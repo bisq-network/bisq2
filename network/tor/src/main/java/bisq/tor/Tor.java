@@ -18,11 +18,11 @@
 package bisq.tor;
 
 import bisq.common.util.FileUtils;
+import bisq.tor.context.ReadOnlyTorContext;
+import bisq.tor.context.TorContext;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-import dev.failsafe.Failsafe;
-import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -37,10 +37,7 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
@@ -63,103 +60,20 @@ import static java.io.File.separator;
 public class Tor {
     public static final String VERSION = "0.1.0";
 
-    private static Optional<Tor> singletonInstance = Optional.empty();
-
     private final TorController torController;
     private final TorBootstrap torBootstrap;
     private final String torDirPath;
-    private final TorContext torContext;
+    private final ReadOnlyTorContext torContext;
     private int proxyPort = -1;
 
-    public static Tor getTor(String torDirPath, TorContext torContext) {
-        if (singletonInstance.isPresent()) {
-            return singletonInstance.get();
-        }
-
-        Tor tor = new Tor(torDirPath, torContext);
-        singletonInstance = Optional.of(tor);
-        return tor;
-    }
-
-    private Tor(String torDirPath, TorContext torContext) {
+    public Tor(String torDirPath, ReadOnlyTorContext torContext) {
         this.torDirPath = torDirPath;
         torBootstrap = new TorBootstrap(torDirPath);
         this.torContext = torContext;
         torController = new TorController(torBootstrap.getCookieFile());
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("Tor.shutdownHook");
-            shutdown();
-        }));
     }
 
-    public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
-        return CompletableFuture.supplyAsync(
-                () -> {
-                    var retryPolicy = RetryPolicy.<Boolean>builder()
-                            .handle(IllegalStateException.class)
-                            .handleResultIf(result -> torContext.getState() == TorContext.State.STARTING)
-                            .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
-                            .withJitter(0.25)
-                            .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(30)
-                            .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
-                            .onRetriesExceeded(e -> {
-                                log.warn("Failed. Max retries exceeded. We shutdown.");
-                                shutdown();
-                            })
-                            .onSuccess(e -> log.debug("Succeeded."))
-                            .build();
-
-                    return Failsafe.with(retryPolicy).get(Tor.this::doStart);
-                },
-                executor
-        );
-    }
-
-    public void shutdown() {
-        TorContext.State previousState = torContext.getAndUpdateStateAtomically(
-                state -> state.isStartingOrRunning() ? TorContext.State.STOPPING : state
-        );
-
-        if (!previousState.isStartingOrRunning()) {
-            return;
-        }
-
-        log.info("Shutdown tor.");
-        long ts = System.currentTimeMillis();
-
-        torBootstrap.shutdown();
-        torController.shutdown();
-
-        log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
-        torContext.setState(TorContext.State.TERMINATED);
-    }
-
-    private boolean doStart() {
-        TorContext.State previousState = torContext.compareAndExchangeState(TorContext.State.NEW, TorContext.State.STARTING);
-        switch (previousState) {
-            case NEW: {
-                boolean isSuccess = startTor();
-                torContext.setState(TorContext.State.RUNNING);
-                return isSuccess;
-            }
-            case STARTING: {
-                throw new IllegalStateException("Already starting.");
-            }
-            case RUNNING: {
-                log.debug("Got called while already running. We ignore that call.");
-                return true;
-            }
-            case STOPPING:
-            case TERMINATED:
-                return false;
-            default: {
-                throw new IllegalStateException("Unhandled state " + torContext.getState());
-            }
-        }
-    }
-
-    private boolean startTor() {
+    public boolean startTor() {
         long ts = System.currentTimeMillis();
         try {
             int controlPort = torBootstrap.start();
@@ -173,6 +87,16 @@ public class Tor {
         }
         log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
         return true;
+    }
+
+    public void shutdown() {
+        log.info("Shutdown tor.");
+        long ts = System.currentTimeMillis();
+
+        torBootstrap.shutdown();
+        torController.shutdown();
+
+        log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
     }
 
     public TorServerSocket getTorServerSocket() throws IOException {

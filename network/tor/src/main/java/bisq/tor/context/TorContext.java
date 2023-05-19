@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.context;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,7 @@ import java.util.function.UnaryOperator;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TorContext {
+public class TorContext implements ReadOnlyTorContext{
     public enum State {
         NEW,
         STARTING,
@@ -52,6 +52,7 @@ public class TorContext {
         return state.compareAndExchange(expectedValue, newValue);
     }
 
+    @Override
     public State getState() {
         return state.get();
     }
