@@ -17,6 +17,8 @@
 
 package bisq.tor;
 
+import bisq.tor.nio.TorSocketChannel;
+import bisq.tor.nio.TorSocksConnectionData;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
