@@ -83,7 +83,6 @@ public class Tor {
     private final TorBootstrap torBootstrap;
     private final String torDirPath;
     private final AtomicReference<State> state = new AtomicReference<>(State.NEW);
-    private final RetryPolicy<Boolean> retryPolicy;
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
@@ -105,26 +104,27 @@ public class Tor {
             Thread.currentThread().setName("Tor.shutdownHook");
             shutdown();
         }));
-
-        retryPolicy = RetryPolicy.<Boolean>builder()
-                .handle(IllegalStateException.class)
-                .handleResultIf(result -> state.get() == STARTING)
-                .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
-                .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(30)
-                .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
-                .onRetriesExceeded(e -> {
-                    log.warn("Failed. Max retries exceeded. We shutdown.");
-                    shutdown();
-                })
-                .onSuccess(e -> log.debug("Succeeded."))
-                .build();
     }
 
     public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
         return CompletableFuture.supplyAsync(
-                () -> Failsafe.with(retryPolicy)
-                        .get(Tor.this::doStart),
+                () -> {
+                    var retryPolicy = RetryPolicy.<Boolean>builder()
+                            .handle(IllegalStateException.class)
+                            .handleResultIf(result -> state.get() == STARTING)
+                            .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
+                            .withJitter(0.25)
+                            .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(30)
+                            .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
+                            .onRetriesExceeded(e -> {
+                                log.warn("Failed. Max retries exceeded. We shutdown.");
+                                shutdown();
+                            })
+                            .onSuccess(e -> log.debug("Succeeded."))
+                            .build();
+
+                    return Failsafe.with(retryPolicy).get(Tor.this::doStart);
+                },
                 executor
         );
     }
