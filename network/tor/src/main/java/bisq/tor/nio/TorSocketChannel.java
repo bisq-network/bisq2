@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.nio;
 
 import bisq.socks5_socket_channel.Socks5ConnectionData;
 import bisq.socks5_socket_channel.Socks5SocketChannel;

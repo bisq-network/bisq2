@@ -15,10 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.nio;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
+import bisq.tor.Constants;
+import bisq.tor.OnionAddress;
+import bisq.tor.TorController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;

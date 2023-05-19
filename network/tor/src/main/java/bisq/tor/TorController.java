@@ -127,20 +127,20 @@ public class TorController {
         }
     }
 
-    TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
+    public TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
                                                                        int localPort) throws IOException {
         assertState();
         return torControlConnection().createHiddenService(hiddenServicePort, localPort);
     }
 
-    TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
+    public TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
                                                                        int localPort,
                                                                        String privateKey) throws IOException {
         assertState();
         return torControlConnection().createHiddenService(hiddenServicePort, localPort, privateKey);
     }
 
-    void destroyHiddenService(String serviceId) throws IOException {
+    public void destroyHiddenService(String serviceId) throws IOException {
         if (!isStopped) {
             torControlConnection().destroyHiddenService(serviceId);
         }
@@ -155,7 +155,7 @@ public class TorController {
         return checkNotNull(torControlConnection);
     }
 
-    void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
+    public void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
         // We set it on demand once needed, but ensure it's not overwritten in case we use multiple servers for the
         // same tor instance.
         synchronized (isTorEventHandlerSetLock) {
@@ -168,7 +168,7 @@ public class TorController {
         torEventHandler.addHiddenServiceReadyListener(serviceId, listener);
     }
 
-    void removeHiddenServiceReadyListener(String serviceId) {
+    public void removeHiddenServiceReadyListener(String serviceId) {
         torEventHandler.removeHiddenServiceReadyListener(serviceId);
     }
 
