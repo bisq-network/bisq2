@@ -71,7 +71,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void sendNotification(String notificationId, String title, String message) {
-        getNotificationsDelegate().notify(title, message);
+        getNotificationsDelegate().sendNotification(title, message);
     }
 
     public boolean containsNotificationId(String notificationId) {

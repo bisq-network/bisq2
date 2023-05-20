@@ -32,7 +32,7 @@ public class LinuxNotifications implements NotificationsDelegate {
     }
 
     @Override
-    public void notify(String title, String message) {
+    public void sendNotification(String title, String message) {
         List<String> command = new ArrayList<>();
         command.add("notify-send");
 

@@ -24,7 +24,7 @@ import java.awt.*;
 @Slf4j
 public class AwtNotifications implements NotificationsDelegate {
 
-    public void notify(String title, String message) {
+    public void sendNotification(String title, String message) {
         SystemTray systemTray = SystemTray.getSystemTray();
         Image awtImage = Toolkit.getDefaultToolkit().createImage(getClass().getClassLoader().getResource("images/task_bar_icon_windows.png"));
         TrayIcon trayIcon = new TrayIcon(awtImage, "Bisq");
