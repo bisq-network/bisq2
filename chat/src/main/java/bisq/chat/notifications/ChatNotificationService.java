@@ -31,19 +31,22 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PublicChatMessage;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -52,6 +55,11 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class ChatNotificationService implements Service {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     // title can have "-" as separator
     // channelId is "[ChatChannelDomain].[title]"
     // notificationId is "[ChatChannelDomain].[title].[messageId]"
@@ -85,13 +93,17 @@ public class ChatNotificationService implements Service {
         return tokens[1];
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Class instance
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     private final ChatService chatService;
     private final NotificationsService notificationsService;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    @Getter
-    private final ObservableSet<ChatNotification<? extends ChatMessage>> chatNotifications = new ObservableSet<>();
+    private final Map<String, Pin> chatMessagesByChannelIdPins = new ConcurrentHashMap<>();
 
     public ChatNotificationService(ChatService chatService,
                                    NotificationsService notificationsService,
@@ -105,11 +117,17 @@ public class ChatNotificationService implements Service {
         this.userProfileService = userProfileService;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public CompletableFuture<Boolean> initialize() {
         BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
                 onChatChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
+
         BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyPublicChatChannelService.getChannels().addListener(() ->
                 onChatChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
@@ -133,8 +151,76 @@ public class ChatNotificationService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
-    private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
-        ChatMessage chatMessage = chatNotification.getChatMessage();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void consumeNotificationId(ChatChannel<? extends ChatMessage> chatChannel) {
+        chatChannel.getChatMessages()
+                .stream()
+                .map(chatMessage -> createNotificationId(chatChannel.getId(),
+                        chatMessage.getId()))
+                .forEach(notificationsService::consumeNotificationId);
+    }
+
+    public int getNumNotificationsByDomain(ChatChannelDomain chatChannelDomain) {
+        return (int) notificationsService.getNotConsumedNotificationIds().stream()
+                .filter(notificationId -> chatChannelDomain == getChatChannelDomain(notificationId))
+                .count();
+    }
+
+    public <C extends ChatChannel<?>> Integer getNumNotificationsByChannel(C chatChannel) {
+        return (int) notificationsService.getNotConsumedNotificationIds().stream()
+                .filter(notificationId -> chatChannel.getId().equals(getChatChannelId(notificationId)))
+                .count();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private <M extends ChatMessage> void onChatChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
+        channels.forEach(chatChannel -> {
+            String channelId = chatChannel.getId();
+            if (chatMessagesByChannelIdPins.containsKey(channelId)) {
+                chatMessagesByChannelIdPins.get(channelId).unbind();
+            }
+            Pin pin = chatChannel.getChatMessages().addListener(new CollectionObserver<>() {
+                @Override
+                public void add(M message) {
+                    chatNotificationAdded(chatChannel, message);
+                }
+
+                @Override
+                public void remove(Object message) {
+                    if (message instanceof ChatMessage) {
+                        ChatMessage chatMessage = (ChatMessage) message;
+                        String notificationId = createNotificationId(chatChannel.getId(), chatMessage.getId());
+                        notificationsService.removeNotificationId(notificationId);
+                    }
+                }
+
+                @Override
+                public void clear() {
+                    String channelId = chatChannel.getId();
+                    Set<String> toRemove = notificationsService.getAllNotificationIds().stream()
+                            .filter(notificationId -> channelId.equals(getChatChannelId(notificationId)))
+                            .collect(Collectors.toSet());
+                    toRemove.forEach(notificationsService::removeNotificationId);
+                }
+            });
+            chatMessagesByChannelIdPins.put(channelId, pin);
+        });
+    }
+
+    private <M extends ChatMessage> void chatNotificationAdded(ChatChannel<M> chatChannel, M chatMessage) {
+        String notificationId = createNotificationId(chatChannel.getId(), chatMessage.getId());
+        if (notificationsService.containsNotificationId(notificationId)) {
+            return;
+        }
+
         if (chatMessage.isMyMessage(userIdentityService)) {
             return;
         }
@@ -145,18 +231,18 @@ public class ChatNotificationService implements Service {
             return;
         }
 
-        ChatChannel<? extends ChatMessage> chatChannel = chatNotification.getChatChannel();
-        if (chatChannel == null) {
-            return;
-        }
+        notificationsService.addNotificationId(notificationId);
+        ChatNotification<M> chatNotification = new ChatNotification<>(userProfileService,
+                notificationId,
+                chatChannel,
+                chatMessage);
+        maybeSendNotification(chatChannel, chatMessage, notificationId, chatNotification);
+    }
 
-        String messageId = chatMessage.getId();
-        String notificationId = createNotificationId(chatChannel.getId(), messageId);
-        if (notificationsService.contains(notificationId)) {
-            return;
-        }
-        notificationsService.add(notificationId);
-
+    private <M extends ChatMessage> void maybeSendNotification(ChatChannel<M> chatChannel,
+                                                               M chatMessage,
+                                                               String notificationId,
+                                                               ChatNotification<M> chatNotification) {
         ChatChannelNotificationType chatChannelNotificationType = chatChannel.getChatChannelNotificationType().get();
         if (chatChannelNotificationType == ChatChannelNotificationType.GLOBAL_DEFAULT) {
             // Map from global settings enums
@@ -195,7 +281,7 @@ public class ChatNotificationService implements Service {
                 BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
-                notificationsService.notify(notificationId, title, msg);
+                notificationsService.sendNotification(notificationId, title, msg);
                 return;
             }
         }
@@ -219,40 +305,6 @@ public class ChatNotificationService implements Service {
             channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " + Res.get("privateMessage");
         }
         title = StringUtils.truncate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
-        notificationsService.notify(notificationId, title, chatNotification.getMessage());
-    }
-
-    private <M extends ChatMessage> void onChatChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
-        channels.forEach(channel -> {
-            channel.getChatMessages().addListener(new CollectionObserver<>() {
-                @Override
-                public void add(M message) {
-                    ChatNotification<M> notification = new ChatNotification<>(channel, message, userProfileService);
-                    chatNotifications.add(notification);
-                    onChatNotificationAdded(notification);
-                }
-
-                @Override
-                public void remove(Object message) {
-                    if (message instanceof BisqEasyPrivateTradeChatMessage) {
-                        ChatNotification<BisqEasyPrivateTradeChatMessage> notification = new ChatNotification<>(channel, (BisqEasyPrivateTradeChatMessage) message, userProfileService);
-                        chatNotifications.remove(notification);
-                        onChatNotificationAdded(notification);
-                    }
-                }
-
-                @Override
-                public void clear() {
-                    chatNotifications.clear();
-                }
-            });
-        });
-    }
-
-    public int getNumNotifications(ChatChannelDomain chatChannelDomain) {
-        String domain = chatChannelDomain.name().toLowerCase();
-        return (int) notificationsService.getNotificationIds().stream()
-                .filter(notificationId -> notificationId.split("\\.")[0].equals(domain))
-                .count();
+        notificationsService.sendNotification(notificationId, title, chatNotification.getMessage());
     }
 }

@@ -30,27 +30,27 @@ import java.util.stream.Collectors;
 public final class NotificationsStore implements PersistableStore<NotificationsStore> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
 
-    private final Map<String, Long> dateByNotificationId = new ConcurrentHashMap<>();
+    private final Map<String, DateAndConsumedFlag> notificationIdMap = new ConcurrentHashMap<>();
 
     public NotificationsStore() {
     }
 
-    private NotificationsStore(Map<String, Long> dateByNotificationId) {
-        this.dateByNotificationId.putAll(dateByNotificationId);
+    private NotificationsStore(Map<String, DateAndConsumedFlag> notificationIdMap) {
+        this.notificationIdMap.putAll(notificationIdMap);
     }
 
     @Override
     public bisq.presentation.protobuf.NotificationsStore toProto() {
         return bisq.presentation.protobuf.NotificationsStore.newBuilder()
-                .putAllDateByNotificationId(dateByNotificationId.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
-
+                .putAllNotificationIdMap(notificationIdMap.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
                 .build();
     }
 
     public static PersistableStore<?> fromProto(bisq.presentation.protobuf.NotificationsStore proto) {
-        return new NotificationsStore(proto.getDateByNotificationIdMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        return new NotificationsStore(proto.getNotificationIdMapMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> DateAndConsumedFlag.fromProto(entry.getValue()))));
     }
 
     @Override
@@ -66,23 +66,23 @@ public final class NotificationsStore implements PersistableStore<NotificationsS
 
     @Override
     public NotificationsStore getClone() {
-        return new NotificationsStore(dateByNotificationId);
+        return new NotificationsStore(notificationIdMap);
     }
 
     @Override
     public void applyPersisted(NotificationsStore persisted) {
-        dateByNotificationId.clear();
-        dateByNotificationId.putAll(prune(persisted.dateByNotificationId));
+        notificationIdMap.clear();
+        notificationIdMap.putAll(prune(persisted.notificationIdMap));
     }
 
-    Map<String, Long> getDateByNotificationId() {
-        return dateByNotificationId;
+    Map<String, DateAndConsumedFlag> getNotificationIdMap() {
+        return notificationIdMap;
     }
 
-    private Map<String, Long> prune(Map<String, Long> dateByNotificationId) {
+    private Map<String, DateAndConsumedFlag> prune(Map<String, DateAndConsumedFlag> dateByNotificationId) {
         long pruneDate = System.currentTimeMillis() - MAX_AGE;
         return dateByNotificationId.entrySet().stream()
-                .filter(e -> e.getValue() > pruneDate)
+                .filter(entry -> entry.getValue().getDate() > pruneDate)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

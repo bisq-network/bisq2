@@ -25,7 +25,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Getter
 @ToString(callSuper = true)
@@ -71,14 +74,12 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                     bisq.chat.protobuf.CommonPublicChatChannel proto) {
-        CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(
+        return new CommonPublicChatChannel(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
-        commonPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return commonPublicChatChannel;
     }
 
     @Override

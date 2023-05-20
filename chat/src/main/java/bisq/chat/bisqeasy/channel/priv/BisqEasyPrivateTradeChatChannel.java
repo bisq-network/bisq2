@@ -91,8 +91,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 mediator,
                 new ArrayList<>(),
                 false,
-                ChatChannelNotificationType.ALL,
-                new HashSet<>());
+                ChatChannelNotificationType.ALL);
     }
 
     // Called from mediator
@@ -107,8 +106,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 Optional.of(myUserIdentity.getUserProfile()),
                 new ArrayList<>(),
                 true,
-                ChatChannelNotificationType.ALL,
-                new HashSet<>());
+                ChatChannelNotificationType.ALL);
     }
 
     // From proto
@@ -119,8 +117,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                                             Optional<UserProfile> mediator,
                                             List<BisqEasyPrivateTradeChatMessage> chatMessages,
                                             boolean isInMediation,
-                                            ChatChannelNotificationType chatChannelNotificationType,
-                                            Set<String> seenChatMessageIds) {
+                                            ChatChannelNotificationType chatChannelNotificationType) {
         super(id, ChatChannelDomain.BISQ_EASY, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
@@ -128,7 +125,6 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         this.mediator = mediator;
 
         setIsInMediation(isInMediation);
-        this.seenChatMessageIds.addAll(seenChatMessageIds);
 
         traders.forEach(userProfile -> userProfileIdsOfSendingLeaveMessage.add(userProfile.getId()));
     }
@@ -163,8 +159,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                         .map(BisqEasyPrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
                 proto.getIsInMediation(),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
-                new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
     }
 
 

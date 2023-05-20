@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.left;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -38,7 +39,6 @@ public class LeftNavController implements Controller {
     private final LeftNavView view;
     private final ChatNotificationService chatNotificationService;
     private final NotificationsService notificationsService;
-    private final NotificationsService.Listener notificationListener;
 
     public LeftNavController(DefaultApplicationService applicationService) {
         chatNotificationService = applicationService.getChatService().getChatNotificationService();
@@ -46,36 +46,19 @@ public class LeftNavController implements Controller {
 
         model = new LeftNavModel(applicationService);
         view = new LeftNavView(model, this);
-
-        notificationListener = new NotificationsService.Listener() {
-            @Override
-            public void onNotificationSent(String notificationId, String title, String message) {
-            }
-
-            @Override
-            public void onAdded(String notificationId) {
-                notificationsChanged(notificationId);
-            }
-
-            @Override
-            public void onRemoved(String notificationId) {
-                notificationsChanged(notificationId);
-            }
-        };
     }
 
     @Override
     public void onActivate() {
-        notificationsService.addListener(notificationListener);
+        notificationsService.addListener(this::updateNumNotifications);
         EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
-                tradeAppsSubMenuExpanded -> {
-                    notificationsService.getNotificationIds().forEach(this::notificationsChanged);
-                });
+                tradeAppsSubMenuExpanded ->
+                        notificationsService.getNotConsumedNotificationIds().forEach(this::updateNumNotifications));
     }
 
     @Override
     public void onDeactivate() {
-        notificationsService.removeListener(notificationListener);
+        notificationsService.removeListener(this::updateNumNotifications);
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
@@ -147,10 +130,12 @@ public class LeftNavController implements Controller {
                 .findAny();
     }
 
-    private void notificationsChanged(String notificationId) {
-        ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-        findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
-                leftNavButton.setNumNotifications(chatNotificationService.getNumNotifications(chatChannelDomain)));
+    private void updateNumNotifications(String notificationId) {
+        UIThread.run(() -> {
+            ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
+            findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
+                    leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
+        });
     }
 
     private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {

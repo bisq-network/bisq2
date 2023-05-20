@@ -63,13 +63,6 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         persist();
     }
 
-    public void updateSeenChatMessageIds(ChatChannel<? extends ChatMessage> chatChannel) {
-        synchronized (getPersistableStore()) {
-            chatChannel.setAllMessagesSeen();
-        }
-        persist();
-    }
-
     public Optional<C> findChannel(ChatMessage chatMessage) {
         return findChannel(chatMessage.getChannelId());
     }
@@ -93,7 +86,6 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         if (!toRemove.isEmpty()) {
             synchronized (getPersistableStore()) {
                 channel.removeChatMessages(toRemove);
-                channel.setAllMessagesSeen();
             }
             persist();
         }
