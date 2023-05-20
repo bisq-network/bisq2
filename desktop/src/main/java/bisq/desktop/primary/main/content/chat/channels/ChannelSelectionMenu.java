@@ -132,7 +132,7 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected void addNotificationsListenerForChannel(C channel) {
-            NotificationsService.Listener listener = notificationId -> notificationsChanged(channel);
+            NotificationsService.Listener listener = notificationId -> updateNumNotifications(channel);
             listenerByChannelId.put(channel.getId(), listener);
             notificationsService.addListener(listener);
         }
@@ -199,7 +199,7 @@ public abstract class ChannelSelectionMenu<
                     .orElseGet(() -> new View.ChannelItem(chatChannel, chatService.findChatChannelService(chatChannel)));
         }
 
-        protected void notificationsChanged(C chatChannel) {
+        protected void updateNumNotifications(C chatChannel) {
             UIThread.run(() -> model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(),
                     chatNotificationService.getNumNotificationsByChannel(chatChannel)));
         }
