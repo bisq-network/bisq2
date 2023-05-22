@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +49,7 @@ public class TorTransport implements Transport {
     private final TorService torService;
 
     public TorTransport(Transport.Config config) {
-        String torDirPath = config.getBaseDir() + separator + "tor";
+        Path torDirPath = Paths.get(config.getBaseDir(), "tor");
         torService = new TorService(NetworkService.NETWORK_IO_POOL, torDirPath);
     }
 

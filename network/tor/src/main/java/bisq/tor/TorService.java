@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +38,7 @@ public class TorService implements Service {
     private final Tor tor;
     private final TorContext context = new TorContext();
 
-    public TorService(ExecutorService executorService, String torDirPath) {
+    public TorService(ExecutorService executorService, Path torDirPath) {
         this.executorService = executorService;
         this.tor = new Tor(torDirPath, context);
 
