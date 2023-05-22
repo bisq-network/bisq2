@@ -31,11 +31,14 @@ import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
+import bisq.presentation.notifications.NotificationsService;
 import bisq.security.pow.ProofOfWorkService;
+import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -55,6 +58,7 @@ public class ChatService implements Service {
     private final NetworkService networkService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
+    private final ChatNotificationService chatNotificationService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices = new HashMap<>();
@@ -65,12 +69,20 @@ public class ChatService implements Service {
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
                        UserIdentityService userIdentityService,
-                       UserProfileService userProfileService) {
+                       UserProfileService userProfileService,
+                       SettingsService settingsService,
+                       NotificationsService notificationsService) {
         this.persistenceService = persistenceService;
         this.proofOfWorkService = proofOfWorkService;
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
+
+        chatNotificationService = new ChatNotificationService(this,
+                notificationsService,
+                settingsService,
+                userIdentityService,
+                userProfileService);
 
         //BISQ_EASY
         bisqEasyPublicChatChannelService = new BisqEasyPublicChatChannelService(persistenceService,
@@ -133,6 +145,9 @@ public class ChatService implements Service {
         list.addAll(chatChannelSelectionServices.values().stream()
                 .map(ChatChannelSelectionService::initialize)
                 .collect(Collectors.toList()));
+
+        list.add(chatNotificationService.initialize());
+
         return CompletableFutureUtils.allOf(list).thenApply(result -> true);
     }
 
@@ -150,6 +165,9 @@ public class ChatService implements Service {
         list.addAll(chatChannelSelectionServices.values().stream()
                 .map(ChatChannelSelectionService::shutdown)
                 .collect(Collectors.toList()));
+
+        list.add(chatNotificationService.shutdown());
+
         return CompletableFutureUtils.allOf(list).thenApply(result -> true);
     }
 

@@ -228,7 +228,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
                     channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
                     model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
-                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key, numMessagesBadge));
+                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(channelId -> onUnseenMessagesChanged(item, channelId, numMessagesBadge));
 
                     setGraphic(hBox);
                 }

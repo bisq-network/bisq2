@@ -22,7 +22,6 @@ import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -110,13 +109,6 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         @Override
         protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
             return new Model();
-        }
-
-        @Override
-        protected void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
-            if (chatChannelService.isVisible((BisqEasyPublicChatChannel) chatChannel)) {
-                super.updateUnseenMessagesMap(chatChannel);
-            }
         }
 
         @Override

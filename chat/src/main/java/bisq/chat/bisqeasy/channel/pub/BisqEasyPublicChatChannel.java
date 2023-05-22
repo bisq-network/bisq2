@@ -27,15 +27,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.HashSet;
-
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." +
-                market.getBaseCurrencyCode() + "." +
+                market.getBaseCurrencyCode() + "-" +
                 market.getQuoteCurrencyCode();
     }
 
@@ -60,11 +58,9 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
 
     public static BisqEasyPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                       bisq.chat.protobuf.BisqEasyPublicChatChannel proto) {
-        BisqEasyPublicChatChannel bisqEasyPublicChatChannel = new BisqEasyPublicChatChannel(
+        return new BisqEasyPublicChatChannel(
                 baseProto.getId(),
                 Market.fromProto(proto.getMarket()));
-        bisqEasyPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return bisqEasyPublicChatChannel;
     }
 
     @Override

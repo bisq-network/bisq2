@@ -62,19 +62,19 @@ public abstract class PrivateChannelSelectionMenu<
             channelCollectionObserverPin = chatChannelService.getChannels().addListener(new CollectionObserver<>() {
                 @Override
                 public void add(C channel) {
-                    addListenersToChannel(channel);
+                    addNotificationsListenerForChannel(channel);
                 }
 
                 @Override
                 public void remove(Object channel) {
                     if (channel instanceof PrivateChatChannel<?>) {
-                        removeListenersToChannel(((PrivateChatChannel<?>) channel).getId());
+                        removeNotificationsListenerForChannel(((PrivateChatChannel<?>) channel).getId());
                     }
                 }
 
                 @Override
                 public void clear() {
-                    unbindAndClearAllChannelListeners();
+                    removeAllNotificationsListeners();
                 }
             });
         }

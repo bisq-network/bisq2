@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @ToString
 @Getter
@@ -45,7 +44,6 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final String id;
     protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
-    protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
     @Getter
     protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
     protected final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
@@ -62,8 +60,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
         return bisq.chat.protobuf.ChatChannel.newBuilder()
                 .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProto())
-                .setChatChannelNotificationType(chatChannelNotificationType.get().toProto())
-                .addAllSeenChatMessageIds(seenChatMessageIds);
+                .setChatChannelNotificationType(chatChannelNotificationType.get().toProto());
     }
 
     public abstract bisq.chat.protobuf.ChatChannel toProto();
@@ -125,12 +122,6 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
 
     public void removeChatMessages(Collection<M> messages) {
         messages.forEach(this::removeChatMessage);
-    }
-
-    public void setAllMessagesSeen() {
-        seenChatMessageIds.setAll(getChatMessages().stream()
-                .map(ChatMessage::getId)
-                .collect(Collectors.toSet()));
     }
 
     public abstract String getDisplayString();

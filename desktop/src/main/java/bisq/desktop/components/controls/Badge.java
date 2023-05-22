@@ -31,19 +31,30 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 // Derived from JfxBadge
 @Slf4j
 @DefaultProperty(value = "control")
 public class Badge extends StackPane {
-
-    private Group badge;
+    @Getter
+    private final Group badge;
+    private final Label labelControl;
+    @Getter
+    private final StackPane badgePane;
+    @Nullable
+    @Getter
     protected Node control;
-    private boolean enabled = true;
+    @Getter
     @Setter
-    private String tooltip;
+    private boolean enabled = true;
+    protected ObjectProperty<Pos> position = new SimpleObjectProperty<>();
+    private final SimpleStringProperty text = new SimpleStringProperty("");
+    private FadeTransition transition;
 
     public Badge() {
         this(null);
@@ -53,14 +64,40 @@ public class Badge extends StackPane {
         this(control, Pos.TOP_RIGHT);
     }
 
-    public Badge(Node control, Pos pos) {
+    public Badge(Node control, Pos position) {
+        labelControl = new Label();
+
+        badgePane = new StackPane();
+        badgePane.getStyleClass().add("badge-pane");
+        badgePane.getChildren().add(labelControl);
+
+        badge = new Group();
+        badge.getChildren().add(badgePane);
+
+        transition = new FadeTransition(Duration.millis(666), badge);
+        transition.setFromValue(0);
+        transition.setToValue(1.0);
+        transition.setCycleCount(1);
+        transition.setAutoReverse(true);
+
+        getChildren().add(badge);
         getStyleClass().add("bisq-badge");
-        setPosition(pos);
+
+        setPosition(position);
         setControl(control);
-        text.addListener((o, oldVal, newVal) -> refreshBadge());
-        this.badge = new Group();
-        this.getChildren().add(badge);
-        position.addListener((o, oldVal, newVal) -> StackPane.setAlignment(badge, newVal));
+    }
+
+    private void refreshBadge() {
+        int textLength = text.get().length();
+        boolean show = enabled && textLength > 0;
+        badge.setVisible(show);
+        badge.setManaged(show);
+        if (show) {
+            labelControl.setText(text.get());
+            double prefWidth = (textLength - 1) * 7.5 + 15;
+            badgePane.setPrefWidth(prefWidth);
+            transition.play();
+        }
     }
 
     /***************************************************************************
@@ -70,7 +107,7 @@ public class Badge extends StackPane {
     public void setControl(Node control) {
         if (control != null) {
             this.control = control;
-            this.getChildren().add(control);
+            getChildren().add(control);
 
             // if the control got resized the badge must be rest
             if (control instanceof Region) {
@@ -80,57 +117,25 @@ public class Badge extends StackPane {
         }
     }
 
-    public Node getControl() {
-        return this.control;
-    }
-
-    public void setEnabled(boolean enable) {
-        this.enabled = enable;
-    }
-
-    public void refreshBadge() {
-        badge.getChildren().clear();
-        int textLength = text.get().length();
-        if (enabled && textLength > 0) {
-            Label labelControl = new Label(text.get());
-
-            StackPane badgePane = new StackPane();
-            badgePane.getStyleClass().add("badge-pane");
-            badgePane.getChildren().add(labelControl);
-            badgePane.setPrefWidth(textLength * 15d);
-
-            if (tooltip != null) {
-                Tooltip.install(badgePane, new BisqTooltip(tooltip));
-            }
-
-            badge.getChildren().add(badgePane);
-            StackPane.setAlignment(badge, getPosition());
-
-            FadeTransition ft = new FadeTransition(Duration.millis(666), badge);
-            ft.setFromValue(0);
-            ft.setToValue(1.0);
-            ft.setCycleCount(1);
-            ft.setAutoReverse(true);
-            ft.play();
+    public void setTooltip(String tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(badgePane, new BisqTooltip(tooltip));
         }
     }
 
-
-    protected ObjectProperty<Pos> position = new SimpleObjectProperty<>();
-
     public Pos getPosition() {
         return position == null ? Pos.TOP_RIGHT : position.get();
+    }
+
+    public void setPosition(Pos position) {
+        this.position.set(position);
+        StackPane.setAlignment(badge, position);
     }
 
     public ObjectProperty<Pos> positionProperty() {
         return this.position;
     }
 
-    public void setPosition(Pos position) {
-        this.position.set(position);
-    }
-
-    private final SimpleStringProperty text = new SimpleStringProperty("");
 
     public final String getText() {
         return text.get();
@@ -138,6 +143,7 @@ public class Badge extends StackPane {
 
     public final void setText(String value) {
         text.set(value);
+        refreshBadge();
     }
 
     public final StringProperty textProperty() {

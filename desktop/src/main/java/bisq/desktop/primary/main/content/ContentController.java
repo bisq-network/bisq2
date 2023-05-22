@@ -76,7 +76,7 @@ public class ContentController extends NavigationController {
             case DASHBOARD: {
                 return Optional.of(new DashboardController(applicationService));
             }
-            case DISCUSS: {
+            case DISCUSSION: {
                 return Optional.of(new CommonChatController(applicationService, ChatChannelDomain.DISCUSSION));
             }
             case ACADEMY_OVERVIEW: {

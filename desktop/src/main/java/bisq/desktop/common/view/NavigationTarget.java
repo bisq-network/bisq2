@@ -92,7 +92,7 @@ public enum NavigationTarget {
     CONTENT(MAIN, false),
 
     DASHBOARD(CONTENT),
-    DISCUSS(CONTENT),
+    DISCUSSION(CONTENT),
 
     ACADEMY_OVERVIEW(CONTENT),
     BISQ_ACADEMY(CONTENT, false),

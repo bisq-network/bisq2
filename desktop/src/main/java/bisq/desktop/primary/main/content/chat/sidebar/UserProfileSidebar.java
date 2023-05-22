@@ -34,6 +34,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -113,14 +114,14 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 return;
             }
 
+            model.nickName.set(userProfile.getNickName());
+            model.nym.set(Res.get("chat.userProfile.nym", userProfile.getNym()));
+            model.userProfileId.set(Res.get("social.createUserProfile.id", userProfile.getId()));
+            model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
+
             model.ignoreButtonText.set(Res.get("social.ignore"));
-            model.id.set(Res.get("social.createUserProfile.id", userProfile.getId()));
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
-
-            model.nym.set(userProfile.getNym());
-            model.nickName.set(userProfile.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
 
             // todo add tooltip
             model.reputationScore.set(String.valueOf(reputationService.getReputationScore(userProfile).getTotalScore()));
@@ -174,9 +175,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private Optional<Consumer<UserProfile>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty nickName = new SimpleStringProperty();
-        private final StringProperty id = new SimpleStringProperty();
+        private final StringProperty nym = new SimpleStringProperty();
+        private final StringProperty userProfileId = new SimpleStringProperty();
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
         private final StringProperty reputationScore = new SimpleStringProperty();
@@ -194,8 +195,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nym;
         private final Label nickName;
+        private final Label nym;
+        private final Label userProfileId;
         private final Label statement;
         private final Label reputationScore;
         private final Label profileAge;
@@ -238,9 +240,15 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
-            VBox.setMargin(nym, new Insets(0, 0, 25, 0));
+            nym.setTooltip(new Tooltip(model.nym.get()));
 
-            privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
+            userProfileId = new Label();
+            userProfileId.getStyleClass().addAll("bisq-text-7");
+            userProfileId.setAlignment(Pos.CENTER);
+            userProfileId.setTooltip(new Tooltip(model.userProfileId.get()));
+            VBox.setMargin(userProfileId, new Insets(0, 0, 25, 0));
+
+            privateMsgButton = new Button(Res.get("chat.userProfile.sendPrivateMessage"));
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
             statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);
@@ -269,15 +277,18 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             termsBox = getInfoBox(Res.get("social.chatUser.terms"), true);
             terms = (Label) termsBox.getChildren().get(1);
             VBox.setMargin(topHBox, new Insets(0, -20, 30, 0));
-            root.getChildren().addAll(topHBox, nickName, roboIconImageView, nym, privateMsgButton,
+            root.getChildren().addAll(topHBox, nickName, roboIconImageView, nym, userProfileId, privateMsgButton,
                     statementBox, reputationScoreBox, profileAgeBox,
                     optionsBox, separator, termsBox);
         }
 
         @Override
         protected void onViewAttached() {
-            nym.textProperty().bind(model.nym);
             nickName.textProperty().bind(model.nickName);
+            nym.textProperty().bind(model.nym);
+            nym.getTooltip().textProperty().bind(model.nym);
+            userProfileId.textProperty().bind(model.userProfileId);
+            userProfileId.getTooltip().textProperty().bind(model.userProfileId);
             statement.textProperty().bind(model.statement);
             statementBox.visibleProperty().bind(model.statement.isEmpty().not());
             statementBox.managedProperty().bind(model.statement.isEmpty().not());
@@ -307,8 +318,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
         @Override
         protected void onViewDetached() {
-            nym.textProperty().unbind();
             nickName.textProperty().unbind();
+            nym.textProperty().unbind();
+            nym.getTooltip().textProperty().unbind();
+            userProfileId.textProperty().unbind();
+            userProfileId.getTooltip().textProperty().unbind();
             statement.textProperty().unbind();
             statementBox.visibleProperty().unbind();
             statementBox.managedProperty().unbind();

@@ -27,7 +27,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,7 +39,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         List<String> userIds = Stream.of(userProfileId1, userProfileId2)
                 .sorted()
                 .collect(Collectors.toList());
-        return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
+        return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
     }
 
     @Getter
@@ -82,7 +81,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
 
     public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                        bisq.chat.protobuf.TwoPartyPrivateChatChannel proto) {
-        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(
+        return new TwoPartyPrivateChatChannel(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 UserProfile.fromProto(proto.getPeer()),
@@ -92,8 +91,6 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                         .collect(Collectors.toList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
         );
-        twoPartyPrivateChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return twoPartyPrivateChatChannel;
     }
 
 

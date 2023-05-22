@@ -56,11 +56,15 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         return controller.view.getRoot();
     }
 
+    public ImageView getRoboIcon() {
+        return controller.view.getRoboIcon();
+    }
+
     public boolean isIgnored() {
         return controller.model.ignored;
     }
 
-    public UserProfile getChatUser() {
+    public UserProfile getUserProfile() {
         return controller.model.userProfile;
     }
 
@@ -110,6 +114,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+        @Getter
         private final ImageView roboIcon;
         private final Label userName, id;
         private Subscription roboHashNodeSubscription;

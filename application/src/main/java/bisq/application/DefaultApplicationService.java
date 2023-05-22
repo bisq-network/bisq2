@@ -124,19 +124,21 @@ public class DefaultApplicationService extends ApplicationService {
                 networkService,
                 securityService.getProofOfWorkService());
 
+        settingsService = new SettingsService(persistenceService);
+
+        notificationsService = new NotificationsService(persistenceService);
+
         chatService = new ChatService(persistenceService,
                 securityService.getProofOfWorkService(),
                 networkService,
                 userService.getUserIdentityService(),
-                userService.getUserProfileService());
+                userService.getUserProfileService(),
+                settingsService,
+                notificationsService);
 
         supportService = new SupportService(networkService, chatService, userService);
 
-        settingsService = new SettingsService(persistenceService);
-
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
-
-        notificationsService = new NotificationsService(persistenceService);
     }
 
     @Override
@@ -173,11 +175,11 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> settingsService.initialize())
+                .thenCompose(result -> notificationsService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
-                .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
-                .thenCompose(result -> notificationsService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -198,25 +200,25 @@ public class DefaultApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> notificationsService.shutdown()
-                        .thenCompose(result -> protocolService.shutdown())
-                        .thenCompose(result -> settingsService.shutdown())
-                        .thenCompose(result -> supportService.shutdown())
-                        .thenCompose(result -> chatService.shutdown())
-                        .thenCompose(result -> userService.shutdown())
-                        .thenCompose(result -> offerService.shutdown())
-                        .thenCompose(result -> accountService.shutdown())
-                        .thenCompose(result -> oracleService.shutdown())
-                        .thenCompose(result -> identityService.shutdown())
-                        .thenCompose(result -> networkService.shutdown())
-                        .thenCompose(result -> {
-                            return walletService.map(Service::shutdown)
-                                    .orElse(CompletableFuture.completedFuture(true));
-                        })
-                        .thenCompose(result -> securityService.shutdown())
-                        .orTimeout(10, TimeUnit.SECONDS)
-                        .handle((result, throwable) -> throwable == null)
-                        .join());
+        return supplyAsync(() -> protocolService.shutdown()
+                .thenCompose(result -> supportService.shutdown())
+                .thenCompose(result -> chatService.shutdown())
+                .thenCompose(result -> notificationsService.shutdown())
+                .thenCompose(result -> settingsService.shutdown())
+                .thenCompose(result -> userService.shutdown())
+                .thenCompose(result -> offerService.shutdown())
+                .thenCompose(result -> accountService.shutdown())
+                .thenCompose(result -> oracleService.shutdown())
+                .thenCompose(result -> identityService.shutdown())
+                .thenCompose(result -> networkService.shutdown())
+                .thenCompose(result -> {
+                    return walletService.map(Service::shutdown)
+                            .orElse(CompletableFuture.completedFuture(true));
+                })
+                .thenCompose(result -> securityService.shutdown())
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> throwable == null)
+                .join());
     }
 
     public KeyPairService getKeyPairService() {

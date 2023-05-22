@@ -18,11 +18,16 @@
 package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotificationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.presentation.notifications.NotificationsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 import java.util.Set;
@@ -32,10 +37,28 @@ public class LeftNavController implements Controller {
     private final LeftNavModel model;
     @Getter
     private final LeftNavView view;
+    private final ChatNotificationService chatNotificationService;
+    private final NotificationsService notificationsService;
 
     public LeftNavController(DefaultApplicationService applicationService) {
+        chatNotificationService = applicationService.getChatService().getChatNotificationService();
+        notificationsService = applicationService.getNotificationsService();
+
         model = new LeftNavModel(applicationService);
         view = new LeftNavView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+        notificationsService.addListener(this::updateNumNotifications);
+        EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
+                tradeAppsSubMenuExpanded ->
+                        notificationsService.getNotConsumedNotificationIds().forEach(this::updateNumNotifications));
+    }
+
+    @Override
+    public void onDeactivate() {
+        notificationsService.removeListener(this::updateNumNotifications);
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
@@ -78,14 +101,6 @@ public class LeftNavController implements Controller {
         }
     }
 
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
-
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
         findNavButton(navigationTarget).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(navigationTarget);
@@ -113,5 +128,37 @@ public class LeftNavController implements Controller {
         return model.getLeftNavButtons().stream()
                 .filter(leftNavButton -> navigationTarget == leftNavButton.getNavigationTarget())
                 .findAny();
+    }
+
+    private void updateNumNotifications(String notificationId) {
+        UIThread.run(() -> {
+            ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
+            findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
+                    leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
+        });
+    }
+
+    private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {
+        return findNavigationTarget(chatChannelDomain)
+                .flatMap(this::findNavButton);
+    }
+
+    private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY:
+                if (model.getTradeAppsSubMenuExpanded().get()) {
+                    return Optional.of(NavigationTarget.BISQ_EASY);
+                } else {
+                    return Optional.of(NavigationTarget.TRADE_OVERVIEW);
+                }
+            case DISCUSSION:
+                return Optional.of(NavigationTarget.DISCUSSION);
+            case EVENTS:
+                return Optional.of(NavigationTarget.EVENTS);
+            case SUPPORT:
+                return Optional.of(NavigationTarget.SUPPORT);
+            default:
+                return Optional.empty();
+        }
     }
 }

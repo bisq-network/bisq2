@@ -29,19 +29,29 @@ import bisq.presentation.notifications.osx.OsxNotifications;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class NotificationsService implements PersistenceClient<NotificationsStore>, Service {
+    public interface Listener {
+        void onChanged(String notificationId);
+    }
+
     @Getter
     private final NotificationsStore persistableStore = new NotificationsStore();
     @Getter
     private final Persistence<NotificationsStore> persistence;
     private NotificationsDelegate delegate;
+    private final Set<Listener> listeners = new HashSet<>();
 
     public NotificationsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
@@ -55,17 +65,60 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
         return CompletableFuture.completedFuture(true);
     }
 
-    public void notify(String title, String message) {
-        getNotificationsDelegate().notify(title, message);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void sendNotification(String notificationId, String title, String message) {
+        getNotificationsDelegate().sendNotification(title, message);
     }
 
-    public boolean contains(String id) {
-        return persistableStore.getDateByMessageId().containsKey(id);
+    public boolean containsNotificationId(String notificationId) {
+        return getNotificationIdMap().containsKey(notificationId);
     }
 
-    public void add(String id) {
-        persistableStore.getDateByMessageId().put(id, System.currentTimeMillis());
-        persist();
+    public void addNotificationId(String notificationId) {
+        synchronized (persistableStore) {
+            if (!containsNotificationId(notificationId)) {
+                getNotificationIdMap().put(notificationId,
+                        new DateAndConsumedFlag(System.currentTimeMillis(), false));
+                listeners.forEach(listener -> listener.onChanged(notificationId));
+                persist();
+            }
+        }
+    }
+
+    public void consumeNotificationId(String notificationId) {
+        synchronized (persistableStore) {
+            if (containsNotificationId(notificationId) &&
+                    !getNotificationIdMap().get(notificationId).isConsumed()) {
+                getNotificationIdMap().get(notificationId).setConsumed(true);
+                listeners.forEach(listener -> listener.onChanged(notificationId));
+                persist();
+            }
+        }
+    }
+
+    public void removeNotificationId(String notificationId) {
+        synchronized (persistableStore) {
+            DateAndConsumedFlag previous = getNotificationIdMap().remove(notificationId);
+            if (previous != null) {
+                listeners.forEach(listener -> listener.onChanged(notificationId));
+                persist();
+            }
+        }
+    }
+
+    public Set<String> getNotConsumedNotificationIds() {
+        return getNotificationIdMap().entrySet().stream()
+                .filter(entry -> !entry.getValue().isConsumed())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<String> getAllNotificationIds() {
+        return getNotificationIdMap().keySet();
     }
 
     private NotificationsDelegate getNotificationsDelegate() {
@@ -81,5 +134,17 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
             }
         }
         return delegate;
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    private Map<String, DateAndConsumedFlag> getNotificationIdMap() {
+        return persistableStore.getNotificationIdMap();
     }
 }

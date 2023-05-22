@@ -7,12 +7,14 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.presentation.notifications.NotificationsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
@@ -81,15 +83,18 @@ public abstract class ChannelSelectionMenu<
         protected final V view;
         protected final S chatChannelService;
         protected final E chatChannelSelectionService;
+        private final NotificationsService notificationsService;
+        private final ChatNotificationService chatNotificationService;
 
         protected Pin channelsPin, selectedChannelPin;
-        protected final Map<String, Pin> seenChatMessageIdsPins = new HashMap<>();
-        protected final Map<String, Pin> numChatMessagesPins = new HashMap<>();
+        private final Map<String, NotificationsService.Listener> listenerByChannelId = new HashMap<>();
 
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
+            notificationsService = applicationService.getNotificationsService();
+            chatNotificationService = chatService.getChatNotificationService();
 
             chatChannelService = createAndGetChatChannelService(chatChannelDomain);
             chatChannelSelectionService = createAndGetChatChannelSelectionService(chatChannelDomain);
@@ -116,35 +121,33 @@ public abstract class ChannelSelectionMenu<
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
                     this::handleSelectedChannelChange);
 
-            chatChannelService.getChannels().forEach(this::addListenersToChannel);
+            chatChannelService.getChannels().forEach(this::addNotificationsListenerForChannel);
         }
 
         @Override
         public void onDeactivate() {
             channelsPin.unbind();
             selectedChannelPin.unbind();
-            unbindAndClearAllChannelListeners();
+            removeAllNotificationsListeners();
         }
 
-        protected void addListenersToChannel(C channel) {
-            Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
-            seenChatMessageIdsPins.put(channel.getId(), seenChatMessageIdsPin);
-            Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
-            numChatMessagesPins.put(channel.getId(), numChatMessagesPin);
+        protected void addNotificationsListenerForChannel(C channel) {
+            NotificationsService.Listener listener = notificationId -> updateNumNotifications(channel);
+            listenerByChannelId.put(channel.getId(), listener);
+            notificationsService.addListener(listener);
         }
 
-        protected void removeListenersToChannel(String channelId) {
-            seenChatMessageIdsPins.get(channelId).unbind();
-            seenChatMessageIdsPins.remove(channelId);
-            numChatMessagesPins.get(channelId).unbind();
-            numChatMessagesPins.remove(channelId);
+        protected void removeNotificationsListenerForChannel(String channelId) {
+            NotificationsService.Listener listener = listenerByChannelId.get(channelId);
+            if (listener != null) {
+                notificationsService.removeListener(listener);
+                listenerByChannelId.remove(channelId);
+            }
         }
 
-        protected void unbindAndClearAllChannelListeners() {
-            seenChatMessageIdsPins.values().forEach(Pin::unbind);
-            seenChatMessageIdsPins.clear();
-            numChatMessagesPins.values().forEach(Pin::unbind);
-            numChatMessagesPins.clear();
+        protected void removeAllNotificationsListeners() {
+            listenerByChannelId.values().forEach(notificationsService::removeListener);
+            listenerByChannelId.clear();
         }
 
         protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -196,23 +199,9 @@ public abstract class ChannelSelectionMenu<
                     .orElseGet(() -> new View.ChannelItem(chatChannel, chatService.findChatChannelService(chatChannel)));
         }
 
-        protected void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
-            UIThread.run(() -> {
-                int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
-                        .filter(this::isNotMyMessage)
-                        .filter(this::isAuthorNotIgnored)
-                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getId()))
-                        .count();
-                model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
-            });
-        }
-
-        protected boolean isNotMyMessage(ChatMessage chatMessage) {
-            return chatMessage.isMyMessage(userIdentityService);
-        }
-
-        protected boolean isAuthorNotIgnored(ChatMessage chatMessage) {
-            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
+        protected void updateNumNotifications(C chatChannel) {
+            UIThread.run(() -> model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(),
+                    chatNotificationService.getNumNotificationsByChannel(chatChannel)));
         }
     }
 

@@ -40,6 +40,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -55,14 +56,19 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ChannelSidebar {
     private final Controller controller;
 
-    public ChannelSidebar(DefaultApplicationService applicationService, Runnable closeHandler) {
-        controller = new Controller(applicationService, closeHandler);
+    public ChannelSidebar(DefaultApplicationService applicationService,
+                          Runnable closeHandler,
+                          Consumer<UserProfile> openUserProfileSidebarHandler) {
+        controller = new Controller(applicationService,
+                closeHandler,
+                openUserProfileSidebarHandler);
     }
 
     public Pane getRoot() {
@@ -81,18 +87,25 @@ public class ChannelSidebar {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
         private final Runnable closeHandler;
+        private final UserProfileService userProfileService;
+        private final Consumer<UserProfile> openUserProfileSidebarHandler;
         private final NotificationsSidebar notificationsSidebar;
         private final ChatService chatService;
+
         @Nullable
         private Pin userProfileIdsOfParticipantsPin;
 
-        private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
+        private Controller(DefaultApplicationService applicationService,
+                           Runnable closeHandler,
+                           Consumer<UserProfile> openUserProfileSidebarHandler) {
             this.closeHandler = closeHandler;
+            this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
+
             userProfileService = applicationService.getUserService().getUserProfileService();
             chatService = applicationService.getChatService();
             notificationsSidebar = new NotificationsSidebar(chatService);
+
             model = new Model();
             view = new View(model, this, notificationsSidebar.getRoot());
         }
@@ -100,7 +113,7 @@ public class ChannelSidebar {
         @Override
         public void onActivate() {
             model.getSortedListParticipantList()
-                    .setComparator(Comparator.comparing(item -> item.getChatUser().getUserName()));
+                    .setComparator(Comparator.comparing(item -> item.getUserProfile().getUserName()));
         }
 
         @Override
@@ -147,7 +160,7 @@ public class ChannelSidebar {
                         String userProfileId = (String) element;
                         UIThread.run(() ->
                                 model.participantList.stream()
-                                        .filter(item -> item.getChatUser().getId().equals(userProfileId))
+                                        .filter(item -> item.getUserProfile().getId().equals(userProfileId))
                                         .findFirst()
                                         .ifPresent(model.participantList::remove));
                     }
@@ -194,6 +207,10 @@ public class ChannelSidebar {
 
         void onClose() {
             closeHandler.run();
+        }
+
+        public void onOpenUserProfileSidebar(UserProfile userProfile) {
+            openUserProfileSidebarHandler.accept(userProfile);
         }
     }
 
@@ -280,6 +297,8 @@ public class ChannelSidebar {
                 @Override
                 public ListCell<ChatUserOverview> call(ListView<ChatUserOverview> list) {
                     return new ListCell<>() {
+                        Pane chatUser;
+                        private ImageView roboIcon;
                         final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("social.undoIgnore"));
                         final HBox hBox = new HBox();
 
@@ -291,25 +310,36 @@ public class ChannelSidebar {
                         }
 
                         @Override
-                        public void updateItem(final ChatUserOverview chatUserOverview, boolean empty) {
+                        public void updateItem(ChatUserOverview chatUserOverview, boolean empty) {
                             super.updateItem(chatUserOverview, empty);
                             if (chatUserOverview != null && !empty) {
                                 undoIgnoreUserButton.setOnAction(e -> {
-                                    controller.onUndoIgnoreUser(chatUserOverview.getChatUser());
+                                    controller.onUndoIgnoreUser(chatUserOverview.getUserProfile());
                                     participants.refresh();
                                 });
                                 undoIgnoreUserButton.setVisible(chatUserOverview.isIgnored());
                                 undoIgnoreUserButton.setManaged(chatUserOverview.isIgnored());
 
-                                Pane chatUserOverviewRoot = chatUserOverview.getRoot();
-                                chatUserOverviewRoot.setOpacity(chatUserOverview.isIgnored() ? 0.4 : 1);
+                                chatUser = chatUserOverview.getRoot();
+                                chatUser.setOpacity(chatUserOverview.isIgnored() ? 0.4 : 1);
+                                // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
+                                chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(chatUserOverview.getUserProfile()));
 
-                                hBox.getChildren().setAll(chatUserOverviewRoot, Spacer.fillHBox(), undoIgnoreUserButton);
+                                roboIcon = chatUserOverview.getRoboIcon();
+                                roboIcon.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(chatUserOverview.getUserProfile()));
+
+                                hBox.getChildren().setAll(chatUser, Spacer.fillHBox(), undoIgnoreUserButton);
 
                                 setGraphic(hBox);
                             } else {
-                                if (undoIgnoreUserButton != null) {
-                                    undoIgnoreUserButton.setOnAction(null);
+                                undoIgnoreUserButton.setOnAction(null);
+                                if (chatUser != null) {
+                                    chatUser.setOnMousePressed(null);
+                                    chatUser = null;
+                                }
+                                if (roboIcon != null) {
+                                    roboIcon.setOnMousePressed(null);
+                                    roboIcon = null;
                                 }
                                 setGraphic(null);
                             }

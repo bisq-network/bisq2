@@ -73,7 +73,6 @@ message ChatChannel {
   string id = 1;
   ChatChannelDomain chatChannelDomain = 2;
   ChatChannelNotificationType chatChannelNotificationType = 3;
-  repeated string seenChatMessageIds = 4;
   oneof message{
     TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = 10;
     CommonPublicChatChannel commonPublicChatChannel = 11;

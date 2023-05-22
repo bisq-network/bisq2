@@ -52,7 +52,7 @@ class LeftNavSubButton extends LeftNavButton {
     }
 
     @Override
-    public void setMenuExpanded(boolean menuExpanded, int duration) {
+    public void setHorizontalExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
             Transitions.animateLeftSubNavigation(label, LABEL_X_POS_EXPANDED, duration);
@@ -67,5 +67,10 @@ class LeftNavSubButton extends LeftNavButton {
     @Override
     protected int calculateHeight() {
         return HEIGHT;
+    }
+
+    @Override
+    protected void updateLayoutYNumMessagesBadge() {
+        numMessagesBadge.setLayoutY((LeftNavSubButton.HEIGHT - 16) / 2d);
     }
 }

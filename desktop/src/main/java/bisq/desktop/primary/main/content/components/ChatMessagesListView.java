@@ -33,6 +33,7 @@ import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.*;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -134,6 +135,7 @@ public class ChatMessagesListView {
         private final Model model;
         @Getter
         private final View view;
+        private final ChatNotificationService chatNotificationService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
@@ -143,6 +145,7 @@ public class ChatMessagesListView {
                            Consumer<ChatMessage> replyHandler,
                            ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
+            chatNotificationService = chatService.getChatNotificationService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
@@ -201,14 +204,14 @@ public class ChatMessagesListView {
                     focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
                             focused -> {
                                 if (focused && model.getSelectedChannel().get() != null) {
-                                    chatChannelService.updateSeenChatMessageIds(model.getSelectedChannel().get());
+                                    chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
                                 }
                             });
 
                     selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
                             selectedChannel -> {
                                 if (selectedChannel != null) {
-                                    chatChannelService.updateSeenChatMessageIds(selectedChannel);
+                                    chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
                                 }
                             });
                 }
