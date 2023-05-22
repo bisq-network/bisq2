@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 class TorBootstrap {
     private final List<String> bridgeConfig = new ArrayList<>();
-    private final String torDirPath;
+    private final Path torDirPath;
     private final File torDir;
     private final File dotTorDir;
     private final File versionFile;
@@ -44,16 +45,16 @@ class TorBootstrap {
 
     private volatile boolean isStopped;
 
-    TorBootstrap(String torDirPath) {
+    TorBootstrap(Path torDirPath) {
         this.torDirPath = torDirPath;
 
-        torDir = new File(torDirPath);
-        dotTorDir = new File(torDirPath, Constants.DOT_TOR_DIR);
-        versionFile = new File(torDirPath, Constants.VERSION);
-        pidFile = new File(torDirPath, Constants.PID);
-        geoIPFile = new File(torDirPath, Constants.GEO_IP);
-        geoIPv6File = new File(torDirPath, Constants.GEO_IPV_6);
-        torrcFile = new File(torDirPath, Constants.TORRC);
+        torDir = torDirPath.toFile();
+        dotTorDir = new File(torDir, Constants.DOT_TOR_DIR);
+        versionFile = new File(torDir, Constants.VERSION);
+        pidFile = new File(torDir, Constants.PID);
+        geoIPFile = new File(torDir, Constants.GEO_IP);
+        geoIPv6File = new File(torDir, Constants.GEO_IPV_6);
+        torrcFile = new File(torDir, Constants.TORRC);
         cookieFile = new File(dotTorDir.getAbsoluteFile(), Constants.COOKIE);
         osType = OsType.getOsType();
     }
@@ -94,7 +95,9 @@ class TorBootstrap {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeCleanupCookieFile() throws IOException {
-        File cookieFile = new File(torDirPath, Constants.DOT_TOR_DIR + File.separator + Constants.COOKIE);
+        File cookieFile = torDirPath.resolve(Constants.DOT_TOR_DIR)
+                .resolve(Constants.COOKIE)
+                .toFile();
         if (cookieFile.exists() && !cookieFile.delete()) {
             throw new IOException("Cannot delete old cookie file.");
         }
@@ -113,7 +116,7 @@ class TorBootstrap {
 
             installTorrcFile();
 
-            File destDir = new File(torDirPath);
+            File destDir = torDirPath.toFile();
             new TorBinaryZipExtractor(destDir).extractBinary();
             log.info("Tor files installed to {}", torDirPath);
             // Only if we have successfully extracted all files we write our version file which is used to

@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -34,12 +35,12 @@ import java.util.concurrent.Executor;
 
 @Slf4j
 public class TorServerSocket extends ServerSocket {
-    private final String hsDirPath;
+    private final Path hsDirPath;
     private final TorController torController;
     private Optional<OnionAddress> onionAddress = Optional.empty();
 
-    public TorServerSocket(String torDirPath, TorController torController) throws IOException {
-        this.hsDirPath = torDirPath + File.separator + Constants.HS_DIR;
+    public TorServerSocket(Path torDirPath, TorController torController) throws IOException {
+        this.hsDirPath = torDirPath.resolve(Constants.HS_DIR);
         this.torController = torController;
     }
 
@@ -76,7 +77,7 @@ public class TorServerSocket extends ServerSocket {
 
     public OnionAddress bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {
         long ts = System.currentTimeMillis();
-        File dir = new File(hsDirPath, id);
+        File dir = hsDirPath.resolve(id).toFile();
         File hostNameFile = new File(dir.getCanonicalPath(), Constants.HOSTNAME);
         File privKeyFile = new File(dir.getCanonicalPath(), Constants.PRIV_KEY);
         FileUtils.makeDirs(dir);

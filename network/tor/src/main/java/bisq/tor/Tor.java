@@ -35,6 +35,7 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
@@ -62,11 +63,11 @@ public class Tor {
 
     private final TorController torController;
     private final TorBootstrap torBootstrap;
-    private final String torDirPath;
+    private final Path torDirPath;
     private final ReadOnlyTorContext torContext;
     private int proxyPort = -1;
 
-    public Tor(String torDirPath, ReadOnlyTorContext torContext) {
+    public Tor(Path torDirPath, ReadOnlyTorContext torContext) {
         this.torDirPath = torDirPath;
         torBootstrap = new TorBootstrap(torDirPath);
         this.torContext = torContext;
