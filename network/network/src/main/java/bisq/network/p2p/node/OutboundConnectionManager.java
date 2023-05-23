@@ -141,7 +141,6 @@ public class OutboundConnectionManager {
             log.info("Sending PoW request to peer.");
             socketChannel.write(byteBuffer);
         }
-
     }
 
     public void handleReadableChannel(SocketChannel socketChannel) throws IOException {
@@ -165,6 +164,11 @@ public class OutboundConnectionManager {
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);
             listeners.forEach(l -> l.onNewConnection(outboundConnectionChannel));
+
+            CompletableFuture<OutboundConnectionChannel> completableFuture =
+                    completableFutureByPeerAddress.get(peerCapability.getAddress());
+            completableFuture.complete(outboundConnectionChannel);
+
         } else if (verifiedConnections.contains(socketChannel)) {
             OutboundConnectionChannel connectionChannel = connectionByChannel.get(socketChannel);
 
