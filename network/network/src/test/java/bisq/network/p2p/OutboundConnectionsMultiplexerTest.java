@@ -56,8 +56,8 @@ public class OutboundConnectionsMultiplexerTest {
         ArrayList<Transport.Type> supportedTransportTypes = new ArrayList<>();
         supportedTransportTypes.add(Transport.Type.CLEAR);
 
-        Address address = Address.localHost(NetworkUtils.findFreeSystemPort());
-        Capability serverCapability = new Capability(address, supportedTransportTypes);
+        Address serverAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
+        Capability serverCapability = new Capability(serverAddress, supportedTransportTypes);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 mock(BanList.class),
@@ -94,7 +94,7 @@ public class OutboundConnectionsMultiplexerTest {
                 var connectionMultiplexer = new OutboundConnectionMultiplexer(outboundConnectionManager);
                 connectionMultiplexer.start();
 
-                CompletableFuture<OutboundConnectionChannel> connection = connectionMultiplexer.getConnection(address);
+                CompletableFuture<OutboundConnectionChannel> connection = connectionMultiplexer.getConnection(serverAddress);
                 return connection.get(1, TimeUnit.MINUTES);
 
 
