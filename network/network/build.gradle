@@ -23,7 +23,8 @@ dependencies {
     integrationTestCompileOnly libs.lombok
     integrationTestAnnotationProcessor libs.lombok
 
-    integrationTestImplementation libs.slf4j.api
+    integrationTestImplementation libs.mockito
     integrationTestImplementation libs.logback.core
     integrationTestImplementation libs.logback.classic
+    integrationTestImplementation libs.slf4j.api
 }
