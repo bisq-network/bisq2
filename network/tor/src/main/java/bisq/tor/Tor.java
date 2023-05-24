@@ -23,6 +23,7 @@ import bisq.tor.context.TorContext;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -65,13 +66,16 @@ public class Tor {
     private final TorBootstrap torBootstrap;
     private final Path torDirPath;
     private final ReadOnlyTorContext torContext;
+    @Getter
+    private final OnionServicePublishService onionServicePublishService;
     private int proxyPort = -1;
 
     public Tor(Path torDirPath, ReadOnlyTorContext torContext) {
         this.torDirPath = torDirPath;
-        torBootstrap = new TorBootstrap(torDirPath);
+        this.torBootstrap = new TorBootstrap(torDirPath);
         this.torContext = torContext;
-        torController = new TorController(torBootstrap.getCookieFile());
+        this.torController = new TorController(torBootstrap.getCookieFile());
+        this.onionServicePublishService = new OnionServicePublishService(torController, torDirPath);
     }
 
     public boolean startTor() {
@@ -98,12 +102,6 @@ public class Tor {
         torController.shutdown();
 
         log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
-    }
-
-    public TorServerSocket getTorServerSocket() throws IOException {
-        checkArgument(torContext.getState() == TorContext.State.RUNNING,
-                "Invalid state at Tor.getTorServerSocket. state=" + torContext.getState());
-        return new TorServerSocket(torDirPath, torController);
     }
 
     public Proxy getProxy(@Nullable String streamId) throws IOException {

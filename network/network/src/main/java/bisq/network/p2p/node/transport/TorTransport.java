@@ -3,8 +3,7 @@ package bisq.network.p2p.node.transport;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.tor.OnionAddress;
-import bisq.tor.TorServerSocket;
+import bisq.tor.CreateOnionServiceResponse;
 import bisq.tor.TorService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
@@ -19,10 +18,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.io.File.separator;
 
 
 @Slf4j
@@ -69,15 +69,12 @@ public class TorTransport implements Transport {
 
     @Override
     public ServerSocketResult getServerSocket(int port, String nodeId) {
-        log.info("Start hidden service with port {} and nodeId {}", port, nodeId);
-        long ts = System.currentTimeMillis();
         try {
-            TorServerSocket torServerSocket = torService.getTorServerSocket();
-            OnionAddress onionAddress = torServerSocket.bind(port, nodeId);
-            log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
-                    System.currentTimeMillis() - ts, onionAddress, nodeId);
-            return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
-        } catch (IOException | InterruptedException e) {
+            CompletableFuture<CreateOnionServiceResponse> completableFuture = torService.createOnionService(port, nodeId);
+            CreateOnionServiceResponse response = completableFuture.get(2, TimeUnit.MINUTES);
+            return new ServerSocketResult(response);
+
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
             throw new ConnectionException(e);
         }

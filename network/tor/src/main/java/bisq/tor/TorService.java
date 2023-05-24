@@ -25,6 +25,7 @@ import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -34,13 +35,17 @@ import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class TorService implements Service {
+    private static final int RANDOM_PORT = 0;
+
     private final ExecutorService executorService;
     private final Tor tor;
     private final TorContext context = new TorContext();
+    private final OnionServicePublishService onionPublishService;
 
     public TorService(ExecutorService executorService, Path torDirPath) {
         this.executorService = executorService;
         this.tor = new Tor(torDirPath, context);
+        this.onionPublishService = tor.getOnionServicePublishService();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Thread.currentThread().setName("Tor.shutdownHook");
@@ -82,6 +87,7 @@ public class TorService implements Service {
             return CompletableFuture.completedFuture(true);
         }
 
+        onionPublishService.shutdown();
         tor.shutdown();
         context.setState(TorContext.State.TERMINATED);
         return CompletableFuture.completedFuture(true);
@@ -111,16 +117,33 @@ public class TorService implements Service {
         }
     }
 
+    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, String nodeId) {
+        log.info("Start hidden service with port {} and nodeId {}", port, nodeId);
+        long ts = System.currentTimeMillis();
+        try {
+            @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
+            int localPort = localServerSocket.getLocalPort();
+
+            return onionPublishService.initialize(nodeId, port, localPort)
+                    .thenApply(onionAddress -> {
+                                log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
+                                        System.currentTimeMillis() - ts, onionAddress, nodeId);
+                                return new CreateOnionServiceResponse(nodeId, localServerSocket, onionAddress);
+                            }
+                    );
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
     public boolean isOnionServiceOnline(String onionUrl) {
         return tor.isHiddenServiceAvailable(onionUrl);
     }
 
     public Optional<String> getHostName(String serverId) {
         return tor.getHostName(serverId);
-    }
-
-    public TorServerSocket getTorServerSocket() throws IOException {
-        return tor.getTorServerSocket();
     }
 
     public Socket getSocket(String streamId) throws IOException {
