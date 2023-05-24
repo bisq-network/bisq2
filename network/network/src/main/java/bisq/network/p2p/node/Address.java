@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
+import bisq.tor.OnionAddress;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,6 +49,10 @@ public final class Address implements Proto {
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
         this.port = port;
+    }
+
+    public Address(OnionAddress onionAddress) {
+        this(onionAddress.getHost(), onionAddress.getPort());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
