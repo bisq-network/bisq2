@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -37,8 +38,8 @@ public class OnionServiceDataDirManager {
     private final File hostNameFile;
     private final File privateKeyFile;
 
-    public OnionServiceDataDirManager(File dataDir) {
-        this.dataDir = dataDir;
+    public OnionServiceDataDirManager(Path dataDirPath) {
+        this.dataDir = dataDirPath.toFile();
         this.hostNameFile = new File(dataDir, HOST_NAME_FILENAME);
         this.privateKeyFile = new File(dataDir, PRIVATE_KEY_FILENAME);
     }
