@@ -1214,7 +1214,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Card toggle button                                                                *
+ * Card button                                                                *
  *                                                                             *
  ******************************************************************************/
 
@@ -1231,11 +1231,11 @@
     -fx-background-color: -bisq-grey-18;
 }
 
-.card-toggle-button:selected {
+.card-toggle-button:default {
     -fx-background-color: -bisq-green;
 }
 
-.card-toggle-button:selected:hover {
+.card-toggle-button:default:hover {
     -fx-background-color: -bisq-green-lighter;
 }
 

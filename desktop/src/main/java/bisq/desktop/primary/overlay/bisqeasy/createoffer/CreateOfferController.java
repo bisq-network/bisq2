@@ -199,11 +199,6 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     public void onBack() {
-       /* if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
-            OverlayController.hide();
-            Navigation.navigateTo(NavigationTarget.DASHBOARD);
-            reset();
-        } else {*/
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
             model.setAnimateRightOut(true);
