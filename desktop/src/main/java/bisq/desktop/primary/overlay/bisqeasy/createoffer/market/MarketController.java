@@ -43,11 +43,13 @@ public class MarketController implements Controller {
     @Getter
     private final MarketView view;
     private final ChatService chatService;
+    private final Runnable onNextHandler;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private Subscription searchTextPin;
 
-    public MarketController(DefaultApplicationService applicationService) {
+    public MarketController(DefaultApplicationService applicationService, Runnable onNextHandler) {
+        this.onNextHandler = onNextHandler;
         chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
@@ -112,9 +114,12 @@ public class MarketController implements Controller {
         searchTextPin.unsubscribe();
     }
 
-    public void onSelect(MarketView.MarketListItem item) {
-        if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
+    void onMarketListItemClicked(MarketView.MarketListItem item) {
+        if (item == null) {
             return;
+        }
+        if (item.equals(model.getSelectedMarketListItem().get())) {
+            onNextHandler.run();
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());

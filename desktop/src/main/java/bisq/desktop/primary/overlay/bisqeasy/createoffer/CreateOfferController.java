@@ -83,7 +83,7 @@ public class CreateOfferController extends NavigationController implements InitW
         ));
 
         directionController = new DirectionController(applicationService, this::onNext, this::setButtonsVisible);
-        marketController = new MarketController(applicationService);
+        marketController = new MarketController(applicationService, this::onNext);
         amountController = new AmountController(applicationService);
         paymentMethodController = new PaymentMethodController(applicationService);
         reviewOfferController = new ReviewOfferController(applicationService, this::setButtonsVisible, this::reset);

@@ -29,7 +29,10 @@ import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -37,17 +40,13 @@ import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
 @Slf4j
 public class MarketView extends View<VBox, MarketModel, MarketController> {
     private final BisqTableView<MarketListItem> tableView;
-    private final ToggleGroup toggleGroup = new ToggleGroup();
     private final SearchBox searchBox;
-    private Subscription selectedItemPin;
 
     public MarketView(MarketModel model, MarketController controller) {
         super(new VBox(), model, controller);
@@ -86,17 +85,22 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
 
     @Override
     protected void onViewAttached() {
+        tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
+
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
+        // We use setOnMouseClicked handler not a listener on 
+        // tableView.getSelectionModel().getSelectedItem() to get triggered the handler only at user action and 
+        // not when we set the selected item by code.
+        tableView.setOnMouseClicked(e -> controller.onMarketListItemClicked(tableView.getSelectionModel().getSelectedItem()));
+
         UIThread.runOnNextRenderFrame(() -> tableView.scrollTo(model.getSelectedMarketListItem().get()));
-        tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
-        selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), controller::onSelect);
     }
 
     @Override
     protected void onViewDetached() {
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
-        selectedItemPin.unsubscribe();
+        tableView.setOnMouseClicked(null);
     }
 
     private void configTableView() {
@@ -125,7 +129,8 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                 .build());
     }
 
-    private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getNameCellFactory() {
+    private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getNameCellFactory
+            () {
         return column -> new TableCell<>() {
             private final Label label = new Label();
 
