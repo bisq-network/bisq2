@@ -63,6 +63,10 @@ public class PriceInput {
         return controller.view.getRoot();
     }
 
+    public void reset() {
+        controller.model.reset();
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -149,6 +153,15 @@ public class PriceInput {
         private boolean isCreateOffer = true;
 
         private Model() {
+        }
+
+        public void reset() {
+            fixPrice.set(null);
+            selectedMarket = null;
+            hasFocus = false;
+            marketString.set(null);
+            description.set(null);
+            isCreateOffer = true;
         }
     }
 

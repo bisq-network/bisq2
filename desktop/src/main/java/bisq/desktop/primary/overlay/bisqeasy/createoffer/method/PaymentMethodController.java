@@ -54,6 +54,10 @@ public class PaymentMethodController implements Controller {
         model.getPaymentMethodsEmpty().set(model.getAllPaymentMethods().isEmpty());
     }
 
+    public void reset() {
+        model.reset();
+    }
+
     @Override
     public void onActivate() {
         customMethodPin = EasyBind.subscribe(model.getCustomMethod(), customMethod -> model.getAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));

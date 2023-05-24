@@ -48,7 +48,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     public static final double TOP_PANE_HEIGHT = 55;
     private static final double OPACITY = 0.35;
 
-    private final Button skipButton;
+    private final Button closeButton;
     private final List<Label> navigationProgressLabelList;
     private final HBox topPaneBox;
     private final Button nextButton, backButton;
@@ -66,7 +66,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
         topPaneBox = topPane.getFirst();
-        skipButton = topPane.getSecond();
+        closeButton = topPane.getSecond();
         navigationProgressLabelList = topPane.getThird();
 
         nextButton = new Button(Res.get("next"));
@@ -112,7 +112,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.managedProperty().bind(model.getNextButtonVisible());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
-        skipButton.visibleProperty().bind(model.getSkipButtonVisible());
+        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
         topPaneBox.visibleProperty().bind(model.getTopPaneBoxVisible());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
@@ -129,11 +129,11 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
-        skipButton.setOnAction(e -> controller.onSkip());
+        closeButton.setOnAction(e -> controller.onClose());
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onSkip);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onClose);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
     }
@@ -142,23 +142,22 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
         backButton.textProperty().unbind();
-        skipButton.textProperty().unbind();
+        closeButton.textProperty().unbind();
 
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
-        skipButton.visibleProperty().unbind();
+        closeButton.visibleProperty().unbind();
         topPaneBox.visibleProperty().unbind();
         nextButton.disableProperty().unbind();
 
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
-        skipButton.setOnAction(null);
+        closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
         model.getCurrentIndex().removeListener(currentIndexListener);
         topPaneBoxVisibleSubscription.unsubscribe();
-        boolean firstOpened = false;
     }
 
     private Triple<HBox, Button, List<Label>> getTopPane() {

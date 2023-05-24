@@ -59,6 +59,19 @@ class ReviewOfferModel implements Model {
     private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
     private final SortedList<ReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
 
-    ReviewOfferModel() {
+    void reset() {
+        showMatchingOffers = false;
+        selectedChannel = null;
+        direction = null;
+        market = null;
+        baseSideAmount = null;
+        quoteSideAmount = null;
+        paymentMethods = null;
+        myOfferText = null;
+        myOfferMessage = null;
+        matchingOffersFound.set(false);
+        showCreateOfferSuccess.set(false);
+        showTakeOfferSuccess.set(false);
+        matchingOffers.clear();
     }
 }

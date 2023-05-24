@@ -27,7 +27,15 @@ import lombok.Getter;
 
 @Getter
 public class DirectionModel implements Model {
-    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty ignoreShowReputationInfo = new SimpleBooleanProperty();
+    private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
+
+    void reset() {
+        direction.set(Direction.BUY);
+        showReputationInfo.set(false);
+        ignoreShowReputationInfo.set(false);
+        buyButtonDisabled.set(false);
+    }
 }

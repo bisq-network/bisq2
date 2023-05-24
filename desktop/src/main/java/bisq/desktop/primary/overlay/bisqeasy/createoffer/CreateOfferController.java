@@ -79,7 +79,7 @@ public class CreateOfferController extends NavigationController implements InitW
                 NavigationTarget.CREATE_OFFER_MARKET,
                 NavigationTarget.CREATE_OFFER_AMOUNT,
                 NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
-                NavigationTarget.CREATE_OFFER_OFFER_COMPLETED
+                NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
         directionController = new DirectionController(applicationService, this::onNext, this::setButtonsVisible);
@@ -134,7 +134,7 @@ public class CreateOfferController extends NavigationController implements InitW
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getNextButtonVisible().set(true);
         model.getBackButtonVisible().set(true);
-        model.getSkipButtonVisible().set(true);
+        model.getCloseButtonVisible().set(true);
         model.getTopPaneBoxVisible().set(true);
         model.getNextButtonText().set(Res.get("next"));
         model.getBackButtonText().set(Res.get("back"));
@@ -153,7 +153,7 @@ public class CreateOfferController extends NavigationController implements InitW
             case CREATE_OFFER_PAYMENT_METHOD: {
                 break;
             }
-            case CREATE_OFFER_OFFER_COMPLETED: {
+            case CREATE_OFFER_REVIEW_OFFER: {
                 model.getNextButtonVisible().set(false);
                 break;
             }
@@ -177,7 +177,7 @@ public class CreateOfferController extends NavigationController implements InitW
             case CREATE_OFFER_PAYMENT_METHOD: {
                 return Optional.of(paymentMethodController);
             }
-            case CREATE_OFFER_OFFER_COMPLETED: {
+            case CREATE_OFFER_REVIEW_OFFER: {
                 return Optional.of(reviewOfferController);
             }
             default: {
@@ -208,10 +208,9 @@ public class CreateOfferController extends NavigationController implements InitW
             Navigation.navigateTo(nextTarget);
             updateNextButtonState();
         }
-        // }
     }
 
-    public void onSkip() {
+    public void onClose() {
         Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
         reset();
@@ -222,9 +221,15 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     private void reset() {
-        model.getCurrentIndex().set(0);
-        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
         resetSelectedChildTarget();
+
+        directionController.reset();
+        marketController.reset();
+        amountController.reset();
+        paymentMethodController.reset();
+        reviewOfferController.reset();
+
+        model.reset();
     }
 
     private void handlePaymentMethodsUpdate() {
@@ -244,7 +249,7 @@ public class CreateOfferController extends NavigationController implements InitW
 
     private void setButtonsVisible(boolean value) {
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
-        model.getSkipButtonVisible().set(value);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
+        model.getCloseButtonVisible().set(value);
     }
 }

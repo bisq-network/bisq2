@@ -69,7 +69,7 @@ public class KeyHandlerUtil {
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
+                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.A, keyEvent)) {
                 OverlayController.hide();
             }

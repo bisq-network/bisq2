@@ -52,6 +52,10 @@ public class DirectionController implements Controller {
         return model.getDirection();
     }
 
+    public void reset() {
+        model.reset();
+    }
+
     @Override
     public void onActivate() {
         setDirection(Direction.BUY);
@@ -61,10 +65,10 @@ public class DirectionController implements Controller {
     public void onDeactivate() {
     }
 
-
     void onSelectDirection(Direction direction) {
         setDirection(direction);
         if (direction == Direction.BUY) {
+            model.getBuyButtonDisabled().set(true);
             onNextHandler.run();
         }
     }
@@ -74,7 +78,6 @@ public class DirectionController implements Controller {
     }
 
     void onGainReputation() {
-        setDirection(Direction.BUY);
         OverlayController.hide();
         Navigation.navigateTo(NavigationTarget.REPUTATION);
     }

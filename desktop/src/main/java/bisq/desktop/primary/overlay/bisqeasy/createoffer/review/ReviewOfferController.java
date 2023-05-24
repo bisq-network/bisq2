@@ -57,7 +57,7 @@ public class ReviewOfferController implements Controller {
     @Getter
     private final ReviewOfferView view;
     private final ReputationService reputationService;
-    private final Runnable closeHandler;
+    private final Runnable resetHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
@@ -69,7 +69,7 @@ public class ReviewOfferController implements Controller {
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
-                                 Runnable closeHandler) {
+                                 Runnable resetHandler) {
         this.buttonsVisibleHandler = buttonsVisibleHandler;
         ChatService chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
@@ -80,7 +80,7 @@ public class ReviewOfferController implements Controller {
         userProfileService = applicationService.getUserService().getUserProfileService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
-        this.closeHandler = closeHandler;
+        this.resetHandler = resetHandler;
 
         model = new ReviewOfferModel();
         view = new ReviewOfferView(model, this);
@@ -116,6 +116,10 @@ public class ReviewOfferController implements Controller {
 
     public void setShowMatchingOffers(boolean showMatchingOffers) {
         model.setShowMatchingOffers(showMatchingOffers);
+    }
+
+    public void reset() {
+        model.reset();
     }
 
     @Override
@@ -193,7 +197,7 @@ public class ReviewOfferController implements Controller {
     }
 
     private void close() {
-        closeHandler.run();
+        resetHandler.run();
         OverlayController.hide();
         // If we got started from initial onboarding we are still at Splash screen, so we need to move to main
         Navigation.navigateTo(NavigationTarget.MAIN);

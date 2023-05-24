@@ -84,6 +84,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
     @Override
     protected void onViewAttached() {
+        buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
         gainReputationHyperlink.setOnAction(evt -> controller.onGainReputation());
@@ -119,7 +120,6 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
             Transitions.removeEffect(content);
         }
         buyButton.disableProperty().unbind();
-        sellButton.disableProperty().unbind();
 
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);

@@ -102,19 +102,21 @@ public class AmountController implements Controller {
         price.setSelectedMarket(market);
     }
 
+    public void reset() {
+        baseAmount.reset();
+        quoteAmount.reset();
+        price.reset();
+        model.reset();
+    }
+
     @Override
     public void onActivate() {
-        model.getMinAmount().set(Coin.asBtc(10000));
-        model.getMaxAmount().set(Coin.asBtc(1000000));
-        model.getSliderMin().set(0);
-        model.getSliderMax().set(1);
-
         model.getBaseSideAmount().addListener(baseCurrencyAmountListener);
         model.getQuoteSideAmount().addListener(quoteCurrencyAmountListener);
         model.getFixPrice().addListener(fixPriceQuoteListener);
 
-        minAmount = model.getMinAmount().get().getValue();
-        minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
+        minAmount = model.getMinAmount().getValue();
+        minMaxDiff = model.getMaxAmount().getValue() - minAmount;
 
         baseAmount.setAmount(null);
         if (model.getQuoteSideAmount().get() == null) {
@@ -142,12 +144,12 @@ public class AmountController implements Controller {
 
         baseAmountFromCompSubscription = EasyBind.subscribe(baseAmount.amountProperty(),
                 amount -> {
-                    if (amount != null && amount.getValue() > model.getMaxAmount().get().getValue()) {
-                        model.getBaseSideAmount().set(model.getMaxAmount().get());
+                    if (amount != null && amount.getValue() > model.getMaxAmount().getValue()) {
+                        model.getBaseSideAmount().set(model.getMaxAmount());
                         setQuoteFromBase();
                         baseAmount.setAmount(model.getBaseSideAmount().get());
-                    } else if (amount != null && amount.getValue() < model.getMinAmount().get().getValue()) {
-                        model.getBaseSideAmount().set(model.getMinAmount().get());
+                    } else if (amount != null && amount.getValue() < model.getMinAmount().getValue()) {
+                        model.getBaseSideAmount().set(model.getMinAmount());
                         setQuoteFromBase();
                         baseAmount.setAmount(model.getBaseSideAmount().get());
                     } else {

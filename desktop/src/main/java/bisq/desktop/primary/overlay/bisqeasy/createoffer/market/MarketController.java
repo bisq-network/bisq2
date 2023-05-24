@@ -61,17 +61,23 @@ public class MarketController implements Controller {
         return model.getSelectedMarket();
     }
 
+    public void reset() {
+        model.reset();
+    }
+
     @Override
     public void onActivate() {
         model.getSearchText().set("");
-        // Used selected public channel or if private channel is selected we use any of the public channels for 
-        // setting the default market 
-        Optional.ofNullable(bisqEasyChatChannelSelectionService.getSelectedChannel().get())
-                .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
-                .map(channel -> (BisqEasyPublicChatChannel) channel)
-                .or(() -> bisqEasyPublicChatChannelService.getVisibleChannels().stream().findFirst())
-                .map(BisqEasyPublicChatChannel::getMarket)
-                .ifPresent(market -> model.getSelectedMarket().set(market));
+        if (model.getSelectedMarket().get() == null) {
+            // Use selected public channel or if private channel is selected we use any of the public channels for 
+            // setting the default market 
+            Optional.ofNullable(bisqEasyChatChannelSelectionService.getSelectedChannel().get())
+                    .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
+                    .map(channel -> (BisqEasyPublicChatChannel) channel)
+                    .or(() -> bisqEasyPublicChatChannelService.getVisibleChannels().stream().findFirst())
+                    .map(BisqEasyPublicChatChannel::getMarket)
+                    .ifPresent(market -> model.getSelectedMarket().set(market));
+        }
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
