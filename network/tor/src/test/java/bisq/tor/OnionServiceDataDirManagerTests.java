@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OnionServiceDataDirManagerTests {
     @Test
     void persistTest(@TempDir Path tempDir) {
-        var dataDirManager = new OnionServiceDataDirManager(tempDir.toFile());
+        var dataDirManager = new OnionServiceDataDirManager(tempDir);
         var result = new CreateHiddenServiceResult("abc", "ED25519-V3 abc:def");
         dataDirManager.persist(result);
 
@@ -43,7 +43,7 @@ public class OnionServiceDataDirManagerTests {
 
     @Test
     void persistIfHostNameFileExists(@TempDir Path tempDir) throws IOException {
-        var dataDirManager = new OnionServiceDataDirManager(tempDir.toFile());
+        var dataDirManager = new OnionServiceDataDirManager(tempDir);
         var result = new CreateHiddenServiceResult("abc", "ED25519-V3 abc:def");
         dataDirManager.persist(result);
 
@@ -56,7 +56,7 @@ public class OnionServiceDataDirManagerTests {
 
     @Test
     void persistIfPrivateKeyExists(@TempDir Path tempDir) throws IOException {
-        var dataDirManager = new OnionServiceDataDirManager(tempDir.toFile());
+        var dataDirManager = new OnionServiceDataDirManager(tempDir);
         var result = new CreateHiddenServiceResult("abc", "ED25519-V3 abc:def");
         dataDirManager.persist(result);
 
@@ -69,7 +69,7 @@ public class OnionServiceDataDirManagerTests {
 
     @Test
     void readBeforePersisting(@TempDir Path tempDir) {
-        var dataDirManager = new OnionServiceDataDirManager(tempDir.toFile());
+        var dataDirManager = new OnionServiceDataDirManager(tempDir);
         assertThat(dataDirManager.getHostName())
                 .isEmpty();
         assertThat(dataDirManager.getPrivateKey())
