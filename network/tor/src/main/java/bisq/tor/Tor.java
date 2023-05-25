@@ -19,29 +19,14 @@ package bisq.tor;
 
 import bisq.common.util.FileUtils;
 import bisq.tor.context.ReadOnlyTorContext;
-import bisq.tor.context.TorContext;
-import com.runjva.sourceforge.jsocks.protocol.Authentication;
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-import javax.net.SocketFactory;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.Socket;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
 
 /**
@@ -65,17 +50,17 @@ public class Tor {
     private final TorController torController;
     private final TorBootstrap torBootstrap;
     private final Path torDirPath;
-    private final ReadOnlyTorContext torContext;
     @Getter
     private final OnionServicePublishService onionServicePublishService;
-    private int proxyPort = -1;
+    @Getter
+    private final TorSocksProxyFactory torSocksProxyFactory;
 
     public Tor(Path torDirPath, ReadOnlyTorContext torContext) {
         this.torDirPath = torDirPath;
         this.torBootstrap = new TorBootstrap(torDirPath);
-        this.torContext = torContext;
         this.torController = new TorController(torBootstrap.getCookieFile());
         this.onionServicePublishService = new OnionServicePublishService(torController, torDirPath);
+        this.torSocksProxyFactory = new TorSocksProxyFactory(torContext);
     }
 
     public boolean startTor() {
@@ -83,7 +68,10 @@ public class Tor {
         try {
             int controlPort = torBootstrap.start();
             torController.start(controlPort);
-            proxyPort = torController.getProxyPort();
+
+            int proxyPort = torController.getProxyPort();
+            torSocksProxyFactory.initialize(proxyPort);
+
         } catch (Exception exception) {
             torBootstrap.deleteVersionFile();
             log.error("Starting tor failed.", exception);
@@ -102,81 +90,6 @@ public class Tor {
         torController.shutdown();
 
         log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
-    }
-
-    public Proxy getProxy(@Nullable String streamId) throws IOException {
-        checkArgument(torContext.getState() == TorContext.State.RUNNING,
-                "Invalid state at Tor.getProxy. state=" + torContext.getState());
-        Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
-        InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
-        return new Proxy(Proxy.Type.SOCKS, socketAddress);
-    }
-
-    public Socket getSocket() throws IOException {
-        return getSocket(null);
-    }
-
-    public Socket getSocket(@Nullable String streamId) throws IOException {
-        Proxy proxy = getProxy(streamId);
-        return new Socket(proxy);
-    }
-
-    public SocketFactory getSocketFactory(@Nullable String streamId) throws IOException {
-        Proxy proxy = getProxy(streamId);
-        return new TorSocketFactory(proxy);
-    }
-
-    public SocksSocket getSocksSocket(String remoteHost, int remotePort, @Nullable String streamId) throws IOException {
-        Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
-        SocksSocket socksSocket = new SocksSocket(socks5Proxy, remoteHost, remotePort);
-        socksSocket.setTcpNoDelay(true);
-        return socksSocket;
-    }
-
-    public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
-        checkArgument(torContext.getState() == TorContext.State.RUNNING,
-                "Invalid state at Tor.getSocks5Proxy. state=" + torContext.getState());
-        checkArgument(proxyPort > -1, "proxyPort must be defined");
-        Socks5Proxy socks5Proxy = new Socks5Proxy(Constants.LOCALHOST, proxyPort);
-        socks5Proxy.resolveAddrLocally(false);
-        if (streamId == null) {
-            return socks5Proxy;
-        }
-
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-            byte[] digest = messageDigest.digest(streamId.getBytes());
-            String asBase26 = new BigInteger(digest).toString(26);
-            byte[] hash = asBase26.getBytes();
-            // Authentication method ID 2 is User/Password
-            //noinspection Convert2Lambda
-            socks5Proxy.setAuthenticationMethod(2,
-                    new Authentication() {
-                        @Override
-                        public Object[] doSocksAuthentication(int i, Socket socket) throws IOException {
-                            // Must not close the streams here, as otherwise we get a socket closed
-                            // exception at SocksSocket
-                            OutputStream outputStream = socket.getOutputStream();
-                            outputStream.write(new byte[]{(byte) 1, (byte) hash.length});
-                            outputStream.write(hash);
-                            outputStream.write(new byte[]{(byte) 1, (byte) 0});
-                            outputStream.flush();
-
-                            byte[] status = new byte[2];
-                            InputStream inputStream = socket.getInputStream();
-                            if (inputStream.read(status) == -1) {
-                                throw new IOException("Did not get data");
-                            }
-                            if (status[1] != (byte) 0) {
-                                throw new IOException("Authentication error: " + status[1]);
-                            }
-                            return new Object[]{inputStream, outputStream};
-                        }
-                    });
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return socks5Proxy;
     }
 
     public Optional<String> getHostName(String serverId) {
