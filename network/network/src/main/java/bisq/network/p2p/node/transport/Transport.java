@@ -18,7 +18,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.network.p2p.node.Address;
-import bisq.tor.CreateOnionServiceResponse;
+import bisq.tor.onionservice.CreateOnionServiceResponse;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

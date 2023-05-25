@@ -19,6 +19,8 @@ package bisq.tor;
 
 import bisq.common.application.Service;
 import bisq.tor.context.TorContext;
+import bisq.tor.onionservice.CreateOnionServiceResponse;
+import bisq.tor.onionservice.OnionServicePublishService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;

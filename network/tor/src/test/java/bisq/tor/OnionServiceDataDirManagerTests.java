@@ -18,6 +18,8 @@
 package bisq.tor;
 
 import bisq.common.util.FileUtils;
+import bisq.tor.onionservice.CreateHiddenServiceResult;
+import bisq.tor.onionservice.OnionServiceDataDirManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
