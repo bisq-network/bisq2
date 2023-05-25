@@ -214,14 +214,16 @@ public class ReviewOfferController implements Controller {
     private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
-            if (item.getSenderUserProfile().isEmpty()) {
+            if (item.getAuthorUserProfileId().isEmpty()) {
                 return false;
             }
-            UserProfile senderUserProfile = item.getSenderUserProfile().get();
-            if (userProfileService.isChatUserIgnored(senderUserProfile)) {
+            UserProfile authorUserProfile = item.getAuthorUserProfileId().get();
+            if (userProfileService.isChatUserIgnored(authorUserProfile)) {
                 return false;
             }
-            if (userProfileService.findUserProfile(item.getChatMessage().getAuthorUserProfileId()).isEmpty()) {
+            if (userIdentityService.getUserIdentities().stream()
+                    .map(userIdentity -> userIdentity.getUserProfile().getId())
+                    .anyMatch(userProfileId -> userProfileId.equals(authorUserProfile.getId()))) {
                 return false;
             }
             if (item.getChatMessage().getBisqEasyOffer().isEmpty()) {

@@ -253,7 +253,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                                 }
                                 if (item != null && !empty) {
                                     userName.setText(item.getUserName());
-                                    item.getSenderUserProfile().ifPresent(userProfile ->
+                                    item.getAuthorUserProfileId().ifPresent(userProfile ->
                                             roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash())));
                                     setGraphic(hBox);
                                 } else {
@@ -362,7 +362,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     @Getter
     static class ListItem implements TableItem {
         private final BisqEasyPublicChatMessage chatMessage;
-        private final Optional<UserProfile> senderUserProfile;
+        private final Optional<UserProfile> authorUserProfileId;
         private final String userName;
         private final String amount;
         private final long amountAsLong;
@@ -371,8 +371,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
         public ListItem(BisqEasyPublicChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
-            senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
-            userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
+            authorUserProfileId = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
+            userName = authorUserProfileId.map(UserProfile::getUserName).orElse("");
             Optional<BisqEasyOffer> bisqEasyOffer = chatMessage.getBisqEasyOffer();
             amountAsLong = bisqEasyOffer.map(BisqEasyOffer::getQuoteSideAmount).orElse(0L);
             String code = bisqEasyOffer.map(BisqEasyOffer::getMarket)
@@ -380,7 +380,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                     .orElse("");
             amount = AmountFormatter.formatAmountWithCode(Fiat.of(amountAsLong, code), true);
 
-            reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore)
+            reputationScore = authorUserProfileId.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }
     }
