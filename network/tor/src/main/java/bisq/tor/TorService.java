@@ -41,11 +41,13 @@ public class TorService implements Service {
     private final Tor tor;
     private final TorContext context = new TorContext();
     private final OnionServicePublishService onionPublishService;
+    private final TorSocksProxyFactory torSocksProxyFactory;
 
     public TorService(ExecutorService executorService, Path torDirPath) {
         this.executorService = executorService;
         this.tor = new Tor(torDirPath, context);
         this.onionPublishService = tor.getOnionServicePublishService();
+        this.torSocksProxyFactory = tor.getTorSocksProxyFactory();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Thread.currentThread().setName("Tor.shutdownHook");
@@ -147,10 +149,10 @@ public class TorService implements Service {
     }
 
     public Socket getSocket(String streamId) throws IOException {
-        return tor.getSocket(streamId);
+        return torSocksProxyFactory.getSocket(streamId);
     }
 
     public Socks5Proxy getSocks5Proxy(String streamId) throws IOException {
-        return tor.getSocks5Proxy(streamId);
+        return torSocksProxyFactory.getSocks5Proxy(streamId);
     }
 }
