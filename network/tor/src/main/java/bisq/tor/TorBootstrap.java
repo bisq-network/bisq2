@@ -20,7 +20,8 @@ package bisq.tor;
 import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,12 +34,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 class TorBootstrap {
     private final List<String> bridgeConfig = new ArrayList<>();
     private final Path torDirPath;
+    private final TorInstallationFileManager torInstallationFileManager;
+    private final TorrcConfigInstaller torrcConfigInstaller;
     private final File torDir;
     private final File dotTorDir;
     private final File versionFile;
     private final File pidFile;
-    private final File geoIPFile;
-    private final File geoIPv6File;
     private final File torrcFile;
     private final File cookieFile;
     private final OsType osType;
@@ -47,13 +48,13 @@ class TorBootstrap {
 
     TorBootstrap(Path torDirPath) {
         this.torDirPath = torDirPath;
+        this.torInstallationFileManager = new TorInstallationFileManager(torDirPath);
+        this.torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFileManager);
 
         torDir = torDirPath.toFile();
         dotTorDir = new File(torDir, Constants.DOT_TOR_DIR);
         versionFile = new File(torDir, Constants.VERSION);
         pidFile = new File(torDir, Constants.PID);
-        geoIPFile = new File(torDir, Constants.GEO_IP);
-        geoIPv6File = new File(torDir, Constants.GEO_IPV_6);
         torrcFile = new File(torDir, Constants.TORRC);
         cookieFile = new File(dotTorDir.getAbsoluteFile(), Constants.COOKIE);
         osType = OsType.getOsType();
@@ -67,7 +68,7 @@ class TorBootstrap {
         }
 
         if (!bridgeConfig.isEmpty()) {
-            addBridgesToTorrcFile(bridgeConfig);
+            torrcConfigInstaller.addBridgesToTorrcFile(bridgeConfig);
         }
 
         Process torProcess = startTorProcess();
@@ -113,8 +114,7 @@ class TorBootstrap {
             FileUtils.makeDirs(dotTorDir);
 
             FileUtils.makeFile(versionFile);
-
-            installTorrcFile();
+            torrcConfigInstaller.install();
 
             File destDir = torDirPath.toFile();
             new TorBinaryZipExtractor(destDir).extractBinary();
@@ -126,49 +126,6 @@ class TorBootstrap {
             deleteVersionFile();
             throw e;
         }
-    }
-
-    private void installTorrcFile() throws IOException {
-        FileUtils.resourceToFile(torrcFile);
-        extendTorrcFile();
-    }
-
-    private void extendTorrcFile() throws IOException {
-        try (FileWriter fileWriter = new FileWriter(torrcFile, true);
-             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-             PrintWriter printWriter = new PrintWriter(bufferedWriter)) {
-
-            // Defaults are from resources
-            printWriter.println("");
-            FileUtils.appendFromResource(printWriter, FileUtils.FILE_SEP + Constants.TORRC_DEFAULTS);
-            printWriter.println("");
-            FileUtils.appendFromResource(printWriter, osType.getTorrcNative());
-
-            // Update with our newly created files
-            printWriter.println("");
-            printWriter.println(Constants.TORRC_KEY_DATA_DIRECTORY + " " + torDir.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_GEOIP + " " + geoIPFile.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_GEOIP6 + " " + geoIPv6File.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_PID + " " + pidFile.getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_COOKIE + " " + cookieFile.getCanonicalPath());
-            printWriter.println("");
-        }
-    }
-
-    private void addBridgesToTorrcFile(List<String> bridgeConfig) throws IOException {
-        // We overwrite old file as it might contain diff. bridges
-        installTorrcFile();
-
-        try (FileWriter fileWriter = new FileWriter(torrcFile, true);
-             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-             PrintWriter printWriter = new PrintWriter(bufferedWriter)) {
-            if (!bridgeConfig.isEmpty()) {
-                printWriter.println("");
-                printWriter.println("UseBridges 1");
-            }
-            bridgeConfig.forEach(entry -> printWriter.println("Bridge " + entry));
-        }
-        log.info("Added bridges to torrc");
     }
 
     private Process startTorProcess() throws IOException {
