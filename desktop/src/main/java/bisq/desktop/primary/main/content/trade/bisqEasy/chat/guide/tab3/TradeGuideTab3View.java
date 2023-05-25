@@ -25,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -34,7 +35,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideTab3View extends View<VBox, TradeGuideTab3Model, TradeGuideTab3Controller> {
-    private final Button backButton;
+    private final Button backButton, collapseButton;
     private final Hyperlink learnMore;
     private final Text content;
     private final CheckBox confirm;
@@ -54,12 +55,15 @@ public class TradeGuideTab3View extends View<VBox, TradeGuideTab3Model, TradeGui
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
-        backButton = new Button(Res.get("back"));
         confirm = new CheckBox(Res.get("tradeGuide.tab3.confirm"));
+
+        backButton = new Button(Res.get("back"));
+        collapseButton = new Button(Res.get("tradeGuide.tab3.collapse"));
+        HBox buttons = new HBox(20, backButton, collapseButton);
 
         VBox.setVgrow(content, Priority.ALWAYS);
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, content, learnMore, confirm, backButton);
+        root.getChildren().addAll(headline, content, learnMore, confirm, buttons);
     }
 
     @Override
@@ -67,18 +71,28 @@ public class TradeGuideTab3View extends View<VBox, TradeGuideTab3Model, TradeGui
         confirm.setManaged(!model.getTradeRulesConfirmed().get());
         confirm.setVisible(!model.getTradeRulesConfirmed().get());
 
+        collapseButton.managedProperty().bind(model.getTradeRulesConfirmed());
+        collapseButton.visibleProperty().bind(model.getTradeRulesConfirmed());
+
         confirm.setOnAction(e -> controller.onConfirm(confirm.isSelected()));
         backButton.setOnAction(e -> controller.onBack());
+        collapseButton.setOnAction(e -> controller.onCollapse());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
         widthPin = EasyBind.subscribe(root.widthProperty(),
                 w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
     protected void onViewDetached() {
+        collapseButton.managedProperty().unbind();
+        collapseButton.visibleProperty().unbind();
+
         confirm.setOnAction(null);
         backButton.setOnAction(null);
+        collapseButton.setOnAction(null);
         learnMore.setOnAction(null);
+
         widthPin.unsubscribe();
     }
 }

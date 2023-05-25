@@ -65,7 +65,7 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
                 return Optional.of(new TradeGuideTab2Controller(applicationService));
             }
             case TRADE_GUIDE_TAB_3: {
-                return Optional.of(new TradeGuideTab3Controller(applicationService));
+                return Optional.of(new TradeGuideTab3Controller(applicationService, this::onCollapse));
             }
             default: {
                 return Optional.empty();
