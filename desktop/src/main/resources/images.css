@@ -191,6 +191,18 @@
     -fx-image: url("images/navigation/nav-settings-hover.png");
 }
 
+#nav-user {
+    -fx-image: url("images/navigation/nav-user.png");
+}
+
+#nav-user-active {
+    -fx-image: url("images/navigation/nav-user-active.png");
+}
+
+#nav-user-hover {
+    -fx-image: url("images/navigation/nav-user-hover.png");
+}
+
 #nav-support {
     -fx-image: url("images/navigation/nav-support.png");
 }

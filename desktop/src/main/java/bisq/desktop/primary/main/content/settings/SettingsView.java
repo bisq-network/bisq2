@@ -26,12 +26,9 @@ public class SettingsView extends TabView<SettingsModel, SettingsController> {
     public SettingsView(SettingsModel model, SettingsController controller) {
         super(model, controller);
 
-        addTab(Res.get("settings.userProfile"), NavigationTarget.USER_PROFILE);
-        addTab(Res.get("settings.paymentAccounts"), NavigationTarget.BISQ_EASY_PAYMENT_ACCOUNTS);
         addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        addTab(Res.get("settings.reputation"), NavigationTarget.REPUTATION);
-        addTab(Res.get("settings.roles"), NavigationTarget.ROLES);
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
+        addTab(Res.get("settings.about"), NavigationTarget.ABOUT);
 
         headLine.setText(Res.get("settings"));
     }

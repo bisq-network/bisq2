@@ -58,7 +58,7 @@ public class TradeGuideTab2View extends View<VBox, TradeGuideTab2Model, TradeGui
 
         HBox buttons = new HBox(20, backButton, nextButton);
 
-        learnMore = new Hyperlink(Res.get("reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));

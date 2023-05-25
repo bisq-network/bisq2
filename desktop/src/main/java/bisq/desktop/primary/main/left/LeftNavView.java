@@ -129,6 +129,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 "nav-settings",
                 NavigationTarget.SETTINGS, false);
+        LeftNavButton user = createNavigationButton(Res.get("user"),
+                "nav-user",
+                NavigationTarget.USER, false);
 
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
@@ -166,7 +169,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.getChildren().addAll(dashBoard, tradeAppsButton, tradeSubMenuItems,
                 learnButton, learnSubMenuItems,
                 chat, events, support,
-                settings);
+                user, settings);
         if (model.isWalletEnabled()) {
             mainMenuItems.getChildren().add(3, wallet);
         }
