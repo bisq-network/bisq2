@@ -129,12 +129,13 @@ public class PrimaryStageController extends NavigationController {
 
     public void onDomainInitialized() {
         splashController.stopAnimation();
-        if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
-            Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
-        } else if (!applicationService.getUserService().getUserIdentityService().hasUserIdentities()) {
-            Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
-       /* } else if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED).orElse(false)) {
-            Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY_OLD);*/
+        boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
+        if (!hasUserIdentities) {
+            if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
+            } else {
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
+            }
         } else {
             // After the domain is initialized we show the application content
             settingsService.getCookie().asString(CookieKey.NAVIGATION_TARGET)
