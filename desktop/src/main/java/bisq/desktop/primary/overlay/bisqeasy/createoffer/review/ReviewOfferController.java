@@ -25,6 +25,8 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
@@ -66,12 +68,13 @@ public class ReviewOfferController implements Controller {
     private final Consumer<Boolean> buttonsVisibleHandler;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final MediationService mediationService;
+    private final ChatService chatService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
                                  Runnable resetHandler) {
         this.buttonsVisibleHandler = buttonsVisibleHandler;
-        ChatService chatService = applicationService.getChatService();
+        chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         reputationService = applicationService.getUserService().getReputationService();
@@ -170,8 +173,12 @@ public class ReviewOfferController implements Controller {
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
         BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
+        BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
         bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(chatMessage, mediator)
                 .thenAccept(result -> UIThread.run(() -> {
+                    bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
+                            .ifPresent(chatChannelSelectionService::selectChannel);
                     model.getShowTakeOfferSuccess().set(true);
                     buttonsVisibleHandler.accept(false);
                 }));
