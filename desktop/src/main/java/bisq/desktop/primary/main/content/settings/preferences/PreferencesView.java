@@ -24,10 +24,7 @@ import bisq.settings.ChatNotificationType;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -35,8 +32,8 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
-
-    private final Switch resetDontShowAgain, useAnimations;
+    private final Button resetDontShowAgain;
+    private final Switch useAnimations;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -76,8 +73,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         displayHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         useAnimations = new Switch(Res.get("settings.preferences.useAnimations"));
-        resetDontShowAgain = new Switch(Res.get("settings.preferences.resetDontShowAgain"));
-
+        resetDontShowAgain = new Button(Res.get("settings.preferences.resetDontShowAgain"));
 
         VBox.setMargin(notificationsHeadline, new Insets(30, 0, 0, 0));
         VBox.setMargin(displayHeadline, new Insets(15, 0, 0, 0));
@@ -91,8 +87,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         selectedNotificationTypePin = EasyBind.subscribe(model.getChatNotificationType(), selected -> applyChatNotificationType());
 
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
-        resetDontShowAgain.setSelected(false);
-        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain(resetDontShowAgain.isSelected()));
+        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
     }
 
     @Override

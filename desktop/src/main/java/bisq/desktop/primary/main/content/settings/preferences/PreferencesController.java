@@ -53,10 +53,8 @@ public class PreferencesController implements Controller {
         chatNotificationTypePin.unbind();
     }
 
-    void onResetDontShowAgain(boolean isSelected) {
-        if (isSelected) {
-            DontShowAgainService.resetDontShowAgain();
-        }
+    void onResetDontShowAgain() {
+        DontShowAgainService.resetDontShowAgain();
     }
 
     void onSetChatNotificationType(ChatNotificationType type) {
