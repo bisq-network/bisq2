@@ -8,11 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  bitcoin-core-version: '23.0'
-  electrumx-version: '1.16.0'
-  elements-core-version: '0.21.0.2'
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -25,59 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3.5.2
 
-      - name: Cache Bitcoin Core
-        uses: actions/cache@v3
-        with:
-          path: tools/bitcoin-core
-          key: ${{ runner.os }}-bitcoin-core-${{ env.bitcoin-core-version }}
-
-      - name: Cache ElectrumX
-        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
-        uses: actions/cache@v3
-        with:
-          path: tools/electrumx
-          key: ${{ runner.os }}-electrumx-${{ env.electrumx-version }}
-
-      - name: Cache Elements Core
-        uses: actions/cache@v3
-        with:
-          path: tools/elements-core
-          key: ${{ runner.os }}-elements-core-${{ env.elements-core-version }}
-
-      - name: Install Wallets
-        uses: ./.github/actions/install-wallets
-        with:
-          bitcoin-core-version: ${{ env.bitcoin-core-version }}
-          electrumx-version: ${{ env.electrumx-version }}
-          elements-core-version: ${{ env.elements-core-version }}
-
-      - name: "Install Python"
-        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-          cache-dependency-path: 'tools/electrumx/electrumx-${{ env.electrumx-version }}/setup.py'
-
-      - name: "Install leveldb (needed by ElectrumX)"
-        if: ${{ matrix.os == 'macOS-latest' }}
-        run: brew install leveldb gmp pkg-config
-
-      - name: "Setup ElectrumX environment"
-        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
-        run: pip install tools/electrumx/electrumx-${{ env.electrumx-version }}
-
       - name: Setup Java JDK
         uses: actions/setup-java@v3.11.0
         with:
           java-version: '17'
           distribution: 'zulu'
-
-      - name: Cache Electrum binaries
-        uses: actions/cache@v3
-        with:
-          path: wallets/electrum/build/electrum_binaries
-          key: ${{ runner.os }}-electrum-binaries-${{ hashFiles('wallets/electrum/build.gradle') }}
 
       - name: Gradle Build Action (root)
         uses: gradle/gradle-build-action@v2.4.2
@@ -91,9 +38,9 @@ jobs:
           build-root-directory: network
           gradle-executable: ./gradlew
 
-#      - name: Gradle Build Action (wallets)
-#        uses: gradle/gradle-build-action@v2.4.2
-#        with:
-#          arguments: build --scan
-#          build-root-directory: wallets
-#          gradle-executable: ./gradlew
+      - name: Gradle Build Action (wallets)
+        uses: gradle/gradle-build-action@v2.4.2
+        with:
+          arguments: build --scan
+          build-root-directory: wallets
+          gradle-executable: ./gradlew
