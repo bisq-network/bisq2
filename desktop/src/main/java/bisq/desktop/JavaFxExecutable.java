@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktopapp;
+package bisq.desktop;
 
 import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
