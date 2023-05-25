@@ -9,7 +9,6 @@ permissions:
   contents: read
 
 env:
-  bitcoin-core-version: '23.0'
   electrumx-version: '1.16.0'
   elements-core-version: '0.21.0.2'
 
@@ -24,12 +23,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3.5.2
-
-      - name: Cache Bitcoin Core
-        uses: actions/cache@v3
-        with:
-          path: tools/bitcoin-core
-          key: ${{ runner.os }}-bitcoin-core-${{ env.bitcoin-core-version }}
 
       - name: Cache ElectrumX
         if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
