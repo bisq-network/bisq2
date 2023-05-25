@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.onionservice;
 
+import bisq.tor.OnionAddress;
 import lombok.Getter;
 
 import java.net.ServerSocket;

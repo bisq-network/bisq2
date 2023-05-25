@@ -19,6 +19,7 @@ package bisq.tor;
 
 import bisq.common.util.FileUtils;
 import bisq.tor.context.ReadOnlyTorContext;
+import bisq.tor.onionservice.OnionServicePublishService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
