@@ -44,13 +44,6 @@ jobs:
           path: tools/elements-core
           key: ${{ runner.os }}-elements-core-${{ env.elements-core-version }}
 
-      - name: Install Wallets
-        uses: ./.github/actions/install-wallets
-        with:
-          bitcoin-core-version: ${{ env.bitcoin-core-version }}
-          electrumx-version: ${{ env.electrumx-version }}
-          elements-core-version: ${{ env.elements-core-version }}
-
       - name: "Install Python"
         if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
         uses: actions/setup-python@v4
