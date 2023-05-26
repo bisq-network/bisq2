@@ -84,7 +84,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         openChatButton = rightBoxPair.getSecond();
         root.add(rightBoxPair.getFirst(), 1, 1, 1, 1);
 
-        dontShowAgain = new Switch(Res.get("dontShowAgain"));
+        dontShowAgain = new Switch(Res.get("bisqEasy.onboarding.dontShowAgain"));
         root.add(dontShowAgain, 0, 2, 2, 1);
     }
 

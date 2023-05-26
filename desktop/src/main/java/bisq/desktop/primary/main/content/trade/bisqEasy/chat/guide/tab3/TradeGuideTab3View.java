@@ -54,7 +54,7 @@ public class TradeGuideTab3View extends View<VBox, TradeGuideTab3Model, TradeGui
         content = new Text(Res.get("tradeGuide.tab3.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        learnMore = new Hyperlink(Res.get("reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
         confirm = new CheckBox(Res.get("tradeGuide.tab3.confirm"));
 
         backButton = new Button(Res.get("back"));

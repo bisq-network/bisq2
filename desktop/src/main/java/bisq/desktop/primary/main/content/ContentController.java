@@ -37,6 +37,7 @@ import bisq.desktop.primary.main.content.trade.bisqEasy.BisqEasyController;
 import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
 import bisq.desktop.primary.main.content.trade.liquidSwap.LiquidSwapController;
 import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;
+import bisq.desktop.primary.main.content.user.UserController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -127,6 +128,9 @@ public class ContentController extends NavigationController {
             /* case LIGHTNING_X: {
                 return Optional.of(new LightningController(applicationService));
             } */
+            case USER: {
+                return Optional.of(new UserController(applicationService));
+            }
             case SETTINGS: {
                 return Optional.of(new SettingsController(applicationService));
             }
