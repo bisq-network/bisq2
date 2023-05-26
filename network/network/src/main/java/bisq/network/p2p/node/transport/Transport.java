@@ -88,7 +88,7 @@ public interface Transport {
 
     Optional<Address> getServerAddress(String serverId);
 
-    boolean isAddressAvailable(Address address);
+    boolean isPeerOnline(Address address);
 
     CompletableFuture<Void> shutdown();
 }

@@ -90,7 +90,7 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public boolean isAddressAvailable(Address address) {
+    public boolean isPeerOnline(Address address) {
         return torService.isOnionServiceOnline(address.getHost());
     }
 

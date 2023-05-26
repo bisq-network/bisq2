@@ -85,7 +85,7 @@ public class ClearNetTransport implements Transport {
     }
 
     @Override
-    public boolean isAddressAvailable(Address address) {
+    public boolean isPeerOnline(Address address) {
         try (Socket ignored = getSocket(address)) {
             return true;
         } catch (IOException e) {
