@@ -90,7 +90,7 @@ public class GenerateProfileController implements Controller {
                 nickName -> model.getCreateProfileButtonDisabled().set(
                         model.getCreateProfileProgress().get() == -1 ||
                                 nickName == null ||
-                                nickName.isEmpty()));
+                                nickName.trim().isEmpty()));
         onRegenerate();
     }
 

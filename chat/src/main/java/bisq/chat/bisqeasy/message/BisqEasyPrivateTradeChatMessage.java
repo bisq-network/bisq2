@@ -113,9 +113,9 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
         Optional<Citation> citation = baseProto.hasCitation() ?
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
-        bisq.chat.protobuf.BisqEasyPrivateTradeChatMessage BisqEasyPrivateTradeChatMessage = baseProto.getPrivateBisqEasyTradeChatMessage();
-        Optional<UserProfile> mediator = BisqEasyPrivateTradeChatMessage.hasMediator() ?
-                Optional.of(UserProfile.fromProto(BisqEasyPrivateTradeChatMessage.getMediator())) :
+        bisq.chat.protobuf.BisqEasyPrivateTradeChatMessage protoMessage = baseProto.getPrivateBisqEasyTradeChatMessage();
+        Optional<UserProfile> mediator = protoMessage.hasMediator() ?
+                Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
                 Optional.empty();
         Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPrivateBisqEasyTradeChatMessage().hasBisqEasyOffer() ?
                 Optional.of(BisqEasyOffer.fromProto(baseProto.getPrivateBisqEasyTradeChatMessage().getBisqEasyOffer())) :
@@ -124,8 +124,8 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
-                UserProfile.fromProto(BisqEasyPrivateTradeChatMessage.getSender()),
-                BisqEasyPrivateTradeChatMessage.getReceiverUserProfileId(),
+                UserProfile.fromProto(protoMessage.getSender()),
+                protoMessage.getReceiverUserProfileId(),
                 baseProto.getText(),
                 citation,
                 baseProto.getDate(),

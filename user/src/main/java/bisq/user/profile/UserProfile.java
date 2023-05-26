@@ -71,7 +71,8 @@ public final class UserProfile implements DistributedData {
                        NetworkId networkId,
                        String terms,
                        String statement) {
-        this.nickName = nickName;
+        this.nickName = nickName.trim().isEmpty() ? "Invalid nickname" :
+                nickName.trim();
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
         this.terms = terms;
@@ -169,6 +170,4 @@ public final class UserProfile implements DistributedData {
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
     }
-
-
 }

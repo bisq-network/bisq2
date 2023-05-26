@@ -17,15 +17,20 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.threading.UIThread;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.skin.TextFieldSkin;
 
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 
 public class MaterialPasswordField extends MaterialTextField {
+    private BooleanProperty isMasked;
+
     public MaterialPasswordField() {
         this(null, null, null);
     }
@@ -46,41 +51,64 @@ public class MaterialPasswordField extends MaterialTextField {
     protected TextInputControl createTextInputControl() {
         PasswordField passwordField = new PasswordField();
         passwordField.setSkin(new VisiblePasswordFieldSkin(passwordField, this));
-
         return passwordField;
     }
 
+    public boolean isMasked() {
+        return isMaskedProperty().get();
+    }
+
+    public BooleanProperty isMaskedProperty() {
+        if (isMasked == null) {
+            isMasked = new SimpleBooleanProperty();
+        }
+        return isMasked;
+    }
+
+    public void setIsMasked(boolean isMasked) {
+        isMaskedProperty().set(isMasked);
+    }
+
     static class VisiblePasswordFieldSkin extends TextFieldSkin {
-        private boolean isMasked = true;
+        private final PasswordField textField;
+        private final BisqIconButton iconButton;
+        private final MaterialPasswordField materialPasswordField;
 
         public VisiblePasswordFieldSkin(PasswordField textField, MaterialPasswordField materialPasswordField) {
             super(textField);
 
-            // iconButton is not created when we get called, so we delay it to next render frame
-            UIThread.runOnNextRenderFrame(() -> {
-                BisqIconButton iconButton = materialPasswordField.getIconButton();
-                materialPasswordField.setIcon(AwesomeIcon.EYE_OPEN);
-                iconButton.setOnAction(e -> {
-                    iconButton.setIcon(isMasked ? AwesomeIcon.EYE_CLOSE : AwesomeIcon.EYE_OPEN);
-                    isMasked = !isMasked;
+            this.textField = textField;
+            this.materialPasswordField = materialPasswordField;
 
-                    // TODO if binding is used we don't get the text updated. With bi-dir binding it works
-                    textField.setText(textField.getText());
-                    textField.end();
-                   /* if(!textField.textProperty().isBound()){
-                        textField.setText(textField.getText());
-                        textField.end();
-                    }*/
-                });
+            // We get called from the constructor of materialPasswordField, some fields might not be initiated yet, 
+            // so we need to take care of which fields we access.
+            iconButton = materialPasswordField.getIconButton();
+            materialPasswordField.isMaskedProperty().addListener(
+                    new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) ->
+                            handleIsMaskedChange(newValue)).get());
+            materialPasswordField.setIcon(AwesomeIcon.EYE_OPEN);
+            iconButton.setOnAction(e -> {
+                boolean isMasked = !materialPasswordField.isMasked();
+                materialPasswordField.setIsMasked(isMasked);
+                handleIsMaskedChange(isMasked);
             });
+        }
+
+        private void handleIsMaskedChange(boolean isMasked) {
+            iconButton.setIcon(isMasked ? AwesomeIcon.EYE_CLOSE : AwesomeIcon.EYE_OPEN);
+
+            // TODO if binding is used we don't get the text updated. With bi-dir binding it works
+            textField.setText(textField.getText());
+            textField.end();
         }
 
         @Override
         protected String maskText(String txt) {
-            if (getSkinnable() instanceof PasswordField && isMasked) {
-                return "•".repeat(txt.length());
-            } else {
+            // Getting called from constructor when materialPasswordField is null
+            if (materialPasswordField != null && !materialPasswordField.isMasked()) {
                 return txt;
+            } else {
+                return super.maskText(txt);
             }
         }
     }

@@ -48,6 +48,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service, DataService.Listener {
     @Getter
@@ -244,6 +246,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                             String terms,
                                             String bio,
                                             Identity identity) {
+        checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
+                "Nickname must not have leading or trailing spaces and must not be empty.");
         UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
         synchronized (lock) {

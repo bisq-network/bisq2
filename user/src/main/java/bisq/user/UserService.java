@@ -36,6 +36,9 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class UserService implements Service {
+    //todo temp just for dev
+    private boolean isPasswordSet;
+
     @Getter
     @ToString
     public static final class Config {
@@ -92,5 +95,23 @@ public class UserService implements Service {
                 .thenCompose(result -> userIdentityService.shutdown())
                 .thenCompose(result -> roleRegistrationService.shutdown())
                 .thenCompose(result -> reputationService.shutdown());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //todo WIP
+    public void setPassword(String password) {
+        isPasswordSet = true;
+    }
+
+    public void removePassword(String password) {
+        isPasswordSet = false;
+    }
+
+    public boolean isPasswordSet() {
+        return isPasswordSet;
     }
 }

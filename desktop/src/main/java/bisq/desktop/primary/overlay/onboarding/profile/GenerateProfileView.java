@@ -120,8 +120,6 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
-        //VBox.setMargin(nickname, new Insets(20, 0, 20, 0));
-        // VBox.setMargin(buttons, new Insets(20, 0, 0, 0));
         root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,

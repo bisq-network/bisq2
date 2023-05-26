@@ -23,7 +23,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
  * Persists my user profiles and the selected user profile.
  */
 @Slf4j
-@Getter
 public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
     private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities;
@@ -95,5 +93,13 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     public void applyPersisted(UserIdentityStore persisted) {
         userIdentities.addAll(persisted.getUserIdentities());
         setSelectedUserIdentity(persisted.getSelectedUserIdentityObservable().get());
+    }
+
+    Observable<UserIdentity> getSelectedUserIdentityObservable() {
+        return selectedUserIdentityObservable;
+    }
+
+    ObservableSet<UserIdentity> getUserIdentities() {
+        return userIdentities;
     }
 }
