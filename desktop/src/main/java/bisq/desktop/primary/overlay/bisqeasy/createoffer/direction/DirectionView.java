@@ -24,7 +24,9 @@ import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -35,8 +37,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class DirectionView extends View<StackPane, DirectionModel, DirectionController> {
-    private final ToggleButton buyButton, sellButton;
-    private final ToggleGroup toggleGroup = new ToggleGroup();
+    private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
     private Subscription directionSubscription, showReputationInfoPin;
@@ -58,11 +59,11 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        Pair<VBox, ToggleButton> buyPair = getBoxPair(Res.get("onboarding.direction.buy"), Res.get("onboarding.direction.buy.info"));
+        Pair<VBox, Button> buyPair = getBoxPair(Res.get("onboarding.direction.buy"), Res.get("onboarding.direction.buy.info"));
         VBox buyBox = buyPair.getFirst();
         buyButton = buyPair.getSecond();
 
-        Pair<VBox, ToggleButton> sellPair = getBoxPair(Res.get("onboarding.direction.sell"), Res.get("onboarding.direction.sell.info"));
+        Pair<VBox, Button> sellPair = getBoxPair(Res.get("onboarding.direction.sell"), Res.get("onboarding.direction.sell.info"));
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
@@ -83,9 +84,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
     @Override
     protected void onViewAttached() {
-        buyButton.disableProperty().bind(buyButton.selectedProperty());
-        sellButton.disableProperty().bind(sellButton.selectedProperty());
-
+        buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
         gainReputationHyperlink.setOnAction(evt -> controller.onGainReputation());
@@ -94,7 +93,8 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
-                toggleGroup.selectToggle(direction == Direction.BUY ? buyButton : sellButton);
+                buyButton.setDefaultButton(direction == Direction.BUY);
+                sellButton.setDefaultButton(direction == Direction.SELL);
             }
         });
 
@@ -120,7 +120,6 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
             Transitions.removeEffect(content);
         }
         buyButton.disableProperty().unbind();
-        sellButton.disableProperty().unbind();
 
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
@@ -132,9 +131,8 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         showReputationInfoPin.unsubscribe();
     }
 
-    private Pair<VBox, ToggleButton> getBoxPair(String title, String info) {
-        ToggleButton button = new ToggleButton(title);
-        button.setToggleGroup(toggleGroup);
+    private Pair<VBox, Button> getBoxPair(String title, String info) {
+        Button button = new Button(title);
         button.getStyleClass().setAll("card-toggle-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;

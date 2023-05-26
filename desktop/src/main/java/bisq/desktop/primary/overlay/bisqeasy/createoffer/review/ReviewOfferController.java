@@ -25,6 +25,8 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
@@ -57,7 +59,7 @@ public class ReviewOfferController implements Controller {
     @Getter
     private final ReviewOfferView view;
     private final ReputationService reputationService;
-    private final Runnable closeHandler;
+    private final Runnable resetHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
@@ -66,12 +68,13 @@ public class ReviewOfferController implements Controller {
     private final Consumer<Boolean> buttonsVisibleHandler;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final MediationService mediationService;
+    private final ChatService chatService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
-                                 Runnable closeHandler) {
+                                 Runnable resetHandler) {
         this.buttonsVisibleHandler = buttonsVisibleHandler;
-        ChatService chatService = applicationService.getChatService();
+        chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         reputationService = applicationService.getUserService().getReputationService();
@@ -80,7 +83,7 @@ public class ReviewOfferController implements Controller {
         userProfileService = applicationService.getUserService().getUserProfileService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
-        this.closeHandler = closeHandler;
+        this.resetHandler = resetHandler;
 
         model = new ReviewOfferModel();
         view = new ReviewOfferView(model, this);
@@ -116,6 +119,10 @@ public class ReviewOfferController implements Controller {
 
     public void setShowMatchingOffers(boolean showMatchingOffers) {
         model.setShowMatchingOffers(showMatchingOffers);
+    }
+
+    public void reset() {
+        model.reset();
     }
 
     @Override
@@ -166,8 +173,12 @@ public class ReviewOfferController implements Controller {
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
         BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
+        BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
         bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(chatMessage, mediator)
                 .thenAccept(result -> UIThread.run(() -> {
+                    bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
+                            .ifPresent(chatChannelSelectionService::selectChannel);
                     model.getShowTakeOfferSuccess().set(true);
                     buttonsVisibleHandler.accept(false);
                 }));
@@ -193,7 +204,7 @@ public class ReviewOfferController implements Controller {
     }
 
     private void close() {
-        closeHandler.run();
+        resetHandler.run();
         OverlayController.hide();
         // If we got started from initial onboarding we are still at Splash screen, so we need to move to main
         Navigation.navigateTo(NavigationTarget.MAIN);
@@ -203,14 +214,16 @@ public class ReviewOfferController implements Controller {
     private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
-            if (item.getSenderUserProfile().isEmpty()) {
+            if (item.getAuthorUserProfileId().isEmpty()) {
                 return false;
             }
-            UserProfile senderUserProfile = item.getSenderUserProfile().get();
-            if (userProfileService.isChatUserIgnored(senderUserProfile)) {
+            UserProfile authorUserProfile = item.getAuthorUserProfileId().get();
+            if (userProfileService.isChatUserIgnored(authorUserProfile)) {
                 return false;
             }
-            if (userProfileService.findUserProfile(item.getChatMessage().getAuthorUserProfileId()).isEmpty()) {
+            if (userIdentityService.getUserIdentities().stream()
+                    .map(userIdentity -> userIdentity.getUserProfile().getId())
+                    .anyMatch(userProfileId -> userProfileId.equals(authorUserProfile.getId()))) {
                 return false;
             }
             if (item.getChatMessage().getBisqEasyOffer().isEmpty()) {

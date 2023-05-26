@@ -32,9 +32,11 @@ public class TradeGuideTab3Controller implements Controller {
     @Getter
     private final TradeGuideTab3View view;
     private final SettingsService settingsService;
+    private final Runnable collapseHandler;
 
-    public TradeGuideTab3Controller(DefaultApplicationService applicationService) {
+    public TradeGuideTab3Controller(DefaultApplicationService applicationService, Runnable collapseHandler) {
         settingsService = applicationService.getSettingsService();
+        this.collapseHandler = collapseHandler;
         model = new TradeGuideTab3Model();
         view = new TradeGuideTab3View(model, this);
     }
@@ -58,5 +60,10 @@ public class TradeGuideTab3Controller implements Controller {
 
     void onConfirm(boolean value) {
         settingsService.setTradeRulesConfirmed(value);
+        model.getTradeRulesConfirmed().set(value);
+    }
+
+    void onCollapse() {
+        collapseHandler.run();
     }
 }

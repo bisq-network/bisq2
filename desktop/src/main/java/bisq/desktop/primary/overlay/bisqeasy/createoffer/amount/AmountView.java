@@ -96,9 +96,15 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         pane.setMaxWidth(AMOUNT_BOX_WIDTH);
 
         slider = new Slider();
-        minAmountLabel = new Label();
+        slider.setMin(model.getSliderMin());
+        slider.setMax(model.getSliderMax());
+
+        minAmountLabel = new Label(Res.get("onboarding.amount.minLabel",
+                AmountFormatter.formatAmountWithCode(model.getMinAmount(), true)));
         minAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
-        maxAmountLabel = new Label();
+
+        maxAmountLabel = new Label(Res.get("onboarding.amount.maxLabel",
+                AmountFormatter.formatAmountWithCode(model.getMaxAmount(), true)));
         maxAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
 
         VBox sliderBox = new VBox(2, slider, new HBox(minAmountLabel, Spacer.fillHBox(), maxAmountLabel));
@@ -132,8 +138,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
                     focus -> onInputTextFieldFocus(baseAmount.focusedProperty(), focus));
         }).after(700);
 
-        slider.minProperty().bind(model.getSliderMin());
-        slider.maxProperty().bind(model.getSliderMax());
         slider.valueProperty().bindBidirectional(model.getSliderValue());
         model.getSliderFocus().bind(slider.focusedProperty());
 
@@ -144,10 +148,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         subtitleLabel.setText(Res.get("onboarding.amount.subtitle",
                 model.getQuoteSideAmount().get().getCode(),
                 model.getSpendOrReceiveString().get()));
-        minAmountLabel.setText(Res.get("onboarding.amount.minLabel",
-                AmountFormatter.formatAmountWithCode(model.getMinAmount().get(), true)));
-        maxAmountLabel.setText(Res.get("onboarding.amount.maxLabel",
-                AmountFormatter.formatAmountWithCode(model.getMaxAmount().get(), true)));
     }
 
     @Override
@@ -158,8 +158,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         if (quoteAmountFocusPin != null) {
             quoteAmountFocusPin.unsubscribe();
         }
-        slider.minProperty().unbind();
-        slider.maxProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getSliderValue());
         model.getSliderFocus().unbind();
         root.setOnMousePressed(null);

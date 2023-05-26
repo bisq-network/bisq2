@@ -597,10 +597,9 @@
 #quote-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -bisq-grey-10;
     -fx-font-size: 1.1em;
-    -fx-font-family: "IBM Plex Sans Thin";
-    /*-fx-line-spacing: -0.12em;*/
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 
@@ -638,12 +637,6 @@
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-13;
-}
-
-.bisq-small-light-label-dimmed-2 {
-    -fx-font-size: 0.9em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .bisq-content-headline-label {
@@ -1221,7 +1214,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Card toggle button                                                                *
+ * Card button                                                                *
  *                                                                             *
  ******************************************************************************/
 
@@ -1238,11 +1231,11 @@
     -fx-background-color: -bisq-grey-18;
 }
 
-.card-toggle-button:selected {
+.card-toggle-button:default {
     -fx-background-color: -bisq-green;
 }
 
-.card-toggle-button:selected:hover {
+.card-toggle-button:default:hover {
     -fx-background-color: -bisq-green-lighter;
 }
 

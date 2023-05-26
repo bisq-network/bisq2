@@ -49,7 +49,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected Pane topBox;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
-    //  private Subscription viewSubscription;
     private ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewListener;
 
     public TabView(M model, C controller) {
@@ -113,7 +112,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             layoutDoneSubscription.unsubscribe();
         }
         model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
-        // viewSubscription.unsubscribe();
         model.getView().removeListener(viewListener);
         super.onViewDetachedInternal();
     }
@@ -131,13 +129,14 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void setupTopBox() {
         headLine = new Label();
         headLine.getStyleClass().add("bisq-content-headline-label");
+        headLine.setMinWidth(90);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.setMinHeight(52);
 
-        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
         topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
+        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
     }
 
     protected void setupLineAndMarker() {

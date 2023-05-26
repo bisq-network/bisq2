@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.bisqeasy.createoffer.amount;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
@@ -29,14 +30,15 @@ import lombok.Setter;
 
 @Getter
 public class AmountModel implements Model {
+    private final Monetary minAmount = Coin.asBtc(10000);
+    private final Monetary maxAmount = Coin.asBtc(1000000);
+    private final double sliderMin = 0;
+    private final double sliderMax = 1;
+
     private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
     private final StringProperty spendOrReceiveString = new SimpleStringProperty();
-    private final ObjectProperty<Monetary> minAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> maxAmount = new SimpleObjectProperty<>();
-    private final DoubleProperty sliderMin = new SimpleDoubleProperty();
-    private final DoubleProperty sliderMax = new SimpleDoubleProperty();
     private final DoubleProperty sliderValue = new SimpleDoubleProperty();
     private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
     @Setter
@@ -45,5 +47,16 @@ public class AmountModel implements Model {
     private Direction direction = Direction.BUY;
 
     AmountModel() {
+    }
+
+    void reset() {
+        baseSideAmount.set(null);
+        quoteSideAmount.set(null);
+        fixPrice.set(null);
+        spendOrReceiveString.set(null);
+        sliderValue.set(0L);
+        sliderFocus.set(false);
+        market = MarketRepository.getDefault();
+        direction = Direction.BUY;
     }
 }

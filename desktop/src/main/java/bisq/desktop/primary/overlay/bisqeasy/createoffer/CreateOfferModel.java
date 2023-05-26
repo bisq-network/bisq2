@@ -33,7 +33,7 @@ public class CreateOfferModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
-    private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
@@ -49,5 +49,11 @@ public class CreateOfferModel extends NavigationModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.CREATE_OFFER_DIRECTION;
+    }
+
+    public void reset() {
+        currentIndex.set(0);
+        selectedChildTarget.set(childTargets.get(0));
+        animateRightOut = true;
     }
 }

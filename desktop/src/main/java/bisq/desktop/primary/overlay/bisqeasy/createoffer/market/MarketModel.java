@@ -37,4 +37,11 @@ public class MarketModel implements Model {
     private final ObservableList<MarketView.MarketListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<MarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<MarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
+
+    void reset() {
+        selectedMarketListItem.set(null);
+        searchText.set(null);
+        selectedMarket.set(null);
+        listItems.clear();
+    }
 }

@@ -61,6 +61,10 @@ public class BigAmountInput {
         return controller.view.textInput.focusedProperty();
     }
 
+    public void reset() {
+        controller.model.reset();
+    }
+
     public void requestFocus() {
         TextField textInput = controller.view.textInput;
         textInput.requestFocus();
@@ -126,14 +130,21 @@ public class BigAmountInput {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final boolean isBaseCurrency;
+        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();
         private Market selectedMarket;
         public boolean hasFocus;
 
         private Model(boolean isBaseCurrency) {
             this.isBaseCurrency = isBaseCurrency;
+        }
+
+        void reset() {
+            amount.set(null);
+            code.set(null);
+            selectedMarket = null;
+            hasFocus = false;
         }
     }
 

@@ -33,4 +33,14 @@ public class PaymentMethodModel implements Model {
     private final BooleanProperty paymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty addCustomMethodIconEnabled = new SimpleBooleanProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+
+    void reset() {
+        allPaymentMethods.clear();
+        addedCustomMethods.clear();
+        selectedPaymentMethods.clear();
+        customMethod.set(null);
+        paymentMethodsEmpty.set(false);
+        addCustomMethodIconEnabled.set(false);
+        selectedMarket.set(null);
+    }
 }
