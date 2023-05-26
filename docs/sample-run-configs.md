@@ -1,6 +1,6 @@
 ### IntelliJ IDEA: Application Run Configs
 
-Here are a few IntelliJ IDEA run configurations for running two seeds and different desktopapp nodes.
+Here are a few IntelliJ IDEA run configurations for running two seeds and different desktop nodes.
 
 #### Run Config: `Seed_1` (clearnet + tor + i2p)
 
@@ -47,12 +47,12 @@ Copy the `Seed_1` run configuration, rename it to `Seed_2` and change:
 
 Classpath of module (Alt+O)
 ```
-bisq.desktopapp.main
+bisq.desktop.main
 ```
 
 Main Class (Alt+C)
 ```
-bisq.desktopapp.Main
+bisq.desktop.Main
 ```
 
 Program Arguments (Alt+R)
@@ -94,7 +94,7 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_i2p` and change:
 
 * Create a new IntelliJ IDEA run config of type Gradle
 * Choose a config name (e.g. `[gradle] Alice I2P`)
-* Choose Gradle Project as `bisq2:desktopapp`
+* Choose Gradle Project as `bisq2:desktop`
 * Add VM options as necessary, in the format `-Dprop=value` (e.g. `-Dbisq.application.appName=bisq_Alice_i2p`)
 
 
@@ -127,18 +127,18 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
     -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
 
-Start a desktopapp client with:
+Start a desktop client with:
 
 ```
 # Using default settings
-./gradlew desktopapp:run
+./gradlew desktop:run
 ```
 
-To start a custom desktopapp client connecting only to clearnet:
+To start a custom desktop client connecting only to clearnet:
 
 ```
 # Local client on clearnet only
-./gradlew desktopapp:run \
+./gradlew desktop:run \
     -Dapplication.appName=bisq_Alice_clear \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \

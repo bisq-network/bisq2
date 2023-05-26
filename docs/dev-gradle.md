@@ -61,7 +61,7 @@ direct and transitive.
 Platform-specific binaries and installers can be generated with
 
 ```
-./gradlew :desktopapp:jpackage
+./gradlew :desktop:jpackage
 ```
 
 Optionally add the `--info` flag at the end for a more verbose output.

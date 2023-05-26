@@ -61,7 +61,7 @@ The social module manages chat use-cases. User management is not implemented yet
 
 Bisq 2 requires Java 17 and Gradle 7.3.3.
 
-You can right-click the `bisq.desktopapp.Main` class in the desktopapp module to create a run config or create
+You can right-click the `bisq.desktop.Main` class in the desktop module to create a run config or create
 a `run config` in `Run/Edit Configurations`.
 
 The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you
