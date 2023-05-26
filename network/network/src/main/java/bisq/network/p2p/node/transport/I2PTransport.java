@@ -176,8 +176,8 @@ public class I2PTransport implements Transport {
     }
 
     @Override
-    public boolean isAddressAvailable(Address address) {
-        throw new UnsupportedOperationException("isAddressAvailable needs to be implemented for I2P.");
+    public boolean isPeerOnline(Address address) {
+        throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
     }
 
     @Override
