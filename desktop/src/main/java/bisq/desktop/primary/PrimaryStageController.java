@@ -37,6 +37,7 @@ import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.user.identity.UserIdentityService;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.AnchorPane;
@@ -58,6 +59,7 @@ public class PrimaryStageController extends NavigationController {
     protected final SettingsService settingsService;
     protected final Runnable onStageReadyHandler;
     private final SplashController splashController;
+    private final UserIdentityService userIdentityService;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -66,6 +68,7 @@ public class PrimaryStageController extends NavigationController {
 
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
         this.onStageReadyHandler = onStageReadyHandler;
 
         model = new PrimaryStageModel(applicationService.getConfig().getAppName());
@@ -90,43 +93,23 @@ public class PrimaryStageController extends NavigationController {
         new OverlayController(applicationService, viewRoot);
     }
 
-    private void setInitialScreenSize(DefaultApplicationService applicationService) {
-        Cookie cookie = applicationService.getSettingsService().getCookie();
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
-                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
-        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
-                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
-        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
-                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
-        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
-                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
-    }
-
     @Override
     public void onActivate() {
+        // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
-        if (isPasswordProtected()) {
+
+        if (isLocked()) {
             // We delay to allow the splash screen to be displayed 
             UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.UNLOCK,
-                    new UnlockController.InitData(splashController::startAnimation)));
-        } else if (!getTacAccepted()) {
+                    new UnlockController.InitData(this::unlockCompleted)));
+        } else if (isTacNotAccepted()) {
             UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
-                    new TacController.InitData(splashController::startAnimation)));
+                    new TacController.InitData(this::tacAccepted)));
         } else {
             splashController.startAnimation();
         }
 
         onStageReadyHandler.run();
-    }
-
-    private boolean getTacAccepted() {
-        return settingsService.getTacAccepted();
-    }
-
-    //todo
-    private boolean isPasswordProtected() {
-        return false;
     }
 
     @Override
@@ -149,36 +132,8 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onDomainInitialized() {
-        if (isPasswordProtected()) {
-            return;
-        }
-        if (!getTacAccepted()) {
-            return;
-        }
-
-        splashController.stopAnimation();
-        boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
-
-        if (!hasUserIdentities) {
-            if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
-            } else {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
-            }
-        } else {
-            // After the domain is initialized we show the application content
-            settingsService.getCookie().asString(CookieKey.NAVIGATION_TARGET)
-                    .ifPresentOrElse(target -> {
-                                try {
-                                    NavigationTarget persisted = NavigationTarget.valueOf(target);
-                                    Navigation.applyPersisted(persisted);
-                                    Navigation.navigateTo(persisted);
-                                } catch (Throwable t) {
-                                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
-                                }
-                            },
-                            () -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
-        }
+        model.setDomainInitialized(true);
+        maybeApplyNavigationTarget();
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {
@@ -213,5 +168,70 @@ public class PrimaryStageController extends NavigationController {
 
     public void onStageHeightChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_H, value);
+    }
+
+    private void setInitialScreenSize(DefaultApplicationService applicationService) {
+        Cookie cookie = applicationService.getSettingsService().getCookie();
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
+                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
+        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
+                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
+        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
+                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
+        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
+                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
+    }
+
+    private boolean isLocked() {
+        return userIdentityService.isDataStoreEncrypted();
+    }
+
+    private boolean isTacNotAccepted() {
+        return !settingsService.isTacAccepted();
+    }
+
+    private void unlockCompleted() {
+        if (isTacNotAccepted()) {
+            Navigation.navigateTo(NavigationTarget.TAC, new TacController.InitData(this::tacAccepted));
+        } else {
+            maybeApplyNavigationTarget();
+            splashController.startAnimation();
+        }
+    }
+
+    private void tacAccepted() {
+        maybeApplyNavigationTarget();
+        splashController.startAnimation();
+    }
+
+    private void maybeApplyNavigationTarget() {
+        if (!model.isDomainInitialized() || isLocked() || isTacNotAccepted()) {
+            return;
+        }
+
+        splashController.stopAnimation();
+        boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
+
+        if (!hasUserIdentities) {
+            if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
+            } else {
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
+            }
+        } else {
+            // After the domain is initialized we show the application content
+            settingsService.getCookie().asString(CookieKey.NAVIGATION_TARGET)
+                    .ifPresentOrElse(target -> {
+                                try {
+                                    NavigationTarget persisted = NavigationTarget.valueOf(target);
+                                    Navigation.applyPersisted(persisted);
+                                    Navigation.navigateTo(persisted);
+                                } catch (Throwable t) {
+                                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
+                                }
+                            },
+                            () -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
+        }
     }
 }

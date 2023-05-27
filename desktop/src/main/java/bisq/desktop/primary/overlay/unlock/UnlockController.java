@@ -93,10 +93,11 @@ public class UnlockController implements InitWithDataController<UnlockController
                         return;
                     }
 
-                    if (completeHandler != null) {
-                        completeHandler.run();
-                    }
-                    OverlayController.hide();
+                    OverlayController.hide(() -> {
+                        if (completeHandler != null) {
+                            completeHandler.run();
+                        }
+                    });
                 });
     }
 

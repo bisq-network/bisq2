@@ -35,27 +35,28 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
     @Nullable
-    private UserIdentity selectedUserIdentity;
+    private String selectedUserIdentityId;
     private final Set<UserIdentity> userIdentities;
 
     public UserIdentityStore() {
         userIdentities = new HashSet<>();
     }
 
-    private UserIdentityStore(@Nullable UserIdentity selectedUserIdentity,
+    private UserIdentityStore(@Nullable String selectedUserIdentityId,
                               Set<UserIdentity> userIdentities) {
         this.userIdentities = new HashSet<>(userIdentities);
-        setSelectedUserIdentity(selectedUserIdentity);
+        setSelectedUserIdentityId(selectedUserIdentityId);
     }
 
     @Nullable
-    public UserIdentity getSelectedUserIdentity() {
-        return selectedUserIdentity;
+    String getSelectedUserIdentityId() {
+        return selectedUserIdentityId;
     }
 
-    public void setSelectedUserIdentity(@Nullable UserIdentity selectedUserIdentity) {
-        this.selectedUserIdentity = userIdentities.stream()
-                .filter(userIdentity -> userIdentity.equals(selectedUserIdentity))
+    void setSelectedUserIdentityId(@Nullable String selectedUserIdentityId) {
+        this.selectedUserIdentityId = userIdentities.stream()
+                .map(userIdentity -> userIdentity.getId())
+                .filter(id -> id.equals(selectedUserIdentityId))
                 .findAny()
                 .orElse(null);
     }
@@ -68,14 +69,13 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     public bisq.user.protobuf.UserIdentityStore toProto() {
         bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
                 .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
-        Optional.ofNullable(selectedUserIdentity).ifPresent(selectedUserIdentity
-                -> builder.setSelectedUserIdentity(selectedUserIdentity.toProto()));
+        Optional.ofNullable(selectedUserIdentityId).ifPresent(builder::setSelectedUserIdentityId);
         return builder.build();
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
-        return new UserIdentityStore(proto.hasSelectedUserIdentity() ?
-                UserIdentity.fromProto(proto.getSelectedUserIdentity()) :
+        return new UserIdentityStore(proto.hasSelectedUserIdentityId() ?
+                proto.getSelectedUserIdentityId() :
                 null,
                 proto.getUserIdentitiesList().stream()
                         .map(UserIdentity::fromProto)
@@ -95,12 +95,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public UserIdentityStore getClone() {
-        return new UserIdentityStore(selectedUserIdentity, userIdentities);
+        return new UserIdentityStore(selectedUserIdentityId, userIdentities);
     }
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
         userIdentities.addAll(persisted.getUserIdentities());
-        setSelectedUserIdentity(persisted.getSelectedUserIdentity());
+        setSelectedUserIdentityId(persisted.getSelectedUserIdentityId());
     }
 }

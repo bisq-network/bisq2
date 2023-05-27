@@ -46,7 +46,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> offersOnly = new Observable<>(true);
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
-    boolean tacAccepted;
+    boolean isTacAccepted;
 
     public SettingsStore() {
         this(new Cookie(),
@@ -70,7 +70,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean offersOnly,
                          boolean tradeRulesConfirmed,
                          ChatNotificationType chatNotificationType,
-                         boolean tacAccepted) {
+                         boolean isTacAccepted) {
         this.cookie = cookie;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
@@ -80,7 +80,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
-        this.tacAccepted = tacAccepted;
+        this.isTacAccepted = isTacAccepted;
     }
 
     @Override
@@ -95,7 +95,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProto())
-                .setTacAccepted(tacAccepted)
+                .setIsTacAccepted(isTacAccepted)
                 .build();
     }
 
@@ -110,7 +110,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getOffersOnly(),
                 proto.getTradeRulesConfirmed(),
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
-                proto.getTacAccepted());
+                proto.getIsTacAccepted());
     }
 
     @Override
@@ -135,7 +135,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
                 chatNotificationType.get(),
-                tacAccepted);
+                isTacAccepted);
     }
 
     @Override
@@ -150,6 +150,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         offersOnly.set(persisted.offersOnly.get());
         tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
         chatNotificationType.set(persisted.chatNotificationType.get());
-        tacAccepted = persisted.tacAccepted;
+        isTacAccepted = persisted.isTacAccepted;
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.tac;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
@@ -108,22 +109,12 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
         rootScene = root.getScene();
 
         Region applicationRoot = OverlayController.getInstance().getApplicationRoot();
-        widthPin = EasyBind.subscribe(applicationRoot.widthProperty(), w -> {
-            if (w.doubleValue() > 0) {
-                double scale = (w.doubleValue() - PrimaryStageModel.MIN_WIDTH) / (PrimaryStageModel.PREF_WIDTH - PrimaryStageModel.MIN_WIDTH);
-                double boundedScale = Math.max(0.25, Math.min(1, scale));
-                double padding = 4 * PADDING * boundedScale;
-                double width = w.doubleValue() - padding;
-                rootScene.getWindow().setWidth(width);
-                root.setPrefWidth(width);
-            }
-        });
-        heightPin = EasyBind.subscribe(applicationRoot.heightProperty(), h -> {
-            if (h.doubleValue() > 0) {
-                double height = h.doubleValue() - 4 * PADDING;
-                rootScene.getWindow().setHeight(height);
-                root.setPrefHeight(height);
-            }
+        widthPin = EasyBind.subscribe(applicationRoot.widthProperty(), w -> updateWidth());
+        heightPin = EasyBind.subscribe(applicationRoot.heightProperty(), h -> updateHeight());
+
+        UIThread.runOnNextRenderFrame(() -> {
+            updateWidth();
+            updateHeight();
         });
 
         acceptButton.setOnAction(e -> controller.onAccept());
@@ -134,6 +125,30 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
+        log.error("root.getScene().getWindow().getWidth() " + root.getScene().getWindow().getWidth());
+    }
+
+    private void updateHeight() {
+        double height = OverlayController.getInstance().getApplicationRoot().getHeight();
+        if (height > 0) {
+            double paddedHeight = height - 4 * PADDING;
+            rootScene.getWindow().setHeight(paddedHeight);
+            root.setPrefHeight(paddedHeight);
+        }
+    }
+
+    private void updateWidth() {
+        double width = OverlayController.getInstance().getApplicationRoot().getWidth();
+        if (width > 0) {
+            double scale = (width - PrimaryStageModel.MIN_WIDTH) / (PrimaryStageModel.PREF_WIDTH - PrimaryStageModel.MIN_WIDTH);
+            double boundedScale = Math.max(0.25, Math.min(1, scale));
+            double padding = 4 * PADDING * boundedScale;
+            double paddedWidth = width - padding;
+            rootScene.getWindow().setWidth(paddedWidth);
+            root.setPrefWidth(paddedWidth);
+
+            log.error("root.getScene().getWindow().getWidth() " + root.getScene().getWindow().getWidth());
+        }
     }
 
     @Override

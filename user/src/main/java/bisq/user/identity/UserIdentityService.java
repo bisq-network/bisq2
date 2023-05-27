@@ -21,6 +21,7 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.timer.Scheduler;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
@@ -85,6 +86,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
 
+    //todo
+    private boolean isDataStoreEncrypted = false;
+
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
                                IdentityService identityService,
@@ -103,9 +107,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                         .forEach(this::processAuthenticatedData));
         networkService.addDataServiceListener(this);
 
-        // todo delay
-        getUserIdentities().forEach(userProfile ->
-                maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair()));
+        // We delay publishing to be better bootstrapped 
+        Scheduler.run(() -> userIdentities.forEach(userProfile ->
+                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair())))
+                .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -113,6 +118,17 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         networkService.removeDataServiceListener(this);
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PersistenceClient
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onPersistedApplied(UserIdentityStore persisted) {
+        userIdentities.setAll(persistableStore.getUserIdentities());
+        setSelectedUserIdentity(persistableStore.getSelectedUserIdentityId());
     }
 
 
@@ -139,15 +155,17 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     //todo
     public CompletableFuture<Boolean> encryptDataStore(String password) {
+        isDataStoreEncrypted = true;
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> decryptDataStore(String password) {
-        return CompletableFuture.completedFuture(false);
+        isDataStoreEncrypted = false;
+        return CompletableFuture.completedFuture(true);
     }
 
     public boolean isDataStoreEncrypted() {
-        return false;
+        return isDataStoreEncrypted;
     }
 
     public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
@@ -178,25 +196,40 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public void selectChatUserIdentity(UserIdentity userIdentity) {
-        persistableStore.setSelectedUserIdentity(userIdentity);
+        setSelectedUserIdentity(userIdentity.getId());
+        //todo
+        persistableStore.setSelectedUserIdentityId(userIdentity.getId());
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity userIdentity, String terms, String bio) {
-        Identity identity = userIdentity.getIdentity();
-        UserProfile oldUserProfile = userIdentity.getUserProfile();
+    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String bio) {
+        Identity oldIdentity = oldUserIdentity.getIdentity();
+        UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
         UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, bio);
-        UserIdentity newUserIdentity = new UserIdentity(identity, newUserProfile);
+        UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
+
+        userIdentities.remove(oldUserIdentity);
+        userIdentities.add(newUserIdentity);
+        setSelectedUserIdentity(newUserIdentity.getId());
 
         synchronized (lock) {
-            persistableStore.getUserIdentities().remove(userIdentity);
+            //todo
+            persistableStore.getUserIdentities().remove(oldUserIdentity);
             persistableStore.getUserIdentities().add(newUserIdentity);
-            persistableStore.setSelectedUserIdentity(newUserIdentity);
+            persistableStore.setSelectedUserIdentityId(newUserIdentity.getId());
         }
         persist();
 
-        return networkService.removeAuthenticatedData(oldUserProfile, identity.getNodeIdAndKeyPair())
-                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, identity.getNodeIdAndKeyPair()));
+        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair())
+                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair()));
+    }
+
+    // We want to ensure that the selected object is the same as the one in the userIdentities set.
+    private void setSelectedUserIdentity(@Nullable String selectedUserIdentityId) {
+        selectedUserIdentityObservable.set(userIdentities.stream()
+                .filter(userIdentity -> userIdentity.getId().equals(selectedUserIdentityId))
+                .findAny()
+                .orElse(null));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
@@ -204,11 +237,17 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         if (persistableStore.getUserIdentities().size() <= 1) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
         }
+
+        userIdentities.remove(userIdentity);
+        userIdentities.stream().findAny()
+                .ifPresentOrElse(userIdentity1 -> setSelectedUserIdentity(userIdentity1.getId()),
+                        () -> this.setSelectedUserIdentity(null));
         synchronized (lock) {
+            //todo
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().stream().findAny()
-                    .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
-                            () -> persistableStore.setSelectedUserIdentity(null));
+                    .ifPresentOrElse(userIdentity2 -> persistableStore.setSelectedUserIdentityId(userIdentity2.getId()),
+                            () -> persistableStore.setSelectedUserIdentityId(null));
         }
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
@@ -242,7 +281,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     @Nullable
     public UserIdentity getSelectedUserIdentity() {
-        return persistableStore.getSelectedUserIdentity();
+        return selectedUserIdentityObservable.get();
     }
 
     public ObservableSet<UserIdentity> getUserIdentities() {
@@ -266,9 +305,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 "Nickname must not have leading or trailing spaces and must not be empty.");
         UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
+
+        userIdentities.add(userIdentity);
+        setSelectedUserIdentity(userIdentity.getId());
+
         synchronized (lock) {
+            //todo
             persistableStore.getUserIdentities().add(userIdentity);
-            persistableStore.setSelectedUserIdentity(userIdentity);
+            persistableStore.setSelectedUserIdentityId(userIdentity.getId());
         }
         newlyCreatedUserIdentity.set(userIdentity);
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);

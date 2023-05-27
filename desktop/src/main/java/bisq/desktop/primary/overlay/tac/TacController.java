@@ -69,10 +69,11 @@ public class TacController implements InitWithDataController<TacController.InitD
 
     void onAccept() {
         settingsService.setTacAccepted(true);
-        if (completeHandler != null) {
-            completeHandler.run();
-        }
-        OverlayController.hide();
+        OverlayController.hide(() -> {
+            if (completeHandler != null) {
+                completeHandler.run();
+            }
+        });
     }
 
     void onReject() {

@@ -107,12 +107,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setTacAccepted(boolean tacAccepted) {
-        persistableStore.tacAccepted = tacAccepted;
+        persistableStore.isTacAccepted = tacAccepted;
         persist();
     }
 
-    public boolean getTacAccepted() {
-        return persistableStore.tacAccepted;
+    public boolean isTacAccepted() {
+        return persistableStore.isTacAccepted;
     }
 
     public void setCookie(CookieKey key, boolean value) {

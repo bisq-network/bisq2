@@ -38,6 +38,7 @@ import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -54,6 +55,11 @@ public class OverlayController extends NavigationController {
     }
 
     public static void hide() {
+        hide(null);
+    }
+
+    public static void hide(@Nullable Runnable onHiddenHandler) {
+        INSTANCE.onHiddenHandler = onHiddenHandler;
         INSTANCE.resetSelectedChildTarget();
     }
 
@@ -68,6 +74,8 @@ public class OverlayController extends NavigationController {
     @Getter
     private final Region applicationRoot;
     private final DefaultApplicationService applicationService;
+    @Nullable
+    private Runnable onHiddenHandler;
 
     public OverlayController(DefaultApplicationService applicationService, Region applicationRoot) {
         super(NavigationTarget.OVERLAY);
@@ -82,7 +90,7 @@ public class OverlayController extends NavigationController {
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue == null) {
-                hide();
+                resetSelectedChildTarget();
             }
         });
     }
@@ -148,6 +156,10 @@ public class OverlayController extends NavigationController {
 
     void onHidden() {
         resetSelectedChildTarget();
+        if (onHiddenHandler != null) {
+            onHiddenHandler.run();
+            onHiddenHandler = null;
+        }
     }
 
     void onQuit() {
