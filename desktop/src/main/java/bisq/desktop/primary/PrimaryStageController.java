@@ -30,6 +30,8 @@ import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.overlay.OverlayController;
+import bisq.desktop.primary.overlay.tac.TacController;
+import bisq.desktop.primary.overlay.unlock.UnlockController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
@@ -103,9 +105,28 @@ public class PrimaryStageController extends NavigationController {
 
     @Override
     public void onActivate() {
-        onStageReadyHandler.run();
-
         Navigation.navigateTo(NavigationTarget.SPLASH);
+        if (isPasswordProtected()) {
+            // We delay to allow the splash screen to be displayed 
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.UNLOCK,
+                    new UnlockController.InitData(splashController::startAnimation)));
+        } else if (!getTacAccepted()) {
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
+                    new TacController.InitData(splashController::startAnimation)));
+        } else {
+            splashController.startAnimation();
+        }
+
+        onStageReadyHandler.run();
+    }
+
+    private boolean getTacAccepted() {
+        return settingsService.getTacAccepted();
+    }
+
+    //todo
+    private boolean isPasswordProtected() {
+        return false;
     }
 
     @Override
@@ -128,8 +149,16 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onDomainInitialized() {
+        if (isPasswordProtected()) {
+            return;
+        }
+        if (!getTacAccepted()) {
+            return;
+        }
+
         splashController.stopAnimation();
         boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
+
         if (!hasUserIdentities) {
             if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);

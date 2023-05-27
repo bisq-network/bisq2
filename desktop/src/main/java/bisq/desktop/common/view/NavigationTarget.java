@@ -37,6 +37,9 @@ public enum NavigationTarget {
 
     OVERLAY(PRIMARY_STAGE, false),
 
+    UNLOCK(OVERLAY, false),
+    TAC(OVERLAY, false),
+
     ONBOARDING(OVERLAY, false),
     ONBOARDING_BISQ_2_INTRO(ONBOARDING, false),
     ONBOARDING_GENERATE_NYM(ONBOARDING, false),

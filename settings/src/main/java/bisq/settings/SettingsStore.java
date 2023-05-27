@@ -46,6 +46,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> offersOnly = new Observable<>(true);
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
+    boolean tacAccepted;
 
     public SettingsStore() {
         this(new Cookie(),
@@ -56,7 +57,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 1000,
                 true,
                 false,
-                ChatNotificationType.MENTION);
+                ChatNotificationType.MENTION,
+                false);
     }
 
     public SettingsStore(Cookie cookie,
@@ -67,7 +69,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          long requiredTotalReputationScore,
                          boolean offersOnly,
                          boolean tradeRulesConfirmed,
-                         ChatNotificationType chatNotificationType) {
+                         ChatNotificationType chatNotificationType,
+                         boolean tacAccepted) {
         this.cookie = cookie;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
@@ -77,6 +80,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
+        this.tacAccepted = tacAccepted;
     }
 
     @Override
@@ -90,7 +94,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setRequiredTotalReputationScore(requiredTotalReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
-                .setChatNotificationType(chatNotificationType.get().toProto()).build();
+                .setChatNotificationType(chatNotificationType.get().toProto())
+                .setTacAccepted(tacAccepted)
+                .build();
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
@@ -103,7 +109,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getRequiredTotalReputationScore(),
                 proto.getOffersOnly(),
                 proto.getTradeRulesConfirmed(),
-                ChatNotificationType.fromProto(proto.getChatNotificationType()));
+                ChatNotificationType.fromProto(proto.getChatNotificationType()),
+                proto.getTacAccepted());
     }
 
     @Override
@@ -127,7 +134,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 requiredTotalReputationScore.get(),
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
-                chatNotificationType.get());
+                chatNotificationType.get(),
+                tacAccepted);
     }
 
     @Override
@@ -142,5 +150,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         offersOnly.set(persisted.offersOnly.get());
         tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
         chatNotificationType.set(persisted.chatNotificationType.get());
+        tacAccepted = persisted.tacAccepted;
     }
 }

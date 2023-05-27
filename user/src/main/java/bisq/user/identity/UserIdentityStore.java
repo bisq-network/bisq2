@@ -17,8 +17,6 @@
 
 package bisq.user.identity;
 
-import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -26,6 +24,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,40 +34,49 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
-    private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
-    private final ObservableSet<UserIdentity> userIdentities;
+    @Nullable
+    private UserIdentity selectedUserIdentity;
+    private final Set<UserIdentity> userIdentities;
 
     public UserIdentityStore() {
-        userIdentities = new ObservableSet<>();
+        userIdentities = new HashSet<>();
     }
 
-    private UserIdentityStore(UserIdentity selectedUserIdentity,
+    private UserIdentityStore(@Nullable UserIdentity selectedUserIdentity,
                               Set<UserIdentity> userIdentities) {
-        this.userIdentities = new ObservableSet<>(userIdentities);
+        this.userIdentities = new HashSet<>(userIdentities);
         setSelectedUserIdentity(selectedUserIdentity);
     }
 
     @Nullable
     public UserIdentity getSelectedUserIdentity() {
-        return selectedUserIdentityObservable.get();
+        return selectedUserIdentity;
     }
 
-    public void setSelectedUserIdentity(UserIdentity selectedUserIdentity) {
-        this.selectedUserIdentityObservable.set(userIdentities.stream()
+    public void setSelectedUserIdentity(@Nullable UserIdentity selectedUserIdentity) {
+        this.selectedUserIdentity = userIdentities.stream()
                 .filter(userIdentity -> userIdentity.equals(selectedUserIdentity))
-                .findAny().orElse(null));
+                .findAny()
+                .orElse(null);
+    }
+
+    Set<UserIdentity> getUserIdentities() {
+        return userIdentities;
     }
 
     @Override
     public bisq.user.protobuf.UserIdentityStore toProto() {
-        return bisq.user.protobuf.UserIdentityStore.newBuilder()
-                .setSelectedUserIdentity(selectedUserIdentityObservable.get().toProto())
-                .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()))
-                .build();
+        bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
+                .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
+        Optional.ofNullable(selectedUserIdentity).ifPresent(selectedUserIdentity
+                -> builder.setSelectedUserIdentity(selectedUserIdentity.toProto()));
+        return builder.build();
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
-        return new UserIdentityStore(UserIdentity.fromProto(proto.getSelectedUserIdentity()),
+        return new UserIdentityStore(proto.hasSelectedUserIdentity() ?
+                UserIdentity.fromProto(proto.getSelectedUserIdentity()) :
+                null,
                 proto.getUserIdentitiesList().stream()
                         .map(UserIdentity::fromProto)
                         .collect(Collectors.toSet()));
@@ -86,20 +95,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public UserIdentityStore getClone() {
-        return new UserIdentityStore(selectedUserIdentityObservable.get(), userIdentities);
+        return new UserIdentityStore(selectedUserIdentity, userIdentities);
     }
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
         userIdentities.addAll(persisted.getUserIdentities());
-        setSelectedUserIdentity(persisted.getSelectedUserIdentityObservable().get());
-    }
-
-    Observable<UserIdentity> getSelectedUserIdentityObservable() {
-        return selectedUserIdentityObservable;
-    }
-
-    ObservableSet<UserIdentity> getUserIdentities() {
-        return userIdentities;
+        setSelectedUserIdentity(persisted.getSelectedUserIdentity());
     }
 }

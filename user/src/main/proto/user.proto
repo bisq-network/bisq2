@@ -40,7 +40,7 @@ message UserIdentity {
 // Stores
 message UserIdentityStore {
   repeated UserIdentity userIdentities = 1;
-  UserIdentity selectedUserIdentity = 2;
+  optional UserIdentity selectedUserIdentity = 2;
 }
 
 message NymList {

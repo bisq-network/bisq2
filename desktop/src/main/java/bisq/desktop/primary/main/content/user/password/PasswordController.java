@@ -22,7 +22,7 @@ import bisq.desktop.common.utils.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.user.UserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -31,18 +31,20 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+// TODO if walletService is present we want to encrypt the wallet file.
+// Wallet encryption is not implemented yet in the wallet domain
 @Slf4j
 public class PasswordController implements Controller {
     @Getter
     private final PasswordView view;
     private final PasswordModel model;
-    private final UserService userService;
     private final PasswordValidator confirmedPasswordValidator;
+    private final UserIdentityService userIdentityService;
     private Subscription pin;
     private MonadicBinding<Boolean> binding;
 
     public PasswordController(DefaultApplicationService applicationService) {
-        userService = applicationService.getUserService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
         confirmedPasswordValidator = new PasswordValidator();
         model = new PasswordModel();
         view = new PasswordView(model, this, confirmedPasswordValidator);
@@ -62,12 +64,12 @@ public class PasswordController implements Controller {
         String password = model.getPassword().get();
         checkArgument(!isPasswordInvalid(password));
 
-        if (userService.isPasswordSet()) {
-            userService.removePassword(password);
+        if (userIdentityService.isDataStoreEncrypted()) {
+            userIdentityService.decryptDataStore(password);
             new Popup().feedback(Res.get("user.password.removePassword.success")).show();
         } else {
             checkArgument(password.equals(model.getConfirmedPassword().get()));
-            userService.setPassword(password);
+            userIdentityService.encryptDataStore(password);
             new Popup().feedback(Res.get("user.password.savePassword.success")).show();
         }
         doDeactivate();
@@ -80,7 +82,7 @@ public class PasswordController implements Controller {
         model.getPassword().set("");
         model.getConfirmedPassword().set("");
 
-        boolean isPasswordSet = userService.isPasswordSet();
+        boolean isPasswordSet = userIdentityService.isDataStoreEncrypted();
         model.getConfirmedPasswordVisible().set(!isPasswordSet);
         if (isPasswordSet) {
             model.getHeadline().set(Res.get("user.password.headline.removePassword"));

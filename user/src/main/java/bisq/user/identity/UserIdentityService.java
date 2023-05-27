@@ -82,6 +82,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
     protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
+    private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
+    private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
+
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
                                IdentityService identityService,
@@ -133,6 +136,19 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //todo
+    public CompletableFuture<Boolean> encryptDataStore(String password) {
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> decryptDataStore(String password) {
+        return CompletableFuture.completedFuture(false);
+    }
+
+    public boolean isDataStoreEncrypted() {
+        return false;
+    }
 
     public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
                                                        String nickName,
@@ -221,7 +237,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public Observable<UserIdentity> getSelectedUserIdentityObservable() {
-        return persistableStore.getSelectedUserIdentityObservable();
+        return selectedUserIdentityObservable;
     }
 
     @Nullable
@@ -230,7 +246,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public ObservableSet<UserIdentity> getUserIdentities() {
-        return persistableStore.getUserIdentities();
+        return userIdentities;
     }
 
     public boolean isUserIdentityPresent(String profileId) {
