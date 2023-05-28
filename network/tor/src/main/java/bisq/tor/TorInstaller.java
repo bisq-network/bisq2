@@ -25,11 +25,11 @@ import java.io.IOException;
 
 @Slf4j
 public class TorInstaller {
-    private final TorInstallationFileManager torInstallationFileManager;
+    private final TorInstallationFiles torInstallationFiles;
     private final TorrcConfigInstaller torrcConfigInstaller;
 
-    public TorInstaller(TorInstallationFileManager torInstallationFileManager, TorrcConfigInstaller torrcConfigInstaller) {
-        this.torInstallationFileManager = torInstallationFileManager;
+    public TorInstaller(TorInstallationFiles torInstallationFiles, TorrcConfigInstaller torrcConfigInstaller) {
+        this.torInstallationFiles = torInstallationFiles;
         this.torrcConfigInstaller = torrcConfigInstaller;
     }
 
@@ -40,26 +40,26 @@ public class TorInstaller {
     }
 
     private boolean isTorUpToDate() throws IOException {
-        File versionFile = torInstallationFileManager.getVersionFile();
+        File versionFile = torInstallationFiles.getVersionFile();
         return versionFile.exists() && Tor.VERSION.equals(FileUtils.readFromFile(versionFile));
     }
     
     private void install() throws IOException {
         try {
-            File torDir = torInstallationFileManager.getTorDir();
+            File torDir = torInstallationFiles.getTorDir();
             FileUtils.makeDirs(torDir);
 
-            File dotTorDir = torInstallationFileManager.getDotTorDir();
+            File dotTorDir = torInstallationFiles.getDotTorDir();
             FileUtils.makeDirs(dotTorDir);
 
             torrcConfigInstaller.install();
 
-            File destDir = torInstallationFileManager.getTorDir();
+            File destDir = torInstallationFiles.getTorDir();
             new TorBinaryZipExtractor(destDir).extractBinary();
             log.info("Tor files installed to {}", destDir.getAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            File versionFile = torInstallationFileManager.getVersionFile();
+            File versionFile = torInstallationFiles.getVersionFile();
             FileUtils.writeToFile(Tor.VERSION, versionFile);
         } catch (Throwable e) {
             deleteVersionFile();
@@ -68,7 +68,7 @@ public class TorInstaller {
     }
 
     void deleteVersionFile() {
-        File versionFile = torInstallationFileManager.getVersionFile();
+        File versionFile = torInstallationFiles.getVersionFile();
         boolean isSuccess = versionFile.delete();
         if (isSuccess) {
             log.debug("Deleted {}", versionFile.getAbsolutePath());

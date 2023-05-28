@@ -31,16 +31,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 class TorBootstrap {
-    private final TorInstallationFileManager torInstallationFileManager;
+    private final TorInstallationFiles torInstallationFiles;
     private final TorInstaller torInstaller;
     private final OsType osType;
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
     TorBootstrap(Path torDirPath) {
-        this.torInstallationFileManager = new TorInstallationFileManager(torDirPath);
+        this.torInstallationFiles = new TorInstallationFiles(torDirPath);
 
-        TorrcConfigInstaller torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFileManager);
-        this.torInstaller = new TorInstaller(torInstallationFileManager, torrcConfigInstaller);
+        TorrcConfigInstaller torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFiles);
+        this.torInstaller = new TorInstaller(torInstallationFiles, torrcConfigInstaller);
 
         this.osType = OsType.getOsType();
     }
@@ -62,7 +62,7 @@ class TorBootstrap {
     }
 
     File getCookieFile() {
-        return torInstallationFileManager.getCookieFile();
+        return torInstallationFiles.getCookieFile();
     }
 
     void deleteVersionFile() {
@@ -75,7 +75,7 @@ class TorBootstrap {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeCleanupCookieFile() throws IOException {
-        File cookieFile = torInstallationFileManager.getCookieFile();
+        File cookieFile = torInstallationFiles.getCookieFile();
         if (cookieFile.exists() && !cookieFile.delete()) {
             throw new IOException("Cannot delete old cookie file.");
         }
@@ -85,12 +85,12 @@ class TorBootstrap {
         String processName = ManagementFactory.getRuntimeMXBean().getName();
         String ownerPid = processName.split("@")[0];
         log.debug("Owner pid {}", ownerPid);
-        File pidFile = torInstallationFileManager.getPidFile();
+        File pidFile = torInstallationFiles.getPidFile();
         FileUtils.writeToFile(ownerPid, pidFile);
 
-        File torDir = torInstallationFileManager.getTorDir();
+        File torDir = torInstallationFiles.getTorDir();
         String path = new File(torDir, osType.getBinaryName()).getAbsolutePath();
-        File torrcFile = torInstallationFileManager.getTorrcFile();
+        File torrcFile = torInstallationFiles.getTorrcFile();
         String[] command = {path, "-f", torrcFile.getAbsolutePath(), Constants.CONTROL_RESET_CONF, ownerPid};
         log.debug("command for process builder: {} {} {} {} {}",
                 path, "-f", torrcFile.getAbsolutePath(), Constants.CONTROL_RESET_CONF, ownerPid);
@@ -154,7 +154,7 @@ class TorBootstrap {
 
     private void waitForCookieInitialized() throws InterruptedException, IOException {
         long start = System.currentTimeMillis();
-        File cookieFile = torInstallationFileManager.getCookieFile();
+        File cookieFile = torInstallationFiles.getCookieFile();
         while (isRunning.get() && cookieFile.length() < 32 && !Thread.currentThread().isInterrupted()) {
             if (System.currentTimeMillis() - start > 5000) {
                 throw new IOException("Auth cookie not created");
