@@ -30,26 +30,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 class TorBootstrap {
-    private final Path torDirPath;
     private final TorInstallationFileManager torInstallationFileManager;
-    private final TorrcConfigInstaller torrcConfigInstaller;
+    private final TorInstaller torInstaller;
     private final OsType osType;
 
     private volatile boolean isStopped;
 
     TorBootstrap(Path torDirPath) {
-        this.torDirPath = torDirPath;
         this.torInstallationFileManager = new TorInstallationFileManager(torDirPath);
-        this.torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFileManager);
+
+        TorrcConfigInstaller torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFileManager);
+        this.torInstaller = new TorInstaller(torInstallationFileManager, torrcConfigInstaller);
+
         this.osType = OsType.getOsType();
     }
 
     int start() throws IOException, InterruptedException {
         maybeCleanupCookieFile();
-
-        if (!torInstallationFileManager.isTorUpToDate()) {
-            installFiles();
-        }
+        torInstaller.installIfNotUpToDate();
 
         Process torProcess = startTorProcess();
         log.info("Tor process started");
@@ -67,8 +65,7 @@ class TorBootstrap {
     }
 
     void deleteVersionFile() {
-        File versionFile = torInstallationFileManager.getVersionFile();
-        versionFile.delete();
+        torInstaller.deleteVersionFile();
     }
 
 
@@ -80,29 +77,6 @@ class TorBootstrap {
         File cookieFile = torInstallationFileManager.getCookieFile();
         if (cookieFile.exists() && !cookieFile.delete()) {
             throw new IOException("Cannot delete old cookie file.");
-        }
-    }
-
-    private void installFiles() throws IOException {
-        try {
-            File torDir = torInstallationFileManager.getTorDir();
-            FileUtils.makeDirs(torDir);
-
-            File dotTorDir = torInstallationFileManager.getDotTorDir();
-            FileUtils.makeDirs(dotTorDir);
-
-            torrcConfigInstaller.install();
-
-            File destDir = torDirPath.toFile();
-            new TorBinaryZipExtractor(destDir).extractBinary();
-            log.info("Tor files installed to {}", torDirPath);
-            // Only if we have successfully extracted all files we write our version file which is used to
-            // check if we need to call installFiles.
-            File versionFile = torInstallationFileManager.getVersionFile();
-            FileUtils.writeToFile(Tor.VERSION, versionFile);
-        } catch (Throwable e) {
-            deleteVersionFile();
-            throw e;
         }
     }
 

@@ -17,11 +17,9 @@
 
 package bisq.tor;
 
-import bisq.common.util.FileUtils;
 import lombok.Getter;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 @Getter
@@ -44,9 +42,5 @@ public class TorInstallationFileManager {
         torrcFile = new File(torDir, Constants.TORRC);
         cookieFile = new File(dotTorDir.getAbsoluteFile(), Constants.COOKIE);
         versionFile = new File(torDir, Constants.VERSION);
-    }
-
-    public boolean isTorUpToDate() throws IOException {
-        return versionFile.exists() && Tor.VERSION.equals(FileUtils.readFromFile(versionFile));
     }
 }
