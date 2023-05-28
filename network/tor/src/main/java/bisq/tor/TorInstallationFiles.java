@@ -27,6 +27,7 @@ import java.nio.file.Path;
 @Getter
 public class TorInstallationFiles {
     private final File torDir;
+    private final File torBinary;
     private final File dotTorDir;
     private final File pidFile;
     private final File geoIPFile;
@@ -35,8 +36,9 @@ public class TorInstallationFiles {
     private final File cookieFile;
     private final File versionFile;
 
-    public TorInstallationFiles(Path torDirPath) {
+    public TorInstallationFiles(Path torDirPath, OsType osType) {
         torDir = torDirPath.toFile();
+        torBinary = new File(torDir, osType.getBinaryName());
         dotTorDir = new File(torDir, Constants.DOT_TOR_DIR);
         pidFile = new File(torDir, Constants.PID);
         geoIPFile = new File(torDir, Constants.GEO_IP);

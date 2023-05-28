@@ -41,9 +41,7 @@ public class TorProcessBuilder {
     }
 
     public Process createAndStartProcess() throws IOException {
-        File torDir = torInstallationFiles.getTorDir();
-        String torBinaryPath = new File(torDir, osType.getBinaryName()).getAbsolutePath();
-
+        String torBinaryPath = torInstallationFiles.getTorBinary().getAbsolutePath();
         log.debug("command for process builder: {} {} {} {} {}",
                 torBinaryPath, ARG_TORRC, torProcessConfig.getTorrcPath(), ARG_OWNER_PID, torProcessConfig.getOwnerPid());
 
@@ -53,6 +51,7 @@ public class TorProcessBuilder {
                 ARG_OWNER_PID, torProcessConfig.getOwnerPid()
         );
 
+        File torDir = torInstallationFiles.getTorDir();
         processBuilder.directory(torDir);
 
         Map<String, String> environment = processBuilder.environment();
