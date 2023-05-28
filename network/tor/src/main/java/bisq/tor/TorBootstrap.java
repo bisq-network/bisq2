@@ -46,7 +46,7 @@ class TorBootstrap {
     }
 
     int start() throws IOException, InterruptedException {
-        removeCookieFileIfPresent();
+        torInstallationFiles.removeCookieFileIfPresent();
         torInstaller.installIfNotUpToDate();
 
         Process torProcess = startTorProcess();
@@ -73,13 +73,6 @@ class TorBootstrap {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void removeCookieFileIfPresent() throws IOException {
-        File cookieFile = torInstallationFiles.getCookieFile();
-        if (cookieFile.exists() && !cookieFile.delete()) {
-            throw new IOException("Cannot delete old cookie file.");
-        }
-    }
 
     private Process startTorProcess() throws IOException {
         String processName = ManagementFactory.getRuntimeMXBean().getName();
