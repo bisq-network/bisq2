@@ -18,7 +18,7 @@
 package bisq.tor.process;
 
 import bisq.tor.OsType;
-import bisq.tor.TorInstallationFiles;
+import bisq.tor.installer.TorInstallationFiles;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
