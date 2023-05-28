@@ -17,6 +17,7 @@
 
 package bisq.tor;
 
+import bisq.common.util.FileUtils;
 import lombok.Getter;
 
 import java.io.File;
@@ -49,5 +50,9 @@ public class TorInstallationFiles {
         if (cookieFile.exists() && !cookieFile.delete()) {
             throw new IOException("Cannot delete old cookie file.");
         }
+    }
+
+    public void writePidToDisk(String ownerPid) throws IOException {
+        FileUtils.writeToFile(ownerPid, pidFile);
     }
 }
