@@ -87,7 +87,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
 
     //todo
-    private boolean isDataStoreEncrypted = false;
+    private boolean isDataStoreEncrypted = true;
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,

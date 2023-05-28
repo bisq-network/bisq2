@@ -73,7 +73,7 @@ public class WalletSendController implements Controller {
         walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)
                 .whenComplete((response, throwable) -> {
                     if (throwable != null) {
-                        UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
+                        UIThread.run(() -> new Popup().error(throwable).show());
                     }
                 });
     }

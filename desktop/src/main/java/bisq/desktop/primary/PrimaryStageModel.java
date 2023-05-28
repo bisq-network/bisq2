@@ -40,7 +40,7 @@ public class PrimaryStageModel extends NavigationModel {
     @Setter
     private double stageHeight;
     @Setter
-    private boolean isDomainInitialized;
+    private boolean isInitializeApplicationServiceCompleted;
 
     public PrimaryStageModel(String title) {
         this.title = title;

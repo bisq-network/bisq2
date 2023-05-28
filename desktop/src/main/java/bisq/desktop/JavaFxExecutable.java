@@ -19,20 +19,20 @@ package bisq.desktop;
 
 import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
-import bisq.common.annotations.LateInit;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.PrimaryStageController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
+
 import static bisq.common.util.OsUtils.EXIT_FAILURE;
-import static java.util.Objects.requireNonNull;
 
 @Slf4j
 public class JavaFxExecutable extends Executable<DefaultApplicationService> {
-    @LateInit
+    @Nullable
     private PrimaryStageController primaryStageController;
 
     public JavaFxExecutable(String[] args) {
@@ -74,19 +74,23 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
     }
 
     @Override
-    protected void onDomainInitialized() {
-        Platform.runLater(() -> requireNonNull(primaryStageController).onDomainInitialized());
+    protected CompletableFuture<Boolean> readAllPersisted() {
+        return super.readAllPersisted()
+                .whenComplete((result, throwable) -> {
+                    if (primaryStageController != null) {
+                        Platform.runLater(() -> primaryStageController.readAllPersistedCompleted(result, throwable));
+                    }
+                });
     }
 
     @Override
-    protected void onInitializeDomainFailed(Throwable throwable) {
-        super.onInitializeDomainFailed(throwable);
-
-        if (primaryStageController == null) {
-            UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
-        } else {
-            UIThread.run(() -> primaryStageController.onInitializeDomainFailed(throwable));
-        }
+    protected CompletableFuture<Boolean> initializeApplicationService() {
+        return super.initializeApplicationService()
+                .whenComplete((result, throwable) -> {
+                    if (primaryStageController != null) {
+                        Platform.runLater(() -> primaryStageController.initializeApplicationServiceCompleted(result, throwable));
+                    }
+                });
     }
 
     @Override

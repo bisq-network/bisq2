@@ -57,19 +57,19 @@ public class PrimaryStageController extends NavigationController {
     @Getter
     protected final PrimaryStageView view;
     protected final SettingsService settingsService;
-    protected final Runnable onStageReadyHandler;
+    protected final Runnable initDomainHandler;
     private final SplashController splashController;
     private final UserIdentityService userIdentityService;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
-                                  Runnable onStageReadyHandler) {
+                                  Runnable initDomainHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
 
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
-        this.onStageReadyHandler = onStageReadyHandler;
+        this.initDomainHandler = initDomainHandler;
 
         model = new PrimaryStageModel(applicationService.getConfig().getAppName());
         setInitialScreenSize(applicationService);
@@ -94,29 +94,6 @@ public class PrimaryStageController extends NavigationController {
     }
 
     @Override
-    public void onActivate() {
-        // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
-        Navigation.navigateTo(NavigationTarget.SPLASH);
-
-        if (isLocked()) {
-            // We delay to allow the splash screen to be displayed 
-            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.UNLOCK,
-                    new UnlockController.InitData(this::unlockCompleted)));
-        } else if (isTacNotAccepted()) {
-            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
-                    new TacController.InitData(this::tacAccepted)));
-        } else {
-            splashController.startAnimation();
-        }
-
-        onStageReadyHandler.run();
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SPLASH: {
@@ -131,82 +108,80 @@ public class PrimaryStageController extends NavigationController {
         }
     }
 
-    public void onDomainInitialized() {
-        model.setDomainInitialized(true);
-        maybeApplyNavigationTarget();
+    // Step 1: Maybe show locked screen
+    @Override
+    public void onActivate() {
+        // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
+        Navigation.navigateTo(NavigationTarget.SPLASH);
+
+        if (isLocked()) {
+            // We delay to allow the splash screen to be displayed 
+            // After successful unlock we start loading persisted data and init of the domain
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.UNLOCK,
+                    new UnlockController.InitData(this::initDomain)));
+            return;
+        }
+
+        // We had no password protection so no storage files and wallets had been encrypted, and we can start reading
+        // persisted data and init the domain
+        initDomain();
     }
 
-    public void onUncaughtException(Thread thread, Throwable throwable) {
-        log.error("Uncaught exception from thread {}", thread);
-        log.error("Uncaught exception", throwable);
-        UIThread.run(() -> new Popup().error(throwable.toString()).show());
+    // Step 2: We load persisted data and after that initialise the application service
+    private void initDomain() {
+        initDomainHandler.run();
     }
 
-    public void onQuit() {
-        shutdown();
+    @Override
+    public void onDeactivate() {
     }
 
-    public void onInitializeDomainFailed(Throwable throwable) {
-        new Popup().error(throwable.toString()).show();
-    }
+    // Step 3: Maybe show tac screen
+    public void readAllPersistedCompleted(boolean result, Throwable throwable) {
+        if (throwable != null) {
+            new Popup().error(throwable).show();
+            return;
+        }
 
-    public void shutdown() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
-    }
+        if (!result) {
+            new Popup().warning("Could not read persisted data.").show();
+            return;
+        }
 
-    public void onStageXChanged(double value) {
-        settingsService.setCookie(CookieKey.STAGE_X, value);
-    }
-
-    public void onStageYChanged(double value) {
-        settingsService.setCookie(CookieKey.STAGE_Y, value);
-    }
-
-    public void onStageWidthChanged(double value) {
-        settingsService.setCookie(CookieKey.STAGE_W, value);
-    }
-
-    public void onStageHeightChanged(double value) {
-        settingsService.setCookie(CookieKey.STAGE_H, value);
-    }
-
-    private void setInitialScreenSize(DefaultApplicationService applicationService) {
-        Cookie cookie = applicationService.getSettingsService().getCookie();
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
-                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
-        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
-                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
-        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
-                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
-        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
-                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
-    }
-
-    private boolean isLocked() {
-        return userIdentityService.isDataStoreEncrypted();
-    }
-
-    private boolean isTacNotAccepted() {
-        return !settingsService.isTacAccepted();
-    }
-
-    private void unlockCompleted() {
+        // Now we have the persisted data loaded and can continue with the tac screen if not yet accepted.
         if (isTacNotAccepted()) {
-            Navigation.navigateTo(NavigationTarget.TAC, new TacController.InitData(this::tacAccepted));
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
+                    new TacController.InitData(this::tacAccepted)));
         } else {
-            maybeApplyNavigationTarget();
             splashController.startAnimation();
         }
     }
 
-    private void tacAccepted() {
+    // Step 4a: Initialize application service completed. Maybe apply navigation target
+    public void initializeApplicationServiceCompleted(boolean result, Throwable throwable) {
+        if (throwable != null) {
+            new Popup().error(throwable).show();
+            return;
+        }
+
+        if (!result) {
+            new Popup().warning("Initialising applicationService failed.").show();
+            return;
+        }
+
+        model.setInitializeApplicationServiceCompleted(true);
         maybeApplyNavigationTarget();
-        splashController.startAnimation();
     }
 
+    // Step 4b: Tac accepted, Maybe apply navigation target
+    private void tacAccepted() {
+        splashController.startAnimation();
+        maybeApplyNavigationTarget();
+    }
+
+    // Step 5: If initializeApplicationServiceCompleted and tac accepted we apply navigation target
     private void maybeApplyNavigationTarget() {
-        if (!model.isDomainInitialized() || isLocked() || isTacNotAccepted()) {
+        if (!model.isInitializeApplicationServiceCompleted() || isTacNotAccepted()) {
             return;
         }
 
@@ -233,5 +208,57 @@ public class PrimaryStageController extends NavigationController {
                             },
                             () -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
         }
+    }
+
+    public void onQuit() {
+        shutdown();
+    }
+
+    public void shutdown() {
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
+    }
+
+    public void onStageXChanged(double value) {
+        settingsService.setCookie(CookieKey.STAGE_X, value);
+    }
+
+    public void onStageYChanged(double value) {
+        settingsService.setCookie(CookieKey.STAGE_Y, value);
+    }
+
+    public void onStageWidthChanged(double value) {
+        settingsService.setCookie(CookieKey.STAGE_W, value);
+    }
+
+    public void onStageHeightChanged(double value) {
+        settingsService.setCookie(CookieKey.STAGE_H, value);
+    }
+
+    public void onUncaughtException(Thread thread, Throwable throwable) {
+        log.error("Uncaught exception from thread {}", thread);
+        log.error("Uncaught exception", throwable);
+        UIThread.run(() -> new Popup().error(throwable).show());
+    }
+
+    private void setInitialScreenSize(DefaultApplicationService applicationService) {
+        Cookie cookie = applicationService.getSettingsService().getCookie();
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
+                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
+        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
+                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
+        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
+                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
+        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
+                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
+    }
+
+    private boolean isLocked() {
+        // todo add wallet support
+        return userIdentityService.isDataStoreEncrypted();
+    }
+
+    private boolean isTacNotAccepted() {
+        return !settingsService.isTacAccepted();
     }
 }

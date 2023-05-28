@@ -83,7 +83,7 @@ public class UnlockController implements InitWithDataController<UnlockController
         userIdentityService.decryptDataStore(model.getPassword().get())
                 .whenComplete((success, throwable) -> {
                     if (throwable != null) {
-                        new Popup().error(throwable.toString()).show();
+                        new Popup().error(throwable).show();
                         model.getPassword().set("");
                         return;
                     }
