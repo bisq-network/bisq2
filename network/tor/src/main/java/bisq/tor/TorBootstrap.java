@@ -17,14 +17,14 @@
 
 package bisq.tor;
 
-import bisq.common.util.FileUtils;
+import bisq.tor.process.TorProcessBuilder;
+import bisq.tor.process.TorProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -75,32 +75,26 @@ class TorBootstrap {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Process startTorProcess() throws IOException {
+        String ownerPid = getBisqProcessPid();
+        torInstallationFiles.writePidToDisk(ownerPid);
+
+        TorProcessConfig torProcessConfig = TorProcessConfig.builder()
+                .torrcFile(torInstallationFiles.getTorrcFile())
+                .ownerPid(ownerPid)
+                .build();
+
+        var torProcessBuilder = new TorProcessBuilder(torProcessConfig, torInstallationFiles, osType);
+        Process process = torProcessBuilder.createAndStartProcess();
+
+        log.debug("Process started. pid={} info={}", process.pid(), process.info());
+        return process;
+    }
+
+    private String getBisqProcessPid() {
         String processName = ManagementFactory.getRuntimeMXBean().getName();
         String ownerPid = processName.split("@")[0];
         log.debug("Owner pid {}", ownerPid);
-        File pidFile = torInstallationFiles.getPidFile();
-        FileUtils.writeToFile(ownerPid, pidFile);
-
-        File torDir = torInstallationFiles.getTorDir();
-        String path = new File(torDir, osType.getBinaryName()).getAbsolutePath();
-        File torrcFile = torInstallationFiles.getTorrcFile();
-        String[] command = {path, "-f", torrcFile.getAbsolutePath(), Constants.CONTROL_RESET_CONF, ownerPid};
-        log.debug("command for process builder: {} {} {} {} {}",
-                path, "-f", torrcFile.getAbsolutePath(), Constants.CONTROL_RESET_CONF, ownerPid);
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-
-        processBuilder.directory(torDir);
-        Map<String, String> environment = processBuilder.environment();
-        environment.put("HOME", torDir.getAbsolutePath());
-        if (osType == OsType.LINUX_32 || osType == OsType.LINUX_64) {
-            // TODO Taken from netlayer, but not sure if needed. Not used in Briar.
-            // Not recommended to be used here: https://www.hpc.dtu.dk/?page_id=1180
-            environment.put("LD_LIBRARY_PATH", torDir.getAbsolutePath());
-        }
-
-        Process process = processBuilder.start();
-        log.debug("Process started. pid={} info={}", process.pid(), process.info());
-        return process;
+        return ownerPid;
     }
 
     private int waitForControlPort(Process torProcess) {
