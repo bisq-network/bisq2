@@ -24,15 +24,12 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 class TorBootstrap {
-    private final List<String> bridgeConfig = new ArrayList<>();
     private final Path torDirPath;
     private final TorInstallationFileManager torInstallationFileManager;
     private final TorrcConfigInstaller torrcConfigInstaller;
@@ -52,10 +49,6 @@ class TorBootstrap {
 
         if (!torInstallationFileManager.isTorUpToDate()) {
             installFiles();
-        }
-
-        if (!bridgeConfig.isEmpty()) {
-            torrcConfigInstaller.addBridgesToTorrcFile(bridgeConfig);
         }
 
         Process torProcess = startTorProcess();
