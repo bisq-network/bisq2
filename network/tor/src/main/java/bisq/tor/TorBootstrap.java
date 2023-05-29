@@ -26,6 +26,7 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -34,8 +35,7 @@ class TorBootstrap {
     private final TorInstallationFileManager torInstallationFileManager;
     private final TorrcConfigInstaller torrcConfigInstaller;
     private final OsType osType;
-
-    private volatile boolean isStopped;
+    private final AtomicBoolean isRunning = new AtomicBoolean();
 
     TorBootstrap(Path torDirPath) {
         this.torDirPath = torDirPath;
@@ -52,6 +52,7 @@ class TorBootstrap {
         }
 
         Process torProcess = startTorProcess();
+        isRunning.set(true);
         log.info("Tor process started");
 
         int controlPort = waitForControlPort(torProcess);
@@ -180,7 +181,7 @@ class TorBootstrap {
     private void waitForCookieInitialized() throws InterruptedException, IOException {
         long start = System.currentTimeMillis();
         File cookieFile = torInstallationFileManager.getCookieFile();
-        while (!isStopped && cookieFile.length() < 32 && !Thread.currentThread().isInterrupted()) {
+        while (isRunning.get() && cookieFile.length() < 32 && !Thread.currentThread().isInterrupted()) {
             if (System.currentTimeMillis() - start > 5000) {
                 throw new IOException("Auth cookie not created");
             }
@@ -189,6 +190,6 @@ class TorBootstrap {
     }
 
     void shutdown() {
-        isStopped = true;
+        isRunning.set(false);
     }
 }
