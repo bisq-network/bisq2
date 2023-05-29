@@ -25,13 +25,13 @@ import java.util.List;
 
 @Slf4j
 public class TorrcConfigInstaller {
-    private final TorInstallationFileManager torInstallationFileManager;
+    private final TorInstallationFiles torInstallationFiles;
     private final File torrcFile;
     private final OsType osType;
 
-    public TorrcConfigInstaller(TorInstallationFileManager torInstallationFileManager) {
-        this.torInstallationFileManager = torInstallationFileManager;
-        this.torrcFile = torInstallationFileManager.getTorrcFile();
+    public TorrcConfigInstaller(TorInstallationFiles torInstallationFiles) {
+        this.torInstallationFiles = torInstallationFiles;
+        this.torrcFile = torInstallationFiles.getTorrcFile();
         this.osType = OsType.getOsType();
     }
 
@@ -70,15 +70,15 @@ public class TorrcConfigInstaller {
             // Update with our newly created files
             printWriter.println("");
             printWriter.println(Constants.TORRC_KEY_DATA_DIRECTORY + " " +
-                    torInstallationFileManager.getTorDir().getCanonicalPath());
+                    torInstallationFiles.getTorDir().getCanonicalPath());
             printWriter.println(Constants.TORRC_KEY_GEOIP + " " +
-                    torInstallationFileManager.getGeoIPFile().getCanonicalPath());
+                    torInstallationFiles.getGeoIPFile().getCanonicalPath());
             printWriter.println(Constants.TORRC_KEY_GEOIP6 + " " +
-                    torInstallationFileManager.getGeoIPv6File().getCanonicalPath());
+                    torInstallationFiles.getGeoIPv6File().getCanonicalPath());
             printWriter.println(Constants.TORRC_KEY_PID + " " +
-                    torInstallationFileManager.getPidFile().getCanonicalPath());
+                    torInstallationFiles.getPidFile().getCanonicalPath());
             printWriter.println(Constants.TORRC_KEY_COOKIE + " " +
-                    torInstallationFileManager.getCookieFile().getCanonicalPath());
+                    torInstallationFiles.getCookieFile().getCanonicalPath());
             printWriter.println("");
         }
     }

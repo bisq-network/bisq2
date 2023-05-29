@@ -23,7 +23,7 @@ import java.io.File;
 import java.nio.file.Path;
 
 @Getter
-public class TorInstallationFileManager {
+public class TorInstallationFiles {
     private final File torDir;
     private final File dotTorDir;
     private final File pidFile;
@@ -33,7 +33,7 @@ public class TorInstallationFileManager {
     private final File cookieFile;
     private final File versionFile;
 
-    public TorInstallationFileManager(Path torDirPath) {
+    public TorInstallationFiles(Path torDirPath) {
         torDir = torDirPath.toFile();
         dotTorDir = new File(torDir, Constants.DOT_TOR_DIR);
         pidFile = new File(torDir, Constants.PID);
