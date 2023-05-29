@@ -20,6 +20,7 @@ package bisq.tor;
 import lombok.Getter;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 
 @Getter
@@ -42,5 +43,11 @@ public class TorInstallationFiles {
         torrcFile = new File(torDir, Constants.TORRC);
         cookieFile = new File(dotTorDir.getAbsoluteFile(), Constants.COOKIE);
         versionFile = new File(torDir, Constants.VERSION);
+    }
+
+    public void removeCookieFileIfPresent() throws IOException {
+        if (cookieFile.exists() && !cookieFile.delete()) {
+            throw new IOException("Cannot delete old cookie file.");
+        }
     }
 }
