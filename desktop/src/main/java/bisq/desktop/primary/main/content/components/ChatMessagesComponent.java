@@ -27,11 +27,15 @@ import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.PrivateChatChannelService;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -195,8 +199,12 @@ public class ChatMessagesComponent {
 
                 boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyPublicChatChannel;
                 boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyPrivateTradeChatChannel;
+                boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
+                model.getLeaveChannelButtonVisible().set(false);
                 model.getCreateOfferButtonVisible().set(isBisqEasyPublicChatChannel);
                 model.getOpenDisputeButtonVisible().set(isBisqEasyPrivateTradeChatChannel);
+                model.getSendBtcAddressButtonVisible().set(false);
+                model.getSendPaymentAccountButtonVisible().set(false);
 
                 if (chatMessagesPin != null) {
                     chatMessagesPin.unbind();
@@ -210,9 +218,8 @@ public class ChatMessagesComponent {
                     inMediationPin = privateChannel.isInMediationObservable().addObserver(isInMediation ->
                             model.getOpenDisputeButtonVisible().set(!isInMediation &&
                                     !privateChannel.isMediator()));
-                } else {
-                    model.getSendBtcAddressButtonVisible().set(false);
-                    model.getSendPaymentAccountButtonVisible().set(false);
+                } else if (isTwoPartyPrivateChatChannel) {
+                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> twoPartyPeerLeft((TwoPartyPrivateChatChannel) chatChannel));
                 }
 
                 accountsChanged();
@@ -310,6 +317,15 @@ public class ChatMessagesComponent {
             });
         }
 
+        private void twoPartyPeerLeft(TwoPartyPrivateChatChannel chatChannel) {
+            UIThread.run(() -> {
+                boolean peerLeft = chatChannel.getChatMessages().stream()
+                        .anyMatch(m -> m.getChatMessageType() == ChatMessageType.LEAVE);
+                model.getLeaveChannelButtonVisible().set(peerLeft);
+            });
+        }
+
+
         private void accountsChanged() {
             UIThread.run(() ->
                     model.getPaymentAccountSelectionVisible().set(
@@ -335,6 +351,38 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // UI handlers
         ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+        void onLeaveChannel() {
+            ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
+
+            // Example 1
+//            if (!(chatChannel instanceof TwoPartyPrivateChatChannel))
+//                return;
+//            chatService.findChatChannelService(chatChannel).ifPresent(
+//                    service -> {
+//                        if (!(service instanceof TwoPartyPrivateChatChannelService))
+//                            return;
+//                        ((TwoPartyPrivateChatChannelService) service).leaveChannel((TwoPartyPrivateChatChannel) chatChannel);
+//                        chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
+//                    }
+//            );
+
+            // Example 2
+            if (!(chatChannel instanceof PrivateChatChannel))
+                return;
+            chatService.findChatChannelService(chatChannel).ifPresent(
+                    service -> {
+                        if (!(service instanceof PrivateChatChannelService))
+                            return;
+                        ((PrivateChatChannelService) service).leaveChannel((PrivateChatChannel) chatChannel);
+                        chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
+                    }
+            );
+
+            // Example 3
+//            chatService.findChatChannelService(chatChannel).ifPresent(
+//                    service -> service.leaveChannel(chatChannel);
+        }
 
         void onCreateOffer() {
             ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
@@ -506,6 +554,7 @@ public class ChatMessagesComponent {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
+        private final BooleanProperty leaveChannelButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
@@ -555,7 +604,7 @@ public class ChatMessagesComponent {
         public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
 
         private final BisqTextArea inputField;
-        private final Button sendButton, createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton;
+        private final Button sendButton, createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton, leaveChannelButton;
         private final AutoCompleteComboBox<BisqEasyPaymentAccount> paymentAccountsComboBox;
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
@@ -618,6 +667,9 @@ public class ChatMessagesComponent {
             openDisputeButton = createAndGetChatButton(Res.get("bisqEasy.openDispute"), 110);
             openDisputeButton.getStyleClass().add("outlined-button");
 
+            leaveChannelButton = createAndGetChatButton(Res.get("social.privateChannel.leave"), 120);
+            leaveChannelButton.getStyleClass().add("outlined-button");
+
             //todo
             paymentAccountsComboBox = new AutoCompleteComboBox<>(model.getPaymentAccounts());
             paymentAccountsComboBox.setConverter(new StringConverter<>() {
@@ -632,7 +684,7 @@ public class ChatMessagesComponent {
                 }
             });
 
-            bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane,
+            bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton,
                     createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton);
             bottomHBox.getStyleClass().add("bg-grey-5");
             bottomHBox.setAlignment(Pos.CENTER);
@@ -652,6 +704,8 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewAttached() {
+            leaveChannelButton.visibleProperty().bind(model.getLeaveChannelButtonVisible());
+            leaveChannelButton.managedProperty().bind(model.getLeaveChannelButtonVisible());
             createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
             createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
             openDisputeButton.visibleProperty().bind(model.getOpenDisputeButtonVisible());
@@ -687,6 +741,7 @@ public class ChatMessagesComponent {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
+            leaveChannelButton.setOnAction(e -> controller.onLeaveChannel());
             createOfferButton.setOnAction(e -> controller.onCreateOffer());
             sendBtcAddressButton.setOnAction(e -> controller.onSendBtcAddress());
             sendPaymentAccountButton.setOnAction(e -> controller.onSendPaymentAccount());
@@ -706,6 +761,8 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewDetached() {
+            leaveChannelButton.visibleProperty().unbind();
+            leaveChannelButton.managedProperty().unbind();
             createOfferButton.visibleProperty().unbind();
             createOfferButton.managedProperty().unbind();
             openDisputeButton.visibleProperty().unbind();
@@ -722,6 +779,7 @@ public class ChatMessagesComponent {
 
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
+            leaveChannelButton.setOnAction(null);
             createOfferButton.setOnAction(null);
             sendBtcAddressButton.setOnAction(null);
             sendPaymentAccountButton.setOnAction(null);
@@ -729,6 +787,7 @@ public class ChatMessagesComponent {
 
             paymentAccountsComboBox.setOnChangeConfirmed(null);
         }
+
     }
 
     private static Button createAndGetChatButton(String title, double width) {
