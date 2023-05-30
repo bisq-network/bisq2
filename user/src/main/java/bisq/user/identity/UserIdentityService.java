@@ -85,9 +85,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
     protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
-    private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
-    private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
-
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
                                IdentityService identityService,
@@ -107,7 +104,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         networkService.addDataServiceListener(this);
 
         // We delay publishing to be better bootstrapped 
-        Scheduler.run(() -> userIdentities.forEach(userProfile ->
+        Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
                         maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair())))
                 .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
@@ -117,17 +114,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         networkService.removeDataServiceListener(this);
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PersistenceClient
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onPersistedApplied(UserIdentityStore persisted) {
-        userIdentities.setAll(persistableStore.getUserIdentities());
-        setSelectedUserIdentity(persistableStore.getSelectedUserIdentityId());
     }
 
 
@@ -174,8 +160,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.decrypt(aesSecretKey)
                 .whenComplete((nil, throwable) -> {
                     if (throwable == null) {
-                        userIdentities.setAll(persistableStore.getUserIdentities());
-                        setSelectedUserIdentity(persistableStore.getSelectedUserIdentityId());
                         persist();
                     }
                 });
@@ -230,9 +214,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public void selectChatUserIdentity(UserIdentity userIdentity) {
-        setSelectedUserIdentity(userIdentity.getId());
-        //todo
-        persistableStore.setSelectedUserIdentityId(userIdentity.getId());
+        persistableStore.setSelectedUserIdentity(userIdentity);
         persist();
     }
 
@@ -242,28 +224,19 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, bio);
         UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
 
-        userIdentities.remove(oldUserIdentity);
-        userIdentities.add(newUserIdentity);
-        setSelectedUserIdentity(newUserIdentity.getId());
+        getUserIdentities().remove(oldUserIdentity);
+        getUserIdentities().add(newUserIdentity);
+        persistableStore.setSelectedUserIdentity(newUserIdentity);
 
         synchronized (lock) {
-            //todo
             persistableStore.getUserIdentities().remove(oldUserIdentity);
             persistableStore.getUserIdentities().add(newUserIdentity);
-            persistableStore.setSelectedUserIdentityId(newUserIdentity.getId());
+            persistableStore.setSelectedUserIdentity(newUserIdentity);
         }
         persist();
 
         return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair())
                 .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair()));
-    }
-
-    // We want to ensure that the selected object is the same as the one in the userIdentities set.
-    private void setSelectedUserIdentity(@Nullable String selectedUserIdentityId) {
-        selectedUserIdentityObservable.set(userIdentities.stream()
-                .filter(userIdentity -> userIdentity.getId().equals(selectedUserIdentityId))
-                .findAny()
-                .orElse(null));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
@@ -272,16 +245,16 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
         }
 
-        userIdentities.remove(userIdentity);
-        userIdentities.stream().findAny()
-                .ifPresentOrElse(userIdentity1 -> setSelectedUserIdentity(userIdentity1.getId()),
-                        () -> this.setSelectedUserIdentity(null));
+        getUserIdentities().remove(userIdentity);
+        getUserIdentities().stream().findAny()
+                .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
+                        () -> persistableStore.setSelectedUserIdentity(null));
         synchronized (lock) {
             //todo
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().stream().findAny()
-                    .ifPresentOrElse(userIdentity2 -> persistableStore.setSelectedUserIdentityId(userIdentity2.getId()),
-                            () -> persistableStore.setSelectedUserIdentityId(null));
+                    .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
+                            () -> persistableStore.setSelectedUserIdentity(null));
         }
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
@@ -310,16 +283,16 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public Observable<UserIdentity> getSelectedUserIdentityObservable() {
-        return selectedUserIdentityObservable;
+        return persistableStore.getSelectedUserIdentityObservable();
     }
 
     @Nullable
     public UserIdentity getSelectedUserIdentity() {
-        return selectedUserIdentityObservable.get();
+        return persistableStore.getSelectedUserIdentity();
     }
 
     public ObservableSet<UserIdentity> getUserIdentities() {
-        return userIdentities;
+        return persistableStore.getUserIdentities();
     }
 
     public boolean isUserIdentityPresent(String profileId) {
@@ -340,13 +313,13 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
-        userIdentities.add(userIdentity);
-        setSelectedUserIdentity(userIdentity.getId());
+        getUserIdentities().add(userIdentity);
+        persistableStore.setSelectedUserIdentity(userIdentity);
 
         synchronized (lock) {
             //todo
             persistableStore.getUserIdentities().add(userIdentity);
-            persistableStore.setSelectedUserIdentityId(userIdentity.getId());
+            persistableStore.setSelectedUserIdentity(userIdentity);
         }
         newlyCreatedUserIdentity.set(userIdentity);
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);

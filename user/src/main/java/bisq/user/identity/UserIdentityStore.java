@@ -17,6 +17,8 @@
 
 package bisq.user.identity;
 
+import bisq.common.observable.Observable;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ProtobufUtils;
@@ -29,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -42,15 +43,26 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
-    @Nullable
-    private String selectedUserIdentityId;
-    private final Set<UserIdentity> userIdentities;
+    private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
+    private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
     private Optional<EncryptedData> encryptedData = Optional.empty();
     private Optional<ScryptParameters> scryptParameters = Optional.empty();
     private transient Optional<AESSecretKey> aesSecretKey = Optional.empty();
 
+
     public UserIdentityStore() {
-        userIdentities = new HashSet<>();
+    }
+
+    private UserIdentityStore(@Nullable String selectedUserIdentityId,
+                              Set<UserIdentity> userIdentities) {
+        this.userIdentities.setAll(userIdentities);
+        setSelectedUserIdentityId(selectedUserIdentityId);
+    }
+
+    private UserIdentityStore(EncryptedData encryptedData,
+                              ScryptParameters scryptParameters) {
+        this.encryptedData = Optional.of(encryptedData);
+        this.scryptParameters = Optional.of(scryptParameters);
     }
 
     private UserIdentityStore(@Nullable String selectedUserIdentityId,
@@ -58,11 +70,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
                               Optional<EncryptedData> encryptedData,
                               Optional<ScryptParameters> scryptParameters,
                               Optional<AESSecretKey> aesSecretKey) {
-        this.userIdentities = new HashSet<>(userIdentities);
+        this.userIdentities.setAll(userIdentities);
+        setSelectedUserIdentityId(selectedUserIdentityId);
+
         this.encryptedData = encryptedData;
         this.scryptParameters = scryptParameters;
         this.aesSecretKey = aesSecretKey;
-        setSelectedUserIdentityId(selectedUserIdentityId);
     }
 
 
@@ -74,7 +87,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     public bisq.user.protobuf.UserIdentityStore toProto() {
         bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
                 .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
-        Optional.ofNullable(selectedUserIdentityId).ifPresent(builder::setSelectedUserIdentityId);
+        Optional.ofNullable(getSelectedUserIdentityId()).ifPresent(builder::setSelectedUserIdentityId);
         bisq.user.protobuf.UserIdentityStore plainTextProto = builder.build();
         if (aesSecretKey.isPresent()) {
             long ts = System.currentTimeMillis();
@@ -91,26 +104,18 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
-        if (proto.hasEncryptedData()) {
-            checkArgument(proto.hasScryptParameters());
+        if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
             checkArgument(proto.getUserIdentitiesList().isEmpty());
             EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
             ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
-            return new UserIdentityStore(null,
-                    new HashSet<>(),
-                    Optional.of(encryptedData),
-                    Optional.of(scryptParameters),
-                    Optional.empty());
+            return new UserIdentityStore(encryptedData, scryptParameters);
         } else {
+            checkArgument(!proto.hasEncryptedData());
             checkArgument(!proto.hasScryptParameters());
-            return new UserIdentityStore(proto.hasSelectedUserIdentityId() ?
-                    proto.getSelectedUserIdentityId() : null,
+            return new UserIdentityStore(proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null,
                     proto.getUserIdentitiesList().stream()
                             .map(UserIdentity::fromProto)
-                            .collect(Collectors.toSet()),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty());
+                            .collect(Collectors.toSet()));
         }
     }
 
@@ -132,12 +137,25 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public UserIdentityStore getClone() {
-        return new UserIdentityStore(selectedUserIdentityId, userIdentities, encryptedData, scryptParameters, aesSecretKey);
+        return new UserIdentityStore(getSelectedUserIdentityId(), userIdentities, encryptedData, scryptParameters, aesSecretKey);
     }
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
-        applyUserIdentityStore(persisted);
+        userIdentities.setAll(persisted.getUserIdentities());
+        setSelectedUserIdentityId(persisted.getSelectedUserIdentityId());
+
+        encryptedData = persisted.getEncryptedData();
+        scryptParameters = persisted.scryptParameters;
+
+        Optional<AESSecretKey> persistedOptionalKey = persisted.aesSecretKey;
+        if (persistedOptionalKey.isPresent()) {
+            AESSecretKey clone = AESSecretKey.getClone(persistedOptionalKey.get());
+            setAesSecretKey(clone);
+            persistedOptionalKey.get().clear();
+        } else {
+            deleteAesSecretKey();
+        }
     }
 
 
@@ -157,7 +175,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             }
             try {
                 AESSecretKey keyFromPassword = scryptKeyDeriver.deriveKeyFromPassword(password);
-                setAesSecretKey(Optional.of(keyFromPassword));
+                setAesSecretKey(keyFromPassword);
                 log.info("Deriving aesKey with scrypt took {} ms", System.currentTimeMillis() - ts);
                 return keyFromPassword;
             } catch (GeneralSecurityException e) {
@@ -167,13 +185,13 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
     CompletableFuture<EncryptedData> encrypt() {
-        checkArgument(aesSecretKey.isPresent());
-        checkArgument(scryptParameters.isPresent());
+        checkArgument(aesSecretKey.isPresent(), "aesSecretKey must be present at encrypt.");
+        checkArgument(scryptParameters.isPresent(), "scryptParameters must be present at encrypt.");
         long ts = System.currentTimeMillis();
         return CompletableFuture.supplyAsync(() -> {
             bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
                     .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
-            Optional.ofNullable(selectedUserIdentityId).ifPresent(builder::setSelectedUserIdentityId);
+            Optional.ofNullable(getSelectedUserIdentityId()).ifPresent(builder::setSelectedUserIdentityId);
             bisq.user.protobuf.UserIdentityStore plainTextProto = builder.build();
             EncryptedData encryptedData = encryptPlainTextProto(plainTextProto);
             log.info("encrypt took {} ms", System.currentTimeMillis() - ts);
@@ -185,12 +203,8 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         });
     }
 
-
     CompletableFuture<Void> decrypt(AESSecretKey aesSecretKey) {
-        if (encryptedData.isEmpty()) {
-            return CompletableFuture.failedFuture(new RuntimeException("decryptDataStore called with invalid state."));
-        }
-
+        checkArgument(encryptedData.isPresent(), "encryptedData must be present at decrypt.");
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
             try {
@@ -209,9 +223,8 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
     CompletableFuture<Void> removeKey(String password) {
-        if (aesSecretKey.isEmpty() || scryptParameters.isEmpty()) {
-            return CompletableFuture.failedFuture(new RuntimeException("removePassword called with invalid state."));
-        }
+        checkArgument(aesSecretKey.isPresent(), "aesSecretKey must be present at removeKey.");
+        checkArgument(scryptParameters.isPresent(), "scryptParameters must be present at removeKey.");
 
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
@@ -221,7 +234,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
                 checkArgument(keyFromPassword.equals(aesSecretKey.get()),
                         "Provided password does not match our aesKey.");
                 scryptParameters = Optional.empty();
-                setAesSecretKey(Optional.empty());
+                deleteAesSecretKey();
                 log.info("removePassword took {} ms", System.currentTimeMillis() - ts);
                 return null;
             } catch (GeneralSecurityException e) {
@@ -239,22 +252,27 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     // Package scope Getter/Setter
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    Observable<UserIdentity> getSelectedUserIdentityObservable() {
+        return selectedUserIdentityObservable;
+    }
+
     @Nullable
-    String getSelectedUserIdentityId() {
-        return selectedUserIdentityId;
+    UserIdentity getSelectedUserIdentity() {
+        return selectedUserIdentityObservable.get();
     }
 
-    void setSelectedUserIdentityId(@Nullable String selectedUserIdentityId) {
-        this.selectedUserIdentityId = userIdentities.stream()
-                .map(UserIdentity::getId)
-                .filter(id -> id.equals(selectedUserIdentityId))
-                .findAny()
-                .orElse(null);
-    }
-
-    Set<UserIdentity> getUserIdentities() {
+    ObservableSet<UserIdentity> getUserIdentities() {
         return userIdentities;
     }
+
+    // We want to ensure that the selected object is the same as the one in the userIdentities set.
+    void setSelectedUserIdentity(@Nullable UserIdentity userIdentity) {
+        selectedUserIdentityObservable.set(userIdentities.stream()
+                .filter(e -> e.equals(userIdentity))
+                .findAny()
+                .orElse(null));
+    }
+
 
     Optional<EncryptedData> getEncryptedData() {
         return encryptedData;
@@ -269,21 +287,24 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyUserIdentityStore(UserIdentityStore userIdentityStore) {
-        userIdentities.clear();
-        userIdentities.addAll(userIdentityStore.getUserIdentities());
-        encryptedData = userIdentityStore.getEncryptedData();
+    @Nullable
+    private String getSelectedUserIdentityId() {
+        return getSelectedUserIdentity() != null ? getSelectedUserIdentity().getId() : null;
+    }
 
-        Optional<AESSecretKey> optionalKey = userIdentityStore.aesSecretKey;
-        if (optionalKey.isPresent()) {
-            setAesSecretKey(Optional.of(AESSecretKey.getClone(optionalKey.get())));
-            optionalKey.get().clear();
-        } else {
-            setAesSecretKey(Optional.empty());
-        }
+    private void setSelectedUserIdentityId(@Nullable String selectedUserIdentityId) {
+        selectedUserIdentityObservable.set(userIdentities.stream()
+                .filter(userIdentity -> userIdentity.getId().equals(selectedUserIdentityId))
+                .findAny()
+                .orElse(null));
+    }
 
-        scryptParameters = userIdentityStore.scryptParameters;
-        setSelectedUserIdentityId(userIdentityStore.getSelectedUserIdentityId());
+    private void deleteAesSecretKey() {
+        setAesSecretKey(Optional.empty());
+    }
+
+    private void setAesSecretKey(AESSecretKey aesSecretKey) {
+        setAesSecretKey(Optional.of(aesSecretKey));
     }
 
     private void setAesSecretKey(Optional<AESSecretKey> aesSecretKey) {

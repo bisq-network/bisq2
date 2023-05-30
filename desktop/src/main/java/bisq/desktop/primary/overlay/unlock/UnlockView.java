@@ -71,6 +71,10 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            });
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
+            });
         });
     }
 
