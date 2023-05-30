@@ -24,6 +24,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
+import bisq.desktop.primary.overlay.onboarding.password.OnboardingPasswordController;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileController;
 import javafx.application.Platform;
 import lombok.Getter;
@@ -69,6 +70,9 @@ public class OnboardingController extends NavigationController {
             }
             case ONBOARDING_GENERATE_NYM: {
                 return Optional.of(new GenerateProfileController(applicationService));
+            }
+            case ONBOARDING_PASSWORD: {
+                return Optional.of(new OnboardingPasswordController(applicationService));
             }
             default: {
                 return Optional.empty();
