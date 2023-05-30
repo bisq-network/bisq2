@@ -25,7 +25,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.BisqEasyChatController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.BisqEasyOnboardingController;
 import bisq.settings.DontShowAgainService;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +45,6 @@ public class BisqEasyController extends NavigationController {
         super(NavigationTarget.BISQ_EASY);
 
         this.applicationService = applicationService;
-        SettingsService settingsService = applicationService.getSettingsService();
         model = new BisqEasyModel();
         view = new BisqEasyView(model, this);
     }
@@ -67,11 +65,11 @@ public class BisqEasyController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_EASY_CHAT: {
-                return Optional.of(new BisqEasyChatController(applicationService));
-            }
             case BISQ_EASY_INTRO: {
                 return Optional.of(new BisqEasyOnboardingController(applicationService));
+            }
+            case BISQ_EASY_CHAT: {
+                return Optional.of(new BisqEasyChatController(applicationService));
             }
             default: {
                 return Optional.empty();

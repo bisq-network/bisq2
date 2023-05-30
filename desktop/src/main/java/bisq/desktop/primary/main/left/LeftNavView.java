@@ -129,7 +129,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 "nav-settings",
                 NavigationTarget.SETTINGS, false);
-        LeftNavButton user = createNavigationButton(Res.get("user"),
+        LeftNavButton user = createNavigationButton(Res.get("userOptions"),
                 "nav-user",
                 NavigationTarget.USER, false);
 

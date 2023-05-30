@@ -32,7 +32,7 @@ public class UserView extends TabView<UserModel, UserController> {
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
 
-        headLine.setText(Res.get("user"));
+        headLine.setText(Res.get("userOptions"));
     }
 
     @Override
