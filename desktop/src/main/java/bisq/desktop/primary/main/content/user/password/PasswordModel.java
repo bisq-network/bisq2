@@ -18,10 +18,7 @@
 package bisq.desktop.primary.main.content.user.password;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PasswordModel implements Model {
     private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty buttonText = new SimpleStringProperty();
-    private final StringProperty password = new SimpleStringProperty();
-    private final StringProperty confirmedPassword = new SimpleStringProperty();
+    private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
+    private final ObjectProperty<CharSequence> confirmedPassword = new SimpleObjectProperty<>();
     private final BooleanProperty confirmedPasswordVisible = new SimpleBooleanProperty();
     private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsMasked = new SimpleBooleanProperty();

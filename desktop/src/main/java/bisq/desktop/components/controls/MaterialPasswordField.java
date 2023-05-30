@@ -19,7 +19,9 @@ package bisq.desktop.components.controls;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextInputControl;
@@ -30,6 +32,7 @@ import java.lang.ref.WeakReference;
 
 public class MaterialPasswordField extends MaterialTextField {
     private BooleanProperty isMasked;
+    private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
 
     public MaterialPasswordField() {
         this(null, null, null);
@@ -45,6 +48,16 @@ public class MaterialPasswordField extends MaterialTextField {
 
     public MaterialPasswordField(@Nullable String description, @Nullable String prompt, @Nullable String help) {
         super(description, prompt, help);
+
+        //todo remove String objects for password 
+        textProperty().addListener(new WeakReference<>(
+                (ChangeListener<String>) (observable, oldValue, newValue) -> {
+                    password.set(newValue);
+                }).get());
+    }
+
+    public ObjectProperty<CharSequence> passwordProperty() {
+        return password;
     }
 
     @Override

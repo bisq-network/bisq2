@@ -64,7 +64,7 @@ public class PasswordController implements Controller {
     }
 
     void onButtonClicked() {
-        String password = model.getPassword().get();
+        CharSequence password = model.getPassword().get();
         checkArgument(!isPasswordInvalid(password));
 
         if (userIdentityService.getAESSecretKey().isPresent()) {
@@ -75,7 +75,7 @@ public class PasswordController implements Controller {
         }
     }
 
-    private void removePassword(String password) {
+    private void removePassword(CharSequence password) {
         userIdentityService.removePassword(password).whenComplete((nil2, throwable) -> {
             maybeHandleError(throwable);
             if (throwable == null) {
@@ -88,7 +88,7 @@ public class PasswordController implements Controller {
         });
     }
 
-    private void setPassword(String password) {
+    private void setPassword(CharSequence password) {
         userIdentityService.deriveKeyFromPassword(password)
                 .whenComplete((key, throwable) -> maybeHandleError(throwable))
                 .thenCompose(key -> userIdentityService.encryptDataStore())
@@ -152,7 +152,7 @@ public class PasswordController implements Controller {
         binding = null;
     }
 
-    private boolean isPasswordInvalid(String password) {
+    private boolean isPasswordInvalid(CharSequence password) {
         return password == null || password.length() < 8;
     }
 }

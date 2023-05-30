@@ -57,11 +57,11 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
     @Override
     protected void onViewAttached() {
         headline.textProperty().bind(model.getHeadline());
-        password.textProperty().bindBidirectional(model.getPassword());
+        password.passwordProperty().bindBidirectional(model.getPassword());
         password.isMaskedProperty().bindBidirectional(model.getPasswordIsMasked());
         confirmedPassword.visibleProperty().bind(model.getConfirmedPasswordVisible());
         confirmedPassword.managedProperty().bind(model.getConfirmedPasswordVisible());
-        confirmedPassword.textProperty().bindBidirectional(model.getConfirmedPassword());
+        confirmedPassword.passwordProperty().bindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().bindBidirectional(model.getConfirmedPasswordIsMasked());
         button.textProperty().bind(model.getButtonText());
         button.disableProperty().bind(model.getButtonDisabled());
@@ -71,11 +71,11 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
     @Override
     protected void onViewDetached() {
         headline.textProperty().unbind();
-        password.textProperty().unbindBidirectional(model.getPassword());
+        password.passwordProperty().unbindBidirectional(model.getPassword());
         password.isMaskedProperty().unbindBidirectional(model.getPasswordIsMasked());
         confirmedPassword.visibleProperty().unbind();
         confirmedPassword.managedProperty().unbind();
-        confirmedPassword.textProperty().unbindBidirectional(model.getConfirmedPassword());
+        confirmedPassword.passwordProperty().unbindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().unbindBidirectional(model.getConfirmedPasswordIsMasked());
         button.textProperty().unbind();
         button.disableProperty().unbind();

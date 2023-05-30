@@ -21,10 +21,10 @@ package bisq.desktop.common.utils.validation;
 import bisq.i18n.Res;
 
 public class PasswordValidator extends InputValidator {
-    public ValidationResult validate(String value) {
-        ValidationResult result = super.validate(value);
-        if (!result.isValid) {
-            return result;
+    public ValidationResult validate(CharSequence value) {
+        //todo trim
+        if (value == null || value.isEmpty()) {
+            return new ValidationResult(false, Res.get("validation.empty"));
         }
 
         if (value.length() < 8) {
@@ -34,7 +34,7 @@ public class PasswordValidator extends InputValidator {
         return new ValidationResult(true);
     }
 
-    public ValidationResult validate(String password1, String password2) {
+    public ValidationResult validate(CharSequence password1, CharSequence password2) {
         ValidationResult result = validate(password1);
         if (!result.isValid) {
             return result;

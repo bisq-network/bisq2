@@ -59,7 +59,7 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
     @Override
     protected void onViewAttached() {
-        password.textProperty().bindBidirectional(model.getPassword());
+        password.passwordProperty().bindBidirectional(model.getPassword());
         password.isMaskedProperty().bindBidirectional(model.getPasswordIsMasked());
         unlockButton.disableProperty().bind(model.getUnlockButtonDisabled());
 
@@ -80,7 +80,7 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
     @Override
     protected void onViewDetached() {
-        password.textProperty().unbindBidirectional(model.getPassword());
+        password.passwordProperty().unbindBidirectional(model.getPassword());
         password.isMaskedProperty().unbindBidirectional(model.getPasswordIsMasked());
         unlockButton.disableProperty().unbind();
 

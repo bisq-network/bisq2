@@ -138,7 +138,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<AESSecretKey> deriveKeyFromPassword(String password) {
+    public CompletableFuture<AESSecretKey> deriveKeyFromPassword(CharSequence password) {
         return persistableStore.deriveKeyFromPassword(password)
                 .whenComplete((aesKey, throwable) -> {
                     if (throwable == null && aesKey != null) {
@@ -165,7 +165,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 });
     }
 
-    public CompletableFuture<Void> removePassword(String password) {
+    public CompletableFuture<Void> removePassword(CharSequence password) {
         return decryptDataStore(getAESSecretKey().orElseThrow())
                 .thenCompose(nil -> {
                     persistableStore.clearEncryptedData();

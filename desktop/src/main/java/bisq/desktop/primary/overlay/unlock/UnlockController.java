@@ -116,7 +116,7 @@ public class UnlockController implements InitWithDataController<UnlockController
         });
     }
 
-    private boolean isPasswordInvalid(String password) {
+    private boolean isPasswordInvalid(CharSequence password) {
         return password == null || password.length() < 8;
     }
 }

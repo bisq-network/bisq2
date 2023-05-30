@@ -163,7 +163,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     // Package scope API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    CompletableFuture<AESSecretKey> deriveKeyFromPassword(String password) {
+    CompletableFuture<AESSecretKey> deriveKeyFromPassword(CharSequence password) {
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
             ScryptKeyDeriver scryptKeyDeriver;
@@ -222,7 +222,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         });
     }
 
-    CompletableFuture<Void> removeKey(String password) {
+    CompletableFuture<Void> removeKey(CharSequence password) {
         checkArgument(aesSecretKey.isPresent(), "aesSecretKey must be present at removeKey.");
         checkArgument(scryptParameters.isPresent(), "scryptParameters must be present at removeKey.");
 

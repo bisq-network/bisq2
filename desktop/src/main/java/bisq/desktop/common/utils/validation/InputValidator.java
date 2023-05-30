@@ -32,10 +32,11 @@ public class InputValidator {
 
     protected ValidationResult validateIfNotEmpty(String input) {
         //trim added to avoid empty input
-        if (input == null || input.trim().isEmpty())
+        if (input == null || input.trim().isEmpty()) {
             return new ValidationResult(false, Res.get("validation.empty"));
-        else
+        } else {
             return new ValidationResult(true);
+        }
     }
 
     public static class ValidationResult {
@@ -52,10 +53,7 @@ public class InputValidator {
         }
 
         public ValidationResult and(ValidationResult next) {
-            if (this.isValid)
-                return next;
-            else
-                return this;
+            return isValid ? next : this;
         }
 
         @Override
@@ -73,7 +71,6 @@ public class InputValidator {
         }
 
         public interface Validator extends Function<String, ValidationResult> {
-
         }
 
         /*
@@ -85,8 +82,9 @@ public class InputValidator {
             ValidationResult result = null;
             for (Validator validator : validators) {
                 result = validator.apply(input);
-                if (!result.isValid)
+                if (!result.isValid) {
                     return result;
+                }
             }
             return result;
         }
