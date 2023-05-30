@@ -95,12 +95,12 @@ public class ScryptKeyDeriver {
      * @return The AES key as byte array
      * @throws GeneralSecurityException
      */
-    public AESSecretKey deriveKeyFromPassword(CharSequence password) throws GeneralSecurityException {
+    public AesSecretKey deriveKeyFromPassword(CharSequence password) throws GeneralSecurityException {
         byte[] passwordBytes = null;
         try {
             passwordBytes = SecureString.toBytesUTF8(password);
             byte[] key = SCrypt.generate(passwordBytes, scryptParameters.getSalt(), scryptParameters.getCost(), scryptParameters.getBlockSize(), scryptParameters.getParallelization(), scryptParameters.getKeyLength());
-            return new AESSecretKey(key);
+            return new AesSecretKey(key);
         } catch (Exception e) {
             throw new GeneralSecurityException("Could not generate key from password and salt.", e);
         } finally {

@@ -33,15 +33,15 @@ public class ScryptKeyDeriverTest {
         String password = "test_password";
 
         ScryptKeyDeriver scryptKeyDeriver1 = new ScryptKeyDeriver();
-        AESSecretKey key1 = scryptKeyDeriver1.deriveKeyFromPassword(password);
+        AesSecretKey key1 = scryptKeyDeriver1.deriveKeyFromPassword(password);
 
         ScryptKeyDeriver scryptKeyDeriver2 = new ScryptKeyDeriver();
-        AESSecretKey key2 = scryptKeyDeriver2.deriveKeyFromPassword(password);
+        AesSecretKey key2 = scryptKeyDeriver2.deriveKeyFromPassword(password);
         assertFalse(Arrays.equals(key1.getEncoded(), key2.getEncoded()));
 
         // Only with same salt we get same key
         ScryptKeyDeriver scryptKeyDeriver3 = new ScryptKeyDeriver(scryptKeyDeriver1.getScryptParameters());
-        AESSecretKey key3 = scryptKeyDeriver3.deriveKeyFromPassword(password);
+        AesSecretKey key3 = scryptKeyDeriver3.deriveKeyFromPassword(password);
         assertArrayEquals(key1.getEncoded(), key3.getEncoded());
     }
 }
