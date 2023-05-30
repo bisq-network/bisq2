@@ -1,6 +1,5 @@
 package bisq.security;
 
-import lombok.Getter;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
@@ -25,19 +24,47 @@ public class AESEncryption {
     private static final SecureRandom secureRandom = new SecureRandom();
 
     /**
+     * Password based encryption using AES - CBC - PKCS7
+     */
+    public static EncryptedData encrypt(byte[] plainBytes, AESSecretKey aesKey) throws GeneralSecurityException {
+        if (plainBytes == null || aesKey == null) {
+            throw new GeneralSecurityException("Data and key to encrypt cannot be null");
+        }
+
+        try {
+            // Generate iv - each encryption call has a different iv.
+            byte[] iv = new byte[BLOCK_LENGTH];
+            secureRandom.nextBytes(iv);
+
+            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey.getEncoded()), iv);
+
+            // Encrypt using AES.
+            BufferedBlockCipher cipher = getBufferedBlockCipher();
+            cipher.init(true, keyWithIv);
+            byte[] encryptedBytes = new byte[cipher.getOutputSize(plainBytes.length)];
+            final int length1 = cipher.processBytes(plainBytes, 0, plainBytes.length, encryptedBytes, 0);
+            final int length2 = cipher.doFinal(encryptedBytes, length1);
+
+            return new EncryptedData(iv, Arrays.copyOf(encryptedBytes, length1 + length2));
+        } catch (Exception e) {
+            throw new GeneralSecurityException("Could not encrypt bytes.", e);
+        }
+    }
+
+    /**
      * Decrypt bytes previously encrypted with this class.
      *
      * @param encryptedData The data to decrypt
      * @param aesKey        The AES key to use for decryption
      * @return The decrypted bytes
      */
-    public static byte[] decrypt(EncryptedData encryptedData, byte[] aesKey) throws GeneralSecurityException {
+    public static byte[] decrypt(EncryptedData encryptedData, AESSecretKey aesKey) throws GeneralSecurityException {
         if (encryptedData == null || aesKey == null) {
             throw new GeneralSecurityException("Data and key to decrypt cannot be null");
         }
 
         try {
-            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey),
+            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey.getEncoded()),
                     encryptedData.getInitialisationVector());
 
             // Decrypt the message.
@@ -57,53 +84,8 @@ public class AESEncryption {
         }
     }
 
-    /**
-     * Password based encryption using AES - CBC - PKCS7
-     */
-    public static EncryptedData encrypt(byte[] plainBytes, byte[] aesKey) throws GeneralSecurityException {
-        if (plainBytes == null || aesKey == null) {
-            throw new GeneralSecurityException("Data and key to encrypt cannot be null");
-        }
-
-        try {
-            // Generate iv - each encryption call has a different iv.
-            byte[] iv = new byte[BLOCK_LENGTH];
-            secureRandom.nextBytes(iv);
-
-            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey), iv);
-
-            // Encrypt using AES.
-            BufferedBlockCipher cipher = getBufferedBlockCipher();
-            cipher.init(true, keyWithIv);
-            byte[] encryptedBytes = new byte[cipher.getOutputSize(plainBytes.length)];
-            final int length1 = cipher.processBytes(plainBytes, 0, plainBytes.length, encryptedBytes, 0);
-            final int length2 = cipher.doFinal(encryptedBytes, length1);
-
-            return new EncryptedData(iv, Arrays.copyOf(encryptedBytes, length1 + length2));
-        } catch (Exception e) {
-            throw new GeneralSecurityException("Could not encrypt bytes.", e);
-        }
-    }
-
     private static PaddedBufferedBlockCipher getBufferedBlockCipher() {
         return new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESEngine()));
     }
 
-    /**
-     * <p>An instance of EncryptedData is a holder for an initialization vector and encrypted bytes. It is typically
-     * used to hold encrypted private key bytes.</p>
-     *
-     * <p>The initialisation vector is random data that is used to initialise the AES block cipher when the
-     * private key bytes were encrypted. You need these for decryption.</p>
-     */
-    @Getter
-    public static final class EncryptedData {
-        private final byte[] initialisationVector;
-        private final byte[] encryptedBytes;
-
-        public EncryptedData(byte[] initialisationVector, byte[] encryptedBytes) {
-            this.initialisationVector = Arrays.copyOf(initialisationVector, initialisationVector.length);
-            this.encryptedBytes = Arrays.copyOf(encryptedBytes, encryptedBytes.length);
-        }
-    }
 }

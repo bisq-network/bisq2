@@ -41,6 +41,8 @@ message UserIdentity {
 message UserIdentityStore {
   repeated UserIdentity userIdentities = 1;
   optional string selectedUserIdentityId = 2;
+  optional security.EncryptedData encryptedData = 3;
+  optional security.ScryptParameters scryptParameters = 4;
 }
 
 message NymList {

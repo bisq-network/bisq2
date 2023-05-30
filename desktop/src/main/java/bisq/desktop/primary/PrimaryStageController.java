@@ -49,6 +49,14 @@ import java.util.Optional;
 
 import static bisq.settings.DontShowAgainKey.BISQ_2_INTRO;
 
+/**
+ * At start-up we first load the persisted data.
+ * Once persisted data is loaded we show the tac window if not already accepted.
+ * Then we show the unlock screen if a password protection was used.
+ * Then we show the splash screen if domain initialisation is not already completed.
+ * If domain initialisation is completed we show the on-boarding screen at the first visit.
+ * If user has created a user profile the last persisted navigation target is shown.
+ */
 @Slf4j
 public class PrimaryStageController extends NavigationController {
     protected final DefaultApplicationService applicationService;
@@ -108,35 +116,17 @@ public class PrimaryStageController extends NavigationController {
         }
     }
 
-    // Step 1: Maybe show locked screen
     @Override
     public void onActivate() {
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
-
-        if (isLocked()) {
-            // We delay to allow the splash screen to be displayed 
-            // After successful unlock we start loading persisted data and init of the domain
-            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.UNLOCK,
-                    new UnlockController.InitData(this::initDomain)));
-            return;
-        }
-
-        // We had no password protection so no storage files and wallets had been encrypted, and we can start reading
-        // persisted data and init the domain
-        initDomain();
-    }
-
-    // Step 2: We load persisted data and after that initialise the application service
-    private void initDomain() {
-        initDomainHandler.run();
+        UIThread.runOnNextRenderFrame(() -> initDomainHandler.run());
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    // Step 3: Maybe show tac screen
     public void readAllPersistedCompleted(boolean result, Throwable throwable) {
         if (throwable != null) {
             new Popup().error(throwable).show();
@@ -147,17 +137,14 @@ public class PrimaryStageController extends NavigationController {
             new Popup().warning("Could not read persisted data.").show();
             return;
         }
-
-        // Now we have the persisted data loaded and can continue with the tac screen if not yet accepted.
-        if (isTacNotAccepted()) {
+        if (!isTacAccepted()) {
             UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
-                    new TacController.InitData(this::tacAccepted)));
+                    new TacController.InitData(this::maybeShowLockScreen)));
         } else {
-            splashController.startAnimation();
+            maybeShowLockScreen();
         }
     }
 
-    // Step 4a: Initialize application service completed. Maybe apply navigation target
     public void initializeApplicationServiceCompleted(boolean result, Throwable throwable) {
         if (throwable != null) {
             new Popup().error(throwable).show();
@@ -170,21 +157,33 @@ public class PrimaryStageController extends NavigationController {
         }
 
         model.setInitializeApplicationServiceCompleted(true);
-        maybeApplyNavigationTarget();
-    }
-
-    // Step 4b: Tac accepted, Maybe apply navigation target
-    private void tacAccepted() {
-        splashController.startAnimation();
-        maybeApplyNavigationTarget();
-    }
-
-    // Step 5: If initializeApplicationServiceCompleted and tac accepted we apply navigation target
-    private void maybeApplyNavigationTarget() {
-        if (!model.isInitializeApplicationServiceCompleted() || isTacNotAccepted()) {
-            return;
+        if (model.isUnlocked()) {
+            applyNavigationTarget();
+        } else {
+            splashController.startAnimation();
         }
+    }
 
+    private void maybeShowLockScreen() {
+        if (isLocked()) {
+            // We delay to allow the splash screen to be displayed 
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.UNLOCK,
+                    new UnlockController.InitData(this::onUnlocked)));
+        } else {
+            onUnlocked();
+        }
+    }
+
+    private void onUnlocked() {
+        model.setUnlocked(true);
+        if (model.isInitializeApplicationServiceCompleted()) {
+            applyNavigationTarget();
+        } else {
+            splashController.startAnimation();
+        }
+    }
+
+    private void applyNavigationTarget() {
         splashController.stopAnimation();
         boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
 
@@ -258,7 +257,7 @@ public class PrimaryStageController extends NavigationController {
         return userIdentityService.isDataStoreEncrypted();
     }
 
-    private boolean isTacNotAccepted() {
-        return !settingsService.isTacAccepted();
+    private boolean isTacAccepted() {
+        return settingsService.isTacAccepted();
     }
 }

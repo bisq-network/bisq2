@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.user.password;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -28,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -64,16 +67,51 @@ public class PasswordController implements Controller {
         String password = model.getPassword().get();
         checkArgument(!isPasswordInvalid(password));
 
-        if (userIdentityService.isDataStoreEncrypted()) {
-            userIdentityService.decryptDataStore(password);
-            new Popup().feedback(Res.get("user.password.removePassword.success")).show();
+        if (userIdentityService.getAESSecretKey().isPresent()) {
+            removePassword(password);
         } else {
             checkArgument(password.equals(model.getConfirmedPassword().get()));
-            userIdentityService.encryptDataStore(password);
-            new Popup().feedback(Res.get("user.password.savePassword.success")).show();
+            setPassword(password);
         }
-        doDeactivate();
-        doActivate();
+    }
+
+    private void removePassword(String password) {
+        userIdentityService.removePassword(password).whenComplete((nil2, throwable) -> {
+            maybeHandleError(throwable);
+            if (throwable == null) {
+                UIThread.run(() -> {
+                    new Popup().feedback(Res.get("user.password.removePassword.success")).show();
+                    doDeactivate();
+                    doActivate();
+                });
+            }
+        });
+    }
+
+    private void setPassword(String password) {
+        userIdentityService.deriveKeyFromPassword(password)
+                .whenComplete((key, throwable) -> maybeHandleError(throwable))
+                .thenCompose(key -> userIdentityService.encryptDataStore())
+                .whenComplete((encryptedData, throwable) -> {
+                    maybeHandleError(throwable);
+                    if (throwable == null) {
+                        UIThread.run(() -> {
+                            new Popup().feedback(Res.get("user.password.savePassword.success")).show();
+                            doDeactivate();
+                            doActivate();
+                        });
+                    }
+                });
+    }
+
+    private void maybeHandleError(@Nullable Throwable throwable) {
+        if (throwable != null) {
+            UIThread.run(() -> {
+                new Popup().error(throwable).show();
+                doDeactivate();
+                doActivate();
+            });
+        }
     }
 
     private void doActivate() {
@@ -82,9 +120,9 @@ public class PasswordController implements Controller {
         model.getPassword().set("");
         model.getConfirmedPassword().set("");
 
-        boolean isPasswordSet = userIdentityService.isDataStoreEncrypted();
-        model.getConfirmedPasswordVisible().set(!isPasswordSet);
-        if (isPasswordSet) {
+        boolean isKeyPresent = userIdentityService.getAESSecretKey().isPresent();
+        model.getConfirmedPasswordVisible().set(!isKeyPresent);
+        if (isKeyPresent) {
             model.getHeadline().set(Res.get("user.password.headline.removePassword"));
             model.getButtonText().set(Res.get("user.password.button.removePassword"));
             pin = EasyBind.subscribe(model.getPassword(), password ->

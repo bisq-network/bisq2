@@ -19,6 +19,8 @@ package bisq.desktop.primary.overlay.unlock;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -80,29 +82,38 @@ public class UnlockController implements InitWithDataController<UnlockController
     }
 
     void onUnlock() {
-        userIdentityService.decryptDataStore(model.getPassword().get())
-                .whenComplete((success, throwable) -> {
-                    if (throwable != null) {
-                        new Popup().error(throwable).show();
-                        model.getPassword().set("");
-                        return;
+        userIdentityService.deriveKeyFromPassword(model.getPassword().get())
+                .whenComplete((aesSecretKey, throwable) -> {
+                    if (throwable == null) {
+                        userIdentityService.decryptDataStore(aesSecretKey)
+                                .whenComplete((nil, throwable2) -> {
+                                    if (throwable2 == null) {
+                                        OverlayController.hide(() -> {
+                                            if (completeHandler != null) {
+                                                completeHandler.run();
+                                            }
+                                        });
+                                    } else {
+                                        handleError();
+                                    }
+                                });
+                    } else {
+                        handleError();
                     }
-                    if (!success) {
-                        new Popup().warning(Res.get("unlock.failed")).show();
-                        model.getPassword().set("");
-                        return;
-                    }
-
-                    OverlayController.hide(() -> {
-                        if (completeHandler != null) {
-                            completeHandler.run();
-                        }
-                    });
                 });
     }
 
     void onCancel() {
         applicationService.shutdown().thenAccept(result -> Platform.exit());
+    }
+
+    private void handleError() {
+        OverlayController.hide(() -> {
+            new Popup().warning(Res.get("unlock.failed"))
+                    .onClose(() -> Navigation.navigateTo(NavigationTarget.UNLOCK))
+                    .show();
+            model.getPassword().set("");
+        });
     }
 
     private boolean isPasswordInvalid(String password) {

@@ -33,6 +33,8 @@ import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.AESSecretKey;
+import bisq.security.EncryptedData;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -85,9 +87,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
-
-    //todo
-    private boolean isDataStoreEncrypted = true;
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
@@ -153,19 +152,54 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //todo
-    public CompletableFuture<Boolean> encryptDataStore(String password) {
-        isDataStoreEncrypted = true;
-        return CompletableFuture.completedFuture(true);
+    public CompletableFuture<AESSecretKey> deriveKeyFromPassword(String password) {
+        return persistableStore.deriveKeyFromPassword(password)
+                .whenComplete((aesKey, throwable) -> {
+                    if (throwable == null && aesKey != null) {
+                        persist();
+                    }
+                });
     }
 
-    public CompletableFuture<Boolean> decryptDataStore(String password) {
-        isDataStoreEncrypted = false;
-        return CompletableFuture.completedFuture(true);
+    public CompletableFuture<EncryptedData> encryptDataStore() {
+        return persistableStore.encrypt()
+                .whenComplete((encryptedData, throwable) -> {
+                    if (throwable == null && encryptedData != null) {
+                        persist();
+                    }
+                });
+    }
+
+    public CompletableFuture<Void> decryptDataStore(AESSecretKey aesSecretKey) {
+        return persistableStore.decrypt(aesSecretKey)
+                .whenComplete((nil, throwable) -> {
+                    if (throwable == null) {
+                        userIdentities.setAll(persistableStore.getUserIdentities());
+                        setSelectedUserIdentity(persistableStore.getSelectedUserIdentityId());
+                        persist();
+                    }
+                });
+    }
+
+    public CompletableFuture<Void> removePassword(String password) {
+        return decryptDataStore(getAESSecretKey().orElseThrow())
+                .thenCompose(nil -> {
+                    persistableStore.clearEncryptedData();
+                    return persistableStore.removeKey(password)
+                            .whenComplete((nil2, throwable) -> {
+                                if (throwable == null) {
+                                    persist();
+                                }
+                            });
+                });
     }
 
     public boolean isDataStoreEncrypted() {
-        return isDataStoreEncrypted;
+        return persistableStore.getEncryptedData().isPresent();
+    }
+
+    public Optional<AESSecretKey> getAESSecretKey() {
+        return persistableStore.getAESSecretKey();
     }
 
     public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,

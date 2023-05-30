@@ -27,13 +27,17 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 @Slf4j
 public class AESEncryptionTest {
     @Test
-    void testDeriveKey() throws GeneralSecurityException {
-        ScryptKeyDeriver scryptKeyDeriver = new ScryptKeyDeriver();
+    void testEncryptDecrypt() throws GeneralSecurityException {
         String password = "test_password";
-        byte[] key = scryptKeyDeriver.deriveKey(password);
+        ScryptKeyDeriver scryptKeyDeriver1 = new ScryptKeyDeriver();
+        ScryptParameters scryptParameters = scryptKeyDeriver1.getScryptParameters();
+        AESSecretKey key1 = scryptKeyDeriver1.deriveKeyFromPassword(password);
         byte[] data = "test_data".getBytes();
-        AESEncryption.EncryptedData encryptedData = AESEncryption.encrypt(data, key);
-        byte[] decryptedData = AESEncryption.decrypt(encryptedData, key);
+        EncryptedData encryptedData = AESEncryption.encrypt(data, key1);
+
+        ScryptKeyDeriver scryptKeyDeriver2 = new ScryptKeyDeriver(scryptParameters);
+        AESSecretKey key2 = scryptKeyDeriver2.deriveKeyFromPassword(password);
+        byte[] decryptedData = AESEncryption.decrypt(encryptedData, key2);
         assertArrayEquals(data, decryptedData);
     }
 }

@@ -49,6 +49,7 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         confirmedPassword.setValidator(confirmedPasswordValidator);
 
         button = new Button();
+        button.setDefaultButton(true);
         VBox.setMargin(headline, new Insets(30, 0, 0, 0));
         root.getChildren().setAll(headline, password, confirmedPassword, button);
     }
