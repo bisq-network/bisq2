@@ -217,7 +217,7 @@ public class ChatMessagesComponent {
                             model.getOpenDisputeButtonVisible().set(!isInMediation &&
                                     !privateChannel.isMediator()));
                 } else if (isTwoPartyPrivateChatChannel) {
-                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> twoPartyPeerLeft((TwoPartyPrivateChatChannel) chatChannel));
+                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> updateLeaveChannelButtonState((TwoPartyPrivateChatChannel) chatChannel));
                 }
 
                 accountsChanged();
@@ -313,10 +313,10 @@ public class ChatMessagesComponent {
                     model.getSendBtcAddressButtonVisible().set(walletService.isPresent());
                 }
             });
-            twoPartyPeerLeft(chatChannel);
+            updateLeaveChannelButtonState(chatChannel);
         }
 
-        private void twoPartyPeerLeft(PrivateChatChannel<?> chatChannel) {
+        private void updateLeaveChannelButtonState(PrivateChatChannel<?> chatChannel) {
             UIThread.run(() -> {
                 boolean peerLeft = chatChannel.getChatMessages().stream()
                         .anyMatch(message -> message.getChatMessageType() == ChatMessageType.LEAVE);
