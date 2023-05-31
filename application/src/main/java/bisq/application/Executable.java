@@ -2,8 +2,6 @@ package bisq.application;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
-
 @Slf4j
 public abstract class Executable<T extends ApplicationService> {
     protected final T applicationService;
@@ -11,6 +9,7 @@ public abstract class Executable<T extends ApplicationService> {
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
         applicationService = createApplicationService(args);
+        applicationService.readAllPersisted().join();
         launchApplication(args);
     }
 
@@ -20,23 +19,12 @@ public abstract class Executable<T extends ApplicationService> {
         onApplicationLaunched();
     }
 
-    protected CompletableFuture<Boolean> onApplicationLaunched() {
-        return readAllPersisted()
-                .thenCompose(success -> {
-                    if (success) {
-                        return initializeApplicationService();
-                    } else {
-                        return CompletableFuture.failedFuture(new RuntimeException("Reading persisted data failed."));
-                    }
-                });
+    protected void onApplicationLaunched() {
+        applicationService.initialize()
+                .whenComplete(this::onApplicationServiceInitialized);
     }
 
-    protected CompletableFuture<Boolean> readAllPersisted() {
-        return applicationService.readAllPersisted();
-    }
-
-    protected CompletableFuture<Boolean> initializeApplicationService() {
-        return applicationService.initialize();
+    protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
     }
 
     protected void setDefaultUncaughtExceptionHandler() {

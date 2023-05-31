@@ -65,22 +65,22 @@ public class PrimaryStageController extends NavigationController {
     @Getter
     protected final PrimaryStageView view;
     protected final SettingsService settingsService;
-    protected final Runnable initDomainHandler;
+    protected final Runnable onActivatedHandler;
     private final SplashController splashController;
     private final UserIdentityService userIdentityService;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
-                                  Runnable initDomainHandler) {
+                                  Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
 
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
-        this.initDomainHandler = initDomainHandler;
+        this.onActivatedHandler = onActivatedHandler;
 
         model = new PrimaryStageModel(applicationService.getConfig().getAppName());
-        setInitialScreenSize(applicationService);
+        setInitialScreenSize();
         view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.getStage());
 
         splashController = new SplashController(applicationService);
@@ -99,6 +99,19 @@ public class PrimaryStageController extends NavigationController {
         view.showStage();
 
         new OverlayController(applicationService, viewRoot);
+    }
+
+    private void setInitialScreenSize() {
+        Cookie cookie = applicationService.getSettingsService().getCookie();
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
+                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
+        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
+                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
+        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
+                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
+        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
+                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
     }
 
     @Override
@@ -120,32 +133,22 @@ public class PrimaryStageController extends NavigationController {
     public void onActivate() {
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
-        UIThread.runOnNextRenderFrame(() -> initDomainHandler.run());
+
+        if (!settingsService.isTacAccepted()) {
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
+                    new TacController.InitData(this::maybeShowLockScreen)));
+        } else {
+            maybeShowLockScreen();
+        }
+
+        onActivatedHandler.run();
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void readAllPersistedCompleted(boolean result, Throwable throwable) {
-        if (throwable != null) {
-            new Popup().error(throwable).show();
-            return;
-        }
-
-        if (!result) {
-            new Popup().warning("Could not read persisted data.").show();
-            return;
-        }
-        if (!isTacAccepted()) {
-            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
-                    new TacController.InitData(this::maybeShowLockScreen)));
-        } else {
-            maybeShowLockScreen();
-        }
-    }
-
-    public void initializeApplicationServiceCompleted(boolean result, Throwable throwable) {
+    public void onApplicationServiceInitialized(boolean result, Throwable throwable) {
         if (throwable != null) {
             new Popup().error(throwable).show();
             return;
@@ -239,25 +242,8 @@ public class PrimaryStageController extends NavigationController {
         UIThread.run(() -> new Popup().error(throwable).show());
     }
 
-    private void setInitialScreenSize(DefaultApplicationService applicationService) {
-        Cookie cookie = applicationService.getSettingsService().getCookie();
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
-                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
-        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
-                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
-        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
-                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
-        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
-                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
-    }
-
     private boolean isLocked() {
         // todo add wallet support
         return userIdentityService.isDataStoreEncrypted();
-    }
-
-    private boolean isTacAccepted() {
-        return settingsService.isTacAccepted();
     }
 }
