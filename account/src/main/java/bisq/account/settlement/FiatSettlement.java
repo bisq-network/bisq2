@@ -118,7 +118,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
 
     @Override
     public bisq.account.protobuf.Settlement toProto() {
-        return toProtoBuilder().setFiatSettlement(bisq.account.protobuf.FiatSettlement.newBuilder()).build();
+        return getSettlementBuilder().setFiatSettlement(bisq.account.protobuf.FiatSettlement.newBuilder()).build();
     }
 
     public static FiatSettlement fromProto(bisq.account.protobuf.Settlement proto) {

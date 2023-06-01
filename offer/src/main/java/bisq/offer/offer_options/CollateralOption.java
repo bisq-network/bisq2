@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.poc.options;
+package bisq.offer.offer_options;
 
-import bisq.offer.offer_options.OfferOption;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,23 +24,23 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FiatSettlementOption implements OfferOption {
-    private final String countyCodeOfBank;
-    private final String bankName;
+public final class CollateralOption implements OfferOption {
+    private final long buyerSecurityDeposit;
+    private final long sellerSecurityDeposit;
 
-    public FiatSettlementOption(String countyCodeOfBank, String bankName) {
-        this.countyCodeOfBank = countyCodeOfBank;
-        this.bankName = bankName;
+    public CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) {
+        this.buyerSecurityDeposit = buyerSecurityDeposit;
+        this.sellerSecurityDeposit = sellerSecurityDeposit;
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setFiatSettlementOption(bisq.offer.protobuf.FiatSettlementOption.newBuilder()
-                        .setCountyCodeOfBank(countyCodeOfBank)
-                        .setBankName(bankName))
+        return getOfferOptionBuilder().setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
+                        .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                        .setSellerSecurityDeposit(sellerSecurityDeposit))
                 .build();
     }
 
-    public static FiatSettlementOption fromProto(bisq.offer.protobuf.FiatSettlementOption proto) {
-        return new FiatSettlementOption(proto.getCountyCodeOfBank(), proto.getBankName());
+    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
+        return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
     }
 }

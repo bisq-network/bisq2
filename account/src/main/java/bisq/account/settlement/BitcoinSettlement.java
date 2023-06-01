@@ -89,7 +89,7 @@ public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
 
     @Override
     public bisq.account.protobuf.Settlement toProto() {
-        return toProtoBuilder().setBitcoinSettlement(bisq.account.protobuf.BitcoinSettlement.newBuilder()).build();
+        return getSettlementBuilder().setBitcoinSettlement(bisq.account.protobuf.BitcoinSettlement.newBuilder()).build();
     }
 
     public static BitcoinSettlement fromProto(bisq.account.protobuf.Settlement proto) {

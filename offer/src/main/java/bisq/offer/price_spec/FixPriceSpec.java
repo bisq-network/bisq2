@@ -34,14 +34,14 @@ public final class FixPriceSpec implements PriceSpec {
         this.value = value;
     }
 
-    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPriceSpec(proto.getValue());
-    }
-
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
         return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
                         .setValue(value))
                 .build();
+    }
+
+    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
+        return new FixPriceSpec(proto.getValue());
     }
 }

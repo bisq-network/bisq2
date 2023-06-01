@@ -136,7 +136,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                     String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
                     String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
                             bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
-                    String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
+                    String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethodNames());
                     String text = Res.get("bisqEasy.takeOffer.takerRequest",
                             direction, amount, methods);
                     Optional<Citation> citation = Optional.of(new Citation(maker.getId(),

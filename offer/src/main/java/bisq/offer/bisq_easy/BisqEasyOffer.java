@@ -10,10 +10,11 @@ import bisq.network.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.SettlementSpec;
 import bisq.offer.SwapOffer;
+import bisq.offer.offer_options.AmountOption;
 import bisq.offer.offer_options.OfferOption;
 import bisq.offer.offer_options.ReputationOption;
 import bisq.offer.offer_options.TradeTermsOption;
-import bisq.offer.price_spec.MarketPriceSpec;
+import bisq.offer.price_spec.FloatPriceSpec;
 import bisq.offer.price_spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import com.google.common.base.Joiner;
@@ -44,16 +45,17 @@ public final class BisqEasyOffer extends SwapOffer {
                 .collect(Collectors.toList());
     }
 
-    private static List<OfferOption> createOfferOptions(String makersTradeTerms, long requiredTotalReputationScore) {
-        //todo add seller fee option, min/max amount
+    private static List<OfferOption> createOfferOptions(String makersTradeTerms, long requiredTotalReputationScore, double minAmountAsPercentage) {
         return List.of(
                 new TradeTermsOption(makersTradeTerms),
-                new ReputationOption(requiredTotalReputationScore)
+                new ReputationOption(requiredTotalReputationScore),
+                new AmountOption(minAmountAsPercentage)
         );
     }
 
 
     private final long quoteSideAmount;
+
     private transient final String chatMessageText;
 
     public BisqEasyOffer(String id,
@@ -65,18 +67,20 @@ public final class BisqEasyOffer extends SwapOffer {
                          long quoteSideAmount,
                          List<String> paymentMethodNames,
                          String makersTradeTerms,
-                         long requiredTotalReputationScore) {
+                         long requiredTotalReputationScore,
+                         double minAmountAsPercentage,
+                         double pricePremiumAsPercentage) {
         this(id,
                 date,
                 makerNetworkId,
                 direction,
                 market,
                 baseSideAmount,
-                new MarketPriceSpec(),
+                new FloatPriceSpec(pricePremiumAsPercentage),
                 createSwapProtocolTypes(),
                 createBaseSideSettlementSpecs(),
                 createQuoteSideSettlementSpecs(paymentMethodNames),
-                createOfferOptions(makersTradeTerms, requiredTotalReputationScore),
+                createOfferOptions(makersTradeTerms, requiredTotalReputationScore, minAmountAsPercentage),
                 quoteSideAmount);
     }
 
@@ -108,7 +112,7 @@ public final class BisqEasyOffer extends SwapOffer {
         chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 Res.get(direction.name().toLowerCase()).toUpperCase(),
                 AmountFormatter.formatAmountWithCode(Fiat.of(quoteSideAmount, market.getQuoteCurrencyCode()), true),
-                Joiner.on(", ").join(this.getPaymentMethods()));
+                Joiner.on(", ").join(this.getPaymentMethodNames()));
     }
 
     @Override
@@ -146,7 +150,7 @@ public final class BisqEasyOffer extends SwapOffer {
                 proto.getBisqEasyOffer().getQuoteSideAmount());
     }
 
-    public List<String> getPaymentMethods() {
+    public List<String> getPaymentMethodNames() {
         return quoteSideSettlementSpecs.stream().map(SettlementSpec::getSettlementMethodName)
                 .map(methodName -> {
                     if (Res.has(methodName)) {

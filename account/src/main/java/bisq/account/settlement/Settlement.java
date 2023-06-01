@@ -75,7 +75,7 @@ public abstract class Settlement<M extends Settlement.Method> implements Proto {
 
     public abstract bisq.account.protobuf.Settlement toProto();
 
-    protected bisq.account.protobuf.Settlement.Builder toProtoBuilder() {
+    protected bisq.account.protobuf.Settlement.Builder getSettlementBuilder() {
         return bisq.account.protobuf.Settlement.newBuilder()
                 .setSettlementMethodName(settlementMethodName);
     }

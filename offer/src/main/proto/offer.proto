@@ -17,7 +17,7 @@ message FixPrice {
   uint64 value = 1;
 }
 message FloatPrice {
-  double value = 1;
+  double percentage = 1;
 }
 message MarketPrice {
 }
@@ -35,6 +35,13 @@ message SettlementSpec {
 }
 
 // options
+message ReputationOption {
+  uint64 requiredTotalReputationScore = 1;
+}
+message TradeTermsOption {
+  string makersTradeTerms = 1;
+}
+
 message AmountOption {
   double minAmountAsPercentage = 1;
 }
@@ -42,11 +49,6 @@ message AmountOption {
 message CollateralOption {
   uint64 buyerSecurityDeposit = 1;
   uint64 sellerSecurityDeposit = 2;
-}
-
-message ContractOption {
-  uint64 maxTradeAmount = 1;
-  uint64 maxTradePeriod = 2;
 }
 
 message FeeOption {
@@ -64,46 +66,14 @@ message FiatSettlementOption {
   string bankName = 2;
 }
 
-message AccountCreationDateProof {
-  string hashOfAccount = 1;
-  string otsProof = 2;
-}
-message ReputationProof {
-  oneof message {
-    AccountCreationDateProof accountCreationDateProof = 1;
-  }
-}
-message ReputationOption {
-  repeated ReputationProof reputationProofs = 1;
-  uint64 requiredTotalReputationScore = 2;
-}
-message TradeTermsOption {
-  string makersTradeTerms = 1;
-}
-
-message DisputeAgent {
-  enum Type {
-    MEDIATOR = 0;
-    ARBITRATOR = 1;
-  }
-  Type type = 10;
-  network.NetworkId networkId = 11;
-}
-
-message SupportOption {
-  repeated DisputeAgent disputeAgents = 1;
-}
-
 message OfferOption {
   oneof message {
-    AmountOption amountOption = 1;
-    CollateralOption collateralOption = 2;
-    ContractOption contractOption = 3;
-    FeeOption feeOption = 4;
+    TradeTermsOption tradeTermsOption = 1;
+    ReputationOption reputationOption = 2;
+    AmountOption amountOption = 33;
+    CollateralOption collateralOption = 4;
     FiatSettlementOption fiatSettlementOption = 5;
-    ReputationOption reputationOption = 6;
-    SupportOption supportOption = 7;
-    TradeTermsOption tradeTermsOption = 8;
+    FeeOption feeOption = 6;
   }
 }
 
@@ -127,7 +97,7 @@ message SwapOffer {
 
 // BisqEasy
 message BisqEasyOffer {
-  uint64 quoteSideAmount = 5;
+  uint64 quoteSideAmount = 1;
 }
 
 

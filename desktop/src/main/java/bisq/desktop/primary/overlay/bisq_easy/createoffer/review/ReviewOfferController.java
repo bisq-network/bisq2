@@ -134,19 +134,10 @@ public class ReviewOfferController implements Controller {
         model.getShowTakeOfferSuccess().set(false);
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        //  public BisqEasyOffer(String id,
-        //                         long date,
-        //                         NetworkId makerNetworkId,
-        //                         Direction direction,
-        //                         Market market,
-        //                         long baseSideAmount,
-        //                         PriceSpec priceSpec,
-        //                         List<SettlementSpec> baseSideSettlementSpecs,
-        //                         List<SettlementSpec> quoteSideSettlementSpecs,
-        ////todo
-        //                         long quoteSideAmount,
-        //                         String makersTradeTerms,
-        //                         long requiredTotalReputationScore)
+
+        // todo
+        int minAmountAsPercentage = 10;
+        double sellerPremiumAsPercentage = 10;
 
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(StringUtils.createUid(),
                 System.currentTimeMillis(),
@@ -157,7 +148,9 @@ public class ReviewOfferController implements Controller {
                 model.getQuoteSideAmount().getValue(),
                 new ArrayList<>(model.getPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getRequiredTotalReputationScore().get());
+                settingsService.getRequiredTotalReputationScore().get(),
+                minAmountAsPercentage,
+                sellerPremiumAsPercentage);
         model.setMyOfferText(StringUtils.truncate(bisqEasyOffer.getChatMessageText(), 100));
 
         bisqEasyPublicChatChannelService.joinChannel(channel);
@@ -267,8 +260,8 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            List<String> paymentMethods = peersOffer.getPaymentMethods();
-            if (myChatOffer.getPaymentMethods().stream().noneMatch(paymentMethods::contains)) {
+            List<String> paymentMethods = peersOffer.getPaymentMethodNames();
+            if (myChatOffer.getPaymentMethodNames().stream().noneMatch(paymentMethods::contains)) {
                 return false;
             }
 
