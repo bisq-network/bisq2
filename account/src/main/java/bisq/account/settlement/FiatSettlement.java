@@ -55,8 +55,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
             case LIQUID_SWAP:
             case BSQ_SWAP:
             case LIGHTNING_X:
-                throw new IllegalArgumentException("No fiat support for that protocolType");
-
+                throw new IllegalArgumentException("No settlementMethods for that protocolType");
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }
@@ -105,11 +104,11 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public FiatSettlement(Method method) {
-        super(method, List.of(FiatSettlement.Method.values()));
+        super(method);
     }
 
     public FiatSettlement(String settlementMethodName) {
-        super(settlementMethodName, List.of(FiatSettlement.Method.values()));
+        super(settlementMethodName);
     }
 
     @Override
@@ -130,6 +129,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     public List<TradeCurrency> getTradeCurrencies() {
         return method.getCountries().stream()
                 .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.getCode()))
+                .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
                 .collect(Collectors.toList());
     }
 }

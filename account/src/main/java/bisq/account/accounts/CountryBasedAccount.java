@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.settlement.Settlement;
 import bisq.common.locale.Country;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,11 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, T extends Settlement<?>> extends Account<P, T> {
+public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, S extends Settlement<?>> extends Account<P, S> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,
-                               T settlement,
+                               S settlement,
                                P payload,
                                Country country) {
         super(accountName, settlement, payload);
@@ -42,5 +43,17 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
     protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder() {
         return bisq.account.protobuf.CountryBasedAccount.newBuilder()
                 .setCountry(country.toProto());
+    }
+
+    public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.CountryBasedAccount proto) {
+        switch (proto.getMessageCase()) {
+            case SEPAACCOUNT: {
+                return SepaAccount.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

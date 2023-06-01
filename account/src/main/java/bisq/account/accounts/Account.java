@@ -29,34 +29,34 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
-// todo move over account domain from bisq1 and adjust it where needed
-
+/**
+ * Account is only stored locally and never shared with the peer. It can contain sensitive data.
+ */
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, T extends Settlement<?>> implements Proto {
+public abstract class Account<P extends AccountPayload, S extends Settlement<?>> implements Proto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final T settlement;
+    protected final S settlement;
 
     public Account(String accountName,
-                   T settlement,
+                   S settlement,
                    P accountPayload) {
         this(new Date().getTime(), accountName, settlement, accountPayload);
     }
 
     public Account(long creationDate,
                    String accountName,
-                   T settlement,
+                   S settlement,
                    P accountPayload) {
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
         this.settlement = settlement;
     }
-
 
     public abstract bisq.account.protobuf.Account toProto();
 
@@ -76,8 +76,8 @@ public abstract class Account<P extends AccountPayload, T extends Settlement<?>>
             case REVOLUTACCOUNT: {
                 return RevolutAccount.fromProto(proto);
             }
-            case SEPAACCOUNT: {
-                return SepaAccount.fromProto(proto);
+            case COUNTRYBASEDACCOUNT: {
+                return CountryBasedAccount.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

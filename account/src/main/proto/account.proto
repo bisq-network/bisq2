@@ -63,7 +63,7 @@ message AccountPayload {
   oneof message {
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
     RevolutAccountPayload RevolutAccountPayload = 21;
-    CountryBasedAccountPayload sepaAccountPayload = 22;
+    CountryBasedAccountPayload countryBasedAccountPayload = 22;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -97,7 +97,7 @@ message Account {
   oneof message {
     UserDefinedFiatAccount userDefinedFiatAccount = 20;
     RevolutAccount revolutAccount = 21;
-    CountryBasedAccount sepaAccount = 22;
+    CountryBasedAccount countryBasedAccount = 22;
   }
 }
 

@@ -40,14 +40,14 @@ public abstract class Settlement<M extends Settlement.Method> implements Proto {
         }
     }
 
-    public static Settlement<? extends Method> from(String name, String currencyCode) {
+    public static Settlement<? extends Method> from(String settlementMethodName, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatSettlement.from(name);
+            return FiatSettlement.from(settlementMethodName);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinSettlement.from(name);
+                return BitcoinSettlement.from(settlementMethodName);
             } else {
-                return CryptoSettlement.from(name, currencyCode);
+                return CryptoSettlement.from(settlementMethodName, currencyCode);
             }
         }
     }
@@ -62,18 +62,15 @@ public abstract class Settlement<M extends Settlement.Method> implements Proto {
 
     protected final String settlementMethodName;
     protected final M method;
-    protected final List<M> availableSettlementMethods;
 
-    public Settlement(M method, List<M> availableSettlementMethods) {
+    public Settlement(M method) {
         this.settlementMethodName = method.name();
         this.method = method;
-        this.availableSettlementMethods = availableSettlementMethods;
     }
 
-    public Settlement(String settlementMethodName, List<M> availableSettlementMethods) {
+    public Settlement(String settlementMethodName) {
         this.settlementMethodName = settlementMethodName;
         this.method = getFallbackMethod();
-        this.availableSettlementMethods = availableSettlementMethods;
     }
 
     public abstract bisq.account.protobuf.Settlement toProto();

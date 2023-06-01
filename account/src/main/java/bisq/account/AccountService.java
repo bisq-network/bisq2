@@ -121,34 +121,4 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
     }
-    
-   /* 
-    
-
-    public void addAccount(Account<?, ? extends Settlement<?>> account) {
-        List<Account<?, ? extends Settlement<?>>> accounts = persistableStore.getAccounts();
-        if (accounts.contains(account)) return;
-        accounts.add(account);
-        persist();
-    }*/
-/*
-   
-
-    private void addDummyAccounts() {
-        log.info("add dummy accounts");
-        if (getAccounts().isEmpty()) {
-            SepaAccount john_smith = new SepaAccount("SEPA-account-1",
-                    "John Smith",
-                    "iban_1234",
-                    "bic_1234",
-                    CountryRepository.getDefaultCountry());
-            addAccount(john_smith);
-            addAccount(new SepaAccount("SEPA-account-2",
-                    "Mary Smith",
-                    "iban_5678",
-                    "bic_5678",
-                    CountryRepository.getDefaultCountry()));
-            addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
-        }
-    }*/
 }

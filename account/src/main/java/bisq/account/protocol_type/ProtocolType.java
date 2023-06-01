@@ -22,6 +22,7 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.ProtoEnum;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public interface ProtocolType extends ProtoEnum {
@@ -46,6 +47,8 @@ public interface ProtocolType extends ProtoEnum {
         if (isMultiSigSupported(market)) {
             result.add(SwapProtocolType.BISQ_MULTISIG);
         }
+
+        result.sort(Comparator.comparingInt(SwapProtocolType::ordinal));
         return result;
     }
 

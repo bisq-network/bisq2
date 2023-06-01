@@ -49,8 +49,7 @@ public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
             case LIQUID_SWAP:
             case BSQ_SWAP:
             case LIGHTNING_X:
-                throw new IllegalArgumentException("No fiat support for that protocolType");
-
+                throw new IllegalArgumentException("No settlementMethods for that protocolType");
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }
@@ -77,11 +76,11 @@ public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public BitcoinSettlement(BitcoinSettlement.Method method) {
-        super(method, List.of(BitcoinSettlement.Method.values()));
+        super(method);
     }
 
     public BitcoinSettlement(String settlementMethodName) {
-        super(settlementMethodName, List.of(BitcoinSettlement.Method.values()));
+        super(settlementMethodName);
     }
 
     protected BitcoinSettlement.Method getFallbackMethod() {

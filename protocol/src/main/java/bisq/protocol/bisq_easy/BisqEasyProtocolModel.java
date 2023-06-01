@@ -20,13 +20,11 @@ package bisq.protocol.bisq_easy;
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @EqualsAndHashCode
 public class BisqEasyProtocolModel implements Proto {
     private final BisqEasyTrade trade;
-    @Setter
     private final BisqEasyTradePhase phase;
 
     public BisqEasyProtocolModel(BisqEasyTrade trade, BisqEasyTradePhase phase) {

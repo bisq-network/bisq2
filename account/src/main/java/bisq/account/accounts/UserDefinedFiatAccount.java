@@ -32,13 +32,19 @@ public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccount
     private static final FiatSettlement SETTLEMENT = new FiatSettlement(FiatSettlement.Method.USER_DEFINED);
 
     public UserDefinedFiatAccount(String accountName, String accountData) {
-        super(accountName,
-                SETTLEMENT,
-                new UserDefinedFiatAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), accountData));
+        this(accountName, new UserDefinedFiatAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), accountData));
+    }
+
+    private UserDefinedFiatAccount(String accountName, UserDefinedFiatAccountPayload userDefinedFiatAccountPayload) {
+        super(accountName, SETTLEMENT, userDefinedFiatAccountPayload);
     }
 
     @Override
     public bisq.account.protobuf.Account toProto() {
         return getAccountBuilder().setUserDefinedFiatAccount(bisq.account.protobuf.UserDefinedFiatAccount.newBuilder()).build();
+    }
+
+    public static UserDefinedFiatAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new UserDefinedFiatAccount(proto.getAccountName(), UserDefinedFiatAccountPayload.fromProto(proto.getAccountPayload()));
     }
 }

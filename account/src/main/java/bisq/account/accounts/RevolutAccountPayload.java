@@ -41,4 +41,8 @@ public final class RevolutAccountPayload extends AccountPayload {
                                 .setEmail(email))
                 .build();
     }
+
+    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        return new RevolutAccountPayload(proto.getId(), proto.getSettlementMethodName(), proto.getRevolutAccountPayload().getEmail());
+    }
 }

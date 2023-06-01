@@ -43,7 +43,6 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     public AccountStore(Map<String, Account<?, ? extends Settlement<?>>> accountByName,
                         Optional<Account<?, ? extends Settlement<?>>> selectedAccount) {
-        this.accountByName.clear();
         this.accountByName.putAll(accountByName);
         this.selectedAccount.set(selectedAccount.orElse(null));
     }
@@ -80,9 +79,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     @Override
     public AccountStore getClone() {
-        return new AccountStore(
-                accountByName,
-                Optional.ofNullable(selectedAccount.get()));
+        return new AccountStore(accountByName, Optional.ofNullable(selectedAccount.get()));
     }
 
     @Override

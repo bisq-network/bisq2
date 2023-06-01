@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,9 +35,20 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
         this.countryCode = countryCode;
     }
 
-
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder() {
         return bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
                 .setCountryCode(countryCode);
+    }
+
+    public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.CountryBasedAccountPayload proto) {
+        switch (proto.getMessageCase()) {
+            case SEPAACCOUNTPAYLOAD: {
+                return SepaAccountPayload.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

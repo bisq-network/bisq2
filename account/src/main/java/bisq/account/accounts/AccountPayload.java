@@ -18,11 +18,15 @@
 package bisq.account.accounts;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * AccountPayload is sent over the wire to the peer. It must not contain sensitive data.
+ */
 @Getter
 @Slf4j
 @ToString
@@ -42,5 +46,23 @@ public abstract class AccountPayload implements Proto {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id)
                 .setSettlementMethodName(settlementMethodName);
+    }
+
+    public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        switch (proto.getMessageCase()) {
+            case USERDEFINEDFIATACCOUNTPAYLOAD: {
+                return UserDefinedFiatAccountPayload.fromProto(proto);
+            }
+            case REVOLUTACCOUNTPAYLOAD: {
+                return RevolutAccountPayload.fromProto(proto);
+            }
+            case COUNTRYBASEDACCOUNTPAYLOAD: {
+                return CountryBasedAccountPayload.fromProto(proto.getCountryBasedAccountPayload());
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

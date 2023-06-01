@@ -37,20 +37,25 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, F
                        String iban,
                        String bic,
                        Country country) {
-        super(accountName,
-                SETTLEMENT,
+        this(accountName,
                 new SepaAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), holderName, iban, bic, country.getCode()),
                 country);
     }
 
+    private SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload, Country country) {
+        super(accountName, SETTLEMENT, sepaAccountPayload, country);
+    }
+
     @Override
     public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder().setSepaAccount(getCountryBasedAccountBuilder()
+        return getAccountBuilder().setCountryBasedAccount(getCountryBasedAccountBuilder()
                         .setSepaAccount(bisq.account.protobuf.SepaAccount.newBuilder()))
                 .build();
     }
 
-    public static SepaAccount fromProto(bisq.account.protobuf.SepaAccount account) {
-        return null;
+    public static SepaAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new SepaAccount(proto.getAccountName(),
+                SepaAccountPayload.fromProto(proto.getAccountPayload()),
+                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
     }
 }

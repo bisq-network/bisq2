@@ -44,7 +44,7 @@ public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
     public static List<CryptoSettlement.Method> getSettlementMethods(SwapProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
-                throw new IllegalArgumentException("No support for altcoins for BISQ_EASY");
+                throw new IllegalArgumentException("No support for CryptoSettlements for BISQ_EASY");
             case BISQ_MULTISIG:
             case LIGHTNING_X:
                 return CryptoSettlement.getSettlementMethods();
@@ -76,12 +76,12 @@ public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
     private final String currencyCode;
 
     public CryptoSettlement(CryptoSettlement.Method method, String currencyCode) {
-        super(method, List.of(CryptoSettlement.Method.values()));
+        super(method);
         this.currencyCode = currencyCode;
     }
 
     public CryptoSettlement(String settlementMethodName, String currencyCode) {
-        super(settlementMethodName, List.of(CryptoSettlement.Method.values()));
+        super(settlementMethodName);
         this.currencyCode = currencyCode;
     }
 
