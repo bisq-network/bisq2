@@ -38,8 +38,7 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
     private final Text content;
     private Subscription widthPin;
 
-    public BisqEasyGuideSecurityView(BisqEasyGuideSecurityModel model,
-                                     BisqEasyGuideSecurityController controller) {
+    public BisqEasyGuideSecurityView(BisqEasyGuideSecurityModel model, BisqEasyGuideSecurityController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);

@@ -38,8 +38,7 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
     private final Text content;
     private Subscription widthPin;
 
-    public BisqEasyGuideProcessView(BisqEasyGuideProcessModel model,
-                                    BisqEasyGuideProcessController controller) {
+    public BisqEasyGuideProcessView(BisqEasyGuideProcessModel model, BisqEasyGuideProcessController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);

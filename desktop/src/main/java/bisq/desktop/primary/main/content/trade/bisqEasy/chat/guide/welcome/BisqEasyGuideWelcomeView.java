@@ -35,8 +35,7 @@ public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeMod
     private final Text content;
     private Subscription widthPin;
 
-    public BisqEasyGuideWelcomeView(BisqEasyGuideWelcomeModel model,
-                                    BisqEasyGuideWelcomeController controller) {
+    public BisqEasyGuideWelcomeView(BisqEasyGuideWelcomeModel model, BisqEasyGuideWelcomeController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);

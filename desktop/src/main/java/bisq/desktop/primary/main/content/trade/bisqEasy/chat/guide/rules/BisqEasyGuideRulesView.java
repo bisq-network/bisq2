@@ -39,8 +39,7 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
     private final Text content;
     private Subscription widthPin;
 
-    public BisqEasyGuideRulesView(BisqEasyGuideRulesModel model,
-                                  BisqEasyGuideRulesController controller) {
+    public BisqEasyGuideRulesView(BisqEasyGuideRulesModel model, BisqEasyGuideRulesController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);

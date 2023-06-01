@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab1.TradeInfoTab1Controller;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab2.TradeInfoTab2Controller;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab3.TradeInfoTab3Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab1.TradeInfoTab1Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab2.TradeInfoTab2Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab3.TradeInfoTab3Controller;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;

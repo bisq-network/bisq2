@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab1;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab1;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
