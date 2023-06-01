@@ -15,32 +15,38 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.user.user_profile.create;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.settings.about.AboutController;
-import bisq.desktop.primary.main.content.settings.network.NetworkInfoController;
-import bisq.desktop.primary.main.content.settings.preferences.PreferencesController;
+import bisq.desktop.primary.main.content.user.user_profile.create.step1.GenerateNewProfileStep1Controller;
+import bisq.desktop.primary.main.content.user.user_profile.create.step2.GenerateNewProfileStep2Controller;
+import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class SettingsController extends TabController<SettingsModel> {
+public class CreateUserProfileController extends NavigationController {
     private final DefaultApplicationService applicationService;
     @Getter
-    private final SettingsView view;
+    private final CreateUserProfileModel model;
+    @Getter
+    private final CreateUserProfileView view;
 
-    public SettingsController(DefaultApplicationService applicationService) {
-        super(new SettingsModel(), NavigationTarget.SETTINGS);
+    public CreateUserProfileController(DefaultApplicationService applicationService) {
+        super(NavigationTarget.CREATE_PROFILE);
 
         this.applicationService = applicationService;
+        model = new CreateUserProfileModel();
+        view = new CreateUserProfileView(model, this);
+    }
 
-        view = new SettingsView(model, this);
+    @Override
+    public void onNavigateToChild(NavigationTarget navigationTarget) {
     }
 
     @Override
@@ -51,20 +57,27 @@ public class SettingsController extends TabController<SettingsModel> {
     public void onDeactivate() {
     }
 
+    @Override
+    public boolean useCaching() {
+        return false;
+    }
+
+    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case PREFERENCES: {
-                return Optional.of(new PreferencesController(applicationService));
+            case CREATE_PROFILE_STEP1: {
+                return Optional.of(new GenerateNewProfileStep1Controller(applicationService));
             }
-            case NETWORK_INFO: {
-                return Optional.of(new NetworkInfoController(applicationService));
-            }
-            case ABOUT: {
-                return Optional.of(new AboutController(applicationService));
+            case CREATE_PROFILE_STEP2: {
+                return Optional.of(new GenerateNewProfileStep2Controller(applicationService));
             }
             default: {
                 return Optional.empty();
             }
         }
+    }
+
+    public void onQuit() {
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 }

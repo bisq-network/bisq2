@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.bisqeasy.createoffer.CreateOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.createoffer.CreateOfferController;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
