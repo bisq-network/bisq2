@@ -25,7 +25,7 @@ import bisq.desktop.primary.main.content.user.accounts.PaymentAccountsController
 import bisq.desktop.primary.main.content.user.password.PasswordController;
 import bisq.desktop.primary.main.content.user.reputation.ReputationController;
 import bisq.desktop.primary.main.content.user.roles.RolesController;
-import bisq.desktop.primary.main.content.user.userProfile.UserProfileController;
+import bisq.desktop.primary.main.content.user.user_profile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
