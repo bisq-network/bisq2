@@ -17,32 +17,34 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.primary.main.content.chat.ChatView;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatModel bisqEasyChatModel;
     private final Switch offersOnlySwitch;
     private final Region bisqEasyPrivateTradeChatChannelSelection;
+    private final Pane tradeInfoController;
+    private Subscription isBisqEasyPrivateTradeChatChannelPin;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
                             Region bisqEasyPublicChatChannelSelection,
                             Region bisqEasyPrivateTradeChatChannelSelection,
                             Region twoPartyPrivateChatChannelSelection,
-                            Pane chatMessagesComponent,
-                            Pane channelSidebar) {
+                            VBox chatMessagesComponent,
+                            Pane channelSidebar,
+                            Pane tradeInfoController) {
         super(model,
                 controller,
                 bisqEasyPublicChatChannelSelection,
@@ -51,6 +53,7 @@ public class BisqEasyChatView extends ChatView {
                 channelSidebar);
 
         this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
+        this.tradeInfoController = tradeInfoController;
 
         left.getChildren().add(1, Layout.separator());
         left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
@@ -61,17 +64,6 @@ public class BisqEasyChatView extends ChatView {
         offersOnlySwitch.setText(Res.get("bisqEasy.filter.offersOnly"));
 
         centerToolbar.getChildren().add(2, offersOnlySwitch);
-
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                Region childRoot = newValue.getRoot();
-                VBox.setMargin(childRoot, new Insets(25, 25, 25, 25));
-                chatMessagesComponent.getChildren().add(0, childRoot);
-                UIThread.runOnNextRenderFrame(() -> Transitions.transitContentViews(oldValue, newValue));
-            } else if (oldValue instanceof TradeGuideView) {
-                chatMessagesComponent.getChildren().remove(0);
-            }
-        });
     }
 
     @Override
@@ -83,6 +75,15 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyPrivateTradeChatChannelSelection.visibleProperty().bind(bisqEasyChatModel.getIsTradeChannelVisible());
         bisqEasyPrivateTradeChatChannelSelection.managedProperty().bind(bisqEasyChatModel.getIsTradeChannelVisible());
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
+
+        isBisqEasyPrivateTradeChatChannelPin = EasyBind.subscribe(bisqEasyChatModel.getIsBisqEasyPrivateTradeChatChannel(), value -> {
+            if (value && !chatMessagesComponent.getChildren().contains(tradeInfoController)) {
+                chatMessagesComponent.getChildren().add(0, tradeInfoController);
+                VBox.setMargin(tradeInfoController, new Insets(0, 25, 25, 25));
+            } else {
+                chatMessagesComponent.getChildren().remove(tradeInfoController);
+            }
+        });
     }
 
     @Override
@@ -94,5 +95,6 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyPrivateTradeChatChannelSelection.visibleProperty().unbind();
         bisqEasyPrivateTradeChatChannelSelection.managedProperty().unbind();
         offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
+        isBisqEasyPrivateTradeChatChannelPin.unsubscribe();
     }
 }
