@@ -45,7 +45,7 @@ import java.util.List;
 
 @Slf4j
 public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
-    public static final double TOP_PANE_HEIGHT = 55;
+    private static final double TOP_PANE_HEIGHT = 55;
     private static final double OPACITY = 0.35;
 
     private final Button closeButton;

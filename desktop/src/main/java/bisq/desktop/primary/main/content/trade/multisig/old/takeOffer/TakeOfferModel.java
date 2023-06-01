@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Offer;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.poc.PocOffer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
@@ -36,16 +36,16 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 public class TakeOfferModel implements Model {
     Direction direction;
-    Offer offer;
+    PocOffer offer;
     Monetary baseSideAmount;
     Monetary quoteSideAmount;
     Quote fixPrice;
     private SwapProtocolType selectedProtocolType;
 
-    private Account<? extends SettlementMethod> selectedBaseSideAccount;
-    private Account<? extends SettlementMethod> selectedQuoteSideAccount;
-    private SettlementMethod selectedBaseSideSettlementMethod;
-    private SettlementMethod selectedQuoteSideSettlementMethod;
+    private Account<?, ? extends Settlement<?>> selectedBaseSideAccount;
+    private Account<?, ? extends Settlement<?>> selectedQuoteSideAccount;
+    private Settlement.Method selectedBaseSideSettlementMethod;
+    private Settlement.Method selectedQuoteSideSettlementMethod;
 
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;

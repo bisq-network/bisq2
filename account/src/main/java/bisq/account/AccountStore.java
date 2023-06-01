@@ -18,43 +18,52 @@
 package bisq.account;
 
 import bisq.account.accounts.Account;
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.settlement.Settlement;
+import bisq.common.observable.Observable;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-@Getter
-@EqualsAndHashCode
-@ToString
+@Slf4j
 public final class AccountStore implements PersistableStore<AccountStore> {
-    private final List<Account<? extends SettlementMethod>> accounts = new CopyOnWriteArrayList<>();
+    private final Map<String, Account<?, ? extends Settlement<?>>> accountByName = new ConcurrentHashMap<>();
+    private final Observable<Account<?, ? extends Settlement<?>>> selectedAccount = new Observable<>();
 
     public AccountStore() {
+        this(new HashMap<>(), Optional.empty());
     }
 
-    private AccountStore(List<Account<? extends SettlementMethod>> accounts) {
-        this.accounts.addAll(accounts);
+    public AccountStore(Map<String, Account<?, ? extends Settlement<?>>> accountByName,
+                        Optional<Account<?, ? extends Settlement<?>>> selectedAccount) {
+        this.accountByName.putAll(accountByName);
+        this.selectedAccount.set(selectedAccount.orElse(null));
     }
 
     @Override
     public bisq.account.protobuf.AccountStore toProto() {
-        return bisq.account.protobuf.AccountStore.newBuilder()
-                .addAllAccounts(accounts.stream().map(Account::toProto).collect(Collectors.toSet()))
-                .build();
+        bisq.account.protobuf.AccountStore.Builder builder = bisq.account.protobuf.AccountStore.newBuilder()
+                .putAllAccountByName(accountByName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> e.getValue().toProto())));
+        Optional.ofNullable(selectedAccount.get()).ifPresent(e -> builder.setSelectedAccount(e.toProto()));
+        return builder.build();
     }
 
-    public static PersistableStore<?> fromProto(bisq.account.protobuf.AccountStore proto) {
-        return new AccountStore(proto.getAccountsList().stream()
-                .map(Account::fromProto)
-                .collect(Collectors.toList()));
+    public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto) {
+        return new AccountStore(
+                proto.getAccountByNameMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> Account.fromProto(e.getValue()))),
+                proto.hasSelectedAccount() ?
+                        Optional.of(Account.fromProto(proto.getSelectedAccount())) :
+                        Optional.empty());
     }
 
     @Override
@@ -70,12 +79,21 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     @Override
     public AccountStore getClone() {
-        return new AccountStore(accounts);
+        return new AccountStore(accountByName, Optional.ofNullable(selectedAccount.get()));
     }
 
     @Override
     public void applyPersisted(AccountStore persisted) {
-        accounts.clear();
-        accounts.addAll(persisted.accounts);
+        accountByName.clear();
+        accountByName.putAll(persisted.accountByName);
+        selectedAccount.set(persisted.selectedAccount.get());
+    }
+
+    Map<String, Account<?, ? extends Settlement<?>>> getAccountByName() {
+        return accountByName;
+    }
+
+    Observable<Account<?, ? extends Settlement<?>>> getSelectedAccount() {
+        return selectedAccount;
     }
 }

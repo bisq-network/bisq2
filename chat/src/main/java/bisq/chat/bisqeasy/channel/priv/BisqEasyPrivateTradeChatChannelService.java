@@ -17,7 +17,6 @@
 
 package bisq.chat.bisqeasy.channel.priv;
 
-import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
@@ -31,6 +30,7 @@ import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.formatters.AmountFormatter;

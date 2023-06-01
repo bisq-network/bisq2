@@ -17,11 +17,11 @@
 
 package bisq.contract;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
-import bisq.offer.Offer;
+import bisq.offer.poc.PocOffer;
 import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class Contract implements Proto {
     private final NetworkId takerNetworkId;
     private final SwapProtocolType protocolType;
-    private final Offer offer;
+    private final PocOffer offer;
     private final Monetary baseSideAmount;
     private final Monetary quoteSideAmount;
     private final String baseSideSettlementMethod;
@@ -41,7 +41,7 @@ public final class Contract implements Proto {
 
     public Contract(NetworkId takerNetworkId,
                     SwapProtocolType protocolType,
-                    Offer offer,
+                    PocOffer offer,
                     Monetary baseSideAmount,
                     Monetary quoteSideAmount,
                     String baseSideSettlementMethod,

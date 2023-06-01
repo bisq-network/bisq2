@@ -31,6 +31,6 @@ public class TradeInfoModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_INFO_TAB_1;
+        return NavigationTarget.TRADE_INFO_OFFER;
     }
 }

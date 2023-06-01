@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.settlement.Settlement;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
@@ -30,8 +30,8 @@ import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.components.ProtocolSelection;
 import bisq.desktop.primary.main.content.trade.components.SettlementSelection;
-import bisq.offer.OpenOfferService;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.poc.OpenOfferService;
 import javafx.collections.SetChangeListener;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -69,9 +69,9 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
     private final SettlementSelection settlementSelection;
-    private final SetChangeListener<Account<? extends SettlementMethod>> selectedBaseSideAccountsListener,
+    private final SetChangeListener<Account<?, ? extends Settlement<?>>> selectedBaseSideAccountsListener,
             selectedQuoteSideAccountsListener;
-    private final SetChangeListener<SettlementMethod> selectedBaseSideSettlementMethodsListener,
+    private final SetChangeListener<Settlement.Method> selectedBaseSideSettlementMethodsListener,
             selectedQuoteSideSettlementMethodsListener;
     private Subscription selectedMarketSubscription, directionSubscription, protocolSelectionSubscription,
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;

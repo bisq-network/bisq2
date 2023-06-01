@@ -17,8 +17,10 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.account.bisqeasy.BisqEasyPaymentAccount;
-import bisq.account.bisqeasy.BisqEasyPaymentAccountService;
+import bisq.account.AccountService;
+import bisq.account.accounts.Account;
+import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.settlement.Settlement;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
@@ -127,9 +129,9 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final SettingsService settingsService;
         private final ChatService chatService;
-        private final BisqEasyPaymentAccountService bisqEasyPaymentAccountService;
         private final MediationService mediationService;
         private final Optional<WalletService> walletService;
+        private final AccountService accountService;
 
         private Pin selectedChannelPin, inMediationPin, chatMessagesPin,
                 selectedPaymentAccountPin, paymentAccountsPin;
@@ -144,7 +146,7 @@ public class ChatMessagesComponent {
             settingsService = applicationService.getSettingsService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
-            bisqEasyPaymentAccountService = applicationService.getAccountService().getBisqEasyPaymentAccountService();
+            accountService = applicationService.getAccountService();
             mediationService = applicationService.getSupportService().getMediationService();
             walletService = applicationService.getWalletService();
 
@@ -168,7 +170,7 @@ public class ChatMessagesComponent {
         @Override
         public void onActivate() {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
-            model.getPaymentAccounts().setAll(bisqEasyPaymentAccountService.getAccounts());
+            model.getPaymentAccounts().setAll(accountService.getAccounts());
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetailsHandler);
 
             //todo
@@ -179,13 +181,13 @@ public class ChatMessagesComponent {
             selectedChannelPin = chatChannelSelectionService.getSelectedChannel()
                     .addObserver(this::selectedChannelChanged);
 
-            paymentAccountsPin = bisqEasyPaymentAccountService.getAccounts().addListener(this::accountsChanged);
+            paymentAccountsPin = accountService.getAccounts().addListener(this::accountsChanged);
             selectedPaymentAccountPin = FxBindings.bind(model.selectedAccountProperty())
-                    .to(bisqEasyPaymentAccountService.selectedAccountAsObservable());
+                    .to(accountService.selectedAccountAsObservable());
             selectedPaymentAccountSubscription = EasyBind.subscribe(model.selectedAccountProperty(),
                     selectedAccount -> {
                         if (selectedAccount != null) {
-                            bisqEasyPaymentAccountService.setSelectedAccount(selectedAccount);
+                            accountService.setSelectedAccount(selectedAccount);
                         }
                     });
         }
@@ -329,7 +331,7 @@ public class ChatMessagesComponent {
             UIThread.run(() ->
                     model.getPaymentAccountSelectionVisible().set(
                             model.getSelectedChannel().get() instanceof BisqEasyPrivateTradeChatChannel &&
-                                    bisqEasyPaymentAccountService.getAccounts().size() > 1));
+                                    accountService.getAccounts().size() > 1));
         }
 
         private void applyUserProfileOrChannelChange() {
@@ -414,23 +416,23 @@ public class ChatMessagesComponent {
         }
 
         void onSendPaymentAccount() {
-            if (bisqEasyPaymentAccountService.getAccounts().size() > 1) {
+            if (accountService.getAccounts().size() > 1) {
                 //todo
                 new Popup().information("TODO").show();
             } else {
-                BisqEasyPaymentAccount selectedAccount = bisqEasyPaymentAccountService.getSelectedAccount();
-                if (bisqEasyPaymentAccountService.hasAccounts() && selectedAccount != null) {
+                Account<?, ? extends Settlement<?>> selectedAccount = accountService.getSelectedAccount();
+                if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
                     ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
                     checkArgument(chatChannel instanceof BisqEasyPrivateTradeChatChannel);
                     BisqEasyPrivateTradeChatChannel channel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                    String message = Res.get("bisqEasy.sendPaymentAccount.message", selectedAccount.getData());
+                    String message = Res.get("bisqEasy.sendPaymentAccount.message", ((UserDefinedFiatAccount) selectedAccount).getAccountPayload());
                     chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                             Optional.empty(),
                             channel);
                 } else {
-                    if (!bisqEasyPaymentAccountService.hasAccounts()) {
+                    if (!accountService.hasAccounts()) {
                         new Popup().information(Res.get("bisqEasy.sendPaymentAccount.noAccount.popup")).show();
-                    } else if (bisqEasyPaymentAccountService.getAccountByNameMap().size() > 1) {
+                    } else if (accountService.getAccountByNameMap().size() > 1) {
                         String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
                         if (DontShowAgainService.showAgain(key)) {
                             new Popup().information(Res.get("bisqEasy.sendPaymentAccount.multipleAccounts.popup"))
@@ -442,9 +444,9 @@ public class ChatMessagesComponent {
             }
         }
 
-        void onPaymentAccountSelected(@Nullable BisqEasyPaymentAccount account) {
+        void onPaymentAccountSelected(@Nullable Account<?, ? extends Settlement<?>> account) {
             if (account != null) {
-                bisqEasyPaymentAccountService.setSelectedAccount(account);
+                accountService.setSelectedAccount(account);
             }
         }
 
@@ -543,8 +545,8 @@ public class ChatMessagesComponent {
         private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty paymentAccountSelectionVisible = new SimpleBooleanProperty();
-        private final ObservableList<BisqEasyPaymentAccount> paymentAccounts = FXCollections.observableArrayList();
-        private final ObjectProperty<BisqEasyPaymentAccount> selectedAccount = new SimpleObjectProperty<>();
+        private final ObservableList<Account<?, ? extends Settlement<?>>> paymentAccounts = FXCollections.observableArrayList();
+        private final ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccount = new SimpleObjectProperty<>();
 
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
         private final StringProperty textInput = new SimpleStringProperty("");
@@ -569,15 +571,15 @@ public class ChatMessagesComponent {
         }
 
         @Nullable
-        public BisqEasyPaymentAccount getSelectedAccount() {
+        public Account<?, ? extends Settlement<?>> getSelectedAccount() {
             return selectedAccount.get();
         }
 
-        public ObjectProperty<BisqEasyPaymentAccount> selectedAccountProperty() {
+        public ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccountProperty() {
             return selectedAccount;
         }
 
-        public void setSelectedAccount(BisqEasyPaymentAccount selectedAccount) {
+        public void setSelectedAccount(Account<?, ? extends Settlement<?>> selectedAccount) {
             this.selectedAccount.set(selectedAccount);
         }
     }
@@ -588,7 +590,7 @@ public class ChatMessagesComponent {
 
         private final BisqTextArea inputField;
         private final Button sendButton, createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton, leaveChannelButton;
-        private final AutoCompleteComboBox<BisqEasyPaymentAccount> paymentAccountsComboBox;
+        private final AutoCompleteComboBox<Account<?, ? extends Settlement<?>>> paymentAccountsComboBox;
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private final Pane userProfileSelectionRoot;
@@ -657,12 +659,12 @@ public class ChatMessagesComponent {
             paymentAccountsComboBox = new AutoCompleteComboBox<>(model.getPaymentAccounts());
             paymentAccountsComboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(BisqEasyPaymentAccount object) {
-                    return object != null ? object.getName() : "";
+                public String toString(Account<?, ? extends Settlement<?>> object) {
+                    return object != null ? object.getAccountName() : "";
                 }
 
                 @Override
-                public BisqEasyPaymentAccount fromString(String string) {
+                public Account<?, ? extends Settlement<?>> fromString(String string) {
                     return null;
                 }
             });

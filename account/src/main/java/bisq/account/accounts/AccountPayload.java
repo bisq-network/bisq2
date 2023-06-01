@@ -18,19 +18,51 @@
 package bisq.account.accounts;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * AccountPayload is sent over the wire to the peer. It must not contain sensitive data.
+ */
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode
 public abstract class AccountPayload implements Proto {
-    private final String settlementMethodId;
+    protected final String id;
+    private final String settlementMethodName;
 
-    public AccountPayload(String settlementMethodId) {
-        this.settlementMethodId = settlementMethodId;
+    public AccountPayload(String id, String settlementMethodName) {
+        this.id = id;
+        this.settlementMethodName = settlementMethodName;
+    }
+
+    public abstract bisq.account.protobuf.AccountPayload toProto();
+
+    protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder() {
+        return bisq.account.protobuf.AccountPayload.newBuilder()
+                .setId(id)
+                .setSettlementMethodName(settlementMethodName);
+    }
+
+    public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        switch (proto.getMessageCase()) {
+            case USERDEFINEDFIATACCOUNTPAYLOAD: {
+                return UserDefinedFiatAccountPayload.fromProto(proto);
+            }
+            case REVOLUTACCOUNTPAYLOAD: {
+                return RevolutAccountPayload.fromProto(proto);
+            }
+            case COUNTRYBASEDACCOUNTPAYLOAD: {
+                return CountryBasedAccountPayload.fromProto(proto.getCountryBasedAccountPayload());
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

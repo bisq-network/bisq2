@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.createoffer.review;
 
-import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
@@ -30,7 +29,8 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;

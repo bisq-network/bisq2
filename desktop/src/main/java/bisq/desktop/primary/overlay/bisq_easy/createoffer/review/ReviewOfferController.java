@@ -23,7 +23,6 @@ import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
-import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -35,7 +34,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -134,7 +134,23 @@ public class ReviewOfferController implements Controller {
         model.getShowTakeOfferSuccess().set(false);
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        //  public BisqEasyOffer(String id,
+        //                         long date,
+        //                         NetworkId makerNetworkId,
+        //                         Direction direction,
+        //                         Market market,
+        //                         long baseSideAmount,
+        //                         PriceSpec priceSpec,
+        //                         List<SettlementSpec> baseSideSettlementSpecs,
+        //                         List<SettlementSpec> quoteSideSettlementSpecs,
+        ////todo
+        //                         long quoteSideAmount,
+        //                         String makersTradeTerms,
+        //                         long requiredTotalReputationScore)
+
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(StringUtils.createUid(),
+                System.currentTimeMillis(),
+                userIdentity.getUserProfile().getNetworkId(),
                 model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),

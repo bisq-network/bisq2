@@ -17,7 +17,8 @@
 
 package bisq.desktop.primary.main.content.user.accounts;
 
-import bisq.account.bisqeasy.BisqEasyPaymentAccount;
+import bisq.account.accounts.Account;
+import bisq.account.settlement.Settlement;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -30,24 +31,24 @@ import java.util.Collection;
 
 @Slf4j
 public class PaymentAccountsModel implements Model {
-    private final ObjectProperty<BisqEasyPaymentAccount> selectedAccount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccount = new SimpleObjectProperty<>();
     private final StringProperty accountData = new SimpleStringProperty("");
     private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
-    private final ObservableList<BisqEasyPaymentAccount> accounts = FXCollections.observableArrayList();
-    private final SortedList<BisqEasyPaymentAccount> sortedAccounts = new SortedList<>(accounts);
+    private final ObservableList<Account<?, ? extends Settlement<?>>> accounts = FXCollections.observableArrayList();
+    private final SortedList<Account<?, ? extends Settlement<?>>> sortedAccounts = new SortedList<>(accounts);
 
     // selectedAccount
     @Nullable
-    public BisqEasyPaymentAccount getSelectedAccount() {
+    public Account<?, ? extends Settlement<?>> getSelectedAccount() {
         return selectedAccount.get();
     }
 
-    public ObjectProperty<BisqEasyPaymentAccount> selectedAccountProperty() {
+    public ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccountProperty() {
         return selectedAccount;
     }
 
-    public void setSelectedAccount(BisqEasyPaymentAccount selectedAccount) {
+    public void setSelectedAccount(Account<?, ? extends Settlement<?>> selectedAccount) {
         this.selectedAccount.set(selectedAccount);
     }
 
@@ -90,15 +91,15 @@ public class PaymentAccountsModel implements Model {
         this.deleteButtonDisabled.set(deleteButtonDisabled);
     }
 
-    /*  public ObservableList<BisqEasyPaymentAccount> getAccounts() {
+    /*  public ObservableList<Account<?, ? extends Settlement<?>>> getAccounts() {
           return accounts;
       }
   */
-    public void setAllAccounts(Collection<BisqEasyPaymentAccount> collection) {
+    public void setAllAccounts(Collection<Account<?, ? extends Settlement<?>>> collection) {
         accounts.setAll(collection);
     }
 
-    public SortedList<BisqEasyPaymentAccount> getSortedAccounts() {
+    public SortedList<Account<?, ? extends Settlement<?>>> getSortedAccounts() {
         return sortedAccounts;
     }
 }

@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.user.accounts.create;
 
-import bisq.account.bisqeasy.BisqEasyPaymentAccount;
-import bisq.account.bisqeasy.BisqEasyPaymentAccountService;
+import bisq.account.AccountService;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -39,12 +39,12 @@ public class CreatePaymentAccountController implements Controller {
     @Getter
     protected final CreatePaymentAccountView view;
     private final DefaultApplicationService applicationService;
-    private final BisqEasyPaymentAccountService service;
+    private final AccountService accountService;
     private Subscription accountDataSubscription, accountNameSubscription;
 
     public CreatePaymentAccountController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
-        service = applicationService.getAccountService().getBisqEasyPaymentAccountService();
+        accountService = applicationService.getAccountService();
 
         model = new CreatePaymentAccountModel();
         view = new CreatePaymentAccountView(model, this);
@@ -74,16 +74,16 @@ public class CreatePaymentAccountController implements Controller {
 
     protected void onSave() {
         checkArgument(isDataValid());
-        if (service.findAccount(model.getAccountName()).isPresent()) {
+        if (accountService.findAccount(model.getAccountName()).isPresent()) {
             new Popup()
                     .warning(Res.get("user.paymentAccounts.createAccount.sameName"))
                     .onAction(() -> model.setAccountName(""))
                     .show();
         } else {
-            BisqEasyPaymentAccount newAccount = new BisqEasyPaymentAccount(model.getAccountName(),
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(model.getAccountName(),
                     model.getAccountData());
-            service.addPaymentAccount(newAccount);
-            service.setSelectedAccount(newAccount);
+            accountService.addPaymentAccount(newAccount);
+            accountService.setSelectedAccount(newAccount);
             close();
         }
     }

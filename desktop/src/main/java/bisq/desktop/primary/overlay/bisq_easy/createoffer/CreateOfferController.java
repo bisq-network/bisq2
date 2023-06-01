@@ -186,19 +186,19 @@ public class CreateOfferController extends NavigationController implements InitW
         }
     }
 
-    public void onNext() {
-        int nextIndex = model.getCurrentIndex().get() + 1;
-        if (nextIndex < model.getChildTargets().size()) {
-            model.setAnimateRightOut(false);
-            model.getCurrentIndex().set(nextIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
-            updateNextButtonState();
-        }
-    }
+     void onNext() {
+         int nextIndex = model.getCurrentIndex().get() + 1;
+         if (nextIndex < model.getChildTargets().size()) {
+             model.setAnimateRightOut(false);
+             model.getCurrentIndex().set(nextIndex);
+             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+             model.getSelectedChildTarget().set(nextTarget);
+             Navigation.navigateTo(nextTarget);
+             updateNextButtonState();
+         }
+     }
 
-    public void onBack() {
+    void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
             model.setAnimateRightOut(true);
@@ -210,13 +210,13 @@ public class CreateOfferController extends NavigationController implements InitW
         }
     }
 
-    public void onClose() {
+    void onClose() {
         Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
         reset();
     }
 
-    public void onQuit() {
+    void onQuit() {
         applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
@@ -230,11 +230,6 @@ public class CreateOfferController extends NavigationController implements InitW
         reviewOfferController.reset();
 
         model.reset();
-    }
-
-    private void handlePaymentMethodsUpdate() {
-        reviewOfferController.setPaymentMethods(paymentMethodController.getPaymentMethods());
-        updateNextButtonState();
     }
 
     private void updateNextButtonState() {
@@ -251,5 +246,10 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
         model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
+    }
+
+    private void handlePaymentMethodsUpdate() {
+        reviewOfferController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        updateNextButtonState();
     }
 }

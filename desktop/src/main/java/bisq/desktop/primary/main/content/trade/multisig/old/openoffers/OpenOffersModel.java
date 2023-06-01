@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.offer.Offer;
+import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
@@ -59,11 +59,11 @@ public class OpenOffersModel implements Model {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
     }
 
-    void setRemoveOfferError(Offer offer, Throwable throwable) {
+    void setRemoveOfferError(PocOffer offer, Throwable throwable) {
         log.error("Error at remove offer: offer={}, error={}", offer, throwable.toString());  //todo
     }
 
-    void setRemoveOfferResult(Offer offer, BroadcastResult broadcastResult) {
+    void setRemoveOfferResult(PocOffer offer, BroadcastResult broadcastResult) {
         log.info("Add offer result for offer {}: {}",
                 offer, broadcastResult.toString()); //todo
         removeDataResultProperty.set(broadcastResult.toString());

@@ -21,7 +21,7 @@ import bisq.common.data.Pair;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.protocol.SwapProtocol;
+import bisq.protocol.poc.SwapProtocol;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

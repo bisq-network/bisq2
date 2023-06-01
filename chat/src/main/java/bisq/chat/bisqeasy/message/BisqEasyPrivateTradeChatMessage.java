@@ -24,6 +24,7 @@ import bisq.chat.message.PrivateChatMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;

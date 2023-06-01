@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CryptoCurrencyRepository {
+    public static final CryptoCurrency BITCOIN = new CryptoCurrency("BTC", "Bitcoin");
     @Getter
     private static final Map<String, String> nameByCode = new HashMap<>();
     @Getter
@@ -37,8 +38,7 @@ public class CryptoCurrencyRepository {
     private static final CryptoCurrency defaultCurrency;
 
     static {
-        CryptoCurrency btc = new CryptoCurrency("BTC", "Bitcoin");
-        currencyByCode.put("BTC", btc);
+        currencyByCode.put("BTC", BITCOIN);
         currencyByCode.put("XMR", new CryptoCurrency("XMR", "Monero"));
         currencyByCode.put("L-BTC", new CryptoCurrency("L-BTC", "Liquid-Bitcoin"));
         currencyByCode.put("USDT", new CryptoCurrency("USDT", "USD-Tether"));
@@ -46,7 +46,7 @@ public class CryptoCurrencyRepository {
         currencyByCode.put("ZEC", new CryptoCurrency("ZEC", "Zcash"));
         currencyByCode.put("ETH", new CryptoCurrency("ETH", "Ethereum"));
 
-        defaultCurrency = btc;
+        defaultCurrency = BITCOIN;
 
         majorCurrencies = initMajorCurrencies();
         majorCurrencies.remove(defaultCurrency);
@@ -92,4 +92,7 @@ public class CryptoCurrencyRepository {
         nameByCode.put("ALGO", "Algorand");
     }
 
+    public static Optional<CryptoCurrency> find(String code) {
+        return Optional.ofNullable(currencyByCode.get(code));
+    }
 }

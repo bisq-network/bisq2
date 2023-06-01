@@ -22,7 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
+import bisq.offer.poc.PocOffer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel, MultiSigCreateOfferController> {
     private final static double POPUP_PADDING = 66;
-    private final ChangeListener<Offer> offerListener;
+    private final ChangeListener<PocOffer> offerListener;
     private final Button createOfferButton;
     private final BisqTextArea offerSummary;
 

@@ -17,16 +17,30 @@
 
 package bisq.contract;
 
-import bisq.account.protocol.SwapProtocolType;
-import bisq.offer.Offer;
+import bisq.account.protocol_type.SwapProtocolType;
+import bisq.offer.SwapOffer;
 import lombok.Getter;
 
 @Getter
-public class TwoPartyContract<T extends Offer> extends AContract<T> {
+public class TwoPartyContract<T extends SwapOffer> extends SwapContract<T> {
     private final Party taker;
 
-    public TwoPartyContract(T listing, SwapProtocolType protocolType, Party taker) {
-        super(listing, protocolType);
+    public TwoPartyContract(T swapOffer, SwapProtocolType protocolType, Party taker) {
+        super(swapOffer, protocolType);
         this.taker = taker;
+    }
+
+    @Override
+    public bisq.contract.protobuf.SwapContract toProto() {
+        return getBuilder().setTwoPartyContract(
+                        bisq.contract.protobuf.TwoPartyContract.newBuilder()
+                                .setTaker(taker.toProto()))
+                .build();
+    }
+
+    public static TwoPartyContract<? extends SwapOffer> fromProto(bisq.contract.protobuf.SwapContract proto) {
+        return new TwoPartyContract<>(SwapOffer.fromProto(proto.getSwapOffer()),
+                SwapProtocolType.fromProto(proto.getProtocolType()),
+                Party.fromProto(proto.getTwoPartyContract().getTaker()));
     }
 }

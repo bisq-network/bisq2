@@ -21,9 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.protocol.Protocol;
-import bisq.protocol.ProtocolModel;
-import bisq.protocol.ProtocolService;
+import bisq.protocol.poc.PocProtocolService;
+import bisq.protocol.poc.Protocol;
+import bisq.protocol.poc.ProtocolModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,7 @@ public class ClosedTradesController implements Controller {
     private final ClosedTradesModel model;
     @Getter
     private final ClosedTradesView view;
-    private final ProtocolService protocolService;
+    private final PocProtocolService pocProtocolService;
     private int pin;
     private Pin protocolsPin;
 
@@ -40,7 +40,7 @@ public class ClosedTradesController implements Controller {
     public ClosedTradesController(DefaultApplicationService applicationService) {
         model = new ClosedTradesModel();
         view = new ClosedTradesView(model, this);
-        protocolService = applicationService.getProtocolService();
+        pocProtocolService = applicationService.getPocProtocolService();
         model.filteredItems.setPredicate(e -> e.getProtocol().isCompleted());
     }
 
@@ -49,7 +49,7 @@ public class ClosedTradesController implements Controller {
     public void onActivate() {
         protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, ClosedTradeListItem>bind(model.getListItems())
                 .map(ClosedTradeListItem::new)
-                .to(protocolService.getProtocols());
+                .to(pocProtocolService.getProtocols());
     }
 
     @Override

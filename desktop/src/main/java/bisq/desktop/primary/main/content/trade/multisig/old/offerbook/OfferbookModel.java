@@ -23,8 +23,8 @@ import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.offer.Offer;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import javafx.beans.property.BooleanProperty;
@@ -93,7 +93,7 @@ public class OfferbookModel implements Model {
         return Res.get("offerbook.createOffer.button", dir);
     }*/
 
-    void setAddOfferError(Offer offer, Throwable throwable) {
+    void setAddOfferError(PocOffer offer, Throwable throwable) {
         log.error("Error at add offer: offer={}, error={}", offer, throwable.toString());  //todo
     }
 
@@ -101,17 +101,17 @@ public class OfferbookModel implements Model {
         log.error("Error at add offer: error={}", throwable.toString());  //todo
     }
 
-    void setAddOfferResult(Offer offer, BroadcastResult broadcastResult) {
+    void setAddOfferResult(PocOffer offer, BroadcastResult broadcastResult) {
         log.info("Add offer result for offer {}: {}",
                 offer, broadcastResult.toString()); //todo
         addDataResultProperty.set(broadcastResult.toString());
     }
 
-    void setRemoveOfferError(Offer offer, Throwable throwable) {
+    void setRemoveOfferError(PocOffer offer, Throwable throwable) {
         log.error("Error at remove offer: offer={}, error={}", offer, throwable.toString());  //todo
     }
 
-    void setRemoveOfferResult(Offer offer, BroadcastResult broadcastResult) {
+    void setRemoveOfferResult(PocOffer offer, BroadcastResult broadcastResult) {
         log.info("Add offer result for offer {}: {}",
                 offer, broadcastResult.toString()); //todo
         removeDataResultProperty.set(broadcastResult.toString());

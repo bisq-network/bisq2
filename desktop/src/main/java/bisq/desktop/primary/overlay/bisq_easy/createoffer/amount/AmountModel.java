@@ -23,7 +23,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;

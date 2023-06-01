@@ -17,8 +17,9 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlementMethod;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.locale.Country;
+import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,27 +29,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccount extends CountryBasedAccount<FiatSettlementMethod> {
-    private static final FiatSettlementMethod METHOD = FiatSettlementMethod.SEPA;
+public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatSettlement> {
+    private static final FiatSettlement SETTLEMENT = new FiatSettlement(FiatSettlement.Method.SEPA);
 
     public SepaAccount(String accountName,
                        String holderName,
                        String iban,
                        String bic,
                        Country country) {
-        super(accountName,
-                METHOD,
-                new SepaAccountPayload(METHOD.name(), holderName, iban, bic, country.getCode()),
-                FiatSettlementMethod.getTradeCurrencies(METHOD),
+        this(accountName,
+                new SepaAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), holderName, iban, bic, country.getCode()),
                 country);
+    }
+
+    private SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload, Country country) {
+        super(accountName, SETTLEMENT, sepaAccountPayload, country);
     }
 
     @Override
     public bisq.account.protobuf.Account toProto() {
-        return null;
+        return getAccountBuilder().setCountryBasedAccount(getCountryBasedAccountBuilder()
+                        .setSepaAccount(bisq.account.protobuf.SepaAccount.newBuilder()))
+                .build();
     }
 
-    public static SepaAccount fromProto(bisq.account.protobuf.SepaAccount account) {
-        return null;
+    public static SepaAccount fromProto(bisq.account.protobuf.Account proto) {
+        return new SepaAccount(proto.getAccountName(),
+                SepaAccountPayload.fromProto(proto.getAccountPayload()),
+                Country.fromProto(proto.getCountryBasedAccount().getCountry()));
     }
 }

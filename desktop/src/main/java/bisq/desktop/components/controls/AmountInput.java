@@ -21,7 +21,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.i18n.Res;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;

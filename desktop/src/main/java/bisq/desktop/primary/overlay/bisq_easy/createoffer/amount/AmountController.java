@@ -27,7 +27,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.controls.PriceInput;
 import bisq.i18n.Res;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;

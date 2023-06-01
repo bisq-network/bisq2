@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.lightning;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
 public class LightningView extends ProtocolRoadmapView<LightningModel, LightningController> {

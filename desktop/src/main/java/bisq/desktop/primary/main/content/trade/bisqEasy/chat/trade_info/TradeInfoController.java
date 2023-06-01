@@ -21,9 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab1.TradeInfoTab1Controller;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab2.TradeInfoTab2Controller;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab3.TradeInfoTab3Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer.TradeInfoOfferController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase.TradeInfoPhaseController;
+import bisq.protocol.bisq_easy.BisqEasyTrade;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -37,6 +37,7 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
     private final TradeInfoView view;
     private final DefaultApplicationService applicationService;
     private final SettingsService settingsService;
+    private final TradeInfoPhaseController tradeInfoPhaseController;
 
     public TradeInfoController(DefaultApplicationService applicationService) {
         super(new TradeInfoModel(), NavigationTarget.TRADE_INFO);
@@ -44,6 +45,8 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
         view = new TradeInfoView(model, this);
+
+        tradeInfoPhaseController = new TradeInfoPhaseController(applicationService);
     }
 
     @Override
@@ -58,19 +61,20 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_INFO_TAB_1: {
-                return Optional.of(new TradeInfoTab1Controller(applicationService));
+            case TRADE_INFO_OFFER: {
+                return Optional.of(new TradeInfoOfferController(applicationService));
             }
-            case TRADE_INFO_TAB_2: {
-                return Optional.of(new TradeInfoTab2Controller(applicationService));
-            }
-            case TRADE_INFO_TAB_3: {
-                return Optional.of(new TradeInfoTab3Controller(applicationService, this::onCollapse));
+            case TRADE_INFO_PHASE: {
+                return Optional.of(tradeInfoPhaseController);
             }
             default: {
                 return Optional.empty();
             }
         }
+    }
+
+    public void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
+        tradeInfoPhaseController.setBisqEasyTrade(bisqEasyTrade);
     }
 
     void onExpand() {

@@ -22,12 +22,12 @@ import bisq.common.monetary.Quote;
 import bisq.contract.Contract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import bisq.offer.spec.SettlementSpec;
+import bisq.offer.SettlementSpec;
+import bisq.offer.poc.PocOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
-import bisq.protocol.Protocol;
-import bisq.protocol.ProtocolModel;
+import bisq.protocol.poc.Protocol;
+import bisq.protocol.poc.ProtocolModel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 public class ClosedTradeListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String id;
-    private final Offer offer;
+    private final PocOffer offer;
     private final String market;
     private final String price;
     private final String baseAmount;

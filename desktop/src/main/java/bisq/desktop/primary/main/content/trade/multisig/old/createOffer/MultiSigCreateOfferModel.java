@@ -18,14 +18,14 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Offer;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.poc.PocOffer;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -51,12 +51,12 @@ public class MultiSigCreateOfferModel implements Model {
     @Setter
     private Quote fixPrice;
 
-    private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<?, ? extends Settlement<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<?, ? extends Settlement<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Settlement.Method> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Settlement.Method> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
 
-    private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<PocOffer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     @Setter
     private boolean showCreateOfferTab;
@@ -69,7 +69,7 @@ public class MultiSigCreateOfferModel implements Model {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer getOffer() {
+    public PocOffer getOffer() {
         return offerProperty.get();
     }
 
@@ -77,22 +77,22 @@ public class MultiSigCreateOfferModel implements Model {
         return createOfferButtonVisibleProperty;
     }
 
-    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<? extends SettlementMethod>> set) {
+    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<?, ? extends Settlement<?>>> set) {
         selectedBaseSideAccounts.clear();
         selectedBaseSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<? extends SettlementMethod>> set) {
+    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<?, ? extends Settlement<?>>> set) {
         selectedQuoteSideAccounts.clear();
         selectedQuoteSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedBaseSideSettlementMethods(ObservableSet<SettlementMethod> set) {
+    public void setAllSelectedBaseSideSettlementMethods(ObservableSet<Settlement.Method> set) {
         selectedBaseSideSettlementMethods.clear();
         selectedBaseSideSettlementMethods.addAll(set);
     }
 
-    public void setAllSelectedQuoteSideSettlementMethods(ObservableSet<SettlementMethod> set) {
+    public void setAllSelectedQuoteSideSettlementMethods(ObservableSet<Settlement.Method> set) {
         selectedQuoteSideSettlementMethods.clear();
         selectedQuoteSideSettlementMethods.addAll(set);
     }

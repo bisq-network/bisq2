@@ -19,17 +19,17 @@ package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.component
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import bisq.offer.spec.Direction;
-import bisq.offer.spec.SettlementSpec;
+import bisq.offer.Direction;
+import bisq.offer.SettlementSpec;
+import bisq.offer.poc.PocOffer;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -58,7 +58,7 @@ public class TakersSettlementSelection {
         controller = new Controller(accountService);
     }
 
-    public void setOffer(Offer offer) {
+    public void setOffer(PocOffer offer) {
         controller.setOffer(offer);
     }
 
@@ -78,19 +78,19 @@ public class TakersSettlementSelection {
         return controller.view.getRoot();
     }
 
-    public ReadOnlyObjectProperty<Account<? extends SettlementMethod>> getSelectedBaseSideAccount() {
+    public ReadOnlyObjectProperty<Account<?, ? extends Settlement<?>>> getSelectedBaseSideAccount() {
         return controller.model.selectedBaseSideAccount;
     }
 
-    public ReadOnlyObjectProperty<Account<? extends SettlementMethod>> getSelectedQuoteSideAccount() {
+    public ReadOnlyObjectProperty<Account<?, ? extends Settlement<?>>> getSelectedQuoteSideAccount() {
         return controller.model.selectedQuoteSideAccount;
     }
 
-    public ReadOnlyObjectProperty<SettlementMethod> getSelectedBaseSideSettlementMethod() {
+    public ReadOnlyObjectProperty<Settlement.Method> getSelectedBaseSideSettlementMethod() {
         return controller.model.selectedBaseSideSettlementMethod;
     }
 
-    public ReadOnlyObjectProperty<SettlementMethod> getSelectedQuoteSideSettlementMethod() {
+    public ReadOnlyObjectProperty<Settlement.Method> getSelectedQuoteSideSettlementMethod() {
         return controller.model.selectedQuoteSideSettlementMethod;
     }
 
@@ -119,7 +119,7 @@ public class TakersSettlementSelection {
             resetAndApplyData();
         }
 
-        private void setOffer(Offer offer) {
+        private void setOffer(PocOffer offer) {
             model.offer = offer;
             resetAndApplyData();
         }
@@ -147,20 +147,20 @@ public class TakersSettlementSelection {
             model.visibility.set(true);
 
             String baseSideCode = market.getBaseCurrencyCode();
-            Set<SettlementMethod> baseSideSettlementMethodByName = model.offer.getBaseSideSettlementSpecs().stream()
+            Set<Settlement.Method> baseSideSettlementMethodByName = model.offer.getBaseSideSettlementSpecs().stream()
                     .map(SettlementSpec::getSettlementMethodName)
-                    .map(settlementMethodName -> SettlementMethod.from(settlementMethodName, baseSideCode))
+                    .map(settlementMethodName -> Settlement.getSettlementMethod(settlementMethodName, baseSideCode))
                     .collect(Collectors.toSet());
             String quoteSideCode = market.getQuoteCurrencyCode();
-            Set<SettlementMethod> quoteSideSettlementMethodByName = model.offer.getQuoteSideSettlementSpecs().stream()
+            Set<Settlement.Method> quoteSideSettlementMethodByName = model.offer.getQuoteSideSettlementSpecs().stream()
                     .map(SettlementSpec::getSettlementMethodName)
-                    .map(settlementMethodName -> SettlementMethod.from(settlementMethodName, quoteSideCode))
+                    .map(settlementMethodName -> Settlement.getSettlementMethod(settlementMethodName, quoteSideCode))
                     .collect(Collectors.toSet());
 
             model.baseSideAccountObservableList.clear();
             model.baseSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolType, baseSideCode)
                     .stream()
-                    .filter(account -> baseSideSettlementMethodByName.contains(account.getSettlementMethod()))
+                    .filter(account -> baseSideSettlementMethodByName.contains(account.getSettlement().getMethod()))
                     .map(AccountListItem::new)
                     .collect(Collectors.toList()));
             if (model.baseSideAccountObservableList.size() == 1) {
@@ -173,7 +173,7 @@ public class TakersSettlementSelection {
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolType, quoteSideCode)
                     .stream()
-                    .filter(account -> quoteSideSettlementMethodByName.contains(account.getSettlementMethod()))
+                    .filter(account -> quoteSideSettlementMethodByName.contains(account.getSettlement().getMethod()))
                     .map(AccountListItem::new)
                     .collect(Collectors.toList()));
             if (model.quoteSideAccountObservableList.size() == 1) {
@@ -183,7 +183,7 @@ public class TakersSettlementSelection {
                 model.selectedQuoteSideSettlementMethod.set(model.selectedQuoteSideAccountListItem.get().getSettlementMethod());
             }
 
-            model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolType, baseSideCode)
+            model.baseSideSettlementObservableList.setAll(Settlement.getSettlementMethods(selectedProtocolType, baseSideCode)
                     .stream()
                     .filter(baseSideSettlementMethodByName::contains)
                     .map(e -> new SettlementListItem(e, baseSideCode))
@@ -194,7 +194,7 @@ public class TakersSettlementSelection {
                 model.selectedBaseSideSettlementMethod.set(model.selectedBaseSideSettlementListItem.get().getSettlementMethod());
             }
 
-            model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolType, quoteSideCode)
+            model.quoteSideSettlementObservableList.setAll(Settlement.getSettlementMethods(selectedProtocolType, quoteSideCode)
                     .stream()
                     .filter(quoteSideSettlementMethodByName::contains)
                     .map(e -> new SettlementListItem(e, quoteSideCode))
@@ -278,7 +278,7 @@ public class TakersSettlementSelection {
             var selectedAccount = isBaseSide ?
                     model.selectedBaseSideAccount :
                     model.selectedQuoteSideAccount;
-            var selectedSettlementMethod = isBaseSide ?
+            ObjectProperty<Settlement.Method> selectedSettlementMethod = isBaseSide ?
                     model.selectedBaseSideSettlementMethod :
                     model.selectedQuoteSideSettlementMethod;
 
@@ -289,7 +289,7 @@ public class TakersSettlementSelection {
         private void onSettlementSelectionChanged(SettlementListItem listItem, boolean isBaseSide) {
             if (listItem == null) return;
 
-            var selectedSettlementMethod = isBaseSide ?
+            ObjectProperty<Settlement.Method> selectedSettlementMethod = isBaseSide ?
                     model.selectedBaseSideSettlementMethod :
                     model.selectedQuoteSideSettlementMethod;
             selectedSettlementMethod.set(listItem.settlementMethod);
@@ -297,10 +297,10 @@ public class TakersSettlementSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Account<? extends SettlementMethod>> selectedBaseSideAccount = new SimpleObjectProperty<>();
-        private final ObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount = new SimpleObjectProperty<>();
-        private final ObjectProperty<SettlementMethod> selectedBaseSideSettlementMethod = new SimpleObjectProperty<>();
-        private final ObjectProperty<SettlementMethod> selectedQuoteSideSettlementMethod = new SimpleObjectProperty<>();
+        private final ObjectProperty<Account<?, ? extends Settlement<?>>> selectedBaseSideAccount = new SimpleObjectProperty<>();
+        private final ObjectProperty<Account<?, ? extends Settlement<?>>> selectedQuoteSideAccount = new SimpleObjectProperty<>();
+        private final ObjectProperty<Settlement.Method> selectedBaseSideSettlementMethod = new SimpleObjectProperty<>();
+        private final ObjectProperty<Settlement.Method> selectedQuoteSideSettlementMethod = new SimpleObjectProperty<>();
 
 
         private final AccountService accountService;
@@ -328,7 +328,7 @@ public class TakersSettlementSelection {
         private Market selectedMarket;
         private Direction direction;
         private SwapProtocolType selectedProtocolType;
-        private Offer offer;
+        private PocOffer offer;
 
 
         private Model(AccountService accountService) {
@@ -476,15 +476,15 @@ public class TakersSettlementSelection {
 
     @Getter
     private static class AccountListItem implements TableItem {
-        private final Account<? extends SettlementMethod> account;
+        private final Account<?, ? extends Settlement<?>> account;
         private final String accountName;
-        private final SettlementMethod settlementMethod;
+        private final Settlement.Method settlementMethod;
         private final String settlementMethodName;
 
-        private AccountListItem(Account<? extends SettlementMethod> account) {
+        private AccountListItem(Account<?, ? extends Settlement<?>> account) {
             this.account = account;
             accountName = account.getAccountName();
-            settlementMethod = account.getSettlementMethod();
+            settlementMethod = account.getSettlement().getMethod();
             settlementMethodName = Res.get(settlementMethod.name());
         }
 
@@ -499,12 +499,14 @@ public class TakersSettlementSelection {
 
     @Getter
     private static class SettlementListItem implements TableItem {
-        private final SettlementMethod settlementMethod;
+        private final Settlement.Method settlementMethod;
         private final String name;
 
-        private SettlementListItem(SettlementMethod settlementMethod, String currencyCode) {
+        private SettlementListItem(Settlement.Method settlementMethod, String currencyCode) {
             this.settlementMethod = settlementMethod;
-            name = settlementMethod.getDisplayName(currencyCode);
+            //todo
+            // name = settlementMethod.getDisplayName(currencyCode);
+            name = settlementMethod.name();
         }
 
         @Override
