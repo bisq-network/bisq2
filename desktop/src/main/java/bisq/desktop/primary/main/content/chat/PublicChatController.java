@@ -46,7 +46,7 @@ public abstract class PublicChatController<V extends ChatView, M extends ChatMod
     }
 
     @Override
-    public void createServices(ChatChannelDomain chatChannelDomain) {
+    public void createDependencies(ChatChannelDomain chatChannelDomain) {
         commonPublicChatChannelService = getPublicChannelService(chatChannelDomain);
         chatChannelSelectionService = getChannelSelectionService(chatChannelDomain);
         publicChatChannelSelection = getPublicChannelSelection(chatChannelDomain);

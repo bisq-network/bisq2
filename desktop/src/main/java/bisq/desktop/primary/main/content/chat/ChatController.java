@@ -101,13 +101,13 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                 this::openUserProfileSidebar);
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
-        createServices(chatChannelDomain);
+        createDependencies(chatChannelDomain);
 
         model = createAndGetModel(chatChannelDomain);
         view = createAndGetView();
     }
 
-    public abstract void createServices(ChatChannelDomain chatChannelDomain);
+    public abstract void createDependencies(ChatChannelDomain chatChannelDomain);
 
     public abstract M createAndGetModel(ChatChannelDomain chatChannelDomain);
 
@@ -188,7 +188,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     public void onToggleHelp() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_HELP);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
     }
 
     public void onCloseSideBar() {
