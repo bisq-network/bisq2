@@ -18,7 +18,7 @@
 package bisq.protocol.poc;
 
 import bisq.common.proto.Proto;
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -74,7 +74,7 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
 
     protected abstract NetworkId getPeersNetworkId();
 
-    public Contract getContract() {
+    public PocContract getContract() {
         return protocolModel.getContract();
     }
 

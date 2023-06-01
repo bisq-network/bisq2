@@ -18,7 +18,7 @@
 package bisq.protocol.poc;
 
 import bisq.common.proto.Proto;
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import bisq.network.p2p.message.NetworkMessage;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,13 +49,13 @@ public abstract class ProtocolModel implements Proto {
         return null;
     }
 
-    protected Contract contract;
+    protected PocContract contract;
 
     protected State state = State.IDLE;
     @Setter
     protected Class<? extends NetworkMessage> expectedNextMessageClass;
 
-    public ProtocolModel(Contract contract) {
+    public ProtocolModel(PocContract contract) {
         this.contract = contract;
     }
 

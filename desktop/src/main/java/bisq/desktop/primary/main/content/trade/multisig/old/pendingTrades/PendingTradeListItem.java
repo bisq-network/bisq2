@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.multisig.old.pendingTrades;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Quote;
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.SettlementSpec;
@@ -51,7 +51,7 @@ public class PendingTradeListItem implements TableItem {
 
     public PendingTradeListItem(Protocol<? extends ProtocolModel> protocol) {
         this.protocol = protocol;
-        Contract contract = protocol.getContract();
+        PocContract contract = protocol.getContract();
         offer = contract.getOffer();
         id = offer.getId();
 

@@ -18,29 +18,26 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.SwapProtocolType;
-import bisq.offer.SwapOffer;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.Getter;
 
 @Getter
-public class TwoPartyContract<T extends SwapOffer> extends SwapContract<T> {
-    protected final Party taker;
+public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
 
-    public TwoPartyContract(T swapOffer, SwapProtocolType protocolType, Party taker) {
-        super(swapOffer, protocolType);
-        this.taker = taker;
+    public BisqEasyContract(BisqEasyOffer bisqEasyOffer, Party taker) {
+        super(bisqEasyOffer, SwapProtocolType.BISQ_EASY, taker);
     }
 
     @Override
     public bisq.contract.protobuf.SwapContract toProto() {
-        return getSwapContractBuilder().setTwoPartyContract(
-                        bisq.contract.protobuf.TwoPartyContract.newBuilder()
+        return getSwapContractBuilder().setBisqEasyContract(
+                        bisq.contract.protobuf.BisqEasyContract.newBuilder()
                                 .setTaker(taker.toProto()))
                 .build();
     }
 
-    public static TwoPartyContract<? extends SwapOffer> fromProto(bisq.contract.protobuf.SwapContract proto) {
-        return new TwoPartyContract<>(SwapOffer.fromProto(proto.getSwapOffer()),
-                SwapProtocolType.fromProto(proto.getProtocolType()),
-                Party.fromProto(proto.getTwoPartyContract().getTaker()));
+    public static BisqEasyContract fromProto(bisq.contract.protobuf.SwapContract proto) {
+        return new BisqEasyContract(BisqEasyOffer.fromProto(proto.getSwapOffer()),
+                Party.fromProto(proto.getBisqEasyContract().getTaker()));
     }
 }

@@ -19,6 +19,8 @@ package bisq.contract;
 
 import bisq.account.protocol_type.SwapProtocolType;
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.contract.poc.MultiPartyContract;
 import bisq.offer.SwapOffer;
 import lombok.Getter;
 
@@ -29,7 +31,8 @@ import lombok.Getter;
 public abstract class SwapContract<T extends SwapOffer> implements Proto {
     protected final T swapOffer;
     protected final SwapProtocolType protocolType;
-    protected final Party maker;
+
+    protected transient final Party maker;
 
     public SwapContract(T swapOffer, SwapProtocolType protocolType) {
         this.swapOffer = swapOffer;
@@ -37,9 +40,28 @@ public abstract class SwapContract<T extends SwapOffer> implements Proto {
         this.maker = new Party(Role.MAKER, swapOffer.getMakerNetworkId());
     }
 
-    public bisq.contract.protobuf.SwapContract.Builder getBuilder() {
+    public bisq.contract.protobuf.SwapContract.Builder getSwapContractBuilder() {
         return bisq.contract.protobuf.SwapContract.newBuilder()
                 .setSwapOffer(swapOffer.toProto())
                 .setProtocolType(protocolType.toProto());
+    }
+
+    public static SwapContract<?> fromProto(bisq.contract.protobuf.SwapContract proto) {
+        switch (proto.getMessageCase()) {
+            case TWOPARTYCONTRACT: {
+                return TwoPartyContract.fromProto(proto);
+            }
+            case BISQEASYCONTRACT: {
+                return BisqEasyContract.fromProto(proto);
+            }
+            case MULTIPARTYCONTRACT: {
+                return MultiPartyContract.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

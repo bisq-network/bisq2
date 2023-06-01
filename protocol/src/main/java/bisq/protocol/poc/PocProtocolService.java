@@ -23,7 +23,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -141,7 +141,7 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
                                                                           String quoteSideSettlementMethod) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
-                    Contract contract = new Contract(identity.getNetworkId(),
+                    PocContract contract = new PocContract(identity.getNetworkId(),
                             protocolType,
                             offer,
                             baseSideAmount,

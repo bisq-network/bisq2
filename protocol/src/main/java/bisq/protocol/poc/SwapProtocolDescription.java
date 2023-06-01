@@ -19,7 +19,7 @@ package bisq.protocol.poc;
 
 import lombok.Getter;
 
-public class SwapProtocol {
+public class SwapProtocolDescription {
     @Getter
     public enum Type {
         BISQ_EASY(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),

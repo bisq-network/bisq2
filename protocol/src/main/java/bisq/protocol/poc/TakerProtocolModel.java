@@ -17,13 +17,13 @@
 
 package bisq.protocol.poc;
 
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import lombok.Getter;
 
 @Getter
 public class TakerProtocolModel extends ProtocolModel {
 
-    public TakerProtocolModel(Contract contract) {
+    public TakerProtocolModel(PocContract contract) {
         super(contract);
     }
 
