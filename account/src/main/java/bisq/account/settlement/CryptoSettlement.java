@@ -92,7 +92,7 @@ public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
 
     @Override
     public bisq.account.protobuf.Settlement toProto() {
-        return toProtoBuilder().setCryptoSettlement(
+        return getSettlementBuilder().setCryptoSettlement(
                         bisq.account.protobuf.CryptoSettlement.newBuilder()
                                 .setCurrencyCode(currencyCode))
                 .build();

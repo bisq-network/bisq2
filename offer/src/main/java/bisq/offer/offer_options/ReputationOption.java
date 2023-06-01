@@ -17,49 +17,28 @@
 
 package bisq.offer.offer_options;
 
-import bisq.offer.poc.options.ReputationProof;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class ReputationOption implements OfferOption {
-    private final List<ReputationProof> reputationProofs;
     private final long requiredTotalReputationScore;
 
     public ReputationOption(long requiredTotalReputationScore) {
-        this(new ArrayList<>(), requiredTotalReputationScore);
-    }
-
-    public ReputationOption(List<ReputationProof> reputationProofs, long requiredTotalReputationScore) {
-        this.reputationProofs = reputationProofs;
         this.requiredTotalReputationScore = requiredTotalReputationScore;
-
-        // All lists need to sort deterministically as the data is used in the proof of work check
-        reputationProofs.sort(Comparator.comparingInt(ReputationProof::hashCode));
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setReputationOption(
                         bisq.offer.protobuf.ReputationOption.newBuilder()
-                                .addAllReputationProofs(reputationProofs.stream()
-                                        .map(ReputationProof::toProto)
-                                        .collect(Collectors.toList()))
                                 .setRequiredTotalReputationScore(requiredTotalReputationScore))
                 .build();
     }
 
     public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {
-        return new ReputationOption(proto.getReputationProofsList().stream()
-                .map(ReputationProof::fromProto)
-                .collect(Collectors.toList()),
-                proto.getRequiredTotalReputationScore());
+        return new ReputationOption(proto.getRequiredTotalReputationScore());
     }
 }

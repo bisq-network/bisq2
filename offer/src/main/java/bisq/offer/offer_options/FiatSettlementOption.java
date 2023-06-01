@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.poc.options;
+package bisq.offer.offer_options;
 
-import bisq.offer.offer_options.OfferOption;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,23 +24,23 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class ContractOption implements OfferOption {
-    private final long maxTradeAmount;
-    private final long maxTradePeriod;
+public final class FiatSettlementOption implements OfferOption {
+    private final String countyCodeOfBank;
+    private final String bankName;
 
-    public ContractOption(long maxTradeAmount, long maxTradePeriod) {
-        this.maxTradeAmount = maxTradeAmount;
-        this.maxTradePeriod = maxTradePeriod;
+    public FiatSettlementOption(String countyCodeOfBank, String bankName) {
+        this.countyCodeOfBank = countyCodeOfBank;
+        this.bankName = bankName;
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setContractOption(bisq.offer.protobuf.ContractOption.newBuilder()
-                        .setMaxTradeAmount(maxTradeAmount)
-                        .setMaxTradePeriod(maxTradePeriod))
+        return getOfferOptionBuilder().setFiatSettlementOption(bisq.offer.protobuf.FiatSettlementOption.newBuilder()
+                        .setCountyCodeOfBank(countyCodeOfBank)
+                        .setBankName(bankName))
                 .build();
     }
 
-    public static ContractOption fromProto(bisq.offer.protobuf.ContractOption proto) {
-        return new ContractOption(proto.getMaxTradeAmount(), proto.getMaxTradePeriod());
+    public static FiatSettlementOption fromProto(bisq.offer.protobuf.FiatSettlementOption proto) {
+        return new FiatSettlementOption(proto.getCountyCodeOfBank(), proto.getBankName());
     }
 }

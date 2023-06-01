@@ -23,26 +23,26 @@ import lombok.ToString;
 
 /**
  * A floating price based on the current market price. The value is the percentage above
- * or below the market price with value between 0 and 1 (=100%).
+ * or below the market price.
  */
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class FloatPriceSpec implements PriceSpec {
-    private final double value;
+    private final double percentage;
 
-    public FloatPriceSpec(double value) {
-        this.value = value;
-    }
-
-    public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) {
-        return new FloatPriceSpec(proto.getValue());
+    public FloatPriceSpec(double percentage) {
+        this.percentage = percentage;
     }
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
         return getPriceSpecBuilder().setFloatPrice(bisq.offer.protobuf.FloatPrice.newBuilder()
-                        .setValue(value))
+                        .setPercentage(percentage))
                 .build();
+    }
+
+    public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) {
+        return new FloatPriceSpec(proto.getPercentage());
     }
 }

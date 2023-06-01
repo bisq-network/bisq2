@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.poc.options;
+package bisq.offer.offer_options;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
-import bisq.offer.offer_options.OfferOption;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

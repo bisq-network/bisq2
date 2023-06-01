@@ -19,7 +19,6 @@ package bisq.offer.offer_options;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.offer.poc.options.*;
 
 public interface OfferOption extends Proto {
     bisq.offer.protobuf.OfferOption toProto();
@@ -30,29 +29,23 @@ public interface OfferOption extends Proto {
 
     static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) {
         switch (proto.getMessageCase()) {
+            case TRADETERMSOPTION: {
+                return TradeTermsOption.fromProto(proto.getTradeTermsOption());
+            }
+            case REPUTATIONOPTION: {
+                return ReputationOption.fromProto(proto.getReputationOption());
+            }
             case AMOUNTOPTION: {
                 return AmountOption.fromProto(proto.getAmountOption());
             }
             case COLLATERALOPTION: {
                 return CollateralOption.fromProto(proto.getCollateralOption());
             }
-            case CONTRACTOPTION: {
-                return ContractOption.fromProto(proto.getContractOption());
-            }
-            case FEEOPTION: {
-                return FeeOption.fromProto(proto.getFeeOption());
-            }
             case FIATSETTLEMENTOPTION: {
                 return FiatSettlementOption.fromProto(proto.getFiatSettlementOption());
             }
-            case REPUTATIONOPTION: {
-                return ReputationOption.fromProto(proto.getReputationOption());
-            }
-            case SUPPORTOPTION: {
-                return SupportOption.fromProto(proto.getSupportOption());
-            }
-            case TRADETERMSOPTION: {
-                return TradeTermsOption.fromProto(proto.getTradeTermsOption());
+            case FEEOPTION: {
+                return FeeOption.fromProto(proto.getFeeOption());
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
