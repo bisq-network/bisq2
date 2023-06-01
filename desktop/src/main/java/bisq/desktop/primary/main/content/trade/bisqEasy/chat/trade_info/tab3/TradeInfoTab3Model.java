@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab3;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab3;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;

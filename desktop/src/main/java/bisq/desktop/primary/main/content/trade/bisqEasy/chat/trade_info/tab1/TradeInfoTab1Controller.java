@@ -15,55 +15,39 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab3;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab1;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeInfoTab3Controller implements Controller {
-    private final TradeInfoTab3Model model;
+public class TradeInfoTab1Controller implements Controller {
     @Getter
-    private final TradeInfoTab3View view;
-    private final SettingsService settingsService;
-    private final Runnable collapseHandler;
+    private final TradeInfoTab1View view;
 
-    public TradeInfoTab3Controller(DefaultApplicationService applicationService, Runnable collapseHandler) {
-        settingsService = applicationService.getSettingsService();
-        this.collapseHandler = collapseHandler;
-        model = new TradeInfoTab3Model();
-        view = new TradeInfoTab3View(model, this);
+    public TradeInfoTab1Controller(DefaultApplicationService applicationService) {
+        TradeInfoTab1Model model = new TradeInfoTab1Model();
+        view = new TradeInfoTab1View(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.getTradeRulesConfirmed().set(settingsService.getTradeRulesConfirmed().get());
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    void onBack() {
-        Navigation.navigateTo(NavigationTarget.TRADE_INFO_TAB_2);
-    }
-
     void onLearnMore() {
         Browser.open("https://bisq.wiki/bisqeasy");
     }
 
-    void onConfirm(boolean value) {
-        settingsService.setTradeRulesConfirmed(value);
-        model.getTradeRulesConfirmed().set(value);
-    }
-
-    void onCollapse() {
-        collapseHandler.run();
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.TRADE_INFO_TAB_2);
     }
 }

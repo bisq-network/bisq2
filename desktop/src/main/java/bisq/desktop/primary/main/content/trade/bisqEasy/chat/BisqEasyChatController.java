@@ -37,7 +37,7 @@ import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPublicChannelSelectionMenu;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.TradeInfoController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.TradeInfoController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;

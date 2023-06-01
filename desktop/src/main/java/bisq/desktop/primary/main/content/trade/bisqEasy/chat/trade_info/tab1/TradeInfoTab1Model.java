@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.tab2;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.tab1;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
@@ -23,5 +23,5 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class TradeInfoTab2Model implements Model {
+public class TradeInfoTab1Model implements Model {
 }
