@@ -24,7 +24,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.protocol.bisq_easy.BisqEasyTrade;
+import bisq.protocol.poc.bisq_easy.BisqEasyTrade;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

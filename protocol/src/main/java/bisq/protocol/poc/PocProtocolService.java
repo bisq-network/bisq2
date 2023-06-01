@@ -17,7 +17,7 @@
 
 package bisq.protocol.poc;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
@@ -44,18 +44,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class PocProtocolService implements MessageListener, PersistenceClient<ProtocolStore>, Service {
+public class PocProtocolService implements MessageListener, PersistenceClient<PocProtocolStore>, Service {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("ProtocolService.dispatcher");
 
     @Getter
-    private final ProtocolStore persistableStore = new ProtocolStore();
+    private final PocProtocolStore persistableStore = new PocProtocolStore();
     @Getter
-    private final Persistence<ProtocolStore> persistence;
+    private final Persistence<PocProtocolStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final OpenOfferService openOfferService;
     @Getter
-    private final ObservableSet<Protocol<? extends ProtocolModel>> protocols = new ObservableSet<>();
+    private final ObservableSet<PocProtocol<? extends PocProtocolModel>> protocols = new ObservableSet<>();
 
     public PocProtocolService(NetworkService networkService,
                               IdentityService identityService,
@@ -80,11 +80,11 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
                         .map(protocolModel ->
                                 identityService.getOrCreateIdentity(protocolModel.getId())
                                         .thenApply(identity -> {
-                                            Protocol<? extends ProtocolModel> protocol;
-                                            if (protocolModel instanceof MakerProtocolModel) {
-                                                protocol = getMakerProtocol((MakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
-                                            } else if (protocolModel instanceof TakerProtocolModel) {
-                                                protocol = getTakerProtocol((TakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
+                                            PocProtocol<? extends PocProtocolModel> protocol;
+                                            if (protocolModel instanceof MakerPocProtocolModel) {
+                                                protocol = getMakerProtocol((MakerPocProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
+                                            } else if (protocolModel instanceof TakerPocProtocolModel) {
+                                                protocol = getTakerProtocol((TakerPocProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
                                             } else {
                                                 return false;
                                             }
@@ -121,7 +121,7 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
             openOfferService.findOpenOffer(offerId)
                     .ifPresent(openOffer -> identityService.getOrCreateIdentity(offerId)
                             .whenComplete((identity, throwable) -> {
-                                MakerProtocolModel protocolModel = new MakerProtocolModel(takeOfferRequest.getContract());
+                                MakerPocProtocolModel protocolModel = new MakerPocProtocolModel(takeOfferRequest.getContract());
                                 var protocol = getMakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
                                 persistableStore.add(protocolModel);
                                 protocols.add(protocol);
@@ -133,12 +133,12 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
         }
     }
 
-    public CompletableFuture<TakerProtocol<TakerProtocolModel>> takeOffer(SwapProtocolType protocolType,
-                                                                          PocOffer offer,
-                                                                          Monetary baseSideAmount,
-                                                                          Monetary quoteSideAmount,
-                                                                          String baseSideSettlementMethod,
-                                                                          String quoteSideSettlementMethod) {
+    public CompletableFuture<TakerPocProtocol<TakerPocProtocolModel>> takeOffer(ProtocolType protocolType,
+                                                                                PocOffer offer,
+                                                                                Monetary baseSideAmount,
+                                                                                Monetary quoteSideAmount,
+                                                                                String baseSideSettlementMethod,
+                                                                                String quoteSideSettlementMethod) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
                     PocContract contract = new PocContract(identity.getNetworkId(),
@@ -148,8 +148,8 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
                             quoteSideAmount,
                             baseSideSettlementMethod,
                             quoteSideSettlementMethod);
-                    TakerProtocolModel protocolModel = new TakerProtocolModel(contract);
-                    TakerProtocol<TakerProtocolModel> protocol = getTakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
+                    TakerPocProtocolModel protocolModel = new TakerPocProtocolModel(contract);
+                    TakerPocProtocol<TakerPocProtocolModel> protocol = getTakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
                     persistableStore.add(protocolModel);
                     protocols.add(protocol);
                     persist();
@@ -159,8 +159,8 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
     }
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
-    private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel,
-                                                               NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
+    private TakerPocProtocol<TakerPocProtocolModel> getTakerProtocol(TakerPocProtocolModel protocolModel,
+                                                                     NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
             case MONERO_SWAP:
                 return null;
@@ -177,8 +177,8 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
     }
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
-    private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel,
-                                                                                           NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
+    private MakerPocProtocol<MakerPocProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerPocProtocolModel protocolModel,
+                                                                                                 NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
             case MONERO_SWAP:
                 return null;

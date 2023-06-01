@@ -17,72 +17,24 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.TradeCurrency;
-import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+// Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
+// if needed.
+public enum ProtocolType implements BaseProtocolType {
+    BISQ_EASY,
+    BISQ_MULTISIG,
+    LIQUID_SWAP,
+    BSQ_SWAP,
+    LIGHTNING_X,
+    MONERO_SWAP;
 
-public interface ProtocolType extends ProtoEnum {
-
-    static List<SwapProtocolType> getProtocols(Market market) {
-        List<SwapProtocolType> result = new ArrayList<>();
-        if (isBisqEasySupported(market)) {
-            result.add(SwapProtocolType.BISQ_EASY);
-        }
-        if (isBtcXmrSwapSupported(market)) {
-            result.add(SwapProtocolType.MONERO_SWAP);
-        }
-        if (isLiquidSwapSupported(market)) {
-            result.add(SwapProtocolType.LIQUID_SWAP);
-        }
-        if (isBsqSwapSupported(market)) {
-            result.add(SwapProtocolType.BSQ_SWAP);
-        }
-        if (isLNSwapSupported(market)) {
-            result.add(SwapProtocolType.LIGHTNING_X);
-        }
-        if (isMultiSigSupported(market)) {
-            result.add(SwapProtocolType.BISQ_MULTISIG);
-        }
-
-        result.sort(Comparator.comparingInt(SwapProtocolType::ordinal));
-        return result;
+    @Override
+    public bisq.account.protobuf.ProtocolType toProto() {
+        return bisq.account.protobuf.ProtocolType.valueOf(name());
     }
 
-    private static boolean isBisqEasySupported(Market market) {
-        String baseCurrencyCode = market.getBaseCurrencyCode();
-        String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        return (baseCurrencyCode.equals("BTC") && TradeCurrency.isFiat(quoteCurrencyCode));
-    }
-
-    private static boolean isBtcXmrSwapSupported(Market market) {
-        String baseCurrencyCode = market.getBaseCurrencyCode();
-        String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        return (baseCurrencyCode.equals("BTC") && quoteCurrencyCode.equals("XMR")) ||
-                (quoteCurrencyCode.equals("BTC") && baseCurrencyCode.equals("XMR"));
-    }
-
-    private static boolean isLiquidSwapSupported(Market market) {
-        //todo we need a asset repository to check if any asset is a liquid asset
-        return (market.getBaseCurrencyCode().equals("L-BTC") ||
-                market.getQuoteCurrencyCode().equals("L-BTC"));
-    }
-
-    private static boolean isBsqSwapSupported(Market market) {
-        String baseCurrencyCode = market.getBaseCurrencyCode();
-        String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        return (baseCurrencyCode.equals("BTC") && quoteCurrencyCode.equals("BSQ")) ||
-                (quoteCurrencyCode.equals("BTC") && baseCurrencyCode.equals("BSQ"));
-    }
-
-    private static boolean isLNSwapSupported(Market market) {
-        return false;//todo need some liquid asset lookup table
-    }
-
-    private static boolean isMultiSigSupported(Market market) {
-        return market.getQuoteCurrencyCode().equals("BTC") || market.getBaseCurrencyCode().equals("BTC");
+    public static ProtocolType fromProto(bisq.account.protobuf.ProtocolType proto) {
+        return ProtobufUtils.enumFromProto(ProtocolType.class, proto.name());
     }
 }

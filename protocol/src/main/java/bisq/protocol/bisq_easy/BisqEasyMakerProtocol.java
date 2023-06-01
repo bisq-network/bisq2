@@ -15,47 +15,45 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.liquid_swap;
+package bisq.protocol.bisq_easy;
 
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.PersistenceClient;
-import bisq.protocol.poc.MakerPocProtocol;
-import bisq.protocol.poc.MakerPocProtocolModel;
-import bisq.protocol.poc.PocProtocolModel;
-import bisq.protocol.poc.PocProtocolStore;
+import bisq.protocol.MakerProtocol;
+import bisq.protocol.ProtocolModel;
+import bisq.protocol.ProtocolStore;
 import bisq.protocol.poc.liquid_swap.messages.LiquidSwapFinalizeTxRequest;
 import bisq.protocol.poc.liquid_swap.messages.LiquidSwapTakeOfferRequest;
-import bisq.protocol.poc.liquid_swap.messages.LiquidSwapTakeOfferResponse;
 import bisq.protocol.poc.messages.ProtocolMessage;
-import bisq.protocol.poc.messages.TakeOfferRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class LiquidSwapMakerProtocol extends MakerPocProtocol<MakerPocProtocolModel, LiquidSwapTakeOfferRequest> {
-    public static MakerPocProtocol<MakerPocProtocolModel, LiquidSwapTakeOfferRequest> getProtocol(NetworkService networkService,
-                                                                                                  PersistenceClient<PocProtocolStore> persistenceClient,
-                                                                                                  MakerPocProtocolModel protocolModel,
-                                                                                                  NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
+public abstract class BisqEasyMakerProtocol extends MakerProtocol<BisqEasyOffer, BisqEasyMakerProtocolModel> {
+    public static BisqEasyMakerProtocol getProtocol(NetworkService networkService,
+                                                    PersistenceClient<ProtocolStore> persistenceClient,
+                                                    BisqEasyMakerProtocolModel protocolModel,
+                                                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         return protocolModel.getContract().getOffer().getDirection().isBuy() ?
-                new LiquidSwapMakerAsBuyerProtocol(networkService, persistenceClient, protocolModel, makerNetworkIdWithKeyPair)
-                : new LiquidSwapMakerAsSellerProtocol(networkService, persistenceClient, protocolModel, makerNetworkIdWithKeyPair);
+                new BisqEasyMakerAsBuyerProtocol(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair) :
+                new BisqEasyMakerAsSellerProtocol(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
     }
 
-    public LiquidSwapMakerProtocol(NetworkService networkService,
-                                   PersistenceClient<PocProtocolStore> persistenceClient,
-                                   MakerPocProtocolModel protocolModel,
-                                   NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    public BisqEasyMakerProtocol(NetworkService networkService,
+                                 PersistenceClient<ProtocolStore> persistenceClient,
+                                 BisqEasyMakerProtocolModel protocolModel,
+                                 NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
     }
 
-    @Override
+/*    @Override
     protected LiquidSwapTakeOfferRequest castTakeOfferRequest(TakeOfferRequest takeOfferRequest) {
         return (LiquidSwapTakeOfferRequest) takeOfferRequest;
-    }
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +76,7 @@ public abstract class LiquidSwapMakerProtocol extends MakerPocProtocol<MakerPocP
     // Protocol
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
+    // @Override
     public void onTakeOfferRequest(LiquidSwapTakeOfferRequest request) {
         try {
             verifyPeer();
@@ -87,7 +85,7 @@ public abstract class LiquidSwapMakerProtocol extends MakerPocProtocol<MakerPocP
             createAndSignTx();
             setupTxListener();
             sendLiquidSwapTakeOfferResponse();
-            setState(PocProtocolModel.State.PENDING);
+            setState(ProtocolModel.State.PENDING);
         } catch (Throwable t) {
             handleError(t);
         }
@@ -95,7 +93,7 @@ public abstract class LiquidSwapMakerProtocol extends MakerPocProtocol<MakerPocP
 
     private void onLiquidSwapFinalizeTxRequest(LiquidSwapFinalizeTxRequest request) {
         try {
-            verifyExpectedMessage(request);
+            //  verifyExpectedMessage(request);
             verifyPeer();
             verifyLiquidSwapFinalizeTxRequest(request);
             processLiquidSwapFinalizeTxRequest(request);
@@ -109,7 +107,7 @@ public abstract class LiquidSwapMakerProtocol extends MakerPocProtocol<MakerPocP
 
     @Override
     protected void onContinue() {
-        checkArgument(getState() == PocProtocolModel.State.PENDING);
+        checkArgument(getState() == ProtocolModel.State.PENDING);
     }
 
 
@@ -137,7 +135,7 @@ public abstract class LiquidSwapMakerProtocol extends MakerPocProtocol<MakerPocP
     private void sendLiquidSwapTakeOfferResponse() {
         log.info("sendLiquidSwapTakeOfferResponse");
         setExpectedNextMessageClass(LiquidSwapFinalizeTxRequest.class);
-        sendMessage(new LiquidSwapTakeOfferResponse(getContract()));
+        // sendMessage(new LiquidSwapTakeOfferResponse(getContract()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

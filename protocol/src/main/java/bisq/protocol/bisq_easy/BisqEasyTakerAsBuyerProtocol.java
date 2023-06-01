@@ -15,22 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.liquid_swap;
+package bisq.protocol.bisq_easy;
 
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceClient;
 import bisq.protocol.BuyerProtocol;
-import bisq.protocol.poc.MakerPocProtocolModel;
-import bisq.protocol.poc.PocProtocolStore;
+import bisq.protocol.ProtocolStore;
 import com.google.protobuf.Message;
 
-public class LiquidSwapMakerAsBuyerProtocol extends LiquidSwapMakerProtocol implements BuyerProtocol {
-
-    public LiquidSwapMakerAsBuyerProtocol(NetworkService networkService,
-                                          PersistenceClient<PocProtocolStore> persistenceClient,
-                                          MakerPocProtocolModel protocolModel,
-                                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+public class BisqEasyTakerAsBuyerProtocol extends BisqEasyTakerProtocol implements BuyerProtocol {
+    public BisqEasyTakerAsBuyerProtocol(NetworkService networkService,
+                                        PersistenceClient<ProtocolStore> persistenceClient,
+                                        BisqEasyTakerProtocolModel protocolModel,
+                                        NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
                 persistenceClient,
                 protocolModel,

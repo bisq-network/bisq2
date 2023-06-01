@@ -18,16 +18,22 @@
 package bisq.protocol.poc;
 
 import bisq.contract.poc.PocContract;
+import com.google.protobuf.Message;
 import lombok.Getter;
 
 @Getter
-public class MakerProtocolModel extends ProtocolModel {
+public class MakerPocProtocolModel extends PocProtocolModel {
 
-    public MakerProtocolModel(PocContract contract) {
+    public MakerPocProtocolModel(PocContract contract) {
         super(contract);
     }
 
-    public MakerProtocolModel getClone() {
-        return new MakerProtocolModel(contract);
+    public MakerPocProtocolModel getClone() {
+        return new MakerPocProtocolModel(contract);
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

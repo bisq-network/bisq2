@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc;
+package bisq.protocol;
 
-public interface SellerProtocol {
+public interface BuyerProtocol {
 }

@@ -24,7 +24,7 @@ import bisq.chat.channel.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.protocol.bisq_easy.BisqEasyTrade;
+import bisq.protocol.poc.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;

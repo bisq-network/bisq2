@@ -15,26 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.protocol_type;
+package bisq.protocol.poc.bisq_easy;
 
+import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-// Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
-// if needed.
-public enum SwapProtocolType implements ProtocolType {
-    BISQ_EASY,
-    BISQ_MULTISIG,
-    LIQUID_SWAP,
-    BSQ_SWAP,
-    LIGHTNING_X,
-    MONERO_SWAP;
+public enum BisqEasyTradePhase implements ProtoEnum {
+    NEGOTIATION,
+    FIAT_TRANSFER,
+    BTC_TRANSFER,
+    COMPLETED;
 
     @Override
-    public bisq.account.protobuf.SwapProtocolType toProto() {
-        return bisq.account.protobuf.SwapProtocolType.valueOf(name());
+    public bisq.protocol.protobuf.BisqEasyTradePhase toProto() {
+        return bisq.protocol.protobuf.BisqEasyTradePhase.valueOf(name());
     }
 
-    public static SwapProtocolType fromProto(bisq.account.protobuf.SwapProtocolType proto) {
-        return ProtobufUtils.enumFromProto(SwapProtocolType.class, proto.name());
+    public static BisqEasyTradePhase fromProto(bisq.protocol.protobuf.BisqEasyTradePhase proto) {
+        return ProtobufUtils.enumFromProto(BisqEasyTradePhase.class, proto.name());
     }
 }
+

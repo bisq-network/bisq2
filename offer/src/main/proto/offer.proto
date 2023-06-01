@@ -78,7 +78,7 @@ message OfferOption {
 }
 
 // Offer
-message SwapOffer {
+message Offer {
   string id = 1;
   uint64 date = 2;
   network.NetworkId makerNetworkId = 3;
@@ -86,7 +86,7 @@ message SwapOffer {
   Direction direction = 5;
   uint64 baseSideAmount = 6;
   PriceSpec priceSpec = 7;
-  repeated account.SwapProtocolType swapProtocolTypes = 8;
+  repeated account.ProtocolType protocolTypes = 8;
   repeated SettlementSpec baseSideSettlementSpecs = 9;
   repeated SettlementSpec quoteSideSettlementSpecs = 10;
   repeated OfferOption offerOptions = 11;
@@ -109,7 +109,7 @@ message PocOffer {
   Direction direction = 5;
   uint64 baseAmount = 6;
   PriceSpec priceSpec = 7;
-  repeated account.SwapProtocolType swapProtocolTypes = 8;
+  repeated account.ProtocolType protocolTypes = 8;
   repeated SettlementSpec baseSideSettlementSpecs = 9;
   repeated SettlementSpec quoteSideSettlementSpecs = 10;
   repeated OfferOption offerOptions = 11;

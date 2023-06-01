@@ -15,7 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc;
+package bisq.protocol;
 
-public interface BuyerProtocol {
+import bisq.contract.Contract;
+import bisq.offer.Offer;
+import lombok.Getter;
+
+@Getter
+public class TakerProtocolModel<T extends Offer> extends ProtocolModel<T> {
+
+    public TakerProtocolModel(Contract<T> contract) {
+        super(contract);
+    }
+
+    @Override
+    public bisq.protocol.protobuf.ProtocolModel toProto() {
+        return null;
+    }
+
+
+    public TakerProtocolModel<T> getClone() {
+        return new TakerProtocolModel<>(contract);
+    }
 }

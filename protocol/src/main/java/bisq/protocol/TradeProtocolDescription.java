@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc;
+package bisq.protocol;
 
 import lombok.Getter;
 
-public class SwapProtocolDescription {
+public class TradeProtocolDescription {
     @Getter
     public enum Type {
         BISQ_EASY(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),

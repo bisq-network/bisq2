@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.component
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
@@ -70,7 +70,7 @@ public class TakersSettlementSelection {
         controller.setDirection(direction);
     }
 
-    public void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+    public void setSelectedProtocolType(ProtocolType selectedProtocolType) {
         controller.setSelectedProtocolType(selectedProtocolType);
     }
 
@@ -104,7 +104,7 @@ public class TakersSettlementSelection {
             view = new View(model, this);
         }
 
-        private void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+        private void setSelectedProtocolType(ProtocolType selectedProtocolType) {
             model.selectedProtocolType = selectedProtocolType;
             resetAndApplyData();
         }
@@ -138,7 +138,7 @@ public class TakersSettlementSelection {
             model.selectedBaseSideSettlementMethod.set(null);
             model.selectedQuoteSideSettlementMethod.set(null);
 
-            SwapProtocolType selectedProtocolType = model.selectedProtocolType;
+            ProtocolType selectedProtocolType = model.selectedProtocolType;
             if (selectedProtocolType == null) {
                 model.visibility.set(false);
                 return;
@@ -327,7 +327,7 @@ public class TakersSettlementSelection {
         private final ObjectProperty<SettlementListItem> selectedQuoteSideSettlementListItem = new SimpleObjectProperty<>();
         private Market selectedMarket;
         private Direction direction;
-        private SwapProtocolType selectedProtocolType;
+        private ProtocolType selectedProtocolType;
         private PocOffer offer;
 
 

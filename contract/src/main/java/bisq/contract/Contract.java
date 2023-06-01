@@ -17,42 +17,39 @@
 
 package bisq.contract;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.poc.MultiPartyContract;
-import bisq.offer.SwapOffer;
+import bisq.offer.Offer;
 import lombok.Getter;
 
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */
 @Getter
-public abstract class SwapContract<T extends SwapOffer> implements Proto {
-    protected final T swapOffer;
-    protected final SwapProtocolType protocolType;
+public abstract class Contract<T extends Offer> implements Proto {
+    protected final T offer;
+    protected final ProtocolType protocolType;
 
     protected transient final Party maker;
 
-    public SwapContract(T swapOffer, SwapProtocolType protocolType) {
-        this.swapOffer = swapOffer;
+    public Contract(T offer, ProtocolType protocolType) {
+        this.offer = offer;
         this.protocolType = protocolType;
-        this.maker = new Party(Role.MAKER, swapOffer.getMakerNetworkId());
+        this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
     }
 
-    public bisq.contract.protobuf.SwapContract.Builder getSwapContractBuilder() {
-        return bisq.contract.protobuf.SwapContract.newBuilder()
-                .setSwapOffer(swapOffer.toProto())
+    public bisq.contract.protobuf.Contract.Builder getContractBuilder() {
+        return bisq.contract.protobuf.Contract.newBuilder()
+                .setOffer(offer.toProto())
                 .setProtocolType(protocolType.toProto());
     }
 
-    public static SwapContract<?> fromProto(bisq.contract.protobuf.SwapContract proto) {
+    public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {
         switch (proto.getMessageCase()) {
             case TWOPARTYCONTRACT: {
                 return TwoPartyContract.fromProto(proto);
-            }
-            case BISQEASYCONTRACT: {
-                return BisqEasyContract.fromProto(proto);
             }
             case MULTIPARTYCONTRACT: {
                 return MultiPartyContract.fromProto(proto);
@@ -64,4 +61,6 @@ public abstract class SwapContract<T extends SwapOffer> implements Proto {
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
+
+    public abstract Party getTaker();
 }

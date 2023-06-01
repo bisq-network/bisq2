@@ -35,21 +35,16 @@ message Party {
   Role role = 1;
   network.NetworkId networkId = 2;
 }
-message SwapContract {
-  offer.SwapOffer swapOffer = 1;
-  account.SwapProtocolType protocolType = 2;
+message Contract {
+  offer.Offer offer = 1;
+  account.ProtocolType protocolType = 2;
   oneof message {
     TwoPartyContract twoPartyContract = 10;
-    BisqEasyContract bisqEasyContract = 11;
     MultiPartyContract multiPartyContract = 12;
   }
 }
 
 message TwoPartyContract {
-  Party taker = 1;
-}
-
-message BisqEasyContract {
   Party taker = 1;
 }
 

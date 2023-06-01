@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
@@ -46,7 +46,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     }
 
 
-    public static List<FiatSettlement.Method> getSettlementMethods(SwapProtocolType protocolType) {
+    public static List<FiatSettlement.Method> getSettlementMethods(ProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
             case BISQ_MULTISIG:

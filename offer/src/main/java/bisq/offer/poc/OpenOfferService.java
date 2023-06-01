@@ -18,7 +18,7 @@
 package bisq.offer.poc;
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -120,7 +120,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                                                    Direction direction,
                                                    Monetary baseSideAmount,
                                                    Quote fixPrice,
-                                                   SwapProtocolType selectedProtocolTyp,
+                                                   ProtocolType selectedProtocolTyp,
                                                    List<Account<?, ? extends Settlement<?>>> selectedBaseSideAccounts,
                                                    List<Account<?, ? extends Settlement<?>>> selectedQuoteSideAccounts,
                                                    List<Settlement.Method> selectedBaseSideSettlementMethods,
@@ -128,7 +128,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.getNetworkId();
-            List<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
+            List<ProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
             FixPriceSpec priceSpec = new FixPriceSpec(fixPrice.getValue());
 

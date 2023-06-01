@@ -15,22 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.liquid_swap;
+package bisq.protocol.poc;
 
+import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceClient;
-import bisq.protocol.BuyerProtocol;
-import bisq.protocol.poc.MakerPocProtocolModel;
-import bisq.protocol.poc.PocProtocolStore;
-import com.google.protobuf.Message;
+import bisq.protocol.poc.messages.TakeOfferRequest;
 
-public class LiquidSwapMakerAsBuyerProtocol extends LiquidSwapMakerProtocol implements BuyerProtocol {
+public abstract class MakerPocProtocol<T extends PocProtocolModel, R extends TakeOfferRequest> extends PocProtocol<T> {
 
-    public LiquidSwapMakerAsBuyerProtocol(NetworkService networkService,
-                                          PersistenceClient<PocProtocolStore> persistenceClient,
-                                          MakerPocProtocolModel protocolModel,
-                                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    public MakerPocProtocol(NetworkService networkService,
+                            PersistenceClient<PocProtocolStore> persistenceClient,
+                            T protocolModel,
+                            NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
                 persistenceClient,
                 protocolModel,
@@ -38,8 +36,15 @@ public class LiquidSwapMakerAsBuyerProtocol extends LiquidSwapMakerProtocol impl
     }
 
     @Override
-    public Message toProto() {
-        //todo
-        return null;
+    protected NetworkId getPeersNetworkId() {
+        return getContract().getTakerNetworkId();
     }
+
+    public void onRawTakeOfferRequest(TakeOfferRequest takeOfferRequest) {
+        onTakeOfferRequest(castTakeOfferRequest(takeOfferRequest));
+    }
+
+    protected abstract R castTakeOfferRequest(TakeOfferRequest takeOfferRequest);
+
+    public abstract void onTakeOfferRequest(R takeOfferRequest);
 }

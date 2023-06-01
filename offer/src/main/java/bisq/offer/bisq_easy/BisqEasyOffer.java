@@ -1,15 +1,15 @@
 package bisq.offer.bisq_easy;
 
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.BitcoinSettlement;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.Direction;
+import bisq.offer.Offer;
 import bisq.offer.SettlementSpec;
-import bisq.offer.SwapOffer;
 import bisq.offer.offer_options.AmountOption;
 import bisq.offer.offer_options.OfferOption;
 import bisq.offer.offer_options.ReputationOption;
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class BisqEasyOffer extends SwapOffer {
-    private static List<SwapProtocolType> createSwapProtocolTypes() {
-        return List.of(SwapProtocolType.BISQ_EASY);
+public final class BisqEasyOffer extends Offer {
+    private static List<ProtocolType> createSwapProtocolTypes() {
+        return List.of(ProtocolType.BISQ_EASY);
     }
 
     private static List<SettlementSpec> createBaseSideSettlementSpecs() {
@@ -91,7 +91,7 @@ public final class BisqEasyOffer extends SwapOffer {
                           Market market,
                           long baseSideAmount,
                           PriceSpec priceSpec,
-                          List<SwapProtocolType> swapProtocolTypes,
+                          List<ProtocolType> protocolTypes,
                           List<SettlementSpec> baseSideSettlementSpecs,
                           List<SettlementSpec> quoteSideSettlementSpecs,
                           List<OfferOption> offerOptions,
@@ -103,7 +103,7 @@ public final class BisqEasyOffer extends SwapOffer {
                 market,
                 baseSideAmount,
                 priceSpec,
-                swapProtocolTypes,
+                protocolTypes,
                 baseSideSettlementSpecs,
                 quoteSideSettlementSpecs,
                 offerOptions);
@@ -116,16 +116,16 @@ public final class BisqEasyOffer extends SwapOffer {
     }
 
     @Override
-    public bisq.offer.protobuf.SwapOffer toProto() {
+    public bisq.offer.protobuf.Offer toProto() {
         return getSwapOfferBuilder().setBisqEasyOffer(
                         bisq.offer.protobuf.BisqEasyOffer.newBuilder()
                                 .setQuoteSideAmount(quoteSideAmount))
                 .build();
     }
 
-    public static BisqEasyOffer fromProto(bisq.offer.protobuf.SwapOffer proto) {
-        List<SwapProtocolType> protocolTypes = proto.getSwapProtocolTypesList().stream()
-                .map(SwapProtocolType::fromProto)
+    public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) {
+        List<ProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
+                .map(ProtocolType::fromProto)
                 .collect(Collectors.toList());
         List<SettlementSpec> baseSideSettlementSpecs = proto.getBaseSideSettlementSpecsList().stream()
                 .map(SettlementSpec::fromProto)

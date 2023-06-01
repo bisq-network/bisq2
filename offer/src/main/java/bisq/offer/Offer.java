@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class SwapOffer implements Proto {
+public abstract class Offer implements Proto {
     protected final String id;
     protected final long date;
     protected final NetworkId makerNetworkId;
@@ -54,22 +54,22 @@ public abstract class SwapOffer implements Proto {
     protected final Market market;
     protected final long baseSideAmount;
     protected final PriceSpec priceSpec;
-    protected final List<SwapProtocolType> swapProtocolTypes;
+    protected final List<ProtocolType> protocolTypes;
     protected final List<SettlementSpec> baseSideSettlementSpecs;
     protected final List<SettlementSpec> quoteSideSettlementSpecs;
     protected final List<OfferOption> offerOptions;
 
-    public SwapOffer(String id,
-                     long date,
-                     NetworkId makerNetworkId,
-                     Direction direction,
-                     Market market,
-                     long baseSideAmount,
-                     PriceSpec priceSpec,
-                     List<SwapProtocolType> swapProtocolTypes,
-                     List<SettlementSpec> baseSideSettlementSpecs,
-                     List<SettlementSpec> quoteSideSettlementSpecs,
-                     List<OfferOption> offerOptions) {
+    public Offer(String id,
+                 long date,
+                 NetworkId makerNetworkId,
+                 Direction direction,
+                 Market market,
+                 long baseSideAmount,
+                 PriceSpec priceSpec,
+                 List<ProtocolType> protocolTypes,
+                 List<SettlementSpec> baseSideSettlementSpecs,
+                 List<SettlementSpec> quoteSideSettlementSpecs,
+                 List<OfferOption> offerOptions) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
@@ -78,22 +78,22 @@ public abstract class SwapOffer implements Proto {
         this.baseSideAmount = baseSideAmount;
         this.priceSpec = priceSpec;
         // We might get an immutable list, but we need to sort it, so wrap it into an ArrayList
-        this.swapProtocolTypes = new ArrayList<>(swapProtocolTypes);
+        this.protocolTypes = new ArrayList<>(protocolTypes);
         this.baseSideSettlementSpecs = new ArrayList<>(baseSideSettlementSpecs);
         this.quoteSideSettlementSpecs = new ArrayList<>(quoteSideSettlementSpecs);
         this.offerOptions = new ArrayList<>(offerOptions);
 
         // All lists need to sort deterministically as the data is used in the proof of work check
-        this.swapProtocolTypes.sort(Comparator.comparingInt(SwapProtocolType::hashCode));
+        this.protocolTypes.sort(Comparator.comparingInt(ProtocolType::hashCode));
         this.baseSideSettlementSpecs.sort(Comparator.comparingInt(SettlementSpec::hashCode));
         this.quoteSideSettlementSpecs.sort(Comparator.comparingInt(SettlementSpec::hashCode));
         this.offerOptions.sort(Comparator.comparingInt(OfferOption::hashCode));
     }
 
-    public abstract bisq.offer.protobuf.SwapOffer toProto();
+    public abstract bisq.offer.protobuf.Offer toProto();
 
-    protected bisq.offer.protobuf.SwapOffer.Builder getSwapOfferBuilder() {
-        return bisq.offer.protobuf.SwapOffer.newBuilder()
+    protected bisq.offer.protobuf.Offer.Builder getSwapOfferBuilder() {
+        return bisq.offer.protobuf.Offer.newBuilder()
                 .setId(id)
                 .setDate(date)
                 .setMakerNetworkId(makerNetworkId.toProto())
@@ -101,14 +101,14 @@ public abstract class SwapOffer implements Proto {
                 .setMarket(market.toProto())
                 .setBaseSideAmount(baseSideAmount)
                 .setPriceSpec(priceSpec.toProto())
-                .addAllSwapProtocolTypes(swapProtocolTypes.stream().map(SwapProtocolType::toProto).collect(Collectors.toList()))
+                .addAllProtocolTypes(protocolTypes.stream().map(ProtocolType::toProto).collect(Collectors.toList()))
                 .addAllBaseSideSettlementSpecs(baseSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
                 .addAllQuoteSideSettlementSpecs(quoteSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()));
     }
 
 
-    public static SwapOffer fromProto(bisq.offer.protobuf.SwapOffer proto) {
+    public static Offer fromProto(bisq.offer.protobuf.Offer proto) {
         switch (proto.getMessageCase()) {
             case BISQEASYOFFER: {
                 return BisqEasyOffer.fromProto(proto);

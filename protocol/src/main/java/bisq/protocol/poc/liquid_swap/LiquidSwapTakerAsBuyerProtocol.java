@@ -20,15 +20,15 @@ package bisq.protocol.poc.liquid_swap;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceClient;
-import bisq.protocol.poc.BuyerProtocol;
-import bisq.protocol.poc.ProtocolStore;
-import bisq.protocol.poc.TakerProtocolModel;
+import bisq.protocol.BuyerProtocol;
+import bisq.protocol.poc.PocProtocolStore;
+import bisq.protocol.poc.TakerPocProtocolModel;
 import com.google.protobuf.Message;
 
 public class LiquidSwapTakerAsBuyerProtocol extends LiquidSwapTakerProtocol implements BuyerProtocol {
     public LiquidSwapTakerAsBuyerProtocol(NetworkService networkService,
-                                          PersistenceClient<ProtocolStore> persistenceClient,
-                                          TakerProtocolModel protocolModel,
+                                          PersistenceClient<PocProtocolStore> persistenceClient,
+                                          TakerPocProtocolModel protocolModel,
                                           NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
                 persistenceClient,

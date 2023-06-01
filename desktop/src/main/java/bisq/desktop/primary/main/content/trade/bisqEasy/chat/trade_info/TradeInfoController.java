@@ -23,7 +23,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer.TradeInfoOfferController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase.TradeInfoPhaseController;
-import bisq.protocol.bisq_easy.BisqEasyTrade;
+import bisq.protocol.poc.bisq_easy.BisqEasyTrade;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;

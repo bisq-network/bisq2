@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc;
+package bisq.protocol.bisq_easy;
 
-import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceClient;
-import bisq.protocol.poc.messages.TakeOfferRequest;
+import bisq.protocol.ProtocolStore;
+import bisq.protocol.SellerProtocol;
+import com.google.protobuf.Message;
 
-public abstract class MakerProtocol<T extends ProtocolModel, R extends TakeOfferRequest> extends Protocol<T> {
-
-    public MakerProtocol(NetworkService networkService,
-                         PersistenceClient<ProtocolStore> persistenceClient,
-                         T protocolModel,
-                         NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+public class BisqEasyTakerAsSellerProtocol extends BisqEasyTakerProtocol implements SellerProtocol {
+    public BisqEasyTakerAsSellerProtocol(NetworkService networkService,
+                                         PersistenceClient<ProtocolStore> persistenceClient,
+                                         BisqEasyTakerProtocolModel protocolModel,
+                                         NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
                 persistenceClient,
                 protocolModel,
@@ -36,15 +36,8 @@ public abstract class MakerProtocol<T extends ProtocolModel, R extends TakeOffer
     }
 
     @Override
-    protected NetworkId getPeersNetworkId() {
-        return getContract().getTakerNetworkId();
+    public Message toProto() {
+        //todo
+        return null;
     }
-
-    public void onRawTakeOfferRequest(TakeOfferRequest takeOfferRequest) {
-        onTakeOfferRequest(castTakeOfferRequest(takeOfferRequest));
-    }
-
-    protected abstract R castTakeOfferRequest(TakeOfferRequest takeOfferRequest);
-
-    public abstract void onTakeOfferRequest(R takeOfferRequest);
 }
