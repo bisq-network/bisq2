@@ -119,9 +119,8 @@ public enum NavigationTarget {
     BISQ_EASY_CHAT(BISQ_EASY),
 
     TRADE_INFO(BISQ_EASY_CHAT, false),
-    TRADE_INFO_TAB_1(TRADE_INFO, false),
-    TRADE_INFO_TAB_2(TRADE_INFO, false),
-    TRADE_INFO_TAB_3(TRADE_INFO, false),
+    TRADE_INFO_OFFER(TRADE_INFO, false),
+    TRADE_INFO_PHASE(TRADE_INFO, false),
 
     LIQUID_SWAP(CONTENT, false),
 

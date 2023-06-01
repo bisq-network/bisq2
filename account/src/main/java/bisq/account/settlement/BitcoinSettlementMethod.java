@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import com.google.protobuf.ProtocolMessageEnum;
 
 import java.util.List;

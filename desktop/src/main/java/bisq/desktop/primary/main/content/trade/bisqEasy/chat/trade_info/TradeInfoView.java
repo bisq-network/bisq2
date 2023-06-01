@@ -48,14 +48,11 @@ public class TradeInfoView extends TabView<TradeInfoModel, TradeInfoController> 
         VBox.setMargin(contentPane, new Insets(10, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
-        addTab(Res.get("tradeInfo.tab1"),
-                NavigationTarget.TRADE_INFO_TAB_1,
+        addTab(Res.get("tradeInfo.offer"),
+                NavigationTarget.TRADE_INFO_OFFER,
                 styles);
-        addTab(Res.get("tradeInfo.tab2"),
-                NavigationTarget.TRADE_INFO_TAB_2,
-                styles);
-        addTab(Res.get("tradeInfo.tab3"),
-                NavigationTarget.TRADE_INFO_TAB_3,
+        addTab(Res.get("tradeInfo.phase"),
+                NavigationTarget.TRADE_INFO_PHASE,
                 styles);
     }
 

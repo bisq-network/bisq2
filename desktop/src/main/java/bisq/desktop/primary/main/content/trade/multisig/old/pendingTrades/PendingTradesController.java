@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.protocol.*;
+import bisq.protocol.poc.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,7 +45,7 @@ public class PendingTradesController implements InitWithDataController<PendingTr
     private final PendingTradesModel model;
     @Getter
     private final PendingTradesView view;
-    private final ProtocolService protocolService;
+    private final PocProtocolService pocProtocolService;
     private Pin protocolsPin;
 
 
@@ -53,7 +53,7 @@ public class PendingTradesController implements InitWithDataController<PendingTr
         model = new PendingTradesModel();
         view = new PendingTradesView(model, this);
 
-        protocolService = applicationService.getProtocolService();
+        pocProtocolService = applicationService.getPocProtocolService();
         model.filteredItems.setPredicate(e -> e.getProtocol().isPending());
     }
 
@@ -65,7 +65,7 @@ public class PendingTradesController implements InitWithDataController<PendingTr
     public void onActivate() {
         protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, PendingTradeListItem>bind(model.getListItems())
                 .map(PendingTradeListItem::new)
-                .to(protocolService.getProtocols());
+                .to(pocProtocolService.getProtocols());
     }
 
     @Override

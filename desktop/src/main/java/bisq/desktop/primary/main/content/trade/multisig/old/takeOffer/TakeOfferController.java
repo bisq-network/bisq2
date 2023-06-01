@@ -29,7 +29,7 @@ import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.components
 import bisq.offer.Offer;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.protocol.ProtocolService;
+import bisq.protocol.poc.PocProtocolService;
 import javafx.beans.property.BooleanProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -54,7 +54,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     }
 
     private final MarketPriceService marketPriceService;
-    private final ProtocolService protocolService;
+    private final PocProtocolService pocProtocolService;
 
     private final TakeOfferModel model;
     @Getter
@@ -68,7 +68,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
     public TakeOfferController(DefaultApplicationService applicationService) {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        protocolService = applicationService.getProtocolService();
+        pocProtocolService = applicationService.getPocProtocolService();
         model = new TakeOfferModel();
 
         // will prob use custom design/component not reuse DirectionSelection
@@ -135,7 +135,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     public void onTakeOffer() {
         String baseSideSettlementMethod = model.getSelectedBaseSideSettlementMethod().name();
         String quoteSideSettlementMethod = model.getSelectedQuoteSideSettlementMethod().name();
-        protocolService.takeOffer(model.getSelectedProtocolType(),
+        pocProtocolService.takeOffer(model.getSelectedProtocolType(),
                         model.offer,
                         model.baseSideAmount,
                         model.quoteSideAmount,

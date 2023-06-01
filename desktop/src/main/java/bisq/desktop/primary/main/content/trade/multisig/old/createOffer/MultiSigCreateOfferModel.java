@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;

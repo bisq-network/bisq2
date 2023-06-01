@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;
-import bisq.protocol.SwapProtocol;
+import bisq.protocol.poc.SwapProtocol;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;

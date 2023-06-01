@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.ProtoEnum;
 import bisq.i18n.Res;

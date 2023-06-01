@@ -33,5 +33,4 @@ public enum ChatMessageType implements ProtoEnum {
     public static ChatMessageType fromProto(bisq.chat.protobuf.ChatMessageType proto) {
         return ProtobufUtils.enumFromProto(ChatMessageType.class, proto.name());
     }
-
 }

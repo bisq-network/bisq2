@@ -17,6 +17,8 @@
 
 package bisq.chat.bisqeasy.message;
 
+import bisq.offer.bisq_easy.BisqEasyOffer;
+
 import java.util.Optional;
 
 public interface BisqEasyOfferMessage {

@@ -17,7 +17,7 @@
 
 package bisq.contract;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import bisq.offer.Offer;
 import lombok.Getter;
 

@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.protocol.SwapProtocol;
+import bisq.protocol.poc.SwapProtocol;
 import lombok.Getter;
 
 public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseModel> implements Controller {

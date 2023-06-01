@@ -22,7 +22,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.bisqeasy.BisqEasyPaymentAccountService;
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.application.Service;
 import bisq.common.locale.CountryRepository;
@@ -49,7 +49,8 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     private final BisqEasyPaymentAccountService bisqEasyPaymentAccountService;
 
     public AccountService(NetworkService networkService,
-                          PersistenceService persistenceService, IdentityService identityService) {
+                          PersistenceService persistenceService,
+                          IdentityService identityService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         bisqEasyPaymentAccountService = new BisqEasyPaymentAccountService(persistenceService);
     }
