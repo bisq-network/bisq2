@@ -17,13 +17,13 @@
 
 package bisq.protocol.poc;
 
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import lombok.Getter;
 
 @Getter
 public class MakerProtocolModel extends ProtocolModel {
 
-    public MakerProtocolModel(Contract contract) {
+    public MakerProtocolModel(PocContract contract) {
         super(contract);
     }
 

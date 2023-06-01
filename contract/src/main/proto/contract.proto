@@ -40,12 +40,16 @@ message SwapContract {
   account.SwapProtocolType protocolType = 2;
   oneof message {
     TwoPartyContract twoPartyContract = 10;
-    MultiPartyContract multiPartyContract = 11;
-
+    BisqEasyContract bisqEasyContract = 11;
+    MultiPartyContract multiPartyContract = 12;
   }
 }
 
 message TwoPartyContract {
+  Party taker = 1;
+}
+
+message BisqEasyContract {
   Party taker = 1;
 }
 

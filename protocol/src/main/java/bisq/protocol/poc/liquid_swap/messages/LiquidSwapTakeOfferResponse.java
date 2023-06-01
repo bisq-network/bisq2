@@ -17,13 +17,13 @@
 
 package bisq.protocol.poc.liquid_swap.messages;
 
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.protocol.poc.messages.ProtocolMessage;
 
 public class LiquidSwapTakeOfferResponse extends ProtocolMessage {
 
-    public LiquidSwapTakeOfferResponse(Contract contract) {
+    public LiquidSwapTakeOfferResponse(PocContract contract) {
         super(contract.getOffer().getId());
     }
 

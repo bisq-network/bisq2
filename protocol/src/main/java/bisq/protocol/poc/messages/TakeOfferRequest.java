@@ -17,7 +17,7 @@
 
 package bisq.protocol.poc.messages;
 
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 
 public abstract class TakeOfferRequest extends ProtocolMessage {
     public TakeOfferRequest(String offerId) {
@@ -28,5 +28,5 @@ public abstract class TakeOfferRequest extends ProtocolMessage {
         super(messageId, offerId);
     }
 
-    public abstract Contract getContract();
+    public abstract PocContract getContract();
 }

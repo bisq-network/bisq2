@@ -17,7 +17,7 @@
 
 package bisq.protocol.poc.liquid_swap.messages;
 
-import bisq.contract.Contract;
+import bisq.contract.poc.PocContract;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.protocol.poc.messages.TakeOfferRequest;
 import lombok.Getter;
@@ -25,9 +25,9 @@ import lombok.Getter;
 @Getter
 public class LiquidSwapTakeOfferRequest extends TakeOfferRequest {
 
-    private final Contract contract;
+    private final PocContract contract;
 
-    public LiquidSwapTakeOfferRequest(Contract contract) {
+    public LiquidSwapTakeOfferRequest(PocContract contract) {
         super(contract.getOffer().getId());
         this.contract = contract;
     }

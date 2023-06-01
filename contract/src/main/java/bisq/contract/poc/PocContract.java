@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.contract.poc;
 
 import bisq.account.protocol_type.SwapProtocolType;
 import bisq.common.monetary.Monetary;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class Contract implements Proto {
+public final class PocContract implements Proto {
     private final NetworkId takerNetworkId;
     private final SwapProtocolType protocolType;
     private final PocOffer offer;
@@ -39,13 +39,13 @@ public final class Contract implements Proto {
     private final String baseSideSettlementMethod;
     private final String quoteSideSettlementMethod;
 
-    public Contract(NetworkId takerNetworkId,
-                    SwapProtocolType protocolType,
-                    PocOffer offer,
-                    Monetary baseSideAmount,
-                    Monetary quoteSideAmount,
-                    String baseSideSettlementMethod,
-                    String quoteSideSettlementMethod) {
+    public PocContract(NetworkId takerNetworkId,
+                       SwapProtocolType protocolType,
+                       PocOffer offer,
+                       Monetary baseSideAmount,
+                       Monetary quoteSideAmount,
+                       String baseSideSettlementMethod,
+                       String quoteSideSettlementMethod) {
 
         this.takerNetworkId = takerNetworkId;
         this.protocolType = protocolType;

@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.protocol.poc.SwapProtocol;
+import bisq.protocol.poc.SwapProtocolDescription;
 import lombok.Getter;
 
 public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseModel> implements Controller {
@@ -33,7 +33,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
         this.model = model;
 
         model.getListItems().setAll(
-                new ProtocolListItem(SwapProtocol.Type.BISQ_EASY,
+                new ProtocolListItem(SwapProtocolDescription.Type.BISQ_EASY,
                         NavigationTarget.BISQ_EASY,
                         Res.get("trade.protocols.basic.info.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.markets.SATOSHI_SQUARE"),
@@ -47,7 +47,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "",
                         "protocol-satoshi-square"
                 ),
-                new ProtocolListItem(SwapProtocol.Type.BISQ_MULTISIG,
+                new ProtocolListItem(SwapProtocolDescription.Type.BISQ_MULTISIG,
                         NavigationTarget.BISQ_MULTISIG,
                         Res.get("trade.protocols.basic.info.BISQ_MULTISIG"),
                         Res.get("trade.protocols.markets.BISQ_MULTISIG"),
@@ -61,7 +61,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "Q4/23",
                         "protocol-bisq"
                 ),
-                new ProtocolListItem(SwapProtocol.Type.LIQUID_SWAP,
+                new ProtocolListItem(SwapProtocolDescription.Type.LIQUID_SWAP,
                         NavigationTarget.LIQUID_SWAP,
                         Res.get("trade.protocols.basic.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.markets.LIQUID_SWAP"),
@@ -103,7 +103,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "Q2/23",
                         "protocol-lightning"
                 ), */
-                new ProtocolListItem(SwapProtocol.Type.BSQ_SWAP,
+                new ProtocolListItem(SwapProtocolDescription.Type.BSQ_SWAP,
                         NavigationTarget.BSQ_SWAP,
                         Res.get("trade.protocols.basic.info.BSQ_SWAP"),
                         Res.get("trade.protocols.markets.BSQ_SWAP"),
