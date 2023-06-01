@@ -47,7 +47,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
     private Optional<EncryptedData> encryptedData = Optional.empty();
     private Optional<ScryptParameters> scryptParameters = Optional.empty();
-    private transient Optional<AESSecretKey> aesSecretKey = Optional.empty();
+    private transient Optional<AesSecretKey> aesSecretKey = Optional.empty();
 
 
     public UserIdentityStore() {
@@ -69,7 +69,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
                               Set<UserIdentity> userIdentities,
                               Optional<EncryptedData> encryptedData,
                               Optional<ScryptParameters> scryptParameters,
-                              Optional<AESSecretKey> aesSecretKey) {
+                              Optional<AesSecretKey> aesSecretKey) {
         this.userIdentities.setAll(userIdentities);
         setSelectedUserIdentityId(selectedUserIdentityId);
 
@@ -148,9 +148,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         encryptedData = persisted.getEncryptedData();
         scryptParameters = persisted.scryptParameters;
 
-        Optional<AESSecretKey> persistedOptionalKey = persisted.aesSecretKey;
+        Optional<AesSecretKey> persistedOptionalKey = persisted.aesSecretKey;
         if (persistedOptionalKey.isPresent()) {
-            AESSecretKey clone = AESSecretKey.getClone(persistedOptionalKey.get());
+            AesSecretKey clone = AesSecretKey.getClone(persistedOptionalKey.get());
             setAesSecretKey(clone);
             persistedOptionalKey.get().clear();
         } else {
@@ -163,7 +163,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     // Package scope API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    CompletableFuture<AESSecretKey> deriveKeyFromPassword(CharSequence password) {
+    CompletableFuture<AesSecretKey> deriveKeyFromPassword(CharSequence password) {
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
             ScryptKeyDeriver scryptKeyDeriver;
@@ -174,7 +174,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
                 scryptParameters = Optional.of(scryptKeyDeriver.getScryptParameters());
             }
             try {
-                AESSecretKey keyFromPassword = scryptKeyDeriver.deriveKeyFromPassword(password);
+                AesSecretKey keyFromPassword = scryptKeyDeriver.deriveKeyFromPassword(password);
                 setAesSecretKey(keyFromPassword);
                 log.info("Deriving aesKey with scrypt took {} ms", System.currentTimeMillis() - ts);
                 return keyFromPassword;
@@ -203,12 +203,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         });
     }
 
-    CompletableFuture<Void> decrypt(AESSecretKey aesSecretKey) {
+    CompletableFuture<Void> decrypt(AesSecretKey aesSecretKey) {
         checkArgument(encryptedData.isPresent(), "encryptedData must be present at decrypt.");
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
             try {
-                byte[] decryptedData = AESEncryption.decrypt(encryptedData.get(), aesSecretKey);
+                byte[] decryptedData = AesGcm.decrypt(aesSecretKey, encryptedData.get().getIv(), encryptedData.get().getCipherText());
                 Any any = ProtobufUtils.toAny(decryptedData);
                 UserIdentityStore decrypted = fromProto(any.unpack(bisq.user.protobuf.UserIdentityStore.class));
                 userIdentities.clear();
@@ -230,7 +230,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             long ts = System.currentTimeMillis();
             ScryptKeyDeriver scryptKeyDeriver = new ScryptKeyDeriver(scryptParameters.get());
             try {
-                AESSecretKey keyFromPassword = scryptKeyDeriver.deriveKeyFromPassword(password);
+                AesSecretKey keyFromPassword = scryptKeyDeriver.deriveKeyFromPassword(password);
                 checkArgument(keyFromPassword.equals(aesSecretKey.get()),
                         "Provided password does not match our aesKey.");
                 scryptParameters = Optional.empty();
@@ -278,7 +278,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         return encryptedData;
     }
 
-    Optional<AESSecretKey> getAESSecretKey() {
+    Optional<AesSecretKey> getAESSecretKey() {
         return aesSecretKey;
     }
 
@@ -303,19 +303,21 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         setAesSecretKey(Optional.empty());
     }
 
-    private void setAesSecretKey(AESSecretKey aesSecretKey) {
+    private void setAesSecretKey(AesSecretKey aesSecretKey) {
         setAesSecretKey(Optional.of(aesSecretKey));
     }
 
-    private void setAesSecretKey(Optional<AESSecretKey> aesSecretKey) {
-        this.aesSecretKey.ifPresent(AESSecretKey::clear);
+    private void setAesSecretKey(Optional<AesSecretKey> aesSecretKey) {
+        this.aesSecretKey.ifPresent(AesSecretKey::clear);
         this.aesSecretKey = aesSecretKey;
     }
 
     private EncryptedData encryptPlainTextProto(bisq.user.protobuf.UserIdentityStore plainTextProto) {
         try {
-            byte[] plainTextProtoAsBytes = ProtobufUtils.getByteArrayFromProto(Any.pack(plainTextProto));
-            return AESEncryption.encrypt(plainTextProtoAsBytes, aesSecretKey.orElseThrow());
+            byte[] plainText = ProtobufUtils.getByteArrayFromProto(Any.pack(plainTextProto));
+            byte[] iv = AesGcm.generateIv().getIV();
+            byte[] cipherText = AesGcm.encrypt(aesSecretKey.orElseThrow(), iv, plainText);
+            return new EncryptedData(iv, cipherText);
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

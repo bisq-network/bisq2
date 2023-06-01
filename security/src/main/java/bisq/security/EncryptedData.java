@@ -22,7 +22,6 @@ import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>An instance of EncryptedData is a holder for an initialization vector and encrypted bytes. It is typically
@@ -32,33 +31,32 @@ import lombok.extern.slf4j.Slf4j;
  * private key bytes were encrypted. You need these for decryption.</p>
  */
 @Getter
-@Slf4j
 @EqualsAndHashCode
 public final class EncryptedData implements Proto {
-    private final byte[] initialisationVector;
-    private final byte[] encryptedBytes;
+    private final byte[] iv;
+    private final byte[] cipherText;
 
-    public EncryptedData(byte[] initialisationVector, byte[] encryptedBytes) {
-        this.initialisationVector = initialisationVector;
-        this.encryptedBytes = encryptedBytes;
+    public EncryptedData(byte[] iv, byte[] cipherText) {
+        this.iv = iv;
+        this.cipherText = cipherText;
     }
 
     public bisq.security.protobuf.EncryptedData toProto() {
         return bisq.security.protobuf.EncryptedData.newBuilder()
-                .setInitialisationVector(ByteString.copyFrom(initialisationVector))
-                .setEncryptedBytes(ByteString.copyFrom(encryptedBytes))
+                .setIv(ByteString.copyFrom(iv))
+                .setCipherText(ByteString.copyFrom(cipherText))
                 .build();
     }
 
     public static EncryptedData fromProto(bisq.security.protobuf.EncryptedData proto) {
-        return new EncryptedData(proto.getInitialisationVector().toByteArray(), proto.getEncryptedBytes().toByteArray());
+        return new EncryptedData(proto.getIv().toByteArray(), proto.getCipherText().toByteArray());
     }
 
     @Override
     public String toString() {
         return "EncryptedData{" +
-                "\r\n     initialisationVector=" + Hex.encode(initialisationVector) +
-                ",\r\n     encryptedBytes=" + Hex.encode(encryptedBytes) +
+                "\r\n     initialisationVector=" + Hex.encode(iv) +
+                ",\r\n     encryptedBytes=" + Hex.encode(cipherText) +
                 "\r\n}";
     }
 }

@@ -33,7 +33,6 @@ public class AesGcm {
 
     private static final String AES_GCM_NO_PADDING_CIPHER_NAME = "AES/GCM/NoPadding";
     private static final String AES = "AES";
-
     private static final int MAX_TAG_LENGTH = 128;
     private static final int RECOMMENDED_IV_LENGTH = 12;
 
@@ -61,4 +60,6 @@ public class AesGcm {
     public static IvParameterSpec generateIv() {
         return new IvParameterSpec(new SecureRandom().generateSeed(RECOMMENDED_IV_LENGTH));
     }
+
+
 }

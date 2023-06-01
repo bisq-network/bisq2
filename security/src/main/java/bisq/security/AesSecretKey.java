@@ -23,16 +23,16 @@ import lombok.Getter;
 import javax.crypto.SecretKey;
 import java.util.Arrays;
 
+@Getter
 @EqualsAndHashCode
-public class AESSecretKey implements SecretKey {
-    public static AESSecretKey getClone(AESSecretKey key) {
-        return new AESSecretKey(Arrays.copyOf(key.getEncoded(), key.getEncoded().length));
+public class AesSecretKey implements SecretKey {
+    public static AesSecretKey getClone(AesSecretKey key) {
+        return new AesSecretKey(Arrays.copyOf(key.getEncoded(), key.getEncoded().length));
     }
 
-    @Getter
     private final byte[] encoded;
 
-    public AESSecretKey(byte[] encoded) {
+    public AesSecretKey(byte[] encoded) {
         this.encoded = encoded;
     }
 

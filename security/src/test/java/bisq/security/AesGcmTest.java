@@ -24,6 +24,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class AesGcmTest {
     @Test
@@ -41,5 +42,22 @@ public class AesGcmTest {
         String decryptedText = new String(plainText);
 
         assertThat(decryptedText).isEqualTo(message);
+    }
+
+    @Test
+    void encryptAndDecryptWithPasswordTest() throws GeneralSecurityException {
+        String password = "test_password";
+        ScryptKeyDeriver scryptKeyDeriver1 = new ScryptKeyDeriver();
+        ScryptParameters scryptParameters = scryptKeyDeriver1.getScryptParameters();
+        AesSecretKey key1 = scryptKeyDeriver1.deriveKeyFromPassword(password);
+        byte[] plainText = "test_data".getBytes();
+        byte[] iv = AesGcm.generateIv().getIV();
+        byte[] cipherText = AesGcm.encrypt(key1, iv, plainText);
+        EncryptedData encryptedData = new EncryptedData(iv, cipherText);
+
+        ScryptKeyDeriver scryptKeyDeriver2 = new ScryptKeyDeriver(scryptParameters);
+        AesSecretKey key2 = scryptKeyDeriver2.deriveKeyFromPassword(password);
+        byte[] decryptedData = AesGcm.decrypt(key2, encryptedData.getIv(), encryptedData.getCipherText());
+        assertArrayEquals(plainText, decryptedData);
     }
 }

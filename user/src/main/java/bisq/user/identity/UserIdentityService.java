@@ -33,7 +33,7 @@ import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.AESSecretKey;
+import bisq.security.AesSecretKey;
 import bisq.security.EncryptedData;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
@@ -138,7 +138,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<AESSecretKey> deriveKeyFromPassword(CharSequence password) {
+    public CompletableFuture<AesSecretKey> deriveKeyFromPassword(CharSequence password) {
         return persistableStore.deriveKeyFromPassword(password)
                 .whenComplete((aesKey, throwable) -> {
                     if (throwable == null && aesKey != null) {
@@ -156,7 +156,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 });
     }
 
-    public CompletableFuture<Void> decryptDataStore(AESSecretKey aesSecretKey) {
+    public CompletableFuture<Void> decryptDataStore(AesSecretKey aesSecretKey) {
         return persistableStore.decrypt(aesSecretKey)
                 .whenComplete((nil, throwable) -> {
                     if (throwable == null) {
@@ -182,7 +182,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.getEncryptedData().isPresent();
     }
 
-    public Optional<AESSecretKey> getAESSecretKey() {
+    public Optional<AesSecretKey> getAESSecretKey() {
         return persistableStore.getAESSecretKey();
     }
 
