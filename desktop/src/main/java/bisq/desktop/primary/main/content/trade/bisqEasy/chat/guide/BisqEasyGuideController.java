@@ -21,10 +21,10 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.process.BisqEasyHelpProcessController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.rules.BisqEasyHelpRulesController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.security.BisqEasyHelpSecurityController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.welcome.BisqEasyHelpWelcomeController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.process.BisqEasyGuideProcessController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.rules.BisqEasyGuideRulesController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.security.BisqEasyGuideSecurityController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.welcome.BisqEasyGuideWelcomeController;
 import bisq.desktop.primary.overlay.OverlayController;
 import javafx.application.Platform;
 import lombok.Getter;
@@ -33,16 +33,16 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class BisqEasyHelpController extends TabController<BisqEasyHelpModel> {
+public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     @Getter
-    private final BisqEasyHelpView view;
+    private final BisqEasyGuideView view;
     private final DefaultApplicationService applicationService;
 
-    public BisqEasyHelpController(DefaultApplicationService applicationService) {
-        super(new BisqEasyHelpModel(), NavigationTarget.BISQ_EASY_GUIDE);
+    public BisqEasyGuideController(DefaultApplicationService applicationService) {
+        super(new BisqEasyGuideModel(), NavigationTarget.BISQ_EASY_GUIDE);
 
         this.applicationService = applicationService;
-        view = new BisqEasyHelpView(model, this);
+        view = new BisqEasyGuideView(model, this);
     }
 
     @Override
@@ -57,16 +57,16 @@ public class BisqEasyHelpController extends TabController<BisqEasyHelpModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case BISQ_EASY_GUIDE_WELCOME: {
-                return Optional.of(new BisqEasyHelpWelcomeController(applicationService));
+                return Optional.of(new BisqEasyGuideWelcomeController(applicationService));
             }
             case BISQ_EASY_GUIDE_SECURITY: {
-                return Optional.of(new BisqEasyHelpSecurityController(applicationService));
+                return Optional.of(new BisqEasyGuideSecurityController(applicationService));
             }
             case BISQ_EASY_GUIDE_PROCESS: {
-                return Optional.of(new BisqEasyHelpProcessController(applicationService));
+                return Optional.of(new BisqEasyGuideProcessController(applicationService));
             }
             case BISQ_EASY_GUIDE_RULES: {
-                return Optional.of(new BisqEasyHelpRulesController(applicationService));
+                return Optional.of(new BisqEasyGuideRulesController(applicationService));
             }
             default: {
                 return Optional.empty();

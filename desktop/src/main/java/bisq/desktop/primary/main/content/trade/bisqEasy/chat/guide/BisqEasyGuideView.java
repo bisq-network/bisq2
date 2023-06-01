@@ -32,10 +32,10 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyHelpView extends TabView<BisqEasyHelpModel, BisqEasyHelpController> {
+public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuideController> {
     private Button closeIconButton;
 
-    public BisqEasyHelpView(BisqEasyHelpModel model, BisqEasyHelpController controller) {
+    public BisqEasyGuideView(BisqEasyGuideModel model, BisqEasyGuideController controller) {
         super(model, controller);
 
         root.getStyleClass().addAll("bisq-box-2");

@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyHelpModel extends TabModel {
+public class BisqEasyGuideModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

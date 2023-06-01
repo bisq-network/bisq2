@@ -15,34 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.rules;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.process;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyHelpRulesController implements Controller {
-    private final BisqEasyHelpRulesModel model;
+public class BisqEasyGuideProcessController implements Controller {
     @Getter
-    private final BisqEasyHelpRulesView view;
-    private final SettingsService settingsService;
+    private final BisqEasyGuideProcessView view;
 
-    public BisqEasyHelpRulesController(DefaultApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
-        model = new BisqEasyHelpRulesModel();
-        view = new BisqEasyHelpRulesView(model, this);
+    public BisqEasyGuideProcessController(DefaultApplicationService applicationService) {
+        BisqEasyGuideProcessModel model = new BisqEasyGuideProcessModel();
+        view = new BisqEasyGuideProcessView(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.getTradeRulesConfirmed().set(settingsService.getTradeRulesConfirmed().get());
     }
 
     @Override
@@ -50,20 +44,14 @@ public class BisqEasyHelpRulesController implements Controller {
     }
 
     void onBack() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_PROCESS);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_SECURITY);
+    }
+
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_RULES);
     }
 
     void onLearnMore() {
         Browser.open("https://bisq.wiki/bisqeasy");
-    }
-
-    void onConfirm() {
-        settingsService.setTradeRulesConfirmed(true);
-        model.getTradeRulesConfirmed().set(true);
-        OverlayController.hide();
-    }
-
-    void onClose() {
-        OverlayController.hide();
     }
 }
