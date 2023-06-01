@@ -15,43 +15,43 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.process;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.welcome;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.i18n.Res;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyHelpProcessController implements Controller {
+public class BisqEasyGuideWelcomeController implements Controller {
     @Getter
-    private final BisqEasyHelpProcessView view;
+    private final BisqEasyGuideWelcomeView view;
+    private final SettingsService settingsService;
+    private final BisqEasyGuideWelcomeModel model;
 
-    public BisqEasyHelpProcessController(DefaultApplicationService applicationService) {
-        BisqEasyHelpProcessModel model = new BisqEasyHelpProcessModel();
-        view = new BisqEasyHelpProcessView(model, this);
+    public BisqEasyGuideWelcomeController(DefaultApplicationService applicationService) {
+        settingsService = applicationService.getSettingsService();
+        model = new BisqEasyGuideWelcomeModel();
+        view = new BisqEasyGuideWelcomeView(model, this);
     }
 
     @Override
     public void onActivate() {
+        String content = Res.get("tradeGuide.welcome.content");
+        model.getContentText().setValue(settingsService.getTradeRulesConfirmed().get() ?
+                content :
+                content + "\n\n" + Res.get("tradeGuide.welcome.content.notYetConfirmed"));
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    void onBack() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_SECURITY);
-    }
-
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_RULES);
-    }
-
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_SECURITY);
     }
 }

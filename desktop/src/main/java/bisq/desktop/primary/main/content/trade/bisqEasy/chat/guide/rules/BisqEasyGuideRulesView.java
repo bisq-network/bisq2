@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.process;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.rules;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -25,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
@@ -32,53 +33,61 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class BisqEasyHelpProcessView extends View<VBox, BisqEasyHelpProcessModel, BisqEasyHelpProcessController> {
-    private final Button backButton, nextButton;
+public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, BisqEasyGuideRulesController> {
+    private final Button backButton, closeButton, confirmButton;
     private final Hyperlink learnMore;
     private final Text content;
     private Subscription widthPin;
 
-    public BisqEasyHelpProcessView(BisqEasyHelpProcessModel model,
-                                   BisqEasyHelpProcessController controller) {
+    public BisqEasyGuideRulesView(BisqEasyGuideRulesModel model,
+                                  BisqEasyGuideRulesController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.tab2.headline"));
+        Label headline = new Label(Res.get("tradeGuide.tab3.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeGuide.tab2.content"));
+        content = new Text(Res.get("tradeGuide.tab3.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
-
-        backButton = new Button(Res.get("back"));
-
-        nextButton = new Button(Res.get("next"));
-        nextButton.setDefaultButton(true);
-
-        HBox buttons = new HBox(20, backButton, nextButton);
 
         learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
 
+        backButton = new Button(Res.get("back"));
+        closeButton = new Button(Res.get("close"));
+        closeButton.setDefaultButton(true);
+        confirmButton = new Button(Res.get("tradeGuide.tab3.confirm"));
+        confirmButton.setDefaultButton(true);
+        HBox buttons = new HBox(20, backButton, closeButton, confirmButton);
+        VBox.setVgrow(content, Priority.ALWAYS);
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
         root.getChildren().addAll(headline, content, learnMore, buttons);
     }
 
     @Override
     protected void onViewAttached() {
+        closeButton.setManaged(model.getTradeRulesConfirmed().get());
+        closeButton.setVisible(model.getTradeRulesConfirmed().get());
+        confirmButton.setManaged(!model.getTradeRulesConfirmed().get());
+        confirmButton.setVisible(!model.getTradeRulesConfirmed().get());
+
+        closeButton.setOnAction(e -> controller.onClose());
+        confirmButton.setOnAction(e -> controller.onConfirm());
         backButton.setOnAction(e -> controller.onBack());
-        nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
         widthPin = EasyBind.subscribe(root.widthProperty(),
                 w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
     protected void onViewDetached() {
+        closeButton.setOnAction(null);
+        confirmButton.setOnAction(null);
         backButton.setOnAction(null);
-        nextButton.setOnAction(null);
         learnMore.setOnAction(null);
+
         widthPin.unsubscribe();
     }
 }
