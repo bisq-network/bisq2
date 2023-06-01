@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;

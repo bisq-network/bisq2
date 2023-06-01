@@ -17,6 +17,7 @@
 
 package bisq.contract;
 
+import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,12 +26,24 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Party {
+public final class Party implements Proto {
     private final Role role;
     private final NetworkId networkId;
 
     public Party(Role role, NetworkId networkId) {
         this.role = role;
         this.networkId = networkId;
+    }
+
+    @Override
+    public bisq.contract.protobuf.Party toProto() {
+        return bisq.contract.protobuf.Party.newBuilder()
+                .setRole(role.toProto())
+                .setNetworkId(networkId.toProto())
+                .build();
+    }
+
+    public static Party fromProto(bisq.contract.protobuf.Party proto) {
+        return new Party(Role.fromProto(proto.getRole()), NetworkId.fromProto(proto.getNetworkId()));
     }
 }

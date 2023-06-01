@@ -26,8 +26,8 @@ import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.multisig.old.pendingTrades.PendingTradesController;
 import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.components.TakersSettlementSelection;
-import bisq.offer.Offer;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.protocol.poc.PocProtocolService;
 import javafx.beans.property.BooleanProperty;
@@ -44,10 +44,10 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     @ToString
     @EqualsAndHashCode
     public static final class InitData {
-        private final Offer offer;
+        private final PocOffer offer;
         private final BooleanProperty showTakeOfferTab;
 
-        public InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+        public InitData(PocOffer offer, BooleanProperty showTakeOfferTab) {
             this.offer = offer;
             this.showTakeOfferTab = showTakeOfferTab;
         }
@@ -85,7 +85,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
     @Override
     public void initWithData(InitData initData) {
-        Offer offer = initData.getOffer();
+        PocOffer offer = initData.getOffer();
         model.offer = offer;
         Direction direction = offer.getDirection();
         model.direction = direction;

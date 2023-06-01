@@ -25,7 +25,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.offer.OfferService;
+import bisq.offer.poc.OfferService;
 import bisq.oracle.OracleService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.protocol.poc.PocProtocolService;

@@ -18,24 +18,23 @@
 package bisq.account.protocol_type;
 
 import bisq.common.util.ProtobufUtils;
-import com.google.protobuf.ProtocolMessageEnum;
 
 // Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
 // if needed.
 public enum SwapProtocolType implements ProtocolType {
     BISQ_EASY,
-    MONERO_SWAP,
+    BISQ_MULTISIG,
     LIQUID_SWAP,
     BSQ_SWAP,
     LIGHTNING_X,
-    BISQ_MULTISIG;
-
-    public static SwapProtocolType fromProto(String name) {
-        return ProtobufUtils.enumFromProto(SwapProtocolType.class, name);
-    }
+    MONERO_SWAP;
 
     @Override
-    public ProtocolMessageEnum toProto() {
-        return null;
+    public bisq.account.protobuf.SwapProtocolType toProto() {
+        return bisq.account.protobuf.SwapProtocolType.valueOf(name());
+    }
+
+    public static SwapProtocolType fromProto(bisq.account.protobuf.SwapProtocolType proto) {
+        return ProtobufUtils.enumFromProto(SwapProtocolType.class, proto.name());
     }
 }

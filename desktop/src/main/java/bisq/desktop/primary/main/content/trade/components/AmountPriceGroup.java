@@ -24,7 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AmountInput;
 import bisq.desktop.components.controls.PriceInput;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;

@@ -38,7 +38,7 @@ enum BisqEasyTradePhase {
 }
 
 message BisqEasyTrade {
-  offer.BisqEasyOffer offer = 1;
+  offer.SwapOffer offer = 1;
   uint64 baseSideAmount = 2;
   uint64 quoteSideAmount = 3;
   double premium = 4;

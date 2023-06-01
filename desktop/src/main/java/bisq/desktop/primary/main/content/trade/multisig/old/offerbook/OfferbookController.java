@@ -31,10 +31,10 @@ import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.multisig.old.createOffer.MultiSigCreateOfferController;
 import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.TakeOfferController;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import bisq.offer.OfferBookService;
-import bisq.offer.OpenOfferService;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
+import bisq.offer.poc.OfferBookService;
+import bisq.offer.poc.OpenOfferService;
+import bisq.offer.poc.PocOffer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.scene.control.ButtonBase;
 import lombok.Getter;
@@ -79,7 +79,7 @@ public class OfferbookController implements Controller {
                     model.direction = direction;
                     applyDirectionChange(direction);
                 });
-        offerListPin = FxBindings.<Offer, OfferListItem>bind(model.getListItems())
+        offerListPin = FxBindings.<PocOffer, OfferListItem>bind(model.getListItems())
                 .map(offer -> new OfferListItem(offer, model.marketPriceService))
                 .to(offerBookService.getOffers());
 
@@ -190,7 +190,7 @@ public class OfferbookController implements Controller {
     }
 
     private void onRemoveOffer(OfferListItem item) {
-        Offer offer = item.getOffer();
+        PocOffer offer = item.getOffer();
         openOfferService.removeMyOffer(item.getOffer())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
                     if (throwable2 != null) {

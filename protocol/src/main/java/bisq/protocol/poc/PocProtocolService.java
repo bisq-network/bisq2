@@ -29,8 +29,8 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.offer.Offer;
-import bisq.offer.OpenOfferService;
+import bisq.offer.poc.OpenOfferService;
+import bisq.offer.poc.PocOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -134,7 +134,7 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Pr
     }
 
     public CompletableFuture<TakerProtocol<TakerProtocolModel>> takeOffer(SwapProtocolType protocolType,
-                                                                          Offer offer,
+                                                                          PocOffer offer,
                                                                           Monetary baseSideAmount,
                                                                           Monetary quoteSideAmount,
                                                                           String baseSideSettlementMethod,

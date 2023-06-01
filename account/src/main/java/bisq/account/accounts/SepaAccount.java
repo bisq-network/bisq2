@@ -17,8 +17,9 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlementMethod;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.locale.Country;
+import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccount extends CountryBasedAccount<FiatSettlementMethod> {
-    private static final FiatSettlementMethod METHOD = FiatSettlementMethod.SEPA;
+public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatSettlement> {
+    private static final FiatSettlement SETTLEMENT = new FiatSettlement(FiatSettlement.Method.SEPA);
 
     public SepaAccount(String accountName,
                        String holderName,
@@ -37,15 +38,16 @@ public final class SepaAccount extends CountryBasedAccount<FiatSettlementMethod>
                        String bic,
                        Country country) {
         super(accountName,
-                METHOD,
-                new SepaAccountPayload(METHOD.name(), holderName, iban, bic, country.getCode()),
-                FiatSettlementMethod.getTradeCurrencies(METHOD),
+                SETTLEMENT,
+                new SepaAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), holderName, iban, bic, country.getCode()),
                 country);
     }
 
     @Override
     public bisq.account.protobuf.Account toProto() {
-        return null;
+        return getAccountBuilder().setSepaAccount(getCountryBasedAccountBuilder()
+                        .setSepaAccount(bisq.account.protobuf.SepaAccount.newBuilder()))
+                .build();
     }
 
     public static SepaAccount fromProto(bisq.account.protobuf.SepaAccount account) {

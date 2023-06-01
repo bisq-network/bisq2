@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.createoffer.direction;
 
 import bisq.desktop.common.view.Model;
-import bisq.offer.spec.Direction;
+import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;

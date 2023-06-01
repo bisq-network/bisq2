@@ -20,9 +20,9 @@ package bisq.desktop.primary.main.content.trade.multisig.old.openoffers;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import bisq.offer.OpenOffer;
-import bisq.offer.spec.SettlementSpec;
+import bisq.offer.SettlementSpec;
+import bisq.offer.poc.OpenOffer;
+import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -39,7 +39,7 @@ public class OpenOfferListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String id;
     private final OpenOffer openOffer;
-    private final Offer offer;
+    private final PocOffer offer;
     private final String market;
     private final MarketPriceService marketPriceService;
     private final String price;

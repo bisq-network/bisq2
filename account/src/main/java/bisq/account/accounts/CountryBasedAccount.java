@@ -17,29 +17,30 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.SettlementMethod;
-import bisq.common.currency.TradeCurrency;
+import bisq.account.settlement.Settlement;
 import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CountryBasedAccount<T extends SettlementMethod> extends Account<T> {
+public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, T extends Settlement<?>> extends Account<P, T> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,
-                               T settlementMethod,
-                               CountryBasedAccountPayload payload,
-                               List<TradeCurrency> tradeCurrencies,
+                               T settlement,
+                               P payload,
                                Country country) {
-        super(accountName, settlementMethod, payload, tradeCurrencies);
+        super(accountName, settlement, payload);
         this.country = country;
+    }
+
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder() {
+        return bisq.account.protobuf.CountryBasedAccount.newBuilder()
+                .setCountry(country.toProto());
     }
 }

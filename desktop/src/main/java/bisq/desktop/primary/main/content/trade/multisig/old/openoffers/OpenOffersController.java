@@ -23,9 +23,9 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import bisq.offer.OpenOffer;
-import bisq.offer.OpenOfferService;
+import bisq.offer.poc.OpenOffer;
+import bisq.offer.poc.OpenOfferService;
+import bisq.offer.poc.PocOffer;
 import javafx.beans.property.BooleanProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,10 +39,10 @@ public class OpenOffersController implements Controller {
     @ToString
     @EqualsAndHashCode
     public static final class InitData {
-        private final Offer offer;
+        private final PocOffer offer;
         private final BooleanProperty showTakeOfferTab;
 
-        public InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+        public InitData(PocOffer offer, BooleanProperty showTakeOfferTab) {
             this.offer = offer;
             this.showTakeOfferTab = showTakeOfferTab;
         }
@@ -86,7 +86,7 @@ public class OpenOffersController implements Controller {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     void onRemoveOffer(OpenOfferListItem item) {
-        Offer offer = item.getOffer();
+        PocOffer offer = item.getOffer();
         openOfferService.removeMyOffer(item.getOffer())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
                     if (throwable2 != null) {
