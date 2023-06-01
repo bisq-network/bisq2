@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import lombok.EqualsAndHashCode;
@@ -40,7 +40,7 @@ public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
         }
     }
 
-    public static List<BitcoinSettlement.Method> getSettlementMethods(SwapProtocolType protocolType) {
+    public static List<BitcoinSettlement.Method> getSettlementMethods(ProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
             case BISQ_MULTISIG:

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.multisig;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
 public class MultiSigView extends ProtocolRoadmapView<MultiSigModel, MultiSigController> {
@@ -27,7 +27,7 @@ public class MultiSigView extends ProtocolRoadmapView<MultiSigModel, MultiSigCon
 
     @Override
     protected String getKey() {
-        return SwapProtocolType.BISQ_MULTISIG.name();
+        return ProtocolType.BISQ_MULTISIG.name();
     }
 
     @Override

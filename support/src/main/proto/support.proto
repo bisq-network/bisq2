@@ -7,12 +7,12 @@ import "chat.proto";
 import "offer.proto";
 
 message MediationRequest {
-  offer.SwapOffer bisqEasyOffer = 1;
+  offer.Offer bisqEasyOffer = 1;
   user.UserProfile requester = 2;
   user.UserProfile peer = 3;
   repeated chat.ChatMessage chatMessages = 4;
 }
 
 message MediationResponse {
-  offer.SwapOffer bisqEasyOffer = 1;
+  offer.Offer bisqEasyOffer = 1;
 }

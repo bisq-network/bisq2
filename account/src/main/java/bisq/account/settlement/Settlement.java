@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -28,7 +28,7 @@ import java.util.List;
 
 @Getter
 public abstract class Settlement<M extends Settlement.Method> implements Proto {
-    public static List<? extends Method> getSettlementMethods(SwapProtocolType protocolType, String currencyCode) {
+    public static List<? extends Method> getSettlementMethods(ProtocolType protocolType, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
             return FiatSettlement.getSettlementMethods(protocolType);
         } else {

@@ -17,22 +17,19 @@
 
 package bisq.protocol.bisq_easy;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.contract.Contract;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.protocol.TakerProtocolModel;
+import lombok.Getter;
 
-public enum BisqEasyTradePhase implements ProtoEnum {
-    NEGOTIATION,
-    FIAT_TRANSFER,
-    BTC_TRANSFER,
-    COMPLETED;
+@Getter
+public class BisqEasyTakerProtocolModel extends TakerProtocolModel<BisqEasyOffer> {
 
-    @Override
-    public bisq.protocol.protobuf.BisqEasyTradePhase toProto() {
-        return bisq.protocol.protobuf.BisqEasyTradePhase.valueOf(name());
+    public BisqEasyTakerProtocolModel(Contract<BisqEasyOffer> contract) {
+        super(contract);
     }
 
-    public static BisqEasyTradePhase fromProto(bisq.protocol.protobuf.BisqEasyTradePhase proto) {
-        return ProtobufUtils.enumFromProto(BisqEasyTradePhase.class, proto.name());
+    public BisqEasyTakerProtocolModel getClone() {
+        return new BisqEasyTakerProtocolModel(contract);
     }
 }
-

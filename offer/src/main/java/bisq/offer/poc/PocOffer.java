@@ -17,7 +17,7 @@
 
 package bisq.offer.poc;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -69,7 +69,7 @@ public final class PocOffer implements DistributedData {
     private final Direction direction;
     private final long baseAmount;
     private final PriceSpec priceSpec;
-    private final List<SwapProtocolType> swapProtocolTypes;
+    private final List<ProtocolType> protocolTypes;
     private final List<SettlementSpec> baseSideSettlementSpecs;
     private final List<SettlementSpec> quoteSideSettlementSpecs;
     private final List<OfferOption> offerOptions;
@@ -82,7 +82,7 @@ public final class PocOffer implements DistributedData {
                     Direction direction,
                     long baseAmount,
                     PriceSpec priceSpec,
-                    List<SwapProtocolType> swapProtocolTypes,
+                    List<ProtocolType> protocolTypes,
                     List<SettlementSpec> baseSideSettlementSpecs,
                     List<SettlementSpec> quoteSideSettlementSpecs,
                     List<OfferOption> offerOptions) {
@@ -93,7 +93,7 @@ public final class PocOffer implements DistributedData {
                 direction,
                 baseAmount,
                 priceSpec,
-                swapProtocolTypes,
+                protocolTypes,
                 baseSideSettlementSpecs,
                 quoteSideSettlementSpecs,
                 offerOptions,
@@ -107,7 +107,7 @@ public final class PocOffer implements DistributedData {
                      Direction direction,
                      long baseAmount,
                      PriceSpec priceSpec,
-                     List<SwapProtocolType> swapProtocolTypes,
+                     List<ProtocolType> protocolTypes,
                      List<SettlementSpec> baseSideSettlementSpecs,
                      List<SettlementSpec> quoteSideSettlementSpecs,
                      List<OfferOption> offerOptions,
@@ -119,7 +119,7 @@ public final class PocOffer implements DistributedData {
         this.direction = direction;
         this.baseAmount = baseAmount;
         this.priceSpec = priceSpec;
-        this.swapProtocolTypes = swapProtocolTypes;
+        this.protocolTypes = protocolTypes;
         this.baseSideSettlementSpecs = baseSideSettlementSpecs;
         this.quoteSideSettlementSpecs = quoteSideSettlementSpecs;
         this.offerOptions = offerOptions;
@@ -145,7 +145,7 @@ public final class PocOffer implements DistributedData {
                 .setDirection(direction.toProto())
                 .setBaseAmount(baseAmount)
                 .setPriceSpec(priceSpec.toProto())
-                .addAllSwapProtocolTypes(swapProtocolTypes.stream().map(SwapProtocolType::toProto).collect(Collectors.toList()))
+                .addAllProtocolTypes(protocolTypes.stream().map(ProtocolType::toProto).collect(Collectors.toList()))
                 .addAllBaseSideSettlementSpecs(baseSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
                 .addAllQuoteSideSettlementSpecs(quoteSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()))
@@ -154,8 +154,8 @@ public final class PocOffer implements DistributedData {
     }
 
     public static PocOffer fromProto(bisq.offer.protobuf.PocOffer proto) {
-        List<SwapProtocolType> protocolTypes = proto.getSwapProtocolTypesList().stream()
-                .map(SwapProtocolType::fromProto)
+        List<ProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
+                .map(ProtocolType::fromProto)
                 .collect(Collectors.toList());
         List<SettlementSpec> baseSideSettlementSpecs = proto.getBaseSideSettlementSpecsList().stream()
                 .map(SettlementSpec::fromProto)
@@ -190,13 +190,13 @@ public final class PocOffer implements DistributedData {
         };
     }*/
 
-    public Optional<SwapProtocolType> findProtocolType() {
-        if (swapProtocolTypes.isEmpty()) {
+    public Optional<ProtocolType> findProtocolType() {
+        if (protocolTypes.isEmpty()) {
             return Optional.empty();
-        } else if (swapProtocolTypes.size() == 1) {
-            return Optional.of(swapProtocolTypes.get(0));
+        } else if (protocolTypes.size() == 1) {
+            return Optional.of(protocolTypes.get(0));
         } else {
-            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + swapProtocolTypes);
+            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + protocolTypes);
         }
     }
 

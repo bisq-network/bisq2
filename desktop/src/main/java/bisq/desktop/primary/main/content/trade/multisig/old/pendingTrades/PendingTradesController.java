@@ -34,9 +34,9 @@ public class PendingTradesController implements InitWithDataController<PendingTr
     @ToString
     @EqualsAndHashCode
     public static final class InitData {
-        private final TakerProtocol<TakerProtocolModel> protocol;
+        private final TakerPocProtocol<TakerPocProtocolModel> protocol;
 
-        public InitData(TakerProtocol<TakerProtocolModel> protocol) {
+        public InitData(TakerPocProtocol<TakerPocProtocolModel> protocol) {
             this.protocol = protocol;
         }
 
@@ -63,7 +63,7 @@ public class PendingTradesController implements InitWithDataController<PendingTr
 
     @Override
     public void onActivate() {
-        protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, PendingTradeListItem>bind(model.getListItems())
+        protocolsPin = FxBindings.<PocProtocol<? extends PocProtocolModel>, PendingTradeListItem>bind(model.getListItems())
                 .map(PendingTradeListItem::new)
                 .to(pocProtocolService.getProtocols());
     }

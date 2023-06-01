@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy;
+package bisq.protocol.poc.bisq_easy;
 
 import bisq.common.proto.Proto;
 import bisq.offer.bisq_easy.BisqEasyOffer;

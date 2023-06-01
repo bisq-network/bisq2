@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -43,7 +43,7 @@ public class MultiSigCreateOfferModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private SwapProtocolType selectedProtocolType;
+    private ProtocolType selectedProtocolType;
     @Setter
     private Monetary baseSideAmount;
     @Setter

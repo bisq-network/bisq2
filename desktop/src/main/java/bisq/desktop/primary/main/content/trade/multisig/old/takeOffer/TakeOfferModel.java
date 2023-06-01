@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -40,7 +40,7 @@ public class TakeOfferModel implements Model {
     Monetary baseSideAmount;
     Monetary quoteSideAmount;
     Quote fixPrice;
-    private SwapProtocolType selectedProtocolType;
+    private ProtocolType selectedProtocolType;
 
     private Account<?, ? extends Settlement<?>> selectedBaseSideAccount;
     private Account<?, ? extends Settlement<?>> selectedQuoteSideAccount;

@@ -19,7 +19,7 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -113,7 +113,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         persist();
     }
 
-    public List<Account<?, ? extends Settlement<?>>> getMatchingAccounts(SwapProtocolType protocolTyp,
+    public List<Account<?, ? extends Settlement<?>>> getMatchingAccounts(ProtocolType protocolTyp,
                                                                          String currencyCode) {
         Set<? extends Settlement.Method> settlementMethods = new HashSet<>(Settlement.getSettlementMethods(protocolTyp, currencyCode));
         return persistableStore.getAccountByName().values().stream()

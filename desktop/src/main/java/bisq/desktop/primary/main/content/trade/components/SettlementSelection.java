@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
@@ -67,7 +67,7 @@ public class SettlementSelection {
         controller.setDirection(direction);
     }
 
-    public void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+    public void setSelectedProtocolType(ProtocolType selectedProtocolType) {
         controller.setSelectedProtocolType(selectedProtocolType);
     }
 
@@ -111,7 +111,7 @@ public class SettlementSelection {
             resetAndApplyData();
         }
 
-        private void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+        private void setSelectedProtocolType(ProtocolType selectedProtocolType) {
             model.selectedProtocolType = selectedProtocolType;
             resetAndApplyData();
         }
@@ -128,7 +128,7 @@ public class SettlementSelection {
             model.selectedBaseSideSettlementMethods.clear();
             model.selectedQuoteSideSettlementMethods.clear();
 
-            SwapProtocolType selectedProtocolTyp = model.selectedProtocolType;
+            ProtocolType selectedProtocolTyp = model.selectedProtocolType;
             if (selectedProtocolTyp == null) {
                 model.visibility.set(false);
                 return;
@@ -282,7 +282,7 @@ public class SettlementSelection {
 
         private Market selectedMarket;
         private Direction direction;
-        private SwapProtocolType selectedProtocolType;
+        private ProtocolType selectedProtocolType;
 
         private Model(AccountService accountService) {
             this.accountService = accountService;

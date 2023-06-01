@@ -15,28 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.xmr_swap;
+package bisq.protocol.poc;
 
-import bisq.account.protocol_type.ProtocolType;
-import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
+import bisq.contract.poc.PocContract;
+import com.google.protobuf.Message;
+import lombok.Getter;
 
-public class XmrSwapView extends ProtocolRoadmapView<XmrSwapModel, XmrSwapController> {
-    public XmrSwapView(XmrSwapModel model, XmrSwapController controller) {
-        super(model, controller);
+@Getter
+public class TakerPocProtocolModel extends PocProtocolModel {
+
+    public TakerPocProtocolModel(PocContract contract) {
+        super(contract);
+    }
+
+    public TakerPocProtocolModel getClone() {
+        return new TakerPocProtocolModel(contract);
     }
 
     @Override
-    protected String getKey() {
-        return ProtocolType.MONERO_SWAP.name();
-    }
-
-    @Override
-    protected String getIconId() {
-        return "protocol-monero";
-    }
-
-    @Override
-    protected String getUrl() {
-        return "https://www.monerooutreach.org/stories/monero-atomic-swaps.html";
+    public Message toProto() {
+        return null;
     }
 }

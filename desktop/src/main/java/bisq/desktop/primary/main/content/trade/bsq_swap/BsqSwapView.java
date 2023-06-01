@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.bsq_swap;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
 public class BsqSwapView extends ProtocolRoadmapView<BsqSwapModel, BsqSwapController> {
@@ -27,7 +27,7 @@ public class BsqSwapView extends ProtocolRoadmapView<BsqSwapModel, BsqSwapContro
 
     @Override
     protected String getKey() {
-        return SwapProtocolType.BSQ_SWAP.name();
+        return ProtocolType.BSQ_SWAP.name();
     }
 
     @Override

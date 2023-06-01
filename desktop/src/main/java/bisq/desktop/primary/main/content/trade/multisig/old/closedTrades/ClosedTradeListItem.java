@@ -26,8 +26,8 @@ import bisq.offer.SettlementSpec;
 import bisq.offer.poc.PocOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
-import bisq.protocol.poc.Protocol;
-import bisq.protocol.poc.ProtocolModel;
+import bisq.protocol.poc.PocProtocol;
+import bisq.protocol.poc.PocProtocolModel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,9 +47,9 @@ public class ClosedTradeListItem implements TableItem {
     private final String quoteAmount;
     private final String settlement;
     private final String options;
-    private final Protocol<? extends ProtocolModel> protocol;
+    private final PocProtocol<? extends PocProtocolModel> protocol;
 
-    public ClosedTradeListItem(Protocol<? extends ProtocolModel> protocol) {
+    public ClosedTradeListItem(PocProtocol<? extends PocProtocolModel> protocol) {
         this.protocol = protocol;
         PocContract contract = protocol.getContract();
         offer = contract.getOffer();

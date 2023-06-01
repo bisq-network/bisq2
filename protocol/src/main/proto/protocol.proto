@@ -25,8 +25,9 @@ import "offer.proto";
 
 message ProtocolModel {
 }
+
 message ProtocolStore {
-  map<string, ProtocolModel> protocolModelByOfferId = 1;
+  map<string, ProtocolModel> modelByOfferId = 1;
 }
 
 // BisqEasy
@@ -38,7 +39,7 @@ enum BisqEasyTradePhase {
 }
 
 message BisqEasyTrade {
-  offer.SwapOffer offer = 1;
+  offer.Offer offer = 1;
   uint64 baseSideAmount = 2;
   uint64 quoteSideAmount = 3;
   double premium = 4;

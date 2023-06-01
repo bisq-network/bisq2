@@ -15,47 +15,41 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.liquid_swap;
+package bisq.protocol.bisq_easy;
 
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.PersistenceClient;
-import bisq.protocol.poc.PocProtocolModel;
-import bisq.protocol.poc.PocProtocolStore;
-import bisq.protocol.poc.TakerPocProtocol;
-import bisq.protocol.poc.TakerPocProtocolModel;
+import bisq.protocol.ProtocolModel;
+import bisq.protocol.ProtocolStore;
+import bisq.protocol.TakerProtocol;
 import bisq.protocol.poc.liquid_swap.messages.LiquidSwapFinalizeTxRequest;
-import bisq.protocol.poc.liquid_swap.messages.LiquidSwapTakeOfferRequest;
 import bisq.protocol.poc.liquid_swap.messages.LiquidSwapTakeOfferResponse;
 import bisq.protocol.poc.messages.ProtocolMessage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class LiquidSwapTakerProtocol extends TakerPocProtocol<TakerPocProtocolModel> {
+public abstract class BisqEasyTakerProtocol extends TakerProtocol<BisqEasyOffer, BisqEasyTakerProtocolModel> {
 
 
-    public static TakerPocProtocol<TakerPocProtocolModel> getProtocol(NetworkService networkService,
-                                                                      PersistenceClient<PocProtocolStore> persistenceClient,
-                                                                      TakerPocProtocolModel protocolModel,
-                                                                      NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
-        return protocolModel.getContract().getOffer().getDirection().mirror().isBuy() ?
-                new LiquidSwapTakerAsBuyerProtocol(networkService, persistenceClient, protocolModel, makerNetworkIdWithKeyPair)
-                : new LiquidSwapTakerAsSellerProtocol(networkService, persistenceClient, protocolModel, makerNetworkIdWithKeyPair);
+    public static BisqEasyTakerProtocol getProtocol(NetworkService networkService,
+                                                    PersistenceClient<ProtocolStore> persistenceClient,
+                                                    BisqEasyTakerProtocolModel protocolModel,
+                                                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+        return protocolModel.getContract().getOffer().getDirection().isSell() ?
+                new BisqEasyTakerAsBuyerProtocol(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair) :
+                new BisqEasyTakerAsSellerProtocol(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
     }
 
 
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-
-    public LiquidSwapTakerProtocol(NetworkService networkService,
-                                   PersistenceClient<PocProtocolStore> persistenceClient,
-                                   TakerPocProtocolModel protocolModel,
-                                   NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    protected BisqEasyTakerProtocol(NetworkService networkService,
+                                    PersistenceClient<ProtocolStore> persistenceClient,
+                                    BisqEasyTakerProtocolModel protocolModel,
+                                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
     }
 
@@ -85,7 +79,7 @@ public abstract class LiquidSwapTakerProtocol extends TakerPocProtocol<TakerPocP
             verifyPeer();
             createInputsAndChange();
             sendLiquidSwapTakeOfferRequest();
-            setState(PocProtocolModel.State.PENDING);
+            setState(ProtocolModel.State.PENDING);
         } catch (Throwable t) {
             handleError(t);
         }
@@ -104,7 +98,7 @@ public abstract class LiquidSwapTakerProtocol extends TakerPocProtocol<TakerPocP
 
     @Override
     protected void onContinue() {
-        checkArgument(getState() == PocProtocolModel.State.PENDING);
+        checkArgument(getState() == ProtocolModel.State.PENDING);
     }
 
 
@@ -119,7 +113,7 @@ public abstract class LiquidSwapTakerProtocol extends TakerPocProtocol<TakerPocP
     private void sendLiquidSwapTakeOfferRequest() {
         log.info("sendLiquidSwapTakeOfferRequest");
         setExpectedNextMessageClass(LiquidSwapTakeOfferResponse.class);
-        sendMessage(new LiquidSwapTakeOfferRequest(getContract()));
+        // sendMessage(new LiquidSwapTakeOfferRequest(getContract()));
     }
 
 
@@ -128,7 +122,7 @@ public abstract class LiquidSwapTakerProtocol extends TakerPocProtocol<TakerPocP
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void verifyLiquidSwapTakeOfferResponse(LiquidSwapTakeOfferResponse response) {
-        verifyExpectedMessage(response);
+        //   verifyExpectedMessage(response);
         log.info("verifyLiquidSwapTakeOfferResponse");
     }
 

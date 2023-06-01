@@ -35,10 +35,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
-public abstract class Protocol<T extends ProtocolModel> implements MessageListener, Proto {
+public abstract class PocProtocol<T extends PocProtocolModel> implements MessageListener, Proto {
 
     public interface Listener {
-        void onStateChanged(ProtocolModel.State state);
+        void onStateChanged(PocProtocolModel.State state);
     }
 
 /*    public interface State {
@@ -48,23 +48,23 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
     }*/
 
     protected final NetworkService networkService;
-    private final PersistenceClient<ProtocolStore> persistenceClient;
+    private final PersistenceClient<PocProtocolStore> persistenceClient;
     protected final NetworkIdWithKeyPair myNodeIdAndKeyPair;
     @Getter
     private final T protocolModel;
 
     protected final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public Protocol(NetworkService networkService,
-                    PersistenceClient<ProtocolStore> persistenceClient,
-                    T protocolModel,
-                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    public PocProtocol(NetworkService networkService,
+                       PersistenceClient<PocProtocolStore> persistenceClient,
+                       T protocolModel,
+                       NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         this.networkService = networkService;
         this.persistenceClient = persistenceClient;
         this.myNodeIdAndKeyPair = myNodeIdAndKeyPair;
         this.protocolModel = protocolModel;
 
-        if (getState() == ProtocolModel.State.IDLE) {
+        if (getState() == PocProtocolModel.State.IDLE) {
             networkService.addMessageListener(this);
         }
         persistenceClient.persist();
@@ -90,25 +90,25 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
         listeners.remove(listener);
     }
 
-    protected void setState(ProtocolModel.State newState) {
+    protected void setState(PocProtocolModel.State newState) {
         protocolModel.setState(newState);
         persistenceClient.persist();
         runAsync(() -> listeners.forEach(e -> e.onStateChanged(protocolModel.getState())), PocProtocolService.DISPATCHER);
     }
 
-    protected ProtocolModel.State getState() {
+    protected PocProtocolModel.State getState() {
         return protocolModel.getState();
     }
 
     protected void onProtocolCompleted() {
         networkService.removeMessageListener(this);
-        protocolModel.setState(ProtocolModel.State.COMPLETED);
+        protocolModel.setState(PocProtocolModel.State.COMPLETED);
         persistenceClient.persist();
     }
 
     protected void onProtocolFailed() {
         networkService.removeMessageListener(this);
-        protocolModel.setState(ProtocolModel.State.FAILED);
+        protocolModel.setState(PocProtocolModel.State.FAILED);
         persistenceClient.persist();
     }
 

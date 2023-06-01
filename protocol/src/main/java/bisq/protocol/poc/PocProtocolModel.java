@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public abstract class ProtocolModel implements Proto {
+public abstract class PocProtocolModel implements Proto {
 
     public enum State {
         IDLE,
@@ -38,16 +38,16 @@ public abstract class ProtocolModel implements Proto {
     }
 
     //todo impl in subclasses, make abstract
-    @Override
-    public bisq.protocol.protobuf.ProtocolModel toProto() {
+    // @Override
+   /* public bisq.protocol.protobuf.ProtocolModel toProto() {
         //todo
         return null;
-    }
+    }*/
 
     //todo
-    public static ProtocolModel fromProto(bisq.protocol.protobuf.ProtocolModel proto) {
+  /*  public static PocProtocolModel fromProto(bisq.protocol.protobuf.ProtocolModel proto) {
         return null;
-    }
+    }*/
 
     protected PocContract contract;
 
@@ -55,7 +55,7 @@ public abstract class ProtocolModel implements Proto {
     @Setter
     protected Class<? extends NetworkMessage> expectedNextMessageClass;
 
-    public ProtocolModel(PocContract contract) {
+    public PocProtocolModel(PocContract contract) {
         this.contract = contract;
     }
 

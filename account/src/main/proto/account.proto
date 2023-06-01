@@ -24,7 +24,7 @@ option java_multiple_files = true;
 import "common.proto";
 
 // ProtocolType
-enum SwapProtocolType {
+enum ProtocolType {
   BISQ_EASY = 0;
   BISQ_MULTISIG = 1;
   LIQUID_SWAP = 2;
@@ -37,7 +37,12 @@ enum LoanProtocolType {
   COLLATERALIZED = 0;
   REPUTATION = 1;
 }
-
+message BaseProtocolType {
+  oneof message {
+    ProtocolType protocolType = 10;
+    LoanProtocolType loanProtocolType = 11;
+  }
+}
 
 // Settlement
 message Settlement {

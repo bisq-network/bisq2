@@ -114,10 +114,10 @@ message BisqEasyPrivateTradeChatMessage {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
-  optional offer.SwapOffer bisqEasyOffer = 4;
+  optional offer.Offer bisqEasyOffer = 4;
 }
 message BisqEasyPrivateTradeChatChannel {
-  offer.SwapOffer bisqEasyOffer = 1;
+  offer.Offer bisqEasyOffer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;
@@ -130,7 +130,7 @@ message BisqEasyPrivateTradeChatChannelStore {
 }
 
 message BisqEasyPublicChatMessage {
-  optional offer.SwapOffer bisqEasyOffer = 1;
+  optional offer.Offer bisqEasyOffer = 1;
 }
 message BisqEasyPublicChatChannel {
   common.Market market = 1;

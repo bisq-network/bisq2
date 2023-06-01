@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import bisq.account.protocol_type.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import lombok.EqualsAndHashCode;
@@ -41,7 +41,7 @@ public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
         }
     }
 
-    public static List<CryptoSettlement.Method> getSettlementMethods(SwapProtocolType protocolType) {
+    public static List<CryptoSettlement.Method> getSettlementMethods(ProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
                 throw new IllegalArgumentException("No support for CryptoSettlements for BISQ_EASY");
