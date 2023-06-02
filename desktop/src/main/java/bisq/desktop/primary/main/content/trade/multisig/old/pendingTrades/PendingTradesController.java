@@ -53,7 +53,10 @@ public class PendingTradesController implements InitWithDataController<PendingTr
         model = new PendingTradesModel();
         view = new PendingTradesView(model, this);
 
-        pocProtocolService = applicationService.getPocProtocolService();
+        pocProtocolService = new PocProtocolService(applicationService.getNetworkService(),
+                applicationService.getIdentityService(),
+                applicationService.getPersistenceService(),
+                applicationService.getOfferService().getOpenOfferService());
         model.filteredItems.setPredicate(e -> e.getProtocol().isPending());
     }
 

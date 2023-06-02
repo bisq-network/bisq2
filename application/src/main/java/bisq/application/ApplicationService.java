@@ -139,7 +139,6 @@ public abstract class ApplicationService {
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedRoleRegistrationData", AuthorizedRoleRegistrationData.getResolver());
-        //DistributedDataResolver.addResolver("offer.Offer", PocOffer.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedDaoBridgeServiceProvider", AuthorizedDaoBridgeServiceProvider.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
