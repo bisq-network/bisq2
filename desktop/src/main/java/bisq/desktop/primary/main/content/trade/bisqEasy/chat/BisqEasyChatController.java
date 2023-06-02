@@ -160,7 +160,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                         .map(service -> Res.get("chat.bisqEasy.trade.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
                         .orElse(""));
 
-                tradeInfoController.setBisqEasyTrade(privateChannel.getBisqEasyTrade());
                 if (!settingsService.getTradeRulesConfirmed().get()) {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
                 }

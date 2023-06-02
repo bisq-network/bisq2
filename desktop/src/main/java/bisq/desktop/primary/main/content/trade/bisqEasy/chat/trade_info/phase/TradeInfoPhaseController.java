@@ -24,7 +24,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.protocol.poc.bisq_easy.BisqEasyTrade;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,11 +47,6 @@ public class TradeInfoPhaseController implements Controller {
 
     @Override
     public void onDeactivate() {
-    }
-
-    public void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
-        model.setBisqEasyTrade(bisqEasyTrade);
-        updateConfirmButtonText();
     }
 
    /* void onBack() {
@@ -116,9 +110,6 @@ public class TradeInfoPhaseController implements Controller {
         //tradeInfo.phase.btc.sent=Bitcoin sent
         //tradeInfo.phase.btc.received=Bitcoin received
 
-        if (model.getBisqEasyTrade() == null) {
-            return;
-        }
         //model.getBisqEasyTrade().getBaseSideAmount()
         String text = Res.get("tradeInfo.phase.negotiation.confirmed");
         model.getConfirmButtonText().set(text);

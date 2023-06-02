@@ -24,12 +24,10 @@ import bisq.chat.channel.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.protocol.poc.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,9 +72,6 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Observable<Boolean> isInMediationObservable = new Observable<>(false);
     @Getter
     private final BisqEasyOffer bisqEasyOffer;
-    @Getter
-    @Setter
-    private BisqEasyTrade bisqEasyTrade;
     @Getter
     private final Set<UserProfile> traders;
     @Getter

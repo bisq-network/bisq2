@@ -19,13 +19,10 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase;
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.protocol.poc.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.*;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +35,4 @@ public class TradeInfoPhaseModel implements Model {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
-    @Setter
-    @Nullable
-    private BisqEasyTrade bisqEasyTrade;
 }

@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
+import bisq.contract.Contract;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -133,12 +134,17 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         }*/
     }
 
-    public CompletableFuture<TakerProtocol<?, TakerProtocolModel<?>>> takeOffer(ProtocolType protocolType,
-                                                                                Offer offer,
-                                                                                Monetary baseSideAmount,
-                                                                                Monetary quoteSideAmount,
-                                                                                String baseSideSettlementMethod,
-                                                                                String quoteSideSettlementMethod) {
+    public void takeOffer(ProtocolType protocolType,
+                          Contract<?> contract,
+                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    }
+
+    public CompletableFuture<TakerProtocol<?, TakerProtocolModel<?>>> takeOffer1(ProtocolType protocolType,
+                                                                                 Offer offer,
+                                                                                 Monetary baseSideAmount,
+                                                                                 Monetary quoteSideAmount,
+                                                                                 String baseSideSettlementMethod,
+                                                                                 String quoteSideSettlementMethod) {
        /* return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
                     Contract contract = new Contract(identity.getNetworkId(),
