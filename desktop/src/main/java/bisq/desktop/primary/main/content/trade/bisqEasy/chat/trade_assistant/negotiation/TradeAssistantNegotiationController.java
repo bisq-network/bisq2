@@ -15,24 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.negotiation;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
+import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeInfoOfferController implements Controller {
+public class TradeAssistantNegotiationController implements Controller {
     @Getter
-    private final TradeInfoOfferView view;
+    private final TradeAssistantNegotiationView view;
+    private final TradeAssistantNegotiationModel model;
+    private final DefaultApplicationService applicationService;
 
-    public TradeInfoOfferController(DefaultApplicationService applicationService) {
-        TradeInfoOfferModel model = new TradeInfoOfferModel();
-        view = new TradeInfoOfferView(model, this);
+    public TradeAssistantNegotiationController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
+        model = new TradeAssistantNegotiationModel();
+        view = new TradeAssistantNegotiationView(model, this);
     }
 
     @Override
@@ -43,11 +48,19 @@ public class TradeInfoOfferController implements Controller {
     public void onDeactivate() {
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+    void onNext() {
     }
 
-    void onNext() {
-        Navigation.navigateTo(NavigationTarget.TRADE_INFO_TRADE);
+    void onClose() {
+        Navigation.navigateTo(NavigationTarget.MAIN);
+        OverlayController.hide();
+    }
+
+    void onQuit() {
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
+    }
+
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/bisqeasy");
     }
 }

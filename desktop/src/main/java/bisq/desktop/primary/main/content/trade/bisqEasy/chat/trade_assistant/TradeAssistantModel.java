@@ -15,24 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant;
 
-import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationTarget;
-import javafx.beans.property.*;
+import bisq.desktop.common.view.TabModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Slf4j
 @Getter
-public class TradeInfoTradeModel implements Model {
-    private final StringProperty confirmButtonText = new SimpleStringProperty();
-    private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
-    private final IntegerProperty currentIndex = new SimpleIntegerProperty();
-    private final List<NavigationTarget> childTargets = new ArrayList<>();
-    private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
+public class TradeAssistantModel extends TabModel {
+    private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.TRADE_ASSISTANT_OFFER;
+    }
 }

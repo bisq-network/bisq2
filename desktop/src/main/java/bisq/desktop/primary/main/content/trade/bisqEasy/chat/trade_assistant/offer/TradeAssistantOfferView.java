@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -31,14 +31,14 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeInfoOfferView extends View<VBox, TradeInfoOfferModel, TradeInfoOfferController> {
+public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel, TradeAssistantOfferController> {
     private final Button nextButton;
     private final Hyperlink learnMore;
     private final Text content;
     private Subscription widthPin;
 
-    public TradeInfoOfferView(TradeInfoOfferModel model,
-                              TradeInfoOfferController controller) {
+    public TradeAssistantOfferView(TradeAssistantOfferModel model,
+                                   TradeAssistantOfferController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);

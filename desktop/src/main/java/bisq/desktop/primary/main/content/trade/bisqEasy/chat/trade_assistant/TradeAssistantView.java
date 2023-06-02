@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant;
 
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.view.NavigationTarget;
@@ -35,12 +35,12 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeInfoView extends TabView<TradeInfoModel, TradeInfoController> {
+public class TradeAssistantView extends TabView<TradeAssistantModel, TradeAssistantController> {
     private Button collapseButton, expandButton;
     private HBox headerHBox;
     private Subscription isCollapsedPin;
 
-    public TradeInfoView(TradeInfoModel model, TradeInfoController controller) {
+    public TradeAssistantView(TradeAssistantModel model, TradeAssistantController controller) {
         super(model, controller);
 
         root.getStyleClass().addAll("bisq-box-2");
@@ -49,13 +49,13 @@ public class TradeInfoView extends TabView<TradeInfoModel, TradeInfoController> 
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
         addTab(Res.get("tradeAssistant.offer"),
-                NavigationTarget.TRADE_INFO_OFFER,
+                NavigationTarget.TRADE_ASSISTANT_OFFER,
                 styles);
         addTab(Res.get("tradeAssistant.negotiation"),
-                NavigationTarget.TRADE_INFO_NEGOTIATION,
+                NavigationTarget.TRADE_ASSISTANT_NEGOTIATION,
                 styles);
         addTab(Res.get("tradeAssistant.trade"),
-                NavigationTarget.TRADE_INFO_TRADE,
+                NavigationTarget.TRADE_ASSISTANT_TRADE,
                 styles);
     }
 

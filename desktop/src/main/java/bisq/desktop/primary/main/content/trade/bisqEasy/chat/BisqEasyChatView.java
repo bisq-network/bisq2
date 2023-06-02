@@ -34,7 +34,7 @@ public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatModel bisqEasyChatModel;
     private final Switch offersOnlySwitch;
     private final Region bisqEasyPrivateTradeChatChannelSelection;
-    private final Pane tradeInfoController;
+    private final Pane tradeAssistant;
     private Subscription isBisqEasyPrivateTradeChatChannelPin;
 
     public BisqEasyChatView(BisqEasyChatModel model,
@@ -44,7 +44,7 @@ public class BisqEasyChatView extends ChatView {
                             Region twoPartyPrivateChatChannelSelection,
                             VBox chatMessagesComponent,
                             Pane channelSidebar,
-                            Pane tradeInfoController) {
+                            Pane tradeAssistant) {
         super(model,
                 controller,
                 bisqEasyPublicChatChannelSelection,
@@ -53,7 +53,7 @@ public class BisqEasyChatView extends ChatView {
                 channelSidebar);
 
         this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
-        this.tradeInfoController = tradeInfoController;
+        this.tradeAssistant = tradeAssistant;
 
         left.getChildren().add(1, Layout.separator());
         left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
@@ -77,11 +77,11 @@ public class BisqEasyChatView extends ChatView {
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
 
         isBisqEasyPrivateTradeChatChannelPin = EasyBind.subscribe(bisqEasyChatModel.getIsBisqEasyPrivateTradeChatChannel(), value -> {
-            if (value && !chatMessagesComponent.getChildren().contains(tradeInfoController)) {
-                chatMessagesComponent.getChildren().add(0, tradeInfoController);
-                VBox.setMargin(tradeInfoController, new Insets(0, 25, 25, 25));
+            if (value && !chatMessagesComponent.getChildren().contains(tradeAssistant)) {
+                chatMessagesComponent.getChildren().add(0, tradeAssistant);
+                VBox.setMargin(tradeAssistant, new Insets(0, 25, 25, 25));
             } else {
-                chatMessagesComponent.getChildren().remove(tradeInfoController);
+                chatMessagesComponent.getChildren().remove(tradeAssistant);
             }
         });
     }

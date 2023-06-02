@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.threading.UIScheduler;
@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 
 @Slf4j
-public class TradeInfoTradeView extends View<VBox, TradeInfoTradeModel, TradeInfoTradeController> {
+public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel, TradeAssistantTradeController> {
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double OPACITY = 0.35;
 
@@ -54,8 +54,8 @@ public class TradeInfoTradeView extends View<VBox, TradeInfoTradeModel, TradeInf
     private Subscription topPaneBoxVisibleSubscription;
     private final ChangeListener<Number> currentIndexListener;
 
-    public TradeInfoTradeView(TradeInfoTradeModel model,
-                              TradeInfoTradeController controller) {
+    public TradeAssistantTradeView(TradeAssistantTradeModel model,
+                                   TradeAssistantTradeController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);

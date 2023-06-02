@@ -37,7 +37,7 @@ import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPublicChannelSelectionMenu;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.TradeInfoController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.TradeAssistantController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
@@ -50,7 +50,7 @@ import java.util.Optional;
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final SettingsService settingsService;
-    private TradeInfoController tradeInfoController;
+    private TradeAssistantController tradeAssistantController;
     private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
     private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
 
@@ -65,7 +65,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeInfoController = new TradeInfoController(applicationService);
+        tradeAssistantController = new TradeAssistantController(applicationService);
         bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(applicationService);
         bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(applicationService);
     }
@@ -93,7 +93,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot(),
-                tradeInfoController.getView().getRoot());
+                tradeAssistantController.getView().getRoot());
     }
 
     @Override

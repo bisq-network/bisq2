@@ -15,29 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.negotiation;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeInfoNegotiationController implements Controller {
+public class TradeAssistantOfferController implements Controller {
     @Getter
-    private final TradeInfoNegotiationView view;
-    private final TradeInfoNegotiationModel model;
-    private final DefaultApplicationService applicationService;
+    private final TradeAssistantOfferView view;
 
-    public TradeInfoNegotiationController(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
-        model = new TradeInfoNegotiationModel();
-        view = new TradeInfoNegotiationView(model, this);
+    public TradeAssistantOfferController(DefaultApplicationService applicationService) {
+        TradeAssistantOfferModel model = new TradeAssistantOfferModel();
+        view = new TradeAssistantOfferView(model, this);
     }
 
     @Override
@@ -48,19 +43,11 @@ public class TradeInfoNegotiationController implements Controller {
     public void onDeactivate() {
     }
 
-    void onNext() {
-    }
-
-    void onClose() {
-        Navigation.navigateTo(NavigationTarget.MAIN);
-        OverlayController.hide();
-    }
-
-    void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
-    }
-
     void onLearnMore() {
         Browser.open("https://bisq.wiki/bisqeasy");
+    }
+
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.TRADE_ASSISTANT_TRADE);
     }
 }

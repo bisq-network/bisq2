@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.negotiation.TradeInfoNegotiationController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer.TradeInfoOfferController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade.TradeInfoTradeController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.negotiation.TradeAssistantNegotiationController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer.TradeAssistantOfferController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade.TradeAssistantTradeController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -32,24 +32,24 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeInfoController extends TabController<TradeInfoModel> {
+public class TradeAssistantController extends TabController<TradeAssistantModel> {
     @Getter
-    private final TradeInfoView view;
+    private final TradeAssistantView view;
     private final DefaultApplicationService applicationService;
     private final SettingsService settingsService;
 
-    public TradeInfoController(DefaultApplicationService applicationService) {
-        super(new TradeInfoModel(), NavigationTarget.TRADE_INFO);
+    public TradeAssistantController(DefaultApplicationService applicationService) {
+        super(new TradeAssistantModel(), NavigationTarget.TRADE_ASSISTANT);
 
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
-        view = new TradeInfoView(model, this);
+        view = new TradeAssistantView(model, this);
 
     }
 
     @Override
     public void onActivate() {
-        model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_INFO_COLLAPSED).orElse(false));
+        model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_ASSISTANT_COLLAPSED).orElse(false));
     }
 
     @Override
@@ -59,14 +59,14 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_INFO_OFFER: {
-                return Optional.of(new TradeInfoOfferController(applicationService));
+            case TRADE_ASSISTANT_OFFER: {
+                return Optional.of(new TradeAssistantOfferController(applicationService));
             }
-            case TRADE_INFO_NEGOTIATION: {
-                return Optional.of(new TradeInfoNegotiationController(applicationService));
+            case TRADE_ASSISTANT_NEGOTIATION: {
+                return Optional.of(new TradeAssistantNegotiationController(applicationService));
             }
-            case TRADE_INFO_TRADE: {
-                return Optional.of(new TradeInfoTradeController(applicationService));
+            case TRADE_ASSISTANT_TRADE: {
+                return Optional.of(new TradeAssistantTradeController(applicationService));
             }
             default: {
                 return Optional.empty();
@@ -88,6 +88,6 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
 
     private void setIsCollapsed(boolean value) {
         model.getIsCollapsed().set(value);
-        settingsService.setCookie(CookieKey.TRADE_INFO_COLLAPSED, value);
+        settingsService.setCookie(CookieKey.TRADE_ASSISTANT_COLLAPSED, value);
     }
 }

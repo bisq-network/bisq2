@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
@@ -29,16 +29,16 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeInfoTradeController implements Controller {
+public class TradeAssistantTradeController implements Controller {
     @Getter
-    private final TradeInfoTradeView view;
-    private final TradeInfoTradeModel model;
+    private final TradeAssistantTradeView view;
+    private final TradeAssistantTradeModel model;
     private final DefaultApplicationService applicationService;
 
-    public TradeInfoTradeController(DefaultApplicationService applicationService) {
+    public TradeAssistantTradeController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
-        model = new TradeInfoTradeModel();
-        view = new TradeInfoTradeView(model, this);
+        model = new TradeAssistantTradeModel();
+        view = new TradeAssistantTradeView(model, this);
     }
 
     @Override
@@ -49,17 +49,9 @@ public class TradeInfoTradeController implements Controller {
     public void onDeactivate() {
     }
 
-   /* void onBack() {
-        Navigation.navigateTo(NavigationTarget.TRADE_INFO_OFFER);
-    }
-
-    void onNext() {
-    }*/
-
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            // model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
@@ -71,7 +63,6 @@ public class TradeInfoTradeController implements Controller {
     void onOpenDispute() {
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
-            // model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
