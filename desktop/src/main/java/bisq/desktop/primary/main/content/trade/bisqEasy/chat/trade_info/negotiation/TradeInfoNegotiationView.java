@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.negotiation;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -24,6 +24,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
@@ -31,48 +32,56 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeInfoOfferView extends View<VBox, TradeInfoOfferModel, TradeInfoOfferController> {
-    private final Button nextButton;
+public class TradeInfoNegotiationView extends View<VBox, TradeInfoNegotiationModel, TradeInfoNegotiationController> {
+    private final Button confirmButton;
     private final Hyperlink learnMore;
     private final Text content;
     private Subscription widthPin;
 
-    public TradeInfoOfferView(TradeInfoOfferModel model,
-                              TradeInfoOfferController controller) {
+    public TradeInfoNegotiationView(TradeInfoNegotiationModel model,
+                                    TradeInfoNegotiationController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
-        root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeAssistant.offer.headline"));
+        Label headline = new Label(Res.get("tradeAssistant.negotiation.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeAssistant.offer.content"));
+        content = new Text(Res.get("tradeAssistant.negotiation.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        nextButton = new Button(Res.get("next"));
-        nextButton.setDefaultButton(true);
+
+        confirmButton = new Button();
+        confirmButton.setDefaultButton(true);
+
+        HBox buttons = new HBox(10, confirmButton);
 
         learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, learnMore, nextButton);
+        root.getChildren().addAll(headline, content, learnMore, buttons);
     }
 
     @Override
     protected void onViewAttached() {
-        nextButton.setOnAction(e -> controller.onNext());
+        confirmButton.textProperty().bind(model.getConfirmButtonText());
+
+        confirmButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
         widthPin = EasyBind.subscribe(root.widthProperty(),
                 w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
     protected void onViewDetached() {
-        nextButton.setOnAction(null);
+        confirmButton.textProperty().unbind();
+
+        confirmButton.setOnAction(null);
         learnMore.setOnAction(null);
+
         widthPin.unsubscribe();
     }
 }

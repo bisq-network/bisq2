@@ -120,7 +120,8 @@ public enum NavigationTarget {
 
     TRADE_INFO(BISQ_EASY_CHAT, false),
     TRADE_INFO_OFFER(TRADE_INFO, false),
-    TRADE_INFO_PHASE(TRADE_INFO, false),
+    TRADE_INFO_NEGOTIATION(TRADE_INFO, false),
+    TRADE_INFO_TRADE(TRADE_INFO, false),
 
     LIQUID_SWAP(CONTENT, false),
 

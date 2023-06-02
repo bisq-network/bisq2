@@ -15,24 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.negotiation;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.NavigationTarget;
-import javafx.beans.property.*;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Slf4j
 @Getter
-public class TradeInfoPhaseModel implements Model {
+public class TradeInfoNegotiationModel implements Model {
     private final StringProperty confirmButtonText = new SimpleStringProperty();
-    private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
-    private final IntegerProperty currentIndex = new SimpleIntegerProperty();
-    private final List<NavigationTarget> childTargets = new ArrayList<>();
-    private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
 }

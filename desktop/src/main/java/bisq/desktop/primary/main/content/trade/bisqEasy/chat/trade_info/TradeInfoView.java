@@ -48,11 +48,14 @@ public class TradeInfoView extends TabView<TradeInfoModel, TradeInfoController> 
         VBox.setMargin(contentPane, new Insets(10, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
-        addTab(Res.get("tradeInfo.offer"),
+        addTab(Res.get("tradeAssistant.offer"),
                 NavigationTarget.TRADE_INFO_OFFER,
                 styles);
-        addTab(Res.get("tradeInfo.phase"),
-                NavigationTarget.TRADE_INFO_PHASE,
+        addTab(Res.get("tradeAssistant.negotiation"),
+                NavigationTarget.TRADE_INFO_NEGOTIATION,
+                styles);
+        addTab(Res.get("tradeAssistant.trade"),
+                NavigationTarget.TRADE_INFO_TRADE,
                 styles);
     }
 
@@ -98,7 +101,7 @@ public class TradeInfoView extends TabView<TradeInfoModel, TradeInfoController> 
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("tradeInfo.headline"));
+        headLine.setText(Res.get("tradeAssistant.headline"));
         headLine.getStyleClass().addAll("font-size-18", "font-light");
 
         collapseButton = BisqIconButton.createIconButton("collapse");
@@ -109,7 +112,7 @@ public class TradeInfoView extends TabView<TradeInfoModel, TradeInfoController> 
         HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
         headerHBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
         headerHBox.setCursor(Cursor.HAND);
-        Tooltip tooltip = new Tooltip(Res.get("tradeInfo.header.tooltip"));
+        Tooltip tooltip = new Tooltip(Res.get("tradeAssistant.header.tooltip"));
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 

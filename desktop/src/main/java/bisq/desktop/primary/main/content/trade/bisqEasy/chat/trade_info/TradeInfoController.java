@@ -21,8 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.negotiation.TradeInfoNegotiationController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.offer.TradeInfoOfferController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase.TradeInfoPhaseController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade.TradeInfoTradeController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -36,7 +37,6 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
     private final TradeInfoView view;
     private final DefaultApplicationService applicationService;
     private final SettingsService settingsService;
-    private final TradeInfoPhaseController tradeInfoPhaseController;
 
     public TradeInfoController(DefaultApplicationService applicationService) {
         super(new TradeInfoModel(), NavigationTarget.TRADE_INFO);
@@ -45,7 +45,6 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
         settingsService = applicationService.getSettingsService();
         view = new TradeInfoView(model, this);
 
-        tradeInfoPhaseController = new TradeInfoPhaseController(applicationService);
     }
 
     @Override
@@ -63,8 +62,11 @@ public class TradeInfoController extends TabController<TradeInfoModel> {
             case TRADE_INFO_OFFER: {
                 return Optional.of(new TradeInfoOfferController(applicationService));
             }
-            case TRADE_INFO_PHASE: {
-                return Optional.of(tradeInfoPhaseController);
+            case TRADE_INFO_NEGOTIATION: {
+                return Optional.of(new TradeInfoNegotiationController(applicationService));
+            }
+            case TRADE_INFO_TRADE: {
+                return Optional.of(new TradeInfoTradeController(applicationService));
             }
             default: {
                 return Optional.empty();

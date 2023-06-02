@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.threading.UIScheduler;
@@ -41,12 +41,11 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 
 @Slf4j
-public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInfoPhaseController> {
+public class TradeInfoTradeView extends View<VBox, TradeInfoTradeModel, TradeInfoTradeController> {
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double OPACITY = 0.35;
 
     private final List<Label> navigationProgressLabelList;
-    private final HBox topPaneBox;
     private final Button confirmButton, openDisputeButton;
     private final HBox buttons;
     private final Hyperlink learnMore;
@@ -55,21 +54,21 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
     private Subscription topPaneBoxVisibleSubscription;
     private final ChangeListener<Number> currentIndexListener;
 
-    public TradeInfoPhaseView(TradeInfoPhaseModel model,
-                              TradeInfoPhaseController controller) {
+    public TradeInfoTradeView(TradeInfoTradeModel model,
+                              TradeInfoTradeController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeInfo.phase.headline"));
+        Label headline = new Label(Res.get("tradeAssistant.phase.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeInfo.phase.content"));
+        content = new Text(Res.get("tradeAssistant.phase.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         Pair<HBox, List<Label>> topPane = getTopPane();
-        topPaneBox = topPane.getFirst();
+        HBox topPaneBox = topPane.getFirst();
         navigationProgressLabelList = topPane.getSecond();
 
         confirmButton = new Button();
@@ -77,7 +76,6 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
 
         openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
         buttons = new HBox(10, confirmButton, openDisputeButton);
-        buttons.setAlignment(Pos.CENTER);
 
         learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
 
@@ -128,10 +126,10 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
     }
 
     private Pair<HBox, List<Label>> getTopPane() {
-        Label negotiation = getTopPaneLabel(Res.get("tradeInfo.phase.negotiation"));
-        Label fiat = getTopPaneLabel(Res.get("tradeInfo.phase.fiat"));
-        Label btc = getTopPaneLabel(Res.get("tradeInfo.phase.btc"));
-        Label complete = getTopPaneLabel(Res.get("tradeInfo.phase.complete"));
+        Label negotiation = getTopPaneLabel(Res.get("tradeAssistant.phase.negotiation"));
+        Label fiat = getTopPaneLabel(Res.get("tradeAssistant.phase.fiat"));
+        Label btc = getTopPaneLabel(Res.get("tradeAssistant.phase.btc"));
+        Label complete = getTopPaneLabel(Res.get("tradeAssistant.phase.complete"));
 
 
         HBox hBox = new HBox(10);

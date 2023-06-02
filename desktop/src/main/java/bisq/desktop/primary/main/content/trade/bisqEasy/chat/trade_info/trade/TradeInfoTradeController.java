@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.trade;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
@@ -29,16 +29,16 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeInfoPhaseController implements Controller {
+public class TradeInfoTradeController implements Controller {
     @Getter
-    private final TradeInfoPhaseView view;
-    private final TradeInfoPhaseModel model;
+    private final TradeInfoTradeView view;
+    private final TradeInfoTradeModel model;
     private final DefaultApplicationService applicationService;
 
-    public TradeInfoPhaseController(DefaultApplicationService applicationService) {
+    public TradeInfoTradeController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
-        model = new TradeInfoPhaseModel();
-        view = new TradeInfoPhaseView(model, this);
+        model = new TradeInfoTradeModel();
+        view = new TradeInfoTradeView(model, this);
     }
 
     @Override
@@ -111,7 +111,7 @@ public class TradeInfoPhaseController implements Controller {
         //tradeInfo.phase.btc.received=Bitcoin received
 
         //model.getBisqEasyTrade().getBaseSideAmount()
-        String text = Res.get("tradeInfo.phase.negotiation.confirmed");
+        String text = Res.get("tradeAssistant.phase.negotiation.confirmed");
         model.getConfirmButtonText().set(text);
                 
        /* if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
