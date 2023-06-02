@@ -123,7 +123,6 @@ message BisqEasyPrivateTradeChatChannel {
   optional user.UserProfile mediator = 4;
   repeated ChatMessage chatMessages = 5;
   bool isInMediation = 6;
-  protocol.BisqEasyTrade bisqEasyTrade = 7;
 }
 message BisqEasyPrivateTradeChatChannelStore {
   repeated ChatChannel channels = 1;
