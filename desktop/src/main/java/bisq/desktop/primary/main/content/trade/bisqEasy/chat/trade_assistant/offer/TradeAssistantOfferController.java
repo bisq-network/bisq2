@@ -23,9 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.offer_details.BisqEasyOfferDetailsController;
-import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.presentation.formatters.DateFormatter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,21 +40,6 @@ public class TradeAssistantOfferController implements Controller {
 
     public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
         model.setBisqEasyOffer(bisqEasyOffer);
-
-        model.getId().set(bisqEasyOffer.getId());
-        model.getDirection().set(bisqEasyOffer.getDirectionAsDisplayString());
-        model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
-        model.getMarket().set(bisqEasyOffer.getMarket().toString());
-        model.getBaseSideAmount().set(bisqEasyOffer.getBaseSideAmountAsDisplayString());
-        model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideAmountAsDisplayString());
-        model.getPaymentMethods().set(bisqEasyOffer.getSettlementMethodsAsDisplayString());
-        model.getMakersTradeTerms().set(bisqEasyOffer.getMakersTradeTerms().orElse(Res.get("na")));
-        model.getRequiredTotalReputationScore().set(bisqEasyOffer.getRequiredTotalReputationScore()
-                .map(e -> String.valueOf(e))
-                .orElse(Res.get("na")));
-        model.getMinAmountAsPercentage().set(bisqEasyOffer.getMinAmountAsPercentage()
-                .map(e -> String.valueOf(e))
-                .orElse(Res.get("na")));
     }
 
     @Override

@@ -19,8 +19,6 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.of
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +28,4 @@ import lombok.extern.slf4j.Slf4j;
 public class TradeAssistantOfferModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
-    private final StringProperty id = new SimpleStringProperty();
-    private final StringProperty direction = new SimpleStringProperty();
-    private final StringProperty date = new SimpleStringProperty();
-    private final StringProperty market = new SimpleStringProperty();
-    private final StringProperty paymentMethods = new SimpleStringProperty();
-    private final StringProperty baseSideAmount = new SimpleStringProperty();
-    private final StringProperty quoteSideAmount = new SimpleStringProperty();
-    private final StringProperty pricePremiumAsPercentage = new SimpleStringProperty();
-    private final StringProperty pricePremiumInBaseCurrency = new SimpleStringProperty();
-    private final StringProperty pricePremiumInQuoteCurrency = new SimpleStringProperty();
-    private final StringProperty makersTradeTerms = new SimpleStringProperty();
-    private final StringProperty requiredTotalReputationScore = new SimpleStringProperty();
-    private final StringProperty minAmountAsPercentage = new SimpleStringProperty();
 }
