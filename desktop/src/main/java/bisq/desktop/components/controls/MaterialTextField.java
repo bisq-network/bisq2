@@ -46,7 +46,6 @@ public class MaterialTextField extends Pane {
     protected final TextInputControl field;
     protected final Label helpLabel;
     protected final StringProperty promptProperty = new SimpleStringProperty();
-    protected final StringProperty descriptionProperty = new SimpleStringProperty();
     protected final StringProperty helpProperty = new SimpleStringProperty();
     @Getter
     private final BisqIconButton iconButton;
@@ -65,7 +64,6 @@ public class MaterialTextField extends Pane {
 
     public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help) {
         promptProperty.set(prompt);
-        descriptionProperty.set(description);
         helpProperty.set(help);
 
         bg = new Region();
@@ -120,8 +118,9 @@ public class MaterialTextField extends Pane {
 
         field.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 onInputTextFieldFocus(newValue)).get());
-        descriptionProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+        descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
+
         promptProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         helpProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
@@ -185,7 +184,7 @@ public class MaterialTextField extends Pane {
     }
 
     public final StringProperty descriptionProperty() {
-        return descriptionProperty;
+        return descriptionLabel.textProperty();
     }
 
     public final StringProperty textProperty() {
@@ -210,7 +209,7 @@ public class MaterialTextField extends Pane {
     }
 
     public void setDescription(String description) {
-        descriptionProperty.set(description);
+        descriptionLabel.setText(description);
     }
 
     public void setEditable(boolean value) {
@@ -300,7 +299,7 @@ public class MaterialTextField extends Pane {
     }
 
     void update() {
-        if (descriptionProperty.get() != null) {
+        if (descriptionLabel.getText() != null) {
             if (showInputTextField()) {
                 Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
             } else {

@@ -163,6 +163,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 if (!settingsService.getTradeRulesConfirmed().get()) {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
                 }
+
+                tradeAssistantController.setBisqEasyOffer(privateChannel.getBisqEasyOffer());
             } else if (isTwoPartyPrivateChatChannel) {
                 bisqEasyPublicChannelSelectionMenu.deSelectChannel();
                 bisqEasyPrivateChannelSelectionMenu.deSelectChannel();

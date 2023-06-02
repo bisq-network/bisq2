@@ -15,16 +15,22 @@ import bisq.offer.offer_options.OfferOption;
 import bisq.offer.offer_options.ReputationOption;
 import bisq.offer.offer_options.TradeTermsOption;
 import bisq.offer.price_spec.FloatPriceSpec;
+import bisq.offer.price_spec.MarketPriceSpec;
 import bisq.offer.price_spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.presentation.formatters.PercentageFormatter;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -35,22 +41,35 @@ public final class BisqEasyOffer extends Offer {
         return List.of(ProtocolType.BISQ_EASY);
     }
 
+    private static PriceSpec createPriceSpec(double percentage) {
+        return percentage >= 0 ?
+                new FloatPriceSpec(percentage) :
+                new MarketPriceSpec();
+    }
+
     private static List<SettlementSpec> createBaseSideSettlementSpecs() {
         return List.of(new SettlementSpec(BitcoinSettlement.Method.MAINCHAIN.name()));
     }
 
     private static List<SettlementSpec> createQuoteSideSettlementSpecs(List<String> paymentMethodNames) {
+        checkArgument(!paymentMethodNames.isEmpty());
         return paymentMethodNames.stream()
                 .map(SettlementSpec::new)
                 .collect(Collectors.toList());
     }
 
     private static List<OfferOption> createOfferOptions(String makersTradeTerms, long requiredTotalReputationScore, double minAmountAsPercentage) {
-        return List.of(
-                new TradeTermsOption(makersTradeTerms),
-                new ReputationOption(requiredTotalReputationScore),
-                new AmountOption(minAmountAsPercentage)
-        );
+        List<OfferOption> offerOptions = new ArrayList<>();
+        if (makersTradeTerms != null && !makersTradeTerms.isEmpty()) {
+            offerOptions.add(new TradeTermsOption(makersTradeTerms));
+        }
+        if (requiredTotalReputationScore > 0) {
+            offerOptions.add(new ReputationOption(requiredTotalReputationScore));
+        }
+        if (minAmountAsPercentage < 1 && minAmountAsPercentage > 0) {
+            offerOptions.add(new AmountOption(minAmountAsPercentage));
+        }
+        return offerOptions;
     }
 
 
@@ -76,13 +95,14 @@ public final class BisqEasyOffer extends Offer {
                 direction,
                 market,
                 baseSideAmount,
-                new FloatPriceSpec(pricePremiumAsPercentage),
+                createPriceSpec(pricePremiumAsPercentage),
                 createSwapProtocolTypes(),
                 createBaseSideSettlementSpecs(),
                 createQuoteSideSettlementSpecs(paymentMethodNames),
                 createOfferOptions(makersTradeTerms, requiredTotalReputationScore, minAmountAsPercentage),
                 quoteSideAmount);
     }
+
 
     private BisqEasyOffer(String id,
                           long date,
@@ -110,9 +130,9 @@ public final class BisqEasyOffer extends Offer {
         this.quoteSideAmount = quoteSideAmount;
 
         chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
-                Res.get(direction.name().toLowerCase()).toUpperCase(),
-                AmountFormatter.formatAmountWithCode(Fiat.of(quoteSideAmount, market.getQuoteCurrencyCode()), true),
-                Joiner.on(", ").join(this.getPaymentMethodNames()));
+                getDirectionAsDisplayString(),
+                getQuoteSideAmountAsDisplayString(),
+                getSettlementMethodsAsDisplayString());
     }
 
     @Override
@@ -150,15 +170,51 @@ public final class BisqEasyOffer extends Offer {
                 proto.getBisqEasyOffer().getQuoteSideAmount());
     }
 
-    public List<String> getPaymentMethodNames() {
-        return quoteSideSettlementSpecs.stream().map(SettlementSpec::getSettlementMethodName)
-                .map(methodName -> {
-                    if (Res.has(methodName)) {
-                        return Res.get(methodName);
-                    } else {
-                        return methodName;
-                    }
-                })
-                .collect(Collectors.toList());
+    public List<String> getSettlementMethodNames() {
+        return SettlementSpec.getSettlementMethodNames(quoteSideSettlementSpecs);
+    }
+
+    public String getDirectionAsDisplayString() {
+        return Res.get(direction.name().toLowerCase()).toUpperCase();
+    }
+
+    public String getMirroredDirectionAsDisplayString() {
+        return Res.get(direction.mirror().name().toLowerCase()).toUpperCase();
+    }
+
+    public String getSettlementMethodsAsDisplayString() {
+        return Joiner.on(", ").join(SettlementSpec.getSettlementMethodNamesAsDisplayString(quoteSideSettlementSpecs));
+    }
+
+    public String getBaseSideAmountAsDisplayString() {
+        return AmountFormatter.formatAmountWithCode(Fiat.of(baseSideAmount, market.getBaseCurrencyCode()), true);
+    }
+
+    public String getQuoteSideAmountAsDisplayString() {
+        return AmountFormatter.formatAmountWithCode(Fiat.of(quoteSideAmount, market.getQuoteCurrencyCode()), true);
+    }
+
+    public Optional<String> getPricePremiumAsPercentage() {
+        return getFloatPriceAsPercentage()
+                .map(PercentageFormatter::formatToPercentWithSymbol);
+    }
+
+    public Optional<Double> getFloatPriceAsPercentage() {
+        return PriceSpec.findFloatPriceSpec(priceSpec).map(FloatPriceSpec::getPercentage);
+    }
+
+    public Optional<String> getMakersTradeTerms() {
+        return OfferOption.findTradeTermsOption(offerOptions).stream().findAny()
+                .map(TradeTermsOption::getMakersTradeTerms);
+    }
+
+    public Optional<Long> getRequiredTotalReputationScore() {
+        return OfferOption.findReputationOption(offerOptions).stream().findAny()
+                .map(ReputationOption::getRequiredTotalReputationScore);
+    }
+
+    public Optional<Double> getMinAmountAsPercentage() {
+        return OfferOption.findAmountOption(offerOptions).stream().findAny()
+                .map(AmountOption::getMinAmountAsPercentage);
     }
 }

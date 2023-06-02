@@ -70,7 +70,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         closeButton = new Button(Res.get("close"));
         closeButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

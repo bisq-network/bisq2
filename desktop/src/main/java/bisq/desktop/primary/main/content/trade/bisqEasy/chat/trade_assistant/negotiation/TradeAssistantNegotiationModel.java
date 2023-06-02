@@ -18,13 +18,10 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.negotiation;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class TradeAssistantNegotiationModel implements Model {
-    private final StringProperty confirmButtonText = new SimpleStringProperty();
 }

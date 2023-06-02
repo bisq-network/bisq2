@@ -224,10 +224,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, bio);
         UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
 
-        getUserIdentities().remove(oldUserIdentity);
-        getUserIdentities().add(newUserIdentity);
-        persistableStore.setSelectedUserIdentity(newUserIdentity);
-
         synchronized (lock) {
             persistableStore.getUserIdentities().remove(oldUserIdentity);
             persistableStore.getUserIdentities().add(newUserIdentity);

@@ -24,6 +24,7 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.negotiation.TradeAssistantNegotiationController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer.TradeAssistantOfferController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade.TradeAssistantTradeController;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -37,14 +38,27 @@ public class TradeAssistantController extends TabController<TradeAssistantModel>
     private final TradeAssistantView view;
     private final DefaultApplicationService applicationService;
     private final SettingsService settingsService;
+    private final TradeAssistantOfferController tradeAssistantOfferController;
+    private final TradeAssistantNegotiationController tradeAssistantNegotiationController;
+    private final TradeAssistantTradeController tradeAssistantTradeController;
 
     public TradeAssistantController(DefaultApplicationService applicationService) {
         super(new TradeAssistantModel(), NavigationTarget.TRADE_ASSISTANT);
 
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
-        view = new TradeAssistantView(model, this);
 
+        tradeAssistantOfferController = new TradeAssistantOfferController(applicationService);
+        tradeAssistantNegotiationController = new TradeAssistantNegotiationController(applicationService);
+        tradeAssistantTradeController = new TradeAssistantTradeController(applicationService);
+
+        view = new TradeAssistantView(model, this);
+    }
+
+    public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
+        tradeAssistantOfferController.setBisqEasyOffer(bisqEasyOffer);
+        tradeAssistantNegotiationController.setBisqEasyOffer(bisqEasyOffer);
+        tradeAssistantTradeController.setBisqEasyOffer(bisqEasyOffer);
     }
 
     @Override
@@ -60,13 +74,13 @@ public class TradeAssistantController extends TabController<TradeAssistantModel>
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case TRADE_ASSISTANT_OFFER: {
-                return Optional.of(new TradeAssistantOfferController(applicationService));
+                return Optional.of(tradeAssistantOfferController);
             }
             case TRADE_ASSISTANT_NEGOTIATION: {
-                return Optional.of(new TradeAssistantNegotiationController(applicationService));
+                return Optional.of(tradeAssistantNegotiationController);
             }
             case TRADE_ASSISTANT_TRADE: {
-                return Optional.of(new TradeAssistantTradeController(applicationService));
+                return Optional.of(tradeAssistantTradeController);
             }
             default: {
                 return Optional.empty();

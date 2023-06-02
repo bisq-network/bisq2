@@ -59,7 +59,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

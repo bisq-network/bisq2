@@ -33,7 +33,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeAssistantNegotiationView extends View<VBox, TradeAssistantNegotiationModel, TradeAssistantNegotiationController> {
-    private final Button confirmButton;
+    private final Button nextButton, backButton;
     private final Hyperlink learnMore;
     private final Text content;
     private Subscription widthPin;
@@ -51,13 +51,12 @@ public class TradeAssistantNegotiationView extends View<VBox, TradeAssistantNego
         content = new Text(Res.get("tradeAssistant.negotiation.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
+        nextButton = new Button(Res.get("next"));
+        nextButton.setDefaultButton(true);
+        backButton = new Button(Res.get("back"));
+        HBox buttons = new HBox(10, backButton, nextButton);
 
-        confirmButton = new Button();
-        confirmButton.setDefaultButton(true);
-
-        HBox buttons = new HBox(10, confirmButton);
-
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
@@ -66,9 +65,8 @@ public class TradeAssistantNegotiationView extends View<VBox, TradeAssistantNego
 
     @Override
     protected void onViewAttached() {
-        confirmButton.textProperty().bind(model.getConfirmButtonText());
-
-        confirmButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(e -> controller.onBack());
+        nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
 
         widthPin = EasyBind.subscribe(root.widthProperty(),
@@ -77,9 +75,8 @@ public class TradeAssistantNegotiationView extends View<VBox, TradeAssistantNego
 
     @Override
     protected void onViewDetached() {
-        confirmButton.textProperty().unbind();
-
-        confirmButton.setOnAction(null);
+        backButton.setOnAction(null);
+        nextButton.setOnAction(null);
         learnMore.setOnAction(null);
 
         widthPin.unsubscribe();

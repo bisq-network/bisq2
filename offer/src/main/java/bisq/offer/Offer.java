@@ -23,11 +23,13 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.offer_options.OfferOption;
 import bisq.offer.price_spec.FixPriceSpec;
 import bisq.offer.price_spec.FloatPriceSpec;
+import bisq.offer.price_spec.MarketPriceSpec;
 import bisq.offer.price_spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -124,30 +126,53 @@ public abstract class Offer implements Proto {
         return Monetary.from(baseSideAmount, market.getBaseCurrencyCode());
     }
 
-    public Monetary getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
+    public Optional<Monetary> getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
+        return getQuote(marketPriceService)
+                .map(quote -> {
+                    long quoteAmountValue = Quote.toQuoteMonetary(getBaseAmountAsMonetary(), quote).getValue();
+                    return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
+                });
+    }
+
+    public Optional<Quote> getQuote(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPriceSpec) {
-            Monetary base = getBaseAmountAsMonetary();
-            Quote quote = Quote.fromPrice(((FixPriceSpec) priceSpec).getValue(), market);
-            long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
-            return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
+            return Optional.of(getFixePriceQuote((FixPriceSpec) priceSpec));
+        } else if (priceSpec instanceof MarketPriceSpec) {
+            return findMarketPriceQuote(marketPriceService);
         } else if (priceSpec instanceof FloatPriceSpec) {
-            Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
-            //todo
-            throw new RuntimeException("floatPrice not impl yet");
+            return findFloatPriceQuote(marketPriceService, (FloatPriceSpec) priceSpec);
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
         }
     }
 
-    public Quote getQuote(MarketPriceService marketPriceService) {
+    public Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService) {
+        Optional<Double> percentage;
         if (priceSpec instanceof FixPriceSpec) {
-            return Quote.fromPrice(((FixPriceSpec) priceSpec).getValue(), market);
+            Quote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
+            percentage = findMarketPriceQuote(marketPriceService).map(marketPrice ->
+                    1 - (double) fixPrice.getValue() / (double) marketPrice.getValue());
+        } else if (priceSpec instanceof MarketPriceSpec) {
+            percentage = Optional.of(0d);
         } else if (priceSpec instanceof FloatPriceSpec) {
-            Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
-            //todo
-            throw new RuntimeException("floatPrice not impl yet");
+            percentage = Optional.of(((FloatPriceSpec) priceSpec).getPercentage());
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
         }
+        return percentage;
+    }
+
+    public Quote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
+        return Quote.fromPrice(fixPriceSpec.getValue(), market);
+    }
+
+    public Optional<Quote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec) {
+        return findMarketPriceQuote(marketPriceService)
+                .map(marketQuote ->
+                        Quote.fromPrice(MathUtils.roundDoubleToLong((1 + floatPriceSpec.getPercentage()) * marketQuote.getValue()), market));
+    }
+
+    public Optional<Quote> findMarketPriceQuote(MarketPriceService marketPriceService) {
+        return marketPriceService.getMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
     }
 }

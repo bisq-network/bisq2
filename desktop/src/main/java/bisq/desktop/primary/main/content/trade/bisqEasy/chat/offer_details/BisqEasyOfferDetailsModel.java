@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.offer_details;
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
@@ -27,20 +29,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class TradeAssistantOfferModel implements Model {
+public class BisqEasyOfferDetailsModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
-    private final StringProperty id = new SimpleStringProperty();
-    private final StringProperty direction = new SimpleStringProperty();
-    private final StringProperty date = new SimpleStringProperty();
-    private final StringProperty market = new SimpleStringProperty();
-    private final StringProperty paymentMethods = new SimpleStringProperty();
+    private final StringProperty offerType = new SimpleStringProperty();
     private final StringProperty baseSideAmount = new SimpleStringProperty();
     private final StringProperty quoteSideAmount = new SimpleStringProperty();
-    private final StringProperty pricePremiumAsPercentage = new SimpleStringProperty();
-    private final StringProperty pricePremiumInBaseCurrency = new SimpleStringProperty();
-    private final StringProperty pricePremiumInQuoteCurrency = new SimpleStringProperty();
+    private final StringProperty quoteSideAmountDescription = new SimpleStringProperty("");
+    private final StringProperty price = new SimpleStringProperty();
+    private final StringProperty priceDescription = new SimpleStringProperty();
+    private final StringProperty paymentMethods = new SimpleStringProperty();
+
+    private final StringProperty id = new SimpleStringProperty();
+    private final StringProperty date = new SimpleStringProperty();
     private final StringProperty makersTradeTerms = new SimpleStringProperty();
     private final StringProperty requiredTotalReputationScore = new SimpleStringProperty();
-    private final StringProperty minAmountAsPercentage = new SimpleStringProperty();
+    private final BooleanProperty makersTradeTermsVisible = new SimpleBooleanProperty();
+    private final BooleanProperty requiredTotalReputationScoreVisible = new SimpleBooleanProperty();
 }

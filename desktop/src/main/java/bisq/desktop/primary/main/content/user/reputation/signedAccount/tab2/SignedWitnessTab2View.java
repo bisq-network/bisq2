@@ -56,7 +56,7 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

@@ -24,6 +24,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,9 @@ public class TradeAssistantTradeController implements Controller {
         this.applicationService = applicationService;
         model = new TradeAssistantTradeModel();
         view = new TradeAssistantTradeView(model, this);
+    }
+
+    public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
     }
 
     @Override

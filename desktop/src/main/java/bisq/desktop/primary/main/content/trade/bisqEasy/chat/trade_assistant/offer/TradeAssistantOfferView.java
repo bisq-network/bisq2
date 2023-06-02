@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -32,10 +34,15 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel, TradeAssistantOfferController> {
-    private final Button nextButton;
+    private final Button nextButton, openOfferDetailsButton;
     private final Hyperlink learnMore;
     private final Text content;
+    private final MaterialTextField id, direction, date, market, paymentMethods, baseSideAmount, quoteSideAmount,
+            pricePremiumAsPercentage, pricePremiumInBaseCurrency, pricePremiumInQuoteCurrency, makersTradeTerms,
+            requiredTotalReputationScore, minAmountAsPercentage;
+
     private Subscription widthPin;
+    private final VBox formVBox;
 
     public TradeAssistantOfferView(TradeAssistantOfferModel model,
                                    TradeAssistantOfferController controller) {
@@ -52,17 +59,50 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         nextButton = new Button(Res.get("next"));
+        openOfferDetailsButton = new Button(Res.get("tradeAssistant.offer.openDetails"));
         nextButton.setDefaultButton(true);
+        // HBox buttons = new HBox(10, openOfferDetailsButton, nextButton);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
+
+        formVBox = new VBox(20);
+
+        id = addField("id");
+        direction = addField("direction");
+        date = addField("date");
+        market = addField("market");
+        paymentMethods = addField("paymentMethods");
+        baseSideAmount = addField("baseSideAmount");
+        quoteSideAmount = addField("quoteSideAmount");
+        pricePremiumAsPercentage = addField("pricePremiumAsPercentage");
+        pricePremiumInBaseCurrency = addField("pricePremiumInBaseCurrency");
+        pricePremiumInQuoteCurrency = addField("pricePremiumInQuoteCurrency");
+        makersTradeTerms = addField("makersTradeTerms");
+        requiredTotalReputationScore = addField("requiredTotalReputationScore");
+        minAmountAsPercentage = addField("minAmountAsPercentage");
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, learnMore, nextButton);
+        root.getChildren().addAll(headline, formVBox, content, learnMore, openOfferDetailsButton, nextButton);
     }
 
     @Override
     protected void onViewAttached() {
+        id.textProperty().bind(model.getId());
+        direction.textProperty().bind(model.getDirection());
+        date.textProperty().bind(model.getDate());
+        market.textProperty().bind(model.getMarket());
+        paymentMethods.textProperty().bind(model.getPaymentMethods());
+        baseSideAmount.textProperty().bind(model.getBaseSideAmount());
+        quoteSideAmount.textProperty().bind(model.getQuoteSideAmount());
+        pricePremiumAsPercentage.textProperty().bind(model.getPricePremiumAsPercentage());
+        pricePremiumInBaseCurrency.textProperty().bind(model.getPricePremiumInBaseCurrency());
+        pricePremiumInQuoteCurrency.textProperty().bind(model.getPricePremiumInQuoteCurrency());
+        makersTradeTerms.textProperty().bind(model.getMakersTradeTerms());
+        requiredTotalReputationScore.textProperty().bind(model.getRequiredTotalReputationScore());
+        minAmountAsPercentage.textProperty().bind(model.getMinAmountAsPercentage());
+
+        openOfferDetailsButton.setOnAction(e -> controller.onOpenOfferDetails());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
         widthPin = EasyBind.subscribe(root.widthProperty(),
@@ -71,8 +111,40 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
 
     @Override
     protected void onViewDetached() {
+        id.textProperty().unbind();
+        direction.textProperty().unbind();
+        date.textProperty().unbind();
+        market.textProperty().unbind();
+        paymentMethods.textProperty().unbind();
+        baseSideAmount.textProperty().unbind();
+        quoteSideAmount.textProperty().unbind();
+        pricePremiumAsPercentage.textProperty().unbind();
+        pricePremiumInBaseCurrency.textProperty().unbind();
+        pricePremiumInQuoteCurrency.textProperty().unbind();
+        makersTradeTerms.textProperty().unbind();
+        requiredTotalReputationScore.textProperty().unbind();
+        minAmountAsPercentage.textProperty().unbind();
+
+        openOfferDetailsButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
         widthPin.unsubscribe();
+    }
+
+
+    private MaterialTextField addField(String key) {
+        MaterialTextField field = new MaterialTextField(Res.get("tradeAssistant.offer." + key), null);
+        field.setEditable(false);
+        field.setIconTooltip(Res.get("tradeAssistant.offer." + key + ".tooltip"));
+        // formVBox.getChildren().add(field);
+        return field;
+    }
+
+    private MaterialTextArea addTextArea(String description, String prompt) {
+        MaterialTextArea field = new MaterialTextArea(description, prompt);
+        field.setEditable(false);
+        field.setFixedHeight(2 * 56 + 20); // MaterialTextField has height 56
+        formVBox.getChildren().add(field);
+        return field;
     }
 }

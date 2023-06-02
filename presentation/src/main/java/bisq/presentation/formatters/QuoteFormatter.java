@@ -20,7 +20,6 @@ package bisq.presentation.formatters;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.monetary.Quote;
 import bisq.common.util.DecimalFormatters;
-import bisq.common.util.MathUtils;
 
 import java.util.Locale;
 
@@ -31,10 +30,6 @@ public class QuoteFormatter {
 
     public static String formatWithQuoteCode(Quote quote, boolean useLowPrecision) {
         return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), useLowPrecision);
-    }
-
-    public static String formatMarketPriceOffset(double offset) {
-        return MathUtils.roundDouble(offset * 100, 2) + "%";
     }
 
     public static String formatWithQuoteCode(Quote quote, Locale locale, boolean useLowPrecision) {
@@ -61,6 +56,4 @@ public class QuoteFormatter {
         int exponent = useLowPrecision ? quote.getLowPrecision() : quote.getPrecision();
         return DecimalFormatters.getDecimalFormat(locale, exponent);
     }
-
-
 }
