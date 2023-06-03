@@ -30,7 +30,7 @@ import java.util.List;
 public abstract class Settlement<M extends Settlement.Method> implements Proto {
     public static List<? extends Method> getSettlementMethods(ProtocolType protocolType, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatSettlement.getSettlementMethods(protocolType);
+            return FiatSettlement.getSettlementMethodsForProtocolType(protocolType);
         } else {
             if (currencyCode.equals("BTC")) {
                 return BitcoinSettlement.getSettlementMethods(protocolType);
@@ -42,7 +42,7 @@ public abstract class Settlement<M extends Settlement.Method> implements Proto {
 
     public static Settlement<? extends Method> from(String settlementMethodName, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatSettlement.from(settlementMethodName);
+            return FiatSettlement.fromName(settlementMethodName);
         } else {
             if (currencyCode.equals("BTC")) {
                 return BitcoinSettlement.from(settlementMethodName);

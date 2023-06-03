@@ -18,12 +18,14 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +34,12 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel, TradeAssistantOfferController> {
+    // private final static int BUTTON_WIDTH = 140;
     private final Button nextButton, openOfferDetailsButton;
-    private final Hyperlink learnMore;
     private final Text content;
+    private final Label offerInfo;
+    private final HBox createOfferHBox;
+    private final Label headline;
 
     private Subscription widthPin;
 
@@ -46,39 +51,50 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeAssistant.offer.headline"));
+        headline = new Label();
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeAssistant.offer.content"));
+        content = new Text(Res.get("tradeAssistant.offer.taker.subHeadline"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        nextButton = new Button(Res.get("next"));
+        offerInfo = new Label();
+        offerInfo.setWrapText(true);
+        offerInfo.setId("chat-messages-message");
+
         openOfferDetailsButton = new Button(Res.get("tradeAssistant.offer.openDetails"));
+        openOfferDetailsButton.getStyleClass().add("outlined-button");
+        openOfferDetailsButton.setMinWidth(180);
+
+        HBox.setHgrow(offerInfo, Priority.ALWAYS);
+        createOfferHBox = new HBox(15, offerInfo, Spacer.fillHBox(), openOfferDetailsButton);
+        createOfferHBox.getStyleClass().add("create-offer-message-my-offer");
+        createOfferHBox.setAlignment(Pos.CENTER_LEFT);
+        createOfferHBox.setPadding(new Insets(15, 26, 15, 15));
+
+        nextButton = new Button(Res.get("tradeAssistant.offer.next"));
         nextButton.setDefaultButton(true);
-        // HBox buttons = new HBox(10, openOfferDetailsButton, nextButton);
-
-        learnMore = new Hyperlink(Res.get("learnMore"));
-
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, learnMore, openOfferDetailsButton, nextButton);
+        VBox.setMargin(createOfferHBox, new Insets(20, 0, 20, 0));
+        root.getChildren().addAll(headline, /*content,*/ createOfferHBox, nextButton);
     }
 
     @Override
     protected void onViewAttached() {
+        headline.textProperty().bind(model.getHeadline());
+        offerInfo.textProperty().bind(model.getOfferInfo());
         openOfferDetailsButton.setOnAction(e -> controller.onOpenOfferDetails());
         nextButton.setOnAction(e -> controller.onNext());
-        learnMore.setOnAction(e -> controller.onLearnMore());
         widthPin = EasyBind.subscribe(root.widthProperty(),
                 w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
     protected void onViewDetached() {
+        headline.textProperty().unbind();
+        offerInfo.textProperty().unbind();
         openOfferDetailsButton.setOnAction(null);
         nextButton.setOnAction(null);
-        learnMore.setOnAction(null);
         widthPin.unsubscribe();
     }
 }

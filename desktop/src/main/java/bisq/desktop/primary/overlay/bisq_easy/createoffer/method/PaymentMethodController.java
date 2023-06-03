@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.createoffer.method;
 
+import bisq.account.settlement.FiatSettlement;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.currency.PaymentMethodRepository;
 import bisq.desktop.common.view.Controller;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -37,11 +37,11 @@ public class PaymentMethodController implements Controller {
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
-        model.getSelectedMarket().addListener((observable, oldValue, newValue) -> model.getSelectedPaymentMethods().clear());
+        model.getSelectedMarket().addListener((observable, oldValue, newValue) -> model.getSelectedPaymentMethodNames().clear());
     }
 
-    public ObservableList<String> getPaymentMethods() {
-        return model.getSelectedPaymentMethods();
+    public ObservableList<String> getPaymentMethodNames() {
+        return model.getSelectedPaymentMethodNames();
     }
 
     public void setMarket(Market market) {
@@ -49,9 +49,9 @@ public class PaymentMethodController implements Controller {
             return;
         }
         model.getSelectedMarket().set(market);
-        model.getAllPaymentMethods().setAll(PaymentMethodRepository.getPaymentMethodsForMarket(market));
-        model.getAllPaymentMethods().addAll(model.getAddedCustomMethods());
-        model.getPaymentMethodsEmpty().set(model.getAllPaymentMethods().isEmpty());
+        model.getAllPaymentMethodNames().setAll(FiatSettlement.getPaymentMethodEnumNamesForCode(market.getQuoteCurrencyCode()));
+        model.getAllPaymentMethodNames().addAll(model.getAddedCustomMethodNames());
+        model.getIsPaymentMethodsEmpty().set(model.getAllPaymentMethodNames().isEmpty());
     }
 
     public void reset() {
@@ -60,7 +60,7 @@ public class PaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
-        customMethodPin = EasyBind.subscribe(model.getCustomMethod(), customMethod -> model.getAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
+        customMethodPin = EasyBind.subscribe(model.getCustomMethodName(), customMethod -> model.getIsAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
     }
 
     @Override
@@ -70,35 +70,35 @@ public class PaymentMethodController implements Controller {
 
     public void onTogglePaymentMethod(String paymentMethod, boolean isSelected) {
         if (isSelected) {
-            if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
-                model.getSelectedPaymentMethods().add(paymentMethod);
+            if (!model.getSelectedPaymentMethodNames().contains(paymentMethod)) {
+                model.getSelectedPaymentMethodNames().add(paymentMethod);
             }
         } else {
-            model.getSelectedPaymentMethods().remove(paymentMethod);
+            model.getSelectedPaymentMethodNames().remove(paymentMethod);
         }
     }
 
     public void onAddCustomMethod() {
-        String customMethod = model.getCustomMethod().get();
+        String customMethod = model.getCustomMethodName().get();
         boolean isEmpty = customMethod == null || customMethod.isEmpty();
         if (!isEmpty) {
-            if (!model.getAddedCustomMethods().contains(customMethod)) {
-                model.getAddedCustomMethods().add(customMethod);
+            if (!model.getAddedCustomMethodNames().contains(customMethod)) {
+                model.getAddedCustomMethodNames().add(customMethod);
             }
-            if (!model.getSelectedPaymentMethods().contains(customMethod)) {
-                model.getSelectedPaymentMethods().add(customMethod);
+            if (!model.getSelectedPaymentMethodNames().contains(customMethod)) {
+                model.getSelectedPaymentMethodNames().add(customMethod);
             }
-            if (!model.getAllPaymentMethods().contains(customMethod)) {
-                model.getAllPaymentMethods().add(customMethod);
+            if (!model.getAllPaymentMethodNames().contains(customMethod)) {
+                model.getAllPaymentMethodNames().add(customMethod);
             }
 
-            model.getCustomMethod().set("");
+            model.getCustomMethodName().set("");
         }
     }
 
     public void onRemoveCustomMethod(String customMethod) {
-        model.getAddedCustomMethods().remove(customMethod);
-        model.getSelectedPaymentMethods().remove(customMethod);
-        model.getAllPaymentMethods().remove(customMethod);
+        model.getAddedCustomMethodNames().remove(customMethod);
+        model.getSelectedPaymentMethodNames().remove(customMethod);
+        model.getAllPaymentMethodNames().remove(customMethod);
     }
 }

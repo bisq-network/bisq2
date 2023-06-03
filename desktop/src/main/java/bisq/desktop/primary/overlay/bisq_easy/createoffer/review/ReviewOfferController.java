@@ -99,9 +99,9 @@ public class ReviewOfferController implements Controller {
         }
     }
 
-    public void setPaymentMethods(List<String> paymentMethods) {
-        if (paymentMethods != null) {
-            model.setPaymentMethods(paymentMethods);
+    public void setPaymentMethodNames(List<String> paymentMethodNames) {
+        if (paymentMethodNames != null) {
+            model.setPaymentMethodNames(paymentMethodNames);
         }
     }
 
@@ -146,7 +146,7 @@ public class ReviewOfferController implements Controller {
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
                 model.getQuoteSideAmount().getValue(),
-                new ArrayList<>(model.getPaymentMethods()),
+                new ArrayList<>(model.getPaymentMethodNames()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
                 minAmountAsPercentage,

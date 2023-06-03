@@ -18,12 +18,13 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.offer_details.BisqEasyOfferDetailsController;
+import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.security.KeyPairService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,14 +33,26 @@ public class TradeAssistantOfferController implements Controller {
     @Getter
     private final TradeAssistantOfferView view;
     private final TradeAssistantOfferModel model;
+    private final KeyPairService keyPairService;
 
     public TradeAssistantOfferController(DefaultApplicationService applicationService) {
+        keyPairService = applicationService.getSecurityService().getKeyPairService();
+
         model = new TradeAssistantOfferModel();
         view = new TradeAssistantOfferView(model, this);
     }
 
     public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
         model.setBisqEasyOffer(bisqEasyOffer);
+        String makersDirection = bisqEasyOffer.getDirectionAsDisplayString();
+        String takersDirection = bisqEasyOffer.getMirroredDirectionAsDisplayString();
+        String headline = isMyOffer(bisqEasyOffer) ? Res.get("tradeAssistant.offer.maker.headline", makersDirection) :
+                Res.get("tradeAssistant.offer.taker.headline", takersDirection);
+        model.getHeadline().set(headline);
+
+        String fiat = bisqEasyOffer.getQuoteSideAmountAsDisplayString();
+        String settlementMethods = bisqEasyOffer.getSettlementMethodsAsDisplayString();
+        model.getOfferInfo().set(Res.get("tradeAssistant.offer.info", makersDirection, fiat, settlementMethods));
     }
 
     @Override
@@ -50,15 +63,15 @@ public class TradeAssistantOfferController implements Controller {
     public void onDeactivate() {
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
-    }
-
     void onNext() {
         Navigation.navigateTo(NavigationTarget.TRADE_ASSISTANT_NEGOTIATION);
     }
 
     void onOpenOfferDetails() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFER_DETAILS, new BisqEasyOfferDetailsController.InitData(model.getBisqEasyOffer()));
+    }
+
+    private boolean isMyOffer(BisqEasyOffer bisqEasyOffer) {
+        return keyPairService.findKeyPair(bisqEasyOffer.getMakerNetworkId().getPubKey().getKeyId()).isPresent();
     }
 }
