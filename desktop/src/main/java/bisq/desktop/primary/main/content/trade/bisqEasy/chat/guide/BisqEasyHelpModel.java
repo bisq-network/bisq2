@@ -15,29 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide;
 
-import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.ChatModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyChatModel extends ChatModel {
-    private final BooleanProperty offerOnly = new SimpleBooleanProperty();
-    private final BooleanProperty offerOnlyVisible = new SimpleBooleanProperty();
-    private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
-    private final BooleanProperty isBisqEasyPrivateTradeChatChannel = new SimpleBooleanProperty();
-    public BisqEasyChatModel(ChatChannelDomain chatChannelDomain) {
-        super(chatChannelDomain);
-    }
+public class BisqEasyHelpModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
+        return NavigationTarget.BISQ_EASY_GUIDE_WELCOME;
     }
 }

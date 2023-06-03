@@ -37,17 +37,20 @@ import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPublicChannelSelectionMenu;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade.TradeInfoController;
+import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final SettingsService settingsService;
+    private TradeInfoController tradeInfoController;
     private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
     private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
 
@@ -61,7 +64,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     }
 
     @Override
-    public void createServices(ChatChannelDomain chatChannelDomain) {
+    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+        tradeInfoController = new TradeInfoController(applicationService);
         bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(applicationService);
         bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(applicationService);
     }
@@ -69,10 +73,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_GUIDE: {
-                return Optional.of(new TradeGuideController(applicationService));
-            }
-
             default: {
                 return Optional.empty();
             }
@@ -92,7 +92,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 bisqEasyPrivateChannelSelectionMenu.getRoot(),
                 twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
-                channelSidebar.getRoot());
+                channelSidebar.getRoot(),
+                tradeInfoController.getView().getRoot());
     }
 
     @Override
@@ -103,9 +104,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
 
         ObservableArray<BisqEasyPrivateTradeChatChannel> bisqEasyPrivateTradeChatChannels = chatService.getBisqEasyPrivateTradeChatChannelService().getChannels();
-        bisqEasyPrivateTradeChatChannelsPin = bisqEasyPrivateTradeChatChannels.addListener(() -> {
-            model.getIsTradeChannelVisible().set(!bisqEasyPrivateTradeChatChannels.isEmpty());
-        });
+        bisqEasyPrivateTradeChatChannelsPin = bisqEasyPrivateTradeChatChannels.addListener(() ->
+                model.getIsTradeChannelVisible().set(!bisqEasyPrivateTradeChatChannels.isEmpty()));
     }
 
     @Override
@@ -126,6 +126,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyPrivateTradeChatChannel;
         boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
 
+        model.getIsBisqEasyPrivateTradeChatChannel().set(isBisqEasyPrivateTradeChatChannel);
 
         UIThread.run(() -> {
             if (chatChannel == null) {
@@ -155,7 +156,13 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 BisqEasyPrivateTradeChatChannel privateChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
 
-                Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
+                model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
+                        .map(service -> Res.get("chat.bisqEasy.trade.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
+                        .orElse(""));
+
+                if (!settingsService.getTradeRulesConfirmed().get()) {
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+                }
             } else if (isTwoPartyPrivateChatChannel) {
                 bisqEasyPublicChannelSelectionMenu.deSelectChannel();
                 bisqEasyPrivateChannelSelectionMenu.deSelectChannel();

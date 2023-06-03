@@ -92,7 +92,7 @@ public class ChatMessagesComponent {
                 openUserProfileSidebarHandler);
     }
 
-    public Pane getRoot() {
+    public VBox getRoot() {
         return controller.view.getRoot();
     }
 
@@ -496,7 +496,10 @@ public class ChatMessagesComponent {
                 if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyPrivateTradeChatChannel) chatChannel).isMediator()) {
                     chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(text, citation, (BisqEasyPrivateTradeChatChannel) chatChannel);
                 } else {
-                    new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
+                    new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup"))
+                            .actionButtonText(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup.openGuide"))
+                            .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
+                            .show();
                 }
             } else if (chatChannel instanceof CommonPublicChatChannel) {
                 chatService.getCommonPublicChatChannelServices().get(model.chatChannelDomain).publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
