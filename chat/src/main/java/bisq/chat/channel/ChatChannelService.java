@@ -77,6 +77,10 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public abstract ObservableArray<C> getChannels();
 
+    public void leaveChannel(String id) {
+        findChannel(id).ifPresent(this::leaveChannel);
+    }
+
     public abstract void leaveChannel(C channel);
 
     protected void doRemoveExpiredMessages(C channel) {
