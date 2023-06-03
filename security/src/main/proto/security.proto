@@ -33,6 +33,11 @@ message ConfidentialData {
   bytes signature = 4;
 }
 
+message EncryptedData {
+  bytes iv = 1;
+  bytes cipherText = 2;
+}
+
 // Protobuf wrapper for java.security.KeyPair used by other modules
 message KeyPair {
   bytes privateKey = 1;
@@ -50,4 +55,12 @@ message ProofOfWork {
   optional bytes challenge = 2;
   double difficulty = 3;
   bytes solution = 4;
+}
+
+message ScryptParameters {
+  bytes salt = 1;
+  uint32 cost = 2;
+  uint32 blockSize = 3;
+  uint32 parallelization = 4;
+  uint32 keyLength = 5;
 }

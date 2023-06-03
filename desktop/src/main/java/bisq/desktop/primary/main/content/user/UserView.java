@@ -27,11 +27,12 @@ public class UserView extends TabView<UserModel, UserController> {
         super(model, controller);
 
         addTab(Res.get("user.userProfile"), NavigationTarget.USER_PROFILE);
+        addTab(Res.get("user.password"), NavigationTarget.PASSWORD);
         addTab(Res.get("user.paymentAccounts"), NavigationTarget.BISQ_EASY_PAYMENT_ACCOUNTS);
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
 
-        headLine.setText(Res.get("user"));
+        headLine.setText(Res.get("userOptions"));
     }
 
     @Override

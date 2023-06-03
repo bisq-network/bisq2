@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy;
+package bisq.desktop.primary.overlay.unlock;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
 
-@Slf4j
-
-public class BisqEasyModel extends NavigationModel {
-    public BisqEasyModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY_INTRO;
-    }
+@Getter
+public class UnlockModel implements Model {
+    private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
+    private final BooleanProperty unlockButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty passwordIsMasked = new SimpleBooleanProperty();
 }

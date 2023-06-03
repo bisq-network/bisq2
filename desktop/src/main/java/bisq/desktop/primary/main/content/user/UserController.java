@@ -22,6 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.user.accounts.PaymentAccountsController;
+import bisq.desktop.primary.main.content.user.password.PasswordController;
 import bisq.desktop.primary.main.content.user.reputation.ReputationController;
 import bisq.desktop.primary.main.content.user.roles.RolesController;
 import bisq.desktop.primary.main.content.user.userProfile.UserProfileController;
@@ -56,6 +57,9 @@ public class UserController extends TabController<UserModel> {
         switch (navigationTarget) {
             case USER_PROFILE: {
                 return Optional.of(new UserProfileController(applicationService));
+            }
+            case PASSWORD: {
+                return Optional.of(new PasswordController(applicationService));
             }
             case BISQ_EASY_PAYMENT_ACCOUNTS: {
                 return Optional.of(new PaymentAccountsController(applicationService));

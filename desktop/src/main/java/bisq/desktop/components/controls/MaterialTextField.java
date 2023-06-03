@@ -91,19 +91,19 @@ public class MaterialTextField extends Pane {
             descriptionLabel.setText(description);
         }
 
-        field = createTextInputControl();
-        field.setLayoutX(6.5);
-        field.getStyleClass().add("material-text-field");
-        if (prompt != null) {
-            field.setPromptText(prompt);
-        }
-
         iconButton = new BisqIconButton();
         iconButton.setAlignment(Pos.TOP_RIGHT);
         iconButton.setIcon("info");
         iconButton.setOpacity(0.6);
         iconButton.setManaged(false);
         iconButton.setVisible(false);
+
+        field = createTextInputControl();
+        field.setLayoutX(6.5);
+        field.getStyleClass().add("material-text-field");
+        if (prompt != null) {
+            field.setPromptText(prompt);
+        }
 
         helpLabel = new Label();
         helpLabel.setLayoutX(16);

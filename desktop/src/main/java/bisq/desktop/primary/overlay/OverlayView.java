@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay;
 
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
@@ -80,6 +81,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         // Also, on Mac sometimes the popups are positioned outside the main app, so keep it for all OS
         positionListener = (observable, oldValue, newValue) -> {
             layout();
+            UIThread.runOnNextRenderFrame(this::layout);
 
             if (centerTime != null) {
                 centerTime.stop();

@@ -31,11 +31,14 @@ import bisq.desktop.primary.main.content.user.reputation.signedAccount.SignedWit
 import bisq.desktop.primary.main.content.user.userProfile.create.CreateUserProfileController;
 import bisq.desktop.primary.overlay.bisqeasy.createoffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
+import bisq.desktop.primary.overlay.tac.TacController;
+import bisq.desktop.primary.overlay.unlock.UnlockController;
 import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -47,7 +50,16 @@ import java.util.Optional;
 public class OverlayController extends NavigationController {
     private static OverlayController INSTANCE;
 
+    public static OverlayController getInstance() {
+        return INSTANCE;
+    }
+
     public static void hide() {
+        hide(null);
+    }
+
+    public static void hide(@Nullable Runnable onHiddenHandler) {
+        INSTANCE.onHiddenHandler = onHiddenHandler;
         INSTANCE.resetSelectedChildTarget();
     }
 
@@ -59,21 +71,26 @@ public class OverlayController extends NavigationController {
     private final OverlayModel model;
     @Getter
     private final OverlayView view;
+    @Getter
+    private final Region applicationRoot;
     private final DefaultApplicationService applicationService;
+    @Nullable
+    private Runnable onHiddenHandler;
 
-    public OverlayController(DefaultApplicationService applicationService, Region owner) {
+    public OverlayController(DefaultApplicationService applicationService, Region applicationRoot) {
         super(NavigationTarget.OVERLAY);
 
         this.applicationService = applicationService;
+        this.applicationRoot = applicationRoot;
 
         model = new OverlayModel(applicationService);
-        view = new OverlayView(model, this, owner);
+        view = new OverlayView(model, this, applicationRoot);
         INSTANCE = this;
         onActivateInternal();
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue == null) {
-                hide();
+                resetSelectedChildTarget();
             }
         });
     }
@@ -95,6 +112,12 @@ public class OverlayController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
+            case UNLOCK: {
+                return Optional.of(new UnlockController(applicationService));
+            }
+            case TAC: {
+                return Optional.of(new TacController(applicationService));
+            }
             case ONBOARDING: {
                 return Optional.of(new OnboardingController(applicationService));
             }
@@ -133,6 +156,10 @@ public class OverlayController extends NavigationController {
 
     void onHidden() {
         resetSelectedChildTarget();
+        if (onHiddenHandler != null) {
+            onHiddenHandler.run();
+            onHiddenHandler = null;
+        }
     }
 
     void onQuit() {

@@ -39,6 +39,10 @@ public class PrimaryStageModel extends NavigationModel {
     private double stageWidth;
     @Setter
     private double stageHeight;
+    @Setter
+    private boolean isInitializeApplicationServiceCompleted;
+    @Setter
+    private boolean isUnlocked;
 
     public PrimaryStageModel(String title) {
         this.title = title;

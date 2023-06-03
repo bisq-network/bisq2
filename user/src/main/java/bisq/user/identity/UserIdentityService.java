@@ -21,6 +21,7 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.timer.Scheduler;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
@@ -32,6 +33,8 @@ import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.AesSecretKey;
+import bisq.security.EncryptedData;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -47,6 +50,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service, DataService.Listener {
@@ -98,9 +103,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                         .forEach(this::processAuthenticatedData));
         networkService.addDataServiceListener(this);
 
-        // todo delay
-        getUserIdentities().forEach(userProfile ->
-                maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair()));
+        // We delay publishing to be better bootstrapped 
+        Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
+                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair())))
+                .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -131,6 +137,54 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<AesSecretKey> deriveKeyFromPassword(CharSequence password) {
+        return persistableStore.deriveKeyFromPassword(password)
+                .whenComplete((aesKey, throwable) -> {
+                    if (throwable == null && aesKey != null) {
+                        persist();
+                    }
+                });
+    }
+
+    public CompletableFuture<EncryptedData> encryptDataStore() {
+        return persistableStore.encrypt()
+                .whenComplete((encryptedData, throwable) -> {
+                    if (throwable == null && encryptedData != null) {
+                        persist();
+                    }
+                });
+    }
+
+    public CompletableFuture<Void> decryptDataStore(AesSecretKey aesSecretKey) {
+        return persistableStore.decrypt(aesSecretKey)
+                .whenComplete((nil, throwable) -> {
+                    if (throwable == null) {
+                        persist();
+                    }
+                });
+    }
+
+    public CompletableFuture<Void> removePassword(CharSequence password) {
+        return decryptDataStore(getAESSecretKey().orElseThrow())
+                .thenCompose(nil -> {
+                    persistableStore.clearEncryptedData();
+                    return persistableStore.removeKey(password)
+                            .whenComplete((nil2, throwable) -> {
+                                if (throwable == null) {
+                                    persist();
+                                }
+                            });
+                });
+    }
+
+    public boolean isDataStoreEncrypted() {
+        return persistableStore.getEncryptedData().isPresent();
+    }
+
+    public Optional<AesSecretKey> getAESSecretKey() {
+        return persistableStore.getAESSecretKey();
+    }
 
     public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
                                                        String nickName,
@@ -164,21 +218,25 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity userIdentity, String terms, String bio) {
-        Identity identity = userIdentity.getIdentity();
-        UserProfile oldUserProfile = userIdentity.getUserProfile();
+    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String bio) {
+        Identity oldIdentity = oldUserIdentity.getIdentity();
+        UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
         UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, bio);
-        UserIdentity newUserIdentity = new UserIdentity(identity, newUserProfile);
+        UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
+
+        getUserIdentities().remove(oldUserIdentity);
+        getUserIdentities().add(newUserIdentity);
+        persistableStore.setSelectedUserIdentity(newUserIdentity);
 
         synchronized (lock) {
-            persistableStore.getUserIdentities().remove(userIdentity);
+            persistableStore.getUserIdentities().remove(oldUserIdentity);
             persistableStore.getUserIdentities().add(newUserIdentity);
             persistableStore.setSelectedUserIdentity(newUserIdentity);
         }
         persist();
 
-        return networkService.removeAuthenticatedData(oldUserProfile, identity.getNodeIdAndKeyPair())
-                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, identity.getNodeIdAndKeyPair()));
+        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair())
+                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
@@ -186,7 +244,13 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         if (persistableStore.getUserIdentities().size() <= 1) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
         }
+
+        getUserIdentities().remove(userIdentity);
+        getUserIdentities().stream().findAny()
+                .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
+                        () -> persistableStore.setSelectedUserIdentity(null));
         synchronized (lock) {
+            //todo
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().stream().findAny()
                     .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
@@ -244,9 +308,16 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                             String terms,
                                             String bio,
                                             Identity identity) {
+        checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
+                "Nickname must not have leading or trailing spaces and must not be empty.");
         UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
+
+        getUserIdentities().add(userIdentity);
+        persistableStore.setSelectedUserIdentity(userIdentity);
+
         synchronized (lock) {
+            //todo
             persistableStore.getUserIdentities().add(userIdentity);
             persistableStore.setSelectedUserIdentity(userIdentity);
         }

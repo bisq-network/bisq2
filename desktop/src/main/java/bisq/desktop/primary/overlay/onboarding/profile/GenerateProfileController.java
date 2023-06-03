@@ -22,8 +22,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -90,7 +90,7 @@ public class GenerateProfileController implements Controller {
                 nickName -> model.getCreateProfileButtonDisabled().set(
                         model.getCreateProfileProgress().get() == -1 ||
                                 nickName == null ||
-                                nickName.isEmpty()));
+                                nickName.trim().isEmpty()));
         onRegenerate();
     }
 
@@ -115,7 +115,7 @@ public class GenerateProfileController implements Controller {
         if (model.getKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
-                            model.getNickName().get(),
+                            model.getNickName().get().trim(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
                             model.getProofOfWork().orElseThrow(),
@@ -124,21 +124,21 @@ public class GenerateProfileController implements Controller {
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
                         if (throwable == null) {
                             model.getCreateProfileProgress().set(0);
-                            close();
+                            next();
                         } else {
-                            //todo
+                            new Popup().error(throwable).show();
                         }
                     }));
         } else if (model.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = model.getPooledIdentity().get();
             userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
-                    model.getNickName().get(),
+                    model.getNickName().get().trim(),
                     model.getProofOfWork().orElseThrow(),
                     "",
                     "");
             model.getCreateProfileProgress().set(0);
-            close();
+            next();
         }
     }
 
@@ -196,12 +196,8 @@ public class GenerateProfileController implements Controller {
                 });
     }
 
-    private void close() {
-        Navigation.navigateTo(NavigationTarget.MAIN);
-        UIThread.runOnNextRenderFrame(() -> {
-            OverlayController.hide();
-            Navigation.navigateTo(NavigationTarget.DASHBOARD);
-        });
+    private void next() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_PASSWORD);
     }
 
     private void createSimulatedDelay(long powDuration) {

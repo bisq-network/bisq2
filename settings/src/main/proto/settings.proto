@@ -46,4 +46,5 @@ message SettingsStore {
   bool offersOnly = 7;
   bool tradeRulesConfirmed = 8;
   ChatNotificationType chatNotificationType = 9;
+  bool isTacAccepted = 10;
 }

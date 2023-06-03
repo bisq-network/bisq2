@@ -56,6 +56,9 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
+
+        rootScene.getWindow().setWidth(OverlayModel.WIDTH);
+        rootScene.getWindow().setHeight(OverlayModel.HEIGHT);
     }
 
     @Override

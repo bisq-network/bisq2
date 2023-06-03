@@ -2,6 +2,8 @@ package bisq.application;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CompletableFuture;
+
 @Slf4j
 public abstract class Executable<T extends ApplicationService> {
     protected final T applicationService;
@@ -9,7 +11,6 @@ public abstract class Executable<T extends ApplicationService> {
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
         applicationService = createApplicationService(args);
-        applicationService.readAllPersisted().join();
         launchApplication(args);
     }
 
@@ -19,26 +20,24 @@ public abstract class Executable<T extends ApplicationService> {
         onApplicationLaunched();
     }
 
-    protected void onApplicationLaunched() {
-        applicationService.initialize()
-                .whenComplete((success, throwable) -> {
-                    if (throwable == null) {
-                        if (success) {
-                            onDomainInitialized();
-                        } else {
-                            log.error("Initialize applicationService failed", throwable);
-                        }
+    protected CompletableFuture<Boolean> onApplicationLaunched() {
+        return readAllPersisted()
+                .thenCompose(success -> {
+                    if (success) {
+                        return initializeApplicationService();
                     } else {
-                        onInitializeDomainFailed(throwable);
+                        return CompletableFuture.failedFuture(new RuntimeException("Reading persisted data failed."));
                     }
                 });
     }
 
-    protected void onInitializeDomainFailed(Throwable throwable) {
-        log.error("Initialize domain failed", throwable);
+    protected CompletableFuture<Boolean> readAllPersisted() {
+        return applicationService.readAllPersisted();
     }
 
-    protected abstract void onDomainInitialized();
+    protected CompletableFuture<Boolean> initializeApplicationService() {
+        return applicationService.initialize();
+    }
 
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> log.error("Uncaught exception", throwable));

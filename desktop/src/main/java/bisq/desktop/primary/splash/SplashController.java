@@ -92,6 +92,10 @@ public class SplashController implements Controller {
         statePin.unsubscribe();
     }
 
+    public void startAnimation() {
+        model.getProgress().set(-1);
+    }
+
     public void stopAnimation() {
         model.getProgress().set(0);
     }

@@ -377,7 +377,15 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
-    public T error(String message) {
+    public T error(Throwable throwable) {
+        if (throwable.getMessage() != null) {
+            return error(throwable.getMessage());
+        } else {
+            return error(throwable.toString());
+        }
+    }
+
+    private T error(String message) {
         type = Type.Error;
         showReportErrorButtons();
         width = 1100;

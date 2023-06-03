@@ -49,7 +49,6 @@ public class KeyHandlerUtil {
 
     public static void handleDevModeKeyEvent(KeyEvent keyEvent) {
         if (DevMode.isDevMode()) {
-
             if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT0, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
@@ -57,7 +56,7 @@ public class KeyHandlerUtil {
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP1);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                 Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
+                Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.BISQ_EASY_INTRO);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
@@ -70,7 +69,7 @@ public class KeyHandlerUtil {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.A, keyEvent)) {
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.H, keyEvent)) {
                 OverlayController.hide();
             }
         }

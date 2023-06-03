@@ -31,7 +31,7 @@ import java.util.Optional;
 @Getter
 public class GenerateNewProfileStep2Model implements Model {
     @Setter
-    private Optional<KeyPairAndId> tempIdentity = Optional.empty();
+    private Optional<KeyPairAndId> tempKeyPairAndId = Optional.empty();
     @Setter
     private Optional<Identity> pooledIdentity = Optional.empty();
     @Setter

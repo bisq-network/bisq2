@@ -25,6 +25,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * My local user profile. Not shared over network.
  */
@@ -38,6 +40,8 @@ public final class UserIdentity implements Proto {
     public UserIdentity(Identity identity, UserProfile userProfile) {
         this.identity = identity;
         this.userProfile = userProfile;
+
+        checkArgument(identity.getId().equals(getId()));
     }
 
     public bisq.user.protobuf.UserIdentity toProto() {

@@ -84,7 +84,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
 
     @Override
     public void initWithData(InitData data) {
-        model.setTempIdentity(data.getTempIdentity());
+        model.setTempKeyPairAndId(data.getTempIdentity());
         model.setPooledIdentity(data.getPooledIdentity());
         model.setProofOfWork(Optional.of(data.getProofOfWork()));
         model.getNickName().set(data.getNickName());
@@ -119,8 +119,8 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
 
-        if (model.getTempIdentity().isPresent()) {
-            KeyPairAndId keyPairAndId = model.getTempIdentity().get();
+        if (model.getTempKeyPairAndId().isPresent()) {
+            KeyPairAndId keyPairAndId = model.getTempKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get(),
                             keyPairAndId.getKeyId(),

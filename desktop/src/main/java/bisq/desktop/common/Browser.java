@@ -17,12 +17,13 @@
 
 package bisq.desktop.common;
 
-import bisq.common.annotations.LateInit;
 import javafx.application.HostServices;
 import lombok.NonNull;
 
+import javax.annotation.Nullable;
+
 public class Browser {
-    @LateInit
+    @Nullable
     private static HostServices hostServices;
 
     public static void setHostServices(@NonNull HostServices hostServices) {

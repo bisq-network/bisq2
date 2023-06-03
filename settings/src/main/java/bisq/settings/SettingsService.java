@@ -106,6 +106,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.chatNotificationType;
     }
 
+    public void setTacAccepted(boolean tacAccepted) {
+        persistableStore.isTacAccepted = tacAccepted;
+        persist();
+    }
+
+    public boolean isTacAccepted() {
+        return persistableStore.isTacAccepted;
+    }
+
     public void setCookie(CookieKey key, boolean value) {
         getCookie().putAsBoolean(key, value);
         persist();
