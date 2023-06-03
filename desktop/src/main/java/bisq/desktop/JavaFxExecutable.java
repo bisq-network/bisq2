@@ -20,13 +20,13 @@ package bisq.desktop;
 import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.PrimaryStageController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.CompletableFuture;
 
 import static bisq.common.util.OsUtils.EXIT_FAILURE;
 
@@ -73,24 +73,12 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
                 });
     }
 
-    @Override
-    protected CompletableFuture<Boolean> readAllPersisted() {
-        return super.readAllPersisted()
-                .whenComplete((result, throwable) -> {
-                    if (primaryStageController != null) {
-                        Platform.runLater(() -> primaryStageController.readAllPersistedCompleted(result, throwable));
-                    }
-                });
-    }
-
-    @Override
-    protected CompletableFuture<Boolean> initializeApplicationService() {
-        return super.initializeApplicationService()
-                .whenComplete((result, throwable) -> {
-                    if (primaryStageController != null) {
-                        Platform.runLater(() -> primaryStageController.initializeApplicationServiceCompleted(result, throwable));
-                    }
-                });
+    protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
+        if (primaryStageController != null) {
+            Platform.runLater(() -> primaryStageController.onApplicationServiceInitialized(result, throwable));
+        } else if (throwable != null) {
+            UIThread.run(() -> new Popup().error(throwable).show());
+        }
     }
 
     @Override
