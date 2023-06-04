@@ -38,7 +38,6 @@ import java.util.function.Consumer;
 public class TradeAssistantController extends TabController<TradeAssistantModel> {
     @Getter
     private final TradeAssistantView view;
-    private final DefaultApplicationService applicationService;
     private final SettingsService settingsService;
     private final TradeAssistantOfferController tradeAssistantOfferController;
     private final TradeAssistantNegotiationController tradeAssistantNegotiationController;
@@ -47,7 +46,6 @@ public class TradeAssistantController extends TabController<TradeAssistantModel>
     public TradeAssistantController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         super(new TradeAssistantModel(), NavigationTarget.TRADE_ASSISTANT);
 
-        this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
 
         tradeAssistantOfferController = new TradeAssistantOfferController(applicationService, openUserProfileSidebarHandler);
@@ -56,7 +54,6 @@ public class TradeAssistantController extends TabController<TradeAssistantModel>
 
         view = new TradeAssistantView(model, this);
     }
-
 
     public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
         tradeAssistantOfferController.setBisqEasyPrivateTradeChatChannel(privateChannel);

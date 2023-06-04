@@ -30,7 +30,6 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
-import bisq.security.KeyPairService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +51,9 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
     private final BisqEasyOfferDetailsView view;
     private final BisqEasyOfferDetailsModel model;
 
-    private final KeyPairService keyPairService;
     private final MarketPriceService marketPriceService;
 
     public BisqEasyOfferDetailsController(DefaultApplicationService applicationService) {
-        keyPairService = applicationService.getSecurityService().getKeyPairService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         model = new BisqEasyOfferDetailsModel();
         view = new BisqEasyOfferDetailsView(model, this);

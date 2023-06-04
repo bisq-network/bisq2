@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.primary.main.content.chat.ChatView;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.TradeAssistantView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.layout.Pane;
@@ -34,7 +35,7 @@ public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatModel bisqEasyChatModel;
     private final Switch offersOnlySwitch;
     private final Region bisqEasyPrivateTradeChatChannelSelection;
-    private final Pane tradeAssistant;
+    private final TradeAssistantView tradeAssistantView;
     private Subscription isBisqEasyPrivateTradeChatChannelPin;
 
     public BisqEasyChatView(BisqEasyChatModel model,
@@ -44,7 +45,7 @@ public class BisqEasyChatView extends ChatView {
                             Region twoPartyPrivateChatChannelSelection,
                             VBox chatMessagesComponent,
                             Pane channelSidebar,
-                            Pane tradeAssistant) {
+                            TradeAssistantView tradeAssistantView) {
         super(model,
                 controller,
                 bisqEasyPublicChatChannelSelection,
@@ -53,7 +54,7 @@ public class BisqEasyChatView extends ChatView {
                 channelSidebar);
 
         this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
-        this.tradeAssistant = tradeAssistant;
+        this.tradeAssistantView = tradeAssistantView;
 
         left.getChildren().add(1, Layout.separator());
         left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
@@ -76,16 +77,22 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyPrivateTradeChatChannelSelection.managedProperty().bind(bisqEasyChatModel.getIsTradeChannelVisible());
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
 
-        isBisqEasyPrivateTradeChatChannelPin = EasyBind.subscribe(bisqEasyChatModel.getIsBisqEasyPrivateTradeChatChannel(), value -> {
-            if (value) {
-                if (!chatMessagesComponent.getChildren().contains(tradeAssistant)) {
-                    chatMessagesComponent.getChildren().add(0, tradeAssistant);
-                    VBox.setMargin(tradeAssistant, new Insets(5, 25, 25, 25));
-                }
-            } else {
-                chatMessagesComponent.getChildren().remove(tradeAssistant);
-            }
-        });
+        isBisqEasyPrivateTradeChatChannelPin = EasyBind.subscribe(bisqEasyChatModel.getIsBisqEasyPrivateTradeChatChannel(),
+                isBisqEasyPrivateTradeChatChannel -> {
+                    VBox tradeAssistantRoot = tradeAssistantView.getRoot();
+                    if (isBisqEasyPrivateTradeChatChannel) {
+                        if (!chatMessagesComponent.getChildren().contains(tradeAssistantRoot)) {
+                            chatMessagesComponent.getChildren().add(0, tradeAssistantRoot);
+                            VBox.setMargin(tradeAssistantRoot, new Insets(10, 25, 25, 25));
+
+                            // We do not use transition here, so lets call onStartTransition() 
+                            // directly (would be called when transition is finished)
+                            tradeAssistantView.onStartTransition();
+                        }
+                    } else {
+                        chatMessagesComponent.getChildren().remove(tradeAssistantRoot);
+                    }
+                });
     }
 
     @Override

@@ -163,12 +163,10 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                 centerTime.stop();
             }
 
-            if (ownerScene != null) {
-                if (window != null && positionListener != null) {
-                    window.xProperty().removeListener(positionListener);
-                    window.yProperty().removeListener(positionListener);
-                    window.widthProperty().removeListener(positionListener);
-                }
+            if (window != null && positionListener != null) {
+                window.xProperty().removeListener(positionListener);
+                window.yProperty().removeListener(positionListener);
+                window.widthProperty().removeListener(positionListener);
             }
 
             root.getChildren().clear();

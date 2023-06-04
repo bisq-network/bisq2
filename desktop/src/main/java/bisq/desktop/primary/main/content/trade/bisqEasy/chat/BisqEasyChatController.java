@@ -93,7 +93,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot(),
-                tradeAssistantController.getView().getRoot());
+                tradeAssistantController.getView());
     }
 
     @Override
