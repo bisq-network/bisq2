@@ -65,7 +65,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeAssistantController = new TradeAssistantController(applicationService);
+        tradeAssistantController = new TradeAssistantController(applicationService, this::openUserProfileSidebar);
         bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(applicationService);
         bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(applicationService);
     }
@@ -164,7 +164,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
                 }
 
-                tradeAssistantController.setBisqEasyOffer(privateChannel.getBisqEasyOffer());
+                tradeAssistantController.setBisqEasyPrivateTradeChatChannel(privateChannel);
             } else if (isTwoPartyPrivateChatChannel) {
                 bisqEasyPublicChannelSelectionMenu.deSelectChannel();
                 bisqEasyPrivateChannelSelectionMenu.deSelectChannel();

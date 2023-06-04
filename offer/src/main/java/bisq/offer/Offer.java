@@ -38,10 +38,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -174,5 +171,29 @@ public abstract class Offer implements Proto {
 
     public Optional<Quote> findMarketPriceQuote(MarketPriceService marketPriceService) {
         return marketPriceService.getMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
+    }
+
+    public Direction getMakersDirection() {
+        return direction;
+    }
+
+    public Direction getTakersDirection() {
+        return direction.mirror();
+    }
+
+    public String getAuthorUserProfileId() {
+        return makerNetworkId.getPubKey().getId();
+    }
+
+    public boolean isMyOffer(String myUserProfileId) {
+        return myUserProfileId.equals(getAuthorUserProfileId());
+    }
+
+    public boolean isMyOffer(Set<String> myUserProfileIds) {
+        return myUserProfileIds.contains(getAuthorUserProfileId());
+    }
+
+    public String getShortId() {
+        return id.substring(0, 8);
     }
 }

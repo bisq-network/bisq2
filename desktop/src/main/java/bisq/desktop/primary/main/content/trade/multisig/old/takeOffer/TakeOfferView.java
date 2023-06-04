@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer;
 
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.AutoSizeButton;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -48,7 +48,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
         Label headlineLabel = new Label(Res.get("takeOffer"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
-        HBox headLineBox = Layout.hBoxWith(Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
+        HBox headLineBox = new HBox(15, Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
         VBox.setMargin(headLineBox, new Insets(-27, 0, 0, 0));
 
 
@@ -57,7 +57,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
-        takeOfferButton = new Button(Res.get("takeOffer.button"));
+        takeOfferButton = new AutoSizeButton(Res.get("takeOffer.button"));
         takeOfferButton.setDefaultButton(true);
 
         Button cancelButton = new Button(Res.get("cancel"));
@@ -69,7 +69,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
                 protocolLabel,
                 amountPrice,
                 settlement,
-                Layout.hBoxWith(takeOfferButton, cancelButton));
+                new HBox(15, takeOfferButton, cancelButton));
     }
 
     @Override

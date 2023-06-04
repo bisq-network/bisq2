@@ -176,14 +176,12 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
     private MaterialTextField getField(String description) {
         MaterialTextField field = new MaterialTextField(description, null);
         field.setEditable(false);
-        field.setFocusTraversable(false);
         return field;
     }
 
     private MaterialTextArea addTextArea(String description) {
         MaterialTextArea field = new MaterialTextArea(description, null);
         field.setEditable(false);
-        field.setFocusTraversable(false);
         field.setFixedHeight(2 * 56 + 20); // MaterialTextField has height 56
         return field;
     }

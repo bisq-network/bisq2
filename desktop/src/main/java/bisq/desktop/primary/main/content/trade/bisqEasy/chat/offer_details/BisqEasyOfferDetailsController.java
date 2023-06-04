@@ -125,8 +125,4 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
     void onClose() {
         OverlayController.hide();
     }
-
-    private boolean isMyOffer(BisqEasyOffer bisqEasyOffer) {
-        return keyPairService.findKeyPair(bisqEasyOffer.getMakerNetworkId().getPubKey().getKeyId()).isPresent();
-    }
 }

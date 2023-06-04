@@ -50,6 +50,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -297,6 +298,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public Optional<UserIdentity> findUserIdentity(String profileId) {
         return getUserIdentities().stream().filter(userIdentity -> userIdentity.getId().equals(profileId)).findAny();
+    }
+
+    public Set<String> getMyUserProfileIds() {
+        return getUserIdentities().stream()
+                .map(userIdentity -> userIdentity.getUserProfile().getId())
+                .collect(Collectors.toSet());
     }
 
     private UserIdentity createUserIdentity(String nickName,

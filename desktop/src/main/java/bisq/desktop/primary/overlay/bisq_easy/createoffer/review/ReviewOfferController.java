@@ -151,7 +151,7 @@ public class ReviewOfferController implements Controller {
                 settingsService.getRequiredTotalReputationScore().get(),
                 minAmountAsPercentage,
                 sellerPremiumAsPercentage);
-        model.setMyOfferText(StringUtils.truncate(bisqEasyOffer.getChatMessageText(), 100));
+        model.setMyOfferText(bisqEasyOffer.getChatMessageText());
 
         bisqEasyPublicChatChannelService.joinChannel(channel);
         bisqEasyChatChannelSelectionService.selectChannel(channel);

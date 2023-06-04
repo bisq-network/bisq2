@@ -26,6 +26,7 @@ import lombok.Getter;
 
 @Getter
 public class PaymentMethodModel implements Model {
+    // Method enum name or custom name
     private final ObservableList<String> allPaymentMethodNames = FXCollections.observableArrayList();
     private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
     private final ObservableList<String> selectedPaymentMethodNames = FXCollections.observableArrayList();

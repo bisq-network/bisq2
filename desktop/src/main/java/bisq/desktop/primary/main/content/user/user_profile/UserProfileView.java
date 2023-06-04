@@ -94,7 +94,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         profileAge = addField(Res.get("social.chatUser.profileAge"));
         profileAge.setIconTooltip(Res.get("social.chatUser.profileAge.tooltip"));
 
-        reputationScoreField = addField(Res.get("social.chatUser.reputationScore"));
+        reputationScoreField = addField(Res.get("social.chatUser.reputation"));
 
         statement = addField(Res.get("social.chatUser.statement"), Res.get("social.chatUser.statement.prompt"));
         statement.setEditable(true);

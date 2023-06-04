@@ -18,13 +18,12 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.Browser;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,7 @@ public class TradeAssistantTradeController implements Controller {
         view = new TradeAssistantTradeView(model, this);
     }
 
-    public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
+    public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
     }
 
     @Override
@@ -53,7 +52,11 @@ public class TradeAssistantTradeController implements Controller {
     public void onDeactivate() {
     }
 
-    void onNext() {
+    void onBack() {
+        Navigation.navigateTo(NavigationTarget.TRADE_ASSISTANT_NEGOTIATION);
+    }
+
+    void onConfirm() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             model.getCurrentIndex().set(nextIndex);
@@ -124,7 +127,7 @@ public class TradeAssistantTradeController implements Controller {
         model.getCloseButtonVisible().set(value);*/
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+    void onOpenTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
     }
 }

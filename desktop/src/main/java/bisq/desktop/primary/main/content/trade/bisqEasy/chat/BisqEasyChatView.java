@@ -77,9 +77,11 @@ public class BisqEasyChatView extends ChatView {
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
 
         isBisqEasyPrivateTradeChatChannelPin = EasyBind.subscribe(bisqEasyChatModel.getIsBisqEasyPrivateTradeChatChannel(), value -> {
-            if (value && !chatMessagesComponent.getChildren().contains(tradeAssistant)) {
-                chatMessagesComponent.getChildren().add(0, tradeAssistant);
-                VBox.setMargin(tradeAssistant, new Insets(0, 25, 25, 25));
+            if (value) {
+                if (!chatMessagesComponent.getChildren().contains(tradeAssistant)) {
+                    chatMessagesComponent.getChildren().add(0, tradeAssistant);
+                    VBox.setMargin(tradeAssistant, new Insets(5, 25, 25, 25));
+                }
             } else {
                 chatMessagesComponent.getChildren().remove(tradeAssistant);
             }

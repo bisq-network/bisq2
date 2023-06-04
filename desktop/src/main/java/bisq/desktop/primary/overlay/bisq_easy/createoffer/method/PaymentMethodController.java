@@ -27,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 public class PaymentMethodController implements Controller {
     private final PaymentMethodModel model;
@@ -37,9 +40,13 @@ public class PaymentMethodController implements Controller {
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
+
         model.getSelectedMarket().addListener((observable, oldValue, newValue) -> model.getSelectedPaymentMethodNames().clear());
     }
 
+    /**
+     * @return Enum names of FiatSettlement.Method or custom names
+     */
     public ObservableList<String> getPaymentMethodNames() {
         return model.getSelectedPaymentMethodNames();
     }
@@ -49,7 +56,8 @@ public class PaymentMethodController implements Controller {
             return;
         }
         model.getSelectedMarket().set(market);
-        model.getAllPaymentMethodNames().setAll(FiatSettlement.getPaymentMethodEnumNamesForCode(market.getQuoteCurrencyCode()));
+        List<FiatSettlement.Method> methods = FiatSettlement.getSettlementMethodsForCode(market.getQuoteCurrencyCode());
+        model.getAllPaymentMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
         model.getAllPaymentMethodNames().addAll(model.getAddedCustomMethodNames());
         model.getIsPaymentMethodsEmpty().set(model.getAllPaymentMethodNames().isEmpty());
     }
@@ -60,7 +68,8 @@ public class PaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
-        customMethodPin = EasyBind.subscribe(model.getCustomMethodName(), customMethod -> model.getIsAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
+        customMethodPin = EasyBind.subscribe(model.getCustomMethodName(),
+                customMethod -> model.getIsAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
     }
 
     @Override
@@ -68,13 +77,13 @@ public class PaymentMethodController implements Controller {
         customMethodPin.unsubscribe();
     }
 
-    public void onTogglePaymentMethod(String paymentMethod, boolean isSelected) {
+    public void onTogglePaymentMethod(String paymentMethodName, boolean isSelected) {
         if (isSelected) {
-            if (!model.getSelectedPaymentMethodNames().contains(paymentMethod)) {
-                model.getSelectedPaymentMethodNames().add(paymentMethod);
+            if (!model.getSelectedPaymentMethodNames().contains(paymentMethodName)) {
+                model.getSelectedPaymentMethodNames().add(paymentMethodName);
             }
         } else {
-            model.getSelectedPaymentMethodNames().remove(paymentMethod);
+            model.getSelectedPaymentMethodNames().remove(paymentMethodName);
         }
     }
 

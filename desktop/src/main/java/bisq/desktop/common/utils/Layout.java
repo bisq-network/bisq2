@@ -17,17 +17,13 @@
 
 package bisq.desktop.common.utils;
 
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 
 import javax.annotation.Nullable;
 
 public class Layout {
-    public static final Insets PADDING = new Insets(20);
     public static final double SPACING = 20;
 
     public static void pinToAnchorPane(Node node,
@@ -52,19 +48,6 @@ public class Layout {
         if (left != null) AnchorPane.setLeftAnchor(node, left);
     }
 
-    public static HBox hBoxWith(Node... nodes) {
-        HBox hBox = new HBox();
-        hBox.setSpacing(15);
-        hBox.getChildren().addAll(nodes);
-        return hBox;
-    }
-
-    public static VBox vBoxWith(Node... nodes) {
-        VBox vBox = new VBox();
-        vBox.setSpacing(15);
-        vBox.getChildren().addAll(nodes);
-        return vBox;
-    }
 
     public static Region separator() {
         Region separator = new Region();

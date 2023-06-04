@@ -130,7 +130,7 @@ public class MaterialTextField extends Pane {
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                update()).get());
+                layoutIconButton()).get());
         field.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
 

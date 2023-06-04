@@ -18,19 +18,21 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.negotiation.TradeAssistantNegotiationController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer.TradeAssistantOfferController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade.TradeAssistantTradeController;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Slf4j
 public class TradeAssistantController extends TabController<TradeAssistantModel> {
@@ -42,23 +44,24 @@ public class TradeAssistantController extends TabController<TradeAssistantModel>
     private final TradeAssistantNegotiationController tradeAssistantNegotiationController;
     private final TradeAssistantTradeController tradeAssistantTradeController;
 
-    public TradeAssistantController(DefaultApplicationService applicationService) {
+    public TradeAssistantController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         super(new TradeAssistantModel(), NavigationTarget.TRADE_ASSISTANT);
 
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
 
-        tradeAssistantOfferController = new TradeAssistantOfferController(applicationService);
+        tradeAssistantOfferController = new TradeAssistantOfferController(applicationService, openUserProfileSidebarHandler);
         tradeAssistantNegotiationController = new TradeAssistantNegotiationController(applicationService);
         tradeAssistantTradeController = new TradeAssistantTradeController(applicationService);
 
         view = new TradeAssistantView(model, this);
     }
 
-    public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
-        tradeAssistantOfferController.setBisqEasyOffer(bisqEasyOffer);
-        tradeAssistantNegotiationController.setBisqEasyOffer(bisqEasyOffer);
-        tradeAssistantTradeController.setBisqEasyOffer(bisqEasyOffer);
+
+    public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
+        tradeAssistantOfferController.setBisqEasyPrivateTradeChatChannel(privateChannel);
+        tradeAssistantNegotiationController.setBisqEasyPrivateTradeChatChannel(privateChannel);
+        tradeAssistantTradeController.setBisqEasyPrivateTradeChatChannel(privateChannel);
     }
 
     @Override

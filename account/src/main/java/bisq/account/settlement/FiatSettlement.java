@@ -24,6 +24,7 @@ import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -32,11 +33,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class FiatSettlement extends Settlement<FiatSettlement.Method> {
+
     public static List<Method> getSettlementMethods() {
-        return List.of(FiatSettlement.Method.values());
+        Method[] values = Method.values();
+        return List.of(values);
     }
 
     public static FiatSettlement fromName(String settlementMethodName) {
@@ -46,7 +50,6 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
             return new FiatSettlement(settlementMethodName);
         }
     }
-
 
     public static List<FiatSettlement.Method> getSettlementMethodsForProtocolType(ProtocolType protocolType) {
         switch (protocolType) {
@@ -63,15 +66,25 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
         }
     }
 
-    public static List<String> getPaymentMethodEnumNamesForCode(String currencyCode) {
-        return getPaymentMethodsForCode(currencyCode).stream()
+    public static List<String> getSettlementMethodEnumNamesForCode(String currencyCode) {
+        return getSettlementMethodsForCode(currencyCode).stream()
                 .map(Enum::name)
                 .collect(Collectors.toList());
     }
 
-    public static List<FiatSettlement.Method> getPaymentMethodsForCode(String currencyCode) {
+    public static List<FiatSettlement.Method> getSettlementMethodsForCode(String currencyCode) {
         return FiatSettlement.getSettlementMethods().stream()
-                .filter(method -> new HashSet<>(method.getCurrencyCodes()).contains(currencyCode))
+                .filter(method -> {
+                    if (currencyCode.equals("EUR") && (method == Method.SWIFT || method == Method.NATIONAL_BANK)) {
+                        // For EUR, we don't add SWIFT and NATIONAL_BANK
+                        return false;
+                    }
+                    // We add NATIONAL_BANK to all
+                    if (method == Method.NATIONAL_BANK) {
+                        return true;
+                    }
+                    return new HashSet<>(method.getCurrencyCodes()).contains(currencyCode);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -81,20 +94,210 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Method implements Settlement.Method {
-        USER_DEFINED,
-        SEPA(List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
-                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA")),
-        SEPA_INSTANT(List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
-                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA")),
+        USER_DEFINED(new ArrayList<>(), new ArrayList<>()),
+        SEPA(getSepaEuroCountries()),
+        SEPA_INSTANT(getSepaEuroCountries()),
         ZELLE(List.of("US")),
-        REVOLUT(List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+        REVOLUT(getRevolutCountries(), getRevolutCurrencies()),
+        WISE(getWiseCountries(), getWiseCurrencies()),
+        NATIONAL_BANK(new ArrayList<>(), new ArrayList<>()),
+        SWIFT();
+
+        @Getter
+        private final List<Country> countries;
+        @Getter
+        private final List<TradeCurrency> tradeCurrencies;
+        @Getter
+        private final List<String> currencyCodes;
+
+        Method() {
+            this(null, null);
+        }
+
+        Method(List<String> countryCodes) {
+            this(countryCodes, null);
+        }
+
+        /**
+         * @param countryCodes  If countryCodes is null we use all countries
+         * @param currencyCodes If currencyCodes is  null we create it from the countries
+         */
+        Method(@Nullable List<String> countryCodes, @Nullable List<String> currencyCodes) {
+            countries = countryCodes != null ?
+                    CountryRepository.getCountriesFromCodes(countryCodes) :
+                    CountryRepository.getCountries();
+            countries.sort(Comparator.comparing(Country::getName));
+
+            this.tradeCurrencies = currencyCodes != null ?
+                    toTradeCurrencies(currencyCodes) :
+                    countries.stream()
+                            .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.getCode()))
+                            .distinct()
+                            .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
+                            .collect(Collectors.toList());
+            this.tradeCurrencies.sort(Comparator.comparing(TradeCurrency::getName));
+
+            this.currencyCodes = currencyCodes != null ?
+                    currencyCodes :
+                    tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toList());
+            // sorting this.currencyCodes throws an ExceptionInInitializerError. Not clear why. 
+            // But currencyCodes comes from hard coded values, so it is deterministic anyway.
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Class instance
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public FiatSettlement(Method method) {
+        super(method);
+    }
+
+    public FiatSettlement(String settlementMethodName) {
+        super(settlementMethodName);
+    }
+
+    @Override
+    public bisq.account.protobuf.Settlement toProto() {
+        return getSettlementBuilder().setFiatSettlement(bisq.account.protobuf.FiatSettlement.newBuilder()).build();
+    }
+
+    public static FiatSettlement fromProto(bisq.account.protobuf.Settlement proto) {
+        return FiatSettlement.fromName(proto.getSettlementMethodName());
+    }
+
+    @Override
+    protected FiatSettlement.Method getFallbackMethod() {
+        return Method.USER_DEFINED;
+    }
+
+    @Override
+    public List<TradeCurrency> getTradeCurrencies() {
+        return method.getTradeCurrencies();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Payment method specific data
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static List<String> getSepaEuroCountries() {
+        return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
+                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
+    }
+
+    private static List<TradeCurrency> toTradeCurrencies(List<String> currencyCodes) {
+        return currencyCodes.stream()
+                .map(FiatCurrencyRepository::getCurrencyByCode)
+                .distinct()
+                .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
+                .collect(Collectors.toList());
+    }
+
+    // https://wise.com/help/articles/2571942/what-countriesregions-can-i-send-to
+    // https://github.com/bisq-network/proposals/issues/243
+    private static List<String> getWiseCountries() {
+        List<String> list = new ArrayList<>(List.of("AR", "AU", "BD", "BR", "BG", "CA", "CL", "CN", "CO", "CR", "CZ", "DK", "EG",
+                "GE", "GH", "HK", "HU", "IN", "ID", "IL", "JP", "KE", "MY", "MX", "MA", "NP", "NZ", "NO",
+                "PK", "PH", "PL", "RO", "SG", "ZA", "KR", "LK", "SE", "CH", "TZ", "TH", "TR", "UG", "UA", "AE",
+                "GB", "US", "UY", "VN", "ZM"));
+        list.addAll(getSepaEuroCountries());
+        return list;
+    }
+
+    private static List<String> getWiseCurrencies() {
+        return List.of(
+                "AED",
+                "ARS",
+                "AUD",
+                "BGN",
+                "CAD",
+                "CHF",
+                "CLP",
+                "CZK",
+                "DKK",
+                "EGP",
+                "EUR",
+                "GBP",
+                "GEL",
+                "HKD",
+                "HRK",
+                "HUF",
+                "IDR",
+                "ILS",
+                "JPY",
+                "KES",
+                "KRW",
+                "MAD",
+                "MXN",
+                "MYR",
+                "NOK",
+                "NPR",
+                "NZD",
+                "PEN",
+                "PHP",
+                "PKR",
+                "PLN",
+                "RON",
+                "RUB",
+                "SEK",
+                "SGD",
+                "THB",
+                "TRY",
+                "UGX",
+                "VND",
+                "XOF",
+                "ZAR",
+                "ZMW"
+        );
+    }
+
+    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
+    private static List<String> getRevolutCountries() {
+        return List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
                 "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL",
                 "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
-                "AU", "CA", "SG", "CH", "US"), getRevolutCurrencies()),
-        WISE(new ArrayList<>(), getWiseCurrencies()),
-        NATIONAL_BANK(new ArrayList<>(), new ArrayList<>()),
-        SWIFT;
-        
+                "AU", "CA", "SG", "CH", "US");
+    }
+
+    private static List<String> getRevolutCurrencies() {
+        return List.of(
+                "AED",
+                "AUD",
+                "BGN",
+                "CAD",
+                "CHF",
+                "CZK",
+                "DKK",
+                "EUR",
+                "GBP",
+                "HKD",
+                "HRK",
+                "HUF",
+                "ILS",
+                "ISK",
+                "JPY",
+                "MAD",
+                "MXN",
+                "NOK",
+                "NZD",
+                "PLN",
+                "QAR",
+                "RON",
+                "RSD",
+                "RUB",
+                "SAR",
+                "SEK",
+                "SGD",
+                "THB",
+                "TRY",
+                "USD",
+                "ZAR"
+        );
+    }
+}
+  
 /*
 TODO add missing bisq 1 payment methods with supported countries and currencies
 NATIONAL_BANK=National bank transfer
@@ -151,183 +354,3 @@ ACH_TRANSFER=ACH Transfer
 DOMESTIC_WIRE_TRANSFER=Domestic Wire Transfer
 CIPS=Cross-Border Interbank Payment System
 */
-
-        @Getter
-        private final List<Country> countries;
-        @Getter
-        private final List<TradeCurrency> tradeCurrencies;
-        @Getter
-        private final List<String> currencyCodes;
-
-        Method() {
-            this(null, null);
-        }
-
-        Method(List<String> countryCodes) {
-            this(countryCodes, null);
-        }
-
-        /**
-         * @param countryCodes  If countryCodes is null we use all countries
-         * @param currencyCodes If currencyCodes is  null we create it from the countries
-         */
-        Method(@Nullable List<String> countryCodes, @Nullable List<String> currencyCodes) {
-            countries = countryCodes != null ?
-                    CountryRepository.getCountriesFromCodes(countryCodes) :
-                    CountryRepository.getCountries();
-            countries.sort(Comparator.comparing(Country::getName));
-
-            this.tradeCurrencies = currencyCodes != null ?
-                    toTradeCurrencies(currencyCodes) :
-                    countries.stream()
-                            .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.getCode()))
-                            .distinct()
-                            .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
-                            .collect(Collectors.toList());
-            tradeCurrencies.sort(Comparator.comparing(TradeCurrency::getName));
-
-            this.currencyCodes = currencyCodes != null ?
-                    currencyCodes :
-                    tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toList());
-            this.currencyCodes.sort(Comparator.comparing(String::toString));
-        }
-
-        public static List<Country> getSepaEuroCountries() {
-            List<String> codes = List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
-                    "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
-            List<Country> list = CountryRepository.getCountriesFromCodes(codes);
-            list.sort(Comparator.comparing(Country::getName));
-            return list;
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Class instance
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public FiatSettlement(Method method) {
-        super(method);
-    }
-
-    public FiatSettlement(String settlementMethodName) {
-        super(settlementMethodName);
-    }
-
-    @Override
-    public bisq.account.protobuf.Settlement toProto() {
-        return getSettlementBuilder().setFiatSettlement(bisq.account.protobuf.FiatSettlement.newBuilder()).build();
-    }
-
-    public static FiatSettlement fromProto(bisq.account.protobuf.Settlement proto) {
-        return FiatSettlement.fromName(proto.getSettlementMethodName());
-    }
-
-    @Override
-    protected FiatSettlement.Method getFallbackMethod() {
-        return Method.USER_DEFINED;
-    }
-
-    @Override
-    public List<TradeCurrency> getTradeCurrencies() {
-        return method.getTradeCurrencies();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Payment method specific data
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private static List<TradeCurrency> toTradeCurrencies(List<String> currencyCodes) {
-        return currencyCodes.stream()
-                .map(FiatCurrencyRepository::getCurrencyByCode)
-                .distinct()
-                .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
-                .collect(Collectors.toList());
-    }
-
-    // https://github.com/bisq-network/proposals/issues/243
-    private static List<String> getWiseCurrencies() {
-        return List.of(
-                "AED",
-                "ARS",
-                "AUD",
-                "BGN",
-                "CAD",
-                "CHF",
-                "CLP",
-                "CZK",
-                "DKK",
-                "EGP",
-                "EUR",
-                "GBP",
-                "GEL",
-                "HKD",
-                "HRK",
-                "HUF",
-                "IDR",
-                "ILS",
-                "JPY",
-                "KES",
-                "KRW",
-                "MAD",
-                "MXN",
-                "MYR",
-                "NOK",
-                "NPR",
-                "NZD",
-                "PEN",
-                "PHP",
-                "PKR",
-                "PLN",
-                "RON",
-                "RUB",
-                "SEK",
-                "SGD",
-                "THB",
-                "TRY",
-                "UGX",
-                "VND",
-                "XOF",
-                "ZAR",
-                "ZMW"
-        );
-    }
-
-    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
-    private static List<String> getRevolutCurrencies() {
-        return List.of(
-                "AED",
-                "AUD",
-                "BGN",
-                "CAD",
-                "CHF",
-                "CZK",
-                "DKK",
-                "EUR",
-                "GBP",
-                "HKD",
-                "HRK",
-                "HUF",
-                "ILS",
-                "ISK",
-                "JPY",
-                "MAD",
-                "MXN",
-                "NOK",
-                "NZD",
-                "PLN",
-                "QAR",
-                "RON",
-                "RSD",
-                "RUB",
-                "SAR",
-                "SEK",
-                "SGD",
-                "THB",
-                "TRY",
-                "USD",
-                "ZAR"
-        );
-    }
-}

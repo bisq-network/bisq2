@@ -35,6 +35,7 @@ public final class SettlementSpec implements Proto {
     public static List<String> getSettlementMethodNames(Collection<SettlementSpec> settlementSpecs) {
         return settlementSpecs.stream()
                 .map(SettlementSpec::getSettlementMethodName)
+                .sorted()
                 .collect(Collectors.toList());
     }
 
@@ -47,6 +48,7 @@ public final class SettlementSpec implements Proto {
                         return methodName;
                     }
                 })
+                .sorted()
                 .collect(Collectors.toList());
     }
 

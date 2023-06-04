@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.of
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
@@ -30,6 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 public class TradeAssistantOfferModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
+    @Setter
+    private UserProfile peersUserProfile;
     private final StringProperty headline = new SimpleStringProperty();
-    private final StringProperty offerInfo = new SimpleStringProperty();
+    private final StringProperty offerTitle = new SimpleStringProperty();
+    private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty paymentMethods = new SimpleStringProperty();
+    private final StringProperty openUserProfileButtonLabel = new SimpleStringProperty();
 }

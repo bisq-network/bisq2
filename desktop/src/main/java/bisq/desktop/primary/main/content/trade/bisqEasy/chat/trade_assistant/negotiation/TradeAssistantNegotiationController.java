@@ -18,11 +18,10 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.negotiation;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.Browser;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +39,7 @@ public class TradeAssistantNegotiationController implements Controller {
         view = new TradeAssistantNegotiationView(model, this);
     }
 
-    public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
+    public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
     }
 
     @Override
@@ -63,7 +62,7 @@ public class TradeAssistantNegotiationController implements Controller {
         applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+    void onOpenTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
     }
 }

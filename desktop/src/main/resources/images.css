@@ -344,26 +344,29 @@
 /* ------------------------------------------------------------------------------------ */
 /* Payment */
 /* ------------------------------------------------------------------------------------ */
-
+/*
 #SEPA {
     -fx-image: url("images/payment/SEPA.png");
 }
-
-#Revolut {
+#SEPA_INSTANT {
+    -fx-image: url("images/payment/SEPA.png");
+}
+#ZELLE {
+    -fx-image: url("images/payment/Zelle.png");
+}
+#REVOLUT {
     -fx-image: url("images/payment/Revolut.png");
 }
-
-#Wise {
+#WISE {
     -fx-image: url("images/payment/Wise.png");
 }
-
-#NationalBankTransfer {
+#NATIONAL_BANK {
+    -fx-image: url("images/payment/NationalBankTransfer.png");
+}
+#SWIFT {
     -fx-image: url("images/payment/NationalBankTransfer.png");
 }
 
-#Zelle {
-    -fx-image: url("images/payment/Zelle.png");
-}
 
 
 /* Onboarding icons*/

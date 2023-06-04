@@ -26,6 +26,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Set the minHeight of the label so that it does not get truncated.
  * todo still not working in all situations correctly ;-(
@@ -33,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MultiLineLabel extends Label {
     private ChangeListener<Number> heightListener, widthListener;
-    private ChangeListener<Scene> sceneListener;
     private double initialHeight = 0;
     private int numRecursions = 0;
     private double minHeight;
@@ -60,48 +61,60 @@ public class MultiLineLabel extends Label {
     private void initialize() {
         setWrapText(true);
 
-        widthListener = (observable, oldValue, newValue) -> {
-            if (newValue.doubleValue() > 0 && getHeight() > 0) {
-                minHeight = initialHeight;
-                adjustMinHeight();
-            }
-        };
+        widthListener = new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
+                onWidthChanged(newValue.doubleValue())).get();
+        heightListener = new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
+                onHeightChanged(newValue.doubleValue())).get();
 
-        heightListener = (observable, oldValue, newValue) -> {
-            if (newValue.doubleValue() > 0) {
-                heightProperty().removeListener(heightListener);
-                initialHeight = newValue.doubleValue();
-                adjustMinHeight();
-            }
-        };
-
-        sceneListener = (observable, oldValue, newValue) -> {
-            if (newValue == null) {
-                widthProperty().removeListener(widthListener);
-            } else {
-                widthProperty().addListener(widthListener);
-                heightProperty().addListener(heightListener);
-            }
-        };
-        sceneProperty().addListener(sceneListener);
-
+        sceneProperty().addListener(new WeakReference<ChangeListener<Scene>>((observable, oldValue, newValue) ->
+                onSceneChanged(newValue)).get());
         widthProperty().addListener(widthListener);
         heightProperty().addListener(heightListener);
 
         UIThread.runOnNextRenderFrame(this::adjustMinHeight);
     }
 
+    private void onWidthChanged(double width) {
+        if (width > 0 && getHeight() > 0) {
+            minHeight = initialHeight;
+            adjustMinHeight();
+        }
+    }
+
+    private void onHeightChanged(double height) {
+        if (height > 0) {
+            heightProperty().removeListener(heightListener);
+            widthProperty().removeListener(widthListener);
+            initialHeight = height;
+            adjustMinHeight();
+        }
+    }
+
+    private void onSceneChanged(Scene newValue) {
+        if (newValue == null) {
+            widthProperty().removeListener(widthListener);
+        } else {
+            widthProperty().addListener(widthListener);
+            heightProperty().addListener(heightListener);
+        }
+    }
+
     private void adjustMinHeight() {
         if (getParent() instanceof Pane) {
             Pane parentPane = (Pane) getParent();
-            parentPane.setMinHeight(2000);
+            if (getText() != null && !getText().isEmpty()) {
+                parentPane.setMinHeight(2000);
+            }
             UIThread.runOnNextRenderFrame(() -> {
-                if (initialHeight == getHeight() && numRecursions < 500) {
-                    numRecursions++;
-                    adjustMinHeight();
-                } else {
-                    minHeight = getHeight();
-                    parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);
+                double height = getHeight();
+                if (height > 0 && getText() != null && !getText().isEmpty()) {
+                    if (initialHeight == height && numRecursions < 500) {
+                        numRecursions++;
+                        adjustMinHeight();
+                    } else {
+                        minHeight = height;
+                        parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);
+                    }
                 }
             });
         }

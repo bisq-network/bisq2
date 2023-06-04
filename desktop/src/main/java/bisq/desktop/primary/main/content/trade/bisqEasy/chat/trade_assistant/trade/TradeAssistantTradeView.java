@@ -46,9 +46,9 @@ public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel
     private static final double OPACITY = 0.35;
 
     private final List<Label> tradePhaseLabels;
-    private final Button confirmButton, openDisputeButton;
+    private final Button backButton, confirmButton, openDisputeButton;
+    private final Hyperlink openTradeGuide;
     private final HBox buttons;
-    private final Hyperlink learnMore;
     private final Text content;
     private Subscription widthPin;
     private Subscription topPaneBoxVisibleSubscription;
@@ -71,17 +71,18 @@ public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel
         HBox tradePhaseHBox = pair.getFirst();
         tradePhaseLabels = pair.getSecond();
 
+        backButton = new Button(Res.get("back"));
         confirmButton = new Button();
         confirmButton.setDefaultButton(true);
 
         openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
-        buttons = new HBox(10, confirmButton, openDisputeButton);
+        buttons = new HBox(10, backButton, confirmButton, openDisputeButton);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        openTradeGuide = new Hyperlink(Res.get("tradeAssistant.openTradeGuide"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, tradePhaseHBox, content, learnMore, buttons);
+        VBox.setMargin(openTradeGuide, new Insets(0, 0, 10, 0));
+        root.getChildren().addAll(headline, tradePhaseHBox, content, openTradeGuide, buttons);
 
         currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
     }
@@ -92,9 +93,10 @@ public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel
         openDisputeButton.visibleProperty().bind(model.getOpenDisputeButtonVisible());
         openDisputeButton.managedProperty().bind(model.getOpenDisputeButtonVisible());
 
-        confirmButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(e -> controller.onBack());
+        confirmButton.setOnAction(e -> controller.onConfirm());
         openDisputeButton.setOnAction(e -> controller.onOpenDispute());
-        learnMore.setOnAction(e -> controller.onLearnMore());
+        openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
 
         model.getCurrentIndex().addListener(currentIndexListener);
 
@@ -117,7 +119,7 @@ public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel
 
         confirmButton.setOnAction(null);
         openDisputeButton.setOnAction(null);
-        learnMore.setOnAction(null);
+        openTradeGuide.setOnAction(null);
 
         model.getCurrentIndex().removeListener(currentIndexListener);
 

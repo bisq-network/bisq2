@@ -137,7 +137,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         twoPartyPrivateChatChannelsPin.unbind();
     }
 
-    private void openUserProfileSidebar(UserProfile userProfile) {
+    protected void openUserProfileSidebar(UserProfile userProfile) {
         onCloseSideBar();
         model.getSideBarVisible().set(true);
 
