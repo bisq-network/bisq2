@@ -17,8 +17,20 @@
 
 package bisq.contract;
 
-public enum Role {
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
+
+public enum Role implements ProtoEnum {
     MAKER,
     TAKER,
-    ESCROW_AGENT
+    ESCROW_AGENT;
+
+    @Override
+    public bisq.contract.protobuf.Role toProto() {
+        return bisq.contract.protobuf.Role.valueOf(name());
+    }
+
+    public static Role fromProto(bisq.contract.protobuf.Role proto) {
+        return ProtobufUtils.enumFromProto(Role.class, proto.name());
+    }
 }

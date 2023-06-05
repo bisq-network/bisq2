@@ -21,9 +21,35 @@ package protocol;
 option java_package = "bisq.protocol.protobuf";
 option java_multiple_files = true;
 
+import "offer.proto";
+
 message ProtocolModel {
-  //todo
 }
+
 message ProtocolStore {
-  map<string, ProtocolModel> protocolModelByOfferId = 1;
+  map<string, ProtocolModel> modelByOfferId = 1;
+}
+
+// BisqEasy
+enum BisqEasyTradePhase {
+  NEGOTIATION = 0;
+  FIAT_TRANSFER = 1;
+  BTC_TRANSFER = 2;
+  COMPLETED = 3;
+}
+
+message BisqEasyTrade {
+  offer.Offer offer = 1;
+  uint64 baseSideAmount = 2;
+  uint64 quoteSideAmount = 3;
+  double premium = 4;
+}
+
+message BisqEasyProtocolModel {
+  BisqEasyTrade trade = 1;
+  BisqEasyTradePhase phase = 2;
+}
+
+message BisqEasyProtocolModelStore {
+  map<string, BisqEasyProtocolModel> protocolModelById = 1;
 }

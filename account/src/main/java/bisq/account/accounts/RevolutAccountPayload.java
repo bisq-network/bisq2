@@ -17,7 +17,6 @@
 
 package bisq.account.accounts;
 
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,13 +29,20 @@ import lombok.extern.slf4j.Slf4j;
 public final class RevolutAccountPayload extends AccountPayload {
     private final String email;
 
-    public RevolutAccountPayload(String settlementMethodId, String email) {
-        super(settlementMethodId);
+    public RevolutAccountPayload(String id, String settlementMethodName, String email) {
+        super(id, settlementMethodName);
         this.email = email;
     }
 
     @Override
-    public Message toProto() {
-        return null;
+    public bisq.account.protobuf.AccountPayload toProto() {
+        return getAccountPayloadBuilder().setRevolutAccountPayload(
+                        bisq.account.protobuf.RevolutAccountPayload.newBuilder()
+                                .setEmail(email))
+                .build();
+    }
+
+    public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        return new RevolutAccountPayload(proto.getId(), proto.getSettlementMethodName(), proto.getRevolutAccountPayload().getEmail());
     }
 }

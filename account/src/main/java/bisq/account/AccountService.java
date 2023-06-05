@@ -19,13 +19,11 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
-import bisq.account.accounts.RevolutAccount;
-import bisq.account.accounts.SepaAccount;
-import bisq.account.bisqeasy.BisqEasyPaymentAccountService;
-import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.protocol_type.ProtocolType;
+import bisq.account.settlement.Settlement;
 import bisq.common.application.Service;
-import bisq.common.locale.CountryRepository;
+import bisq.common.observable.Observable;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
@@ -34,8 +32,8 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.List;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -46,12 +44,12 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     @Getter
     private final Persistence<AccountStore> persistence;
     @Getter
-    private final BisqEasyPaymentAccountService bisqEasyPaymentAccountService;
+    private transient final ObservableSet<Account<?, ? extends Settlement<?>>> accounts = new ObservableSet<>();
 
     public AccountService(NetworkService networkService,
-                          PersistenceService persistenceService, IdentityService identityService) {
+                          PersistenceService persistenceService,
+                          IdentityService identityService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        bisqEasyPaymentAccountService = new BisqEasyPaymentAccountService(persistenceService);
     }
 
 
@@ -61,7 +59,6 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        addDummyAccounts();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -71,41 +68,57 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     }
 
 
-    public void addAccount(Account<? extends SettlementMethod> account) {
-        List<Account<? extends SettlementMethod>> accounts = persistableStore.getAccounts();
-        if (accounts.contains(account)) return;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Map<String, Account<?, ? extends Settlement<?>>> getAccountByNameMap() {
+        return persistableStore.getAccountByName();
+    }
+
+    public boolean hasAccounts() {
+        return !getAccountByNameMap().isEmpty();
+    }
+
+    public void addPaymentAccount(Account<?, ? extends Settlement<?>> account) {
+        getAccountByNameMap().put(account.getAccountName(), account);
         accounts.add(account);
         persist();
     }
 
-    public List<Account<? extends SettlementMethod>> getAccounts() {
-        return persistableStore.getAccounts();
+    public void removePaymentAccount(Account<?, ? extends Settlement<?>> account) {
+        getAccountByNameMap().remove(account.getAccountName());
+        accounts.remove(account);
+        if (account.equals(getSelectedAccount())) {
+            setSelectedAccount(null);
+        }
+        persist();
     }
 
-    public List<Account<? extends SettlementMethod>> getMatchingAccounts(SwapProtocolType protocolTyp,
+    public Optional<Account<?, ? extends Settlement<?>>> findAccount(String name) {
+        return Optional.ofNullable(getAccountByNameMap().get(name));
+    }
+
+    public Observable<Account<?, ? extends Settlement<?>>> selectedAccountAsObservable() {
+        return persistableStore.getSelectedAccount();
+    }
+
+    @Nullable
+    public Account<?, ? extends Settlement<?>> getSelectedAccount() {
+        return selectedAccountAsObservable().get();
+    }
+
+    public void setSelectedAccount(Account<?, ? extends Settlement<?>> account) {
+        selectedAccountAsObservable().set(account);
+        persist();
+    }
+
+    public List<Account<?, ? extends Settlement<?>>> getMatchingAccounts(ProtocolType protocolTyp,
                                                                          String currencyCode) {
-        var settlementMethods = new HashSet<>(SettlementMethod.from(protocolTyp, currencyCode));
-        return persistableStore.getAccounts().stream()
-                .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
+        Set<? extends Settlement.Method> settlementMethods = new HashSet<>(Settlement.getSettlementMethods(protocolTyp, currencyCode));
+        return persistableStore.getAccountByName().values().stream()
+                .filter(account -> settlementMethods.contains(account.getSettlement().getMethod()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
-    }
-
-    private void addDummyAccounts() {
-        log.info("add dummy accounts");
-        if (getAccounts().isEmpty()) {
-            SepaAccount john_smith = new SepaAccount("SEPA-account-1",
-                    "John Smith",
-                    "iban_1234",
-                    "bic_1234",
-                    CountryRepository.getDefaultCountry());
-            addAccount(john_smith);
-            addAccount(new SepaAccount("SEPA-account-2",
-                    "Mary Smith",
-                    "iban_5678",
-                    "bic_5678",
-                    CountryRepository.getDefaultCountry()));
-            addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
-        }
     }
 }

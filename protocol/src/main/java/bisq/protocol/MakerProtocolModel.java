@@ -18,16 +18,24 @@
 package bisq.protocol;
 
 import bisq.contract.Contract;
+import bisq.offer.Offer;
 import lombok.Getter;
 
 @Getter
-public class MakerProtocolModel extends ProtocolModel {
+public class MakerProtocolModel<T extends Offer> extends ProtocolModel<T> {
 
-    public MakerProtocolModel(Contract contract) {
+    public MakerProtocolModel(Contract<T> contract) {
         super(contract);
     }
 
-    public MakerProtocolModel getClone() {
-        return new MakerProtocolModel(contract);
+    @Override
+    public bisq.protocol.protobuf.ProtocolModel toProto() {
+        return null;
     }
+
+
+    public MakerProtocolModel<T> getClone() {
+        return new MakerProtocolModel<>(contract);
+    }
+
 }

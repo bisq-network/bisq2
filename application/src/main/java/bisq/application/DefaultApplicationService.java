@@ -25,7 +25,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.offer.OfferService;
+import bisq.offer.poc.OfferService;
 import bisq.oracle.OracleService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.protocol.ProtocolService;
@@ -77,9 +77,9 @@ public class DefaultApplicationService extends ApplicationService {
     private final UserService userService;
     private final ChatService chatService;
     private final SettingsService settingsService;
-    private final ProtocolService protocolService;
     private final SupportService supportService;
     private final NotificationsService notificationsService;
+    private final ProtocolService protocolService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 

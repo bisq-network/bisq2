@@ -17,7 +17,6 @@
 
 package bisq.account.accounts;
 
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,15 +31,31 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     private final String iban;
     private final String bic;
 
-    public SepaAccountPayload(String settlementMethodId, String holderName, String iban, String bic, String countryCode) {
-        super(settlementMethodId, countryCode);
+    public SepaAccountPayload(String id, String settlementMethodName, String holderName, String iban, String bic, String countryCode) {
+        super(id, settlementMethodName, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
     }
 
     @Override
-    public Message toProto() {
-        return null;
+    public bisq.account.protobuf.AccountPayload toProto() {
+        bisq.account.protobuf.SepaAccountPayload.Builder sepa = bisq.account.protobuf.SepaAccountPayload.newBuilder()
+                .setHolderName(holderName)
+                .setIban(iban)
+                .setBic(bic);
+        bisq.account.protobuf.CountryBasedAccountPayload.Builder countryBased = getCountryBasedAccountPayloadBuilder().setSepaAccountPayload(sepa);
+        return getAccountPayloadBuilder().setCountryBasedAccountPayload(countryBased).build();
+    }
+
+    public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+        bisq.account.protobuf.SepaAccountPayload sepaAccountPayload = countryBasedAccountPayload.getSepaAccountPayload();
+        return new SepaAccountPayload(proto.getId(),
+                proto.getSettlementMethodName(),
+                sepaAccountPayload.getHolderName(),
+                sepaAccountPayload.getIban(),
+                sepaAccountPayload.getBic(),
+                countryBasedAccountPayload.getCountryCode());
     }
 }

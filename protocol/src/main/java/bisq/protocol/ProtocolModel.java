@@ -17,9 +17,11 @@
 
 package bisq.protocol;
 
+import bisq.common.observable.Observable;
 import bisq.common.proto.Proto;
 import bisq.contract.Contract;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.offer.Offer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,64 +29,75 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@Getter
-public abstract class ProtocolModel implements Proto {
 
+public abstract class ProtocolModel<T extends Offer> implements Proto {
     public enum State {
         IDLE,
         PENDING,
         COMPLETED,
-        FAILED
+        FAILED;
+
+        public boolean isPending() {
+            return this == State.PENDING;
+        }
+
+        public boolean isCompleted() {
+            return this == State.COMPLETED;
+        }
+
+        public boolean isFailed() {
+            return this == State.FAILED;
+        }
+
     }
 
-    //todo impl in subclasses, make abstract
-    @Override
-    public bisq.protocol.protobuf.ProtocolModel toProto() {
-        //todo
-        return null;
-    }
-
-    //todo
-    public static ProtocolModel fromProto(bisq.protocol.protobuf.ProtocolModel proto) {
-        return null;
-    }
-
-    protected Contract contract;
-
-    protected State state = State.IDLE;
+    @Getter
+    protected final Contract<T> contract;
+    protected final Observable<State> stateAsObservable = new Observable<>(State.IDLE);
     @Setter
     protected Class<? extends NetworkMessage> expectedNextMessageClass;
 
-    public ProtocolModel(Contract contract) {
+    public ProtocolModel(Contract<T> contract) {
         this.contract = contract;
     }
 
-  /*  public void applyPersisted(ProtocolModel persisted) {
-        log.error("applyPersisted {}", persisted);
-        contract = persisted.getContract();
-        state = persisted.getState();
-        expectedNextMessageClass = persisted.getExpectedNextMessageClass();
-    }*/
+    public abstract bisq.protocol.protobuf.ProtocolModel toProto();
 
-    void setState(State newState) {
-        checkArgument(state.ordinal() < newState.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", newState, state);
-        state = newState;
+    public static ProtocolModel<?> fromProto(bisq.protocol.protobuf.ProtocolModel proto) {
+        return null;
+    }
+
+    void setStateAsObservable(State newState) {
+        checkArgument(getState().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, stateAsObservable);
+        stateAsObservable.set(newState);
     }
 
     public boolean isPending() {
-        return state == State.PENDING;
+        return getState().isPending();
     }
 
     public boolean isCompleted() {
-        return state == State.COMPLETED;
+        return getState().isCompleted();
     }
 
     public boolean isFailed() {
-        return state == State.FAILED;
+        return getState().isFailed();
+    }
+
+    public State getState() {
+        return stateAsObservable.get();
     }
 
     public String getId() {
-        return contract.getOffer().getId();
+        return getSwapOffer().getId();
+    }
+
+    public T getSwapOffer() {
+        return contract.getOffer();
+    }
+
+    public Observable<State> getStateAsObservable() {
+        return stateAsObservable;
     }
 }

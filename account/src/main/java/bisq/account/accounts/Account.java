@@ -17,64 +17,67 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.SettlementMethod;
+import bisq.account.settlement.Settlement;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.data.ByteArray;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-// todo move over account domain from bisq1 and adjust it where needed
-
+/**
+ * Account is only stored locally and never shared with the peer. It can contain sensitive data.
+ */
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<T extends SettlementMethod> implements Proto {
-    protected final String id;
+public abstract class Account<P extends AccountPayload, S extends Settlement<?>> implements Proto {
     protected final long creationDate;
     protected final String accountName;
-    protected final AccountPayload payload;
-    protected final T settlementMethod;
-    protected final List<TradeCurrency> tradeCurrencies;
+    protected final P accountPayload;
+    protected final S settlement;
 
     public Account(String accountName,
-                   T settlementMethod,
-                   AccountPayload payload,
-                   List<TradeCurrency> tradeCurrencies) {
-        this(StringUtils.createUid(), new Date().getTime(), accountName, settlementMethod, payload, tradeCurrencies);
+                   S settlement,
+                   P accountPayload) {
+        this(new Date().getTime(), accountName, settlement, accountPayload);
     }
 
-    public Account(String id, long creationDate,
+    public Account(long creationDate,
                    String accountName,
-                   T settlementMethod,
-                   AccountPayload payload,
-                   List<TradeCurrency> tradeCurrencies) {
-        this.id = id;
+                   S settlement,
+                   P accountPayload) {
         this.creationDate = creationDate;
         this.accountName = accountName;
-        this.payload = payload;
-        this.settlementMethod = settlementMethod;
-        this.tradeCurrencies = tradeCurrencies;
-        // We need to sort deterministically as the data is used in the proof of work check
-        this.tradeCurrencies.sort(Comparator.comparing((TradeCurrency e) -> new ByteArray(e.serialize())));
+        this.accountPayload = accountPayload;
+        this.settlement = settlement;
     }
 
+    public abstract bisq.account.protobuf.Account toProto();
 
-    //todo
-    public static Account<?> fromProto(bisq.account.protobuf.Account proto) {
+    protected bisq.account.protobuf.Account.Builder getAccountBuilder() {
+        return bisq.account.protobuf.Account.newBuilder()
+                .setCreationDate(creationDate)
+                .setAccountName(accountName)
+                .setSettlement(settlement.toProto())
+                .setAccountPayload(accountPayload.toProto());
+    }
+
+    public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {
         switch (proto.getMessageCase()) {
-            case SEPAACCOUNT: {
-                return SepaAccount.fromProto(proto.getSepaAccount());
+            case USERDEFINEDFIATACCOUNT: {
+                return UserDefinedFiatAccount.fromProto(proto);
+            }
+            case REVOLUTACCOUNT: {
+                return RevolutAccount.fromProto(proto);
+            }
+            case COUNTRYBASEDACCOUNT: {
+                return CountryBasedAccount.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -83,9 +86,8 @@ public abstract class Account<T extends SettlementMethod> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public abstract bisq.account.protobuf.Account toProto();
 
     public Set<String> getTradeCurrencyCodes() {
-        return tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+        return settlement.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
     }
 }

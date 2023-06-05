@@ -18,16 +18,23 @@
 package bisq.protocol;
 
 import bisq.contract.Contract;
+import bisq.offer.Offer;
 import lombok.Getter;
 
 @Getter
-public class TakerProtocolModel extends ProtocolModel {
+public class TakerProtocolModel<T extends Offer> extends ProtocolModel<T> {
 
-    public TakerProtocolModel(Contract contract) {
+    public TakerProtocolModel(Contract<T> contract) {
         super(contract);
     }
 
-    public TakerProtocolModel getClone() {
-        return new TakerProtocolModel(contract);
+    @Override
+    public bisq.protocol.protobuf.ProtocolModel toProto() {
+        return null;
+    }
+
+
+    public TakerProtocolModel<T> getClone() {
+        return new TakerProtocolModel<>(contract);
     }
 }

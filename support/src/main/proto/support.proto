@@ -4,15 +4,15 @@ option java_package = "bisq.support.protobuf";
 option java_multiple_files = true;
 import "user.proto";
 import "chat.proto";
-
-
+import "offer.proto";
 
 message MediationRequest {
-  chat.BisqEasyOffer bisqEasyOffer = 1;
+  offer.Offer bisqEasyOffer = 1;
   user.UserProfile requester = 2;
   user.UserProfile peer = 3;
   repeated chat.ChatMessage chatMessages = 4;
 }
+
 message MediationResponse {
-  chat.BisqEasyOffer bisqEasyOffer = 1;
+  offer.Offer bisqEasyOffer = 1;
 }

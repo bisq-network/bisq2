@@ -17,8 +17,10 @@
 
 package bisq.desktop.primary.main.content.user.accounts;
 
-import bisq.account.bisqeasy.BisqEasyPaymentAccount;
-import bisq.account.bisqeasy.BisqEasyPaymentAccountService;
+import bisq.account.AccountService;
+import bisq.account.accounts.Account;
+import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.settlement.Settlement;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -39,13 +41,13 @@ public class PaymentAccountsController implements Controller {
     private final PaymentAccountsModel model;
     @Getter
     private final PaymentAccountsView view;
-    private final BisqEasyPaymentAccountService service;
+    private final AccountService accountService;
     private Subscription selectedAccountSubscription, accountDataSubscription;
-    private Pin accountsPin, selectedAccountPin, selectedAccountPin2;
+    private Pin accountsPin, selectedAccountPin;
 
 
     public PaymentAccountsController(DefaultApplicationService applicationService) {
-        service = applicationService.getAccountService().getBisqEasyPaymentAccountService();
+        accountService = applicationService.getAccountService();
 
         model = new PaymentAccountsModel();
         view = new PaymentAccountsView(model, this);
@@ -53,20 +55,20 @@ public class PaymentAccountsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getSortedAccounts().setComparator(Comparator.comparing(BisqEasyPaymentAccount::getName));
+        model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = service.getAccounts().addListener(() -> {
-            model.setAllAccounts(service.getAccounts());
+        accountsPin = accountService.getAccounts().addListener(() -> {
+            model.setAllAccounts(accountService.getAccounts());
             maybeSelectFirstAccount();
         });
         selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
-                .to(service.selectedAccountAsObservable());
+                .to(accountService.selectedAccountAsObservable());
 
         selectedAccountSubscription = EasyBind.subscribe(model.selectedAccountProperty(),
                 selectedAccount -> {
-                    if (selectedAccount != null) {
-                        service.setSelectedAccount(selectedAccount);
-                        model.setAccountData(selectedAccount.getData());
+                    if (selectedAccount instanceof UserDefinedFiatAccount) {
+                        accountService.setSelectedAccount(selectedAccount);
+                        model.setAccountData(((UserDefinedFiatAccount) selectedAccount).getAccountPayload().getAccountData());
                         updateButtonStates();
                     } else {
                         model.setAccountData("");
@@ -76,7 +78,7 @@ public class PaymentAccountsController implements Controller {
         accountDataSubscription = EasyBind.subscribe(model.accountDataProperty(),
                 accountData -> updateButtonStates());
 
-        if (!service.hasAccounts()) {
+        if (!accountService.hasAccounts()) {
             onCreateAccount();
         }
     }
@@ -89,9 +91,9 @@ public class PaymentAccountsController implements Controller {
         selectedAccountPin.unbind();
     }
 
-    void onSelectAccount(BisqEasyPaymentAccount account) {
+    void onSelectAccount(Account<?, ? extends Settlement<?>> account) {
         if (account != null) {
-            service.setSelectedAccount(account);
+            accountService.setSelectedAccount(account);
         }
     }
 
@@ -101,18 +103,18 @@ public class PaymentAccountsController implements Controller {
 
     void onSaveAccount() {
         checkNotNull(model.getSelectedAccount());
-        String accountName = model.getSelectedAccount().getName();
+        String accountName = model.getSelectedAccount().getAccountName();
         String accountData = model.getAccountData();
-        BisqEasyPaymentAccount newAccount = new BisqEasyPaymentAccount(accountName, accountData);
+        UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
 
-        service.removePaymentAccount(model.getSelectedAccount());
-        service.addPaymentAccount(newAccount);
-        service.setSelectedAccount(newAccount);
+        accountService.removePaymentAccount(model.getSelectedAccount());
+        accountService.addPaymentAccount(newAccount);
+        accountService.setSelectedAccount(newAccount);
     }
 
     void onDeleteAccount() {
         checkNotNull(model.getSelectedAccount());
-        service.removePaymentAccount(model.getSelectedAccount());
+        accountService.removePaymentAccount(model.getSelectedAccount());
         maybeSelectFirstAccount();
     }
 
@@ -120,14 +122,15 @@ public class PaymentAccountsController implements Controller {
         model.setSaveButtonDisabled(model.getSelectedAccount() == null
                 || model.getAccountData() == null
                 || model.getAccountData().isEmpty()
-                || model.getSelectedAccount().getData().equals(model.getAccountData()));
+                || model.getSelectedAccount() == null
+                || ((UserDefinedFiatAccount) model.getSelectedAccount()).getAccountPayload().getAccountData().equals(model.getAccountData()));
 
         model.setDeleteButtonDisabled(model.getSelectedAccount() == null);
     }
 
     private void maybeSelectFirstAccount() {
-        if (!model.getSortedAccounts().isEmpty() && service.getSelectedAccount() == null) {
-            service.setSelectedAccount(model.getSortedAccounts().get(0));
+        if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
+            accountService.setSelectedAccount(model.getSortedAccounts().get(0));
         }
     }
 }

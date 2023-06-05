@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.settings.about.AboutController;
-import bisq.desktop.primary.main.content.settings.networkInfo.NetworkInfoController;
+import bisq.desktop.primary.main.content.settings.network.NetworkInfoController;
 import bisq.desktop.primary.main.content.settings.preferences.PreferencesController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

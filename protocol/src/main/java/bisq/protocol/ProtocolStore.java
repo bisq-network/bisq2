@@ -21,7 +21,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -30,26 +29,25 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class ProtocolStore implements PersistableStore<ProtocolStore> {
-    @Getter
-    private final Map<String, ProtocolModel> protocolModelByOfferId = new ConcurrentHashMap<>();
+    private final Map<String, ProtocolModel<?>> modelByOfferId = new ConcurrentHashMap<>();
 
     public ProtocolStore() {
     }
 
-    private ProtocolStore(Map<String, ProtocolModel> protocolModelByOfferId) {
-        this.protocolModelByOfferId.putAll(protocolModelByOfferId);
+    private ProtocolStore(Map<String, ProtocolModel<?>> modelByOfferId) {
+        this.modelByOfferId.putAll(modelByOfferId);
     }
 
     @Override
     public bisq.protocol.protobuf.ProtocolStore toProto() {
         return bisq.protocol.protobuf.ProtocolStore.newBuilder()
-                .putAllProtocolModelByOfferId(protocolModelByOfferId.entrySet().stream()
+                .putAllModelByOfferId(modelByOfferId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toProto())))
                 .build();
     }
 
     public static ProtocolStore fromProto(bisq.protocol.protobuf.ProtocolStore proto) {
-        return new ProtocolStore(proto.getProtocolModelByOfferIdMap().entrySet().stream()
+        return new ProtocolStore(proto.getModelByOfferIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> ProtocolModel.fromProto(e.getValue()))));
     }
@@ -67,19 +65,23 @@ public final class ProtocolStore implements PersistableStore<ProtocolStore> {
 
     @Override
     public ProtocolStore getClone() {
-        return new ProtocolStore(protocolModelByOfferId);
+        return new ProtocolStore(modelByOfferId);
     }
 
     @Override
     public void applyPersisted(ProtocolStore persisted) {
-        protocolModelByOfferId.clear();
-        protocolModelByOfferId.putAll(persisted.getProtocolModelByOfferId());
+        modelByOfferId.clear();
+        modelByOfferId.putAll(persisted.getModelByOfferId());
     }
 
-    public void add(ProtocolModel protocolModel) {
+    public void add(ProtocolModel<?> protocolModel) {
         String protocolId = protocolModel.getId();
-        if (!protocolModelByOfferId.containsKey(protocolId)) {
-            protocolModelByOfferId.put(protocolId, protocolModel);
+        if (!modelByOfferId.containsKey(protocolId)) {
+            modelByOfferId.put(protocolId, protocolModel);
         }
+    }
+
+    Map<String, ProtocolModel<?>> getModelByOfferId() {
+        return modelByOfferId;
     }
 }

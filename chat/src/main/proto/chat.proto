@@ -25,6 +25,7 @@ import "network.proto";
 import "security.proto";
 import "offer.proto";
 import "user.proto";
+import "protocol.proto";
 
 enum ChatMessageType {
   TEXT = 0;
@@ -109,25 +110,14 @@ message CommonPublicChatChannelStore {
 }
 
 // BisqEasy
-message BisqEasyOffer {
-  string id = 1;
-  offer.Direction direction = 2;
-  common.Market market = 3;
-  uint64 baseSideAmount = 4;
-  uint64 quoteSideAmount = 5;
-  repeated string paymentMethods = 6;
-  string makersTradeTerms = 7;
-  uint64 requiredTotalReputationScore = 8;
-}
-
 message BisqEasyPrivateTradeChatMessage {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
-  optional BisqEasyOffer bisqEasyOffer = 4;
+  optional offer.Offer bisqEasyOffer = 4;
 }
 message BisqEasyPrivateTradeChatChannel {
-  BisqEasyOffer bisqEasyOffer = 1;
+  offer.Offer bisqEasyOffer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;
@@ -139,7 +129,7 @@ message BisqEasyPrivateTradeChatChannelStore {
 }
 
 message BisqEasyPublicChatMessage {
-  optional BisqEasyOffer bisqEasyOffer = 1;
+  optional offer.Offer bisqEasyOffer = 1;
 }
 message BisqEasyPublicChatChannel {
   common.Market market = 1;

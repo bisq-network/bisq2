@@ -22,14 +22,14 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.BisqEasyHelpController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.BisqEasyGuideController;
 import bisq.desktop.primary.main.content.user.accounts.create.CreatePaymentAccountController;
 import bisq.desktop.primary.main.content.user.reputation.accountAge.AccountAgeController;
 import bisq.desktop.primary.main.content.user.reputation.bond.BondedReputationController;
 import bisq.desktop.primary.main.content.user.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.user.reputation.signedAccount.SignedWitnessController;
-import bisq.desktop.primary.main.content.user.userProfile.create.CreateUserProfileController;
-import bisq.desktop.primary.overlay.bisqeasy.createoffer.CreateOfferController;
+import bisq.desktop.primary.main.content.user.user_profile.create.CreateUserProfileController;
+import bisq.desktop.primary.overlay.bisq_easy.createoffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import bisq.desktop.primary.overlay.tac.TacController;
 import bisq.desktop.primary.overlay.unlock.UnlockController;
@@ -125,7 +125,7 @@ public class OverlayController extends NavigationController {
                 return Optional.of(new CreateOfferController(applicationService));
             }
             case BISQ_EASY_GUIDE: {
-                return Optional.of(new BisqEasyHelpController(applicationService));
+                return Optional.of(new BisqEasyGuideController(applicationService));
             }
             case CREATE_PROFILE: {
                 return Optional.of(new CreateUserProfileController(applicationService));

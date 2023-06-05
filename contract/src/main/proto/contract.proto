@@ -20,3 +20,35 @@ syntax = "proto3";
 package contract;
 option java_package = "bisq.contract.protobuf";
 option java_multiple_files = true;
+
+import "network.proto";
+import "account.proto";
+import "offer.proto";
+
+enum Role {
+  MAKER = 0;
+  TAKER = 1;
+  ESCROW_AGENT = 2;
+}
+
+message Party {
+  Role role = 1;
+  network.NetworkId networkId = 2;
+}
+message Contract {
+  offer.Offer offer = 1;
+  account.ProtocolType protocolType = 2;
+  oneof message {
+    TwoPartyContract twoPartyContract = 10;
+    MultiPartyContract multiPartyContract = 12;
+  }
+}
+
+message TwoPartyContract {
+  Party taker = 1;
+}
+
+message MultiPartyContract {
+  repeated Party parties = 1;
+}
+    

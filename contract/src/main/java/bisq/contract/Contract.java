@@ -17,48 +17,50 @@
 
 package bisq.contract;
 
-import bisq.account.protocol.SwapProtocolType;
-import bisq.common.monetary.Monetary;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.proto.Proto;
-import bisq.network.NetworkId;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.contract.poc.MultiPartyContract;
 import bisq.offer.Offer;
-import com.google.protobuf.Message;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@EqualsAndHashCode
+/**
+ * Defines the terms of the financial interaction with the counterparty/parties.
+ */
 @Getter
-public final class Contract implements Proto {
-    private final NetworkId takerNetworkId;
-    private final SwapProtocolType protocolType;
-    private final Offer offer;
-    private final Monetary baseSideAmount;
-    private final Monetary quoteSideAmount;
-    private final String baseSideSettlementMethod;
-    private final String quoteSideSettlementMethod;
+public abstract class Contract<T extends Offer> implements Proto {
+    protected final T offer;
+    protected final ProtocolType protocolType;
 
-    public Contract(NetworkId takerNetworkId,
-                    SwapProtocolType protocolType,
-                    Offer offer,
-                    Monetary baseSideAmount,
-                    Monetary quoteSideAmount,
-                    String baseSideSettlementMethod,
-                    String quoteSideSettlementMethod) {
+    protected transient final Party maker;
 
-        this.takerNetworkId = takerNetworkId;
-        this.protocolType = protocolType;
+    public Contract(T offer, ProtocolType protocolType) {
         this.offer = offer;
-        this.baseSideAmount = baseSideAmount;
-        this.quoteSideAmount = quoteSideAmount;
-        this.baseSideSettlementMethod = baseSideSettlementMethod;
-        this.quoteSideSettlementMethod = quoteSideSettlementMethod;
+        this.protocolType = protocolType;
+        this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
     }
 
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
+    public bisq.contract.protobuf.Contract.Builder getContractBuilder() {
+        return bisq.contract.protobuf.Contract.newBuilder()
+                .setOffer(offer.toProto())
+                .setProtocolType(protocolType.toProto());
     }
+
+    public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {
+        switch (proto.getMessageCase()) {
+            case TWOPARTYCONTRACT: {
+                return TwoPartyContract.fromProto(proto);
+            }
+            case MULTIPARTYCONTRACT: {
+                return MultiPartyContract.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public abstract Party getTaker();
 }

@@ -17,12 +17,11 @@
 
 package bisq.protocol;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.protocol_type.ProtocolType;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.Contract;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
@@ -30,13 +29,14 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.Offer;
-import bisq.offer.OpenOfferService;
+import bisq.offer.poc.OpenOfferService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.protocol.liquidswap.LiquidSwapMakerProtocol;
-import bisq.protocol.liquidswap.LiquidSwapTakerProtocol;
-import bisq.protocol.messages.TakeOfferRequest;
+import bisq.protocol.bisq_easy.BisqEasyMakerProtocol;
+import bisq.protocol.bisq_easy.BisqEasyMakerProtocolModel;
+import bisq.protocol.bisq_easy.BisqEasyTakerProtocol;
+import bisq.protocol.bisq_easy.BisqEasyTakerProtocolModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +55,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     private final IdentityService identityService;
     private final OpenOfferService openOfferService;
     @Getter
-    private final ObservableSet<Protocol<? extends ProtocolModel>> protocols = new ObservableSet<>();
+    private final ObservableSet<Protocol<?, ?>> protocols = new ObservableSet<>();
 
     public ProtocolService(NetworkService networkService,
                            IdentityService identityService,
@@ -69,18 +69,19 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         networkService.addMessageListener(this);
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return CompletableFutureUtils.allOf(persistableStore.getProtocolModelByOfferId().values().stream()
+        return CompletableFuture.completedFuture(true);
+       /* return CompletableFutureUtils.allOf(persistableStore.getProtocolModelByOfferId().values().stream()
                         .map(protocolModel ->
                                 identityService.getOrCreateIdentity(protocolModel.getId())
                                         .thenApply(identity -> {
-                                            Protocol<? extends ProtocolModel> protocol;
+                                            SwapProtocol<? extends SwapProtocolModel> protocol;
                                             if (protocolModel instanceof MakerProtocolModel) {
                                                 protocol = getMakerProtocol((MakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
                                             } else if (protocolModel instanceof TakerProtocolModel) {
@@ -88,14 +89,14 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                                             } else {
                                                 return false;
                                             }
-                                   /* // We do not rely on equals and hash code as protocol is very content rich. 
+                                   *//* // We do not rely on equals and hash code as protocol is very content rich. 
                                     // We just want to be sure to always have the latest version, so if we find 
                                     // one with the same id, we replace it with the new one.
                                     // We could use a map instead but atm we don't have an ObservedSet-like implementation for a map (todo).
                                     Optional<Protocol<? extends ProtocolModel>> optionalProtocol = protocols.stream()
                                             .filter(p -> p.getId().equals(protocol.getId()))
                                             .findAny();
-                                    optionalProtocol.ifPresent(protocols::remove);*/
+                                    optionalProtocol.ifPresent(protocols::remove);*//*
 
                                             protocols.add(protocol);
                                             persistableStore.add(protocolModel);
@@ -105,7 +106,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                                             return true;
                                         })
                         ))
-                .thenApply(list -> true);
+                .thenApply(list -> true);*/
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -115,7 +116,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof TakeOfferRequest) {
+       /* if (networkMessage instanceof TakeOfferRequest) {
             TakeOfferRequest takeOfferRequest = (TakeOfferRequest) networkMessage;
             String offerId = takeOfferRequest.getContract().getOffer().getId();
             openOfferService.findOpenOffer(offerId)
@@ -130,16 +131,21 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                                 //todo figure out how to use generics without that hack
                                 protocol.onRawTakeOfferRequest(takeOfferRequest);
                             }));
-        }
+        }*/
     }
 
-    public CompletableFuture<TakerProtocol<TakerProtocolModel>> takeOffer(SwapProtocolType protocolType,
-                                                                          Offer offer,
-                                                                          Monetary baseSideAmount,
-                                                                          Monetary quoteSideAmount,
-                                                                          String baseSideSettlementMethod,
-                                                                          String quoteSideSettlementMethod) {
-        return identityService.getOrCreateIdentity(offer.getId())
+    public void takeOffer(ProtocolType protocolType,
+                          Contract<?> contract,
+                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    }
+
+    public CompletableFuture<TakerProtocol<?, TakerProtocolModel<?>>> takeOffer1(ProtocolType protocolType,
+                                                                                 Offer offer,
+                                                                                 Monetary baseSideAmount,
+                                                                                 Monetary quoteSideAmount,
+                                                                                 String baseSideSettlementMethod,
+                                                                                 String quoteSideSettlementMethod) {
+       /* return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
                     Contract contract = new Contract(identity.getNetworkId(),
                             protocolType,
@@ -155,17 +161,19 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                     persist();
                     protocol.takeOffer();
                     return protocol;
-                });
+                });*/
+        return null;
     }
 
-    @SuppressWarnings("DuplicateBranchesInSwitch")
-    private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel,
-                                                               NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
+    private TakerProtocol<?, ?> getTakerProtocol(TakerProtocolModel<?> protocolModel,
+                                                 NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
+            case BISQ_EASY:
+                return BisqEasyTakerProtocol.getProtocol(networkService, this, (BisqEasyTakerProtocolModel) protocolModel, myNodeIdAndKeyPair);
             case MONERO_SWAP:
                 return null;
             case LIQUID_SWAP:
-                return LiquidSwapTakerProtocol.getProtocol(networkService, this, protocolModel, takerNodeIdAndKeyPair);
+                return null;
             case BSQ_SWAP:
                 return null;
             case LIGHTNING_X:
@@ -177,13 +185,15 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     }
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
-    private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel,
-                                                                                           NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
+    private MakerProtocol<?, ?> getMakerProtocol(MakerProtocolModel<?> protocolModel,
+                                                 NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
+            case BISQ_EASY:
+                return BisqEasyMakerProtocol.getProtocol(networkService, this, (BisqEasyMakerProtocolModel) protocolModel, myNodeIdAndKeyPair);
             case MONERO_SWAP:
                 return null;
             case LIQUID_SWAP:
-                return LiquidSwapMakerProtocol.getProtocol(networkService, this, protocolModel, makerNetworkIdWithKeyPair);
+                return null;
             case BSQ_SWAP:
                 return null;
             case LIGHTNING_X:

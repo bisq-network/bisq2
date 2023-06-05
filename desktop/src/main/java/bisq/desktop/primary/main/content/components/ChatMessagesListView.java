@@ -268,6 +268,7 @@ public class ChatMessagesListView {
 
         private void onTakeOffer(BisqEasyPublicChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
+            checkArgument(chatMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
             Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
 
             BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();

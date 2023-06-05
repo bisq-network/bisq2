@@ -20,14 +20,14 @@ package bisq.protocol;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
+import bisq.offer.Offer;
 import bisq.persistence.PersistenceClient;
-import bisq.protocol.messages.TakeOfferRequest;
 
-public abstract class MakerProtocol<T extends ProtocolModel, R extends TakeOfferRequest> extends Protocol<T> {
+public abstract class MakerProtocol<T extends Offer, M extends ProtocolModel<T>> extends Protocol<T, M> {
 
     public MakerProtocol(NetworkService networkService,
                          PersistenceClient<ProtocolStore> persistenceClient,
-                         T protocolModel,
+                         M protocolModel,
                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
                 persistenceClient,
@@ -37,14 +37,14 @@ public abstract class MakerProtocol<T extends ProtocolModel, R extends TakeOffer
 
     @Override
     protected NetworkId getPeersNetworkId() {
-        return getContract().getTakerNetworkId();
+        return getContract().getTaker().getNetworkId();
     }
 
-    public void onRawTakeOfferRequest(TakeOfferRequest takeOfferRequest) {
+   /* public void onRawTakeOfferRequest(TakeOfferRequest takeOfferRequest) {
         onTakeOfferRequest(castTakeOfferRequest(takeOfferRequest));
-    }
-
+    }*/
+/*
     protected abstract R castTakeOfferRequest(TakeOfferRequest takeOfferRequest);
 
-    public abstract void onTakeOfferRequest(R takeOfferRequest);
+    public abstract void onTakeOfferRequest(R takeOfferRequest);*/
 }

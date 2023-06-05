@@ -24,40 +24,22 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.offer.Offer;
 import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 @Slf4j
-public abstract class Protocol<T extends ProtocolModel> implements MessageListener, Proto {
-
-    public interface Listener {
-        void onStateChanged(ProtocolModel.State state);
-    }
-
-/*    public interface State {
-        int ordinal();
-
-        String name();
-    }*/
-
+public abstract class Protocol<T extends Offer, M extends ProtocolModel<T>> implements MessageListener, Proto {
     protected final NetworkService networkService;
     private final PersistenceClient<ProtocolStore> persistenceClient;
     protected final NetworkIdWithKeyPair myNodeIdAndKeyPair;
     @Getter
-    private final T protocolModel;
-
-    protected final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final M protocolModel;
 
     public Protocol(NetworkService networkService,
                     PersistenceClient<ProtocolStore> persistenceClient,
-                    T protocolModel,
+                    M protocolModel,
                     NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         this.networkService = networkService;
         this.persistenceClient = persistenceClient;
@@ -74,26 +56,21 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
 
     protected abstract NetworkId getPeersNetworkId();
 
-    public Contract getContract() {
+    public Contract<T> getContract() {
         return protocolModel.getContract();
     }
 
     public String getId() {
-        return getContract().getOffer().getId();
+        return getSwapOffer().getId();
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    private T getSwapOffer() {
+        return getContract().getOffer();
     }
 
     protected void setState(ProtocolModel.State newState) {
-        protocolModel.setState(newState);
+        protocolModel.setStateAsObservable(newState);
         persistenceClient.persist();
-        runAsync(() -> listeners.forEach(e -> e.onStateChanged(protocolModel.getState())), ProtocolService.DISPATCHER);
     }
 
     protected ProtocolModel.State getState() {
@@ -102,13 +79,13 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
 
     protected void onProtocolCompleted() {
         networkService.removeMessageListener(this);
-        protocolModel.setState(ProtocolModel.State.COMPLETED);
+        protocolModel.setStateAsObservable(ProtocolModel.State.COMPLETED);
         persistenceClient.persist();
     }
 
     protected void onProtocolFailed() {
         networkService.removeMessageListener(this);
-        protocolModel.setState(ProtocolModel.State.FAILED);
+        protocolModel.setStateAsObservable(ProtocolModel.State.FAILED);
         persistenceClient.persist();
     }
 
@@ -117,11 +94,11 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
     // Tasks
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void verifyExpectedMessage(NetworkMessage networkMessage) {
+   /* protected void verifyExpectedMessage(NetworkMessage networkMessage) {
         checkArgument(protocolModel.getExpectedNextMessageClass().equals(networkMessage.getClass()),
                 "Incorrect response message. Received " + networkMessage.getClass().getSimpleName() +
                         " but expected " + protocolModel.getExpectedNextMessageClass().getSimpleName());
-    }
+    }*/
 
     protected void verifyPeer() {
         // throw if peer verification fails
