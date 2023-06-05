@@ -25,7 +25,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -48,6 +47,8 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.bisq_easy.createoffer.CreateOfferController;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
@@ -299,15 +300,13 @@ public class ChatMessagesComponent {
 
         private void privateTradeMessagesChanged(BisqEasyPrivateTradeChatChannel chatChannel) {
             UIThread.run(() -> {
-                boolean isMyOffer = chatChannel.getChatMessages().stream()
-                        .filter(BisqEasyPrivateTradeChatMessage::hasTradeChatOffer)
-                        .filter(message -> message.getCitation().isPresent())
-                        .anyMatch(message -> isOfferAuthor(message.getCitation().get().getAuthorUserProfileId()));
-                boolean isSeller = isMyOffer ?
-                        chatChannel.getBisqEasyOffer().getDirection().isSell() :
-                        chatChannel.getBisqEasyOffer().getDirection().isBuy();
+                BisqEasyOffer bisqEasyOffer = chatChannel.getBisqEasyOffer();
+                boolean isMaker = bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+                Direction usersDirection = isMaker ?
+                        bisqEasyOffer.getMakersDirection() :
+                        bisqEasyOffer.getTakersDirection();
 
-                if (isSeller) {
+                if (usersDirection.isSell()) {
                     model.getSendPaymentAccountButtonVisible().set(true);
                     model.getSendBtcAddressButtonVisible().set(false);
                 } else {

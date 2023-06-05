@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.multisig.old.offerbook;
 
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -71,10 +70,10 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         tableView.setPadding(new Insets(-20, 0, 0, 0));
         configDataTableView();
 
-        HBox hBox = Layout.hBoxWith(marketSelection, showAllMarkets, Spacer.fillHBox(), createOfferButton);
+        HBox hBox = new HBox(15, marketSelection, showAllMarkets, Spacer.fillHBox(), createOfferButton);
         hBox.setAlignment(Pos.CENTER);
         root.getChildren().addAll(hBox,
-                Layout.hBoxWith(directionSelection),
+                new HBox(15, directionSelection),
                 headline,
                 tableView);
     }

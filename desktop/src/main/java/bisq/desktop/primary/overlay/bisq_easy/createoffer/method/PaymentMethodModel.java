@@ -26,21 +26,22 @@ import lombok.Getter;
 
 @Getter
 public class PaymentMethodModel implements Model {
-    private final ObservableList<String> allPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<String> addedCustomMethods = FXCollections.observableArrayList();
-    private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
-    private final StringProperty customMethod = new SimpleStringProperty();
-    private final BooleanProperty paymentMethodsEmpty = new SimpleBooleanProperty();
-    private final BooleanProperty addCustomMethodIconEnabled = new SimpleBooleanProperty();
+    // Method enum name or custom name
+    private final ObservableList<String> allPaymentMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> selectedPaymentMethodNames = FXCollections.observableArrayList();
+    private final StringProperty customMethodName = new SimpleStringProperty();
+    private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
+    private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
 
     void reset() {
-        allPaymentMethods.clear();
-        addedCustomMethods.clear();
-        selectedPaymentMethods.clear();
-        customMethod.set(null);
-        paymentMethodsEmpty.set(false);
-        addCustomMethodIconEnabled.set(false);
+        allPaymentMethodNames.clear();
+        addedCustomMethodNames.clear();
+        selectedPaymentMethodNames.clear();
+        customMethodName.set(null);
+        isPaymentMethodsEmpty.set(false);
+        isAddCustomMethodIconEnabled.set(false);
         selectedMarket.set(null);
     }
 }

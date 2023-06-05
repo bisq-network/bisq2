@@ -116,8 +116,8 @@ public class CreateOfferController extends NavigationController implements InitW
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), reviewOfferController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), reviewOfferController::setQuoteSideAmount);
 
-        paymentMethodController.getPaymentMethods().addListener(paymentMethodsListener);
-        reviewOfferController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        paymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
+        reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
         handlePaymentMethodsUpdate();
     }
 
@@ -128,7 +128,7 @@ public class CreateOfferController extends NavigationController implements InitW
         baseSideAmountSubscription.unsubscribe();
         quoteSideAmountSubscription.unsubscribe();
 
-        paymentMethodController.getPaymentMethods().removeListener(paymentMethodsListener);
+        paymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
@@ -236,7 +236,7 @@ public class CreateOfferController extends NavigationController implements InitW
         if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
         } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(paymentMethodController.getPaymentMethods().isEmpty());
+            model.getNextButtonDisabled().set(paymentMethodController.getPaymentMethodNames().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -249,7 +249,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     private void handlePaymentMethodsUpdate() {
-        reviewOfferController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
         updateNextButtonState();
     }
 }

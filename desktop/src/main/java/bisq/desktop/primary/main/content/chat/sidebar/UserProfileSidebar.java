@@ -22,11 +22,13 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -124,7 +126,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.terms.set(userProfile.getTerms());
 
             // todo add tooltip
-            model.reputationScore.set(String.valueOf(reputationService.getReputationScore(userProfile).getTotalScore()));
+            model.reputationScore.set(reputationService.getReputationScore(userProfile));
 
             model.profileAge.set(reputationService.getProfileAgeService().getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
@@ -180,7 +182,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty userProfileId = new SimpleStringProperty();
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
-        private final StringProperty reputationScore = new SimpleStringProperty();
+        private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty profileAge = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
@@ -199,7 +201,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final Label nym;
         private final Label userProfileId;
         private final Label statement;
-        private final Label reputationScore;
+        private final Label totalReputationScore;
         private final Label profileAge;
         private final Hyperlink mention, ignore, report;
         private final Label terms;
@@ -207,6 +209,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final VBox statementBox;
         private final VBox termsBox;
         private final VBox optionsBox;
+        private final ReputationScoreDisplay reputationScoreDisplay;
         private Subscription roboHashNodeSubscription;
         private final Button closeButton;
 
@@ -254,8 +257,15 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);
             statement = (Label) statementBox.getChildren().get(1);
 
-            VBox reputationScoreBox = getInfoBox(Res.get("social.chatUser.reputationScore"), false);
-            reputationScore = (Label) reputationScoreBox.getChildren().get(1);
+            Label reputationLabel = new Label(Res.get("social.chatUser.reputation").toUpperCase());
+            reputationLabel.getStyleClass().addAll("bisq-text-4", "bisq-text-grey-9", "font-semi-bold");
+            reputationScoreDisplay = new ReputationScoreDisplay();
+            reputationScoreDisplay.setAlignment(Pos.CENTER_LEFT);
+            VBox reputationBox = new VBox(2, reputationLabel, reputationScoreDisplay);
+            VBox.setMargin(reputationBox, new Insets(2, 0, 0, 0));
+
+            VBox totalReputationScoreBox = getInfoBox(Res.get("social.chatUser.totalReputationScore"), false);
+            totalReputationScore = (Label) totalReputationScoreBox.getChildren().get(1);
 
             VBox profileAgeBox = getInfoBox(Res.get("social.chatUser.profileAge"), false);
             profileAge = (Label) profileAgeBox.getChildren().get(1);
@@ -278,7 +288,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms = (Label) termsBox.getChildren().get(1);
             VBox.setMargin(topHBox, new Insets(0, -20, 30, 0));
             root.getChildren().addAll(topHBox, nickName, roboIconImageView, nym, userProfileId, privateMsgButton,
-                    statementBox, reputationScoreBox, profileAgeBox,
+                    statementBox, reputationBox, totalReputationScoreBox, profileAgeBox,
                     optionsBox, separator, termsBox);
         }
 
@@ -295,7 +305,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.textProperty().bind(model.terms);
             termsBox.visibleProperty().bind(model.terms.isEmpty().not());
             termsBox.managedProperty().bind(model.terms.isEmpty().not());
-            reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
             ignore.textProperty().bind(model.ignoreButtonText);
             optionsBox.visibleProperty().bind(model.isPeer);
@@ -306,6 +315,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
+                }
+            });
+
+            roboHashNodeSubscription = EasyBind.subscribe(model.reputationScore, reputationScore -> {
+                if (reputationScore != null) {
+                    reputationScoreDisplay.applyReputationScore(reputationScore);
+                    totalReputationScore.setText(String.valueOf(reputationScore.getTotalScore()));
                 }
             });
 
@@ -329,7 +345,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.textProperty().unbind();
             terms.visibleProperty().unbind();
             terms.managedProperty().unbind();
-            reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
             ignore.textProperty().unbind();
             optionsBox.visibleProperty().unbind();

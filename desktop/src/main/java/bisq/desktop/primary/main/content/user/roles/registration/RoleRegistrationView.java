@@ -66,7 +66,7 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         copyButton = new Button(Res.get("user.roles.registration.copyPubKey"));
         copyButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, removeRegistrationButton, copyButton);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

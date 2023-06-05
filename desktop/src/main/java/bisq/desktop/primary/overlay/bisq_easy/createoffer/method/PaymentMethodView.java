@@ -36,6 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 @Slf4j
 public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMethodController> {
 
@@ -95,27 +99,27 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
 
     @Override
     protected void onViewAttached() {
-        custom.textProperty().bindBidirectional(model.getCustomMethod());
-        nonFoundLabel.visibleProperty().bind(model.getPaymentMethodsEmpty());
-        nonFoundLabel.managedProperty().bind(model.getPaymentMethodsEmpty());
-        flowPane.visibleProperty().bind(model.getPaymentMethodsEmpty().not());
-        flowPane.managedProperty().bind(model.getPaymentMethodsEmpty().not());
-        addButton.disableProperty().bind(model.getAddCustomMethodIconEnabled().not());
+        custom.textProperty().bindBidirectional(model.getCustomMethodName());
+        nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
+        nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
+        flowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        flowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
 
         addButton.setOnAction(e -> controller.onAddCustomMethod());
 
-        addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getAddCustomMethodIconEnabled(), enabled -> {
+        addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getIsAddCustomMethodIconEnabled(), enabled -> {
             custom.setIcon(enabled ? "add" : "add-white");
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
 
-        model.getAllPaymentMethods().addListener(allPaymentMethodsListener);
+        model.getAllPaymentMethodNames().addListener(allPaymentMethodsListener);
         fillPaymentMethods();
     }
 
     @Override
     protected void onViewDetached() {
-        custom.textProperty().unbindBidirectional(model.getCustomMethod());
+        custom.textProperty().unbindBidirectional(model.getCustomMethodName());
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         flowPane.visibleProperty().unbind();
@@ -126,32 +130,47 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
 
         addCustomMethodIconEnabledPin.unsubscribe();
 
-        model.getAllPaymentMethods().removeListener(allPaymentMethodsListener);
+        model.getAllPaymentMethodNames().removeListener(allPaymentMethodsListener);
     }
 
     private void fillPaymentMethods() {
         flowPane.getChildren().clear();
-        for (int i = 0; i < model.getAllPaymentMethods().size(); i++) {
-            String paymentMethod = model.getAllPaymentMethods().get(i);
-            String displayString = Res.has("paymentMethod." + paymentMethod) ? Res.get("paymentMethod." + paymentMethod) : paymentMethod;
+        List<String> allPaymentMethodNames = new ArrayList<>(model.getAllPaymentMethodNames());
+        allPaymentMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
+
+        for (String paymentMethodName : allPaymentMethodNames) {
+            // enum name or custom name
+            String displayString = paymentMethodName;
+            if (Res.has(paymentMethodName)) {
+                String paymentMethodShortName = paymentMethodName + "_SHORT";
+                if (Res.has(paymentMethodShortName)) {
+                    displayString = Res.get(paymentMethodShortName);
+                } else {
+                    displayString = Res.get(paymentMethodName);
+                }
+            }
             ChipButton chipButton = new ChipButton(displayString);
-            if (model.getSelectedPaymentMethods().contains(paymentMethod)) {
+            if (model.getSelectedPaymentMethodNames().contains(paymentMethodName)) {
                 chipButton.setSelected(true);
             }
-            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, chipButton.isSelected()));
-            model.getAddedCustomMethods().stream()
-                    .filter(customMethod -> customMethod.equals(paymentMethod))
+            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethodName, chipButton.isSelected()));
+            String finalDisplayString = displayString;
+            model.getAddedCustomMethodNames().stream()
+                    .filter(customMethod -> customMethod.equals(paymentMethodName))
                     .findAny()
-                    .ifPresentOrElse(customMethod -> {
-                        ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                        closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
-                        if (paymentMethod.length() > 13) {
-                            chipButton.setTooltip(new BisqTooltip(displayString));
-                        }
-                    }, () -> {
-                        ImageView icon = ImageUtil.getImageViewById(paymentMethod);
-                        chipButton.setLeftIcon(icon);
-                    });
+                    .ifPresentOrElse(
+                            customMethod -> {
+                                ImageView closeIcon = chipButton.setRightIcon("remove-white");
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethodName));
+                                if (paymentMethodName.length() > 13) {
+                                    chipButton.setTooltip(new BisqTooltip(finalDisplayString));
+                                }
+                            },
+                            () -> {
+                                // A provided method
+                                ImageView icon = ImageUtil.getImageViewById(paymentMethodName);
+                                chipButton.setLeftIcon(icon);
+                            });
             flowPane.getChildren().add(chipButton);
         }
     }

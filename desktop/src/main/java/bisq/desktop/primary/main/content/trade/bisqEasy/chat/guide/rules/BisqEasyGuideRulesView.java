@@ -51,7 +51,7 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
         content = new Text(Res.get("tradeGuide.tab3.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         backButton = new Button(Res.get("back"));
         closeButton = new Button(Res.get("close"));

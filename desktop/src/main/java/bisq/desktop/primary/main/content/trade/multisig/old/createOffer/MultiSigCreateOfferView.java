@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -56,7 +55,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
 
         Label headlineLabel = new Label(Res.get("createOffer"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
-        HBox headLineBox = Layout.hBoxWith(Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
+        HBox headLineBox = new HBox(15, Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
@@ -85,7 +84,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
                 amountPrice,
                 protocol,
                 settlement,
-                Layout.hBoxWith(createOfferButton, cancelButton),
+                new HBox(15, createOfferButton, cancelButton),
                 offerSummary,
                 publishButton);
 

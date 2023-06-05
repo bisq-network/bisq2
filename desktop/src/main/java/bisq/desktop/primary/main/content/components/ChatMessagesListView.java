@@ -40,7 +40,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.NoSelectionModel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
@@ -541,7 +540,7 @@ public class ChatMessagesListView {
                             saveEditButton.setDefaultButton(true);
                             cancelEditButton = new Button(Res.get("cancel"));
 
-                            editButtonsHBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
+                            editButtonsHBox = new HBox(15, Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editButtonsHBox.setVisible(false);
                             editButtonsHBox.setManaged(false);
 

@@ -48,7 +48,7 @@ class ReviewOfferModel implements Model {
     @Setter
     private Monetary quoteSideAmount;
     @Setter
-    private List<String> paymentMethods;
+    private List<String> paymentMethodNames;
     @Setter
     private String myOfferText;
     @Setter
@@ -66,7 +66,7 @@ class ReviewOfferModel implements Model {
         market = null;
         baseSideAmount = null;
         quoteSideAmount = null;
-        paymentMethods = null;
+        paymentMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
         matchingOffersFound.set(false);

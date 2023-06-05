@@ -64,7 +64,7 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
 
         closeButton = new Button(Res.get("close"));
         closeButton.setDefaultButton(true);
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
         backButton = new Button(Res.get("back"));
 
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);

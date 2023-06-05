@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
@@ -149,7 +148,7 @@ public class QuotedMessageBlock {
             closeButton.setOpacity(0.5);
             HBox.setMargin(headline, new Insets(0, 0, 5, 0));
             HBox.setMargin(closeButton, new Insets(0, -22, 0, 0));
-            HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), closeButton);
+            HBox topBox = new HBox(15, headline, Spacer.fillHBox(), closeButton);
             topBox.setAlignment(Pos.CENTER);
             topBox.setPadding(new Insets(5, 30, -5, 0));
 
@@ -161,7 +160,7 @@ public class QuotedMessageBlock {
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(25);
             roboIconImageView.setFitHeight(25);
-            HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
+            HBox userBox = new HBox(15, roboIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             citation = new Text();
             citation.setStyle("-fx-fill: -bisq-grey-dimmed");

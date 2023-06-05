@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.threading.UIScheduler;
@@ -41,49 +41,48 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 
 @Slf4j
-public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInfoPhaseController> {
+public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel, TradeAssistantTradeController> {
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double OPACITY = 0.35;
 
-    private final List<Label> navigationProgressLabelList;
-    private final HBox topPaneBox;
-    private final Button confirmButton, openDisputeButton;
+    private final List<Label> tradePhaseLabels;
+    private final Button backButton, confirmButton, openDisputeButton;
+    private final Hyperlink openTradeGuide;
     private final HBox buttons;
-    private final Hyperlink learnMore;
     private final Text content;
     private Subscription widthPin;
     private Subscription topPaneBoxVisibleSubscription;
     private final ChangeListener<Number> currentIndexListener;
 
-    public TradeInfoPhaseView(TradeInfoPhaseModel model,
-                              TradeInfoPhaseController controller) {
+    public TradeAssistantTradeView(TradeAssistantTradeModel model,
+                                   TradeAssistantTradeController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeInfo.phase.headline"));
+        Label headline = new Label(Res.get("tradeAssistant.trade.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeInfo.phase.content"));
+        content = new Text(Res.get("tradeAssistant.trade.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        Pair<HBox, List<Label>> topPane = getTopPane();
-        topPaneBox = topPane.getFirst();
-        navigationProgressLabelList = topPane.getSecond();
+        Pair<HBox, List<Label>> pair = getTradePhaseComponent();
+        HBox tradePhaseHBox = pair.getFirst();
+        tradePhaseLabels = pair.getSecond();
 
+        backButton = new Button(Res.get("back"));
         confirmButton = new Button();
         confirmButton.setDefaultButton(true);
 
         openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
-        buttons = new HBox(10, confirmButton, openDisputeButton);
-        buttons.setAlignment(Pos.CENTER);
+        buttons = new HBox(10, backButton, confirmButton, openDisputeButton);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        openTradeGuide = new Hyperlink(Res.get("tradeAssistant.openTradeGuide"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, topPaneBox, content, learnMore, buttons);
+        VBox.setMargin(openTradeGuide, new Insets(0, 0, 10, 0));
+        root.getChildren().addAll(headline, tradePhaseHBox, content, openTradeGuide, buttons);
 
         currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
     }
@@ -94,9 +93,10 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
         openDisputeButton.visibleProperty().bind(model.getOpenDisputeButtonVisible());
         openDisputeButton.managedProperty().bind(model.getOpenDisputeButtonVisible());
 
-        confirmButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(e -> controller.onBack());
+        confirmButton.setOnAction(e -> controller.onConfirm());
         openDisputeButton.setOnAction(e -> controller.onOpenDispute());
-        learnMore.setOnAction(e -> controller.onLearnMore());
+        openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
 
         model.getCurrentIndex().addListener(currentIndexListener);
 
@@ -119,7 +119,7 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
 
         confirmButton.setOnAction(null);
         openDisputeButton.setOnAction(null);
-        learnMore.setOnAction(null);
+        openTradeGuide.setOnAction(null);
 
         model.getCurrentIndex().removeListener(currentIndexListener);
 
@@ -127,11 +127,11 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
         widthPin.unsubscribe();
     }
 
-    private Pair<HBox, List<Label>> getTopPane() {
-        Label negotiation = getTopPaneLabel(Res.get("tradeInfo.phase.negotiation"));
-        Label fiat = getTopPaneLabel(Res.get("tradeInfo.phase.fiat"));
-        Label btc = getTopPaneLabel(Res.get("tradeInfo.phase.btc"));
-        Label complete = getTopPaneLabel(Res.get("tradeInfo.phase.complete"));
+    private Pair<HBox, List<Label>> getTradePhaseComponent() {
+        Label negotiation = getTopPaneLabel(Res.get("tradeAssistant.trade.negotiation"));
+        Label fiat = getTopPaneLabel(Res.get("tradeAssistant.trade.fiat"));
+        Label btc = getTopPaneLabel(Res.get("tradeAssistant.trade.btc"));
+        Label complete = getTopPaneLabel(Res.get("tradeAssistant.trade.complete"));
 
 
         HBox hBox = new HBox(10);
@@ -169,9 +169,9 @@ public class TradeInfoPhaseView extends View<VBox, TradeInfoPhaseModel, TradeInf
     }
 
     private void applyProgress(int progressIndex, boolean delay) {
-        if (progressIndex < navigationProgressLabelList.size()) {
-            navigationProgressLabelList.forEach(label -> label.setOpacity(OPACITY));
-            Label label = navigationProgressLabelList.get(progressIndex);
+        if (progressIndex < tradePhaseLabels.size()) {
+            tradePhaseLabels.forEach(label -> label.setOpacity(OPACITY));
+            Label label = tradePhaseLabels.get(progressIndex);
             if (delay) {
                 UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
                         .after(Transitions.DEFAULT_DURATION / 2);

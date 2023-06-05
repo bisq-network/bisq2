@@ -18,16 +18,40 @@
 package bisq.offer;
 
 import bisq.common.proto.Proto;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class SettlementSpec implements Proto {
+    public static List<String> getSettlementMethodNames(Collection<SettlementSpec> settlementSpecs) {
+        return settlementSpecs.stream()
+                .map(SettlementSpec::getSettlementMethodName)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    public static List<String> getSettlementMethodNamesAsDisplayString(Collection<SettlementSpec> settlementSpecs) {
+        return getSettlementMethodNames(settlementSpecs).stream()
+                .map(methodName -> {
+                    if (Res.has(methodName)) {
+                        return Res.get(methodName);
+                    } else {
+                        return methodName;
+                    }
+                })
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
     private final String settlementMethodName;
     private final Optional<String> saltedMakerAccountId;
 

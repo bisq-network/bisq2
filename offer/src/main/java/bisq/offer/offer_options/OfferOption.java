@@ -20,11 +20,56 @@ package bisq.offer.offer_options;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
+import java.util.Collection;
+import java.util.Optional;
+
 public interface OfferOption extends Proto {
     bisq.offer.protobuf.OfferOption toProto();
 
     default bisq.offer.protobuf.OfferOption.Builder getOfferOptionBuilder() {
         return bisq.offer.protobuf.OfferOption.newBuilder();
+    }
+
+    static Optional<TradeTermsOption> findTradeTermsOption(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(option -> option instanceof TradeTermsOption)
+                .map(option -> (TradeTermsOption) option)
+                .findAny();
+    }
+
+    static Optional<ReputationOption> findReputationOption(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(option -> option instanceof ReputationOption)
+                .map(option -> (ReputationOption) option)
+                .findAny();
+    }
+
+    static Optional<AmountOption> findAmountOption(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(option -> option instanceof AmountOption)
+                .map(option -> (AmountOption) option)
+                .findAny();
+    }
+
+    static Optional<CollateralOption> findCollateralOption(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(option -> option instanceof CollateralOption)
+                .map(option -> (CollateralOption) option)
+                .findAny();
+    }
+
+    static Optional<FiatSettlementOption> findFiatSettlementOption(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(option -> option instanceof FiatSettlementOption)
+                .map(option -> (FiatSettlementOption) option)
+                .findAny();
+    }
+
+    static Optional<FeeOption> findFeeOption(Collection<OfferOption> offerOptions) {
+        return offerOptions.stream()
+                .filter(option -> option instanceof FeeOption)
+                .map(option -> (FeeOption) option)
+                .findAny();
     }
 
     static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) {

@@ -30,6 +30,11 @@ public final class Country implements Proto {
     private final String name;
     private final Region region;
 
+    /**
+     * @param code   Uppercase ISO 3166 2-letter code or a UN M.49 3-digit code.
+     * @param name   Name of the county
+     * @param region Region of the country
+     */
     public Country(String code, String name, Region region) {
         this.code = code;
         this.name = name;

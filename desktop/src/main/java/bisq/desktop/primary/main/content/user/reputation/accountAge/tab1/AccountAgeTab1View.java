@@ -56,7 +56,7 @@ public class AccountAgeTab1View extends View<VBox, AccountAgeTab1Model, AccountA
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("user.reputation.learnMore"));
+        learnMore = new Hyperlink(Res.get("learnMore"));
 
         HBox buttons = new HBox(20, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

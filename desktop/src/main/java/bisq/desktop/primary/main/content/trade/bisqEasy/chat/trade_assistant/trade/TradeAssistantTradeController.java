@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_info.phase;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.Browser;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -29,16 +29,19 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeInfoPhaseController implements Controller {
+public class TradeAssistantTradeController implements Controller {
     @Getter
-    private final TradeInfoPhaseView view;
-    private final TradeInfoPhaseModel model;
+    private final TradeAssistantTradeView view;
+    private final TradeAssistantTradeModel model;
     private final DefaultApplicationService applicationService;
 
-    public TradeInfoPhaseController(DefaultApplicationService applicationService) {
+    public TradeAssistantTradeController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
-        model = new TradeInfoPhaseModel();
-        view = new TradeInfoPhaseView(model, this);
+        model = new TradeAssistantTradeModel();
+        view = new TradeAssistantTradeView(model, this);
+    }
+
+    public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
     }
 
     @Override
@@ -49,17 +52,13 @@ public class TradeInfoPhaseController implements Controller {
     public void onDeactivate() {
     }
 
-   /* void onBack() {
-        Navigation.navigateTo(NavigationTarget.TRADE_INFO_OFFER);
+    void onBack() {
+        Navigation.navigateTo(NavigationTarget.TRADE_ASSISTANT_NEGOTIATION);
     }
 
-    void onNext() {
-    }*/
-
-    void onNext() {
+    void onConfirm() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            // model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
@@ -71,7 +70,6 @@ public class TradeInfoPhaseController implements Controller {
     void onOpenDispute() {
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
-            // model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
@@ -111,7 +109,7 @@ public class TradeInfoPhaseController implements Controller {
         //tradeInfo.phase.btc.received=Bitcoin received
 
         //model.getBisqEasyTrade().getBaseSideAmount()
-        String text = Res.get("tradeInfo.phase.negotiation.confirmed");
+        String text = Res.get("tradeAssistant.phase.negotiation.confirmed");
         model.getConfirmButtonText().set(text);
                 
        /* if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
@@ -129,7 +127,7 @@ public class TradeInfoPhaseController implements Controller {
         model.getCloseButtonVisible().set(value);*/
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+    void onOpenTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
     }
 }

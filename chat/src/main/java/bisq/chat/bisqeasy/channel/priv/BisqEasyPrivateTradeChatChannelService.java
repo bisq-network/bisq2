@@ -39,7 +39,6 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -133,10 +132,10 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                             makerUserProfile,
                             mediator);
                     UserProfile maker = channel.getPeer();
-                    String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+                    String direction = bisqEasyOffer.getMirroredDirectionAsDisplayString();
                     String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
                             bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
-                    String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethodNames());
+                    String methods = bisqEasyOffer.getSettlementMethodsAsDisplayString();
                     String text = Res.get("bisqEasy.takeOffer.takerRequest",
                             direction, amount, methods);
                     Optional<Citation> citation = Optional.of(new Citation(maker.getId(),
