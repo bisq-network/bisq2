@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.review;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;

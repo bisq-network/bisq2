@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.threading.UIScheduler;

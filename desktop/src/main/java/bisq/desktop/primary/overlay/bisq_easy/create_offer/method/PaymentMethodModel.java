@@ -15,33 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.market;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
-public class MarketModel implements Model {
-    private final ObjectProperty<MarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
-    private final StringProperty searchText = new SimpleStringProperty();
+public class PaymentMethodModel implements Model {
+    // Method enum name or custom name
+    private final ObservableList<String> allPaymentMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> selectedPaymentMethodNames = FXCollections.observableArrayList();
+    private final StringProperty customMethodName = new SimpleStringProperty();
+    private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
+    private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<MarketView.MarketListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<MarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<MarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
 
     void reset() {
-        selectedMarketListItem.set(null);
-        searchText.set(null);
+        allPaymentMethodNames.clear();
+        addedCustomMethodNames.clear();
+        selectedPaymentMethodNames.clear();
+        customMethodName.set(null);
+        isPaymentMethodsEmpty.set(false);
+        isAddCustomMethodIconEnabled.set(false);
         selectedMarket.set(null);
-        listItems.clear();
     }
 }

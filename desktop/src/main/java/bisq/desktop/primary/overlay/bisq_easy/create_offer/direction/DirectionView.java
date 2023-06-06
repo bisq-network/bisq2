@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.direction;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.direction;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.Transitions;

@@ -45,7 +45,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.CreateOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;

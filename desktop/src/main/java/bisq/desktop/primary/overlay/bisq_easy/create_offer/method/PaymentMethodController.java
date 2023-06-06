@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.method;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
 
 import bisq.account.settlement.FiatSettlement;
 import bisq.application.DefaultApplicationService;
