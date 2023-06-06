@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,7 +78,8 @@ class TorBootstrap {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Process startTorProcess() throws IOException {
-        String ownerPid = getBisqProcessPid();
+        String ownerPid = Pid.getMyPid();
+        log.debug("Owner pid {}", ownerPid);
         torInstallationFiles.writePidToDisk(ownerPid);
 
         TorProcessConfig torProcessConfig = TorProcessConfig.builder()
@@ -92,13 +92,6 @@ class TorBootstrap {
 
         log.debug("Process started. pid={} info={}", process.pid(), process.info());
         return process;
-    }
-
-    private String getBisqProcessPid() {
-        String processName = ManagementFactory.getRuntimeMXBean().getName();
-        String ownerPid = processName.split("@")[0];
-        log.debug("Owner pid {}", ownerPid);
-        return ownerPid;
     }
 
     private int waitForControlPort(Process torProcess) {
