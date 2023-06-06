@@ -430,6 +430,13 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.bisq-text-21 {
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white !Important;
+    -fx-font-size: 1.1em !Important;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /* Generic Label properties */
 
 /* colors */
@@ -775,6 +782,22 @@
  *                                                                             *
  ******************************************************************************/
 
+.hyperlink {
+    -fx-text-fill: -bisq-white;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -bisq-green;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.hyperlink:hover:visited {
+    -fx-text-fill: derive(-bisq-grey-dimmed, 20%);
+}
+
 .hyperlink,
 .hyperlink.force-underline .text,
 .hyperlink:hover,
@@ -784,25 +807,10 @@
     -fx-border-style: none;
     -fx-border-width: 0px;
     -fx-underline: true;
-    -fx-text-fill: -bisq-white;
-    -fx-fill: -bisq-white;
 }
 
 .hyperlink.no-underline {
-    /* -fx-underline: false;*/
     -fx-text-fill: -bisq-grey-dimmed;
-}
-
-.hyperlink:hover {
-    -fx-text-fill: -bisq-white;
-    -fx-fill: -bisq-white;
-}
-
-.hyperlink:hover,
-.hyperlink:visited,
-.hyperlink:hover:visited {
-    -fx-text-fill: -bisq-grey-dimmed;
-    /*  -fx-underline: false;*/
 }
 
 .hyperlink.highlight,
@@ -1270,29 +1278,6 @@
 
 .green-card-button:hover {
     -fx-background-color: -bisq-green-lighter;
-}
-
-
-/*******************************************************************************
- *                                                                             *
- * Hyperlink                                                                  *
- *                                                                             *
- ******************************************************************************/
-
-.hyperlink {
-    -fx-text-fill: -bisq-white;
-}
-
-.hyperlink:hover {
-    -fx-text-fill: -bisq-green;
-}
-
-.hyperlink:visited {
-    -fx-text-fill: -bisq-grey-dimmed;
-}
-
-.hyperlink:hover:visited {
-    -fx-text-fill: derive(-bisq-grey-dimmed, 20%);
 }
 
 
@@ -2439,6 +2424,11 @@ tree-table-view:focused {
     -fx-background-color: -bisq-grey-17;
 }
 
+.create-offer-feedback-bg {
+    -fx-background-color: -bisq-grey-18;
+    -fx-background-radius: 0 0 16 16;
+}
+
 #buy-button {
     -fx-background-color: -bisq-buy;
     -fx-text-fill: -bisq-white;
@@ -2554,11 +2544,6 @@ tree-table-view:focused {
 #bisq-easy-skip-button {
     -fx-background-color: transparent;
     -fx-text-fill: -bisq-grey-dimmed;
-}
-
-#sellBtcWarning {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 0 0 16 16;
 }
 
 #bisq-easy-trade-info-headline-label {

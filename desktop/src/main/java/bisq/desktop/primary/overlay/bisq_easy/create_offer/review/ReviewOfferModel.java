@@ -53,7 +53,7 @@ class ReviewOfferModel implements Model {
     private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
-    private final BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
+    private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
     private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
@@ -69,7 +69,7 @@ class ReviewOfferModel implements Model {
         paymentMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
-        matchingOffersFound.set(false);
+        matchingOffersVisible.set(false);
         showCreateOfferSuccess.set(false);
         showTakeOfferSuccess.set(false);
         matchingOffers.clear();

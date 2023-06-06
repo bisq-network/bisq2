@@ -135,7 +135,6 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getNextButtonVisible().set(true);
         model.getBackButtonVisible().set(true);
         model.getCloseButtonVisible().set(true);
-        model.getTopPaneBoxVisible().set(true);
         model.getNextButtonText().set(Res.get("next"));
         model.getBackButtonText().set(Res.get("back"));
 

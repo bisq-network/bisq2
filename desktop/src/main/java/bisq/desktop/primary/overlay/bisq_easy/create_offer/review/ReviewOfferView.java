@@ -28,6 +28,7 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -62,15 +63,16 @@ import java.util.Optional;
 @Slf4j
 class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
     private final static int BUTTON_WIDTH = 140;
+    private final static int FEEDBACK_WIDTH = 700;
 
-    private final Label topHeadLine, createOfferLabel;
+    private final Label headLineLabel, createOfferLabel;
     private final BisqTableView<ListItem> tableView;
     private final Button createOfferButton;
     private final Label createOfferText;
     private final HBox createOfferHBox;
-    private final Label noMatchingOffersLabel;
+    private final Label subtitleLabel;
     private Subscription matchingOffersFoundPin;
-    private final VBox content, createOfferSuccessFeedback, takeOfferSuccessFeedback;
+    private final VBox content, createOfferSuccess, takeOfferSuccess;
     private final Button viewOfferButton;
     private final Button openPrivateChannelButton;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
@@ -78,17 +80,17 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
         super(new StackPane(), model, controller);
 
-        content = new VBox();
+
+        content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().add("bisq-content-bg");
 
-        topHeadLine = new Label();
-        topHeadLine.getStyleClass().add("bisq-text-headline-2");
+        headLineLabel = new Label();
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        noMatchingOffersLabel = new Label();
-        noMatchingOffersLabel.setTextAlignment(TextAlignment.CENTER);
-        noMatchingOffersLabel.setAlignment(Pos.CENTER);
-        noMatchingOffersLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subtitleLabel = new Label();
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("offer-review");
@@ -113,26 +115,23 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         createOfferHBox.setAlignment(Pos.CENTER_LEFT);
 
         // margin is set in onViewAttached
-        content.getChildren().addAll(topHeadLine, noMatchingOffersLabel, tableView, createOfferLabel, createOfferHBox);
+        content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, createOfferLabel, createOfferHBox, Spacer.fillVBox());
 
-        createOfferSuccessFeedback = new VBox();
-        createOfferSuccessFeedback.setVisible(false);
         viewOfferButton = new Button(Res.get("onboarding.completed.createOfferSuccess.viewOffer"));
+        createOfferSuccess = new VBox(20);
         configCreateOfferSuccess();
 
-        takeOfferSuccessFeedback = new VBox();
-        takeOfferSuccessFeedback.setVisible(false);
         openPrivateChannelButton = new Button(Res.get("onboarding.completed.takeOfferSuccess.openPrivateChannel"));
+        takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
 
-        StackPane.setMargin(createOfferSuccessFeedback, new Insets(-55, 0, 380, 0));
-        StackPane.setMargin(takeOfferSuccessFeedback, new Insets(-55, 0, 380, 0));
-        root.getChildren().addAll(content, createOfferSuccessFeedback, takeOfferSuccessFeedback);
+        StackPane.setMargin(createOfferSuccess, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        StackPane.setMargin(takeOfferSuccess, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
     }
 
     @Override
     protected void onViewAttached() {
-        configTableView();
         Transitions.removeEffect(content);
 
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
@@ -140,75 +139,75 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         createOfferText.setText(model.getMyOfferText());
-        noMatchingOffersLabel.setText(model.isShowMatchingOffers() ?
+        subtitleLabel.setText(model.isShowMatchingOffers() ?
                 Res.get("onboarding.completed.noMatchingOffers") :
                 Res.get("onboarding.completed.createOfferMode")
         );
 
-        matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersFound(), matchingOffersFound -> {
-            tableView.setVisible(matchingOffersFound);
-            tableView.setManaged(matchingOffersFound);
-            createOfferLabel.setVisible(matchingOffersFound);
-            createOfferLabel.setManaged(matchingOffersFound);
-            noMatchingOffersLabel.setVisible(!matchingOffersFound);
-            noMatchingOffersLabel.setManaged(!matchingOffersFound);
+        matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersVisible(), matchingOffersVisible -> {
+            tableView.setVisible(matchingOffersVisible);
+            tableView.setManaged(matchingOffersVisible);
+            createOfferLabel.setVisible(matchingOffersVisible);
+            createOfferLabel.setManaged(matchingOffersVisible);
+            subtitleLabel.setVisible(!matchingOffersVisible);
+            subtitleLabel.setManaged(!matchingOffersVisible);
 
-            if (matchingOffersFound) {
+            createOfferHBox.setPadding(new Insets(15, 26, 15, 15));
+
+            if (matchingOffersVisible) {
+                maybeConfigTableView();
                 createOfferHBox.setMinWidth(tableView.getMaxWidth());
                 createOfferHBox.setMaxWidth(tableView.getMaxWidth());
-                topHeadLine.setText(Res.get("onboarding.completed.headline.takeOffer"));
+                headLineLabel.setText(Res.get("onboarding.completed.headline.takeOffer"));
                 createOfferLabel.setText(Res.get("onboarding.completed.headLine2.createOffer"));
+
+                int numMatchingOffers = model.getMatchingOffers().size();
+                if (numMatchingOffers > 0) {
+                    tableView.setMaxHeight(42 + numMatchingOffers * 55);
+                    VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
+                    // Aligned with take offer button
+                    createOfferHBox.setPadding(new Insets(12));
+                    if (numMatchingOffers == 3) {
+                        VBox.setMargin(tableView, new Insets(-5, 0, 10, 0));
+                        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
+                    } else if (numMatchingOffers == 2) {
+                        VBox.setMargin(tableView, new Insets(-5, 0, 30, 0));
+                        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
+                    } else if (numMatchingOffers == 1) {
+                        VBox.setMargin(tableView, new Insets(-5, 0, 50, 0));
+                        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
+                    }
+                } else {
+                    VBox.setMargin(headLineLabel, new Insets(70, 0, 0, 0));
+                    VBox.setMargin(subtitleLabel, new Insets(20, 0, 10, 0));
+                    VBox.setMargin(createOfferHBox, new Insets(40, 0, 0, 0));
+                }
             } else {
                 createOfferHBox.setMinWidth(550);
                 createOfferHBox.setMaxWidth(550);
-                topHeadLine.setText(Res.get("createOffer"));
-            }
+                headLineLabel.setText(Res.get("createOffer"));
 
-            int numEntries = model.getMatchingOffers().size();
-
-            tableView.setMaxHeight(42 + numEntries * 55);
-            if (numEntries == 3) {
-                VBox.setMargin(topHeadLine, new Insets(25, 0, 0, 0));
-                VBox.setMargin(tableView, new Insets(-5, 0, 40, 0));
+                VBox.setMargin(headLineLabel, new Insets(-100, 0, 0, 0));
                 VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
-            } else if (numEntries == 2) {
-                VBox.setMargin(topHeadLine, new Insets(40, 0, 0, 0));
-                VBox.setMargin(tableView, new Insets(-5, 0, 60, 0));
-                VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
-            } else if (numEntries == 1) {
-                VBox.setMargin(topHeadLine, new Insets(50, 0, 0, 0));
-                VBox.setMargin(tableView, new Insets(5, 0, 70, 0));
-                VBox.setMargin(createOfferHBox, new Insets(20, 0, 0, 0));
-            } else {
-                VBox.setMargin(topHeadLine, new Insets(80, 0, 5, 0));
-                VBox.setMargin(createOfferHBox, new Insets(40, 0, 0, 0));
             }
-
-            if (numEntries == 0) {
-                createOfferHBox.setPadding(new Insets(15, 26, 15, 15));
-            } else {
-                // Aligned with take offer button
-                createOfferHBox.setPadding(new Insets(12));
-            }
-
         });
 
         showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
                 show -> {
-                    createOfferSuccessFeedback.setVisible(show);
+                    createOfferSuccess.setVisible(show);
                     if (show) {
-                        Transitions.blurLight(content, -0.5);
-                        Transitions.slideInTop(createOfferSuccessFeedback, 450);
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(createOfferSuccess, 450);
                     } else {
                         Transitions.removeEffect(content);
                     }
                 });
         showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
                 show -> {
-                    takeOfferSuccessFeedback.setVisible(show);
+                    takeOfferSuccess.setVisible(show);
                     if (show) {
-                        Transitions.blurLight(content, -0.5);
-                        Transitions.slideInTop(takeOfferSuccessFeedback, 450);
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(takeOfferSuccess, 450);
                     } else {
                         Transitions.removeEffect(content);
                     }
@@ -224,7 +223,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         showTakeOfferSuccessPin.unsubscribe();
     }
 
-    private void configTableView() {
+    private void maybeConfigTableView() {
         if (!tableView.getColumns().isEmpty()) {
             return;
         }
@@ -310,52 +309,60 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     }
 
     private void configCreateOfferSuccess() {
-        double width = 700;
-        createOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
-        createOfferSuccessFeedback.setMaxWidth(width);
-        createOfferSuccessFeedback.setId("sellBtcWarning");
-        createOfferSuccessFeedback.setPadding(new Insets(30, 0, 30, 0));
-        createOfferSuccessFeedback.setSpacing(20);
+        VBox contentBox = getFeedbackContentBox();
+
+        createOfferSuccess.setVisible(false);
+        createOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.subTitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(width - 200);
-        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        configFeedbackSubtitleLabel(subtitleLabel);
 
         viewOfferButton.setDefaultButton(true);
         VBox.setMargin(viewOfferButton, new Insets(10, 0, 0, 0));
-        createOfferSuccessFeedback.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
+        createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
+
     private void configTakeOfferSuccess() {
-        double width = 700;
-        takeOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
-        takeOfferSuccessFeedback.setMaxWidth(width);
-        takeOfferSuccessFeedback.setId("sellBtcWarning");
-        takeOfferSuccessFeedback.setPadding(new Insets(30, 0, 30, 0));
-        takeOfferSuccessFeedback.setSpacing(20);
+        VBox contentBox = getFeedbackContentBox();
+
+        takeOfferSuccess.setVisible(false);
+        takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.subTitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(width - 200);
-        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        configFeedbackSubtitleLabel(subtitleLabel);
 
         openPrivateChannelButton.setDefaultButton(true);
         VBox.setMargin(openPrivateChannelButton, new Insets(10, 0, 0, 0));
-        takeOfferSuccessFeedback.getChildren().addAll(headLineLabel, subtitleLabel, openPrivateChannelButton);
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, openPrivateChannelButton);
+        takeOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
+
+    private VBox getFeedbackContentBox() {
+        VBox contentBox = new VBox(20);
+        contentBox.setAlignment(Pos.TOP_CENTER);
+        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.setPadding(new Insets(30));
+        contentBox.setMaxWidth(FEEDBACK_WIDTH);
+        return contentBox;
+    }
+
+    private void configFeedbackSubtitleLabel(Label subtitleLabel) {
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.setMinHeight(100);
+        subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
+    }
+
 
     @ToString
     @EqualsAndHashCode

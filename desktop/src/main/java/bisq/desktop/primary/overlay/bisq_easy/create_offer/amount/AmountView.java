@@ -52,7 +52,7 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
     private Subscription baseAmountFocusPin, quoteAmountFocusPin;
 
     public AmountView(AmountModel model, AmountController controller, SmallAmountInput baseAmount, BigAmountInput quoteAmount) {
-        super(new VBox(), model, controller);
+        super(new VBox(10), model, controller);
 
         baseAmountRoot = baseAmount.getRoot();
         this.baseAmount = baseAmount;
@@ -60,7 +60,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         this.quoteAmount = quoteAmount;
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("bisq-content-bg");
 
         headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -109,23 +108,10 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
 
         VBox sliderBox = new VBox(2, slider, new HBox(minAmountLabel, Spacer.fillHBox(), maxAmountLabel));
         sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        VBox.setMargin(sliderBox, new Insets(28, 0, 70, 0));
 
-        VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, pane, sliderBox);
-    }
-
-    private void onInputTextFieldFocus(ReadOnlyBooleanProperty other, boolean focus) {
-        if (focus) {
-            selectionLine.setPrefWidth(0);
-            selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH);
-        } else if (!other.get()) {
-            // If switching between the 2 fields we want to avoid to get the fadeout called that's why
-            // we do the check with !other.get()  
-            Transitions.fadeOut(selectionLine, 200);
-        }
+        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
+        VBox.setMargin(pane, new Insets(10, 0, 28, 0));
+        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, pane, sliderBox, Spacer.fillVBox());
     }
 
     @Override
@@ -162,4 +148,17 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         model.getSliderFocus().unbind();
         root.setOnMousePressed(null);
     }
+
+    private void onInputTextFieldFocus(ReadOnlyBooleanProperty other, boolean focus) {
+        if (focus) {
+            selectionLine.setPrefWidth(0);
+            selectionLine.setOpacity(1);
+            Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH);
+        } else if (!other.get()) {
+            // If switching between the 2 fields we want to avoid to get the fadeout called that's why
+            // we do the check with !other.get()  
+            Transitions.fadeOut(selectionLine, 200);
+        }
+    }
+
 }

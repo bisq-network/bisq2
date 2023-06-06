@@ -172,7 +172,7 @@ public class ReviewOfferController implements Controller {
                 .limit(3)
                 .collect(Collectors.toList()));
 
-        model.getMatchingOffersFound().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
+        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
     }
 
     @Override

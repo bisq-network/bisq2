@@ -38,14 +38,16 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 
 @Slf4j
 public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
-    private static final double TOP_PANE_HEIGHT = 55;
+    public static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
+    public static final double TOP_PANE_HEIGHT = 55;
+    public static final double BUTTON_HEIGHT = 32;
+    public static final double BUTTON_BOTTOM = 40;
+    public static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
     private final Button closeButton;
@@ -55,14 +57,13 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private final HBox buttons;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
-    private Subscription topPaneBoxVisibleSubscription;
     private Scene rootScene;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT);
+        root.setPrefHeight(POPUP_HEIGHT);
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
         topPaneBox = topPane.getFirst();
@@ -77,14 +78,18 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         buttons.setAlignment(Pos.CENTER);
 
         content = new VBox();
-        content.setMinHeight(420);
-        content.setMaxHeight(420);
+        content.setMinHeight(CONTENT_HEIGHT);
+        content.setMaxHeight(CONTENT_HEIGHT);
+        content.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
         root.getChildren().addAll(topPaneBox, content, Spacer.fillVBox(), buttons);
 
-        VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
+                childRoot.setMinHeight(CONTENT_HEIGHT);
+                childRoot.setMaxHeight(CONTENT_HEIGHT);
                 content.getChildren().setAll(childRoot);
                 if (oldValue != null) {
                     if (model.isAnimateRightOut()) {
@@ -113,16 +118,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
-        topPaneBox.visibleProperty().bind(model.getTopPaneBoxVisible());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
-
-        topPaneBoxVisibleSubscription = EasyBind.subscribe(model.getTopPaneBoxVisible(), visible -> {
-            if (visible) {
-                VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
-            } else {
-                VBox.setMargin(buttons, new Insets(0, 0, 240, 0));
-            }
-        });
 
         model.getCurrentIndex().addListener(currentIndexListener);
         applyProgress(model.getCurrentIndex().get(), false);
@@ -149,7 +145,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
         closeButton.visibleProperty().unbind();
-        topPaneBox.visibleProperty().unbind();
         nextButton.disableProperty().unbind();
 
         nextButton.setOnAction(null);
@@ -157,7 +152,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
         model.getCurrentIndex().removeListener(currentIndexListener);
-        topPaneBoxVisibleSubscription.unsubscribe();
     }
 
     private Triple<HBox, Button, List<Label>> getTopPane() {
@@ -173,6 +167,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         hBox.setAlignment(Pos.CENTER);
         hBox.setId("onboarding-top-panel");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
+        hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 direction,
