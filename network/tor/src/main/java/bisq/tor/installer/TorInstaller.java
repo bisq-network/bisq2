@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.installer;
 
 import bisq.common.util.FileUtils;
+import bisq.tor.Tor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -39,11 +40,19 @@ public class TorInstaller {
         }
     }
 
+    public void deleteVersionFile() {
+        File versionFile = torInstallationFiles.getVersionFile();
+        boolean isSuccess = versionFile.delete();
+        if (isSuccess) {
+            log.debug("Deleted {}", versionFile.getAbsolutePath());
+        }
+    }
+
     private boolean isTorUpToDate() throws IOException {
         File versionFile = torInstallationFiles.getVersionFile();
         return versionFile.exists() && Tor.VERSION.equals(FileUtils.readFromFile(versionFile));
     }
-    
+
     private void install() throws IOException {
         try {
             File torDir = torInstallationFiles.getTorDir();
@@ -64,14 +73,6 @@ public class TorInstaller {
         } catch (Throwable e) {
             deleteVersionFile();
             throw e;
-        }
-    }
-
-    void deleteVersionFile() {
-        File versionFile = torInstallationFiles.getVersionFile();
-        boolean isSuccess = versionFile.delete();
-        if (isSuccess) {
-            log.debug("Deleted {}", versionFile.getAbsolutePath());
         }
     }
 }

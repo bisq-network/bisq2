@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.installer;
 
 import bisq.common.util.FileUtils;
+import bisq.tor.Constants;
+import bisq.tor.OsType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
