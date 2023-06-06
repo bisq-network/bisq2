@@ -37,12 +37,13 @@ class TorBootstrap {
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
     TorBootstrap(Path torDirPath) {
-        this.torInstallationFiles = new TorInstallationFiles(torDirPath);
+        OsType osType = OsType.getOsType();
+        this.torInstallationFiles = new TorInstallationFiles(torDirPath, osType);
 
         TorrcConfigInstaller torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFiles);
         this.torInstaller = new TorInstaller(torInstallationFiles, torrcConfigInstaller);
 
-        this.osType = OsType.getOsType();
+        this.osType = osType;
     }
 
     int start() throws IOException, InterruptedException {
