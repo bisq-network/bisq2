@@ -59,11 +59,16 @@ public class TorProcessBuilder {
         environment.put("HOME", torDir.getAbsolutePath());
 
         if (osType == OsType.LINUX_32 || osType == OsType.LINUX_64) {
-            environment.put("LD_LIBRARY_PATH", torDir.getAbsolutePath());
+            forceLinkerToLoadLibrariesFromTorBundle(environment);
         }
 
         Process process = processBuilder.start();
         log.debug("Process started. pid={} info={}", process.pid(), process.info());
         return process;
+    }
+
+    private void forceLinkerToLoadLibrariesFromTorBundle(Map<String, String> environment) {
+        File torDir = torInstallationFiles.getTorDir();
+        environment.put("LD_LIBRARY_PATH", torDir.getAbsolutePath());
     }
 }
