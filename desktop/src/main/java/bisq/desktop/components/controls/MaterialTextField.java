@@ -49,6 +49,7 @@ public class MaterialTextField extends Pane {
     protected final StringProperty helpProperty = new SimpleStringProperty();
     @Getter
     private final BisqIconButton iconButton;
+    private ChangeListener<Number> iconButtonHeightListener;
 
     public MaterialTextField() {
         this(null, null, null);
@@ -286,15 +287,25 @@ public class MaterialTextField extends Pane {
     }
 
     private void layoutIconButton() {
-        if (getWidth() > 0 && iconButton.isManaged()) {
-            if (iconButton.getAlignment() == Pos.CENTER ||
-                    iconButton.getAlignment() == Pos.CENTER_LEFT ||
-                    iconButton.getAlignment() == Pos.CENTER_RIGHT) {
-                iconButton.setLayoutY((getBgHeight() - iconButton.getHeight()) / 2 - 1);
-            } else {
-                iconButton.setLayoutY(6);
+        if (iconButton.getHeight() > 0) {
+            if (getWidth() > 0 && iconButton.isManaged()) {
+                if (iconButton.getAlignment() == Pos.CENTER ||
+                        iconButton.getAlignment() == Pos.CENTER_LEFT ||
+                        iconButton.getAlignment() == Pos.CENTER_RIGHT) {
+                    iconButton.setLayoutY((getBgHeight() - iconButton.getHeight()) / 2 - 1);
+                } else {
+                    iconButton.setLayoutY(6);
+                }
+                iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12 + iconButton.getPadding().getLeft());
             }
-            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12 + iconButton.getPadding().getLeft());
+        } else {
+            iconButtonHeightListener = (observable, oldValue, newValue) -> {
+                if (newValue.doubleValue() > 0) {
+                    layoutIconButton();
+                    UIThread.runOnNextRenderFrame(() -> iconButton.heightProperty().removeListener(iconButtonHeightListener));
+                }
+            };
+            iconButton.heightProperty().addListener(iconButtonHeightListener);
         }
     }
 
