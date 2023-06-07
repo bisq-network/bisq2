@@ -32,12 +32,12 @@ public final class MarketPriceSpec implements PriceSpec {
     public MarketPriceSpec() {
     }
 
-    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {
-        return new MarketPriceSpec();
-    }
-
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
         return getPriceSpecBuilder().setMarketPrice(bisq.offer.protobuf.MarketPrice.newBuilder()).build();
+    }
+
+    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {
+        return new MarketPriceSpec();
     }
 }

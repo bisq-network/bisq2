@@ -17,6 +17,7 @@
 
 package bisq.offer;
 
+import bisq.account.settlement.BitcoinSettlement;
 import bisq.common.proto.Proto;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -28,10 +29,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class SettlementSpec implements Proto {
+
+    public static List<SettlementSpec> createBaseSideSpecsForBitcoinMainChain() {
+        return List.of(new SettlementSpec(BitcoinSettlement.Method.MAINCHAIN.name()));
+    }
+
+    public static List<SettlementSpec> createQuoteSideSpecsFromMethodNames(List<String> paymentMethodNames) {
+        checkArgument(!paymentMethodNames.isEmpty());
+        return paymentMethodNames.stream()
+                .map(SettlementSpec::new)
+                .collect(Collectors.toList());
+    }
+
+
     public static List<String> getSettlementMethodNames(Collection<SettlementSpec> settlementSpecs) {
         return settlementSpecs.stream()
                 .map(SettlementSpec::getSettlementMethodName)

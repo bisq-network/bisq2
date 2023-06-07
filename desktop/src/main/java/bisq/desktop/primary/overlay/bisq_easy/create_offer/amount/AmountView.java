@@ -17,148 +17,60 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
-import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class AmountView extends View<VBox, AmountModel, AmountController> {
     private final static int AMOUNT_BOX_WIDTH = 330;
-    private final Label minAmountLabel, maxAmountLabel;
-    private final Slider slider;
     private final Label headLineLabel;
-    private final Label subtitleLabel;
-    private final Region line, selectionLine;
-    private final Pane baseAmountRoot;
-    private final SmallAmountInput baseAmount;
-    private final Pane quoteAmountRoot;
-    private final BigAmountInput quoteAmount;
-    private Subscription baseAmountFocusPin, quoteAmountFocusPin;
+    private final Button toggleButton;
+    private final VBox minAmountRoot;
 
-    public AmountView(AmountModel model, AmountController controller, SmallAmountInput baseAmount, BigAmountInput quoteAmount) {
+    public AmountView(AmountModel model, AmountController controller, AmountComponent minAmountComponent, AmountComponent maxAmountComponent) {
         super(new VBox(10), model, controller);
-
-        baseAmountRoot = baseAmount.getRoot();
-        this.baseAmount = baseAmount;
-        quoteAmountRoot = quoteAmount.getRoot();
-        this.quoteAmount = quoteAmount;
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        headLineLabel = new Label();
+        headLineLabel = new Label(Res.get("onboarding.amount.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        subtitleLabel = new Label();
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        minAmountRoot = minAmountComponent.getView().getRoot();
+        HBox amountBox = new HBox(20, minAmountRoot, maxAmountComponent.getView().getRoot());
+        amountBox.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(quoteAmountRoot, new Insets(-15, 0, 0, 0));
-        VBox.setMargin(baseAmountRoot, new Insets(-17, 0, 0, 0));
-        VBox vbox = new VBox(0, quoteAmountRoot, baseAmountRoot);
-        vbox.getStyleClass().add("bisq-dual-amount-bg");
-        vbox.setAlignment(Pos.CENTER);
-        vbox.setMinWidth(AMOUNT_BOX_WIDTH);
-        vbox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        vbox.setPadding(new Insets(25, 20, 10, 20));
-
-        line = new Region();
-        line.setLayoutY(121);
-        line.setPrefHeight(1);
-        line.setPrefWidth(AMOUNT_BOX_WIDTH);
-        line.setStyle("-fx-background-color: -bisq-grey-dimmed");
-        line.setMouseTransparent(true);
-
-        selectionLine = new Region();
-        selectionLine.getStyleClass().add("bisq-green-line");
-        selectionLine.setPrefHeight(3);
-        selectionLine.setPrefWidth(0);
-        selectionLine.setLayoutY(119);
-        selectionLine.setMouseTransparent(true);
-        Pane pane = new Pane(vbox, line, selectionLine);
-        pane.setMaxWidth(AMOUNT_BOX_WIDTH);
-
-        slider = new Slider();
-        slider.setMin(model.getSliderMin());
-        slider.setMax(model.getSliderMax());
-
-        minAmountLabel = new Label(Res.get("onboarding.amount.minLabel",
-                AmountFormatter.formatAmountWithCode(model.getMinAmount(), true)));
-        minAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
-
-        maxAmountLabel = new Label(Res.get("onboarding.amount.maxLabel",
-                AmountFormatter.formatAmountWithCode(model.getMaxAmount(), true)));
-        maxAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
-
-        VBox sliderBox = new VBox(2, slider, new HBox(minAmountLabel, Spacer.fillHBox(), maxAmountLabel));
-        sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH);
+        toggleButton = new Button(Res.get("onboarding.amount.addMinAmountOption"));
+        toggleButton.getStyleClass().add("outlined-button");
+        toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 
         VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(pane, new Insets(10, 0, 28, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, pane, sliderBox, Spacer.fillVBox());
+        VBox.setMargin(toggleButton, new Insets(15, 0, 0, 0));
+        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, amountBox, toggleButton, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
-        UIScheduler.run(() -> {
-            quoteAmount.requestFocus();
-            baseAmountFocusPin = EasyBind.subscribe(baseAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(quoteAmount.focusedProperty(), focus));
-            quoteAmountFocusPin = EasyBind.subscribe(quoteAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(baseAmount.focusedProperty(), focus));
-        }).after(700);
+        minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
+        minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
+        toggleButton.textProperty().bind(model.getToggleButtonText());
 
-        slider.valueProperty().bindBidirectional(model.getSliderValue());
-        model.getSliderFocus().bind(slider.focusedProperty());
-
-        // Needed to trigger focusOut event on amount components
-        root.setOnMousePressed(e -> root.requestFocus());
-
-        headLineLabel.setText(Res.get("onboarding.amount.headline"));
-        subtitleLabel.setText(Res.get("onboarding.amount.subtitle",
-                model.getQuoteSideAmount().get().getCode(),
-                model.getSpendOrReceiveString().get()));
+        toggleButton.setOnAction(e -> controller.onToggleMinAmountVisibility());
     }
 
     @Override
     protected void onViewDetached() {
-        if (baseAmountFocusPin != null) {
-            baseAmountFocusPin.unsubscribe();
-        }
-        if (quoteAmountFocusPin != null) {
-            quoteAmountFocusPin.unsubscribe();
-        }
-        slider.valueProperty().unbindBidirectional(model.getSliderValue());
-        model.getSliderFocus().unbind();
-        root.setOnMousePressed(null);
-    }
+        minAmountRoot.visibleProperty().unbind();
+        minAmountRoot.managedProperty().unbind();
+        toggleButton.textProperty().unbind();
 
-    private void onInputTextFieldFocus(ReadOnlyBooleanProperty other, boolean focus) {
-        if (focus) {
-            selectionLine.setPrefWidth(0);
-            selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH);
-        } else if (!other.get()) {
-            // If switching between the 2 fields we want to avoid to get the fadeout called that's why
-            // we do the check with !other.get()  
-            Transitions.fadeOut(selectionLine, 200);
-        }
+        toggleButton.setOnAction(null);
     }
-
 }

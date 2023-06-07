@@ -19,17 +19,14 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.controls.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -41,166 +38,128 @@ public class AmountController implements Controller {
     private final AmountModel model;
     @Getter
     private final AmountView view;
-    private final BigAmountInput quoteAmount;
-    private final SmallAmountInput baseAmount;
-    private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
-    private final ChangeListener<Quote> fixPriceQuoteListener;
-    private final PriceInput price;
-    private final ChangeListener<Number> sliderListener;
-    private long minAmount, minMaxDiff;
-    private Subscription baseAmountFromModelSubscription, baseAmountFromCompSubscription,
-            quoteAmountFromCompSubscription, priceFromCompSubscription;
+    private final AmountComponent minAmountComponent, maxAmountComponent;
+    private final SettingsService settingsService;
+    private Subscription isMinAmountEnabledPin, maxAmountBaseSideAmountPin, minAmountBaseSideAmountPin,
+            maxAmountQuoteSideAmountPin, minAmountQuoteSideAmountPin;
 
     public AmountController(DefaultApplicationService applicationService) {
-        quoteAmount = new BigAmountInput(false);
-        baseAmount = new SmallAmountInput(true);
-        price = new PriceInput(applicationService.getOracleService().getMarketPriceService());
-
+        settingsService = applicationService.getSettingsService();
         model = new AmountModel();
+
+        minAmountComponent = new AmountComponent(applicationService, model.getMinAmountDescription());
+        maxAmountComponent = new AmountComponent(applicationService, model.getMaxAmountDescription());
+
         view = new AmountView(model, this,
-                baseAmount,
-                quoteAmount);
-
-        // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
-        // apply the conversion before the other component has processed the market change event.
-        // The order of the event notification is not deterministic. 
-        baseCurrencyAmountListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setQuoteFromBase);
-        quoteCurrencyAmountListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setBaseFromQuote);
-        fixPriceQuoteListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::applyFixPrice);
-
-        sliderListener = (observable, oldValue, newValue) -> {
-            double sliderValue = newValue.doubleValue();
-            long value = Math.round(sliderValue * minMaxDiff) + minAmount;
-            Coin amount = Coin.of(value, "BTC");
-            baseAmount.setAmount(amount);
-        };
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
-        return model.getBaseSideAmount();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
-        return model.getQuoteSideAmount();
+                minAmountComponent,
+                maxAmountComponent);
     }
 
     public void setDirection(Direction direction) {
         if (direction == null) {
             return;
         }
-        model.setDirection(direction);
-        model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("buying") : Res.get("selling"));
+        minAmountComponent.setDirection(direction);
+        maxAmountComponent.setDirection(direction);
     }
 
     public void setMarket(Market market) {
         if (market == null) {
             return;
         }
-        model.setMarket(market);
-        baseAmount.setSelectedMarket(market);
-        quoteAmount.setSelectedMarket(market);
-        price.setSelectedMarket(market);
+        minAmountComponent.setMarket(market);
+        maxAmountComponent.setMarket(market);
     }
 
     public void reset() {
-        baseAmount.reset();
-        quoteAmount.reset();
-        price.reset();
+        minAmountComponent.reset();
+        maxAmountComponent.reset();
         model.reset();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getBaseSideMinAmount() {
+        return minAmountComponent.getBaseSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getQuoteSideMinAmount() {
+        return minAmountComponent.getQuoteSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getBaseSideMaxAmount() {
+        return maxAmountComponent.getBaseSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getQuoteSideMaxAmount() {
+        return maxAmountComponent.getQuoteSideAmount();
+    }
+
+    public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
+        return model.getIsMinAmountEnabled();
     }
 
     @Override
     public void onActivate() {
-        model.getBaseSideAmount().addListener(baseCurrencyAmountListener);
-        model.getQuoteSideAmount().addListener(quoteCurrencyAmountListener);
-        model.getFixPrice().addListener(fixPriceQuoteListener);
+        model.getIsMinAmountEnabled().set(settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false));
 
-        minAmount = model.getMinAmount().getValue();
-        minMaxDiff = model.getMaxAmount().getValue() - minAmount;
-
-        baseAmount.setAmount(null);
-        if (model.getQuoteSideAmount().get() == null) {
-            // We use 0.004 BTC as default value converted with the price to the fiat amount
-            Quote fixPrice = price.fixPriceProperty().get();
-            if (fixPrice != null) {
-                Monetary baseCurrencyAmount = Coin.asBtc(400000);
-                Monetary exactAmount = fixPrice.toQuoteMonetary(baseCurrencyAmount);
-                quoteAmount.setAmount(exactAmount.round(0));
-            } else {
-                quoteAmount.setAmount(Fiat.parse("100", model.getMarket().getQuoteCurrencyCode()));
-            }
-        } else {
-            quoteAmount.setAmount(model.getQuoteSideAmount().get());
-        }
-        setBaseFromQuote();
-
-        baseAmountFromModelSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
-            // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null && !model.getSliderFocus().get()) {
-                double sliderValue = (amount.getValue() - minAmount) / (double) minMaxDiff;
-                model.getSliderValue().set(sliderValue);
-            }
-        });
-
-        baseAmountFromCompSubscription = EasyBind.subscribe(baseAmount.amountProperty(),
-                amount -> {
-                    if (amount != null && amount.getValue() > model.getMaxAmount().getValue()) {
-                        model.getBaseSideAmount().set(model.getMaxAmount());
-                        setQuoteFromBase();
-                        baseAmount.setAmount(model.getBaseSideAmount().get());
-                    } else if (amount != null && amount.getValue() < model.getMinAmount().getValue()) {
-                        model.getBaseSideAmount().set(model.getMinAmount());
-                        setQuoteFromBase();
-                        baseAmount.setAmount(model.getBaseSideAmount().get());
-                    } else {
-                        model.getBaseSideAmount().set(amount);
+        maxAmountBaseSideAmountPin = EasyBind.subscribe(maxAmountComponent.getBaseSideAmount(),
+                maxAmountBaseSideAmount -> {
+                    if (model.getIsMinAmountEnabled().get() &&
+                            maxAmountBaseSideAmount != null && minAmountComponent.getBaseSideAmount().get() != null &&
+                            maxAmountBaseSideAmount.getValue() < minAmountComponent.getBaseSideAmount().get().getValue()) {
+                        minAmountComponent.setBaseSideAmount(maxAmountBaseSideAmount);
                     }
                 });
-        quoteAmountFromCompSubscription = EasyBind.subscribe(quoteAmount.amountProperty(),
-                amount -> model.getQuoteSideAmount().set(amount));
-        priceFromCompSubscription = EasyBind.subscribe(price.fixPriceProperty(),
-                price -> model.getFixPrice().set(price));
+        maxAmountQuoteSideAmountPin = EasyBind.subscribe(maxAmountComponent.getQuoteSideAmount(),
+                maxAmountQuoteSideAmount -> {
+                    if (model.getIsMinAmountEnabled().get() &&
+                            maxAmountQuoteSideAmount != null && minAmountComponent.getQuoteSideAmount().get() != null &&
+                            maxAmountQuoteSideAmount.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
+                        minAmountComponent.setQuoteSideAmount(maxAmountQuoteSideAmount);
+                    }
+                });
 
-        model.getSliderValue().addListener(sliderListener);
+        minAmountBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
+                minAmountBaseSideAmount -> {
+                    if (model.getIsMinAmountEnabled().get()) {
+                        if (minAmountBaseSideAmount != null && maxAmountComponent.getBaseSideAmount().get() != null &&
+                                minAmountBaseSideAmount.getValue() > maxAmountComponent.getBaseSideAmount().get().getValue()) {
+                            maxAmountComponent.setBaseSideAmount(minAmountBaseSideAmount);
+                        }
+                    }
+                });
+        minAmountQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
+                minAmountQuoteSideAmount -> {
+                    if (model.getIsMinAmountEnabled().get()) {
+                        if (minAmountQuoteSideAmount != null && maxAmountComponent.getQuoteSideAmount().get() != null &&
+                                minAmountQuoteSideAmount.getValue() > maxAmountComponent.getQuoteSideAmount().get().getValue()) {
+                            maxAmountComponent.setQuoteSideAmount(minAmountQuoteSideAmount);
+                        }
+                    }
+                });
+
+        isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
+            model.getToggleButtonText().set(isMinAmountEnabled ?
+                    Res.get("onboarding.amount.removeMinAmountOption") :
+                    Res.get("onboarding.amount.addMinAmountOption"));
+            model.getMinAmountDescription().set(Res.get("onboarding.amount.description.minAmount"));
+            model.getMaxAmountDescription().set(isMinAmountEnabled ?
+                    Res.get("onboarding.amount.description.maxAmount") :
+                    Res.get("onboarding.amount.description.maxAmountOnly"));
+        });
     }
 
     @Override
     public void onDeactivate() {
-        model.getBaseSideAmount().removeListener(baseCurrencyAmountListener);
-        model.getQuoteSideAmount().removeListener(quoteCurrencyAmountListener);
-        model.getFixPrice().removeListener(fixPriceQuoteListener);
-        model.getSliderValue().removeListener(sliderListener);
-        baseAmountFromModelSubscription.unsubscribe();
-        baseAmountFromCompSubscription.unsubscribe();
-        quoteAmountFromCompSubscription.unsubscribe();
-        priceFromCompSubscription.unsubscribe();
+        isMinAmountEnabledPin.unsubscribe();
+        maxAmountBaseSideAmountPin.unsubscribe();
+        maxAmountQuoteSideAmountPin.unsubscribe();
+        minAmountBaseSideAmountPin.unsubscribe();
+        minAmountQuoteSideAmountPin.unsubscribe();
     }
 
-    private void setQuoteFromBase() {
-        Quote fixPrice = model.getFixPrice().get();
-        if (fixPrice == null) return;
-        Monetary baseCurrencyAmount = model.getBaseSideAmount().get();
-        if (baseCurrencyAmount == null) return;
-        if (fixPrice.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
-
-        Monetary exactAmount = fixPrice.toQuoteMonetary(baseCurrencyAmount);
-        quoteAmount.setAmount(exactAmount.round(0));
-    }
-
-    private void setBaseFromQuote() {
-        Quote fixPrice = model.getFixPrice().get();
-        if (fixPrice == null) return;
-        Monetary quoteCurrencyAmount = model.getQuoteSideAmount().get();
-        if (quoteCurrencyAmount == null) return;
-        if (fixPrice.getQuoteMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
-        baseAmount.setAmount(fixPrice.toBaseMonetary(quoteCurrencyAmount));
-    }
-
-    private void applyFixPrice() {
-        if (model.getBaseSideAmount() == null) {
-            setBaseFromQuote();
-        } else {
-            setQuoteFromBase();
-        }
+    void onToggleMinAmountVisibility() {
+        boolean value = !model.getIsMinAmountEnabled().get();
+        model.getIsMinAmountEnabled().set(value);
+        settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
     }
 }

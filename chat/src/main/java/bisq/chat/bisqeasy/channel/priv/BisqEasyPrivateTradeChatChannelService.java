@@ -23,7 +23,6 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateGroupChatChannelService;
 import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
-import bisq.common.monetary.Fiat;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -33,7 +32,6 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -132,10 +130,9 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                             makerUserProfile,
                             mediator);
                     UserProfile maker = channel.getPeer();
-                    String direction = bisqEasyOffer.getMirroredDirectionAsDisplayString();
-                    String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
-                            bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
-                    String methods = bisqEasyOffer.getSettlementMethodsAsDisplayString();
+                    String direction = bisqEasyOffer.getTakersDirectionAsDisplayString();
+                    String amount = bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString();
+                    String methods = bisqEasyOffer.getQuoteSideSettlementMethodsAsDisplayString();
                     String text = Res.get("bisqEasy.takeOffer.takerRequest",
                             direction, amount, methods);
                     Optional<Citation> citation = Optional.of(new Citation(maker.getId(),

@@ -19,14 +19,11 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat.offer_details;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Fiat;
-import bisq.common.util.MathUtils;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -70,25 +67,23 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         Market market = bisqEasyOffer.getMarket();
         model.getQuoteSideAmountDescription().set(Res.get("bisqEasy.offerDetails.quoteSideAmount",
                 market.getQuoteCurrencyCode()));
-        String baseSideAmountAsDisplayString = bisqEasyOffer.getBaseSideAmountAsDisplayString();
-        String quoteSideAmountAsDisplayString = bisqEasyOffer.getQuoteSideAmountAsDisplayString();
-        bisqEasyOffer.getMinAmountAsPercentage()
-                .ifPresentOrElse(minAmountAsPercentage -> {
-                            long minBaseSideAmount = MathUtils.roundDoubleToLong(bisqEasyOffer.getBaseSideAmount() * minAmountAsPercentage);
-                            String minBaseSideAmountAsDisplayString = AmountFormatter.formatAmountWithCode(Fiat.of(minBaseSideAmount,
-                                    market.getBaseCurrencyCode()), true);
-                            model.getBaseSideAmount().set(minBaseSideAmountAsDisplayString + " - " + baseSideAmountAsDisplayString);
 
-                            long minQuoteSideAmount = MathUtils.roundDoubleToLong(bisqEasyOffer.getQuoteSideAmount() * minAmountAsPercentage);
-                            String minQuoteSideAmountAsDisplayString = AmountFormatter.formatAmountWithCode(Fiat.of(minQuoteSideAmount,
-                                    market.getQuoteCurrencyCode()), true);
-                            model.getQuoteSideAmount().set(minQuoteSideAmountAsDisplayString + " - " + quoteSideAmountAsDisplayString);
-                        },
-                        () -> {
-                            model.getBaseSideAmount().set(baseSideAmountAsDisplayString);
-                            model.getQuoteSideAmount().set(quoteSideAmountAsDisplayString);
-                        });
-        model.getPrice().set(bisqEasyOffer.getQuote(marketPriceService)
+        if (bisqEasyOffer.getBaseSideMaxAmount().getValue() == bisqEasyOffer.getBaseSideMinAmount().getValue()) {
+            model.getBaseSideAmount().set(bisqEasyOffer.getBaseSideAmountAsDisplayString());
+        } else {
+            model.getBaseSideAmount().set(bisqEasyOffer.getBaseSideMinAmountAsDisplayString() + " - " +
+                    bisqEasyOffer.getBaseSideMaxAmountAsDisplayString());
+        }
+
+        if (bisqEasyOffer.getQuoteSideMaxAmount().getValue() == bisqEasyOffer.getQuoteSideMinAmount().getValue()) {
+            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+        } else {
+            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMinAmountAsDisplayString() + " - " +
+                    bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+        }
+
+
+        model.getPrice().set(bisqEasyOffer.findQuote(marketPriceService)
                 .map(quote -> {
                     String price = QuoteFormatter.format(quote, true);
                     String percentFromMarketPrice = bisqEasyOffer.findPercentFromMarketPrice(marketPriceService).map(PercentageFormatter::formatToPercentWithSymbol)
@@ -97,17 +92,17 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                 })
                 .orElse(Res.get("na")));
         model.getPriceDescription().set(Res.get("bisqEasy.offerDetails.price", bisqEasyOffer.getMarket().getMarketCodes()));
-        model.getPaymentMethods().set(bisqEasyOffer.getSettlementMethodsAsDisplayString());
+        model.getPaymentMethods().set(bisqEasyOffer.getQuoteSideSettlementMethodsAsDisplayString());
 
         model.getId().set(bisqEasyOffer.getId());
         model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 
-        model.getMakersTradeTermsVisible().set(bisqEasyOffer.getMakersTradeTerms().isPresent());
-        bisqEasyOffer.getMakersTradeTerms().ifPresent(makersTradeTerms ->
+        model.getMakersTradeTermsVisible().set(bisqEasyOffer.findMakersTradeTerms().isPresent());
+        bisqEasyOffer.findMakersTradeTerms().ifPresent(makersTradeTerms ->
                 model.getMakersTradeTerms().set(makersTradeTerms));
 
-        model.getRequiredTotalReputationScoreVisible().set(bisqEasyOffer.getRequiredTotalReputationScore().isPresent());
-        bisqEasyOffer.getRequiredTotalReputationScore().ifPresent(requiredTotalReputationScore ->
+        model.getRequiredTotalReputationScoreVisible().set(bisqEasyOffer.findRequiredTotalReputationScore().isPresent());
+        bisqEasyOffer.findRequiredTotalReputationScore().ifPresent(requiredTotalReputationScore ->
                 model.getRequiredTotalReputationScore().set("" + requiredTotalReputationScore)); //todo
     }
 

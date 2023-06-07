@@ -51,8 +51,8 @@ public class TradeAssistantOfferController implements Controller {
     public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
         BisqEasyOffer bisqEasyOffer = privateChannel.getBisqEasyOffer();
         model.setBisqEasyOffer(bisqEasyOffer);
-        String makersDirection = bisqEasyOffer.getDirectionAsDisplayString();
-        String takersDirection = bisqEasyOffer.getMirroredDirectionAsDisplayString();
+        String makersDirection = bisqEasyOffer.getMakersDirectionAsDisplayString();
+        String takersDirection = bisqEasyOffer.getTakersDirectionAsDisplayString();
 
         UserProfile peersUserProfile = privateChannel.getPeer();
         model.setPeersUserProfile(peersUserProfile);
@@ -65,8 +65,8 @@ public class TradeAssistantOfferController implements Controller {
             model.getOfferTitle().set(Res.get("tradeAssistant.offer.taker.offerTitle", peersUserName));
         }
 
-        model.getAmount().set(bisqEasyOffer.getQuoteSideAmountAsDisplayString());
-        model.getPaymentMethods().set(bisqEasyOffer.getSettlementMethodsAsDisplayString());
+        model.getAmount().set(bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+        model.getPaymentMethods().set(bisqEasyOffer.getQuoteSideSettlementMethodsAsDisplayString());
 
         model.getOpenUserProfileButtonLabel().set(Res.get("tradeAssistant.offer.peer.openUserProfile", peersUserName));
     }

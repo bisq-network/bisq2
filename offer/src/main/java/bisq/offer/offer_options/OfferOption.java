@@ -20,10 +20,23 @@ package bisq.offer.offer_options;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface OfferOption extends Proto {
+    static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms, long requiredTotalReputationScore) {
+        List<OfferOption> offerOptions = new ArrayList<>();
+        if (makersTradeTerms != null && !makersTradeTerms.isEmpty()) {
+            offerOptions.add(new TradeTermsOption(makersTradeTerms));
+        }
+        if (requiredTotalReputationScore > 0) {
+            offerOptions.add(new ReputationOption(requiredTotalReputationScore));
+        }
+        return offerOptions;
+    }
+
     bisq.offer.protobuf.OfferOption toProto();
 
     default bisq.offer.protobuf.OfferOption.Builder getOfferOptionBuilder() {
@@ -41,13 +54,6 @@ public interface OfferOption extends Proto {
         return offerOptions.stream()
                 .filter(option -> option instanceof ReputationOption)
                 .map(option -> (ReputationOption) option)
-                .findAny();
-    }
-
-    static Optional<AmountOption> findAmountOption(Collection<OfferOption> offerOptions) {
-        return offerOptions.stream()
-                .filter(option -> option instanceof AmountOption)
-                .map(option -> (AmountOption) option)
                 .findAny();
     }
 
@@ -79,9 +85,6 @@ public interface OfferOption extends Proto {
             }
             case REPUTATIONOPTION: {
                 return ReputationOption.fromProto(proto.getReputationOption());
-            }
-            case AMOUNTOPTION: {
-                return AmountOption.fromProto(proto.getAmountOption());
             }
             case COLLATERALOPTION: {
                 return CollateralOption.fromProto(proto.getCollateralOption());

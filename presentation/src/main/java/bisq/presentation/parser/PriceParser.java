@@ -21,8 +21,9 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Quote;
 
 public class PriceParser {
-    public static Quote parse(String priceString, String baseCurrencyCode, String quoteCurrencyCode) {
-        return Quote.fromPrice(Double.parseDouble(priceString), baseCurrencyCode, quoteCurrencyCode);
+    public static Quote parse(String value, String baseCurrencyCode, String quoteCurrencyCode) {
+        value = value.replace(",", ".");
+        return Quote.fromPrice(Double.parseDouble(value), baseCurrencyCode, quoteCurrencyCode);
     }
 
     public static Quote parse(String value, Market market) {

@@ -44,15 +44,21 @@ class ReviewOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
-    private Monetary baseSideAmount;
+    private Monetary baseSideMinAmount;
     @Setter
-    private Monetary quoteSideAmount;
+    private Monetary baseSideMaxAmount;
+    @Setter
+    private Monetary quoteSideMinAmount;
+    @Setter
+    private Monetary quoteSideMaxAmount;
     @Setter
     private List<String> paymentMethodNames;
     @Setter
     private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
+    @Setter
+    private boolean isMinAmountEnabled;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
@@ -64,8 +70,10 @@ class ReviewOfferModel implements Model {
         selectedChannel = null;
         direction = null;
         market = null;
-        baseSideAmount = null;
-        quoteSideAmount = null;
+        baseSideMinAmount = null;
+        baseSideMaxAmount = null;
+        quoteSideMinAmount = null;
+        quoteSideMaxAmount = null;
         paymentMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;

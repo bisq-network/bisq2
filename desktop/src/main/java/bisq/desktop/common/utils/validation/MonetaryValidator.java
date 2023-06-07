@@ -32,6 +32,7 @@ public class MonetaryValidator extends InputValidator {
             return new ValidationResult(true);
         }
         try {
+            value = value.replace(",", ".");
             Double.parseDouble(value);
             return new ValidationResult(true);
         } catch (Throwable error) {

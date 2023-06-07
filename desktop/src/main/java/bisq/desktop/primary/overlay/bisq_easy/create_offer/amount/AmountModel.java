@@ -17,46 +17,22 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class AmountModel implements Model {
-    private final Monetary minAmount = Coin.asBtc(10000);
-    private final Monetary maxAmount = Coin.asBtc(1000000);
-    private final double sliderMin = 0;
-    private final double sliderMax = 1;
+    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final StringProperty minAmountDescription = new SimpleStringProperty();
+    private final StringProperty maxAmountDescription = new SimpleStringProperty();
+    private final StringProperty toggleButtonText = new SimpleStringProperty();
 
-    private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-    private final StringProperty spendOrReceiveString = new SimpleStringProperty();
-    private final DoubleProperty sliderValue = new SimpleDoubleProperty();
-    private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
-    @Setter
-    private Market market = MarketRepository.getDefault();
-    @Setter
-    private Direction direction = Direction.BUY;
-
-    AmountModel() {
-    }
-
-    void reset() {
-        baseSideAmount.set(null);
-        quoteSideAmount.set(null);
-        fixPrice.set(null);
-        spendOrReceiveString.set(null);
-        sliderValue.set(0L);
-        sliderFocus.set(false);
-        market = MarketRepository.getDefault();
-        direction = Direction.BUY;
+    public void reset() {
+        isMinAmountEnabled.set(false);
+        toggleButtonText.set(null);
     }
 }

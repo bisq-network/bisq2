@@ -18,8 +18,6 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.common.currency.Market;
-import bisq.common.monetary.Fiat;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -32,7 +30,6 @@ import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -266,8 +263,9 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("amount"))
-                .valueSupplier(ListItem::getAmount)
-                .comparator(Comparator.comparing(ListItem::getAmountAsLong))
+                .minWidth(200)
+                .valueSupplier(ListItem::getAmountDisplayString)
+                .comparator(Comparator.comparing(ListItem::getMaxAmountAsLong))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation"))
@@ -363,7 +361,6 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
     }
 
-
     @ToString
     @EqualsAndHashCode
     @Getter
@@ -371,8 +368,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         private final BisqEasyPublicChatMessage chatMessage;
         private final Optional<UserProfile> authorUserProfileId;
         private final String userName;
-        private final String amount;
-        private final long amountAsLong;
+        private final String amountDisplayString;
+        private final long maxAmountAsLong;
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
 
@@ -380,13 +377,9 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
             this.chatMessage = chatMessage;
             authorUserProfileId = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
             userName = authorUserProfileId.map(UserProfile::getUserName).orElse("");
-            Optional<BisqEasyOffer> bisqEasyOffer = chatMessage.getBisqEasyOffer();
-            amountAsLong = bisqEasyOffer.map(BisqEasyOffer::getQuoteSideAmount).orElse(0L);
-            String code = bisqEasyOffer.map(BisqEasyOffer::getMarket)
-                    .map(Market::getQuoteCurrencyCode)
-                    .orElse("");
-            amount = AmountFormatter.formatAmountWithCode(Fiat.of(amountAsLong, code), true);
-
+            BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
+            maxAmountAsLong = bisqEasyOffer.getQuoteSideMaxAmount().getValue();
+            amountDisplayString = bisqEasyOffer.getQuoteSideAmountAsDisplayString();
             reputationScore = authorUserProfileId.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }
