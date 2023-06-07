@@ -83,11 +83,11 @@ public class CreateOfferController extends NavigationController implements InitW
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
-        directionController = new DirectionController(applicationService, this::onNext, this::setButtonsVisible);
+        directionController = new DirectionController(applicationService, this::onNext, this::setMainButtonsVisibleState);
         marketController = new MarketController(applicationService, this::onNext);
         amountController = new AmountController(applicationService);
         paymentMethodController = new PaymentMethodController(applicationService);
-        reviewOfferController = new ReviewOfferController(applicationService, this::setButtonsVisible, this::reset);
+        reviewOfferController = new ReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
 
         paymentMethodsListener = c -> {
             c.next();
@@ -112,7 +112,7 @@ public class CreateOfferController extends NavigationController implements InitW
             reviewOfferController.setMarket(market);
             paymentMethodController.setMarket(market);
             amountController.setMarket(market);
-            updateNextButtonState();
+            updateNextButtonDisabledState();
         });
         baseSideMinAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMinAmount(), reviewOfferController::setBaseSideMinAmount);
         baseSideMaxAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMaxAmount(), reviewOfferController::setBaseSideMaxAmount);
@@ -120,9 +120,8 @@ public class CreateOfferController extends NavigationController implements InitW
         quoteSideMaxAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMaxAmount(), reviewOfferController::setQuoteSideMaxAmount);
         isMinAmountEnabledSubscription = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
 
-        paymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
-        reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
         handlePaymentMethodsUpdate();
+        paymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
     }
 
     @Override
@@ -139,33 +138,11 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.getNextButtonVisible().set(true);
-        model.getBackButtonVisible().set(true);
         model.getCloseButtonVisible().set(true);
         model.getNextButtonText().set(Res.get("next"));
         model.getBackButtonText().set(Res.get("back"));
-
-        switch (navigationTarget) {
-            case CREATE_OFFER_DIRECTION: {
-                model.getBackButtonVisible().set(false);
-                break;
-            }
-            case CREATE_OFFER_MARKET: {
-                break;
-            }
-            case CREATE_OFFER_AMOUNT: {
-                break;
-            }
-            case CREATE_OFFER_PAYMENT_METHOD: {
-                break;
-            }
-            case CREATE_OFFER_REVIEW_OFFER: {
-                model.getNextButtonVisible().set(false);
-                break;
-            }
-            default: {
-            }
-        }
+        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.CREATE_OFFER_DIRECTION);
+        model.getNextButtonVisible().set(navigationTarget != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
     }
 
     @Override
@@ -200,7 +177,7 @@ public class CreateOfferController extends NavigationController implements InitW
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonState();
+            updateNextButtonDisabledState();
         }
     }
 
@@ -212,7 +189,7 @@ public class CreateOfferController extends NavigationController implements InitW
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonState();
+            updateNextButtonDisabledState();
         }
     }
 
@@ -238,7 +215,7 @@ public class CreateOfferController extends NavigationController implements InitW
         model.reset();
     }
 
-    private void updateNextButtonState() {
+    private void updateNextButtonDisabledState() {
         if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
         } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
@@ -248,7 +225,7 @@ public class CreateOfferController extends NavigationController implements InitW
         }
     }
 
-    private void setButtonsVisible(boolean value) {
+    private void setMainButtonsVisibleState(boolean value) {
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
         model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
@@ -256,6 +233,6 @@ public class CreateOfferController extends NavigationController implements InitW
 
     private void handlePaymentMethodsUpdate() {
         reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
-        updateNextButtonState();
+        updateNextButtonDisabledState();
     }
 }

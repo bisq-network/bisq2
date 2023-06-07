@@ -65,15 +65,15 @@ public class ReviewOfferController implements Controller {
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final UserProfileService userProfileService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
-    private final Consumer<Boolean> buttonsVisibleHandler;
+    private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final MediationService mediationService;
     private final ChatService chatService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
-                                 Consumer<Boolean> buttonsVisibleHandler,
+                                 Consumer<Boolean> mainButtonsVisibleHandler,
                                  Runnable resetHandler) {
-        this.buttonsVisibleHandler = buttonsVisibleHandler;
+        this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
@@ -212,7 +212,7 @@ public class ReviewOfferController implements Controller {
                     bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
                             .ifPresent(chatChannelSelectionService::selectChannel);
                     model.getShowTakeOfferSuccess().set(true);
-                    buttonsVisibleHandler.accept(false);
+                    mainButtonsVisibleHandler.accept(false);
                 }));
     }
 
@@ -221,7 +221,7 @@ public class ReviewOfferController implements Controller {
         bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
-                    buttonsVisibleHandler.accept(false);
+                    mainButtonsVisibleHandler.accept(false);
                 }));
     }
 

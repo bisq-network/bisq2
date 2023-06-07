@@ -35,13 +35,13 @@ public class DirectionController implements Controller {
     @Getter
     private final DirectionView view;
     private final Runnable onNextHandler;
-    private final Consumer<Boolean> buttonsVisibleHandler;
+    private final Consumer<Boolean> mainButtonsVisibleHandler;
 
     public DirectionController(DefaultApplicationService applicationService,
                                Runnable onNextHandler,
-                               Consumer<Boolean> buttonsVisibleHandler) {
+                               Consumer<Boolean> mainButtonsVisibleHandler) {
         this.onNextHandler = onNextHandler;
-        this.buttonsVisibleHandler = buttonsVisibleHandler;
+        this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
 
         model = new DirectionModel();
         view = new DirectionView(model, this);
@@ -89,7 +89,7 @@ public class DirectionController implements Controller {
     private void setDirection(Direction direction) {
         model.getDirection().set(direction);
         boolean showReputationInfo = !model.getIgnoreShowReputationInfo().get() && direction == Direction.SELL;
-        buttonsVisibleHandler.accept(!showReputationInfo);
+        mainButtonsVisibleHandler.accept(!showReputationInfo);
         model.getShowReputationInfo().set(showReputationInfo);
     }
 }
