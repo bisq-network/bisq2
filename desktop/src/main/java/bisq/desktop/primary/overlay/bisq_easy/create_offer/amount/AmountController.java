@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.settings.CookieKey;
@@ -40,15 +41,16 @@ public class AmountController implements Controller {
     private final AmountView view;
     private final AmountComponent minAmountComponent, maxAmountComponent;
     private final SettingsService settingsService;
-    private Subscription isMinAmountEnabledPin, maxAmountBaseSideAmountPin, minAmountBaseSideAmountPin,
-            maxAmountQuoteSideAmountPin, minAmountQuoteSideAmountPin;
+    private Subscription isMinAmountEnabledPin, maxAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
+            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
     public AmountController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
         model = new AmountModel();
 
-        minAmountComponent = new AmountComponent(applicationService, model.getMinAmountDescription());
-        maxAmountComponent = new AmountComponent(applicationService, model.getMaxAmountDescription());
+        minAmountComponent = new AmountComponent(applicationService, true);
+        minAmountComponent.setDescription(Res.get("onboarding.amount.description.minAmount"));
+        maxAmountComponent = new AmountComponent(applicationService, true);
 
         view = new AmountView(model, this,
                 minAmountComponent,
@@ -101,48 +103,53 @@ public class AmountController implements Controller {
     public void onActivate() {
         model.getIsMinAmountEnabled().set(settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false));
 
-        maxAmountBaseSideAmountPin = EasyBind.subscribe(maxAmountComponent.getBaseSideAmount(),
-                maxAmountBaseSideAmount -> {
-                    if (model.getIsMinAmountEnabled().get() &&
-                            maxAmountBaseSideAmount != null && minAmountComponent.getBaseSideAmount().get() != null &&
-                            maxAmountBaseSideAmount.getValue() < minAmountComponent.getBaseSideAmount().get().getValue()) {
-                        minAmountComponent.setBaseSideAmount(maxAmountBaseSideAmount);
+        minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
+                value -> {
+                    if (model.getIsMinAmountEnabled().get()) {
+                        if (value != null && maxAmountComponent.getBaseSideAmount().get() != null &&
+                                value.getValue() > maxAmountComponent.getBaseSideAmount().get().getValue()) {
+                            log.error("minAmountCompBaseSideAmountPin value={}", value);
+                            maxAmountComponent.setBaseSideAmount(value);
+                        }
                     }
                 });
-        maxAmountQuoteSideAmountPin = EasyBind.subscribe(maxAmountComponent.getQuoteSideAmount(),
-                maxAmountQuoteSideAmount -> {
+        maxAmountCompBaseSideAmountPin = EasyBind.subscribe(maxAmountComponent.getBaseSideAmount(),
+                value -> {
                     if (model.getIsMinAmountEnabled().get() &&
-                            maxAmountQuoteSideAmount != null && minAmountComponent.getQuoteSideAmount().get() != null &&
-                            maxAmountQuoteSideAmount.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
-                        minAmountComponent.setQuoteSideAmount(maxAmountQuoteSideAmount);
+                            value != null && minAmountComponent.getBaseSideAmount().get() != null &&
+                            value.getValue() < minAmountComponent.getBaseSideAmount().get().getValue()) {
+                        log.error("maxAmountCompBaseSideAmountPin value={}", value);
+                        minAmountComponent.setBaseSideAmount(value);
                     }
                 });
 
-        minAmountBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
-                minAmountBaseSideAmount -> {
+        minAmountCompQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
+                value -> {
                     if (model.getIsMinAmountEnabled().get()) {
-                        if (minAmountBaseSideAmount != null && maxAmountComponent.getBaseSideAmount().get() != null &&
-                                minAmountBaseSideAmount.getValue() > maxAmountComponent.getBaseSideAmount().get().getValue()) {
-                            maxAmountComponent.setBaseSideAmount(minAmountBaseSideAmount);
+                        if (value != null && maxAmountComponent.getQuoteSideAmount().get() != null &&
+                                value.getValue() > maxAmountComponent.getQuoteSideAmount().get().getValue()) {
+                            log.error("minAmountCompQuoteSideAmountPin value={}", value);
+                            maxAmountComponent.setQuoteSideAmount(value);
                         }
                     }
                 });
-        minAmountQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
-                minAmountQuoteSideAmount -> {
-                    if (model.getIsMinAmountEnabled().get()) {
-                        if (minAmountQuoteSideAmount != null && maxAmountComponent.getQuoteSideAmount().get() != null &&
-                                minAmountQuoteSideAmount.getValue() > maxAmountComponent.getQuoteSideAmount().get().getValue()) {
-                            maxAmountComponent.setQuoteSideAmount(minAmountQuoteSideAmount);
-                        }
+        maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxAmountComponent.getQuoteSideAmount(),
+                value -> {
+                    if (model.getIsMinAmountEnabled().get() &&
+                            value != null && minAmountComponent.getQuoteSideAmount().get() != null &&
+                            value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
+                        log.error("maxAmountCompQuoteSideAmountPin value={}", value);
+                        minAmountComponent.setQuoteSideAmount(value);
                     }
                 });
+
 
         isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
             model.getToggleButtonText().set(isMinAmountEnabled ?
                     Res.get("onboarding.amount.removeMinAmountOption") :
                     Res.get("onboarding.amount.addMinAmountOption"));
-            model.getMinAmountDescription().set(Res.get("onboarding.amount.description.minAmount"));
-            model.getMaxAmountDescription().set(isMinAmountEnabled ?
+
+            maxAmountComponent.setDescription(isMinAmountEnabled ?
                     Res.get("onboarding.amount.description.maxAmount") :
                     Res.get("onboarding.amount.description.maxAmountOnly"));
         });
@@ -151,10 +158,10 @@ public class AmountController implements Controller {
     @Override
     public void onDeactivate() {
         isMinAmountEnabledPin.unsubscribe();
-        maxAmountBaseSideAmountPin.unsubscribe();
-        maxAmountQuoteSideAmountPin.unsubscribe();
-        minAmountBaseSideAmountPin.unsubscribe();
-        minAmountQuoteSideAmountPin.unsubscribe();
+        maxAmountCompBaseSideAmountPin.unsubscribe();
+        maxAmountCompQuoteSideAmountPin.unsubscribe();
+        minAmountCompBaseSideAmountPin.unsubscribe();
+        minAmountCompQuoteSideAmountPin.unsubscribe();
     }
 
     void onToggleMinAmountVisibility() {

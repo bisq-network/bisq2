@@ -20,13 +20,11 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -41,10 +39,13 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.NoSelectionModel;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
@@ -266,9 +267,16 @@ public class ChatMessagesListView {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void onTakeOffer(BisqEasyPublicChatMessage chatMessage) {
+
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
             checkArgument(chatMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
+            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(chatMessage.getBisqEasyOffer().orElseThrow()));
+
+            //TODO
+            /*
             Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
+
+            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, TakeOfferController.InitData(chatMessage.getBisqEasyOffer().get()));
 
             BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
             ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(model.getChatChannelDomain());
@@ -278,7 +286,7 @@ public class ChatMessagesListView {
                                 .ifPresent(chatChannelSelectionService::selectChannel);
                         Optional<Runnable> takeOfferCompleteHandler = model.takeOfferCompleteHandler;
                         takeOfferCompleteHandler.ifPresent(Runnable::run);
-                    }));
+                    }));*/
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {

@@ -134,7 +134,7 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
                 model::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountPriceGroup.quoteSideAmountProperty(),
                 model::setQuoteSideAmount);
-        fixPriceSubscription = EasyBind.subscribe(amountPriceGroup.fixPriceProperty(),
+        fixPriceSubscription = EasyBind.subscribe(amountPriceGroup.quoteProperty(),
                 model::setFixPrice);
 
         settlementSelection.getSelectedBaseSideAccounts().addListener(selectedBaseSideAccountsListener);

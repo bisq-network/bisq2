@@ -105,7 +105,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         amountPriceGroup.setSelectedMarket(market);
         amountPriceGroup.setBaseSideAmount(model.baseSideAmount);
         amountPriceGroup.setQuoteSideAmount(model.quoteSideAmount);
-        amountPriceGroup.setFixPrice(model.fixPrice);
+        amountPriceGroup.setQuote(model.fixPrice);
 
         settlementSelection.setSelectedMarket(market);
         settlementSelection.setDirection(direction);

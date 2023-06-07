@@ -15,29 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
+package bisq.desktop.primary.overlay.bisq_easy.components;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
+import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BigAmountInput {
+public class SmallAmountInput {
     private final Controller controller;
 
-    public BigAmountInput(boolean isBaseCurrency) {
+    public SmallAmountInput(boolean isBaseCurrency) {
         controller = new Controller(isBaseCurrency);
     }
 
@@ -63,12 +68,6 @@ public class BigAmountInput {
 
     public void reset() {
         controller.model.reset();
-    }
-
-    public void requestFocus() {
-        TextField textInput = controller.view.textInput;
-        textInput.requestFocus();
-        textInput.selectRange(textInput.getLength(), textInput.getLength());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -115,7 +114,6 @@ public class BigAmountInput {
                 return;
             }
             if (model.code.get() == null) return;
-
             model.amount.set(AmountParser.parse(value, model.code.get()));
         }
 
@@ -149,6 +147,7 @@ public class BigAmountInput {
     }
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+        private static final String PREFIX = "~ ";
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
@@ -158,39 +157,48 @@ public class BigAmountInput {
         private View(Model model, Controller controller, MonetaryValidator validator) {
             super(new HBox(), model, controller);
 
-            root.setAlignment(Pos.BASELINE_CENTER);
-            root.setSpacing(10);
+            root.setAlignment(Pos.CENTER);
+            root.setSpacing(3);
 
             // textInput would be black without setting a style on root. Not clear why...
             root.setStyle("-fx-fill: -bisq-white;");
 
             textInput = new TextField();
-            textInput.setPrefWidth(250);
-            textInput.setId("base-amount-text-field");
-            textInput.setAlignment(Pos.BASELINE_RIGHT);
-            textInput.setPadding(new Insets(0, 0, 5, 0));
+            textInput.setPrefWidth(100);
+            textInput.setId("quote-amount-text-field");
+            textInput.setAlignment(Pos.CENTER_RIGHT);
+            textInput.setPadding(new Insets(0, 0, 0, 0));
 
             codeLabel = new Label();
+            codeLabel.setAlignment(Pos.CENTER_LEFT);
+            codeLabel.setId("quote-amount-text-field");
             codeLabel.setPadding(new Insets(0, 0, 0, 0));
-            codeLabel.getStyleClass().add("bisq-text-9");
-            codeLabel.setAlignment(Pos.BASELINE_LEFT);
 
-            HBox.setMargin(textInput, new Insets(0, 0, 0, -30));
-            root.getChildren().addAll(textInput, codeLabel);
+            Button marketValueInfo = BisqIconButton.createIconButton("info");
+            marketValueInfo.setScaleX(0.8);
+            marketValueInfo.setScaleY(0.8);
+            marketValueInfo.setOpacity(0.5);
+            Tooltip tooltip = new BisqTooltip(Res.get("onboarding.amount.marketValueInfo"));
+            tooltip.getStyleClass().add("dark-tooltip");
+            marketValueInfo.setTooltip(tooltip);
+
+            HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
+            HBox.setMargin(marketValueInfo, new Insets(-8, 0, 0, 1));
+            root.getChildren().addAll(textInput, codeLabel, marketValueInfo);
 
             //  Listeners on view component events
             focusListener = (o, oldValue, newValue) -> {
                 controller.onFocusChange(newValue);
                 if (oldValue) {
-                    controller.onAmount(textInput.getText());
+                    controller.onAmount(getText());
                 }
             };
             textInputListener = (o, old, newValue) -> {
                 if (textInput.isFocused()) {
-                    controller.onAmount(textInput.getText());
-                    adjustTextFieldStyle();
+                    controller.onAmount(getText());
                 }
             };
+
             // Listeners on model change
             amountListener = (o, old, newValue) -> applyAmount(newValue);
         }
@@ -214,18 +222,12 @@ public class BigAmountInput {
         }
 
         private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
-            // textInput.requestFocus();
-            textInput.selectRange(textInput.getLength(), textInput.getLength());
-            adjustTextFieldStyle();
+            textInput.setText(newValue == null ? "" :
+                    PREFIX + AmountFormatter.formatAmount(newValue, true));
         }
 
-        private void adjustTextFieldStyle() {
-            if (textInput.getText().length() > 6) {
-                textInput.setId("base-amount-text-field-small");
-            } else {
-                textInput.setId("base-amount-text-field");
-            }
+        private String getText() {
+            return textInput.getText().replace(PREFIX, "");
         }
     }
 }

@@ -23,7 +23,7 @@ import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AmountInput;
-import bisq.desktop.components.controls.PriceInput;
+import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.offer.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -51,8 +51,8 @@ public class AmountPriceGroup {
         return controller.model.quoteSideAmount;
     }
 
-    public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
-        return controller.model.fixPrice;
+    public ReadOnlyObjectProperty<Quote> quoteProperty() {
+        return controller.model.quote;
     }
 
 
@@ -71,8 +71,8 @@ public class AmountPriceGroup {
         controller.quoteAmount.setAmount(amount);
     }
 
-    public void setFixPrice(Quote price) {
-        controller.price.setPrice(price);
+    public void setQuote(Quote price) {
+        controller.price.setQuote(price);
     }
 
     public Pane getRoot() {
@@ -95,7 +95,7 @@ public class AmountPriceGroup {
         @Getter
         private final View view;
         private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
-        private final ChangeListener<Quote> fixPriceQuoteListener;
+        private final ChangeListener<Quote> quoteListener;
         private final AmountInput baseAmount;
         private final AmountInput quoteAmount;
         private final PriceInput price;
@@ -105,7 +105,7 @@ public class AmountPriceGroup {
             quoteAmount = new AmountInput(false);
             price = new PriceInput(marketPriceService);
 
-            model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
+            model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.quoteProperty());
 
             view = new View(model,
                     this,
@@ -118,7 +118,7 @@ public class AmountPriceGroup {
             // The order of the event notification is not deterministic. 
             baseCurrencyAmountListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setQuoteFromBase);
             quoteCurrencyAmountListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setBaseFromQuote);
-            fixPriceQuoteListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::applyFixPrice);
+            quoteListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::applyQuote);
         }
 
         @Override
@@ -126,7 +126,7 @@ public class AmountPriceGroup {
             if (model.isCreateOffer) {
                 model.baseSideAmount.addListener(baseCurrencyAmountListener);
                 model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
-                model.fixPrice.addListener(fixPriceQuoteListener);
+                model.quote.addListener(quoteListener);
             }
         }
 
@@ -135,29 +135,29 @@ public class AmountPriceGroup {
             if (model.isCreateOffer) {
                 model.baseSideAmount.removeListener(baseCurrencyAmountListener);
                 model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
-                model.fixPrice.removeListener(fixPriceQuoteListener);
+                model.quote.removeListener(quoteListener);
             }
         }
 
         private void setQuoteFromBase() {
-            Quote fixPrice = model.fixPrice.get();
-            if (fixPrice == null) return;
+            Quote quote = model.quote.get();
+            if (quote == null) return;
             Monetary baseCurrencyAmount = model.baseSideAmount.get();
             if (baseCurrencyAmount == null) return;
-            if (fixPrice.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
-            quoteAmount.setAmount(fixPrice.toQuoteMonetary(baseCurrencyAmount));
+            if (quote.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
+            quoteAmount.setAmount(quote.toQuoteMonetary(baseCurrencyAmount));
         }
 
         private void setBaseFromQuote() {
-            Quote fixPrice = model.fixPrice.get();
-            if (fixPrice == null) return;
+            Quote quote = model.quote.get();
+            if (quote == null) return;
             Monetary quoteCurrencyAmount = model.quoteSideAmount.get();
             if (quoteCurrencyAmount == null) return;
-            if (fixPrice.getQuoteMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
-            baseAmount.setAmount(fixPrice.toBaseMonetary(quoteCurrencyAmount));
+            if (quote.getQuoteMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
+            baseAmount.setAmount(quote.toBaseMonetary(quoteCurrencyAmount));
         }
 
-        private void applyFixPrice() {
+        private void applyQuote() {
             if (model.baseSideAmount == null) {
                 setBaseFromQuote();
             } else {
@@ -169,15 +169,15 @@ public class AmountPriceGroup {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
         private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
-        private final ReadOnlyObjectProperty<Quote> fixPrice;
+        private final ReadOnlyObjectProperty<Quote> quote;
         private boolean isCreateOffer = true;
 
         private Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
                       ReadOnlyObjectProperty<Monetary> quoteSideAmount,
-                      ReadOnlyObjectProperty<Quote> fixPrice) {
+                      ReadOnlyObjectProperty<Quote> quote) {
             this.baseSideAmount = baseSideAmount;
             this.quoteSideAmount = quoteSideAmount;
-            this.fixPrice = fixPrice;
+            this.quote = quote;
         }
     }
 

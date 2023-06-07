@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
@@ -24,6 +24,8 @@ import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
@@ -32,7 +34,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
@@ -50,7 +51,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -203,10 +203,7 @@ public class ReviewOfferController implements Controller {
     }
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
-        checkArgument(listItem.getChatMessage().getBisqEasyOffer().isPresent(), "message must contain offer");
-        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(listItem.getChatMessage().getBisqEasyOffer().orElseThrow()));
-//TODO
-      /*  BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
+        BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
         BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
@@ -216,7 +213,7 @@ public class ReviewOfferController implements Controller {
                             .ifPresent(chatChannelSelectionService::selectChannel);
                     model.getShowTakeOfferSuccess().set(true);
                     mainButtonsVisibleHandler.accept(false);
-                }));*/
+                }));
     }
 
     void onCreateOffer() {

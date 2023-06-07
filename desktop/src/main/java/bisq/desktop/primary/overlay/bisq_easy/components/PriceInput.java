@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.desktop.primary.overlay.bisq_easy.components;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Quote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -47,12 +48,12 @@ public class PriceInput {
         controller.setSelectedMarket(selectedMarket);
     }
 
-    public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
-        return controller.model.fixPrice;
+    public ReadOnlyObjectProperty<Quote> quoteProperty() {
+        return controller.model.quote;
     }
 
-    public void setPrice(Quote price) {
-        controller.model.fixPrice.set(price);
+    public void setQuote(Quote quote) {
+        controller.model.quote.set(quote);
     }
 
     public void setIsTakeOffer() {
@@ -92,8 +93,8 @@ public class PriceInput {
                 model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.getBaseCurrencyCode()));
             }
             if (model.isCreateOffer) {
-                model.fixPrice.set(null);
-                setFixPriceFromMarketPrice();
+                model.quote.set(null);
+                setQuoteFromMarketPrice();
             }
         }
 
@@ -104,8 +105,8 @@ public class PriceInput {
             marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
                 UIThread.run(() -> {
                     // We only set it initially
-                    if (model.fixPrice.get() != null) return;
-                    setFixPriceFromMarketPrice();
+                    if (model.quote.get() != null) return;
+                    setQuoteFromMarketPrice();
                 });
             });
         }
@@ -121,31 +122,31 @@ public class PriceInput {
             model.hasFocus = hasFocus;
         }
 
-        private void onFixPriceInput(String value) {
+        private void onQuoteInput(String value) {
             if (value == null) return;
             if (model.hasFocus) return;
             if (value.isEmpty()) {
-                model.fixPrice.set(null);
+                model.quote.set(null);
                 return;
             }
             if (!validator.validate(value).isValid) {
-                model.fixPrice.set(null);
+                model.quote.set(null);
                 return;
             }
             if (model.selectedMarket == null) return;
-            model.fixPrice.set(PriceParser.parse(value, model.selectedMarket));
+            model.quote.set(PriceParser.parse(value, model.selectedMarket));
         }
 
-        private void setFixPriceFromMarketPrice() {
+        private void setQuoteFromMarketPrice() {
             if (model.selectedMarket == null) return;
             MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
-            model.fixPrice.set(marketPrice.getQuote());
+            model.quote.set(marketPrice.getQuote());
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
+        private final ObjectProperty<Quote> quote = new SimpleObjectProperty<>();
         private Market selectedMarket;
         private boolean hasFocus;
         private final StringProperty marketString = new SimpleStringProperty();
@@ -156,7 +157,7 @@ public class PriceInput {
         }
 
         public void reset() {
-            fixPrice.set(null);
+            quote.set(null);
             selectedMarket = null;
             hasFocus = false;
             marketString.set(null);
@@ -171,7 +172,7 @@ public class PriceInput {
         private final MaterialTextField textField;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
-        private final ChangeListener<Quote> fixPriceListener;
+        private final ChangeListener<Quote> quoteListener;
         private final Label rightLabel;
 
         private View(Model model, Controller controller, PriceValidator validator) {
@@ -196,12 +197,12 @@ public class PriceInput {
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onFixPriceInput(textField.getText());
+                controller.onQuoteInput(textField.getText());
             };
-            textInputListener = (o, old, newValue) -> controller.onFixPriceInput(textField.getText());
+            textInputListener = (o, old, newValue) -> controller.onQuoteInput(textField.getText());
 
             // Listeners on model change
-            fixPriceListener = (o, old, newValue) -> textField.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
+            quoteListener = (o, old, newValue) -> textField.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
         }
 
         @Override
@@ -216,8 +217,8 @@ public class PriceInput {
             rightLabel.textProperty().bind(model.marketString);
 
             textField.descriptionProperty().bind(model.description);
-            model.fixPrice.addListener(fixPriceListener);
-            textField.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
+            model.quote.addListener(quoteListener);
+            textField.setText(model.quote.get() == null ? "" : QuoteFormatter.format(model.quote.get()));
         }
 
         @Override
@@ -228,7 +229,7 @@ public class PriceInput {
             }
             rightLabel.textProperty().unbind();
             textField.descriptionProperty().unbind();
-            model.fixPrice.removeListener(fixPriceListener);
+            model.quote.removeListener(quoteListener);
         }
     }
 }

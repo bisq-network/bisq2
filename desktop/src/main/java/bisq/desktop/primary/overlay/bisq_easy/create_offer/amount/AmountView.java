@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AmountView extends View<VBox, AmountModel, AmountController> {
-    private final static int AMOUNT_BOX_WIDTH = 330;
-    private final Label headLineLabel;
     private final Button toggleButton;
     private final VBox minAmountRoot;
 
@@ -40,7 +39,7 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        headLineLabel = new Label(Res.get("onboarding.amount.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.amount.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         minAmountRoot = minAmountComponent.getView().getRoot();
