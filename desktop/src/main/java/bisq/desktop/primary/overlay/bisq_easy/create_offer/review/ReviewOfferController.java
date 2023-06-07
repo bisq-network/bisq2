@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.review;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
@@ -105,20 +105,36 @@ public class ReviewOfferController implements Controller {
         }
     }
 
-    public void setBaseSideAmount(Monetary monetary) {
+    public void setBaseSideMinAmount(Monetary monetary) {
         if (monetary != null) {
-            model.setBaseSideAmount(monetary);
+            model.setBaseSideMinAmount(monetary);
         }
     }
 
-    public void setQuoteSideAmount(Monetary monetary) {
+    public void setBaseSideMaxAmount(Monetary monetary) {
         if (monetary != null) {
-            model.setQuoteSideAmount(monetary);
+            model.setBaseSideMaxAmount(monetary);
+        }
+    }
+
+    public void setQuoteSideMinAmount(Monetary monetary) {
+        if (monetary != null) {
+            model.setQuoteSideMinAmount(monetary);
+        }
+    }
+
+    public void setQuoteSideMaxAmount(Monetary monetary) {
+        if (monetary != null) {
+            model.setQuoteSideMaxAmount(monetary);
         }
     }
 
     public void setShowMatchingOffers(boolean showMatchingOffers) {
         model.setShowMatchingOffers(showMatchingOffers);
+    }
+
+    public void setIsMinAmountEnabled(boolean isMinAmountEnabled) {
+        model.setMinAmountEnabled(isMinAmountEnabled);
     }
 
     public void reset() {
@@ -136,20 +152,27 @@ public class ReviewOfferController implements Controller {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
 
         // todo
-        double minAmountAsPercentage = 0.1;
         double sellerPremiumAsPercentage = 0.1;
+
+        long baseSideMinAmount = model.getBaseSideMinAmount().getValue();
+        long baseSideMaxAmount = model.getBaseSideMaxAmount().getValue();
+        long quoteSideMinAmount = model.getQuoteSideMinAmount().getValue();
+        long quoteSideMaxAmount = model.getQuoteSideMaxAmount().getValue();
+        boolean isMinAmountEnabled = model.isMinAmountEnabled();
 
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 userIdentity.getUserProfile().getNetworkId(),
                 model.getDirection(),
                 model.getMarket(),
-                model.getBaseSideAmount().getValue(),
-                model.getQuoteSideAmount().getValue(),
+                isMinAmountEnabled,
+                baseSideMinAmount,
+                baseSideMaxAmount,
+                quoteSideMinAmount,
+                quoteSideMaxAmount,
                 new ArrayList<>(model.getPaymentMethodNames()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
-                minAmountAsPercentage,
                 sellerPremiumAsPercentage);
         model.setMyOfferText(bisqEasyOffer.getChatMessageText());
 
@@ -172,7 +195,7 @@ public class ReviewOfferController implements Controller {
                 .limit(3)
                 .collect(Collectors.toList()));
 
-        model.getMatchingOffersFound().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
+        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
     }
 
     @Override
@@ -256,12 +279,16 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            if (peersOffer.getQuoteSideAmount() < myChatOffer.getQuoteSideAmount()) {
+            if (myChatOffer.getQuoteSideMinAmount().getValue() > peersOffer.getQuoteSideMaxAmount().getValue()) {
                 return false;
             }
 
-            List<String> paymentMethods = peersOffer.getSettlementMethodNames();
-            if (myChatOffer.getSettlementMethodNames().stream().noneMatch(paymentMethods::contains)) {
+            if (myChatOffer.getQuoteSideMaxAmount().getValue() < peersOffer.getQuoteSideMinAmount().getValue()) {
+                return false;
+            }
+
+            List<String> paymentMethods = peersOffer.getQuoteSideSettlementMethodNames();
+            if (myChatOffer.getQuoteSideSettlementMethodNames().stream().noneMatch(paymentMethods::contains)) {
                 return false;
             }
 

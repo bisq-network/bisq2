@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.review;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
@@ -44,16 +44,22 @@ class ReviewOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
-    private Monetary baseSideAmount;
+    private Monetary baseSideMinAmount;
     @Setter
-    private Monetary quoteSideAmount;
+    private Monetary baseSideMaxAmount;
+    @Setter
+    private Monetary quoteSideMinAmount;
+    @Setter
+    private Monetary quoteSideMaxAmount;
     @Setter
     private List<String> paymentMethodNames;
     @Setter
     private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
-    private final BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
+    @Setter
+    private boolean isMinAmountEnabled;
+    private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
     private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
@@ -64,12 +70,14 @@ class ReviewOfferModel implements Model {
         selectedChannel = null;
         direction = null;
         market = null;
-        baseSideAmount = null;
-        quoteSideAmount = null;
+        baseSideMinAmount = null;
+        baseSideMaxAmount = null;
+        quoteSideMinAmount = null;
+        quoteSideMaxAmount = null;
         paymentMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
-        matchingOffersFound.set(false);
+        matchingOffersVisible.set(false);
         showCreateOfferSuccess.set(false);
         showTakeOfferSuccess.set(false);
         matchingOffers.clear();

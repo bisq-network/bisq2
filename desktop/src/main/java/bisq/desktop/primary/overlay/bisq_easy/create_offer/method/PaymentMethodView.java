@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.method;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
@@ -51,7 +52,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     private Subscription addCustomMethodIconEnabledPin;
 
     public PaymentMethodView(PaymentMethodModel model, PaymentMethodController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
@@ -85,10 +86,9 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         addButton.setAlignment(Pos.CENTER);
         custom.setMaxWidth(300);
 
-        VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(flowPane, new Insets(50, 65, 50, 65));
-        VBox.setMargin(nonFoundLabel, new Insets(50, 0, 50, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom);
+        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
+        VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
+        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
         allPaymentMethodsListener = c -> {
             c.next();

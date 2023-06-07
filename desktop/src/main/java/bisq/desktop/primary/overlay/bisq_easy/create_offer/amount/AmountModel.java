@@ -15,27 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.direction;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
-public class DirectionModel implements Model {
-    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
-    private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
-    private final BooleanProperty ignoreShowReputationInfo = new SimpleBooleanProperty();
-    private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
+public class AmountModel implements Model {
+    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final StringProperty minAmountDescription = new SimpleStringProperty();
+    private final StringProperty maxAmountDescription = new SimpleStringProperty();
+    private final StringProperty toggleButtonText = new SimpleStringProperty();
 
-    void reset() {
-        direction.set(Direction.BUY);
-        showReputationInfo.set(false);
-        ignoreShowReputationInfo.set(false);
-        buyButtonDisabled.set(false);
+    public void reset() {
+        isMinAmountEnabled.set(false);
+        toggleButtonText.set(null);
     }
 }

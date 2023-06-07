@@ -30,7 +30,7 @@ import bisq.desktop.primary.main.content.user.reputation.bond.BondedReputationCo
 import bisq.desktop.primary.main.content.user.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.user.reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.primary.main.content.user.user_profile.create.CreateUserProfileController;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.CreateOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import bisq.desktop.primary.overlay.tac.TacController;
 import bisq.desktop.primary.overlay.unlock.UnlockController;

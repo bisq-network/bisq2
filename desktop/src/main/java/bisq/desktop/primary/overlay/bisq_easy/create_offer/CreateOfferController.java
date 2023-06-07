@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.amount.AmountController;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.direction.DirectionController;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.market.MarketController;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.method.PaymentMethodController;
-import bisq.desktop.primary.overlay.bisq_easy.createoffer.review.ReviewOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.AmountController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.DirectionController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.MarketController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.PaymentMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.ReviewOfferController;
 import bisq.i18n.Res;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -63,8 +63,9 @@ public class CreateOfferController extends NavigationController implements InitW
     private final PaymentMethodController paymentMethodController;
     private final ReviewOfferController reviewOfferController;
     private final ListChangeListener<String> paymentMethodsListener;
-    private Subscription directionSubscription, marketSubscription, baseSideAmountSubscription,
-            quoteSideAmountSubscription;
+    private Subscription directionSubscription, marketSubscription, baseSideMinAmountSubscription,
+            baseSideMaxAmountSubscription, quoteSideMinAmountSubscription, quoteSideMaxAmountSubscription,
+            isMinAmountEnabledSubscription;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -113,8 +114,11 @@ public class CreateOfferController extends NavigationController implements InitW
             amountController.setMarket(market);
             updateNextButtonState();
         });
-        baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), reviewOfferController::setBaseSideAmount);
-        quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), reviewOfferController::setQuoteSideAmount);
+        baseSideMinAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMinAmount(), reviewOfferController::setBaseSideMinAmount);
+        baseSideMaxAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMaxAmount(), reviewOfferController::setBaseSideMaxAmount);
+        quoteSideMinAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMinAmount(), reviewOfferController::setQuoteSideMinAmount);
+        quoteSideMaxAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMaxAmount(), reviewOfferController::setQuoteSideMaxAmount);
+        isMinAmountEnabledSubscription = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
 
         paymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
         reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
@@ -125,8 +129,11 @@ public class CreateOfferController extends NavigationController implements InitW
     public void onDeactivate() {
         directionSubscription.unsubscribe();
         marketSubscription.unsubscribe();
-        baseSideAmountSubscription.unsubscribe();
-        quoteSideAmountSubscription.unsubscribe();
+        baseSideMinAmountSubscription.unsubscribe();
+        baseSideMaxAmountSubscription.unsubscribe();
+        quoteSideMinAmountSubscription.unsubscribe();
+        quoteSideMaxAmountSubscription.unsubscribe();
+        isMinAmountEnabledSubscription.unsubscribe();
 
         paymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
     }
@@ -135,7 +142,6 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getNextButtonVisible().set(true);
         model.getBackButtonVisible().set(true);
         model.getCloseButtonVisible().set(true);
-        model.getTopPaneBoxVisible().set(true);
         model.getNextButtonText().set(Res.get("next"));
         model.getBackButtonText().set(Res.get("back"));
 
@@ -186,17 +192,17 @@ public class CreateOfferController extends NavigationController implements InitW
         }
     }
 
-     void onNext() {
-         int nextIndex = model.getCurrentIndex().get() + 1;
-         if (nextIndex < model.getChildTargets().size()) {
-             model.setAnimateRightOut(false);
-             model.getCurrentIndex().set(nextIndex);
-             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-             model.getSelectedChildTarget().set(nextTarget);
-             Navigation.navigateTo(nextTarget);
-             updateNextButtonState();
-         }
-     }
+    void onNext() {
+        int nextIndex = model.getCurrentIndex().get() + 1;
+        if (nextIndex < model.getChildTargets().size()) {
+            model.setAnimateRightOut(false);
+            model.getCurrentIndex().set(nextIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
+            updateNextButtonState();
+        }
+    }
 
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;

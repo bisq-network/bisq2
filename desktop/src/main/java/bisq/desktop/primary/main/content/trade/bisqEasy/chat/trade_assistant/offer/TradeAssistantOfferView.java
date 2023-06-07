@@ -72,7 +72,8 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         VBox.setMargin(offerTitle, new Insets(0, 0, 5, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         offerInfoHBox = new VBox(10, offerTitle, amount, paymentMethods, buttons);
-        offerInfoHBox.getStyleClass().add("chat-message-bg-peer-message");
+        offerInfoHBox.getStyleClass().add("bisq-content-bg");
+
         offerInfoHBox.setAlignment(Pos.CENTER_LEFT);
         offerInfoHBox.setPadding(new Insets(20));
 

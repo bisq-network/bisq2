@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
@@ -37,7 +37,6 @@ public class CreateOfferModel extends NavigationModel {
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter

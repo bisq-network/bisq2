@@ -24,6 +24,7 @@ import bisq.common.monetary.Monetary;
 
 public class AmountParser {
     public static Monetary parse(String value, String code) {
+        value = value.replace(",", ".");
         if (TradeCurrency.isFiat(code)) {
             return Fiat.parse(value, code);
         } else {

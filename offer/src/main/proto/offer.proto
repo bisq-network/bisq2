@@ -12,7 +12,24 @@ enum Direction {
   SELL = 1;
 }
 
-// PriceSpec
+// Specs
+message FixAmountSpec {
+  uint64 baseSideAmount = 1;
+  uint64 quoteSideAmount = 2;
+}
+message MinMaxAmountSpec {
+  uint64 baseSideMinAmount = 1;
+  uint64 baseSideMaxAmount = 2;
+  uint64 quoteSideMinAmount = 3;
+  uint64 quoteSideMaxAmount = 4;
+}
+message AmountSpec {
+  oneof message {
+    FixAmountSpec fixAmountSpec = 1;
+    MinMaxAmountSpec minMaxAmountSpec = 2;
+  }
+}
+
 message FixPrice {
   uint64 value = 1;
 }
@@ -42,10 +59,6 @@ message TradeTermsOption {
   string makersTradeTerms = 1;
 }
 
-message AmountOption {
-  double minAmountAsPercentage = 1;
-}
-
 message CollateralOption {
   uint64 buyerSecurityDeposit = 1;
   uint64 sellerSecurityDeposit = 2;
@@ -70,7 +83,6 @@ message OfferOption {
   oneof message {
     TradeTermsOption tradeTermsOption = 1;
     ReputationOption reputationOption = 2;
-    AmountOption amountOption = 33;
     CollateralOption collateralOption = 4;
     FiatSettlementOption fiatSettlementOption = 5;
     FeeOption feeOption = 6;
@@ -84,7 +96,7 @@ message Offer {
   network.NetworkId makerNetworkId = 3;
   common.Market market = 4;
   Direction direction = 5;
-  uint64 baseSideAmount = 6;
+  AmountSpec amountSpec = 6;
   PriceSpec priceSpec = 7;
   repeated account.ProtocolType protocolTypes = 8;
   repeated SettlementSpec baseSideSettlementSpecs = 9;
@@ -97,7 +109,6 @@ message Offer {
 
 // BisqEasy
 message BisqEasyOffer {
-  uint64 quoteSideAmount = 1;
 }
 
 

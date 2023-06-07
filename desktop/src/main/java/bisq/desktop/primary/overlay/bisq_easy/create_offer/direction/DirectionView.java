@@ -15,11 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.direction;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.direction;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.geometry.Insets;
@@ -47,9 +49,10 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
     public DirectionView(DirectionModel model, DirectionController controller) {
         super(new StackPane(), model, controller);
 
-        content = new VBox();
+        root.setAlignment(Pos.CENTER);
+
+        content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().add("bisq-content-bg");
 
         Label headLineLabel = new Label(Res.get("onboarding.direction.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -67,18 +70,16 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
-        HBox boxes = new HBox(25, buyBox, sellBox);
-        boxes.setAlignment(Pos.CENTER);
+        HBox directionBox = new HBox(25, buyBox, sellBox);
+        directionBox.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 70, 0));
-        content.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
+        VBox.setMargin(directionBox, new Insets(10, 0, 0, 0));
+        content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, directionBox, Spacer.fillVBox());
 
-        reputationInfo = new VBox();
-        reputationInfo.setVisible(false);
+        reputationInfo = new VBox(20);
         setupReputationInfo();
 
-        StackPane.setMargin(reputationInfo, new Insets(-55, 0, 0, 0));
+        StackPane.setMargin(reputationInfo, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfo);
     }
 
@@ -101,14 +102,15 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         showReputationInfoPin = EasyBind.subscribe(model.getShowReputationInfo(),
                 showReputationInfo -> {
                     if (showReputationInfo) {
-                        Transitions.blurStrong(content, 0);
                         reputationInfo.setVisible(true);
                         reputationInfo.setOpacity(1);
+                        Transitions.blurStrong(content, 0);
                         Transitions.slideInTop(reputationInfo, 450);
                     } else {
                         Transitions.removeEffect(content);
                         if (reputationInfo.isVisible()) {
-                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2, () -> reputationInfo.setVisible(false));
+                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2,
+                                    () -> reputationInfo.setVisible(false));
                         }
                     }
                 });
@@ -154,12 +156,15 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
     private void setupReputationInfo() {
         double width = 700;
-        reputationInfo.setAlignment(Pos.TOP_LEFT);
-        reputationInfo.setMaxWidth(width);
-        reputationInfo.setId("sellBtcWarning");
-        reputationInfo.setVisible(false);
-        reputationInfo.setPadding(new Insets(30, 30, 30, 30));
+        VBox contentBox = new VBox(20);
+        contentBox.setAlignment(Pos.TOP_LEFT);
+        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.setPadding(new Insets(30));
+        contentBox.setMaxWidth(width);
 
+        // We don't use setManaged as the transition would not work as expected if set to false
+        reputationInfo.setVisible(false);
+        reputationInfo.setAlignment(Pos.TOP_CENTER);
         Label headLineLabel = new Label(Res.get("onboarding.direction.feedback.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
         headLineLabel.setTextAlignment(TextAlignment.CENTER);
@@ -168,24 +173,24 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
         Label subtitleLabel1 = new Label(Res.get("onboarding.direction.feedback.subTitle1"));
         subtitleLabel1.setMaxWidth(width - 60);
-        subtitleLabel1.getStyleClass().addAll("bisq-text-1", "wrap-text");
+        subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
         gainReputationHyperlink = new Hyperlink(Res.get("onboarding.direction.feedback.gainReputation"));
+        gainReputationHyperlink.getStyleClass().addAll("bisq-text-21");
 
         Label subtitleLabel2 = new Label(Res.get("onboarding.direction.feedback.subTitle2"));
         subtitleLabel2.setMaxWidth(width - 60);
-        subtitleLabel2.getStyleClass().addAll("bisq-text-1", "wrap-text");
+        subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
         withoutReputationButton = new Button(Res.get("onboarding.direction.feedback.tradeWithoutReputation"));
-
         backToBuyButton = new Button(Res.get("onboarding.direction.feedback.backToBuy"));
 
         HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(0, 0, 20, 0));
-        VBox.setMargin(gainReputationHyperlink, new Insets(10, 0, 30, 0));
-        VBox.setMargin(buttons, new Insets(50, 0, 20, 0));
-        reputationInfo.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationHyperlink, subtitleLabel2, buttons);
+        VBox.setMargin(gainReputationHyperlink, new Insets(-10, 0, 20, -2));
+        VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationHyperlink, subtitleLabel2, buttons);
+        reputationInfo.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 }

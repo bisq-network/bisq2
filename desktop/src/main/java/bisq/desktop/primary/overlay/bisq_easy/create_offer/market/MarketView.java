@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.createoffer.market;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.market;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -49,10 +50,9 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
     private final SearchBox searchBox;
 
     public MarketView(MarketModel model, MarketController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("bisq-content-bg");
 
         Label headLineLabel = new Label(Res.get("onboarding.market.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -63,24 +63,26 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         searchBox = new SearchBox();
-        searchBox.setPrefWidth(140);
+        searchBox.setMinWidth(140);
+        searchBox.setMaxWidth(140);
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("create-offer-table-view");
-        int tableHeight = 240;
+        double tableHeight = 290;
+        int tableWidth = 650;
         tableView.setMinHeight(tableHeight);
-        int width = 650;
-        tableView.setMaxWidth(width);
+        tableView.setMaxHeight(tableHeight);
+        tableView.setMinWidth(tableWidth);
+        tableView.setMaxWidth(tableWidth);
         configTableView();
 
-        StackPane.setMargin(searchBox, new Insets(0, 16, tableHeight - 3, width - searchBox.getPrefWidth() - 30));
+        StackPane.setMargin(searchBox, new Insets(5, 15, 0, 0));
         StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
-        tableViewWithSearchBox.setMaxWidth(width);
+        tableViewWithSearchBox.setAlignment(Pos.TOP_RIGHT);
+        tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
+        tableViewWithSearchBox.setMaxWidth(tableWidth);
 
-        VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 20, 0));
-        VBox.setMargin(tableViewWithSearchBox, new Insets(0, 0, 30, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, tableViewWithSearchBox);
+        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableViewWithSearchBox, Spacer.fillVBox());
     }
 
     @Override
