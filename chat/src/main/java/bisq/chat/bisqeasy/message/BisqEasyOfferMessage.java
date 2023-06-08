@@ -24,5 +24,5 @@ import java.util.Optional;
 public interface BisqEasyOfferMessage {
     Optional<BisqEasyOffer> getBisqEasyOffer();
 
-    boolean hasTradeChatOffer();
+    boolean hasBisqEasyOffer();
 }

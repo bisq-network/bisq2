@@ -31,13 +31,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Fiat extends Monetary {
 
     public static Fiat parse(String string, String code) {
-        return Fiat.of(new BigDecimal(string).movePointRight(4).longValue(),
+        return Fiat.fromValue(new BigDecimal(string).movePointRight(4).longValue(),
                 code,
                 4);
     }
 
     public static Fiat parse(String string, String code, int precision) {
-        return Fiat.of(new BigDecimal(string).movePointRight(precision).longValue(),
+        return Fiat.fromValue(new BigDecimal(string).movePointRight(precision).longValue(),
                 code,
                 precision);
     }
@@ -53,25 +53,37 @@ public final class Fiat extends Monetary {
         throw new IllegalArgumentException("input could not be parsed. Expected: number value + space + currency code (e.g. 234.12 USD)");
     }
 
-    public static Fiat of(long value, String code) {
+    public static Fiat fromValue(long value, String code) {
         return new Fiat(value, code, 4);
     }
 
-    public static Fiat of(double value, String code) {
-        return new Fiat(value, code, 4);
+    /**
+     * @param faceValue Fiat value as face value. E.g. 123.45 USD
+     */
+    public static Fiat fromFaceValue(double faceValue, String code) {
+        return new Fiat(faceValue, code, 4);
     }
 
-    public static Fiat of(long value, String code, int precision) {
+    /**
+     * @param value Value as smallest unit the Fiat object can represent.
+     */
+    public static Fiat fromValue(long value, String code, int precision) {
         return new Fiat(value, code, precision);
     }
 
+    /**
+     * @param value Value as smallest unit the Fiat object can represent.
+     */
     Fiat(long value, String code, int precision) {
         // For Fiat market price we show precision 2 but in trade context we show the highest precision (4 for Fiat)  
         super(code, value, code, precision, 2);
     }
 
-    private Fiat(double value, String code, int precision) {
-        super(code, value, code, precision, 2);
+    /**
+     * @param faceValue Fiat value as face value. E.g. 123.45 USD
+     */
+    private Fiat(double faceValue, String code, int precision) {
+        super(code, faceValue, code, precision, 2);
     }
 
     private Fiat(String id, long value, String code, int precision, int minPrecision) {
@@ -117,7 +129,7 @@ public final class Fiat extends Monetary {
     public Fiat round(int roundPrecision) {
         double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
         long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
-        return Fiat.of(shifted, code, precision);
+        return Fiat.fromValue(shifted, code, precision);
     }
 
     @Override

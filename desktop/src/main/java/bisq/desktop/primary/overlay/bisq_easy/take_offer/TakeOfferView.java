@@ -41,6 +41,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,14 +56,14 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     public static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
-    private final Button closeButton;
     private final List<Label> navigationProgressLabelList = new ArrayList<>();
-    private final HBox progressBox;
-    private final Button nextButton, backButton;
+    private final HBox progressBox, topPane;
+    private final Button nextButton, takeOfferButton, backButton, closeButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
     private Scene rootScene;
+    private Subscription showProgressBoxPin;
 
     public TakeOfferView(TakeOfferModel model, TakeOfferController controller) {
         super(new VBox(), model, controller);
@@ -72,23 +74,34 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         Label review = getTopPaneLabel(Res.get("bisqEasy.takeOffer.review"));
         navigationProgressLabelList.add(review);
 
-        closeButton = BisqIconButton.createIconButton("close");
-
         progressBox = new HBox(10);
         progressBox.setAlignment(Pos.CENTER);
-        progressBox.setId("onboarding-top-panel");
         progressBox.setMinHeight(TOP_PANE_HEIGHT);
         progressBox.setMaxHeight(TOP_PANE_HEIGHT);
         progressBox.setPadding(new Insets(0, 20, 0, 50));
-        progressBox.getChildren().addAll(Spacer.fillHBox(),
-                review,
-                Spacer.fillHBox(), closeButton);
+        progressBox.getChildren().add(review);
+
+        closeButton = BisqIconButton.createIconButton("close");
+
+        topPane = new HBox();
+        topPane.setAlignment(Pos.CENTER);
+        topPane.setStyle("-fx-background-color: -bisq-grey-23");
+        topPane.setMinHeight(TOP_PANE_HEIGHT);
+        topPane.setMaxHeight(TOP_PANE_HEIGHT);
+        topPane.setPadding(new Insets(0, 20, 0, 50));
+        topPane.getChildren().addAll(Spacer.fillHBox(),
+                progressBox,
+                Spacer.fillHBox(),
+                closeButton);
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
 
+        takeOfferButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOffer"));
+        takeOfferButton.setDefaultButton(true);
+
         backButton = new Button(Res.get("back"));
-        HBox buttons = new HBox(10, backButton, nextButton);
+        HBox buttons = new HBox(10, backButton, nextButton, takeOfferButton);
         buttons.setAlignment(Pos.CENTER);
 
         content = new VBox();
@@ -97,7 +110,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         content.setAlignment(Pos.CENTER);
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
-        root.getChildren().addAll(progressBox, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(topPane, content, Spacer.fillVBox(), buttons);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -124,65 +137,83 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
-
         if (model.isSettlementVisible()) {
             Label settlement = getTopPaneLabel(Res.get("bisqEasy.takeOffer.method"));
             navigationProgressLabelList.add(0, settlement);
-            progressBox.getChildren().add(1, getSeparator());
-            progressBox.getChildren().add(1, settlement);
+            progressBox.getChildren().add(0, getSeparator());
+            progressBox.getChildren().add(0, settlement);
         }
         if (model.isAmountVisible()) {
             Label amount = getTopPaneLabel(Res.get("bisqEasy.takeOffer.amount"));
             navigationProgressLabelList.add(0, amount);
-            progressBox.getChildren().add(1, getSeparator());
-            progressBox.getChildren().add(1, amount);
+            progressBox.getChildren().add(0, getSeparator());
+            progressBox.getChildren().add(0, amount);
         }
 
         nextButton.textProperty().bind(model.getNextButtonText());
-        backButton.textProperty().bind(model.getBackButtonText());
-
+        nextButton.disableProperty().bind(model.getNextButtonDisabled());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
+        takeOfferButton.visibleProperty().bind(model.getTakeOfferButtonVisible());
+        takeOfferButton.managedProperty().bind(model.getTakeOfferButtonVisible());
+        backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
-        nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
-        applyProgress(model.getCurrentIndex().get(), false);
 
-        nextButton.setOnAction(e -> controller.onNext());
-        backButton.setOnAction(evt -> controller.onBack());
-        closeButton.setOnAction(e -> controller.onClose());
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onClose);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
+
+        showProgressBoxPin = EasyBind.subscribe(model.getShowProgressBox(), showProgressBox -> {
+            if (showProgressBox) {
+                Transitions.fadeIn(progressBox, 200);
+                topPane.setStyle("-fx-background-color: -bisq-grey-23");
+            } else {
+                Transitions.fadeOut(progressBox, 200);
+                topPane.setStyle("-fx-background-color: transparent");
+            }
+        });
+
+        nextButton.setOnAction(e -> controller.onNext());
+        takeOfferButton.setOnAction(e -> controller.onTakeOffer());
+        backButton.setOnAction(evt -> controller.onBack());
+        closeButton.setOnAction(e -> controller.onClose());
+
+        applyProgress(model.getCurrentIndex().get(), false);
     }
 
     @Override
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
-        backButton.textProperty().unbind();
-        closeButton.textProperty().unbind();
-
+        nextButton.disableProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
+        takeOfferButton.visibleProperty().unbind();
+        takeOfferButton.managedProperty().unbind();
+        backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
         closeButton.visibleProperty().unbind();
-        nextButton.disableProperty().unbind();
+
+
+        model.getCurrentIndex().removeListener(currentIndexListener);
+        model.getView().removeListener(viewChangeListener);
+
+        showProgressBoxPin.unsubscribe();
 
         nextButton.setOnAction(null);
+        takeOfferButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
-        model.getCurrentIndex().removeListener(currentIndexListener);
-        model.getView().removeListener(viewChangeListener);
     }
 
     private Separator getSeparator() {

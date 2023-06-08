@@ -51,7 +51,7 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     private final Config config;
     private final BitcoinWalletStore persistableStore = new BitcoinWalletStore();
     private final Persistence<BitcoinWalletStore> persistence;
-    private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
+    private final Observable<Coin> balance = new Observable<>(Coin.asBtcFromValue(0));
 
     public BitcoinWalletService(Config config,
                                 PersistenceService persistenceService) {
@@ -79,11 +79,11 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     @Override
     public CompletableFuture<Coin> requestBalance() {
         if (wallet.isEmpty()) {
-            return CompletableFuture.completedFuture(Coin.asBtc(0));
+            return CompletableFuture.completedFuture(Coin.asBtcFromValue(0));
         } else {
             return CompletableFuture.supplyAsync(() -> {
                 double balance = wallet.get().getBalance();
-                Coin balanceAsCoin = Coin.asBtc(balance);
+                Coin balanceAsCoin = Coin.asBtcFromFaceValue(balance);
                 this.balance.set(balanceAsCoin);
                 return balanceAsCoin;
             });

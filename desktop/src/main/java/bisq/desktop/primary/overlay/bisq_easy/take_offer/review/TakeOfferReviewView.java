@@ -20,16 +20,14 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferView;
 import bisq.i18n.Res;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -37,99 +35,198 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOfferReviewController> {
-    private final static int BUTTON_WIDTH = 140;
     private final static int FEEDBACK_WIDTH = 700;
 
-    private final Label headline;
-    private final Button createOfferButton;
-    private final Label subtitleLabel;
-    private final VBox content, createOfferSuccess, takeOfferSuccess;
-    private final Button viewOfferButton;
-    private final Button openPrivateChannelButton;
-    private final MaterialTextField amount, paymentMethods;
-    private final Text offerTitle;
-    private final VBox offerInfoHBox;
-    private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
-    private Subscription widthPin;
+    private final Label subtitle;
+    private final VBox content, takeOfferSuccess;
+    private final Button takeOfferSuccessButton;
+    private final Label amounts;
+    private final Label payValue;
+    private final Label receiveValue;
+    private final Label methodValue;
+    private final Label sellersPriceValue;
+    private final Label sellersPriceValueDetails;
+    private final Label sellersPremiumValue;
+    private final Label sellersPremiumValueDetails;
+    private Subscription showTakeOfferSuccessPin;
 
-    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller) {
+    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller, Pane sellersPriceComponent) {
         super(new StackPane(), model, controller);
 
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(20);
+        gridPane.setVgap(10);
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(25);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(25);
+        ColumnConstraints col3 = new ColumnConstraints();
+        col3.setPercentWidth(50);
+        gridPane.getColumnConstraints().addAll(col1, col2, col3);
 
         content = new VBox(10);
-        content.setAlignment(Pos.TOP_CENTER);
+        content.setAlignment(Pos.TOP_LEFT);
+        content.setPadding(new Insets(0, 30, 0, 30));
 
-        headline = new Label();
-        headline.getStyleClass().add("bisq-text-headline-2");
+        String descriptionStyle = "take-offer-review-description";
+        String valueStyle = "take-offer-review-value";
+        String valueDetailsStyle = "take-offer-review-value-details";
 
-        subtitleLabel = new Label();
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        int rowIndex = 0;
+        Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
+        headline.getStyleClass().add("take-offer-review-headline");
+        GridPane.setHalignment(headline, HPos.CENTER);
+        GridPane.setMargin(headline, new Insets(-55, 0, 20, 0));
+        GridPane.setRowIndex(headline, rowIndex);
+        GridPane.setColumnSpan(headline, 3);
+        gridPane.getChildren().add(headline);
 
-        createOfferButton = new Button(Res.get("createOffer"));
-        createOfferButton.setDefaultButton(true);
-        createOfferButton.setMinWidth(BUTTON_WIDTH);
-        createOfferButton.setMaxWidth(BUTTON_WIDTH);
+        rowIndex++;
+        Region line1 = getLine();
+        GridPane.setRowIndex(line1, rowIndex);
+        GridPane.setColumnSpan(line1, 3);
+        gridPane.getChildren().add(line1);
 
-        amount = getField(Res.get("tradeAssistant.offer.amount"));
-        paymentMethods = getField(Res.get("tradeAssistant.offer.paymentMethods"));
+        rowIndex++;
+        subtitle = new Label();
+        subtitle.getStyleClass().addAll("take-offer-review-subtitle");
+        GridPane.setMargin(subtitle, new Insets(16, 0, 0, 0));
+        GridPane.setRowIndex(subtitle, rowIndex);
+        GridPane.setColumnSpan(subtitle, 3);
+        gridPane.getChildren().add(subtitle);
 
-        offerTitle = new Text();
-        offerTitle.getStyleClass().addAll("bisq-text-9");
+        rowIndex++;
+        amounts = new Label();
+        amounts.getStyleClass().add("take-offer-review-subtitle-value");
+        GridPane.setMargin(amounts, new Insets(-7, 0, 17, 0));
+        GridPane.setRowIndex(amounts, rowIndex);
+        GridPane.setColumnSpan(amounts, 3);
+        gridPane.getChildren().add(amounts);
 
-        VBox.setMargin(offerTitle, new Insets(0, 0, 5, 0));
-        offerInfoHBox = new VBox(10, offerTitle, amount, paymentMethods);
-        offerInfoHBox.getStyleClass().add("trade-chat-offer-info-bg");
-        offerInfoHBox.setAlignment(Pos.CENTER_LEFT);
-        offerInfoHBox.setPadding(new Insets(20));
-        VBox.setMargin(offerInfoHBox, new Insets(0, 0, 10, 0));
-        content.getChildren().addAll(Spacer.fillVBox(), headline, /*subtitleLabel,*/  offerInfoHBox, /*createOfferButton, */Spacer.fillVBox());
+        rowIndex++;
+        Label gridPaneHeadline = new Label(Res.get("bisqEasy.takeOffer.review.gridPaneHeadline").toUpperCase());
+        gridPaneHeadline.getStyleClass().add("take-offer-review-grid-headline");
+        GridPane.setMargin(gridPaneHeadline, new Insets(0, 0, -2, 0));
+        GridPane.setRowIndex(gridPaneHeadline, rowIndex);
+        GridPane.setColumnSpan(gridPaneHeadline, 3);
+        gridPane.getChildren().add(gridPaneHeadline);
 
-        viewOfferButton = new Button(Res.get("onboarding.completed.createOfferSuccess.viewOffer"));
-        createOfferSuccess = new VBox(20);
-        configCreateOfferSuccess();
+        rowIndex++;
+        Region line2 = getLine();
+        GridPane.setMargin(line2, new Insets(0, 0, 3, 0));
+        GridPane.setRowIndex(line2, rowIndex);
+        GridPane.setColumnSpan(line2, 3);
+        gridPane.getChildren().add(line2);
 
-        openPrivateChannelButton = new Button(Res.get("onboarding.completed.takeOfferSuccess.openPrivateChannel"));
+        rowIndex++;
+        Label pay = new Label(Res.get("bisqEasy.takeOffer.review.pay"));
+        pay.getStyleClass().add(descriptionStyle);
+        GridPane.setRowIndex(pay, rowIndex);
+        GridPane.setColumnIndex(pay, 0);
+        gridPane.getChildren().add(pay);
+
+        payValue = new Label();
+        payValue.getStyleClass().add(valueStyle);
+        GridPane.setRowIndex(payValue, rowIndex);
+        GridPane.setColumnIndex(payValue, 1);
+        gridPane.getChildren().add(payValue);
+
+        rowIndex++;
+        Label receive = new Label(Res.get("bisqEasy.takeOffer.review.receive"));
+        receive.getStyleClass().add(descriptionStyle);
+        GridPane.setRowIndex(receive, rowIndex);
+        GridPane.setColumnIndex(receive, 0);
+        gridPane.getChildren().add(receive);
+
+        receiveValue = new Label();
+        receiveValue.getStyleClass().add(valueStyle);
+        GridPane.setRowIndex(receiveValue, rowIndex);
+        GridPane.setColumnIndex(receiveValue, 1);
+        gridPane.getChildren().add(receiveValue);
+
+        rowIndex++;
+        Label method = new Label(Res.get("bisqEasy.takeOffer.review.method"));
+        method.getStyleClass().add(descriptionStyle);
+        GridPane.setRowIndex(method, rowIndex);
+        GridPane.setColumnIndex(method, 0);
+        gridPane.getChildren().add(method);
+
+        methodValue = new Label();
+        methodValue.getStyleClass().add(valueStyle);
+        GridPane.setRowIndex(methodValue, rowIndex);
+        GridPane.setColumnIndex(methodValue, 1);
+        gridPane.getChildren().add(methodValue);
+
+        rowIndex++;
+        Label sellersPrice = new Label(Res.get("bisqEasy.takeOffer.review.sellersPrice"));
+        sellersPrice.getStyleClass().add(descriptionStyle);
+        GridPane.setRowIndex(sellersPrice, rowIndex);
+        GridPane.setColumnIndex(sellersPrice, 0);
+        gridPane.getChildren().add(sellersPrice);
+
+        sellersPriceValue = new Label();
+        sellersPriceValue.getStyleClass().add(valueStyle);
+        GridPane.setRowIndex(sellersPriceValue, rowIndex);
+        GridPane.setColumnIndex(sellersPriceValue, 1);
+        gridPane.getChildren().add(sellersPriceValue);
+
+        sellersPriceValueDetails = new Label();
+        sellersPriceValueDetails.getStyleClass().add(valueDetailsStyle);
+        GridPane.setRowIndex(sellersPriceValueDetails, rowIndex);
+        GridPane.setColumnIndex(sellersPriceValueDetails, 2);
+        gridPane.getChildren().add(sellersPriceValueDetails);
+
+        rowIndex++;
+        Label sellersPremium = new Label(Res.get("bisqEasy.takeOffer.review.sellersPremium"));
+        sellersPremium.getStyleClass().add(descriptionStyle);
+        GridPane.setRowIndex(sellersPremium, rowIndex);
+        GridPane.setColumnIndex(sellersPremium, 0);
+        gridPane.getChildren().add(sellersPremium);
+
+        sellersPremiumValue = new Label();
+        sellersPremiumValue.getStyleClass().add(valueStyle);
+        GridPane.setRowIndex(sellersPremiumValue, rowIndex);
+        GridPane.setColumnIndex(sellersPremiumValue, 1);
+        gridPane.getChildren().add(sellersPremiumValue);
+
+        sellersPremiumValueDetails = new Label(Res.get("bisqEasy.takeOffer.review.sellersPremium.details"));
+        sellersPremiumValueDetails.getStyleClass().add(valueDetailsStyle);
+        GridPane.setRowIndex(sellersPremiumValueDetails, rowIndex);
+        GridPane.setColumnIndex(sellersPremiumValueDetails, 2);
+        gridPane.getChildren().add(sellersPremiumValueDetails);
+
+        rowIndex++;
+        Region line3 = getLine();
+        GridPane.setMargin(line3, new Insets(2, 0, 0, 0));
+        GridPane.setRowIndex(line3, rowIndex);
+        GridPane.setColumnSpan(line3, 3);
+        gridPane.getChildren().add(line3);
+
+        content.getChildren().addAll(Spacer.fillVBox(), gridPane, Spacer.fillVBox());
+
+        takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
         takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
 
-        StackPane.setMargin(createOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
+        root.getChildren().addAll(content, takeOfferSuccess);
     }
+
 
     @Override
     protected void onViewAttached() {
-        headline.textProperty().bind(model.getHeadline());
-        offerTitle.textProperty().bind(model.getOfferTitle());
-        amount.textProperty().bind(model.getAmount());
-        paymentMethods.textProperty().bind(model.getPaymentMethods());
-        widthPin = EasyBind.subscribe(offerInfoHBox.widthProperty(), w -> {
-            if (w.doubleValue() > 0) {
-                amount.setPrefWidth(w.doubleValue() - 30);
-                paymentMethods.setPrefWidth(w.doubleValue() - 30);
-            }
-        });
+        subtitle.textProperty().bind(model.getSubtitle());
+        amounts.textProperty().bind(model.getAmounts());
+        payValue.textProperty().bind(model.getPayValue());
+        receiveValue.textProperty().bind(model.getReceiveValue());
+        methodValue.textProperty().bind(model.getMethodValue());
+        sellersPriceValue.textProperty().bind(model.getSellersPriceValue());
+        sellersPriceValueDetails.textProperty().bind(model.getSellersPriceValueDetails());
+        sellersPremiumValue.textProperty().bind(model.getSellersPremiumValue());
+        // sellersPremiumValueDetails.textProperty().bind(model.getSellersPremiumValueDetails());
 
-        Transitions.removeEffect(content);
+        takeOfferSuccessButton.setOnAction(e -> controller.onOpenPrivateChat());
 
-        viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
-        openPrivateChannelButton.setOnAction(e -> controller.onOpenPrivateChat());
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
-
-        subtitleLabel.setText(Res.get("onboarding.completed.createOfferMode"));
-
-        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
-                show -> {
-                    createOfferSuccess.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(createOfferSuccess, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                    }
-                });
         showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
                 show -> {
                     takeOfferSuccess.setVisible(show);
@@ -144,40 +241,19 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewDetached() {
-        headline.textProperty().unbind();
-        offerTitle.textProperty().unbind();
-        amount.textProperty().unbind();
-        paymentMethods.textProperty().unbind();
-        widthPin.unsubscribe();
+        subtitle.textProperty().unbind();
+        amounts.textProperty().unbind();
+        payValue.textProperty().unbind();
+        receiveValue.textProperty().unbind();
+        methodValue.textProperty().unbind();
+        sellersPriceValue.textProperty().unbind();
+        sellersPriceValueDetails.textProperty().unbind();
+        sellersPremiumValue.textProperty().unbind();
+        //sellersPremiumValueDetails.textProperty().unbind();
 
-        viewOfferButton.setOnAction(null);
-        openPrivateChannelButton.setOnAction(null);
-        showCreateOfferSuccessPin.unsubscribe();
+        takeOfferSuccessButton.setOnAction(null);
+
         showTakeOfferSuccessPin.unsubscribe();
-    }
-
-    private MaterialTextField getField(String description) {
-        MaterialTextField field = new MaterialTextField(description, null);
-        field.setEditable(false);
-        return field;
-    }
-
-    private void configCreateOfferSuccess() {
-        VBox contentBox = getFeedbackContentBox();
-
-        createOfferSuccess.setVisible(false);
-        createOfferSuccess.setAlignment(Pos.TOP_CENTER);
-
-        Label headLineLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        Label subtitleLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.subTitle"));
-        configFeedbackSubtitleLabel(subtitleLabel);
-
-        viewOfferButton.setDefaultButton(true);
-        VBox.setMargin(viewOfferButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
-        createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private void configTakeOfferSuccess() {
@@ -192,9 +268,9 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         Label subtitleLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
-        openPrivateChannelButton.setDefaultButton(true);
-        VBox.setMargin(openPrivateChannelButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, openPrivateChannelButton);
+        takeOfferSuccessButton.setDefaultButton(true);
+        VBox.setMargin(takeOfferSuccessButton, new Insets(10, 0, 0, 0));
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, takeOfferSuccessButton);
         takeOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
@@ -214,5 +290,14 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
         subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
+    }
+
+    private Region getLine() {
+        Region line = new Region();
+        line.setMinHeight(1);
+        line.setMaxHeight(1);
+        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.setPadding(new Insets(9, 0, 8, 0));
+        return line;
     }
 }

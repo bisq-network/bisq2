@@ -147,7 +147,6 @@ public class ReviewOfferController implements Controller {
         model.setSelectedChannel(channel);
 
         model.getShowCreateOfferSuccess().set(false);
-        model.getShowTakeOfferSuccess().set(false);
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
 
@@ -204,19 +203,10 @@ public class ReviewOfferController implements Controller {
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
         checkArgument(listItem.getChatMessage().getBisqEasyOffer().isPresent(), "message must contain offer");
-        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(listItem.getChatMessage().getBisqEasyOffer().orElseThrow()));
-//TODO
-      /*  BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
-        Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
-        BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
-        bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(chatMessage, mediator)
-                .thenAccept(result -> UIThread.run(() -> {
-                    bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
-                            .ifPresent(chatChannelSelectionService::selectChannel);
-                    model.getShowTakeOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
-                }));*/
+        mainButtonsVisibleHandler.accept(false);
+        resetHandler.run();
+        BisqEasyOffer bisqEasyOffer = listItem.getChatMessage().getBisqEasyOffer().orElseThrow();
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer)));
     }
 
     void onCreateOffer() {
@@ -229,11 +219,6 @@ public class ReviewOfferController implements Controller {
     }
 
     void onOpenBisqEasy() {
-        close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
-    }
-
-    void onOpenPrivateChat() {
         close();
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }

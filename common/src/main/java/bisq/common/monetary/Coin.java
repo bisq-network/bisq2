@@ -35,25 +35,25 @@ public final class Coin extends Monetary {
     }
 
     public static Coin parse(String string, String code, int precision) {
-        return Coin.of(new BigDecimal(string).movePointRight(precision).longValue(),
+        return Coin.fromValue(new BigDecimal(string).movePointRight(precision).longValue(),
                 code,
                 precision);
     }
 
     public static Coin parseBtc(String string) {
-        return Coin.of(new BigDecimal(string).movePointRight(8).longValue(),
+        return Coin.fromValue(new BigDecimal(string).movePointRight(8).longValue(),
                 "BTC",
                 8);
     }
 
     public static Coin parseXmr(String string) {
-        return Coin.of(new BigDecimal(string).movePointRight(12).longValue(),
+        return Coin.fromValue(new BigDecimal(string).movePointRight(12).longValue(),
                 "XMR",
                 12);
     }
 
     public static Coin parseBsq(String string) {
-        return Coin.of(new BigDecimal(string).movePointRight(12).longValue(),
+        return Coin.fromValue(new BigDecimal(string).movePointRight(12).longValue(),
                 "BSQ",
                 2);
     }
@@ -72,33 +72,53 @@ public final class Coin extends Monetary {
         throw new IllegalArgumentException("input could not be parsed. Expected: number value + space + currency code (e.g. 234.12 USD)");
     }
 
-    public static Coin asBtc(long value) {
+    /**
+     * @param value Value as smallest unit the Coin object can represent.
+     */
+    public static Coin asBtcFromValue(long value) {
         return new Coin(value, "BTC", 8);
     }
 
-    public static Coin asBtc(double value) {
-        return new Coin(value, "BTC", 8);
+    /**
+     * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
+     */
+    public static Coin asBtcFromFaceValue(double faceValue) {
+        return new Coin(faceValue, "BTC", 8);
     }
 
-    public static Coin asXmr(long value) {
+    /**
+     * @param value Value as smallest unit the Coin object can represent.
+     */
+    public static Coin asXmrFromValue(long value) {
         return new Coin(value, "XMR", 12);
     }
 
-    public static Coin asXmr(double value) {
-        return new Coin(value, "XMR", 12);
+    /**
+     * @param faceValue Coin value as face value. E.g. 1.123456789012 XMR
+     */
+    public static Coin asXmrFromFaceValue(double faceValue) {
+        return new Coin(faceValue, "XMR", 12);
     }
 
-    public static Coin of(long value, String code) {
+    /**
+     * @param value Value as smallest unit the Coin object can represent.
+     */
+    public static Coin fromValue(long value, String code) {
         return new Coin(value, code, deriveExponent(code));
     }
 
-    public static Coin of(double value, String code) {
+    /**
+     * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
+     */
+    public static Coin fromFaceValue(double faceValue, String code) {
         int exponent = deriveExponent(code);
-        return new Coin(value, code, exponent);
+        return new Coin(faceValue, code, exponent);
     }
 
-
-    public static Coin of(long value, String code, int precision) {
+    /**
+     * @param value Value as smallest unit the Coin object can represent.
+     */
+    public static Coin fromValue(long value, String code, int precision) {
         return new Coin(value, code, precision);
     }
 
@@ -109,8 +129,11 @@ public final class Coin extends Monetary {
         super(code + " [crypto]", value, code, precision, code.equals("BSQ") ? 2 : 4);
     }
 
-    private Coin(double value, String code, int precision) {
-        super(code + " [crypto]", value, code, precision, code.equals("BSQ") ? 2 : 4);
+    /**
+     * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
+     */
+    private Coin(double faceValue, String code, int precision) {
+        super(code + " [crypto]", faceValue, code, precision, code.equals("BSQ") ? 2 : 4);
     }
 
     private Coin(String id, long value, String code, int precision, int minPrecision) {
@@ -162,7 +185,7 @@ public final class Coin extends Monetary {
         //todo not tested
         double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
         long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
-        return Coin.of(shifted, code, precision);
+        return Coin.fromValue(shifted, code, precision);
     }
 
     @Override

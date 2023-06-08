@@ -48,7 +48,7 @@ public class TakeOfferSettlementView extends View<VBox, TakeOfferSettlementModel
         Label headLineLabel = new Label(Res.get("bisqEasy.takeOffer.method.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.method.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.method.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");

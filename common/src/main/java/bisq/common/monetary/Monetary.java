@@ -42,17 +42,17 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
 
     public static Monetary from(Monetary monetary, long newValue) {
         if (monetary instanceof Fiat) {
-            return Fiat.of(newValue, monetary.getCode(), monetary.getPrecision());
+            return Fiat.fromValue(newValue, monetary.getCode(), monetary.getPrecision());
         } else {
-            return Coin.of(newValue, monetary.getCode(), monetary.getPrecision());
+            return Coin.fromValue(newValue, monetary.getCode(), monetary.getPrecision());
         }
     }
 
     public static Monetary from(long amount, String code) {
         if (TradeCurrency.isFiat(code)) {
-            return Fiat.of(amount, code);
+            return Fiat.fromValue(amount, code);
         } else {
-            return Coin.of(amount, code);
+            return Coin.fromValue(amount, code);
         }
     }
 
@@ -73,8 +73,11 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         this.minPrecision = minPrecision;
     }
 
-    protected Monetary(String id, double value, String code, int precision, int minPrecision) {
-        this(id, doubleValueToLong(value, precision), code, precision, minPrecision);
+    /**
+     * @param faceValue Monetary value as face value. E.g. 123.45 USD or 1.12345678 BTC
+     */
+    protected Monetary(String id, double faceValue, String code, int precision, int minPrecision) {
+        this(id, doubleValueToLong(faceValue, precision), code, precision, minPrecision);
     }
 
     public bisq.common.protobuf.Monetary.Builder getMonetaryBuilder() {

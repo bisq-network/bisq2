@@ -21,6 +21,7 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PrivateChatMessage;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
@@ -31,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -87,8 +89,40 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
         this.bisqEasyOffer = bisqEasyOffer;
     }
 
+    public static BisqEasyPrivateTradeChatMessage createTakeOfferMessage(String channelId,
+                                                                         UserProfile sender,
+                                                                         String receiverUserProfileId,
+                                                                         Optional<UserProfile> mediator,
+                                                                         BisqEasyOffer bisqEasyOffer) {
+        return new BisqEasyPrivateTradeChatMessage(channelId,
+                sender,
+                receiverUserProfileId,
+                mediator,
+                bisqEasyOffer);
+    }
+
+    private BisqEasyPrivateTradeChatMessage(String channelId,
+                                            UserProfile sender,
+                                            String receiverUserProfileId,
+                                            Optional<UserProfile> mediator,
+                                            BisqEasyOffer bisqEasyOffer) {
+        super(StringUtils.createShortUid(),
+                ChatChannelDomain.BISQ_EASY,
+                channelId,
+                sender,
+                receiverUserProfileId,
+                Optional.empty(),
+                Optional.empty(),
+                new Date().getTime(),
+                false,
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                new MetaData(TTL, 100000, BisqEasyPrivateTradeChatMessage.class.getSimpleName()));
+        this.mediator = mediator;
+        this.bisqEasyOffer = Optional.of(bisqEasyOffer);
+    }
+
     @Override
-    public boolean hasTradeChatOffer() {
+    public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }
 

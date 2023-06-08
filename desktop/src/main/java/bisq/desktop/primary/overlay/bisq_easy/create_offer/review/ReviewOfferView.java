@@ -64,15 +64,13 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
     private final Label headLineLabel, createOfferLabel;
     private final BisqTableView<ListItem> tableView;
-    private final Button createOfferButton;
+    private final Button createOfferButton, viewOfferButton;
     private final Label createOfferText;
     private final HBox createOfferHBox;
     private final Label subtitleLabel;
     private Subscription matchingOffersFoundPin;
-    private final VBox content, createOfferSuccess, takeOfferSuccess;
-    private final Button viewOfferButton;
-    private final Button openPrivateChannelButton;
-    private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
+    private final VBox content, createOfferSuccess;
+    private Subscription showCreateOfferSuccessPin;
 
     ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
         super(new StackPane(), model, controller);
@@ -118,13 +116,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         createOfferSuccess = new VBox(20);
         configCreateOfferSuccess();
 
-        openPrivateChannelButton = new Button(Res.get("onboarding.completed.takeOfferSuccess.openPrivateChannel"));
-        takeOfferSuccess = new VBox(20);
-        configTakeOfferSuccess();
-
         StackPane.setMargin(createOfferSuccess, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        StackPane.setMargin(takeOfferSuccess, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
+        root.getChildren().addAll(content, createOfferSuccess);
     }
 
     @Override
@@ -132,7 +125,6 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         Transitions.removeEffect(content);
 
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
-        openPrivateChannelButton.setOnAction(e -> controller.onOpenPrivateChat());
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         createOfferText.setText(model.getMyOfferText());
@@ -199,25 +191,13 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                         Transitions.removeEffect(content);
                     }
                 });
-        showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
-                show -> {
-                    takeOfferSuccess.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(takeOfferSuccess, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                    }
-                });
     }
 
     @Override
     protected void onViewDetached() {
         viewOfferButton.setOnAction(null);
-        openPrivateChannelButton.setOnAction(null);
         matchingOffersFoundPin.unsubscribe();
         showCreateOfferSuccessPin.unsubscribe();
-        showTakeOfferSuccessPin.unsubscribe();
     }
 
     private void maybeConfigTableView() {
@@ -322,25 +302,6 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         VBox.setMargin(viewOfferButton, new Insets(10, 0, 0, 0));
         contentBox.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
         createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
-    }
-
-
-    private void configTakeOfferSuccess() {
-        VBox contentBox = getFeedbackContentBox();
-
-        takeOfferSuccess.setVisible(false);
-        takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
-
-        Label headLineLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        Label subtitleLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.subTitle"));
-        configFeedbackSubtitleLabel(subtitleLabel);
-
-        openPrivateChannelButton.setDefaultButton(true);
-        VBox.setMargin(openPrivateChannelButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, openPrivateChannelButton);
-        takeOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private VBox getFeedbackContentBox() {

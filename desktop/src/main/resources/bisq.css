@@ -437,6 +437,49 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+
+.take-offer-review-description {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-grid-headline {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.8em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-value {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-value-details {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-headline {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 2.5em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-subtitle {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.05em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-subtitle-value {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /* Generic Label properties */
 
 /* colors */

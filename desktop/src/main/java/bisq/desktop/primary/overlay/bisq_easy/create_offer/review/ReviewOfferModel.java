@@ -61,7 +61,6 @@ class ReviewOfferModel implements Model {
     private boolean isMinAmountEnabled;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
     private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
     private final SortedList<ReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
 
@@ -79,7 +78,6 @@ class ReviewOfferModel implements Model {
         myOfferMessage = null;
         matchingOffersVisible.set(false);
         showCreateOfferSuccess.set(false);
-        showTakeOfferSuccess.set(false);
         matchingOffers.clear();
     }
 }

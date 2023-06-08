@@ -108,7 +108,7 @@ public class DashboardController implements Controller {
         if (allowUpdateOffersOnline) {
             UIThread.run(() ->
                     model.getOffersOnline().set(String.valueOf(bisqEasyPublicChatChannelService.getChannels().stream().flatMap(channel -> channel.getChatMessages().stream())
-                            .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
+                            .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
                             .count())));
         }
     }

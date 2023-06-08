@@ -25,7 +25,7 @@ import java.util.Locale;
 
 public class QuoteFormatter {
     public static String formatWithQuoteCode(Quote quote) {
-        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), false);
+        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), true);
     }
 
     public static String formatWithQuoteCode(Quote quote, boolean useLowPrecision) {
@@ -45,7 +45,7 @@ public class QuoteFormatter {
     }
 
     public static String format(Quote quote, Locale locale) {
-        return getDecimalFormat(quote, locale, false).format(quote.asDouble());
+        return getDecimalFormat(quote, locale, true).format(quote.asDouble());
     }
 
     public static String format(Quote quote, Locale locale, boolean useLowPrecision) {

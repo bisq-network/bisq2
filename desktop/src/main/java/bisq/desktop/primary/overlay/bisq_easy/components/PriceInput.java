@@ -24,17 +24,18 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class PriceInput {
@@ -52,12 +53,20 @@ public class PriceInput {
         return controller.model.quote;
     }
 
-    public void setQuote(Quote quote) {
-        controller.model.quote.set(quote);
+    public ReadOnlyStringProperty descriptionProperty() {
+        return controller.model.description;
+    }
+
+    public void setDescription(String description) {
+        controller.model.description.set(description);
+    }
+
+    public void setQuote(Quote price) {
+        controller.model.quote.set(price);
     }
 
     public void setIsTakeOffer() {
-        controller.model.isCreateOffer = false;
+        controller.model.isEditable = false;
     }
 
     public Pane getRoot() {
@@ -75,6 +84,7 @@ public class PriceInput {
         private final PriceValidator validator = new PriceValidator();
         private final MarketPriceService marketPriceService;
         private Pin marketPriceUpdateFlagPin;
+        private Subscription quotePin, pricePin;
 
         private Controller(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
@@ -88,12 +98,10 @@ public class PriceInput {
         }
 
         private void updateFromMarketPrice() {
-            if (model.selectedMarket != null) {
-                model.marketString.set(model.selectedMarket.toString());
-                model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.getBaseCurrencyCode()));
+            if (model.selectedMarket != null && model.description.get() == null) {
+                model.description.set(Res.get("priceInput.description", model.selectedMarket.getMarketCodes()));
             }
-            if (model.isCreateOffer) {
-                model.quote.set(null);
+            if (model.isEditable && model.quote.get() == null) {
                 setQuoteFromMarketPrice();
             }
         }
@@ -109,49 +117,73 @@ public class PriceInput {
                     setQuoteFromMarketPrice();
                 });
             });
+
+            pricePin = EasyBind.subscribe(model.price, this::onPriceChanged);
+            quotePin = EasyBind.subscribe(model.quote, this::onQuoteChanged);
         }
+
 
         @Override
         public void onDeactivate() {
             marketPriceUpdateFlagPin.unbind();
+            pricePin.unsubscribe();
+            quotePin.unsubscribe();
+            model.description.set(null);
         }
 
-
-        // View events
-        private void onFocusChange(boolean hasFocus) {
-            model.hasFocus = hasFocus;
+        private void onPriceChanged(String price) {
+            if (model.isFocused) {
+                return;
+            }
+            if (price == null ||
+                    price.isEmpty() ||
+                    model.selectedMarket == null ||
+                    !validator.validate(price).isValid) {
+                onQuoteChanged(model.quote.get());
+                return;
+            }
+            try {
+                Quote quote = PriceParser.parse(price, model.selectedMarket);
+                checkArgument(quote.getValue() > 0);
+                model.quote.set(quote);
+            } catch (Throwable ignore) {
+                onQuoteChanged(model.quote.get());
+            }
         }
 
-        private void onQuoteInput(String value) {
-            if (value == null) return;
-            if (model.hasFocus) return;
-            if (value.isEmpty()) {
-                model.quote.set(null);
+        private void onQuoteChanged(Quote quote) {
+            if (model.isFocused) {
                 return;
             }
-            if (!validator.validate(value).isValid) {
-                model.quote.set(null);
-                return;
+
+            if (quote != null && quote.getValue() < 247095444) {
+                log.error("");
             }
-            if (model.selectedMarket == null) return;
-            model.quote.set(PriceParser.parse(value, model.selectedMarket));
+            model.price.set(quote == null ? "" : QuoteFormatter.format(quote));
+        }
+
+        private void onFocusedChanged(boolean isFocused) {
+            model.isFocused = isFocused;
+            if (!isFocused) {
+                onPriceChanged(model.price.get());
+            }
         }
 
         private void setQuoteFromMarketPrice() {
             if (model.selectedMarket == null) return;
-            MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
-            if (marketPrice == null) return;
-            model.quote.set(marketPrice.getQuote());
+            marketPriceService.getMarketPrice(model.selectedMarket)
+                    .ifPresent(marketPrice -> model.quote.set(marketPrice.getQuote()));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Quote> quote = new SimpleObjectProperty<>();
+        private final StringProperty price = new SimpleStringProperty();
+
         private Market selectedMarket;
-        private boolean hasFocus;
-        private final StringProperty marketString = new SimpleStringProperty();
+        private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
-        private boolean isCreateOffer = true;
+        private boolean isEditable = true;
 
         private Model() {
         }
@@ -159,77 +191,41 @@ public class PriceInput {
         public void reset() {
             quote.set(null);
             selectedMarket = null;
-            hasFocus = false;
-            marketString.set(null);
+            isFocused = false;
             description.set(null);
-            isCreateOffer = true;
+            isEditable = true;
         }
     }
 
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
-        private final static int CODE_LABEL_WIDTH = 60;
-        private final MaterialTextField textField;
-        private final ChangeListener<String> textInputListener;
-        private final ChangeListener<Boolean> focusListener;
-        private final ChangeListener<Quote> quoteListener;
-        private final Label rightLabel;
+        private final MaterialTextField textInput;
+        private Subscription focusedPin;
 
         private View(Model model, Controller controller, PriceValidator validator) {
-            super(new Pane(), model, controller);
+            super(new VBox(), model, controller);
 
-            textField = new MaterialTextField(model.description.get(), Res.get("createOffer.price.fix.prompt"));
-            textField.setPrefWidth(WIDTH);
-            textField.setValidator(validator);
+            textInput = new MaterialTextField(model.description.get(), Res.get("priceInput.prompt"));
+            textInput.setPrefWidth(WIDTH);
+            textInput.setValidator(validator);
 
-            rightLabel = new Label();
-            rightLabel.setMinHeight(42);
-            rightLabel.setAlignment(Pos.CENTER_RIGHT);
-            rightLabel.setMinWidth(CODE_LABEL_WIDTH);
-            rightLabel.setMaxWidth(CODE_LABEL_WIDTH);
-            rightLabel.setLayoutX(WIDTH - CODE_LABEL_WIDTH - 13);
-            rightLabel.setLayoutY(11);
-            rightLabel.getStyleClass().add("bisq-amount-input-code-label");
-
-            root.getChildren().addAll(textField, rightLabel);
-
-
-            //  Listeners on view component events
-            focusListener = (o, old, newValue) -> {
-                controller.onFocusChange(newValue);
-                controller.onQuoteInput(textField.getText());
-            };
-            textInputListener = (o, old, newValue) -> controller.onQuoteInput(textField.getText());
-
-            // Listeners on model change
-            quoteListener = (o, old, newValue) -> textField.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
+            root.getChildren().add(textInput);
         }
 
         @Override
         protected void onViewAttached() {
-            if (model.isCreateOffer) {
-                textField.textProperty().addListener(textInputListener);
-                textField.focusedProperty().addListener(focusListener);
-            } else {
-                // editable/disable changes style. setMouseTransparent is just for prototyping now
-                textField.setMouseTransparent(true);
-            }
-            rightLabel.textProperty().bind(model.marketString);
+            textInput.descriptionProperty().bind(model.description);
+            textInput.textProperty().bindBidirectional(model.price);
+            focusedPin = EasyBind.subscribe(textInput.inputTextFieldFocusedProperty(), controller::onFocusedChanged);
+            textInput.setMouseTransparent(!model.isEditable);
 
-            textField.descriptionProperty().bind(model.description);
-            model.quote.addListener(quoteListener);
-            textField.setText(model.quote.get() == null ? "" : QuoteFormatter.format(model.quote.get()));
         }
 
         @Override
         protected void onViewDetached() {
-            if (model.isCreateOffer) {
-                textField.textProperty().removeListener(textInputListener);
-                textField.focusedProperty().removeListener(focusListener);
-            }
-            rightLabel.textProperty().unbind();
-            textField.descriptionProperty().unbind();
-            model.quote.removeListener(quoteListener);
+            textInput.descriptionProperty().unbind();
+            textInput.textProperty().unbindBidirectional(model.price);
+            focusedPin.unsubscribe();
         }
     }
 }

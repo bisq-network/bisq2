@@ -225,11 +225,11 @@ public abstract class Offer implements Proto {
     }
 
     public String getBaseSideMinAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getBaseSideMinAmount(), true);
+        return AmountFormatter.formatAmountWithCode(getBaseSideMinAmount());
     }
 
     public String getBaseSideMaxAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getBaseSideMaxAmount(), true);
+        return AmountFormatter.formatAmountWithCode(getBaseSideMaxAmount());
     }
 
     public String getBaseSideMinMaxAmountAsDisplayString() {
@@ -275,11 +275,11 @@ public abstract class Offer implements Proto {
     }
 
     public String getQuoteSideMinAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getQuoteSideMinAmount(), true);
+        return AmountFormatter.formatAmountWithCode(getQuoteSideMinAmount());
     }
 
     public String getQuoteSideMaxAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getQuoteSideMaxAmount(), true);
+        return AmountFormatter.formatAmountWithCode(getQuoteSideMaxAmount());
     }
 
     public String getQuoteSideMinMaxAmountAsDisplayString() {

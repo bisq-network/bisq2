@@ -54,8 +54,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AmountComponent {
-    private static final Coin MIN_RANGE_BASE_SIDE_VALUE = Coin.asBtc(10000);
-    private static final Coin MAX_RANGE_BASE_SIDE_VALUE = Coin.asBtc(1000000);
+    private static final Coin MIN_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(10000);
+    private static final Coin MAX_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(1000000);
 
     private final Controller controller;
 
@@ -219,7 +219,7 @@ public class AmountComponent {
             price.quoteProperty().addListener(quoteListener);
 
             baseAmountInput.setAmount(null);
-            Fiat defaultQuoteAmount = Fiat.of(1000000, model.getMarket().getQuoteCurrencyCode());
+            Fiat defaultQuoteAmount = Fiat.fromValue(1000000, model.getMarket().getQuoteCurrencyCode());
             if (model.getQuoteSideAmount().get() == null) {
                 Quote quote = price.quoteProperty().get();
                 if (quote != null) {
@@ -227,7 +227,7 @@ public class AmountComponent {
                     Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
                     Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
                     long defaultQuoteValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
-                    Monetary exactAmount = Fiat.of(defaultQuoteValue, quote.getQuoteMonetary().getCode());
+                    Monetary exactAmount = Fiat.fromValue(defaultQuoteValue, quote.getQuoteMonetary().getCode());
                     quoteAmountInput.setAmount(exactAmount.round(0));
                 } else {
                     log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
@@ -313,7 +313,7 @@ public class AmountComponent {
                 model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
                 if (!model.useQuoteCurrencyForMinMaxRange) {
                     model.getMinRangeValueAsString().set(Res.get("onboarding.amount.minRangeValue",
-                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin, true)));
+                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin)));
                 }
             }
             if (model.getMaxRangeBaseSideValue().get() == null) {
@@ -323,7 +323,7 @@ public class AmountComponent {
                 model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
                 if (!model.useQuoteCurrencyForMinMaxRange) {
                     model.getMaxRangeValueAsString().set(Res.get("onboarding.amount.maxRangeValue",
-                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin, true)));
+                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin)));
                 }
             }
 
@@ -334,7 +334,7 @@ public class AmountComponent {
                 model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
                 if (model.useQuoteCurrencyForMinMaxRange) {
                     model.getMinRangeValueAsString().set(Res.get("onboarding.amount.minRangeValue",
-                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat, true)));
+                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat)));
                 }
             }
 
@@ -345,7 +345,7 @@ public class AmountComponent {
                 model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
                 if (model.useQuoteCurrencyForMinMaxRange) {
                     model.getMaxRangeValueAsString().set(Res.get("onboarding.amount.maxRangeValue",
-                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat, true)));
+                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat)));
                 }
             }
 

@@ -37,7 +37,7 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     @Getter
     private final Persistence<LiquidWalletStore> persistence;
     @Getter
-    private final Observable<Coin> balance = new Observable<>(Coin.of(0, "L-BTC"));
+    private final Observable<Coin> balance = new Observable<>(Coin.fromValue(0, "L-BTC"));
 
     public LiquidWalletService(PersistenceService persistenceService,
                                boolean isRegtest) {

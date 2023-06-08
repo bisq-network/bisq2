@@ -85,7 +85,7 @@ public final class Quote implements Comparable<Quote>, Proto {
      * @return A quote object using 1 BTC as base coin.
      */
     public static Quote fromFiatPrice(double price, String fiatCurrencyCode) {
-        return Quote.of(Coin.asBtc(1.0), Fiat.of(price, fiatCurrencyCode));
+        return Quote.of(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(price, fiatCurrencyCode));
     }
 
     /**
@@ -94,7 +94,7 @@ public final class Quote implements Comparable<Quote>, Proto {
      * @return A quote object using 1 unit of the altcoin as base coin.
      */
     public static Quote fromAltCoinPrice(double price, String altCoinCode) {
-        return Quote.of(Coin.of(1.0, altCoinCode), Coin.asBtc(price));
+        return Quote.of(Coin.fromFaceValue(1.0, altCoinCode), Coin.asBtcFromFaceValue(price));
     }
 
     /**
@@ -105,11 +105,11 @@ public final class Quote implements Comparable<Quote>, Proto {
      */
     public static Quote fromPrice(double price, String baseCurrencyCode, String quoteCurrencyCode) {
         Monetary baseMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
-                Fiat.of(1d, baseCurrencyCode) :
-                Coin.of(1d, baseCurrencyCode);
+                Fiat.fromFaceValue(1d, baseCurrencyCode) :
+                Coin.fromFaceValue(1d, baseCurrencyCode);
         Monetary quoteMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
-                Fiat.of(price, quoteCurrencyCode) :
-                Coin.of(price, quoteCurrencyCode);
+                Fiat.fromFaceValue(price, quoteCurrencyCode) :
+                Coin.fromFaceValue(price, quoteCurrencyCode);
 
         return Quote.of(baseMonetary, quoteMonetary);
     }
@@ -120,11 +120,11 @@ public final class Quote implements Comparable<Quote>, Proto {
 
     public static Quote fromPrice(long value, String baseCurrencyCode, String quoteCurrencyCode) {
         Monetary baseMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
-                Fiat.of(1d, baseCurrencyCode) :
-                Coin.of(1d, baseCurrencyCode);
+                Fiat.fromFaceValue(1d, baseCurrencyCode) :
+                Coin.fromFaceValue(1d, baseCurrencyCode);
         Monetary quoteMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
-                Fiat.of(value, quoteCurrencyCode) :
-                Coin.of(value, quoteCurrencyCode);
+                Fiat.fromValue(value, quoteCurrencyCode) :
+                Coin.fromValue(value, quoteCurrencyCode);
 
         return Quote.of(baseMonetary, quoteMonetary);
     }

@@ -52,9 +52,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
     private final Button closeButton;
     private final List<Label> navigationProgressLabelList;
-    private final HBox topPaneBox;
     private final Button nextButton, backButton;
-    private final HBox buttons;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private Scene rootScene;
@@ -66,7 +64,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         root.setPrefHeight(POPUP_HEIGHT);
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
-        topPaneBox = topPane.getFirst();
+        HBox topPaneBox = topPane.getFirst();
         closeButton = topPane.getSecond();
         navigationProgressLabelList = topPane.getThird();
 
@@ -74,7 +72,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.setDefaultButton(true);
 
         backButton = new Button(Res.get("back"));
-        buttons = new HBox(10, backButton, nextButton);
+        HBox buttons = new HBox(10, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 
         content = new VBox();
@@ -138,7 +136,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
         backButton.textProperty().unbind();
-        closeButton.textProperty().unbind();
 
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();

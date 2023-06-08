@@ -31,16 +31,16 @@ public class AmountFormatterTest {
 
     @Test
     void testFormat() {
-        Coin btc = Coin.asBtc(1.0);
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
         Assertions.assertEquals("1,00000000", AmountFormatter.formatAmount(btc, Locale.GERMAN));
         assertEquals("1.00000000", AmountFormatter.formatAmount(btc, Locale.US));
 
-        btc = Coin.asBtc(20123456.1234);
+        btc = Coin.asBtcFromFaceValue(20123456.1234);
         assertEquals("20123456.12340000", AmountFormatter.formatAmount(btc, Locale.US));
 
-        Fiat usd = Fiat.of(51234.1234, "USD");
+        Fiat usd = Fiat.fromFaceValue(51234.1234, "USD");
         assertEquals("51234.1234", AmountFormatter.formatAmount(usd, Locale.US));
-        usd = Fiat.of(51234.56, "USD");
+        usd = Fiat.fromFaceValue(51234.56, "USD");
         assertEquals("51234.5600", AmountFormatter.formatAmount(usd, Locale.US));
     }
 }

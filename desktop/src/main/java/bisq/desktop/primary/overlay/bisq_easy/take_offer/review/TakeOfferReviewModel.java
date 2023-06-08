@@ -34,27 +34,38 @@ import java.util.List;
 @Getter
 class TakeOfferReviewModel implements Model {
     @Setter
-    private UserProfile peersUserProfile;
-    private final StringProperty headline = new SimpleStringProperty();
-    private final StringProperty offerTitle = new SimpleStringProperty();
-    private final StringProperty amount = new SimpleStringProperty();
-    private final StringProperty paymentMethods = new SimpleStringProperty();
-    @Setter
     private BisqEasyOffer bisqEasyOffer;
-
     @Setter
-    private Monetary baseSideAmount;
+    private UserProfile peersUserProfile;
+    private final StringProperty baseSideAmount = new SimpleStringProperty();
+    private final StringProperty quoteSideAmount = new SimpleStringProperty();
+    private final StringProperty paymentMethod = new SimpleStringProperty();
     @Setter
-    private Monetary quoteSideAmount;
+    private Monetary baseSideAmountAsMonetary;
+    @Setter
+    private Monetary quoteSideAmountAsMonetary;
     @Setter
     private List<String> paymentMethodNames;
-    @Setter
-    private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
     @Setter
     private boolean isMinAmountEnabled;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
+
+    private final StringProperty subtitle = new SimpleStringProperty();
+    private final StringProperty amounts = new SimpleStringProperty();
+    private final StringProperty payValue = new SimpleStringProperty();
+    private final StringProperty receiveValue = new SimpleStringProperty();
+    private final StringProperty methodValue = new SimpleStringProperty();
+    private final StringProperty sellersPriceValue = new SimpleStringProperty();
+    private final StringProperty sellersPriceValueDetails = new SimpleStringProperty();
+    private final StringProperty sellersPremiumValue = new SimpleStringProperty();
+    private final StringProperty sellersPremiumValueDetails = new SimpleStringProperty();
+
+
+    private final StringProperty marketPriceDescription = new SimpleStringProperty();
+    private final StringProperty sellersPremium = new SimpleStringProperty();
+
+    private final StringProperty sellersPrice = new SimpleStringProperty();
 }

@@ -26,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class QuoteTest {
     @Test
     void testToQuoteMonetary() {
-        Coin btc = Coin.asBtc(1.0);
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
         Quote quote = Quote.fromFiatPrice(50000, "USD");
         Monetary quoteMonetary = Quote.toQuoteMonetary(btc, quote);
         assertTrue(quoteMonetary instanceof Fiat);
         assertEquals(500000000, quoteMonetary.value);
 
-        btc = Coin.asBtc(2.0);
+        btc = Coin.asBtcFromFaceValue(2.0);
         quote = Quote.fromFiatPrice(50000, "USD");
         quoteMonetary = Quote.toQuoteMonetary(btc, quote);
         assertEquals(1000000000, quoteMonetary.value);

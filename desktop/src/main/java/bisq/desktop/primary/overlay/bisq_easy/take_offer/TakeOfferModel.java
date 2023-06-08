@@ -34,9 +34,11 @@ public class TakeOfferModel extends NavigationModel {
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
-    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
+    private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty takeOfferButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
     @Setter
     private boolean amountVisible;
     @Setter
@@ -52,11 +54,5 @@ public class TakeOfferModel extends NavigationModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TAKE_OFFER_AMOUNT;
-    }
-
-    public void reset() {
-        currentIndex.set(0);
-        selectedChildTarget.set(childTargets.get(0));
-        animateRightOut = true;
     }
 }
