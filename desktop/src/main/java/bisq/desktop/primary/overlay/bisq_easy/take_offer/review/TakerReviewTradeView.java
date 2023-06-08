@@ -58,7 +58,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
+class TakerReviewTradeView extends View<StackPane, TakerReviewTradeModel, TakerReviewTradeController> {
     private final static int BUTTON_WIDTH = 140;
     private final static int FEEDBACK_WIDTH = 700;
 
@@ -74,7 +74,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     private final Button openPrivateChannelButton;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
-    ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
+    TakerReviewTradeView(TakerReviewTradeModel model, TakerReviewTradeController controller) {
         super(new StackPane(), model, controller);
 
 
@@ -129,6 +129,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
     @Override
     protected void onViewAttached() {
+        if (true) return;
         Transitions.removeEffect(content);
 
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
@@ -213,6 +214,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
     @Override
     protected void onViewDetached() {
+        if (true) return;
         viewOfferButton.setOnAction(null);
         openPrivateChannelButton.setOnAction(null);
         matchingOffersFoundPin.unsubscribe();

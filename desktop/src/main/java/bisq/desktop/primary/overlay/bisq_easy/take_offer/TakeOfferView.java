@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
-import bisq.common.data.Triple;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Transitions;
@@ -39,6 +38,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -51,7 +51,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     private static final double OPACITY = 0.35;
 
     private final Button closeButton;
-    private final List<Label> navigationProgressLabelList;
+    private final List<Label> navigationProgressLabelList = new ArrayList<>();
     private final HBox topPaneBox;
     private final Button nextButton, backButton;
     private final HBox buttons;
@@ -65,10 +65,25 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Triple<HBox, Button, List<Label>> topPane = getTopPane();
-        topPaneBox = topPane.getFirst();
-        closeButton = topPane.getSecond();
-        navigationProgressLabelList = topPane.getThird();
+        Label complete = getTopPaneLabel(Res.get("onboarding.navProgress.review"));
+
+        closeButton = BisqIconButton.createIconButton("close");
+
+        topPaneBox = new HBox(10);
+        topPaneBox.setAlignment(Pos.CENTER);
+        topPaneBox.setId("onboarding-top-panel");
+        topPaneBox.setMinHeight(TOP_PANE_HEIGHT);
+        topPaneBox.setMaxHeight(TOP_PANE_HEIGHT);
+        topPaneBox.setPadding(new Insets(0, 20, 0, 50));
+
+        topPaneBox.getChildren().addAll(Spacer.fillHBox(),
+               /* amount,
+                amountSeparator,
+                settlement,
+                settlementSeparator,*/
+                complete,
+                Spacer.fillHBox(), closeButton);
+        navigationProgressLabelList.add(complete);
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
@@ -110,6 +125,19 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
+        if (model.isSettlementVisible()) {
+            Label settlement = getTopPaneLabel(Res.get("onboarding.navProgress.method"));
+            navigationProgressLabelList.add(0, settlement);
+            topPaneBox.getChildren().add(1, getSeparator());
+            topPaneBox.getChildren().add(1, settlement);
+        }
+        if (model.isAmountVisible()) {
+            Label amount = getTopPaneLabel(Res.get("onboarding.navProgress.amount"));
+            navigationProgressLabelList.add(0, amount);
+            topPaneBox.getChildren().add(1, getSeparator());
+            topPaneBox.getChildren().add(1, amount);
+        }
+
         nextButton.textProperty().bind(model.getNextButtonText());
         backButton.textProperty().bind(model.getBackButtonText());
 
@@ -119,6 +147,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         backButton.managedProperty().bind(model.getBackButtonVisible());
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
+
 
         model.getCurrentIndex().addListener(currentIndexListener);
         applyProgress(model.getCurrentIndex().get(), false);
@@ -152,30 +181,6 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
         model.getCurrentIndex().removeListener(currentIndexListener);
-    }
-
-    private Triple<HBox, Button, List<Label>> getTopPane() {
-        Label amount = getTopPaneLabel(Res.get("onboarding.navProgress.amount"));
-        Label method = getTopPaneLabel(Res.get("onboarding.navProgress.method"));
-        Label complete = getTopPaneLabel(Res.get("onboarding.navProgress.review"));
-
-        Button closeButton = BisqIconButton.createIconButton("close");
-
-        HBox hBox = new HBox(10);
-        hBox.setAlignment(Pos.CENTER);
-        hBox.setId("onboarding-top-panel");
-        hBox.setMinHeight(TOP_PANE_HEIGHT);
-        hBox.setMaxHeight(TOP_PANE_HEIGHT);
-        hBox.setPadding(new Insets(0, 20, 0, 50));
-        hBox.getChildren().addAll(Spacer.fillHBox(),
-                amount,
-                getSeparator(),
-                method,
-                getSeparator(),
-                complete,
-                Spacer.fillHBox(), closeButton);
-
-        return new Triple<>(hBox, closeButton, List.of(amount, method, complete));
     }
 
     private Separator getSeparator() {

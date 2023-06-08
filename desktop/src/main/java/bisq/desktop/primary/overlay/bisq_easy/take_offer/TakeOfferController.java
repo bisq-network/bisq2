@@ -21,7 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakerSelectAmountController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.method.TakerSelectPaymentMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakerReviewTradeController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement.TakerSelectPaymentMethodController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.application.Platform;
@@ -31,11 +32,11 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 public class TakeOfferController extends NavigationController implements InitWithDataController<TakeOfferController.InitData> {
+
 
     @Getter
     @EqualsAndHashCode
@@ -55,6 +56,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferView view;
     private final TakerSelectAmountController takerSelectAmountController;
     private final TakerSelectPaymentMethodController takerSelectPaymentMethodController;
+    private final TakerReviewTradeController takerReviewTradeController;
     private final ListChangeListener<String> paymentMethodsListener;
 
     public TakeOfferController(DefaultApplicationService applicationService) {
@@ -65,14 +67,9 @@ public class TakeOfferController extends NavigationController implements InitWit
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
 
-        model.getChildTargets().addAll(List.of(
-                NavigationTarget.TAKE_OFFER_AMOUNT,
-                NavigationTarget.TAKE_OFFER_PAYMENT_METHOD,
-                NavigationTarget.TAKE_OFFER_REVIEW
-        ));
-
         takerSelectAmountController = new TakerSelectAmountController(applicationService);
         takerSelectPaymentMethodController = new TakerSelectPaymentMethodController(applicationService);
+        takerReviewTradeController = new TakerReviewTradeController(applicationService);
 
         paymentMethodsListener = c -> {
             c.next();
@@ -87,8 +84,20 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     @Override
     public void initWithData(InitData initData) {
-        takerSelectAmountController.setBisqEasyOffer(initData.getBisqEasyOffer());
-        takerSelectPaymentMethodController.setBisqEasyOffer(initData.getBisqEasyOffer());
+        BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
+        takerSelectAmountController.setBisqEasyOffer(bisqEasyOffer);
+        takerSelectPaymentMethodController.setBisqEasyOffer(bisqEasyOffer);
+        model.setAmountVisible(bisqEasyOffer.getBaseSideMinAmount().getValue() != bisqEasyOffer.getBaseSideMaxAmount().getValue());
+        model.setSettlementVisible(bisqEasyOffer.getQuoteSideSettlementSpecs().size() > 1);
+
+        model.getChildTargets().clear();
+        if (model.isAmountVisible()) {
+            model.getChildTargets().add(NavigationTarget.TAKE_OFFER_AMOUNT);
+        }
+        if (model.isSettlementVisible()) {
+            model.getChildTargets().add(NavigationTarget.TAKE_OFFER_PAYMENT_METHOD);
+        }
+        model.getChildTargets().add(NavigationTarget.TAKE_OFFER_REVIEW);
     }
 
     @Override
@@ -116,14 +125,17 @@ public class TakeOfferController extends NavigationController implements InitWit
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case TAKE_OFFER_AMOUNT: {
-                return Optional.of(takerSelectAmountController);
+                if (model.isAmountVisible()) {
+                    return Optional.of(takerSelectAmountController);
+                }
             }
             case TAKE_OFFER_PAYMENT_METHOD: {
-                return Optional.of(takerSelectPaymentMethodController);
+                if (model.isSettlementVisible()) {
+                    return Optional.of(takerSelectPaymentMethodController);
+                }
             }
             case TAKE_OFFER_REVIEW: {
-                return Optional.empty();
-                // return Optional.of(reviewOfferController);
+                return Optional.of(takerReviewTradeController);
             }
             default: {
                 return Optional.empty();

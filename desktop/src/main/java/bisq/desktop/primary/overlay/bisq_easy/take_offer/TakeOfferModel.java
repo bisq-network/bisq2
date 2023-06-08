@@ -37,6 +37,10 @@ public class TakeOfferModel extends NavigationModel {
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
+    @Setter
+    private boolean amountVisible;
+    @Setter
+    private boolean settlementVisible;
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter

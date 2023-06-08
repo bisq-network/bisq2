@@ -47,33 +47,27 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ReviewOfferController implements Controller {
-    private final ReviewOfferModel model;
+public class TakerReviewTradeController implements Controller {
+    private final TakerReviewTradeModel model;
     @Getter
-    private final ReviewOfferView view;
+    private final TakerReviewTradeView view;
     private final ReputationService reputationService;
-    private final Runnable resetHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final UserProfileService userProfileService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
-    private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final MediationService mediationService;
     private final ChatService chatService;
 
-    public ReviewOfferController(DefaultApplicationService applicationService,
-                                 Consumer<Boolean> mainButtonsVisibleHandler,
-                                 Runnable resetHandler) {
-        this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+    public TakerReviewTradeController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
@@ -83,10 +77,9 @@ public class ReviewOfferController implements Controller {
         userProfileService = applicationService.getUserService().getUserProfileService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
-        this.resetHandler = resetHandler;
 
-        model = new ReviewOfferModel();
-        view = new ReviewOfferView(model, this);
+        model = new TakerReviewTradeModel();
+        view = new TakerReviewTradeView(model, this);
     }
 
     public void setDirection(Direction direction) {
@@ -143,6 +136,7 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
+        if (true) return;
         BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(model.getMarket()).orElseThrow();
         model.setSelectedChannel(channel);
 
@@ -189,9 +183,9 @@ public class ReviewOfferController implements Controller {
         model.setMyOfferMessage(myOfferMessage);
 
         model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .map(chatMessage -> new ReviewOfferView.ListItem(chatMessage, userProfileService, reputationService))
+                .map(chatMessage -> new TakerReviewTradeView.ListItem(chatMessage, userProfileService, reputationService))
                 .filter(getTakeOfferPredicate())
-                .sorted(Comparator.comparing(ReviewOfferView.ListItem::getReputationScore))
+                .sorted(Comparator.comparing(TakerReviewTradeView.ListItem::getReputationScore))
                 .limit(3)
                 .collect(Collectors.toList()));
 
@@ -202,7 +196,7 @@ public class ReviewOfferController implements Controller {
     public void onDeactivate() {
     }
 
-    void onTakeOffer(ReviewOfferView.ListItem listItem) {
+    void onTakeOffer(TakerReviewTradeView.ListItem listItem) {
         BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
         BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
@@ -212,7 +206,6 @@ public class ReviewOfferController implements Controller {
                     bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
                             .ifPresent(chatChannelSelectionService::selectChannel);
                     model.getShowTakeOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
                 }));
     }
 
@@ -221,7 +214,6 @@ public class ReviewOfferController implements Controller {
         bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
                 }));
     }
 
@@ -236,14 +228,13 @@ public class ReviewOfferController implements Controller {
     }
 
     private void close() {
-        resetHandler.run();
         OverlayController.hide();
         // If we got started from initial onboarding we are still at Splash screen, so we need to move to main
         Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
     @SuppressWarnings("RedundantIfStatement")
-    private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
+    private Predicate<? super TakerReviewTradeView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
             if (item.getAuthorUserProfileId().isEmpty()) {
