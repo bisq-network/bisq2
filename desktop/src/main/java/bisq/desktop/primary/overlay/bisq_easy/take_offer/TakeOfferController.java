@@ -20,24 +20,23 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakerSelectAmountController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakerReviewTradeController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement.TakerSelectPaymentMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakeOfferReviewController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement.TakeOfferSettlementController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
 @Slf4j
 public class TakeOfferController extends NavigationController implements InitWithDataController<TakeOfferController.InitData> {
-
-
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -54,10 +53,10 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferModel model;
     @Getter
     private final TakeOfferView view;
-    private final TakerSelectAmountController takerSelectAmountController;
-    private final TakerSelectPaymentMethodController takerSelectPaymentMethodController;
-    private final TakerReviewTradeController takerReviewTradeController;
-    private final ListChangeListener<String> paymentMethodsListener;
+    private final TakeOfferAmountController takeOfferAmountController;
+    private final TakeOfferSettlementController takeOfferSettlementController;
+    private final TakeOfferReviewController takeOfferReviewController;
+    private Subscription quoteSideAmountPin, baseSideAmountPin, methodNamePin;
 
     public TakeOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.TAKE_OFFER);
@@ -67,14 +66,9 @@ public class TakeOfferController extends NavigationController implements InitWit
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
 
-        takerSelectAmountController = new TakerSelectAmountController(applicationService);
-        takerSelectPaymentMethodController = new TakerSelectPaymentMethodController(applicationService);
-        takerReviewTradeController = new TakerReviewTradeController(applicationService);
-
-        paymentMethodsListener = c -> {
-            c.next();
-            handlePaymentMethodsUpdate();
-        };
+        takeOfferAmountController = new TakeOfferAmountController(applicationService);
+        takeOfferSettlementController = new TakeOfferSettlementController(applicationService);
+        takeOfferReviewController = new TakeOfferReviewController(applicationService);
     }
 
     @Override
@@ -85,8 +79,9 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
-        takerSelectAmountController.setBisqEasyOffer(bisqEasyOffer);
-        takerSelectPaymentMethodController.setBisqEasyOffer(bisqEasyOffer);
+        takeOfferAmountController.setBisqEasyOffer(bisqEasyOffer);
+        takeOfferSettlementController.setBisqEasyOffer(bisqEasyOffer);
+        takeOfferReviewController.setBisqEasyOffer(bisqEasyOffer);
         model.setAmountVisible(bisqEasyOffer.getBaseSideMinAmount().getValue() != bisqEasyOffer.getBaseSideMaxAmount().getValue());
         model.setSettlementVisible(bisqEasyOffer.getQuoteSideSettlementSpecs().size() > 1);
 
@@ -102,15 +97,20 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     @Override
     public void onActivate() {
-        model.getNextButtonDisabled().set(false);
+        quoteSideAmountPin = EasyBind.subscribe(takeOfferAmountController.getQuoteSideAmount(), takeOfferReviewController::setQuoteSideAmount);
+        baseSideAmountPin = EasyBind.subscribe(takeOfferAmountController.getBaseSideAmount(), takeOfferReviewController::setBaseSideAmount);
+        methodNamePin = EasyBind.subscribe(takeOfferSettlementController.getSelectedMethodName(), methodName -> {
+            takeOfferReviewController.setPaymentMethodName(methodName);
+            updateNextButtonDisabledState(methodName);
+        });
 
-        handlePaymentMethodsUpdate();
-        takerSelectPaymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
     }
 
     @Override
     public void onDeactivate() {
-        takerSelectPaymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
+        quoteSideAmountPin.unsubscribe();
+        baseSideAmountPin.unsubscribe();
+        methodNamePin.unsubscribe();
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
@@ -126,16 +126,16 @@ public class TakeOfferController extends NavigationController implements InitWit
         switch (navigationTarget) {
             case TAKE_OFFER_AMOUNT: {
                 if (model.isAmountVisible()) {
-                    return Optional.of(takerSelectAmountController);
+                    return Optional.of(takeOfferAmountController);
                 }
             }
             case TAKE_OFFER_PAYMENT_METHOD: {
                 if (model.isSettlementVisible()) {
-                    return Optional.of(takerSelectPaymentMethodController);
+                    return Optional.of(takeOfferSettlementController);
                 }
             }
             case TAKE_OFFER_REVIEW: {
-                return Optional.of(takerReviewTradeController);
+                return Optional.of(takeOfferReviewController);
             }
             default: {
                 return Optional.empty();
@@ -151,7 +151,7 @@ public class TakeOfferController extends NavigationController implements InitWit
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState();
+            updateNextButtonDisabledState(takeOfferSettlementController.getSelectedMethodName().get());
         }
     }
 
@@ -163,7 +163,7 @@ public class TakeOfferController extends NavigationController implements InitWit
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState();
+            updateNextButtonDisabledState(takeOfferSettlementController.getSelectedMethodName().get());
         }
     }
 
@@ -176,9 +176,9 @@ public class TakeOfferController extends NavigationController implements InitWit
         applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
-    private void updateNextButtonDisabledState() {
+    private void updateNextButtonDisabledState(String methodName) {
         if (NavigationTarget.TAKE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(takerSelectPaymentMethodController.getPaymentMethodNames().isEmpty());
+            model.getNextButtonDisabled().set(methodName == null);
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -190,8 +190,4 @@ public class TakeOfferController extends NavigationController implements InitWit
         model.getCloseButtonVisible().set(value);
     }
 
-    private void handlePaymentMethodsUpdate() {
-        // reviewOfferController.setPaymentMethodNames(takerSelectPaymentMethodController.getPaymentMethodNames());
-        updateNextButtonDisabledState();
-    }
 }

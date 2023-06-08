@@ -17,40 +17,35 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter
-class TakerReviewTradeModel implements Model {
+class TakeOfferReviewModel implements Model {
     @Setter
-    private boolean showMatchingOffers;
+    private UserProfile peersUserProfile;
+    private final StringProperty headline = new SimpleStringProperty();
+    private final StringProperty offerTitle = new SimpleStringProperty();
+    private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty paymentMethods = new SimpleStringProperty();
     @Setter
-    private BisqEasyPublicChatChannel selectedChannel;
+    private BisqEasyOffer bisqEasyOffer;
+
     @Setter
-    private Direction direction;
+    private Monetary baseSideAmount;
     @Setter
-    private Market market;
-    @Setter
-    private Monetary baseSideMinAmount;
-    @Setter
-    private Monetary baseSideMaxAmount;
-    @Setter
-    private Monetary quoteSideMinAmount;
-    @Setter
-    private Monetary quoteSideMaxAmount;
+    private Monetary quoteSideAmount;
     @Setter
     private List<String> paymentMethodNames;
     @Setter
@@ -62,24 +57,4 @@ class TakerReviewTradeModel implements Model {
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-    private final ObservableList<TakerReviewTradeView.ListItem> matchingOffers = FXCollections.observableArrayList();
-    private final SortedList<TakerReviewTradeView.ListItem> sortedList = new SortedList<>(matchingOffers);
-
-    void reset() {
-        showMatchingOffers = false;
-        selectedChannel = null;
-        direction = null;
-        market = null;
-        baseSideMinAmount = null;
-        baseSideMaxAmount = null;
-        quoteSideMinAmount = null;
-        quoteSideMaxAmount = null;
-        paymentMethodNames.clear();
-        myOfferText = null;
-        myOfferMessage = null;
-        matchingOffersVisible.set(false);
-        showCreateOfferSuccess.set(false);
-        showTakeOfferSuccess.set(false);
-        matchingOffers.clear();
-    }
 }

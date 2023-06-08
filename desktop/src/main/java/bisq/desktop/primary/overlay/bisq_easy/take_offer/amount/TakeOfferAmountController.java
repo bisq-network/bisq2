@@ -29,28 +29,32 @@ import lombok.extern.slf4j.Slf4j;
 
 // TODO open bug when opening popup with amount screen the values are not set
 @Slf4j
-public class TakerSelectAmountController implements Controller {
-    private final TakerSelectAmountModel model;
+public class TakeOfferAmountController implements Controller {
+    private final TakeOfferAmountModel model;
     @Getter
-    private final TakerSelectAmountView view;
+    private final TakeOfferAmountView view;
     private final AmountComponent amountComponent;
 
-    public TakerSelectAmountController(DefaultApplicationService applicationService) {
-        model = new TakerSelectAmountModel();
+    public TakeOfferAmountController(DefaultApplicationService applicationService) {
+        model = new TakeOfferAmountModel();
 
         amountComponent = new AmountComponent(applicationService, true);
-        view = new TakerSelectAmountView(model, this, amountComponent.getView().getRoot());
+        view = new TakeOfferAmountView(model, this, amountComponent.getView().getRoot());
     }
 
     public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
-        amountComponent.setMinMaxRange(bisqEasyOffer.getQuoteSideMinAmount(), bisqEasyOffer.getQuoteSideMaxAmount());
         amountComponent.setDirection(bisqEasyOffer.getDirection());
         amountComponent.setMarket(bisqEasyOffer.getMarket());
+        amountComponent.setMinMaxRange(bisqEasyOffer.getQuoteSideMinAmount(), bisqEasyOffer.getQuoteSideMaxAmount());
 
         String direction = bisqEasyOffer.getTakersDirection().isBuy() ?
                 Res.get("buy").toUpperCase() :
                 Res.get("sell").toUpperCase();
-        amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description", bisqEasyOffer.getMarket().getQuoteCurrencyCode(), direction));
+        amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
+                bisqEasyOffer.getMarket().getQuoteCurrencyCode(),
+                direction,
+                bisqEasyOffer.getQuoteSideMinAmountAsDisplayString(),
+                bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString()));
     }
 
     public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {

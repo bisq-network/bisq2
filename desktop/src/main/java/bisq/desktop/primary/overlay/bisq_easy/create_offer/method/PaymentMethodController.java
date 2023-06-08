@@ -40,8 +40,6 @@ public class PaymentMethodController implements Controller {
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
-
-        model.getSelectedMarket().addListener((observable, oldValue, newValue) -> model.getSelectedPaymentMethodNames().clear());
     }
 
     /**
@@ -56,6 +54,7 @@ public class PaymentMethodController implements Controller {
             return;
         }
         model.getSelectedMarket().set(market);
+        model.getSelectedPaymentMethodNames().clear();
         List<FiatSettlement.Method> methods = FiatSettlement.getSettlementMethodsForCode(market.getQuoteCurrencyCode());
         model.getAllPaymentMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
         model.getAllPaymentMethodNames().addAll(model.getAddedCustomMethodNames());
@@ -77,7 +76,7 @@ public class PaymentMethodController implements Controller {
         customMethodPin.unsubscribe();
     }
 
-    public void onTogglePaymentMethod(String paymentMethodName, boolean isSelected) {
+    void onTogglePaymentMethod(String paymentMethodName, boolean isSelected) {
         if (isSelected) {
             if (!model.getSelectedPaymentMethodNames().contains(paymentMethodName)) {
                 model.getSelectedPaymentMethodNames().add(paymentMethodName);
@@ -87,7 +86,7 @@ public class PaymentMethodController implements Controller {
         }
     }
 
-    public void onAddCustomMethod() {
+    void onAddCustomMethod() {
         String customMethod = model.getCustomMethodName().get();
         boolean isEmpty = customMethod == null || customMethod.isEmpty();
         if (!isEmpty) {
@@ -105,7 +104,7 @@ public class PaymentMethodController implements Controller {
         }
     }
 
-    public void onRemoveCustomMethod(String customMethod) {
+    void onRemoveCustomMethod(String customMethod) {
         model.getAddedCustomMethodNames().remove(customMethod);
         model.getSelectedPaymentMethodNames().remove(customMethod);
         model.getAllPaymentMethodNames().remove(customMethod);

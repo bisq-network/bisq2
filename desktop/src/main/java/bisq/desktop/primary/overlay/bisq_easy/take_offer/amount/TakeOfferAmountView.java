@@ -27,9 +27,9 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TakerSelectAmountView extends View<VBox, TakerSelectAmountModel, TakerSelectAmountController> {
+public class TakeOfferAmountView extends View<VBox, TakeOfferAmountModel, TakeOfferAmountController> {
 
-    public TakerSelectAmountView(TakerSelectAmountModel model, TakerSelectAmountController controller, VBox amountComponentRoot) {
+    public TakeOfferAmountView(TakeOfferAmountModel model, TakeOfferAmountController controller, VBox amountComponentRoot) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
