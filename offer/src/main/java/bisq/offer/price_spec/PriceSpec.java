@@ -23,8 +23,8 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import java.util.Optional;
 
 public interface PriceSpec extends Proto {
-    static PriceSpec fromPremiumAsPercentage(double percentage) {
-        return percentage >= 0 ?
+    static PriceSpec fromPercentage(double percentage) {
+        return percentage != 0 ?
                 new FloatPriceSpec(percentage) :
                 new MarketPriceSpec();
     }

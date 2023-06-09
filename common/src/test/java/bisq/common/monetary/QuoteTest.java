@@ -77,21 +77,21 @@ public class QuoteTest {
     void testFromMarketPriceOffset() {
         Quote marketQuote = Quote.fromFiatPrice(50000, "USD");
 
-        Quote quote = Quote.fromMarketPriceOffset(marketQuote, 0);
+        Quote quote = Quote.fromMarketPriceMarkup(marketQuote, 0);
         assertEquals(500000000, quote.getValue());
         assertEquals(4, quote.getPrecision());
         assertEquals("BTC/USD", quote.getMarket().getMarketCodes());
 
-        quote = Quote.fromMarketPriceOffset(marketQuote, 1);
+        quote = Quote.fromMarketPriceMarkup(marketQuote, 1);
         assertEquals(1000000000, quote.getValue());
 
-        quote = Quote.fromMarketPriceOffset(marketQuote, -1);
+        quote = Quote.fromMarketPriceMarkup(marketQuote, -1);
         assertEquals(0, quote.getValue());
 
-        quote = Quote.fromMarketPriceOffset(marketQuote, 0.1);
+        quote = Quote.fromMarketPriceMarkup(marketQuote, 0.1);
         assertEquals(550000000, quote.getValue());
 
-        quote = Quote.fromMarketPriceOffset(marketQuote, -0.1);
+        quote = Quote.fromMarketPriceMarkup(marketQuote, -0.1);
         assertEquals(450000000, quote.getValue());
     }
 }

@@ -24,8 +24,10 @@ import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.AmountControll
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.DirectionController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.MarketController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.SettlementMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.price.PriceController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.ReviewOfferController;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import lombok.EqualsAndHashCode;
@@ -40,6 +42,7 @@ import java.util.Optional;
 
 @Slf4j
 public class CreateOfferController extends NavigationController implements InitWithDataController<CreateOfferController.InitData> {
+
 
     @Getter
     @EqualsAndHashCode
@@ -59,13 +62,14 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferView view;
     private final DirectionController directionController;
     private final MarketController marketController;
+    private final PriceController priceController;
     private final AmountController amountController;
     private final SettlementMethodController settlementMethodController;
     private final ReviewOfferController reviewOfferController;
     private final ListChangeListener<String> settlementMethodsListener;
-    private Subscription directionSubscription, marketSubscription, baseSideMinAmountSubscription,
-            baseSideMaxAmountSubscription, quoteSideMinAmountSubscription, quoteSideMaxAmountSubscription,
-            isMinAmountEnabledSubscription;
+    private Subscription directionPin, marketPin, baseSideMinAmountPin,
+            baseSideMaxAmountPin, quoteSideMinAmountPin, quoteSideMaxAmountPin,
+            isMinAmountEnabledPin, priceSpecPin, sellersPricePercentagePin;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -85,6 +89,7 @@ public class CreateOfferController extends NavigationController implements InitW
 
         directionController = new DirectionController(applicationService, this::onNext, this::setMainButtonsVisibleState);
         marketController = new MarketController(applicationService, this::onNext);
+        priceController = new PriceController(applicationService);
         amountController = new AmountController(applicationService);
         settlementMethodController = new SettlementMethodController(applicationService);
         reviewOfferController = new ReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
@@ -104,21 +109,34 @@ public class CreateOfferController extends NavigationController implements InitW
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
 
-        directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
+        directionPin = EasyBind.subscribe(directionController.getDirection(), direction -> {
             reviewOfferController.setDirection(direction);
             amountController.setDirection(direction);
+            model.getPriceProgressItemVisible().set(direction == Direction.SELL);
+            if (direction == Direction.SELL) {
+                model.getChildTargets().add(2, NavigationTarget.CREATE_OFFER_PRICE);
+                log.error(" model.getChildTargets() {}", model.getChildTargets());
+            } else {
+                model.getChildTargets().remove(NavigationTarget.CREATE_OFFER_PRICE);
+            }
         });
-        marketSubscription = EasyBind.subscribe(marketController.getMarket(), market -> {
+        marketPin = EasyBind.subscribe(marketController.getMarket(), market -> {
             reviewOfferController.setMarket(market);
             settlementMethodController.setMarket(market);
+            priceController.setMarket(market);
             amountController.setMarket(market);
             updateNextButtonDisabledState();
         });
-        baseSideMinAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMinAmount(), reviewOfferController::setBaseSideMinAmount);
-        baseSideMaxAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMaxAmount(), reviewOfferController::setBaseSideMaxAmount);
-        quoteSideMinAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMinAmount(), reviewOfferController::setQuoteSideMinAmount);
-        quoteSideMaxAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMaxAmount(), reviewOfferController::setQuoteSideMaxAmount);
-        isMinAmountEnabledSubscription = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
+        baseSideMinAmountPin = EasyBind.subscribe(amountController.getBaseSideMinAmount(), reviewOfferController::setBaseSideMinAmount);
+        baseSideMaxAmountPin = EasyBind.subscribe(amountController.getBaseSideMaxAmount(), reviewOfferController::setBaseSideMaxAmount);
+        quoteSideMinAmountPin = EasyBind.subscribe(amountController.getQuoteSideMinAmount(), reviewOfferController::setQuoteSideMinAmount);
+        quoteSideMaxAmountPin = EasyBind.subscribe(amountController.getQuoteSideMaxAmount(), reviewOfferController::setQuoteSideMaxAmount);
+        isMinAmountEnabledPin = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
+
+        priceSpecPin = EasyBind.subscribe(priceController.getPriceSpec(), priceSpec -> {
+            amountController.setPriceSpec(priceSpec);
+            reviewOfferController.setPriceSpec(priceSpec);
+        });
 
         handleSettlementMethodsUpdate();
         settlementMethodController.getSettlementMethodNames().addListener(settlementMethodsListener);
@@ -126,14 +144,15 @@ public class CreateOfferController extends NavigationController implements InitW
 
     @Override
     public void onDeactivate() {
-        directionSubscription.unsubscribe();
-        marketSubscription.unsubscribe();
-        baseSideMinAmountSubscription.unsubscribe();
-        baseSideMaxAmountSubscription.unsubscribe();
-        quoteSideMinAmountSubscription.unsubscribe();
-        quoteSideMaxAmountSubscription.unsubscribe();
-        isMinAmountEnabledSubscription.unsubscribe();
-
+        directionPin.unsubscribe();
+        marketPin.unsubscribe();
+        baseSideMinAmountPin.unsubscribe();
+        baseSideMaxAmountPin.unsubscribe();
+        quoteSideMinAmountPin.unsubscribe();
+        quoteSideMaxAmountPin.unsubscribe();
+        isMinAmountEnabledPin.unsubscribe();
+        priceSpecPin.unsubscribe();
+        sellersPricePercentagePin.unsubscribe();
         settlementMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);
     }
 
@@ -153,6 +172,9 @@ public class CreateOfferController extends NavigationController implements InitW
             }
             case CREATE_OFFER_MARKET: {
                 return Optional.of(marketController);
+            }
+            case CREATE_OFFER_PRICE: {
+                return Optional.of(priceController);
             }
             case CREATE_OFFER_AMOUNT: {
                 return Optional.of(amountController);
@@ -208,6 +230,7 @@ public class CreateOfferController extends NavigationController implements InitW
 
         directionController.reset();
         marketController.reset();
+        priceController.reset();
         amountController.reset();
         settlementMethodController.reset();
         reviewOfferController.reset();

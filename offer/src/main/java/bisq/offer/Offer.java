@@ -309,7 +309,7 @@ public abstract class Offer implements Proto {
     }
 
     public Quote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
-        return Quote.fromPrice(fixPriceSpec.getValue(), market);
+        return fixPriceSpec.getQuote();
     }
 
     public Optional<Quote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec) {
@@ -319,7 +319,7 @@ public abstract class Offer implements Proto {
     }
 
     public Optional<Quote> findMarketPriceQuote(MarketPriceService marketPriceService) {
-        return marketPriceService.getMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
+        return marketPriceService.findMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
     }
 
     // Percentage price

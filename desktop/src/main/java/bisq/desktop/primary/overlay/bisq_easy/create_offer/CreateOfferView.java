@@ -38,7 +38,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -51,11 +53,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private static final double OPACITY = 0.35;
 
     private final Button closeButton;
-    private final List<Label> navigationProgressLabelList;
+    private final List<Label> progressLabelList;
     private final Button nextButton, backButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
+    private final HBox progressItemsBox;
     private Scene rootScene;
+    private Label priceProgressItemLabel;
+    private Separator priceProgressItemSeparator;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
@@ -63,10 +68,10 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Triple<HBox, Button, List<Label>> topPane = getTopPane();
-        HBox topPaneBox = topPane.getFirst();
+        Triple<HBox, Button, List<Label>> topPane = getProgressItems();
+        progressItemsBox = topPane.getFirst();
         closeButton = topPane.getSecond();
-        navigationProgressLabelList = topPane.getThird();
+        progressLabelList = topPane.getThird();
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
@@ -81,7 +86,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         content.setAlignment(Pos.CENTER);
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
-        root.getChildren().addAll(topPaneBox, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(progressItemsBox, content, Spacer.fillVBox(), buttons);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -119,17 +124,29 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
         model.getCurrentIndex().addListener(currentIndexListener);
-        applyProgress(model.getCurrentIndex().get(), false);
-
-        nextButton.setOnAction(e -> controller.onNext());
-        backButton.setOnAction(evt -> controller.onBack());
-        closeButton.setOnAction(e -> controller.onClose());
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onClose);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
+        EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
+            if (isVisible) {
+                progressItemsBox.getChildren().add(5, priceProgressItemSeparator);
+                progressItemsBox.getChildren().add(5, priceProgressItemLabel);
+                progressLabelList.add(2, priceProgressItemLabel);
+            } else {
+                progressItemsBox.getChildren().remove(priceProgressItemSeparator);
+                progressItemsBox.getChildren().remove(priceProgressItemLabel);
+                progressLabelList.remove(priceProgressItemLabel);
+            }
+        });
+
+        nextButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(evt -> controller.onBack());
+        closeButton.setOnAction(e -> controller.onClose());
+
+        applyProgress(model.getCurrentIndex().get(), false);
     }
 
     @Override
@@ -151,12 +168,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         model.getCurrentIndex().removeListener(currentIndexListener);
     }
 
-    private Triple<HBox, Button, List<Label>> getTopPane() {
-        Label direction = getTopPaneLabel(Res.get("onboarding.navProgress.direction"));
-        Label market = getTopPaneLabel(Res.get("onboarding.navProgress.market"));
-        Label amount = getTopPaneLabel(Res.get("onboarding.navProgress.amount"));
-        Label method = getTopPaneLabel(Res.get("onboarding.navProgress.method"));
-        Label complete = getTopPaneLabel(Res.get("onboarding.navProgress.review"));
+    private Triple<HBox, Button, List<Label>> getProgressItems() {
+        Label direction = createAndGetProgressLabel(Res.get("onboarding.navProgress.direction"));
+        Label market = createAndGetProgressLabel(Res.get("onboarding.navProgress.market"));
+        priceProgressItemLabel = createAndGetProgressLabel(Res.get("onboarding.navProgress.price"));
+        priceProgressItemSeparator = createAndGetSeparator();
+        Label amount = createAndGetProgressLabel(Res.get("onboarding.navProgress.amount"));
+        Label method = createAndGetProgressLabel(Res.get("onboarding.navProgress.method"));
+        Label complete = createAndGetProgressLabel(Res.get("onboarding.navProgress.review"));
 
         Button closeButton = BisqIconButton.createIconButton("close");
 
@@ -168,26 +187,26 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         hBox.setPadding(new Insets(0, 20, 0, 50));
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 direction,
-                getSeparator(),
+                createAndGetSeparator(),
                 market,
-                getSeparator(),
+                createAndGetSeparator(),
                 amount,
-                getSeparator(),
+                createAndGetSeparator(),
                 method,
-                getSeparator(),
+                createAndGetSeparator(),
                 complete,
                 Spacer.fillHBox(), closeButton);
 
-        return new Triple<>(hBox, closeButton, List.of(direction, market, amount, method, complete));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, method, complete)));
     }
 
-    private Separator getSeparator() {
+    private Separator createAndGetSeparator() {
         Separator line = new Separator();
         line.setPrefWidth(30);
         return line;
     }
 
-    private Label getTopPaneLabel(String text) {
+    private Label createAndGetProgressLabel(String text) {
         Label label = new Label(text.toUpperCase());
         label.setTextAlignment(TextAlignment.CENTER);
         label.setAlignment(Pos.CENTER);
@@ -198,9 +217,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     }
 
     private void applyProgress(int progressIndex, boolean delay) {
-        if (progressIndex < navigationProgressLabelList.size()) {
-            navigationProgressLabelList.forEach(label -> label.setOpacity(OPACITY));
-            Label label = navigationProgressLabelList.get(progressIndex);
+        if (progressIndex < progressLabelList.size()) {
+            progressLabelList.forEach(label -> label.setOpacity(OPACITY));
+            Label label = progressLabelList.get(progressIndex);
             if (delay) {
                 UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
                         .after(Transitions.DEFAULT_DURATION / 2);

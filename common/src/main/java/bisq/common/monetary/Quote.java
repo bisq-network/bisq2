@@ -146,15 +146,15 @@ public final class Quote implements Comparable<Quote>, Proto {
     }
 
     /**
-     * A quote created from a market price quote and a percentage offset
+     * A quote created from a market price quote and a percentage markup
      *
      * @param marketPrice Current market price
-     * @param offset      Offset from market price in percent (values: -1 to +1).
-     * @return The quote representing the offset from market price
+     * @param markup      Offset from market price in percent normalize to 1 (=100%).
+     * @return The quote representing the markup from market price
      */
-    public static Quote fromMarketPriceOffset(Quote marketPrice, double offset) {
-        checkArgument(offset >= -1 && offset <= 1, "Offset must be in range -1 to +1");
-        double price = marketPrice.asDouble() * (1 + offset);
+    public static Quote fromMarketPriceMarkup(Quote marketPrice, double markup) {
+        checkArgument(markup >= -1, "Offset must > -1");
+        double price = marketPrice.asDouble() * (1 + markup);
         return Quote.fromPrice(price, marketPrice.baseMonetary.code, marketPrice.quoteMonetary.code);
     }
 

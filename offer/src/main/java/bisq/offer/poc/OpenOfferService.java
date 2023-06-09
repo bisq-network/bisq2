@@ -130,7 +130,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
             NetworkId makerNetworkId = identity.getNetworkId();
             List<ProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
-            FixPriceSpec priceSpec = new FixPriceSpec(fixPrice.getValue());
+            FixPriceSpec priceSpec = new FixPriceSpec(fixPrice);
 
             List<SettlementSpec> baseSideSettlementSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {

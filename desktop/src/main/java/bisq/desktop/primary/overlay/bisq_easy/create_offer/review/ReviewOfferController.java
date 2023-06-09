@@ -35,6 +35,7 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price_spec.PriceSpec;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -129,6 +130,10 @@ public class ReviewOfferController implements Controller {
         }
     }
 
+    public void setPriceSpec(PriceSpec priceSpec) {
+        model.setPriceSpec(priceSpec);
+    }
+
     public void setShowMatchingOffers(boolean showMatchingOffers) {
         model.setShowMatchingOffers(showMatchingOffers);
     }
@@ -150,9 +155,6 @@ public class ReviewOfferController implements Controller {
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
 
-        // todo
-        double sellerPremiumAsPercentage = 0.1;
-
         long baseSideMinAmount = model.getBaseSideMinAmount().getValue();
         long baseSideMaxAmount = model.getBaseSideMaxAmount().getValue();
         long quoteSideMinAmount = model.getQuoteSideMinAmount().getValue();
@@ -172,7 +174,7 @@ public class ReviewOfferController implements Controller {
                 new ArrayList<>(model.getSettlementMethodNames()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
-                sellerPremiumAsPercentage);
+                model.getPriceSpec());
         model.setMyOfferText(bisqEasyOffer.getChatMessageText());
 
         bisqEasyPublicChatChannelService.joinChannel(channel);

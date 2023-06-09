@@ -32,10 +32,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -56,6 +56,18 @@ public class SmallAmountInput {
 
     public void setAmount(Monetary value) {
         controller.model.amount.set(value);
+    }
+
+    public void setTooltip(String tooltip) {
+        controller.model.setTooltip(tooltip);
+    }
+
+    public void setShowEstimationPrefix(boolean showEstimationPrefix) {
+        controller.model.setShowEstimationPrefix(showEstimationPrefix);
+    }
+
+    public void setUseLowPrecision(boolean useLowPrecision) {
+        controller.model.setUseLowPrecision(useLowPrecision);
     }
 
     public Pane getRoot() {
@@ -128,6 +140,12 @@ public class SmallAmountInput {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
+        @Setter
+        private boolean showEstimationPrefix;
+        @Setter
+        private boolean useLowPrecision;
+        @Setter
+        private String tooltip = Res.get("bisqEasy.components.smallAmountInput.buyer.tooltip");
         private final boolean isBaseCurrency;
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();
@@ -147,12 +165,13 @@ public class SmallAmountInput {
     }
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private static final String PREFIX = "~ ";
+        private static final String ESTIMATION_PREFIX = "~ ";
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
         private final TextField textInput;
         private final Label codeLabel;
+        private final BisqTooltip tooltip;
 
         private View(Model model, Controller controller, MonetaryValidator validator) {
             super(new HBox(), model, controller);
@@ -174,17 +193,17 @@ public class SmallAmountInput {
             codeLabel.setId("quote-amount-text-field");
             codeLabel.setPadding(new Insets(0, 0, 0, 0));
 
-            Button marketValueInfo = BisqIconButton.createIconButton("info");
-            marketValueInfo.setScaleX(0.8);
-            marketValueInfo.setScaleY(0.8);
-            marketValueInfo.setOpacity(0.5);
-            Tooltip tooltip = new BisqTooltip(Res.get("onboarding.amount.marketValueInfo"));
+            Button iconButton = BisqIconButton.createIconButton("info");
+            iconButton.setScaleX(0.8);
+            iconButton.setScaleY(0.8);
+            iconButton.setOpacity(0.5);
+            tooltip = new BisqTooltip();
             tooltip.getStyleClass().add("dark-tooltip");
-            marketValueInfo.setTooltip(tooltip);
+            iconButton.setTooltip(tooltip);
 
             HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
-            HBox.setMargin(marketValueInfo, new Insets(-8, 0, 0, 1));
-            root.getChildren().addAll(textInput, codeLabel, marketValueInfo);
+            HBox.setMargin(iconButton, new Insets(-8, 0, 0, 1));
+            root.getChildren().addAll(textInput, codeLabel, iconButton);
 
             //  Listeners on view component events
             focusListener = (o, oldValue, newValue) -> {
@@ -205,6 +224,7 @@ public class SmallAmountInput {
 
         @Override
         protected void onViewAttached() {
+            tooltip.setText(model.tooltip);
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             codeLabel.textProperty().bind(model.code);
@@ -222,12 +242,13 @@ public class SmallAmountInput {
         }
 
         private void applyAmount(Monetary newValue) {
+            String prefix = model.showEstimationPrefix ? ESTIMATION_PREFIX : "";
             textInput.setText(newValue == null ? "" :
-                    PREFIX + AmountFormatter.formatAmount(newValue, true));
+                    prefix + AmountFormatter.formatAmount(newValue, model.useLowPrecision));
         }
 
         private String getText() {
-            return textInput.getText().replace(PREFIX, "");
+            return textInput.getText().replace(ESTIMATION_PREFIX, "");
         }
     }
 }

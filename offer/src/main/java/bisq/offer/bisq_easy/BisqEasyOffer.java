@@ -3,6 +3,7 @@ package bisq.offer.bisq_easy;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
+import bisq.common.monetary.Quote;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.Direction;
@@ -10,6 +11,9 @@ import bisq.offer.Offer;
 import bisq.offer.SettlementSpec;
 import bisq.offer.amount_spec.AmountSpec;
 import bisq.offer.offer_options.OfferOption;
+import bisq.offer.price_spec.FixPriceSpec;
+import bisq.offer.price_spec.FloatPriceSpec;
+import bisq.offer.price_spec.MarketPriceSpec;
 import bisq.offer.price_spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,7 +21,10 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -28,6 +35,16 @@ public final class BisqEasyOffer extends Offer {
         return List.of(ProtocolType.BISQ_EASY);
     }
 
+    private static PriceSpec createPriceSpec(Optional<Quote> priceAsFixQuote, Optional<Double> priceAsPercentage) {
+        if (priceAsFixQuote.isPresent()) {
+            checkArgument(priceAsPercentage.isEmpty(), "createPriceSpec should not be called with both optional parameters filled.");
+            return new FixPriceSpec(priceAsFixQuote.get());
+        } else if (priceAsPercentage.isPresent()) {
+            return new FloatPriceSpec(priceAsPercentage.get());
+        } else {
+            return new MarketPriceSpec();
+        }
+    }
 
     private final transient String chatMessageText;
 
@@ -44,7 +61,7 @@ public final class BisqEasyOffer extends Offer {
                          List<String> settlementMethodNames,
                          String makersTradeTerms,
                          long requiredTotalReputationScore,
-                         double pricePremiumAsPercentage) {
+                         PriceSpec priceSpec) {
         this(id,
                 date,
                 makerNetworkId,
@@ -55,7 +72,7 @@ public final class BisqEasyOffer extends Offer {
                         baseSideMaxAmount,
                         quoteSideMinAmount,
                         quoteSideMaxAmount),
-                PriceSpec.fromPremiumAsPercentage(pricePremiumAsPercentage),
+                priceSpec,
                 createSwapProtocolTypes(),
                 SettlementSpec.createBaseSideSpecsForBitcoinMainChain(),
                 SettlementSpec.createQuoteSideSpecsFromMethodNames(settlementMethodNames),

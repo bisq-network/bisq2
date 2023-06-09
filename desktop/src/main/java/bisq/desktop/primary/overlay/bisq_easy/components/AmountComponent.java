@@ -96,6 +96,12 @@ public class AmountComponent {
         controller.setMinMaxRange(minRangeValue, maxRangeValue);
     }
 
+    public void setQuote(Quote quote) {
+        if (quote != null) {
+            controller.setQuote(quote);
+        }
+    }
+
     public void reset() {
         controller.reset();
     }
@@ -108,8 +114,8 @@ public class AmountComponent {
         private final Model model;
         @Getter
         private final View view;
-        private final BigAmountInput quoteAmountInput;
-        private final SmallAmountInput baseAmountInput;
+        private final BigAmountInput quoteSideAmountInput;
+        private final SmallAmountInput baseSideAmountInput;
         private final ChangeListener<Monetary> baseSideAmountFromModelListener, quoteSideAmountFromModelListener;
         private final ChangeListener<Quote> quoteListener;
         private final PriceInput price;
@@ -119,21 +125,28 @@ public class AmountComponent {
 
         private Controller(DefaultApplicationService applicationService,
                            boolean useQuoteCurrencyForMinMaxRange) {
-            quoteAmountInput = new BigAmountInput(false);
-            baseAmountInput = new SmallAmountInput(true);
+            quoteSideAmountInput = new BigAmountInput(false);
+            baseSideAmountInput = new SmallAmountInput(true);
             price = new PriceInput(applicationService.getOracleService().getMarketPriceService());
 
             model = new Model(useQuoteCurrencyForMinMaxRange);
             view = new View(model, this,
-                    baseAmountInput,
-                    quoteAmountInput);
+                    baseSideAmountInput,
+                    quoteSideAmountInput);
 
             // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
             // apply the conversion before the other component has processed the market change event.
             // The order of the event notification is not deterministic. 
             baseSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setQuoteFromBase);
             quoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setBaseFromQuote);
-            quoteListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::applyQuote);
+            quoteListener = (observable, oldValue, newValue) -> {
+                model.getMinRangeBaseSideValue().set(null);
+                model.getMaxRangeBaseSideValue().set(null);
+                model.getMinRangeQuoteSideValue().set(null);
+                model.getMaxRangeQuoteSideValue().set(null);
+                applyInitialRangeValues();
+                UIThread.runOnNextRenderFrame(this::applyQuote);
+            };
             sliderListener = (observable, oldValue, newValue) -> {
                 double sliderValue = newValue.doubleValue();
                 long min = model.useQuoteCurrencyForMinMaxRange ?
@@ -144,9 +157,9 @@ public class AmountComponent {
                         model.getMaxRangeBaseSideValue().get().getValue();
                 long value = Math.round(sliderValue * (max - min)) + min;
                 if (model.useQuoteCurrencyForMinMaxRange) {
-                    quoteAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
+                    quoteSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
                 } else {
-                    baseAmountInput.setAmount(Monetary.from(value, model.getMarket().getBaseCurrencyCode()));
+                    baseSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getBaseCurrencyCode()));
                 }
             };
         }
@@ -156,7 +169,6 @@ public class AmountComponent {
         }
 
         private void setQuoteSideAmount(Monetary value) {
-            log.error("setQuoteSideAmount");
             model.getQuoteSideAmount().set(value);
         }
 
@@ -174,6 +186,11 @@ public class AmountComponent {
             }
             model.setDirection(direction);
             model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("buying") : Res.get("selling"));
+
+            baseSideAmountInput.setShowEstimationPrefix(direction.isBuy());
+            baseSideAmountInput.setUseLowPrecision(direction.isBuy());
+            baseSideAmountInput.setTooltip(direction.isBuy() ? Res.get("bisqEasy.components.smallAmountInput.buyer.tooltip") :
+                    Res.get("bisqEasy.components.smallAmountInput.seller.tooltip"));
         }
 
         private void setMarket(Market market) {
@@ -181,9 +198,9 @@ public class AmountComponent {
                 return;
             }
             model.setMarket(market);
-            baseAmountInput.setSelectedMarket(market);
-            quoteAmountInput.setSelectedMarket(market);
-            price.setSelectedMarket(market);
+            baseSideAmountInput.setSelectedMarket(market);
+            quoteSideAmountInput.setSelectedMarket(market);
+            price.setMarket(market);
         }
 
         public void setDescription(String description) {
@@ -206,37 +223,45 @@ public class AmountComponent {
             applyInitialRangeValues();
         }
 
+        public void setQuote(Quote quote) {
+            price.setQuote(quote);
+        }
+
         private void reset() {
-            baseAmountInput.reset();
-            quoteAmountInput.reset();
+            baseSideAmountInput.reset();
+            quoteSideAmountInput.reset();
             price.reset();
             model.reset();
         }
 
         @Override
         public void onActivate() {
-            log.error("onActivate");
+            model.getMinRangeBaseSideValue().set(null);
+            model.getMaxRangeBaseSideValue().set(null);
+            model.getMinRangeQuoteSideValue().set(null);
+            model.getMaxRangeQuoteSideValue().set(null);
+            applyInitialRangeValues();
+
             model.getBaseSideAmount().addListener(baseSideAmountFromModelListener);
             model.getQuoteSideAmount().addListener(quoteSideAmountFromModelListener);
-            price.quoteProperty().addListener(quoteListener);
+            price.getQuote().addListener(quoteListener);
 
-            baseAmountInput.setAmount(null);
-            Fiat defaultQuoteAmount = Fiat.fromValue(1000000, model.getMarket().getQuoteCurrencyCode());
+            baseSideAmountInput.setAmount(null);
             if (model.getQuoteSideAmount().get() == null) {
-                Quote quote = price.quoteProperty().get();
+                Quote quote = price.getQuote().get();
                 if (quote != null) {
-                    applyInitialRangeValues();
                     Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
                     Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
-                    long defaultQuoteValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
-                    Monetary exactAmount = Fiat.fromValue(defaultQuoteValue, quote.getQuoteMonetary().getCode());
-                    quoteAmountInput.setAmount(exactAmount.round(0));
+                    long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
+                    Monetary exactAmount = Fiat.fromValue(midValue, quote.getQuoteMonetary().getCode());
+                    quoteSideAmountInput.setAmount(exactAmount.round(0));
                 } else {
                     log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
-                    quoteAmountInput.setAmount(defaultQuoteAmount);
+                    Fiat defaultQuoteSideAmount = Fiat.fromValue(1000000, model.getMarket().getQuoteCurrencyCode());
+                    quoteSideAmountInput.setAmount(defaultQuoteSideAmount);
                 }
             } else {
-                quoteAmountInput.setAmount(model.getQuoteSideAmount().get());
+                quoteSideAmountInput.setAmount(model.getQuoteSideAmount().get());
             }
             setBaseFromQuote();
 
@@ -252,40 +277,40 @@ public class AmountComponent {
                 }
             });
 
-            baseAmountFromCompPin = EasyBind.subscribe(baseAmountInput.amountProperty(),
+            baseAmountFromCompPin = EasyBind.subscribe(baseSideAmountInput.amountProperty(),
                     amount -> {
                         Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
                         Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
                         if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
                             model.getBaseSideAmount().set(maxRangeValue);
                             setQuoteFromBase();
-                            baseAmountInput.setAmount(maxRangeValue);
+                            baseSideAmountInput.setAmount(maxRangeValue);
                         } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
                             model.getBaseSideAmount().set(minRangeValue);
                             setQuoteFromBase();
-                            baseAmountInput.setAmount(minRangeValue);
+                            baseSideAmountInput.setAmount(minRangeValue);
                         } else {
                             model.getBaseSideAmount().set(amount);
                         }
                     });
 
-            quoteAmountFromCompPin = EasyBind.subscribe(quoteAmountInput.amountProperty(),
+            quoteAmountFromCompPin = EasyBind.subscribe(quoteSideAmountInput.amountProperty(),
                     amount -> {
                         Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
                         Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
                         if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
                             model.getQuoteSideAmount().set(maxRangeValue);
                             setBaseFromQuote();
-                            quoteAmountInput.setAmount(maxRangeValue);
+                            quoteSideAmountInput.setAmount(maxRangeValue);
                         } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
                             model.getQuoteSideAmount().set(minRangeValue);
                             setBaseFromQuote();
-                            quoteAmountInput.setAmount(minRangeValue);
+                            quoteSideAmountInput.setAmount(minRangeValue);
                         } else {
                             model.getQuoteSideAmount().set(amount);
                         }
                     });
-            priceFromCompPin = EasyBind.subscribe(price.quoteProperty(),
+            priceFromCompPin = EasyBind.subscribe(price.getQuote(),
                     quote -> applyInitialRangeValues());
 
             minRangeCustomValuePin = EasyBind.subscribe(model.getMinRangeMonetary(),
@@ -297,10 +322,11 @@ public class AmountComponent {
         }
 
         private void applyInitialRangeValues() {
-            Quote quote = price.quoteProperty().get();
+            Quote quote = price.getQuote().get();
             if (quote == null) {
                 return;
             }
+
             Monetary minRangeMonetary = model.getMinRangeMonetary().get();
             Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
             boolean isMinRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeMonetary.getCode());
@@ -355,7 +381,7 @@ public class AmountComponent {
         public void onDeactivate() {
             model.getBaseSideAmount().removeListener(baseSideAmountFromModelListener);
             model.getQuoteSideAmount().removeListener(quoteSideAmountFromModelListener);
-            price.quoteProperty().removeListener(quoteListener);
+            price.getQuote().removeListener(quoteListener);
             model.getSliderValue().removeListener(sliderListener);
             baseAmountFromModelPin.unsubscribe();
             baseAmountFromCompPin.unsubscribe();
@@ -366,19 +392,19 @@ public class AmountComponent {
         }
 
         private void setQuoteFromBase() {
-            Quote quote = price.quoteProperty().get();
+            Quote quote = price.getQuote().get();
             if (quote == null) return;
             Monetary baseSideAmount = model.getBaseSideAmount().get();
             if (baseSideAmount == null) return;
-            quoteAmountInput.setAmount(quote.toQuoteMonetary(baseSideAmount).round(0));
+            quoteSideAmountInput.setAmount(quote.toQuoteMonetary(baseSideAmount).round(0));
         }
 
         private void setBaseFromQuote() {
-            Quote quote = price.quoteProperty().get();
+            Quote quote = price.getQuote().get();
             if (quote == null) return;
             Monetary quoteSideAmount = model.getQuoteSideAmount().get();
             if (quoteSideAmount == null) return;
-            baseAmountInput.setAmount(quote.toBaseMonetary(quoteSideAmount));
+            baseSideAmountInput.setAmount(quote.toBaseMonetary(quoteSideAmount));
         }
 
         private void applyQuote() {
@@ -445,8 +471,7 @@ public class AmountComponent {
         public final static int AMOUNT_BOX_WIDTH = 330;
         private final Slider slider;
         private final Label minRangeValue, maxRangeValue, description;
-        private final Region line, selectionLine;
-        private final Pane baseAmountRoot, quoteAmountRoot;
+        private final Region selectionLine;
         private final SmallAmountInput baseAmount;
         private final BigAmountInput quoteAmount;
         private Subscription baseAmountFocusPin, quoteAmountFocusPin;
@@ -454,9 +479,9 @@ public class AmountComponent {
         private View(Model model, AmountComponent.Controller controller, SmallAmountInput baseAmount, BigAmountInput quoteAmount) {
             super(new VBox(10), model, controller);
 
-            baseAmountRoot = baseAmount.getRoot();
+            Pane baseAmountRoot = baseAmount.getRoot();
             this.baseAmount = baseAmount;
-            quoteAmountRoot = quoteAmount.getRoot();
+            Pane quoteAmountRoot = quoteAmount.getRoot();
             this.quoteAmount = quoteAmount;
 
             root.setAlignment(Pos.TOP_CENTER);
@@ -475,7 +500,7 @@ public class AmountComponent {
             vbox.setMaxWidth(AMOUNT_BOX_WIDTH);
             vbox.setPadding(new Insets(25, 20, 10, 20));
 
-            line = new Region();
+            Region line = new Region();
             line.setLayoutY(121);
             line.setPrefHeight(1);
             line.setPrefWidth(AMOUNT_BOX_WIDTH);

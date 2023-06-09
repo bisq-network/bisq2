@@ -82,7 +82,7 @@ public class AmountPriceGroup {
     public void setSelectedMarket(Market selectedMarket) {
         controller.baseAmount.setSelectedMarket(selectedMarket);
         controller.quoteAmount.setSelectedMarket(selectedMarket);
-        controller.price.setSelectedMarket(selectedMarket);
+        controller.price.setMarket(selectedMarket);
     }
 
     public void setDirection(Direction direction) {
@@ -105,7 +105,7 @@ public class AmountPriceGroup {
             quoteAmount = new AmountInput(false);
             price = new PriceInput(marketPriceService);
 
-            model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.quoteProperty());
+            model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.getQuote());
 
             view = new View(model,
                     this,

@@ -23,6 +23,8 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
+import bisq.offer.price_spec.MarketPriceSpec;
+import bisq.offer.price_spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -59,6 +61,8 @@ class ReviewOfferModel implements Model {
     private BisqEasyPublicChatMessage myOfferMessage;
     @Setter
     private boolean isMinAmountEnabled;
+    @Setter
+    private PriceSpec priceSpec = new MarketPriceSpec();
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
@@ -76,8 +80,11 @@ class ReviewOfferModel implements Model {
         settlementMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
+        isMinAmountEnabled = false;
+        priceSpec = new MarketPriceSpec();
         matchingOffersVisible.set(false);
         showCreateOfferSuccess.set(false);
         matchingOffers.clear();
+
     }
 }

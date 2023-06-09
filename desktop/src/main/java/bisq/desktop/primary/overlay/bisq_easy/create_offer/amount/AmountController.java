@@ -20,10 +20,16 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.price_spec.FixPriceSpec;
+import bisq.offer.price_spec.FloatPriceSpec;
+import bisq.offer.price_spec.PriceSpec;
+import bisq.oracle.marketprice.MarketPrice;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -33,7 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-// TODO open bug when opening popup with amount screen the values are not set
+import java.util.Optional;
+
 @Slf4j
 public class AmountController implements Controller {
     private final AmountModel model;
@@ -41,11 +48,13 @@ public class AmountController implements Controller {
     private final AmountView view;
     private final AmountComponent minAmountComponent, maxAmountComponent;
     private final SettingsService settingsService;
+    private final MarketPriceService marketPriceService;
     private Subscription isMinAmountEnabledPin, maxAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
     public AmountController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
         model = new AmountModel();
 
         minAmountComponent = new AmountComponent(applicationService, true);
@@ -71,6 +80,39 @@ public class AmountController implements Controller {
         }
         minAmountComponent.setMarket(market);
         maxAmountComponent.setMarket(market);
+        model.setMarket(market);
+    }
+
+    public void setPriceSpec(PriceSpec priceSpec) {
+        if (priceSpec instanceof FixPriceSpec) {
+            Quote quote = ((FixPriceSpec) priceSpec).getQuote();
+            minAmountComponent.setQuote(quote);
+            maxAmountComponent.setQuote(quote);
+        } else if (priceSpec instanceof FloatPriceSpec) {
+            double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
+           /* findMarketPriceQuote().map(marketPrice->{
+                
+            });*/
+        } else {
+            
+     /*   }
+        Quote quote = PriceSpec.findFixPriceSpec(priceSpec)
+                .map(FixPriceSpec::getQuote).orElse(
+                        PriceSpec.findFloatPriceSpec(priceSpec)
+                                .map(FloatPriceSpec::getPercentage)
+                                .map(p -> Quote.fromPrice(0L, null))).orElse(
+                        Quote.fromPrice(0, null)
+                );*/
+        }
+    }
+
+    private Optional<Quote> findMarketPriceQuote() {
+        return marketPriceService.findMarketPrice(model.getMarket()).map(MarketPrice::getQuote).stream().findAny();
+    }
+
+    public void setSellerPriceQuote(Quote sellersPriceQuote) {
+        minAmountComponent.setQuote(sellersPriceQuote);
+        maxAmountComponent.setQuote(sellersPriceQuote);
     }
 
     public void reset() {
@@ -108,7 +150,6 @@ public class AmountController implements Controller {
                     if (model.getIsMinAmountEnabled().get()) {
                         if (value != null && maxAmountComponent.getBaseSideAmount().get() != null &&
                                 value.getValue() > maxAmountComponent.getBaseSideAmount().get().getValue()) {
-                            log.error("minAmountCompBaseSideAmountPin value={}", value);
                             maxAmountComponent.setBaseSideAmount(value);
                         }
                     }
@@ -118,7 +159,6 @@ public class AmountController implements Controller {
                     if (model.getIsMinAmountEnabled().get() &&
                             value != null && minAmountComponent.getBaseSideAmount().get() != null &&
                             value.getValue() < minAmountComponent.getBaseSideAmount().get().getValue()) {
-                        log.error("maxAmountCompBaseSideAmountPin value={}", value);
                         minAmountComponent.setBaseSideAmount(value);
                     }
                 });
@@ -128,7 +168,6 @@ public class AmountController implements Controller {
                     if (model.getIsMinAmountEnabled().get()) {
                         if (value != null && maxAmountComponent.getQuoteSideAmount().get() != null &&
                                 value.getValue() > maxAmountComponent.getQuoteSideAmount().get().getValue()) {
-                            log.error("minAmountCompQuoteSideAmountPin value={}", value);
                             maxAmountComponent.setQuoteSideAmount(value);
                         }
                     }
@@ -138,7 +177,6 @@ public class AmountController implements Controller {
                     if (model.getIsMinAmountEnabled().get() &&
                             value != null && minAmountComponent.getQuoteSideAmount().get() != null &&
                             value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
-                        log.error("maxAmountCompQuoteSideAmountPin value={}", value);
                         minAmountComponent.setQuoteSideAmount(value);
                     }
                 });

@@ -31,7 +31,7 @@ message AmountSpec {
 }
 
 message FixPrice {
-  uint64 value = 1;
+  common.Quote quote = 1;
 }
 message FloatPrice {
   double percentage = 1;

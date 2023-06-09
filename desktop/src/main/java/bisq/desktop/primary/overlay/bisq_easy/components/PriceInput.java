@@ -45,11 +45,11 @@ public class PriceInput {
         controller = new Controller(marketPriceService);
     }
 
-    public void setSelectedMarket(Market selectedMarket) {
-        controller.setSelectedMarket(selectedMarket);
+    public void setMarket(Market market) {
+        controller.setMarket(market);
     }
 
-    public ReadOnlyObjectProperty<Quote> quoteProperty() {
+    public ReadOnlyObjectProperty<Quote> getQuote() {
         return controller.model.quote;
     }
 
@@ -92,14 +92,14 @@ public class PriceInput {
             view = new View(model, this, validator);
         }
 
-        public void setSelectedMarket(Market selectedMarket) {
-            model.selectedMarket = selectedMarket;
+        public void setMarket(Market market) {
+            model.market = market;
             updateFromMarketPrice();
         }
 
         private void updateFromMarketPrice() {
-            if (model.selectedMarket != null && model.description.get() == null) {
-                model.description.set(Res.get("priceInput.description", model.selectedMarket.getMarketCodes()));
+            if (model.market != null && model.description.get() == null) {
+                model.description.set(Res.get("priceInput.description", model.market.getMarketCodes()));
             }
             if (model.isEditable && model.quote.get() == null) {
                 setQuoteFromMarketPrice();
@@ -118,10 +118,9 @@ public class PriceInput {
                 });
             });
 
-            pricePin = EasyBind.subscribe(model.price, this::onPriceChanged);
+            pricePin = EasyBind.subscribe(model.priceString, this::onPriceInput);
             quotePin = EasyBind.subscribe(model.quote, this::onQuoteChanged);
         }
-
 
         @Override
         public void onDeactivate() {
@@ -131,19 +130,19 @@ public class PriceInput {
             model.description.set(null);
         }
 
-        private void onPriceChanged(String price) {
+        private void onPriceInput(String price) {
             if (model.isFocused) {
                 return;
             }
             if (price == null ||
                     price.isEmpty() ||
-                    model.selectedMarket == null ||
+                    model.market == null ||
                     !validator.validate(price).isValid) {
                 onQuoteChanged(model.quote.get());
                 return;
             }
             try {
-                Quote quote = PriceParser.parse(price, model.selectedMarket);
+                Quote quote = PriceParser.parse(price, model.market);
                 checkArgument(quote.getValue() > 0);
                 model.quote.set(quote);
             } catch (Throwable ignore) {
@@ -155,32 +154,28 @@ public class PriceInput {
             if (model.isFocused) {
                 return;
             }
-
-            if (quote != null && quote.getValue() < 247095444) {
-                log.error("");
-            }
-            model.price.set(quote == null ? "" : QuoteFormatter.format(quote));
+            model.priceString.set(quote == null ? "" : QuoteFormatter.format(quote));
         }
 
         private void onFocusedChanged(boolean isFocused) {
             model.isFocused = isFocused;
             if (!isFocused) {
-                onPriceChanged(model.price.get());
+                onPriceInput(model.priceString.get());
             }
         }
 
         private void setQuoteFromMarketPrice() {
-            if (model.selectedMarket == null) return;
-            marketPriceService.getMarketPrice(model.selectedMarket)
+            if (model.market == null) return;
+            marketPriceService.findMarketPrice(model.market)
                     .ifPresent(marketPrice -> model.quote.set(marketPrice.getQuote()));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Quote> quote = new SimpleObjectProperty<>();
-        private final StringProperty price = new SimpleStringProperty();
+        private final StringProperty priceString = new SimpleStringProperty();
 
-        private Market selectedMarket;
+        private Market market;
         private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
         private boolean isEditable = true;
@@ -190,7 +185,7 @@ public class PriceInput {
 
         public void reset() {
             quote.set(null);
-            selectedMarket = null;
+            market = null;
             isFocused = false;
             description.set(null);
             isEditable = true;
@@ -215,16 +210,15 @@ public class PriceInput {
         @Override
         protected void onViewAttached() {
             textInput.descriptionProperty().bind(model.description);
-            textInput.textProperty().bindBidirectional(model.price);
+            textInput.textProperty().bindBidirectional(model.priceString);
             focusedPin = EasyBind.subscribe(textInput.inputTextFieldFocusedProperty(), controller::onFocusedChanged);
             textInput.setMouseTransparent(!model.isEditable);
-
         }
 
         @Override
         protected void onViewDetached() {
             textInput.descriptionProperty().unbind();
-            textInput.textProperty().unbindBidirectional(model.price);
+            textInput.textProperty().unbindBidirectional(model.priceString);
             focusedPin.unsubscribe();
         }
     }

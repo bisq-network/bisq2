@@ -210,11 +210,11 @@ public final class PocOffer implements DistributedData {
     public Monetary getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPriceSpec) {
             Monetary base = getBaseAmountAsMonetary();
-            Quote quote = Quote.fromPrice(((FixPriceSpec) priceSpec).getValue(), market);
+            Quote quote = ((FixPriceSpec) priceSpec).getQuote();
             long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
             return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
         } else if (priceSpec instanceof FloatPriceSpec) {
-            Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
+            Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
             //todo
             throw new RuntimeException("floatPrice not impl yet");
         } else {
@@ -224,9 +224,9 @@ public final class PocOffer implements DistributedData {
 
     public Quote getQuote(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPriceSpec) {
-            return Quote.fromPrice(((FixPriceSpec) priceSpec).getValue(), market);
+            return ((FixPriceSpec) priceSpec).getQuote();
         } else if (priceSpec instanceof FloatPriceSpec) {
-            Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
+            Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
             //todo
             throw new RuntimeException("floatPrice not impl yet");
         } else {

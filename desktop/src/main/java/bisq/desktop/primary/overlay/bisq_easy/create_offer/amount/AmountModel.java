@@ -17,17 +17,25 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 @Getter
 public class AmountModel implements Model {
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
+    @Setter
+    @Nullable
+    private Market market = MarketRepository.getDefault();
 
     public void reset() {
         isMinAmountEnabled.set(false);

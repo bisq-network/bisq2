@@ -103,7 +103,7 @@ public class TakeOfferReviewController implements Controller {
     public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
         model.setBisqEasyOffer(bisqEasyOffer);
         Market market = bisqEasyOffer.getMarket();
-        priceInput.setSelectedMarket(market);
+        priceInput.setMarket(market);
 
 
         String marketCodes = market.getMarketCodes();
@@ -116,7 +116,7 @@ public class TakeOfferReviewController implements Controller {
         model.getSellersPriceValue().set(sellersQuote
                 .map(QuoteFormatter::formatWithQuoteCode)
                 .orElse(Res.get("na")));
-        Optional<Quote> marketPriceQuote = marketPriceService.getMarketPrice(market)
+        Optional<Quote> marketPriceQuote = marketPriceService.findMarketPrice(market)
                 .map(MarketPrice::getQuote);
         String marketPrice = marketPriceQuote
                 .map(QuoteFormatter::formatWithQuoteCode)
@@ -174,7 +174,7 @@ public class TakeOfferReviewController implements Controller {
 
     @Override
     public void onActivate() {
-        priceInputPin = EasyBind.subscribe(priceInput.quoteProperty(), this::onSellerQuoteChanged);
+        priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onSellerQuoteChanged);
     }
 
     @Override

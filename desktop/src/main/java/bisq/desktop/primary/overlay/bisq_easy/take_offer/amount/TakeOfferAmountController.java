@@ -27,7 +27,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-// TODO open bug when opening popup with amount screen the values are not set
 @Slf4j
 public class TakeOfferAmountController implements Controller {
     private final TakeOfferAmountModel model;

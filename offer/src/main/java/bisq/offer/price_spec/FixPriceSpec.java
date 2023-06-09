@@ -17,6 +17,7 @@
 
 package bisq.offer.price_spec;
 
+import bisq.common.monetary.Quote;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,20 +29,20 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class FixPriceSpec implements PriceSpec {
-    private final long value;
+    private final Quote quote;
 
-    public FixPriceSpec(long value) {
-        this.value = value;
+    public FixPriceSpec(Quote quote) {
+        this.quote = quote;
     }
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
         return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
-                        .setValue(value))
+                        .setQuote(quote.toProto()))
                 .build();
     }
 
     public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPriceSpec(proto.getValue());
+        return new FixPriceSpec(Quote.fromProto(proto.getQuote()));
     }
 }
