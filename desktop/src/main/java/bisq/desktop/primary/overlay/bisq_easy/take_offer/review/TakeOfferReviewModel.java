@@ -39,13 +39,13 @@ class TakeOfferReviewModel implements Model {
     private UserProfile peersUserProfile;
     private final StringProperty baseSideAmount = new SimpleStringProperty();
     private final StringProperty quoteSideAmount = new SimpleStringProperty();
-    private final StringProperty paymentMethod = new SimpleStringProperty();
+    private final StringProperty settlementMethod = new SimpleStringProperty();
     @Setter
     private Monetary baseSideAmountAsMonetary;
     @Setter
     private Monetary quoteSideAmountAsMonetary;
     @Setter
-    private List<String> paymentMethodNames;
+    private List<String> settlementMethodNames;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
     @Setter

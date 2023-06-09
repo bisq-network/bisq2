@@ -57,6 +57,10 @@ public class TakeOfferAmountController implements Controller {
                 bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString()));
     }
 
+    public void setQuoteSideFixAmount(Monetary amount) {
+        amountComponent.setQuoteSideAmount(amount);
+    }
+
     public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
         return amountComponent.getBaseSideAmount();
     }

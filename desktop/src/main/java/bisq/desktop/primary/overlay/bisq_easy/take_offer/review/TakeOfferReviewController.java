@@ -127,13 +127,13 @@ public class TakeOfferReviewController implements Controller {
                 percentage, aboveOrBelow, marketPrice));
     }
 
-    public void setPaymentMethodName(String methodName) {
+    public void setSettlementMethodName(String methodName) {
         if (methodName != null) {
-            model.getPaymentMethod().set(Res.has(methodName) ? Res.get(methodName) : methodName);
+            model.getSettlementMethod().set(Res.has(methodName) ? Res.get(methodName) : methodName);
 
             String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("buying").toUpperCase() : Res.get("selling").toUpperCase();
-            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getPaymentMethod().get().toUpperCase()));
-            model.getMethodValue().set(model.getPaymentMethod().get());
+            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getSettlementMethod().get().toUpperCase()));
+            model.getMethodValue().set(model.getSettlementMethod().get());
         }
     }
 
@@ -156,9 +156,6 @@ public class TakeOfferReviewController implements Controller {
 
                     model.getShowTakeOfferSuccess().set(true);
                     mainButtonsVisibleHandler.accept(false);
-                        
-                     /*   Optional<Runnable> takeOfferCompleteHandler = model.takeOfferCompleteHandler;
-                        takeOfferCompleteHandler.ifPresent(Runnable::run);*/
                 }));
 
         UIScheduler.run(() -> {

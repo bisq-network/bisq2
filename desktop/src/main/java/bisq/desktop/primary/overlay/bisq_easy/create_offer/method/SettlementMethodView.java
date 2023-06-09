@@ -42,16 +42,16 @@ import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
-public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMethodController> {
+public class SettlementMethodView extends View<VBox, SettlementMethodModel, SettlementMethodController> {
 
     private final MaterialTextField custom;
-    private final ListChangeListener<String> allPaymentMethodsListener;
+    private final ListChangeListener<String> allSettlementMethodsListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
     private final BisqIconButton addButton;
     private Subscription addCustomMethodIconEnabledPin;
 
-    public PaymentMethodView(PaymentMethodModel model, PaymentMethodController controller) {
+    public SettlementMethodView(SettlementMethodModel model, SettlementMethodController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -90,9 +90,9 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
         root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
-        allPaymentMethodsListener = c -> {
+        allSettlementMethodsListener = c -> {
             c.next();
-            fillPaymentMethods();
+            fillSettlementMethods();
         };
         root.setOnMousePressed(e -> root.requestFocus());
     }
@@ -100,10 +100,10 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewAttached() {
         custom.textProperty().bindBidirectional(model.getCustomMethodName());
-        nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
-        nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
-        flowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        flowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        nonFoundLabel.visibleProperty().bind(model.getIsSettlementMethodsEmpty());
+        nonFoundLabel.managedProperty().bind(model.getIsSettlementMethodsEmpty());
+        flowPane.visibleProperty().bind(model.getIsSettlementMethodsEmpty().not());
+        flowPane.managedProperty().bind(model.getIsSettlementMethodsEmpty().not());
         addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
 
         addButton.setOnAction(e -> controller.onAddCustomMethod());
@@ -113,8 +113,8 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
 
-        model.getAllPaymentMethodNames().addListener(allPaymentMethodsListener);
-        fillPaymentMethods();
+        model.getAllSettlementMethodNames().addListener(allSettlementMethodsListener);
+        fillSettlementMethods();
     }
 
     @Override
@@ -130,45 +130,45 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
 
         addCustomMethodIconEnabledPin.unsubscribe();
 
-        model.getAllPaymentMethodNames().removeListener(allPaymentMethodsListener);
+        model.getAllSettlementMethodNames().removeListener(allSettlementMethodsListener);
     }
 
-    private void fillPaymentMethods() {
+    private void fillSettlementMethods() {
         flowPane.getChildren().clear();
-        List<String> allPaymentMethodNames = new ArrayList<>(model.getAllPaymentMethodNames());
-        allPaymentMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
+        List<String> allSettlementMethodNames = new ArrayList<>(model.getAllSettlementMethodNames());
+        allSettlementMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
 
-        for (String paymentMethodName : allPaymentMethodNames) {
+        for (String methodName : allSettlementMethodNames) {
             // enum name or custom name
-            String displayString = paymentMethodName;
-            if (Res.has(paymentMethodName)) {
-                String paymentMethodShortName = paymentMethodName + "_SHORT";
-                if (Res.has(paymentMethodShortName)) {
-                    displayString = Res.get(paymentMethodShortName);
+            String displayString = methodName;
+            if (Res.has(methodName)) {
+                String shortName = methodName + "_SHORT";
+                if (Res.has(shortName)) {
+                    displayString = Res.get(shortName);
                 } else {
-                    displayString = Res.get(paymentMethodName);
+                    displayString = Res.get(methodName);
                 }
             }
             ChipButton chipButton = new ChipButton(displayString);
-            if (model.getSelectedPaymentMethodNames().contains(paymentMethodName)) {
+            if (model.getSettlementMethodNames().contains(methodName)) {
                 chipButton.setSelected(true);
             }
-            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethodName, chipButton.isSelected()));
+            chipButton.setOnAction(() -> controller.onToggleSettlementMethod(methodName, chipButton.isSelected()));
             String finalDisplayString = displayString;
             model.getAddedCustomMethodNames().stream()
-                    .filter(customMethod -> customMethod.equals(paymentMethodName))
+                    .filter(customMethod -> customMethod.equals(methodName))
                     .findAny()
                     .ifPresentOrElse(
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethodName));
-                                if (paymentMethodName.length() > 13) {
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(methodName));
+                                if (methodName.length() > 13) {
                                     chipButton.setTooltip(new BisqTooltip(finalDisplayString));
                                 }
                             },
                             () -> {
                                 // A provided method
-                                ImageView icon = ImageUtil.getImageViewById(paymentMethodName);
+                                ImageView icon = ImageUtil.getImageViewById(methodName);
                                 chipButton.setLeftIcon(icon);
                             });
             flowPane.getChildren().add(chipButton);

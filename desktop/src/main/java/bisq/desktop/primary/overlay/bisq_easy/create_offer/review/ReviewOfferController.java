@@ -99,9 +99,9 @@ public class ReviewOfferController implements Controller {
         }
     }
 
-    public void setPaymentMethodNames(List<String> paymentMethodNames) {
-        if (paymentMethodNames != null) {
-            model.setPaymentMethodNames(paymentMethodNames);
+    public void setSettlementMethodNames(List<String> settlementMethodNames) {
+        if (settlementMethodNames != null) {
+            model.setSettlementMethodNames(settlementMethodNames);
         }
     }
 
@@ -169,7 +169,7 @@ public class ReviewOfferController implements Controller {
                 baseSideMaxAmount,
                 quoteSideMinAmount,
                 quoteSideMaxAmount,
-                new ArrayList<>(model.getPaymentMethodNames()),
+                new ArrayList<>(model.getSettlementMethodNames()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
                 sellerPremiumAsPercentage);
@@ -203,10 +203,17 @@ public class ReviewOfferController implements Controller {
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
         checkArgument(listItem.getChatMessage().getBisqEasyOffer().isPresent(), "message must contain offer");
-        mainButtonsVisibleHandler.accept(false);
-        resetHandler.run();
         BisqEasyOffer bisqEasyOffer = listItem.getChatMessage().getBisqEasyOffer().orElseThrow();
-        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer)));
+        boolean fixAmountUsed = !model.isMinAmountEnabled() ||
+                (model.getQuoteSideMinAmount().getValue() == model.getQuoteSideMaxAmount().getValue());
+        Optional<Monetary> quoteSideFixAmount = fixAmountUsed ? Optional.of(model.getQuoteSideMaxAmount()) : Optional.empty();
+        mainButtonsVisibleHandler.accept(false);
+
+        OverlayController.hide(() -> {
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, quoteSideFixAmount, model.getSettlementMethodNames()));
+                    resetHandler.run();
+                }
+        );
     }
 
     void onCreateOffer() {
@@ -275,8 +282,8 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            List<String> paymentMethods = peersOffer.getQuoteSideSettlementMethodNames();
-            if (myChatOffer.getQuoteSideSettlementMethodNames().stream().noneMatch(paymentMethods::contains)) {
+            List<String> settlementMethods = peersOffer.getQuoteSideSettlementMethodNames();
+            if (myChatOffer.getQuoteSideSettlementMethodNames().stream().noneMatch(settlementMethods::contains)) {
                 return false;
             }
 

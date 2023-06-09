@@ -39,6 +39,10 @@ public class TakeOfferSettlementController implements Controller {
         model.getOfferedMethodNames().setAll(bisqEasyOffer.getQuoteSideSettlementMethodNames());
     }
 
+    public void setSettlementMethodName(String methodName) {
+        model.getSelectedMethodName().set(methodName);
+    }
+
     /**
      * @return Enum name of FiatSettlement.Method or custom name
      */

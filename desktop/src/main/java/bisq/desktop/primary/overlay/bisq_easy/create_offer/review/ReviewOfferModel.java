@@ -52,7 +52,7 @@ class ReviewOfferModel implements Model {
     @Setter
     private Monetary quoteSideMaxAmount;
     @Setter
-    private List<String> paymentMethodNames;
+    private List<String> settlementMethodNames;
     @Setter
     private String myOfferText;
     @Setter
@@ -73,7 +73,7 @@ class ReviewOfferModel implements Model {
         baseSideMaxAmount = null;
         quoteSideMinAmount = null;
         quoteSideMaxAmount = null;
-        paymentMethodNames.clear();
+        settlementMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
         matchingOffersVisible.set(false);

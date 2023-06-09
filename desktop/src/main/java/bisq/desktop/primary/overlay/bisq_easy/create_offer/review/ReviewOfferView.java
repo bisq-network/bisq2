@@ -152,6 +152,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
                 int numMatchingOffers = model.getMatchingOffers().size();
                 if (numMatchingOffers > 0) {
+                    createOfferButton.setDefaultButton(false);
+                    createOfferButton.getStyleClass().add("outlined-button");
                     tableView.setMaxHeight(42 + numMatchingOffers * 55);
                     VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
                     // Aligned with take offer button
@@ -167,11 +169,15 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                         VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
                     }
                 } else {
+                    createOfferButton.setDefaultButton(true);
+                    createOfferButton.getStyleClass().remove("outlined-button");
                     VBox.setMargin(headLineLabel, new Insets(70, 0, 0, 0));
                     VBox.setMargin(subtitleLabel, new Insets(20, 0, 10, 0));
                     VBox.setMargin(createOfferHBox, new Insets(40, 0, 0, 0));
                 }
             } else {
+                createOfferButton.setDefaultButton(true);
+                createOfferButton.getStyleClass().remove("outlined-button");
                 createOfferHBox.setMinWidth(550);
                 createOfferHBox.setMaxWidth(550);
                 headLineLabel.setText(Res.get("createOffer"));
@@ -210,6 +216,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(peer)
                 .isFirst()
+                .minWidth(100)
                 .setCellFactory(new Callback<>() {
                     @Override
                     public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
@@ -249,6 +256,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation"))
+                .minWidth(50)
                 .setCellFactory(new Callback<>() {
                     @Override
                     public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
@@ -273,6 +281,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         BisqTableColumn<ListItem> takeOffer = new BisqTableColumn.Builder<ListItem>()
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .value(Res.get("takeOffer"))
+                .minWidth(120)
                 .actionHandler(controller::onTakeOffer)
                 .updateItemWithButtonHandler((item, button) -> {
                     Button takeOfferButton = (Button) button;
@@ -282,7 +291,6 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                 })
                 .isLast()
                 .build();
-        //takeOffer.setStyle("-fx-padding: 0 5 0 10;");
         tableView.getColumns().add(takeOffer);
     }
 

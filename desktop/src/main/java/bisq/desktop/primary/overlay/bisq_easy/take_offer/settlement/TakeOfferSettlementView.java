@@ -70,23 +70,23 @@ public class TakeOfferSettlementView extends View<VBox, TakeOfferSettlementModel
     @Override
     protected void onViewAttached() {
         flowPane.getChildren().clear();
-        List<String> allPaymentMethodNames = new ArrayList<>(model.getOfferedMethodNames());
-        allPaymentMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
+        List<String> allMethodNames = new ArrayList<>(model.getOfferedMethodNames());
+        allMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
 
-        for (String paymentMethodName : allPaymentMethodNames) {
+        for (String methodName : allMethodNames) {
             // enum name or custom name
-            String displayString = paymentMethodName;
-            if (Res.has(paymentMethodName)) {
-                String paymentMethodShortName = paymentMethodName + "_SHORT";
-                if (Res.has(paymentMethodShortName)) {
-                    displayString = Res.get(paymentMethodShortName);
+            String displayString = methodName;
+            if (Res.has(methodName)) {
+                String shortName = methodName + "_SHORT";
+                if (Res.has(shortName)) {
+                    displayString = Res.get(shortName);
                 } else {
-                    displayString = Res.get(paymentMethodName);
+                    displayString = Res.get(methodName);
                 }
             }
             ChipToggleButton chipToggleButton = new ChipToggleButton(displayString, toggleGroup);
-            chipToggleButton.setUserData(paymentMethodName);
-            chipToggleButton.setSelected(paymentMethodName.equals(model.getSelectedMethodName().get()));
+            chipToggleButton.setUserData(methodName);
+            chipToggleButton.setSelected(methodName.equals(model.getSelectedMethodName().get()));
             flowPane.getChildren().add(chipToggleButton);
         }
         EasyBind.subscribe(toggleGroup.selectedToggleProperty(), selectedToggle -> {

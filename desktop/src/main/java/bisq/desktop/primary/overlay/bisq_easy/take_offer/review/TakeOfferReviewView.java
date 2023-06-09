@@ -47,7 +47,6 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final Label sellersPriceValue;
     private final Label sellersPriceValueDetails;
     private final Label sellersPremiumValue;
-    private final Label sellersPremiumValueDetails;
     private Subscription showTakeOfferSuccessPin;
 
     TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller, Pane sellersPriceComponent) {
@@ -66,7 +65,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         content = new VBox(10);
         content.setAlignment(Pos.TOP_LEFT);
-        content.setPadding(new Insets(0, 30, 0, 30));
+        content.setPadding(new Insets(0, 50, 0, 50));
 
         String descriptionStyle = "take-offer-review-description";
         String valueStyle = "take-offer-review-value";
@@ -189,7 +188,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         GridPane.setColumnIndex(sellersPremiumValue, 1);
         gridPane.getChildren().add(sellersPremiumValue);
 
-        sellersPremiumValueDetails = new Label(Res.get("bisqEasy.takeOffer.review.sellersPremium.details"));
+        Label sellersPremiumValueDetails = new Label(Res.get("bisqEasy.takeOffer.review.sellersPremium.details"));
         sellersPremiumValueDetails.getStyleClass().add(valueDetailsStyle);
         GridPane.setRowIndex(sellersPremiumValueDetails, rowIndex);
         GridPane.setColumnIndex(sellersPremiumValueDetails, 2);
@@ -262,10 +261,10 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         takeOfferSuccess.setVisible(false);
         takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
         takeOfferSuccessButton.setDefaultButton(true);

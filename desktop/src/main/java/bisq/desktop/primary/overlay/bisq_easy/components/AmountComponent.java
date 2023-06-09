@@ -156,6 +156,7 @@ public class AmountComponent {
         }
 
         private void setQuoteSideAmount(Monetary value) {
+            log.error("setQuoteSideAmount");
             model.getQuoteSideAmount().set(value);
         }
 
@@ -214,6 +215,7 @@ public class AmountComponent {
 
         @Override
         public void onActivate() {
+            log.error("onActivate");
             model.getBaseSideAmount().addListener(baseSideAmountFromModelListener);
             model.getQuoteSideAmount().addListener(quoteSideAmountFromModelListener);
             price.quoteProperty().addListener(quoteListener);
@@ -265,7 +267,6 @@ public class AmountComponent {
                         } else {
                             model.getBaseSideAmount().set(amount);
                         }
-                        //}
                     });
 
             quoteAmountFromCompPin = EasyBind.subscribe(quoteAmountInput.amountProperty(),
@@ -283,7 +284,6 @@ public class AmountComponent {
                         } else {
                             model.getQuoteSideAmount().set(amount);
                         }
-                        // }
                     });
             priceFromCompPin = EasyBind.subscribe(price.quoteProperty(),
                     quote -> applyInitialRangeValues());

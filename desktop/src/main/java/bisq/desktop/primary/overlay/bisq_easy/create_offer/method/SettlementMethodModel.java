@@ -25,22 +25,22 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @Getter
-public class PaymentMethodModel implements Model {
+public class SettlementMethodModel implements Model {
     // Method enum name or custom name
-    private final ObservableList<String> allPaymentMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> allSettlementMethodNames = FXCollections.observableArrayList();
     private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
-    private final ObservableList<String> selectedPaymentMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> settlementMethodNames = FXCollections.observableArrayList();
     private final StringProperty customMethodName = new SimpleStringProperty();
-    private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
+    private final BooleanProperty isSettlementMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
 
     void reset() {
-        allPaymentMethodNames.clear();
+        allSettlementMethodNames.clear();
         addedCustomMethodNames.clear();
-        selectedPaymentMethodNames.clear();
+        settlementMethodNames.clear();
         customMethodName.set(null);
-        isPaymentMethodsEmpty.set(false);
+        isSettlementMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
         selectedMarket.set(null);
     }

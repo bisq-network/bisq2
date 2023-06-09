@@ -40,6 +40,10 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         return BigDecimal.valueOf(value).movePointRight(precision).longValue();
     }
 
+    public static Monetary clone(Monetary monetary) {
+        return from(monetary, monetary.getValue());
+    }
+
     public static Monetary from(Monetary monetary, long newValue) {
         if (monetary instanceof Fiat) {
             return Fiat.fromValue(newValue, monetary.getCode(), monetary.getPrecision());
