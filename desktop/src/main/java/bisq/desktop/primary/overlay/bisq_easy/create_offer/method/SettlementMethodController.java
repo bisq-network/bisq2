@@ -21,6 +21,11 @@ import bisq.account.settlement.FiatSettlement;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
+import com.google.common.base.Joiner;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +40,12 @@ public class SettlementMethodController implements Controller {
     private final SettlementMethodModel model;
     @Getter
     private final SettlementMethodView view;
+    private final SettingsService settingsService;
     private Subscription customMethodPin;
 
     public SettlementMethodController(DefaultApplicationService applicationService) {
+        settingsService = applicationService.getSettingsService();
+
         model = new SettlementMethodModel();
         view = new SettlementMethodView(model, this);
     }
@@ -46,19 +54,20 @@ public class SettlementMethodController implements Controller {
      * @return Enum names of FiatSettlement.Method or custom names
      */
     public ObservableList<String> getSettlementMethodNames() {
-        return model.getSettlementMethodNames();
+        return model.getSelectedMethodNames();
     }
 
     public void setMarket(Market market) {
         if (market == null) {
             return;
         }
-        model.getSelectedMarket().set(market);
-        model.getSettlementMethodNames().clear();
+
+        model.getMarket().set(market);
+        model.getSelectedMethodNames().clear();
         List<FiatSettlement.Method> methods = FiatSettlement.getSettlementMethodsForCode(market.getQuoteCurrencyCode());
-        model.getAllSettlementMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
-        model.getAllSettlementMethodNames().addAll(model.getAddedCustomMethodNames());
-        model.getIsSettlementMethodsEmpty().set(model.getAllSettlementMethodNames().isEmpty());
+        model.getAllMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
+        model.getAllMethodNames().addAll(model.getAddedCustomMethodNames());
+        model.getIsSettlementMethodsEmpty().set(model.getAllMethodNames().isEmpty());
     }
 
     public void reset() {
@@ -67,6 +76,16 @@ public class SettlementMethodController implements Controller {
 
     @Override
     public void onActivate() {
+        settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
+                .ifPresent(methodNames -> {
+                    List.of(methodNames.split(",")).forEach(methodName -> {
+                        if (model.getAllMethodNames().contains(methodName)) {
+                            maybeAddMethodName(methodName);
+                        } else {
+                            maybeAddCustomMethod(methodName);
+                        }
+                    });
+                });
         customMethodPin = EasyBind.subscribe(model.getCustomMethodName(),
                 customMethod -> model.getIsAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
     }
@@ -78,27 +97,42 @@ public class SettlementMethodController implements Controller {
 
     void onToggleSettlementMethod(String methodName, boolean isSelected) {
         if (isSelected) {
-            if (!model.getSettlementMethodNames().contains(methodName)) {
-                model.getSettlementMethodNames().add(methodName);
+            if (model.getSelectedMethodNames().size() >= 4) {
+                new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
+                return;
             }
+            maybeAddMethodName(methodName);
         } else {
-            model.getSettlementMethodNames().remove(methodName);
+            model.getSelectedMethodNames().remove(methodName);
         }
     }
 
+
     void onAddCustomMethod() {
+        if (model.getSelectedMethodNames().size() >= 4) {
+            new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
+            return;
+        }
         String customMethod = model.getCustomMethodName().get();
-        boolean isEmpty = customMethod == null || customMethod.isEmpty();
-        if (!isEmpty) {
+        maybeAddCustomMethod(customMethod);
+    }
+
+    private void maybeAddMethodName(String methodName) {
+        if (!model.getSelectedMethodNames().contains(methodName)) {
+            model.getSelectedMethodNames().add(methodName);
+            setCookie();
+        }
+        if (!model.getAllMethodNames().contains(methodName)) {
+            model.getAllMethodNames().add(methodName);
+        }
+    }
+
+    private void maybeAddCustomMethod(String customMethod) {
+        if (customMethod != null && !customMethod.isEmpty()) {
             if (!model.getAddedCustomMethodNames().contains(customMethod)) {
                 model.getAddedCustomMethodNames().add(customMethod);
             }
-            if (!model.getSettlementMethodNames().contains(customMethod)) {
-                model.getSettlementMethodNames().add(customMethod);
-            }
-            if (!model.getAllSettlementMethodNames().contains(customMethod)) {
-                model.getAllSettlementMethodNames().add(customMethod);
-            }
+            maybeAddMethodName(customMethod);
 
             model.getCustomMethodName().set("");
         }
@@ -106,7 +140,17 @@ public class SettlementMethodController implements Controller {
 
     void onRemoveCustomMethod(String customMethod) {
         model.getAddedCustomMethodNames().remove(customMethod);
-        model.getSettlementMethodNames().remove(customMethod);
-        model.getAllSettlementMethodNames().remove(customMethod);
+        model.getSelectedMethodNames().remove(customMethod);
+        model.getAllMethodNames().remove(customMethod);
+        setCookie();
+    }
+
+    private void setCookie() {
+        settingsService.setCookie(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey(),
+                Joiner.on(",").join(model.getSelectedMethodNames()));
+    }
+
+    private String getCookieSubKey() {
+        return model.getMarket().get().getMarketCodes();
     }
 }

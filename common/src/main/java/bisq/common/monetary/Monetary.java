@@ -84,7 +84,9 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         this(id, doubleValueToLong(faceValue, precision), code, precision, minPrecision);
     }
 
-    public bisq.common.protobuf.Monetary.Builder getMonetaryBuilder() {
+    public abstract bisq.common.protobuf.Monetary toProto();
+
+    protected bisq.common.protobuf.Monetary.Builder getMonetaryBuilder() {
         return bisq.common.protobuf.Monetary.newBuilder()
                 .setId(id)
                 .setValue(value)

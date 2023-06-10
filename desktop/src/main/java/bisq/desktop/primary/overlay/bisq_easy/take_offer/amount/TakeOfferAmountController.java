@@ -52,8 +52,8 @@ public class TakeOfferAmountController implements Controller {
         amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
                 bisqEasyOffer.getMarket().getQuoteCurrencyCode(),
                 direction,
-                bisqEasyOffer.getQuoteSideMinAmountAsDisplayString(),
-                bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString()));
+                bisqEasyOffer.getQuoteSideMinAmountAsDisplayString(true),
+                bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString(true)));
     }
 
     public void setQuoteSideFixAmount(Monetary amount) {

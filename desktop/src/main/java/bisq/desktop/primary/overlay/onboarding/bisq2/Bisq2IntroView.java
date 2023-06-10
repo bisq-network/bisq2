@@ -74,8 +74,6 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
     protected void onViewAttached() {
         nextButton.setOnMouseClicked(e -> controller.onNext());
         root.setOnKeyReleased(keyEvent -> KeyHandlerUtil.handleEnterKeyEvent(keyEvent, controller::onNext));
-
-        log.error("root.getScene().getWindow().getWidth() " + root.getScene().getWindow().getWidth());
     }
 
     @Override

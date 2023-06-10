@@ -32,16 +32,13 @@ public class PriceModel implements Model {
     private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageAsString = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();
-    private final StringProperty marketPriceDescription = new SimpleStringProperty();
-    private final StringProperty marketPriceAsString = new SimpleStringProperty();
+    private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
 
     public void reset() {
         market = null;
         percentageAsString.set(null);
         priceAsString.set(null);
-        marketPriceDescription.set(null);
-        marketPriceAsString.set(null);
         priceSpec.set(new MarketPriceSpec());
     }
 }

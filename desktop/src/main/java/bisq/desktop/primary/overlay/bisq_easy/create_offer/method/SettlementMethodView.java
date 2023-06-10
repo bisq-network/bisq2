@@ -113,7 +113,7 @@ public class SettlementMethodView extends View<VBox, SettlementMethodModel, Sett
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
 
-        model.getAllSettlementMethodNames().addListener(allSettlementMethodsListener);
+        model.getAllMethodNames().addListener(allSettlementMethodsListener);
         fillSettlementMethods();
     }
 
@@ -130,12 +130,12 @@ public class SettlementMethodView extends View<VBox, SettlementMethodModel, Sett
 
         addCustomMethodIconEnabledPin.unsubscribe();
 
-        model.getAllSettlementMethodNames().removeListener(allSettlementMethodsListener);
+        model.getAllMethodNames().removeListener(allSettlementMethodsListener);
     }
 
     private void fillSettlementMethods() {
         flowPane.getChildren().clear();
-        List<String> allSettlementMethodNames = new ArrayList<>(model.getAllSettlementMethodNames());
+        List<String> allSettlementMethodNames = new ArrayList<>(model.getAllMethodNames());
         allSettlementMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
 
         for (String methodName : allSettlementMethodNames) {
@@ -150,7 +150,7 @@ public class SettlementMethodView extends View<VBox, SettlementMethodModel, Sett
                 }
             }
             ChipButton chipButton = new ChipButton(displayString);
-            if (model.getSettlementMethodNames().contains(methodName)) {
+            if (model.getSelectedMethodNames().contains(methodName)) {
                 chipButton.setSelected(true);
             }
             chipButton.setOnAction(() -> controller.onToggleSettlementMethod(methodName, chipButton.isSelected()));

@@ -65,7 +65,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         content = new VBox(10);
         content.setAlignment(Pos.TOP_LEFT);
-        content.setPadding(new Insets(0, 50, 0, 50));
+        content.setPadding(new Insets(0, 40, 0, 40));
 
         String descriptionStyle = "take-offer-review-description";
         String valueStyle = "take-offer-review-value";

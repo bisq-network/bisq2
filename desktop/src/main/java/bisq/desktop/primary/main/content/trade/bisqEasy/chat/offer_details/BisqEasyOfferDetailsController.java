@@ -76,12 +76,11 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         }
 
         if (bisqEasyOffer.getQuoteSideMaxAmount().getValue() == bisqEasyOffer.getQuoteSideMinAmount().getValue()) {
-            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString(true));
         } else {
-            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMinAmountAsDisplayString() + " - " +
-                    bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMinAmountAsDisplayString(true) + " - " +
+                    bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString(true));
         }
-
 
         model.getPrice().set(bisqEasyOffer.findQuote(marketPriceService)
                 .map(quote -> {

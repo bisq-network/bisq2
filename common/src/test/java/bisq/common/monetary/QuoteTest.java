@@ -43,33 +43,33 @@ public class QuoteTest {
         Quote marketQuote = Quote.fromFiatPrice(50000, "USD");
         Quote offerQuote = Quote.fromFiatPrice(50000, "USD");
 
-        double offset = Quote.offsetOf(marketQuote, offerQuote);
+        double offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
         assertEquals(0, offset);
 
         offerQuote = Quote.fromFiatPrice(55000, "USD");
-        offset = Quote.offsetOf(marketQuote, offerQuote);
+        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
         log.error("" + offset);
 
         assertEquals(0.1d, offset);
 
         offerQuote = Quote.fromFiatPrice(45000, "USD");
-        offset = Quote.offsetOf(marketQuote, offerQuote);
+        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
         assertEquals(-0.1, offset);
 
         offerQuote = Quote.fromFiatPrice(100000, "USD");
-        offset = Quote.offsetOf(marketQuote, offerQuote);
+        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
         assertEquals(1, offset); // 100% of marketQuote
 
         offerQuote = Quote.fromFiatPrice(150000, "USD");
-        offset = Quote.offsetOf(marketQuote, offerQuote);
+        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
         assertEquals(2, offset); // 200% of marketQuote
 
         offerQuote = Quote.fromFiatPrice(0, "USD");
-        offset = Quote.offsetOf(marketQuote, offerQuote);
+        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
         assertEquals(-1, offset);
 
         assertThrows(IllegalArgumentException.class,
-                () -> Quote.offsetOf(Quote.fromFiatPrice(0, "USD"),
+                () -> Quote.getPercentageToMarketPrice(Quote.fromFiatPrice(0, "USD"),
                         Quote.fromFiatPrice(50000, "USD")));
     }
 

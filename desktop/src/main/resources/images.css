@@ -114,6 +114,9 @@
     -fx-image: url("images/field-remove-white.png");
 }
 
+#toggle_price {
+    -fx-image: url("images/toggle_price.png");
+}
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */

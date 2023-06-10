@@ -27,6 +27,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -120,14 +121,39 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persist();
     }
 
+    public void setCookie(CookieKey key, String subKey, boolean value) {
+        key.setSubKey(subKey);
+        setCookie(key, value);
+    }
+
     public void setCookie(CookieKey key, double value) {
         getCookie().putAsDouble(key, value);
         persist();
     }
 
+    public void setCookie(CookieKey key, String subKey, double value) {
+        key.setSubKey(subKey);
+        setCookie(key, value);
+    }
+
     public void setCookie(CookieKey key, String value) {
         getCookie().putAsString(key, value);
         persist();
+    }
+
+    public void removeCookie(CookieKey key) {
+        removeCookie(key, null);
+    }
+
+    public void removeCookie(CookieKey key, @Nullable String subKey) {
+        key.setSubKey(subKey);
+        getCookie().remove(key);
+        persist();
+    }
+
+    public void setCookie(CookieKey key, String subKey, String value) {
+        key.setSubKey(subKey);
+        setCookie(key, value);
     }
 
     public void setRequiredTotalReputationScore(long value) {

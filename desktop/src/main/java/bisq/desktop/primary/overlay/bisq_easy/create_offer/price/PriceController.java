@@ -30,6 +30,8 @@ import bisq.offer.price_spec.PriceSpec;
 import bisq.offer.utils.OfferUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,13 +48,15 @@ public class PriceController implements Controller {
     private final PriceView view;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
+    private final SettingsService settingsService;
     private Subscription priceInputPin;
 
     public PriceController(DefaultApplicationService applicationService) {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
+        settingsService = applicationService.getSettingsService();
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
         model = new PriceModel();
-        view = new PriceView(model, this, priceInput.getRoot());
+        view = new PriceView(model, this, priceInput);
     }
 
     public void setMarket(Market market) {
@@ -62,14 +66,6 @@ public class PriceController implements Controller {
         priceInput.setMarket(market);
         model.setMarket(market);
     }
-
-  /*  public ReadOnlyObjectProperty<Quote> getQuote() {
-        return priceInput.getQuote();
-    }
-
-    public ReadOnlyDoubleProperty getPercentage() {
-        return model.getPercentage();
-    }*/
 
     public ReadOnlyObjectProperty<PriceSpec> getPriceSpec() {
         return model.getPriceSpec();
@@ -81,17 +77,16 @@ public class PriceController implements Controller {
 
     @Override
     public void onActivate() {
+        settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
+                .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
+
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
 
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("onboarding.price.sellersPrice", marketCodes));
 
-        model.getMarketPriceDescription().set(Res.get("onboarding.price.marketPrice", marketCodes));
-        model.getMarketPriceAsString().set(marketPriceService.findMarketPrice(model.getMarket())
-                .map(marketPrice -> QuoteFormatter.format(marketPrice.getQuote()))
-                .orElse(Res.get("na")));
+        applyPriceSpec();
     }
-
 
     @Override
     public void onDeactivate() {
@@ -105,15 +100,27 @@ public class PriceController implements Controller {
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageAsString().set("");
                 model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
-
                 Quote quote = Quote.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
                 priceInput.setQuote(quote);
-                model.getPriceSpec().set(new FloatPriceSpec(percentage));
+                applyPriceSpec();
             } catch (NumberFormatException t) {
                 new Popup().warning(Res.get("onboarding.price.warn.invalidPrice")).show();
                 onQuoteInput(priceInput.getQuote().get());
             }
         }
+    }
+
+    void onToggleUseFixPrice() {
+        boolean useFixPrice = !model.getUseFixPrice().get();
+        model.getUseFixPrice().set(useFixPrice);
+        settingsService.setCookie(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey(), useFixPrice);
+        applyPriceSpec();
+    }
+
+    private void applyPriceSpec() {
+        model.getPriceSpec().set(model.getUseFixPrice().get() ?
+                new FixPriceSpec(priceInput.getQuote().get()) :
+                new FloatPriceSpec(model.getPercentage().get()));
     }
 
     private void onQuoteInput(Quote quote) {
@@ -125,12 +132,13 @@ public class PriceController implements Controller {
         if (isQuoteValid(quote)) {
             model.getPriceAsString().set(QuoteFormatter.format(quote, true));
             applyPercentageFromQuote(quote);
-            model.getPriceSpec().set(new FixPriceSpec(quote));
+            applyPriceSpec();
         } else {
             new Popup().warning(Res.get("onboarding.price.warn.invalidPrice")).show();
             Quote marketPrice = findMarketPriceQuote();
             priceInput.setQuote(marketPrice);
             applyPercentageFromQuote(marketPrice);
+            applyPriceSpec();
         }
     }
 
@@ -156,5 +164,9 @@ public class PriceController implements Controller {
 
     private Quote findMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
+    }
+
+    private String getCookieSubKey() {
+        return model.getMarket().getMarketCodes();
     }
 }

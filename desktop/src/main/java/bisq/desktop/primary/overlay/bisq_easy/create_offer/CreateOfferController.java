@@ -69,7 +69,7 @@ public class CreateOfferController extends NavigationController implements InitW
     private final ListChangeListener<String> settlementMethodsListener;
     private Subscription directionPin, marketPin, baseSideMinAmountPin,
             baseSideMaxAmountPin, quoteSideMinAmountPin, quoteSideMaxAmountPin,
-            isMinAmountEnabledPin, priceSpecPin, sellersPricePercentagePin;
+            isMinAmountEnabledPin, priceSpecPin;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -115,7 +115,6 @@ public class CreateOfferController extends NavigationController implements InitW
             model.getPriceProgressItemVisible().set(direction == Direction.SELL);
             if (direction == Direction.SELL) {
                 model.getChildTargets().add(2, NavigationTarget.CREATE_OFFER_PRICE);
-                log.error(" model.getChildTargets() {}", model.getChildTargets());
             } else {
                 model.getChildTargets().remove(NavigationTarget.CREATE_OFFER_PRICE);
             }
@@ -152,7 +151,6 @@ public class CreateOfferController extends NavigationController implements InitW
         quoteSideMaxAmountPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
-        sellersPricePercentagePin.unsubscribe();
         settlementMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);
     }
 

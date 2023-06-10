@@ -77,6 +77,18 @@ public class PriceInput {
         controller.model.reset();
     }
 
+    public void requestFocus() {
+        controller.view.textInput.requestFocus();
+    }
+
+    public void deselect() {
+        controller.view.textInput.deselect();
+    }
+
+    public void setEditable(boolean value) {
+        controller.view.textInput.setEditable(value);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter

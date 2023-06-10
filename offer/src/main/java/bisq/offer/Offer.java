@@ -23,7 +23,6 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.MathUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.amount_spec.AmountSpec;
@@ -41,6 +40,7 @@ import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.formatters.QuoteFormatter;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -274,26 +274,29 @@ public abstract class Offer implements Proto {
         return Monetary.from(amount, market.getQuoteCurrencyCode());
     }
 
-    public String getQuoteSideMinAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getQuoteSideMinAmount());
+    public String getQuoteSideMinAmountAsDisplayString(boolean showCode) {
+        return showCode ?
+                AmountFormatter.formatAmountWithCode(getQuoteSideMinAmount()) :
+                AmountFormatter.formatAmount(getQuoteSideMinAmount());
     }
 
-    public String getQuoteSideMaxAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getQuoteSideMaxAmount());
+    public String getQuoteSideMaxAmountAsDisplayString(boolean showCode) {
+        return showCode ?
+                AmountFormatter.formatAmountWithCode(getQuoteSideMaxAmount()) :
+                AmountFormatter.formatAmount(getQuoteSideMaxAmount());
     }
 
-    public String getQuoteSideMinMaxAmountAsDisplayString() {
-        return getQuoteSideMinAmountAsDisplayString() + " - " + getQuoteSideMaxAmountAsDisplayString();
+    public String getQuoteSideMinMaxAmountAsDisplayString(boolean showCode) {
+        return getQuoteSideMinAmountAsDisplayString(showCode) + " - " + getQuoteSideMaxAmountAsDisplayString(showCode);
     }
 
-    public String getQuoteSideAmountAsDisplayString() {
+    public String getQuoteSideAmountAsDisplayString(boolean showCode) {
         if (getQuoteSideMinAmount().getValue() == getQuoteSideMaxAmount().getValue()) {
-            return getQuoteSideMaxAmountAsDisplayString();
+            return getQuoteSideMaxAmountAsDisplayString(showCode);
         } else {
-            return getQuoteSideMinMaxAmountAsDisplayString();
+            return getQuoteSideMinMaxAmountAsDisplayString(showCode);
         }
     }
-
 
     // Quote
     public Optional<Quote> findQuote(MarketPriceService marketPriceService) {
@@ -308,14 +311,21 @@ public abstract class Offer implements Proto {
         }
     }
 
+    public String getQuoteAsDisplayString(MarketPriceService marketPriceService, boolean showCode) {
+        return findQuote(marketPriceService)
+                .map(quote -> showCode ?
+                        QuoteFormatter.formatWithQuoteCode(quote) :
+                        QuoteFormatter.format(quote))
+                .orElse(Res.get("na"));
+    }
+
     public Quote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
         return fixPriceSpec.getQuote();
     }
 
     public Optional<Quote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec) {
         return findMarketPriceQuote(marketPriceService)
-                .map(marketQuote ->
-                        Quote.fromPrice(MathUtils.roundDoubleToLong((1 + floatPriceSpec.getPercentage()) * marketQuote.getValue()), market));
+                .map(marketQuote -> Quote.fromMarketPriceMarkup(marketQuote, floatPriceSpec.getPercentage()));
     }
 
     public Optional<Quote> findMarketPriceQuote(MarketPriceService marketPriceService) {
@@ -328,7 +338,7 @@ public abstract class Offer implements Proto {
         if (priceSpec instanceof FixPriceSpec) {
             Quote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
             percentage = findMarketPriceQuote(marketPriceService).map(marketPrice ->
-                    1 - (double) fixPrice.getValue() / (double) marketPrice.getValue());
+                    Quote.getPercentageToMarketPrice(marketPrice, fixPrice));
         } else if (priceSpec instanceof MarketPriceSpec) {
             percentage = Optional.of(0d);
         } else if (priceSpec instanceof FloatPriceSpec) {
@@ -339,21 +349,9 @@ public abstract class Offer implements Proto {
         return percentage;
     }
 
-    public Optional<String> findPricePremiumAsPercentage() {
-        return findFloatPriceAsPercentage()
-                .map(PercentageFormatter::formatToPercentWithSymbol);
+    public String getPercentageAsDisplayString(MarketPriceService marketPriceService) {
+        return findPercentFromMarketPrice(marketPriceService)
+                .map(PercentageFormatter::formatToPercentWithSymbol)
+                .orElse(Res.get("na"));
     }
-
-    public Optional<Double> findFloatPriceAsPercentage() {
-        return PriceSpec.findFloatPriceSpec(priceSpec).map(FloatPriceSpec::getPercentage);
-    }
-    
-   /* public Optional<Monetary> getQuoteSideMaxAmountAsMonetary(MarketPriceService marketPriceService) {
-        return getQuote(marketPriceService)
-                .map(quote -> {
-                    long quoteAmountValue = Quote.toQuoteMonetary(getBaseSideMaxAmountAsMonetary(), quote).getValue();
-                    return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
-                });
-    }*/
-
 }

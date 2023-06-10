@@ -28,7 +28,6 @@ import bisq.offer.Direction;
 import bisq.offer.price_spec.FixPriceSpec;
 import bisq.offer.price_spec.FloatPriceSpec;
 import bisq.offer.price_spec.PriceSpec;
-import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -38,8 +37,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.Optional;
 
 @Slf4j
 public class AmountController implements Controller {
@@ -84,35 +81,17 @@ public class AmountController implements Controller {
     }
 
     public void setPriceSpec(PriceSpec priceSpec) {
+        Quote quote;
         if (priceSpec instanceof FixPriceSpec) {
-            Quote quote = ((FixPriceSpec) priceSpec).getQuote();
-            minAmountComponent.setQuote(quote);
-            maxAmountComponent.setQuote(quote);
+            quote = ((FixPriceSpec) priceSpec).getQuote();
         } else if (priceSpec instanceof FloatPriceSpec) {
             double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-           /* findMarketPriceQuote().map(marketPrice->{
-                
-            });*/
+            quote = Quote.fromMarketPriceMarkup(getMarketPriceQuote(), percentage);
         } else {
-            
-     /*   }
-        Quote quote = PriceSpec.findFixPriceSpec(priceSpec)
-                .map(FixPriceSpec::getQuote).orElse(
-                        PriceSpec.findFloatPriceSpec(priceSpec)
-                                .map(FloatPriceSpec::getPercentage)
-                                .map(p -> Quote.fromPrice(0L, null))).orElse(
-                        Quote.fromPrice(0, null)
-                );*/
+            quote = getMarketPriceQuote();
         }
-    }
-
-    private Optional<Quote> findMarketPriceQuote() {
-        return marketPriceService.findMarketPrice(model.getMarket()).map(MarketPrice::getQuote).stream().findAny();
-    }
-
-    public void setSellerPriceQuote(Quote sellersPriceQuote) {
-        minAmountComponent.setQuote(sellersPriceQuote);
-        maxAmountComponent.setQuote(sellersPriceQuote);
+        minAmountComponent.setQuote(quote);
+        maxAmountComponent.setQuote(quote);
     }
 
     public void reset() {
@@ -207,4 +186,9 @@ public class AmountController implements Controller {
         model.getIsMinAmountEnabled().set(value);
         settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
     }
+
+    private Quote getMarketPriceQuote() {
+        return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
+    }
+
 }

@@ -25,6 +25,7 @@ import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountC
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakeOfferReviewController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement.TakeOfferSettlementController;
 import bisq.i18n.Res;
+import bisq.offer.SettlementSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
@@ -37,6 +38,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -48,16 +50,16 @@ public class TakeOfferController extends NavigationController implements InitWit
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
         private final Optional<Monetary> quoteSideFixAmount;
-        private final List<String> settlementMethodName;
+        private final List<String> settlementMethodNames;
 
         public InitData(BisqEasyOffer bisqEasyOffer) {
             this(bisqEasyOffer, Optional.empty(), new ArrayList<>());
         }
 
-        public InitData(BisqEasyOffer bisqEasyOffer, Optional<Monetary> quoteSideFixAmount, List<String> settlementMethodName) {
+        public InitData(BisqEasyOffer bisqEasyOffer, Optional<Monetary> quoteSideFixAmount, List<String> settlementMethodNames) {
             this.bisqEasyOffer = bisqEasyOffer;
             this.quoteSideFixAmount = quoteSideFixAmount;
-            this.settlementMethodName = settlementMethodName;
+            this.settlementMethodNames = settlementMethodNames;
         }
     }
 
@@ -93,8 +95,14 @@ public class TakeOfferController extends NavigationController implements InitWit
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
         initData.getQuoteSideFixAmount().ifPresent(takeOfferAmountController::setQuoteSideFixAmount);
-        if (initData.getSettlementMethodName().size() == 1) {
-            takeOfferSettlementController.setSettlementMethodName(initData.getSettlementMethodName().get(0));
+
+        List<String> matchingNames = bisqEasyOffer.getQuoteSideSettlementSpecs().stream()
+                .map(SettlementSpec::getSettlementMethodName)
+                .filter(name -> initData.getSettlementMethodNames().contains(name))
+                .collect(Collectors.toList());
+        // We only preselect if there is exactly one match
+        if (matchingNames.size() == 1) {
+            takeOfferSettlementController.setSettlementMethodName(matchingNames.get(0));
         }
         takeOfferAmountController.setBisqEasyOffer(bisqEasyOffer);
         takeOfferSettlementController.setBisqEasyOffer(bisqEasyOffer);
@@ -171,7 +179,6 @@ public class TakeOfferController extends NavigationController implements InitWit
             }
             case TAKE_OFFER_SETTLEMENT: {
                 return Optional.of(takeOfferSettlementController);
-                //  }
             }
             case TAKE_OFFER_REVIEW: {
                 return Optional.of(takeOfferReviewController);

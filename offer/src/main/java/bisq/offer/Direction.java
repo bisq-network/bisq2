@@ -46,7 +46,7 @@ public enum Direction implements ProtoEnum {
         return isBuy() ? SELL : BUY;
     }
 
-    public String displayString() {
+    public String getDisplayString() {
         return Res.get(name().toLowerCase());
     }
 }

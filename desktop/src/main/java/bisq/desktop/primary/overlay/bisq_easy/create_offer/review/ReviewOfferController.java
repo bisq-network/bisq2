@@ -36,6 +36,7 @@ import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price_spec.PriceSpec;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -51,7 +52,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -70,6 +70,7 @@ public class ReviewOfferController implements Controller {
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final MediationService mediationService;
     private final ChatService chatService;
+    private final MarketPriceService marketPriceService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> mainButtonsVisibleHandler,
@@ -84,6 +85,7 @@ public class ReviewOfferController implements Controller {
         userProfileService = applicationService.getUserService().getUserProfileService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
         this.resetHandler = resetHandler;
 
         model = new ReviewOfferModel();
@@ -190,7 +192,10 @@ public class ReviewOfferController implements Controller {
         model.setMyOfferMessage(myOfferMessage);
 
         model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .map(chatMessage -> new ReviewOfferView.ListItem(chatMessage, userProfileService, reputationService))
+                .map(chatMessage -> new ReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().orElseThrow(),
+                        userProfileService,
+                        reputationService,
+                        marketPriceService))
                 .filter(getTakeOfferPredicate())
                 .sorted(Comparator.comparing(ReviewOfferView.ListItem::getReputationScore))
                 .limit(3)
@@ -204,16 +209,14 @@ public class ReviewOfferController implements Controller {
     }
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
-        checkArgument(listItem.getChatMessage().getBisqEasyOffer().isPresent(), "message must contain offer");
-        BisqEasyOffer bisqEasyOffer = listItem.getChatMessage().getBisqEasyOffer().orElseThrow();
         boolean fixAmountUsed = !model.isMinAmountEnabled() ||
                 (model.getQuoteSideMinAmount().getValue() == model.getQuoteSideMaxAmount().getValue());
         Optional<Monetary> quoteSideFixAmount = fixAmountUsed ? Optional.of(model.getQuoteSideMaxAmount()) : Optional.empty();
         mainButtonsVisibleHandler.accept(false);
 
         OverlayController.hide(() -> {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, quoteSideFixAmount, model.getSettlementMethodNames()));
-                    resetHandler.run();
+            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(listItem.getBisqEasyOffer(), quoteSideFixAmount, model.getSettlementMethodNames()));
+            resetHandler.run();
                 }
         );
     }
@@ -255,9 +258,6 @@ public class ReviewOfferController implements Controller {
                     .anyMatch(userProfileId -> userProfileId.equals(authorUserProfile.getId()))) {
                 return false;
             }
-            if (item.getChatMessage().getBisqEasyOffer().isEmpty()) {
-                return false;
-            }
             if (model.getMyOfferMessage() == null) {
                 return false;
             }
@@ -265,27 +265,27 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            BisqEasyOffer myChatOffer = model.getMyOfferMessage().getBisqEasyOffer().get();
-            BisqEasyOffer peersOffer = item.getChatMessage().getBisqEasyOffer().get();
+            BisqEasyOffer bisqEasyOffer = model.getMyOfferMessage().getBisqEasyOffer().get();
+            BisqEasyOffer peersOffer = item.getBisqEasyOffer();
 
-            if (peersOffer.getDirection().equals(myChatOffer.getDirection())) {
+            if (peersOffer.getDirection().equals(bisqEasyOffer.getDirection())) {
                 return false;
             }
 
-            if (!peersOffer.getMarket().equals(myChatOffer.getMarket())) {
+            if (!peersOffer.getMarket().equals(bisqEasyOffer.getMarket())) {
                 return false;
             }
 
-            if (myChatOffer.getQuoteSideMinAmount().getValue() > peersOffer.getQuoteSideMaxAmount().getValue()) {
+            if (bisqEasyOffer.getQuoteSideMinAmount().getValue() > peersOffer.getQuoteSideMaxAmount().getValue()) {
                 return false;
             }
 
-            if (myChatOffer.getQuoteSideMaxAmount().getValue() < peersOffer.getQuoteSideMinAmount().getValue()) {
+            if (bisqEasyOffer.getQuoteSideMaxAmount().getValue() < peersOffer.getQuoteSideMinAmount().getValue()) {
                 return false;
             }
 
             List<String> settlementMethods = peersOffer.getQuoteSideSettlementMethodNames();
-            if (myChatOffer.getQuoteSideSettlementMethodNames().stream().noneMatch(settlementMethods::contains)) {
+            if (bisqEasyOffer.getQuoteSideSettlementMethodNames().stream().noneMatch(settlementMethods::contains)) {
                 return false;
             }
 

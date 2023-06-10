@@ -27,21 +27,21 @@ import lombok.Getter;
 @Getter
 public class SettlementMethodModel implements Model {
     // Method enum name or custom name
-    private final ObservableList<String> allSettlementMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> allMethodNames = FXCollections.observableArrayList();
     private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
-    private final ObservableList<String> settlementMethodNames = FXCollections.observableArrayList();
+    private final ObservableList<String> selectedMethodNames = FXCollections.observableArrayList();
     private final StringProperty customMethodName = new SimpleStringProperty();
     private final BooleanProperty isSettlementMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
-        allSettlementMethodNames.clear();
+        allMethodNames.clear();
         addedCustomMethodNames.clear();
-        settlementMethodNames.clear();
+        selectedMethodNames.clear();
         customMethodName.set(null);
         isSettlementMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
-        selectedMarket.set(null);
+        market.set(null);
     }
 }

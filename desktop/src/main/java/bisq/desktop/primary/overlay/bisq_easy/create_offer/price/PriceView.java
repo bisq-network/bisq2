@@ -17,15 +17,19 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.price;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.Switch;
+import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -34,16 +38,19 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PriceView extends View<VBox, PriceModel, PriceController> {
-    private final MaterialTextField percentage, marketPrice;
-    private final Switch priceTypeSwitch;
-    private Subscription percentageFocussedPin;
+    private final MaterialTextField percentage;
+    private final ToggleButton useFixPriceToggle;
+    private final VBox fieldsBox;
+    private final PriceInput priceInput;
+    private Subscription percentageFocussedPin, useFixPricePin;
 
-    public PriceView(PriceModel model, PriceController controller, Pane priceInputRoot) {
+    public PriceView(PriceModel model, PriceController controller, PriceInput priceInput) {
         super(new VBox(10), model, controller);
+        this.priceInput = priceInput;
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        root.setPadding(new Insets(40, 250, 0, 250));
+        // root.setPadding(new Insets(40, 200, 0, 160));
 
         Label headLine = new Label(Res.get("onboarding.price.headline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
@@ -53,26 +60,51 @@ public class PriceView extends View<VBox, PriceModel, PriceController> {
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(450);
+        subtitleLabel.setMaxWidth(400);
 
         percentage = new MaterialTextField(Res.get("onboarding.price.percentage"));
-        marketPrice = new MaterialTextField();
-        marketPrice.setEditable(false);
 
-        priceTypeSwitch = new Switch();
-        // VBox.setMargin(percentage, new Insets(5, 0, 0, 0));
-        root.getChildren().addAll(headLine, subtitleLabel, percentage, priceInputRoot, marketPrice, priceTypeSwitch);
+        useFixPriceToggle = new ToggleButton();
+        useFixPriceToggle.setGraphic(ImageUtil.getImageViewById("toggle_price"));
+        useFixPriceToggle.getStyleClass().add("icon-button");
+        useFixPriceToggle.setTooltip(new BisqTooltip(Res.get("onboarding.price.toggle.tooltip")));
+
+        fieldsBox = new VBox(20);
+        fieldsBox.setAlignment(Pos.TOP_CENTER);
+        fieldsBox.setMinWidth(400);
+
+        HBox.setMargin(fieldsBox, new Insets(0, 0, 0, 44));
+        HBox hBox = new HBox(10, fieldsBox, useFixPriceToggle);
+        hBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(headLine, new Insets(60, 0, 0, 0));
+        root.getChildren().addAll(headLine, subtitleLabel, hBox);
     }
 
     @Override
     protected void onViewAttached() {
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
-        marketPrice.descriptionProperty().bind(model.getMarketPriceDescription());
-        marketPrice.textProperty().bind(model.getMarketPriceAsString());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.inputTextFieldFocusedProperty(), controller::onPercentageFocussed);
+        useFixPriceToggle.setSelected(model.getUseFixPrice().get());
+        useFixPriceToggle.setOnAction(e -> controller.onToggleUseFixPrice());
+        useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice -> {
+            fieldsBox.getChildren().clear();
+            Node firstChild = useFixPrice ? priceInput.getRoot() : percentage;
+            Node lastChild = useFixPrice ? percentage : priceInput.getRoot();
+            fieldsBox.getChildren().addAll(firstChild, lastChild);
+            if (useFixPrice) {
+                percentage.setEditable(false);
+                percentage.deselect();
+                priceInput.setEditable(true);
+                priceInput.requestFocus();
+            } else {
+                priceInput.setEditable(false);
+                priceInput.deselect();
+                percentage.setEditable(true);
+                percentage.requestFocus();
+            }
+        });
 
-        //  priceTypeSwitch.setOnAction(e->controller.onChange);
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
         Parent node = root;
@@ -85,10 +117,11 @@ public class PriceView extends View<VBox, PriceModel, PriceController> {
     @Override
     protected void onViewDetached() {
         percentage.textProperty().unbindBidirectional(model.getPercentageAsString());
-        marketPrice.descriptionProperty().unbind();
-        marketPrice.textProperty().unbind();
 
         percentageFocussedPin.unsubscribe();
+        useFixPricePin.unsubscribe();
+
+        useFixPriceToggle.setOnAction(null);
 
         Parent node = root;
         while (node.getParent() != null) {

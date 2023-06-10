@@ -121,10 +121,21 @@ public class TakeOfferReviewController implements Controller {
         String marketPrice = marketPriceQuote
                 .map(QuoteFormatter::formatWithQuoteCode)
                 .orElse(Res.get("na"));
-        String aboveOrBelow = bisqEasyOffer.findFloatPriceAsPercentage().orElse(0d) > 0 ? Res.get("above") : Res.get("below");
-        String percentage = bisqEasyOffer.findPricePremiumAsPercentage().orElse(Res.get("na"));
-        model.getSellersPriceValueDetails().set(Res.get("bisqEasy.takeOffer.review.sellersPrice.details",
-                percentage, aboveOrBelow, marketPrice));
+        Optional<Double> percentFromMarketPrice = bisqEasyOffer.findPercentFromMarketPrice(marketPriceService);
+        double percent = percentFromMarketPrice.orElse(0d);
+        String details;
+        if (percent == 0) {
+            details = Res.get("bisqEasy.takeOffer.review.sellersPrice.marketPrice", marketPrice);
+        } else {
+            String aboveOrBelow = percent > 0 ?
+                    Res.get("above") :
+                    Res.get("below");
+            String percentAsString = percentFromMarketPrice.map(PercentageFormatter::formatToPercentWithSymbol)
+                    .orElse(Res.get("na"));
+            details = Res.get("bisqEasy.takeOffer.review.sellersPrice.aboveOrBelowMarketPrice",
+                    percentAsString, aboveOrBelow, marketPrice);
+        }
+        model.getSellersPriceValueDetails().set(details);
     }
 
     public void setSettlementMethodName(String methodName) {

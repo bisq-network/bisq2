@@ -39,6 +39,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private Scene rootScene;
     private Label priceProgressItemLabel;
     private Separator priceProgressItemSeparator;
+    private Subscription priceProgressItemVisiblePin;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
@@ -130,7 +132,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
             KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onClose);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
-        EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
+        priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
             if (isVisible) {
                 progressItemsBox.getChildren().add(5, priceProgressItemSeparator);
                 progressItemsBox.getChildren().add(5, priceProgressItemLabel);
@@ -161,11 +163,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         closeButton.visibleProperty().unbind();
         nextButton.disableProperty().unbind();
 
+        model.getCurrentIndex().removeListener(currentIndexListener);
+
+        priceProgressItemVisiblePin.unsubscribe();
+
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
-        model.getCurrentIndex().removeListener(currentIndexListener);
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {

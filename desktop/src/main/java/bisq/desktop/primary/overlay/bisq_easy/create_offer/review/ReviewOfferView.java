@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.common.monetary.Quote;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -30,6 +30,7 @@ import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -61,6 +62,8 @@ import java.util.Optional;
 class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
     private final static int BUTTON_WIDTH = 140;
     private final static int FEEDBACK_WIDTH = 700;
+    private final static int TABLE_WIDTH = 800;
+    private final static int OFFER_BOX_WIDTH = 700;
 
     private final Label headLineLabel, createOfferLabel;
     private final BisqTableView<ListItem> tableView;
@@ -75,7 +78,6 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
         super(new StackPane(), model, controller);
 
-
         content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
@@ -89,8 +91,9 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("offer-review");
-        tableView.setMinWidth(700);
-        tableView.setMaxWidth(700);
+
+        tableView.setMinWidth(TABLE_WIDTH);
+        tableView.setMaxWidth(tableView.getMinWidth());
 
         createOfferLabel = new Label();
         createOfferLabel.getStyleClass().add("bisq-text-headline-2");
@@ -178,8 +181,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
             } else {
                 createOfferButton.setDefaultButton(true);
                 createOfferButton.getStyleClass().remove("outlined-button");
-                createOfferHBox.setMinWidth(550);
-                createOfferHBox.setMaxWidth(550);
+                createOfferHBox.setMinWidth(OFFER_BOX_WIDTH);
+                createOfferHBox.setMaxWidth(createOfferHBox.getMinWidth());
                 headLineLabel.setText(Res.get("createOffer"));
 
                 VBox.setMargin(headLineLabel, new Insets(-100, 0, 0, 0));
@@ -249,14 +252,22 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("amount"))
-                .minWidth(200)
+                .title(Res.get("onboarding.completed.table.amount", model.getMarket().getQuoteCurrencyCode()))
+                .minWidth(160)
                 .valueSupplier(ListItem::getAmountDisplayString)
-                .comparator(Comparator.comparing(ListItem::getMaxAmountAsLong))
+                .comparator(Comparator.comparing(ListItem::getAmountAsLong))
                 .build());
+        if (model.getDirection().isBuy()) {
+            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                    .title(Res.get("onboarding.completed.table.price", model.getMarket().getMarketCodes()))
+                    .minWidth(160)
+                    .valueSupplier(ListItem::getPriceDisplayString)
+                    .comparator(Comparator.comparing(ListItem::getPriceAsLong))
+                    .build());
+        }
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation"))
-                .minWidth(50)
+                .minWidth(120)
                 .setCellFactory(new Callback<>() {
                     @Override
                     public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
@@ -281,7 +292,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         BisqTableColumn<ListItem> takeOffer = new BisqTableColumn.Builder<ListItem>()
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .value(Res.get("takeOffer"))
-                .minWidth(120)
+                .minWidth(150)
                 .actionHandler(controller::onTakeOffer)
                 .updateItemWithButtonHandler((item, button) -> {
                     Button takeOfferButton = (Button) button;
@@ -334,21 +345,27 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     @EqualsAndHashCode
     @Getter
     static class ListItem implements TableItem {
-        private final BisqEasyPublicChatMessage chatMessage;
         private final Optional<UserProfile> authorUserProfileId;
         private final String userName;
         private final String amountDisplayString;
-        private final long maxAmountAsLong;
+        private final String priceDisplayString;
+        private final long priceAsLong;
+        private final long amountAsLong;
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
+        private final BisqEasyOffer bisqEasyOffer;
 
-        public ListItem(BisqEasyPublicChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
-            this.chatMessage = chatMessage;
-            authorUserProfileId = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
+        public ListItem(BisqEasyOffer bisqEasyOffer,
+                        UserProfileService userProfileService,
+                        ReputationService reputationService,
+                        MarketPriceService marketPriceService) {
+            this.bisqEasyOffer = bisqEasyOffer;
+            authorUserProfileId = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
             userName = authorUserProfileId.map(UserProfile::getUserName).orElse("");
-            BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
-            maxAmountAsLong = bisqEasyOffer.getQuoteSideMaxAmount().getValue();
-            amountDisplayString = bisqEasyOffer.getQuoteSideAmountAsDisplayString();
+            priceAsLong = bisqEasyOffer.findQuote(marketPriceService).map(Quote::getValue).orElse(0L);
+            priceDisplayString = bisqEasyOffer.getQuoteAsDisplayString(marketPriceService, false);
+            amountAsLong = bisqEasyOffer.getQuoteSideMaxAmount().getValue();
+            amountDisplayString = bisqEasyOffer.getQuoteSideAmountAsDisplayString(false);
             reputationScore = authorUserProfileId.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }
