@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.offer_options;
+package bisq.offer.options;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+//todo should be part of settlement spec?
 @Getter
 @ToString
 @EqualsAndHashCode

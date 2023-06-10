@@ -15,27 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.utils;
+package bisq.offer.price;
 
 import bisq.common.monetary.Quote;
-import bisq.common.util.MathUtils;
-import bisq.offer.price_spec.FloatPriceSpec;
-import bisq.oracle.marketprice.MarketPrice;
+import bisq.i18n.Res;
+import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
-import lombok.extern.slf4j.Slf4j;
+import bisq.presentation.formatters.QuoteFormatter;
 
-import java.util.Optional;
+import java.util.function.Function;
 
-@Slf4j
-public class OfferUtil {
-    public static Optional<FloatPriceSpec> findFloatPriceSpec(MarketPriceService marketPriceService, Quote quote) {
-        return marketPriceService.findMarketPrice(quote.getMarket())
-                .map(MarketPrice::getQuote).stream()
-                .map(marketPrice -> {
-                    double exact = (double) quote.getValue() / (double) marketPrice.getValue() - 1;
-                    return MathUtils.roundDouble(exact, 4);
-                })
-                .map(FloatPriceSpec::new)
-                .findAny();
+public class OfferQuoteFormatter {
+    public static String formatQuote(MarketPriceService marketPriceService, Offer offer) {
+        return formatQuote(marketPriceService, offer, true);
+    }
+
+    public static String formatQuote(MarketPriceService marketPriceService, Offer offer, boolean showCode) {
+        return PriceUtil.findQuote(marketPriceService, offer).map(getFormatFunction(showCode)).orElse(Res.get("na"));
+    }
+
+    private static Function<Quote, String> getFormatFunction(boolean showCode) {
+        return showCode ? QuoteFormatter::formatWithQuoteCode : QuoteFormatter::format;
     }
 }

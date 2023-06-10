@@ -3,18 +3,16 @@ package bisq.offer.bisq_easy;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
-import bisq.i18n.Res;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
-import bisq.offer.SettlementSpec;
-import bisq.offer.amount_spec.AmountSpec;
-import bisq.offer.offer_options.OfferOption;
-import bisq.offer.price_spec.FixPriceSpec;
-import bisq.offer.price_spec.FloatPriceSpec;
-import bisq.offer.price_spec.PriceSpec;
-import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.offer.amount.AmountSpec;
+import bisq.offer.options.OfferOption;
+import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.price.PriceSpec;
+import bisq.offer.settlement.SettlementSpec;
+import bisq.offer.settlement.SettlementUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,41 +26,29 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class BisqEasyOffer extends Offer {
-    private static List<ProtocolType> createSwapProtocolTypes() {
-        return List.of(ProtocolType.BISQ_EASY);
-    }
+    private final String chatMessageText;
 
-    private final transient String chatMessageText;
-
-    public BisqEasyOffer(String id,
-                         long date,
-                         NetworkId makerNetworkId,
+    public BisqEasyOffer(NetworkId makerNetworkId,
                          Direction direction,
                          Market market,
-                         boolean isMinAmountEnabled,
-                         long baseSideMinAmount,
-                         long baseSideMaxAmount,
-                         long quoteSideMinAmount,
-                         long quoteSideMaxAmount,
+                         AmountSpec amountSpec,
+                         PriceSpec priceSpec,
                          List<String> settlementMethodNames,
                          String makersTradeTerms,
                          long requiredTotalReputationScore,
-                         PriceSpec priceSpec) {
-        this(id,
-                date,
+                         String chatMessageText) {
+        this(StringUtils.createUid(),
+                System.currentTimeMillis(),
                 makerNetworkId,
                 direction,
                 market,
-                AmountSpec.fromMinMaxAmounts(isMinAmountEnabled,
-                        baseSideMinAmount,
-                        baseSideMaxAmount,
-                        quoteSideMinAmount,
-                        quoteSideMaxAmount),
+                amountSpec,
                 priceSpec,
-                createSwapProtocolTypes(),
-                SettlementSpec.createBaseSideSpecsForBitcoinMainChain(),
-                SettlementSpec.createQuoteSideSpecsFromMethodNames(settlementMethodNames),
-                OfferOption.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore)
+                List.of(ProtocolType.BISQ_EASY),
+                SettlementUtil.createBaseSideSpecsForBitcoinMainChain(),
+                SettlementUtil.createQuoteSideSpecsFromMethodNames(settlementMethodNames),
+                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
+                chatMessageText
         );
     }
 
@@ -76,7 +62,8 @@ public final class BisqEasyOffer extends Offer {
                           List<ProtocolType> protocolTypes,
                           List<SettlementSpec> baseSideSettlementSpecs,
                           List<SettlementSpec> quoteSideSettlementSpecs,
-                          List<OfferOption> offerOptions) {
+                          List<OfferOption> offerOptions,
+                          String chatMessageText) {
         super(id,
                 date,
                 makerNetworkId,
@@ -88,34 +75,14 @@ public final class BisqEasyOffer extends Offer {
                 baseSideSettlementSpecs,
                 quoteSideSettlementSpecs,
                 offerOptions);
-
-        String priceInfo;
-        if (direction.isSell()) {
-            if (priceSpec instanceof FixPriceSpec) {
-                FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
-                String price = QuoteFormatter.formatWithQuoteCode(fixPriceSpec.getQuote());
-                priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.fixPrice", price);
-            } else if (priceSpec instanceof FloatPriceSpec) {
-                FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
-                String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
-                priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.floatPrice", percent);
-            } else {
-                priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.marketPrice");
-            }
-        } else {
-            priceInfo = "";
-        }
-        chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
-                getMakersDirectionAsDisplayString(),
-                getQuoteSideAmountAsDisplayString(true),
-                getQuoteSideSettlementMethodsAsDisplayString(),
-                priceInfo);
+        this.chatMessageText = chatMessageText;
     }
 
     @Override
     public bisq.offer.protobuf.Offer toProto() {
         return getSwapOfferBuilder().setBisqEasyOffer(
-                        bisq.offer.protobuf.BisqEasyOffer.newBuilder())
+                        bisq.offer.protobuf.BisqEasyOffer.newBuilder()
+                                .setChatMessageText(chatMessageText))
                 .build();
     }
 
@@ -142,6 +109,7 @@ public final class BisqEasyOffer extends Offer {
                 protocolTypes,
                 baseSideSettlementSpecs,
                 quoteSideSettlementSpecs,
-                offerOptions);
+                offerOptions,
+                proto.getBisqEasyOffer().getChatMessageText());
     }
 }

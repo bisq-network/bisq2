@@ -15,28 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount_spec;
+package bisq.offer.amount;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public interface AmountSpec extends Proto {
-    static AmountSpec fromMinMaxAmounts(boolean isMinAmountEnabled,
-                                        long baseSideMinAmount,
-                                        long baseSideMaxAmount,
-                                        long quoteSideMinAmount,
-                                        long quoteSideMaxAmount) {
-        if (isMinAmountEnabled && baseSideMinAmount != baseSideMaxAmount) {
-            checkArgument(quoteSideMinAmount != quoteSideMaxAmount,
-                    "There is a mismatch of quoteSide min/max amounts and baseSide min/max amounts.");
-            return new MinMaxAmountSpec(baseSideMinAmount, baseSideMaxAmount, quoteSideMinAmount, quoteSideMaxAmount);
-        } else {
-            return new FixAmountSpec(baseSideMaxAmount, quoteSideMaxAmount);
-        }
-    }
-
 
     bisq.offer.protobuf.AmountSpec toProto();
 
@@ -46,11 +30,17 @@ public interface AmountSpec extends Proto {
 
     static AmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
         switch (proto.getMessageCase()) {
-            case FIXAMOUNTSPEC: {
-                return FixAmountSpec.fromProto(proto);
+            case FIXBASEAMOUNTSPEC: {
+                return FixBaseAmountSpec.fromProto(proto);
             }
-            case MINMAXAMOUNTSPEC: {
-                return MinMaxAmountSpec.fromProto(proto);
+            case FIXQUOTEAMOUNTSPEC: {
+                return FixQuoteAmountSpec.fromProto(proto);
+            }
+            case MINMAXBASEAMOUNTSPEC: {
+                return MinMaxBaseAmountSpec.fromProto(proto);
+            }
+            case MINMAXQUOTEAMOUNTSPEC: {
+                return MinMaxQuoteAmountSpec.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

@@ -19,15 +19,18 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.price_spec.FixPriceSpec;
-import bisq.offer.price_spec.FloatPriceSpec;
-import bisq.offer.price_spec.PriceSpec;
+import bisq.offer.amount.AmountSpec;
+import bisq.offer.amount.FixQuoteAmountSpec;
+import bisq.offer.amount.MinMaxQuoteAmountSpec;
+import bisq.offer.price.FixPriceSpec;
+import bisq.offer.price.FloatPriceSpec;
+import bisq.offer.price.PriceSpec;
+import bisq.offer.price.PriceUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -86,7 +89,7 @@ public class AmountController implements Controller {
             quote = ((FixPriceSpec) priceSpec).getQuote();
         } else if (priceSpec instanceof FloatPriceSpec) {
             double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-            quote = Quote.fromMarketPriceMarkup(getMarketPriceQuote(), percentage);
+            quote = PriceUtil.fromMarketPriceMarkup(getMarketPriceQuote(), percentage);
         } else {
             quote = getMarketPriceQuote();
         }
@@ -100,20 +103,8 @@ public class AmountController implements Controller {
         model.reset();
     }
 
-    public ReadOnlyObjectProperty<Monetary> getBaseSideMinAmount() {
-        return minAmountComponent.getBaseSideAmount();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getQuoteSideMinAmount() {
-        return minAmountComponent.getQuoteSideAmount();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getBaseSideMaxAmount() {
-        return maxAmountComponent.getBaseSideAmount();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getQuoteSideMaxAmount() {
-        return maxAmountComponent.getQuoteSideAmount();
+    public ReadOnlyObjectProperty<AmountSpec> getAmountSpec() {
+        return model.getAmountSpec();
     }
 
     public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
@@ -123,7 +114,6 @@ public class AmountController implements Controller {
     @Override
     public void onActivate() {
         model.getIsMinAmountEnabled().set(settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false));
-
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
                 value -> {
                     if (model.getIsMinAmountEnabled().get()) {
@@ -148,8 +138,10 @@ public class AmountController implements Controller {
                         if (value != null && maxAmountComponent.getQuoteSideAmount().get() != null &&
                                 value.getValue() > maxAmountComponent.getQuoteSideAmount().get().getValue()) {
                             maxAmountComponent.setQuoteSideAmount(value);
+
                         }
                     }
+                    applyAmountSpec();
                 });
         maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxAmountComponent.getQuoteSideAmount(),
                 value -> {
@@ -158,8 +150,8 @@ public class AmountController implements Controller {
                             value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
                         minAmountComponent.setQuoteSideAmount(value);
                     }
+                    applyAmountSpec();
                 });
-
 
         isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
             model.getToggleButtonText().set(isMinAmountEnabled ?
@@ -169,7 +161,11 @@ public class AmountController implements Controller {
             maxAmountComponent.setDescription(isMinAmountEnabled ?
                     Res.get("onboarding.amount.description.maxAmount") :
                     Res.get("onboarding.amount.description.maxAmountOnly"));
+
+            applyAmountSpec();
         });
+
+        applyAmountSpec();
     }
 
     @Override
@@ -185,6 +181,13 @@ public class AmountController implements Controller {
         boolean value = !model.getIsMinAmountEnabled().get();
         model.getIsMinAmountEnabled().set(value);
         settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
+    }
+
+    private void applyAmountSpec() {
+        model.getAmountSpec().set(model.getIsMinAmountEnabled().get() ?
+                new MinMaxQuoteAmountSpec(minAmountComponent.getQuoteSideAmount().get().getValue(), maxAmountComponent.getQuoteSideAmount().get().getValue()) :
+                new FixQuoteAmountSpec(maxAmountComponent.getQuoteSideAmount().get().getValue())
+        );
     }
 
     private Quote getMarketPriceQuote() {

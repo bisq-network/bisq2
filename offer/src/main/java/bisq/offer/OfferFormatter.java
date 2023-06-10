@@ -15,15 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
+package bisq.offer;
 
-import bisq.desktop.common.view.Model;
-import bisq.offer.amount.AmountSpec;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import lombok.Getter;
+import bisq.i18n.Res;
 
-@Getter
-public class TakeOfferAmountModel implements Model {
-    private final ObjectProperty<AmountSpec> takersAmountSpec = new SimpleObjectProperty<>();
+public class OfferFormatter {
+    public static String getMakersDirectionAsDisplayString(Offer offer) {
+        return Res.get(offer.getDirection().name().toLowerCase()).toUpperCase();
+    }
+
+    public static String getTakersDirectionAsDisplayString(Offer offer) {
+        return Res.get(offer.getTakersDirection().name().toLowerCase()).toUpperCase();
+    }
 }

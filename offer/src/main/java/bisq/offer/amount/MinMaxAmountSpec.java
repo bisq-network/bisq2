@@ -15,15 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
+package bisq.offer.amount;
 
-import bisq.desktop.common.view.Model;
-import bisq.offer.amount.AmountSpec;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
-public class TakeOfferAmountModel implements Model {
-    private final ObjectProperty<AmountSpec> takersAmountSpec = new SimpleObjectProperty<>();
+@ToString
+@EqualsAndHashCode
+public abstract class MinMaxAmountSpec implements AmountSpec {
+    protected final long minAmount;
+    protected final long maxAmount;
+
+    public MinMaxAmountSpec(long minAmount, long maxAmount) {
+        this.minAmount = minAmount;
+        this.maxAmount = maxAmount;
+    }
 }

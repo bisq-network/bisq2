@@ -20,11 +20,11 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import bisq.offer.price_spec.MarketPriceSpec;
-import bisq.offer.price_spec.PriceSpec;
+import bisq.offer.amount.AmountSpec;
+import bisq.offer.price.MarketPriceSpec;
+import bisq.offer.price.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -46,14 +46,6 @@ class ReviewOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
-    private Monetary baseSideMinAmount;
-    @Setter
-    private Monetary baseSideMaxAmount;
-    @Setter
-    private Monetary quoteSideMinAmount;
-    @Setter
-    private Monetary quoteSideMaxAmount;
-    @Setter
     private List<String> settlementMethodNames;
     @Setter
     private String myOfferText;
@@ -63,6 +55,8 @@ class ReviewOfferModel implements Model {
     private boolean isMinAmountEnabled;
     @Setter
     private PriceSpec priceSpec = new MarketPriceSpec();
+    @Setter
+    private AmountSpec amountSpec;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
@@ -73,15 +67,12 @@ class ReviewOfferModel implements Model {
         selectedChannel = null;
         direction = null;
         market = null;
-        baseSideMinAmount = null;
-        baseSideMaxAmount = null;
-        quoteSideMinAmount = null;
-        quoteSideMaxAmount = null;
         settlementMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
         isMinAmountEnabled = false;
         priceSpec = new MarketPriceSpec();
+        amountSpec = null;
         matchingOffersVisible.set(false);
         showCreateOfferSuccess.set(false);
         matchingOffers.clear();

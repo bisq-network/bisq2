@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.offer_options;
+package bisq.offer.options;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,20 +24,23 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class TradeTermsOption implements OfferOption {
-    private final String makersTradeTerms;
+public final class CollateralOption implements OfferOption {
+    private final long buyerSecurityDeposit;
+    private final long sellerSecurityDeposit;
 
-    public TradeTermsOption(String makersTradeTerms) {
-        this.makersTradeTerms = makersTradeTerms;
+    public CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) {
+        this.buyerSecurityDeposit = buyerSecurityDeposit;
+        this.sellerSecurityDeposit = sellerSecurityDeposit;
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setTradeTermsOption(bisq.offer.protobuf.TradeTermsOption.newBuilder()
-                        .setMakersTradeTerms(makersTradeTerms))
+        return getOfferOptionBuilder().setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
+                        .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                        .setSellerSecurityDeposit(sellerSecurityDeposit))
                 .build();
     }
 
-    public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto) {
-        return new TradeTermsOption(proto.getMakersTradeTerms());
+    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
+        return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
     }
 }

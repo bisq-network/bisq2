@@ -67,8 +67,7 @@ public class CreateOfferController extends NavigationController implements InitW
     private final SettlementMethodController settlementMethodController;
     private final ReviewOfferController reviewOfferController;
     private final ListChangeListener<String> settlementMethodsListener;
-    private Subscription directionPin, marketPin, baseSideMinAmountPin,
-            baseSideMaxAmountPin, quoteSideMinAmountPin, quoteSideMaxAmountPin,
+    private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
@@ -126,12 +125,8 @@ public class CreateOfferController extends NavigationController implements InitW
             amountController.setMarket(market);
             updateNextButtonDisabledState();
         });
-        baseSideMinAmountPin = EasyBind.subscribe(amountController.getBaseSideMinAmount(), reviewOfferController::setBaseSideMinAmount);
-        baseSideMaxAmountPin = EasyBind.subscribe(amountController.getBaseSideMaxAmount(), reviewOfferController::setBaseSideMaxAmount);
-        quoteSideMinAmountPin = EasyBind.subscribe(amountController.getQuoteSideMinAmount(), reviewOfferController::setQuoteSideMinAmount);
-        quoteSideMaxAmountPin = EasyBind.subscribe(amountController.getQuoteSideMaxAmount(), reviewOfferController::setQuoteSideMaxAmount);
+        amountSpecPin = EasyBind.subscribe(amountController.getAmountSpec(), reviewOfferController::setAmountSpec);
         isMinAmountEnabledPin = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
-
         priceSpecPin = EasyBind.subscribe(priceController.getPriceSpec(), priceSpec -> {
             amountController.setPriceSpec(priceSpec);
             reviewOfferController.setPriceSpec(priceSpec);
@@ -145,10 +140,7 @@ public class CreateOfferController extends NavigationController implements InitW
     public void onDeactivate() {
         directionPin.unsubscribe();
         marketPin.unsubscribe();
-        baseSideMinAmountPin.unsubscribe();
-        baseSideMaxAmountPin.unsubscribe();
-        quoteSideMinAmountPin.unsubscribe();
-        quoteSideMaxAmountPin.unsubscribe();
+        amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
         settlementMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);

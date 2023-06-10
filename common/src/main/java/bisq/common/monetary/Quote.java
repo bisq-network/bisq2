@@ -146,30 +146,6 @@ public final class Quote implements Comparable<Quote>, Proto {
     }
 
     /**
-     * A quote created from a market price quote and a percentage
-     *
-     * @param marketPrice Current market price
-     * @param percentage  Offset from market price in percent normalize to 1 (=100%).
-     * @return The quote representing the offset from market price
-     */
-    public static Quote fromMarketPriceMarkup(Quote marketPrice, double percentage) {
-        checkArgument(percentage >= -1, "Offset must > -1");
-        double price = marketPrice.asDouble() * (1 + percentage);
-        return Quote.fromPrice(price, marketPrice.baseMonetary.code, marketPrice.quoteMonetary.code);
-    }
-
-    /**
-     * @param marketQuote The quote representing the market price
-     * @param offerQuote  The quote we want to compare to the market price
-     * @return The percentage offset from the market price. Positive value means that offerQuote is above market price.
-     * Result is rounded to precision 4 (2 decimal places at percentage representation)
-     */
-    public static double getPercentageToMarketPrice(Quote marketQuote, Quote offerQuote) {
-        checkArgument(marketQuote.value > 0, "marketQuote must be positive");
-        return MathUtils.roundDouble(offerQuote.value / (double) marketQuote.value - 1, 4);
-    }
-
-    /**
      * Create a quote monetary from a given base monetary and a quote
      *
      * @param baseMonetary The base monetary

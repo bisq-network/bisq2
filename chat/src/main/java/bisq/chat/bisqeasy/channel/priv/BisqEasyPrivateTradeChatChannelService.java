@@ -25,7 +25,6 @@ import bisq.chat.message.Citation;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -141,7 +140,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage1(BisqEasyOffer bisqEasyOffer,
+  /*  public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage1(BisqEasyOffer bisqEasyOffer,
                                                                                      Optional<UserProfile> mediator) {
         return userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                 .map(makerUserProfile -> {
@@ -174,7 +173,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
 
                 })
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
-    }
+    }*/
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Citation> citation,

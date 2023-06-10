@@ -20,7 +20,8 @@ package bisq.common.monetary;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 public class QuoteTest {
@@ -36,62 +37,5 @@ public class QuoteTest {
         quote = Quote.fromFiatPrice(50000, "USD");
         quoteMonetary = Quote.toQuoteMonetary(btc, quote);
         assertEquals(1000000000, quoteMonetary.value);
-    }
-
-    @Test
-    void testOffsetOf() {
-        Quote marketQuote = Quote.fromFiatPrice(50000, "USD");
-        Quote offerQuote = Quote.fromFiatPrice(50000, "USD");
-
-        double offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
-        assertEquals(0, offset);
-
-        offerQuote = Quote.fromFiatPrice(55000, "USD");
-        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
-        log.error("" + offset);
-
-        assertEquals(0.1d, offset);
-
-        offerQuote = Quote.fromFiatPrice(45000, "USD");
-        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
-        assertEquals(-0.1, offset);
-
-        offerQuote = Quote.fromFiatPrice(100000, "USD");
-        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
-        assertEquals(1, offset); // 100% of marketQuote
-
-        offerQuote = Quote.fromFiatPrice(150000, "USD");
-        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
-        assertEquals(2, offset); // 200% of marketQuote
-
-        offerQuote = Quote.fromFiatPrice(0, "USD");
-        offset = Quote.getPercentageToMarketPrice(marketQuote, offerQuote);
-        assertEquals(-1, offset);
-
-        assertThrows(IllegalArgumentException.class,
-                () -> Quote.getPercentageToMarketPrice(Quote.fromFiatPrice(0, "USD"),
-                        Quote.fromFiatPrice(50000, "USD")));
-    }
-
-    @Test
-    void testFromMarketPriceOffset() {
-        Quote marketQuote = Quote.fromFiatPrice(50000, "USD");
-
-        Quote quote = Quote.fromMarketPriceMarkup(marketQuote, 0);
-        assertEquals(500000000, quote.getValue());
-        assertEquals(4, quote.getPrecision());
-        assertEquals("BTC/USD", quote.getMarket().getMarketCodes());
-
-        quote = Quote.fromMarketPriceMarkup(marketQuote, 1);
-        assertEquals(1000000000, quote.getValue());
-
-        quote = Quote.fromMarketPriceMarkup(marketQuote, -1);
-        assertEquals(0, quote.getValue());
-
-        quote = Quote.fromMarketPriceMarkup(marketQuote, 0.1);
-        assertEquals(550000000, quote.getValue());
-
-        quote = Quote.fromMarketPriceMarkup(marketQuote, -0.1);
-        assertEquals(450000000, quote.getValue());
     }
 }

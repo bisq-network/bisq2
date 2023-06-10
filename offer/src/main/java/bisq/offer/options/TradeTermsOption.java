@@ -15,34 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price_spec;
+package bisq.offer.options;
 
-import bisq.common.monetary.Quote;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-/**
- * Fix price defined as a long value.
- */
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FixPriceSpec implements PriceSpec {
-    private final Quote quote;
+public final class TradeTermsOption implements OfferOption {
+    private final String makersTradeTerms;
 
-    public FixPriceSpec(Quote quote) {
-        this.quote = quote;
+    public TradeTermsOption(String makersTradeTerms) {
+        this.makersTradeTerms = makersTradeTerms;
     }
 
-    @Override
-    public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
-                        .setQuote(quote.toProto()))
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setTradeTermsOption(bisq.offer.protobuf.TradeTermsOption.newBuilder()
+                        .setMakersTradeTerms(makersTradeTerms))
                 .build();
     }
 
-    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPriceSpec(Quote.fromProto(proto.getQuote()));
+    public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto) {
+        return new TradeTermsOption(proto.getMakersTradeTerms());
     }
 }

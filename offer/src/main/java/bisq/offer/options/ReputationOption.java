@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.offer_options;
+package bisq.offer.options;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,23 +24,21 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class CollateralOption implements OfferOption {
-    private final long buyerSecurityDeposit;
-    private final long sellerSecurityDeposit;
+public final class ReputationOption implements OfferOption {
+    private final long requiredTotalReputationScore;
 
-    public CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) {
-        this.buyerSecurityDeposit = buyerSecurityDeposit;
-        this.sellerSecurityDeposit = sellerSecurityDeposit;
+    public ReputationOption(long requiredTotalReputationScore) {
+        this.requiredTotalReputationScore = requiredTotalReputationScore;
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
-                        .setBuyerSecurityDeposit(buyerSecurityDeposit)
-                        .setSellerSecurityDeposit(sellerSecurityDeposit))
+        return getOfferOptionBuilder().setReputationOption(
+                        bisq.offer.protobuf.ReputationOption.newBuilder()
+                                .setRequiredTotalReputationScore(requiredTotalReputationScore))
                 .build();
     }
 
-    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
-        return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
+    public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {
+        return new ReputationOption(proto.getRequiredTotalReputationScore());
     }
 }

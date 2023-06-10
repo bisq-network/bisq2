@@ -15,38 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price_spec;
+package bisq.offer.price;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 /**
- * A floating price based on the current market price.
+ * The current market price is used.
  */
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FloatPriceSpec implements PriceSpec {
-    private final double percentage;
+public final class MarketPriceSpec implements PriceSpec {
 
-    /**
-     * @param percentage  The percentage value normalized to 1 (1 = 100%) above or below the market price.
-     *                    Positive value means higher than market price. 
-     *                    E.g. 0.1 means `marketPrice * 1.1`, -0.2 means `marketPrice * 0.8`
-     */
-    public FloatPriceSpec(double percentage) {
-        this.percentage = percentage;
+    public MarketPriceSpec() {
     }
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setFloatPrice(bisq.offer.protobuf.FloatPrice.newBuilder()
-                        .setPercentage(percentage))
-                .build();
+        return getPriceSpecBuilder().setMarketPrice(bisq.offer.protobuf.MarketPrice.newBuilder()).build();
     }
 
-    public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) {
-        return new FloatPriceSpec(proto.getPercentage());
+    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {
+        return new MarketPriceSpec();
     }
 }

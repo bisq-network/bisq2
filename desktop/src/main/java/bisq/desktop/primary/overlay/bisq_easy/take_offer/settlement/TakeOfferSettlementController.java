@@ -20,9 +20,14 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.settlement.SettlementSpec;
+import bisq.offer.settlement.SettlementUtil;
 import javafx.beans.property.ReadOnlyStringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class TakeOfferSettlementController implements Controller {
@@ -35,13 +40,19 @@ public class TakeOfferSettlementController implements Controller {
         view = new TakeOfferSettlementView(model, this);
     }
 
-    public void setBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
-        model.getOfferedMethodNames().setAll(bisqEasyOffer.getQuoteSideSettlementMethodNames());
+    public void init(BisqEasyOffer bisqEasyOffer, List<String> takersSettlementMethodNames) {
+        model.getOfferedMethodNames().setAll(SettlementUtil.getQuoteSideSettlementMethodNames(bisqEasyOffer));
+
+        List<String> matchingNames = bisqEasyOffer.getQuoteSideSettlementSpecs().stream()
+                .map(SettlementSpec::getSettlementMethodName)
+                .filter(takersSettlementMethodNames::contains)
+                .collect(Collectors.toList());
+        // We only preselect if there is exactly one match
+        if (matchingNames.size() == 1) {
+            model.getSelectedMethodName().set(matchingNames.get(0));
+        }
     }
 
-    public void setSettlementMethodName(String methodName) {
-        model.getSelectedMethodName().set(methodName);
-    }
 
     /**
      * @return Enum name of FiatSettlement.Method or custom name

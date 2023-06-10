@@ -18,9 +18,10 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
+import bisq.offer.amount.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.PriceSpec;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,13 +38,7 @@ class TakeOfferReviewModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     @Setter
     private UserProfile peersUserProfile;
-    private final StringProperty baseSideAmount = new SimpleStringProperty();
-    private final StringProperty quoteSideAmount = new SimpleStringProperty();
     private final StringProperty settlementMethod = new SimpleStringProperty();
-    @Setter
-    private Monetary baseSideAmountAsMonetary;
-    @Setter
-    private Monetary quoteSideAmountAsMonetary;
     @Setter
     private List<String> settlementMethodNames;
     @Setter
@@ -54,18 +49,16 @@ class TakeOfferReviewModel implements Model {
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
 
     private final StringProperty subtitle = new SimpleStringProperty();
-    private final StringProperty amounts = new SimpleStringProperty();
-    private final StringProperty payValue = new SimpleStringProperty();
-    private final StringProperty receiveValue = new SimpleStringProperty();
-    private final StringProperty methodValue = new SimpleStringProperty();
-    private final StringProperty sellersPriceValue = new SimpleStringProperty();
-    private final StringProperty sellersPriceValueDetails = new SimpleStringProperty();
-    private final StringProperty sellersPremiumValue = new SimpleStringProperty();
-    private final StringProperty sellersPremiumValueDetails = new SimpleStringProperty();
-
-
-    private final StringProperty marketPriceDescription = new SimpleStringProperty();
+    private final StringProperty amountDescription = new SimpleStringProperty();
+    private final StringProperty toPay = new SimpleStringProperty();
+    private final StringProperty toReceive = new SimpleStringProperty();
+    private final StringProperty method = new SimpleStringProperty();
+    private final StringProperty sellersPrice = new SimpleStringProperty();
+    private final StringProperty sellersPriceDetails = new SimpleStringProperty();
     private final StringProperty sellersPremium = new SimpleStringProperty();
 
-    private final StringProperty sellersPrice = new SimpleStringProperty();
+    @Setter
+    private AmountSpec tradeAmountSpec;
+    @Setter
+    private PriceSpec tradePriceSpec;
 }

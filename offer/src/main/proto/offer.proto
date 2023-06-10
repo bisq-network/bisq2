@@ -13,20 +13,27 @@ enum Direction {
 }
 
 // Specs
-message FixAmountSpec {
-  uint64 baseSideAmount = 1;
-  uint64 quoteSideAmount = 2;
+message FixBaseAmountSpec {
+  uint64 amount = 1;
 }
-message MinMaxAmountSpec {
-  uint64 baseSideMinAmount = 1;
-  uint64 baseSideMaxAmount = 2;
-  uint64 quoteSideMinAmount = 3;
-  uint64 quoteSideMaxAmount = 4;
+message FixQuoteAmountSpec {
+  uint64 amount = 2;
+}
+
+message MinMaxBaseAmountSpec {
+  uint64 minAmount = 1;
+  uint64 maxAmount = 2;
+}
+message MinMaxQuoteAmountSpec {
+  uint64 minAmount = 1;
+  uint64 maxAmount = 2;
 }
 message AmountSpec {
   oneof message {
-    FixAmountSpec fixAmountSpec = 1;
-    MinMaxAmountSpec minMaxAmountSpec = 2;
+    FixBaseAmountSpec fixBaseAmountSpec = 1;
+    FixQuoteAmountSpec fixQuoteAmountSpec = 2;
+    MinMaxBaseAmountSpec minMaxBaseAmountSpec = 3;
+    MinMaxQuoteAmountSpec minMaxQuoteAmountSpec = 4;
   }
 }
 
@@ -109,6 +116,7 @@ message Offer {
 
 // BisqEasy
 message BisqEasyOffer {
+  string chatMessageText = 1;
 }
 
 

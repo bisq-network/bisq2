@@ -15,30 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.offer_options;
+package bisq.offer.price;
 
+import bisq.common.monetary.Quote;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * Fix price defined as a long value.
+ */
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class ReputationOption implements OfferOption {
-    private final long requiredTotalReputationScore;
+public final class FixPriceSpec implements PriceSpec {
+    private final Quote quote;
 
-    public ReputationOption(long requiredTotalReputationScore) {
-        this.requiredTotalReputationScore = requiredTotalReputationScore;
+    public FixPriceSpec(Quote quote) {
+        this.quote = quote;
     }
 
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setReputationOption(
-                        bisq.offer.protobuf.ReputationOption.newBuilder()
-                                .setRequiredTotalReputationScore(requiredTotalReputationScore))
+    @Override
+    public bisq.offer.protobuf.PriceSpec toProto() {
+        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
+                        .setQuote(quote.toProto()))
                 .build();
     }
 
-    public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {
-        return new ReputationOption(proto.getRequiredTotalReputationScore());
+    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
+        return new FixPriceSpec(Quote.fromProto(proto.getQuote()));
     }
 }

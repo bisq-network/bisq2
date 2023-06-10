@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount_spec;
+package bisq.offer.amount;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,26 +26,20 @@ import lombok.ToString;
  */
 @Getter
 @ToString
-@EqualsAndHashCode
-public final class FixAmountSpec implements AmountSpec {
-    private final long baseSideAmount;
-    private final long quoteSideAmount;
-
-    public FixAmountSpec(long baseSideAmount, long quoteSideAmount) {
-        this.baseSideAmount = baseSideAmount;
-        this.quoteSideAmount = quoteSideAmount;
+@EqualsAndHashCode(callSuper = true)
+public final class FixBaseAmountSpec extends FixAmountSpec implements BaseAmountSpec {
+    public FixBaseAmountSpec(long amount) {
+        super(amount);
     }
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixAmountSpec(bisq.offer.protobuf.FixAmountSpec.newBuilder()
-                        .setBaseSideAmount(baseSideAmount)
-                        .setQuoteSideAmount(quoteSideAmount))
+        return getAmountSpecBuilder().setFixBaseAmountSpec(bisq.offer.protobuf.FixBaseAmountSpec.newBuilder()
+                        .setAmount(amount))
                 .build();
     }
 
-    public static FixAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        bisq.offer.protobuf.FixAmountSpec minMaxAmountSpec = proto.getFixAmountSpec();
-        return new FixAmountSpec(minMaxAmountSpec.getBaseSideAmount(), minMaxAmountSpec.getQuoteSideAmount());
+    public static FixBaseAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
+        return new FixBaseAmountSpec(proto.getFixBaseAmountSpec().getAmount());
     }
 }

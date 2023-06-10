@@ -24,10 +24,10 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
-import bisq.offer.price_spec.FixPriceSpec;
-import bisq.offer.price_spec.FloatPriceSpec;
-import bisq.offer.price_spec.PriceSpec;
-import bisq.offer.utils.OfferUtil;
+import bisq.offer.price.FixPriceSpec;
+import bisq.offer.price.FloatPriceSpec;
+import bisq.offer.price.PriceSpec;
+import bisq.offer.price.PriceUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.settings.CookieKey;
@@ -100,7 +100,7 @@ public class PriceController implements Controller {
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageAsString().set("");
                 model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
-                Quote quote = Quote.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
+                Quote quote = PriceUtil.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
                 priceInput.setQuote(quote);
                 applyPriceSpec();
             } catch (NumberFormatException t) {
@@ -159,7 +159,7 @@ public class PriceController implements Controller {
     }
 
     private double getPercentage(Quote quote) {
-        return OfferUtil.findFloatPriceSpec(marketPriceService, quote).orElseThrow().getPercentage();
+        return PriceUtil.findFloatPriceSpec(marketPriceService, quote).orElseThrow().getPercentage();
     }
 
     private Quote findMarketPriceQuote() {

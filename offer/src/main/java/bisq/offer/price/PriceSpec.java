@@ -15,45 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price_spec;
+package bisq.offer.price;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
-import java.util.Optional;
-
 public interface PriceSpec extends Proto {
-    static PriceSpec fromPercentage(double percentage) {
-        return percentage != 0 ?
-                new FloatPriceSpec(percentage) :
-                new MarketPriceSpec();
-    }
 
     bisq.offer.protobuf.PriceSpec toProto();
 
     default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder() {
         return bisq.offer.protobuf.PriceSpec.newBuilder();
-    }
-
-    static Optional<FixPriceSpec> findFixPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec instanceof FixPriceSpec) {
-            return Optional.of((FixPriceSpec) priceSpec);
-        }
-        return Optional.empty();
-    }
-
-    static Optional<FloatPriceSpec> findFloatPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec instanceof FloatPriceSpec) {
-            return Optional.of((FloatPriceSpec) priceSpec);
-        }
-        return Optional.empty();
-    }
-
-    static Optional<MarketPriceSpec> findMarketPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec instanceof MarketPriceSpec) {
-            return Optional.of((MarketPriceSpec) priceSpec);
-        }
-        return Optional.empty();
     }
 
     static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {

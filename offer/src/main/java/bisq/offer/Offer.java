@@ -19,35 +19,24 @@ package bisq.offer;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.i18n.Res;
 import bisq.network.NetworkId;
-import bisq.offer.amount_spec.AmountSpec;
-import bisq.offer.amount_spec.FixAmountSpec;
-import bisq.offer.amount_spec.MinMaxAmountSpec;
+import bisq.offer.amount.AmountSpec;
+import bisq.offer.amount.MinMaxAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.offer_options.OfferOption;
-import bisq.offer.offer_options.ReputationOption;
-import bisq.offer.offer_options.TradeTermsOption;
-import bisq.offer.price_spec.FixPriceSpec;
-import bisq.offer.price_spec.FloatPriceSpec;
-import bisq.offer.price_spec.MarketPriceSpec;
-import bisq.offer.price_spec.PriceSpec;
-import bisq.oracle.marketprice.MarketPrice;
-import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
-import com.google.common.base.Joiner;
+import bisq.offer.options.OfferOption;
+import bisq.offer.price.PriceSpec;
+import bisq.offer.settlement.SettlementSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -132,7 +121,6 @@ public abstract class Offer implements Proto {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Misc
     public String getMakersUserProfileId() {
         return makerNetworkId.getPubKey().getId();
     }
@@ -149,7 +137,6 @@ public abstract class Offer implements Proto {
         return id.substring(0, 8);
     }
 
-    // Direction
     public Direction getMakersDirection() {
         return direction;
     }
@@ -158,200 +145,7 @@ public abstract class Offer implements Proto {
         return direction.mirror();
     }
 
-    public String getMakersDirectionAsDisplayString() {
-        return Res.get(direction.name().toLowerCase()).toUpperCase();
-    }
-
-    public String getTakersDirectionAsDisplayString() {
-        return Res.get(getTakersDirection().name().toLowerCase()).toUpperCase();
-    }
-
-
-    // Settlement
-    public List<String> getBaseSideSettlementMethodNames() {
-        return SettlementSpec.getSettlementMethodNames(baseSideSettlementSpecs);
-    }
-
-    public String getBaseSideSettlementMethodsAsDisplayString() {
-        return Joiner.on(", ").join(SettlementSpec.getSettlementMethodNamesAsDisplayString(baseSideSettlementSpecs));
-    }
-
-    public List<String> getQuoteSideSettlementMethodNames() {
-        return SettlementSpec.getSettlementMethodNames(quoteSideSettlementSpecs);
-    }
-
-    public String getQuoteSideSettlementMethodsAsDisplayString() {
-        return Joiner.on(", ").join(SettlementSpec.getSettlementMethodNamesAsDisplayString(quoteSideSettlementSpecs));
-    }
-
-    // OfferOptions
-    public Optional<String> findMakersTradeTerms() {
-        return OfferOption.findTradeTermsOption(offerOptions).stream().findAny()
-                .map(TradeTermsOption::getMakersTradeTerms);
-    }
-
-    public Optional<Long> findRequiredTotalReputationScore() {
-        return OfferOption.findReputationOption(offerOptions).stream().findAny()
-                .map(ReputationOption::getRequiredTotalReputationScore);
-    }
-
-    // BaseSide amounts
-    public Monetary getBaseSideMinAmount() {
-        long amount;
-        if (amountSpec instanceof FixAmountSpec) {
-            FixAmountSpec fixAmountSpec = (FixAmountSpec) amountSpec;
-            amount = fixAmountSpec.getBaseSideAmount();
-        } else if (amountSpec instanceof MinMaxAmountSpec) {
-            MinMaxAmountSpec minMaxAmountSpec = (MinMaxAmountSpec) amountSpec;
-            amount = minMaxAmountSpec.getBaseSideMinAmount();
-        } else {
-            throw new RuntimeException("Unsupported amountSpec " + amountSpec);
-        }
-        return Monetary.from(amount, market.getBaseCurrencyCode());
-    }
-
-    public Monetary getBaseSideMaxAmount() {
-        long amount;
-        if (amountSpec instanceof FixAmountSpec) {
-            FixAmountSpec fixAmountSpec = (FixAmountSpec) amountSpec;
-            amount = fixAmountSpec.getBaseSideAmount();
-        } else if (amountSpec instanceof MinMaxAmountSpec) {
-            MinMaxAmountSpec minMaxAmountSpec = (MinMaxAmountSpec) amountSpec;
-            amount = minMaxAmountSpec.getBaseSideMaxAmount();
-        } else {
-            throw new RuntimeException("Unsupported amountSpec " + amountSpec);
-        }
-        return Monetary.from(amount, market.getBaseCurrencyCode());
-    }
-
-    public String getBaseSideMinAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getBaseSideMinAmount());
-    }
-
-    public String getBaseSideMaxAmountAsDisplayString() {
-        return AmountFormatter.formatAmountWithCode(getBaseSideMaxAmount());
-    }
-
-    public String getBaseSideMinMaxAmountAsDisplayString() {
-        return getBaseSideMinAmountAsDisplayString() + " - " + getBaseSideMaxAmountAsDisplayString();
-    }
-
-    public String getBaseSideAmountAsDisplayString() {
-        if (getBaseSideMinAmount().getValue() == getBaseSideMaxAmount().getValue()) {
-            return getBaseSideMaxAmountAsDisplayString();
-        } else {
-            return getBaseSideMinMaxAmountAsDisplayString();
-        }
-    }
-
-
-    //QuoteSide amounts
-    public Monetary getQuoteSideMinAmount() {
-        long amount;
-        if (amountSpec instanceof FixAmountSpec) {
-            FixAmountSpec fixAmountSpec = (FixAmountSpec) amountSpec;
-            amount = fixAmountSpec.getQuoteSideAmount();
-        } else if (amountSpec instanceof MinMaxAmountSpec) {
-            MinMaxAmountSpec minMaxAmountSpec = (MinMaxAmountSpec) amountSpec;
-            amount = minMaxAmountSpec.getQuoteSideMinAmount();
-        } else {
-            throw new RuntimeException("Unsupported amountSpec " + amountSpec);
-        }
-        return Monetary.from(amount, market.getQuoteCurrencyCode());
-    }
-
-    public Monetary getQuoteSideMaxAmount() {
-        long amount;
-        if (amountSpec instanceof FixAmountSpec) {
-            FixAmountSpec fixAmountSpec = (FixAmountSpec) amountSpec;
-            amount = fixAmountSpec.getQuoteSideAmount();
-        } else if (amountSpec instanceof MinMaxAmountSpec) {
-            MinMaxAmountSpec minMaxAmountSpec = (MinMaxAmountSpec) amountSpec;
-            amount = minMaxAmountSpec.getQuoteSideMaxAmount();
-        } else {
-            throw new RuntimeException("Unsupported amountSpec " + amountSpec);
-        }
-        return Monetary.from(amount, market.getQuoteCurrencyCode());
-    }
-
-    public String getQuoteSideMinAmountAsDisplayString(boolean showCode) {
-        return showCode ?
-                AmountFormatter.formatAmountWithCode(getQuoteSideMinAmount()) :
-                AmountFormatter.formatAmount(getQuoteSideMinAmount());
-    }
-
-    public String getQuoteSideMaxAmountAsDisplayString(boolean showCode) {
-        return showCode ?
-                AmountFormatter.formatAmountWithCode(getQuoteSideMaxAmount()) :
-                AmountFormatter.formatAmount(getQuoteSideMaxAmount());
-    }
-
-    public String getQuoteSideMinMaxAmountAsDisplayString(boolean showCode) {
-        return getQuoteSideMinAmountAsDisplayString(showCode) + " - " + getQuoteSideMaxAmountAsDisplayString(showCode);
-    }
-
-    public String getQuoteSideAmountAsDisplayString(boolean showCode) {
-        if (getQuoteSideMinAmount().getValue() == getQuoteSideMaxAmount().getValue()) {
-            return getQuoteSideMaxAmountAsDisplayString(showCode);
-        } else {
-            return getQuoteSideMinMaxAmountAsDisplayString(showCode);
-        }
-    }
-
-    // Quote
-    public Optional<Quote> findQuote(MarketPriceService marketPriceService) {
-        if (priceSpec instanceof FixPriceSpec) {
-            return Optional.of(getFixePriceQuote((FixPriceSpec) priceSpec));
-        } else if (priceSpec instanceof MarketPriceSpec) {
-            return findMarketPriceQuote(marketPriceService);
-        } else if (priceSpec instanceof FloatPriceSpec) {
-            return findFloatPriceQuote(marketPriceService, (FloatPriceSpec) priceSpec);
-        } else {
-            throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
-        }
-    }
-
-    public String getQuoteAsDisplayString(MarketPriceService marketPriceService, boolean showCode) {
-        return findQuote(marketPriceService)
-                .map(quote -> showCode ?
-                        QuoteFormatter.formatWithQuoteCode(quote) :
-                        QuoteFormatter.format(quote))
-                .orElse(Res.get("na"));
-    }
-
-    public Quote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
-        return fixPriceSpec.getQuote();
-    }
-
-    public Optional<Quote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec) {
-        return findMarketPriceQuote(marketPriceService)
-                .map(marketQuote -> Quote.fromMarketPriceMarkup(marketQuote, floatPriceSpec.getPercentage()));
-    }
-
-    public Optional<Quote> findMarketPriceQuote(MarketPriceService marketPriceService) {
-        return marketPriceService.findMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
-    }
-
-    // Percentage price
-    public Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService) {
-        Optional<Double> percentage;
-        if (priceSpec instanceof FixPriceSpec) {
-            Quote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
-            percentage = findMarketPriceQuote(marketPriceService).map(marketPrice ->
-                    Quote.getPercentageToMarketPrice(marketPrice, fixPrice));
-        } else if (priceSpec instanceof MarketPriceSpec) {
-            percentage = Optional.of(0d);
-        } else if (priceSpec instanceof FloatPriceSpec) {
-            percentage = Optional.of(((FloatPriceSpec) priceSpec).getPercentage());
-        } else {
-            throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
-        }
-        return percentage;
-    }
-
-    public String getPercentageAsDisplayString(MarketPriceService marketPriceService) {
-        return findPercentFromMarketPrice(marketPriceService)
-                .map(PercentageFormatter::formatToPercentWithSymbol)
-                .orElse(Res.get("na"));
+    public boolean hasAmountRange() {
+        return amountSpec instanceof MinMaxAmountSpec;
     }
 }

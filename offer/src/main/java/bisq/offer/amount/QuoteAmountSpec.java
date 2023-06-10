@@ -15,29 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price_spec;
+package bisq.offer.amount;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-/**
- * The current market price is used.
- */
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class MarketPriceSpec implements PriceSpec {
-
-    public MarketPriceSpec() {
-    }
-
-    @Override
-    public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setMarketPrice(bisq.offer.protobuf.MarketPrice.newBuilder()).build();
-    }
-
-    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {
-        return new MarketPriceSpec();
-    }
+public interface QuoteAmountSpec extends AmountSpec {
 }
