@@ -42,7 +42,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
-public class SettlementMethodView extends View<VBox, SettlementMethodModel, SettlementMethodController> {
+public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
 
     private final MaterialTextField custom;
     private final ListChangeListener<String> allSettlementMethodsListener;
@@ -51,7 +51,7 @@ public class SettlementMethodView extends View<VBox, SettlementMethodModel, Sett
     private final BisqIconButton addButton;
     private Subscription addCustomMethodIconEnabledPin;
 
-    public SettlementMethodView(SettlementMethodModel model, SettlementMethodController controller) {
+    public CreateOfferPaymentMethodView(CreateOfferPaymentMethodModel model, CreateOfferPaymentMethodController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

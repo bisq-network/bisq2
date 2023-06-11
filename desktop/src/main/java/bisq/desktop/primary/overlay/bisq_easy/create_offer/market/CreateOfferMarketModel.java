@@ -30,13 +30,13 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
-public class MarketModel implements Model {
-    private final ObjectProperty<MarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+public class CreateOfferMarketModel implements Model {
+    private final ObjectProperty<CreateOfferMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<MarketView.MarketListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<MarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<MarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
+    private final ObservableList<CreateOfferMarketView.MarketListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<CreateOfferMarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<CreateOfferMarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
 
     void reset() {
         selectedMarketListItem.set(null);

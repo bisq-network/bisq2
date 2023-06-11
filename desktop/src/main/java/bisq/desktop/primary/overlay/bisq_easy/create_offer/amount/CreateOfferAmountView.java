@@ -30,11 +30,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountView extends View<VBox, AmountModel, AmountController> {
+public class CreateOfferAmountView extends View<VBox, CreateOfferAmountModel, CreateOfferAmountController> {
     private final Button toggleButton;
     private final VBox minAmountRoot;
 
-    public AmountView(AmountModel model, AmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
+    public CreateOfferAmountView(CreateOfferAmountModel model, CreateOfferAmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

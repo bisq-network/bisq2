@@ -26,7 +26,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class DirectionModel implements Model {
+public class CreateOfferDirectionModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty ignoreShowReputationInfo = new SimpleBooleanProperty();

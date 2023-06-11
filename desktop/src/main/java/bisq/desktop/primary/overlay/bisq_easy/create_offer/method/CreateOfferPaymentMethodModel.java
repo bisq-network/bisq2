@@ -25,7 +25,7 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @Getter
-public class SettlementMethodModel implements Model {
+public class CreateOfferPaymentMethodModel implements Model {
     // Method enum name or custom name
     private final ObservableList<String> allMethodNames = FXCollections.observableArrayList();
     private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();

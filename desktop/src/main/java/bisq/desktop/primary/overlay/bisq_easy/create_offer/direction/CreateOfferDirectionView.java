@@ -38,7 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class DirectionView extends View<StackPane, DirectionModel, DirectionController> {
+public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirectionModel, CreateOfferDirectionController> {
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
@@ -46,7 +46,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
     private Button withoutReputationButton, backToBuyButton;
     private Hyperlink gainReputationHyperlink;
 
-    public DirectionView(DirectionModel model, DirectionController controller) {
+    public CreateOfferDirectionView(CreateOfferDirectionModel model, CreateOfferDirectionController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);

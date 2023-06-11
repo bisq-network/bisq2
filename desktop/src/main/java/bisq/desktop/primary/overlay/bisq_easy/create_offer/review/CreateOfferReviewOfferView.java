@@ -64,7 +64,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
+class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferModel, CreateOfferReviewOfferController> {
     private final static int BUTTON_WIDTH = 140;
     private final static int FEEDBACK_WIDTH = 700;
     private final static int TABLE_WIDTH = 800;
@@ -80,7 +80,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     private final VBox content, createOfferSuccess;
     private Subscription showCreateOfferSuccessPin;
 
-    ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
+    CreateOfferReviewOfferView(CreateOfferReviewOfferModel model, CreateOfferReviewOfferController controller) {
         super(new StackPane(), model, controller);
 
         content = new VBox(10);

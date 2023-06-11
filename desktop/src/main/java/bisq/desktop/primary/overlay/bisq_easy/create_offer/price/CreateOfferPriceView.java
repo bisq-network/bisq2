@@ -37,14 +37,14 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PriceView extends View<VBox, PriceModel, PriceController> {
+public class CreateOfferPriceView extends View<VBox, CreateOfferPriceModel, CreateOfferPriceController> {
     private final MaterialTextField percentage;
     private final ToggleButton useFixPriceToggle;
     private final VBox fieldsBox;
     private final PriceInput priceInput;
     private Subscription percentageFocussedPin, useFixPricePin;
 
-    public PriceView(PriceModel model, PriceController controller, PriceInput priceInput) {
+    public CreateOfferPriceView(CreateOfferPriceModel model, CreateOfferPriceController controller, PriceInput priceInput) {
         super(new VBox(10), model, controller);
         this.priceInput = priceInput;
 

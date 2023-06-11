@@ -40,21 +40,21 @@ import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWi
 import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
-public class PriceController implements Controller {
-    private final PriceModel model;
+public class CreateOfferPriceController implements Controller {
+    private final CreateOfferPriceModel model;
     @Getter
-    private final PriceView view;
+    private final CreateOfferPriceView view;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Subscription priceInputPin;
 
-    public PriceController(DefaultApplicationService applicationService) {
+    public CreateOfferPriceController(DefaultApplicationService applicationService) {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         settingsService = applicationService.getSettingsService();
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
-        model = new PriceModel();
-        view = new PriceView(model, this, priceInput);
+        model = new CreateOfferPriceModel();
+        view = new CreateOfferPriceView(model, this, priceInput);
     }
 
     public void setMarket(Market market) {

@@ -20,12 +20,12 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.AmountController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.DirectionController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.MarketController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.SettlementMethodController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.price.PriceController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.ReviewOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.CreateOfferAmountController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.CreateOfferDirectionController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.CreateOfferMarketController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.CreateOfferPaymentMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.price.CreateOfferPriceController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.CreateOfferReviewOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.application.Platform;
@@ -60,12 +60,12 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
-    private final DirectionController directionController;
-    private final MarketController marketController;
-    private final PriceController priceController;
-    private final AmountController amountController;
-    private final SettlementMethodController settlementMethodController;
-    private final ReviewOfferController reviewOfferController;
+    private final CreateOfferDirectionController createOfferDirectionController;
+    private final CreateOfferMarketController createOfferMarketController;
+    private final CreateOfferPriceController createOfferPriceController;
+    private final CreateOfferAmountController createOfferAmountController;
+    private final CreateOfferPaymentMethodController createOfferPaymentMethodController;
+    private final CreateOfferReviewOfferController createOfferReviewOfferController;
     private final ListChangeListener<String> settlementMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin;
@@ -86,12 +86,12 @@ public class CreateOfferController extends NavigationController implements InitW
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
-        directionController = new DirectionController(applicationService, this::onNext, this::setMainButtonsVisibleState);
-        marketController = new MarketController(applicationService, this::onNext);
-        priceController = new PriceController(applicationService);
-        amountController = new AmountController(applicationService);
-        settlementMethodController = new SettlementMethodController(applicationService);
-        reviewOfferController = new ReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
+        createOfferDirectionController = new CreateOfferDirectionController(applicationService, this::onNext, this::setMainButtonsVisibleState);
+        createOfferMarketController = new CreateOfferMarketController(applicationService, this::onNext);
+        createOfferPriceController = new CreateOfferPriceController(applicationService);
+        createOfferAmountController = new CreateOfferAmountController(applicationService);
+        createOfferPaymentMethodController = new CreateOfferPaymentMethodController(applicationService);
+        createOfferReviewOfferController = new CreateOfferReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
 
         settlementMethodsListener = c -> {
             c.next();
@@ -101,16 +101,16 @@ public class CreateOfferController extends NavigationController implements InitW
 
     @Override
     public void initWithData(InitData initData) {
-        reviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
+        createOfferReviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
     }
 
     @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
 
-        directionPin = EasyBind.subscribe(directionController.getDirection(), direction -> {
-            reviewOfferController.setDirection(direction);
-            amountController.setDirection(direction);
+        directionPin = EasyBind.subscribe(createOfferDirectionController.getDirection(), direction -> {
+            createOfferReviewOfferController.setDirection(direction);
+            createOfferAmountController.setDirection(direction);
             model.getPriceProgressItemVisible().set(direction == Direction.SELL);
             if (direction == Direction.SELL) {
                 model.getChildTargets().add(2, NavigationTarget.CREATE_OFFER_PRICE);
@@ -118,22 +118,22 @@ public class CreateOfferController extends NavigationController implements InitW
                 model.getChildTargets().remove(NavigationTarget.CREATE_OFFER_PRICE);
             }
         });
-        marketPin = EasyBind.subscribe(marketController.getMarket(), market -> {
-            reviewOfferController.setMarket(market);
-            settlementMethodController.setMarket(market);
-            priceController.setMarket(market);
-            amountController.setMarket(market);
+        marketPin = EasyBind.subscribe(createOfferMarketController.getMarket(), market -> {
+            createOfferReviewOfferController.setMarket(market);
+            createOfferPaymentMethodController.setMarket(market);
+            createOfferPriceController.setMarket(market);
+            createOfferAmountController.setMarket(market);
             updateNextButtonDisabledState();
         });
-        amountSpecPin = EasyBind.subscribe(amountController.getAmountSpec(), reviewOfferController::setAmountSpec);
-        isMinAmountEnabledPin = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
-        priceSpecPin = EasyBind.subscribe(priceController.getPriceSpec(), priceSpec -> {
-            amountController.setPriceSpec(priceSpec);
-            reviewOfferController.setPriceSpec(priceSpec);
+        amountSpecPin = EasyBind.subscribe(createOfferAmountController.getAmountSpec(), createOfferReviewOfferController::setAmountSpec);
+        isMinAmountEnabledPin = EasyBind.subscribe(createOfferAmountController.getIsMinAmountEnabled(), createOfferReviewOfferController::setIsMinAmountEnabled);
+        priceSpecPin = EasyBind.subscribe(createOfferPriceController.getPriceSpec(), priceSpec -> {
+            createOfferAmountController.setPriceSpec(priceSpec);
+            createOfferReviewOfferController.setPriceSpec(priceSpec);
         });
 
         handleSettlementMethodsUpdate();
-        settlementMethodController.getSettlementMethodNames().addListener(settlementMethodsListener);
+        createOfferPaymentMethodController.getSettlementMethodNames().addListener(settlementMethodsListener);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class CreateOfferController extends NavigationController implements InitW
         amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
-        settlementMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);
+        createOfferPaymentMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
@@ -158,22 +158,22 @@ public class CreateOfferController extends NavigationController implements InitW
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CREATE_OFFER_DIRECTION: {
-                return Optional.of(directionController);
+                return Optional.of(createOfferDirectionController);
             }
             case CREATE_OFFER_MARKET: {
-                return Optional.of(marketController);
+                return Optional.of(createOfferMarketController);
             }
             case CREATE_OFFER_PRICE: {
-                return Optional.of(priceController);
+                return Optional.of(createOfferPriceController);
             }
             case CREATE_OFFER_AMOUNT: {
-                return Optional.of(amountController);
+                return Optional.of(createOfferAmountController);
             }
             case CREATE_OFFER_SETTLEMENT_METHOD: {
-                return Optional.of(settlementMethodController);
+                return Optional.of(createOfferPaymentMethodController);
             }
             case CREATE_OFFER_REVIEW_OFFER: {
-                return Optional.of(reviewOfferController);
+                return Optional.of(createOfferReviewOfferController);
             }
             default: {
                 return Optional.empty();
@@ -218,21 +218,21 @@ public class CreateOfferController extends NavigationController implements InitW
     private void reset() {
         resetSelectedChildTarget();
 
-        directionController.reset();
-        marketController.reset();
-        priceController.reset();
-        amountController.reset();
-        settlementMethodController.reset();
-        reviewOfferController.reset();
+        createOfferDirectionController.reset();
+        createOfferMarketController.reset();
+        createOfferPriceController.reset();
+        createOfferAmountController.reset();
+        createOfferPaymentMethodController.reset();
+        createOfferReviewOfferController.reset();
 
         model.reset();
     }
 
     private void updateNextButtonDisabledState() {
         if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
+            model.getNextButtonDisabled().set(createOfferMarketController.getMarket().get() == null);
         } else if (NavigationTarget.CREATE_OFFER_SETTLEMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(settlementMethodController.getSettlementMethodNames().isEmpty());
+            model.getNextButtonDisabled().set(createOfferPaymentMethodController.getSettlementMethodNames().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -245,7 +245,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     private void handleSettlementMethodsUpdate() {
-        reviewOfferController.setSettlementMethodNames(settlementMethodController.getSettlementMethodNames());
+        createOfferReviewOfferController.setSettlementMethodNames(createOfferPaymentMethodController.getSettlementMethodNames());
         updateNextButtonDisabledState();
     }
 }

@@ -42,26 +42,26 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class AmountController implements Controller {
-    private final AmountModel model;
+public class CreateOfferAmountController implements Controller {
+    private final CreateOfferAmountModel model;
     @Getter
-    private final AmountView view;
+    private final CreateOfferAmountView view;
     private final AmountComponent minAmountComponent, maxOrFixAmountComponent;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
-    public AmountController(DefaultApplicationService applicationService) {
+    public CreateOfferAmountController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        model = new AmountModel();
+        model = new CreateOfferAmountModel();
 
         minAmountComponent = new AmountComponent(applicationService, true);
         minAmountComponent.setDescription(Res.get("onboarding.amount.description.minAmount"));
         maxOrFixAmountComponent = new AmountComponent(applicationService, true);
 
-        view = new AmountView(model, this,
+        view = new CreateOfferAmountView(model, this,
                 minAmountComponent,
                 maxOrFixAmountComponent);
     }

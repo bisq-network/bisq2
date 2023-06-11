@@ -28,7 +28,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 @Getter
-public class AmountModel implements Model {
+public class CreateOfferAmountModel implements Model {
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();

@@ -36,7 +36,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-class ReviewOfferModel implements Model {
+class CreateOfferReviewOfferModel implements Model {
     @Setter
     private boolean showMatchingOffers;
     @Setter
@@ -59,8 +59,8 @@ class ReviewOfferModel implements Model {
     private AmountSpec amountSpec;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-    private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
-    private final SortedList<ReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
+    private final ObservableList<CreateOfferReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
+    private final SortedList<CreateOfferReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
 
     void reset() {
         showMatchingOffers = false;

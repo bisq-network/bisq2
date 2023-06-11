@@ -38,23 +38,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MarketController implements Controller {
-    private final MarketModel model;
+public class CreateOfferMarketController implements Controller {
+    private final CreateOfferMarketModel model;
     @Getter
-    private final MarketView view;
+    private final CreateOfferMarketView view;
     private final ChatService chatService;
     private final Runnable onNextHandler;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private Subscription searchTextPin;
 
-    public MarketController(DefaultApplicationService applicationService, Runnable onNextHandler) {
+    public CreateOfferMarketController(DefaultApplicationService applicationService, Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
         chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
-        model = new MarketModel();
-        view = new MarketView(model, this);
+        model = new CreateOfferMarketModel();
+        view = new CreateOfferMarketView(model, this);
     }
 
     public ReadOnlyObjectProperty<Market> getMarket() {
@@ -93,7 +93,7 @@ public class MarketController implements Controller {
                             .map(ChatMessage::getAuthorUserProfileId)
                             .distinct()
                             .count();
-                    MarketView.MarketListItem item = new MarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
+                    CreateOfferMarketView.MarketListItem item = new CreateOfferMarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
                     if (market.equals(model.getSelectedMarket().get())) {
                         model.getSelectedMarketListItem().set(item);
                     }
@@ -120,7 +120,7 @@ public class MarketController implements Controller {
         searchTextPin.unsubscribe();
     }
 
-    void onMarketListItemClicked(MarketView.MarketListItem item) {
+    void onMarketListItemClicked(CreateOfferMarketView.MarketListItem item) {
         if (item == null) {
             return;
         }
@@ -131,7 +131,7 @@ public class MarketController implements Controller {
         model.getSelectedMarket().set(item.getMarket());
     }
 
-    private Optional<MarketView.MarketListItem> findMarketListItem(Market market) {
+    private Optional<CreateOfferMarketView.MarketListItem> findMarketListItem(Market market) {
         return model.getListItems().stream()
                 .filter(marketListItem -> marketListItem.getMarket().equals(market))
                 .findAny();

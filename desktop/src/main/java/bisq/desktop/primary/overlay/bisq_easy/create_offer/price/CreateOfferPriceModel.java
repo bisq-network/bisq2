@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class PriceModel implements Model {
+public class CreateOfferPriceModel implements Model {
     @Setter
     private Market market = null;
     private final DoubleProperty percentage = new SimpleDoubleProperty();

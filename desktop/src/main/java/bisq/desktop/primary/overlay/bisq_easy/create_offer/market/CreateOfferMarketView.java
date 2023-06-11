@@ -45,11 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 
 @Slf4j
-public class MarketView extends View<VBox, MarketModel, MarketController> {
+public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, CreateOfferMarketController> {
     private final BisqTableView<MarketListItem> tableView;
     private final SearchBox searchBox;
 
-    public MarketView(MarketModel model, MarketController controller) {
+    public CreateOfferMarketView(CreateOfferMarketModel model, CreateOfferMarketController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

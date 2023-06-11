@@ -36,18 +36,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class SettlementMethodController implements Controller {
-    private final SettlementMethodModel model;
+public class CreateOfferPaymentMethodController implements Controller {
+    private final CreateOfferPaymentMethodModel model;
     @Getter
-    private final SettlementMethodView view;
+    private final CreateOfferPaymentMethodView view;
     private final SettingsService settingsService;
     private Subscription customMethodPin;
 
-    public SettlementMethodController(DefaultApplicationService applicationService) {
+    public CreateOfferPaymentMethodController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
 
-        model = new SettlementMethodModel();
-        view = new SettlementMethodView(model, this);
+        model = new CreateOfferPaymentMethodModel();
+        view = new CreateOfferPaymentMethodView(model, this);
     }
 
     /**

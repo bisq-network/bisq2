@@ -30,21 +30,21 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 
 @Slf4j
-public class DirectionController implements Controller {
-    private final DirectionModel model;
+public class CreateOfferDirectionController implements Controller {
+    private final CreateOfferDirectionModel model;
     @Getter
-    private final DirectionView view;
+    private final CreateOfferDirectionView view;
     private final Runnable onNextHandler;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
 
-    public DirectionController(DefaultApplicationService applicationService,
-                               Runnable onNextHandler,
-                               Consumer<Boolean> mainButtonsVisibleHandler) {
+    public CreateOfferDirectionController(DefaultApplicationService applicationService,
+                                          Runnable onNextHandler,
+                                          Consumer<Boolean> mainButtonsVisibleHandler) {
         this.onNextHandler = onNextHandler;
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
 
-        model = new DirectionModel();
-        view = new DirectionView(model, this);
+        model = new CreateOfferDirectionModel();
+        view = new CreateOfferDirectionView(model, this);
         setDirection(Direction.BUY);
     }
 

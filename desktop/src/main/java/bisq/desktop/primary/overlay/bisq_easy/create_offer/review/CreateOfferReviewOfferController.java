@@ -65,10 +65,10 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ReviewOfferController implements Controller {
-    private final ReviewOfferModel model;
+public class CreateOfferReviewOfferController implements Controller {
+    private final CreateOfferReviewOfferModel model;
     @Getter
-    private final ReviewOfferView view;
+    private final CreateOfferReviewOfferView view;
     private final ReputationService reputationService;
     private final Runnable resetHandler;
     private final SettingsService settingsService;
@@ -82,9 +82,9 @@ public class ReviewOfferController implements Controller {
     private final ChatService chatService;
     private final MarketPriceService marketPriceService;
 
-    public ReviewOfferController(DefaultApplicationService applicationService,
-                                 Consumer<Boolean> mainButtonsVisibleHandler,
-                                 Runnable resetHandler) {
+    public CreateOfferReviewOfferController(DefaultApplicationService applicationService,
+                                            Consumer<Boolean> mainButtonsVisibleHandler,
+                                            Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
@@ -98,8 +98,8 @@ public class ReviewOfferController implements Controller {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         this.resetHandler = resetHandler;
 
-        model = new ReviewOfferModel();
-        view = new ReviewOfferView(model, this);
+        model = new CreateOfferReviewOfferModel();
+        view = new CreateOfferReviewOfferView(model, this);
     }
 
     public void setDirection(Direction direction) {
@@ -205,12 +205,12 @@ public class ReviewOfferController implements Controller {
         model.setMyOfferMessage(myOfferMessage);
 
         model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .map(chatMessage -> new ReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().orElseThrow(),
+                .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().orElseThrow(),
                         userProfileService,
                         reputationService,
                         marketPriceService))
                 .filter(getTakeOfferPredicate())
-                .sorted(Comparator.comparing(ReviewOfferView.ListItem::getReputationScore))
+                .sorted(Comparator.comparing(CreateOfferReviewOfferView.ListItem::getReputationScore))
                 .limit(3)
                 .collect(Collectors.toList()));
 
@@ -221,7 +221,7 @@ public class ReviewOfferController implements Controller {
     public void onDeactivate() {
     }
 
-    void onTakeOffer(ReviewOfferView.ListItem listItem) {
+    void onTakeOffer(CreateOfferReviewOfferView.ListItem listItem) {
         OverlayController.hide(() -> {
                     TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
                             Optional.of(model.getAmountSpec()),
@@ -252,7 +252,7 @@ public class ReviewOfferController implements Controller {
     }
 
     @SuppressWarnings("RedundantIfStatement")
-    private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
+    private Predicate<? super CreateOfferReviewOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
             try {
