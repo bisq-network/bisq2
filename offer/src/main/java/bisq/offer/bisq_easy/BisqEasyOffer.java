@@ -80,7 +80,7 @@ public final class BisqEasyOffer extends Offer {
 
     @Override
     public bisq.offer.protobuf.Offer toProto() {
-        return getSwapOfferBuilder().setBisqEasyOffer(
+        return getOfferBuilder().setBisqEasyOffer(
                         bisq.offer.protobuf.BisqEasyOffer.newBuilder()
                                 .setChatMessageText(chatMessageText))
                 .build();

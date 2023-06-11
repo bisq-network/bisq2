@@ -56,7 +56,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
         this.chatChannelNotificationType.set(chatChannelNotificationType);
     }
 
-    public bisq.chat.protobuf.ChatChannel.Builder getChannelBuilder() {
+    public bisq.chat.protobuf.ChatChannel.Builder getChatChannelBuilder() {
         return bisq.chat.protobuf.ChatChannel.newBuilder()
                 .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProto())

@@ -68,7 +68,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         bisq.chat.protobuf.CommonPublicChatChannel.Builder builder = bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
                 .addAllChannelModeratorIds(channelModeratorIds);
         channelAdminId.ifPresent(builder::setChannelAdminId);
-        return getChannelBuilder()
+        return getChatChannelBuilder()
                 .setCommonPublicChatChannel(builder).build();
     }
 

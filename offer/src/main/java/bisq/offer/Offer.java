@@ -89,7 +89,7 @@ public abstract class Offer implements Proto {
 
     public abstract bisq.offer.protobuf.Offer toProto();
 
-    protected bisq.offer.protobuf.Offer.Builder getSwapOfferBuilder() {
+    protected bisq.offer.protobuf.Offer.Builder getOfferBuilder() {
         return bisq.offer.protobuf.Offer.newBuilder()
                 .setId(id)
                 .setDate(date)
