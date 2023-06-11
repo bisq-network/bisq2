@@ -18,7 +18,7 @@
 package bisq.oracle.marketprice;
 
 import bisq.common.currency.Market;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,19 +27,19 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class MarketPrice {
-    private final Quote quote;
+    private final PriceQuote priceQuote;
     private final String code;
     private final long timestamp;
     private final String provider;
 
-    public MarketPrice(Quote quote, String code, long timestamp, String provider) {
-        this.quote = quote;
+    public MarketPrice(PriceQuote priceQuote, String code, long timestamp, String provider) {
+        this.priceQuote = priceQuote;
         this.code = code;
         this.timestamp = timestamp;
         this.provider = provider;
     }
 
     public Market getMarket() {
-        return quote.getMarket();
+        return priceQuote.getMarket();
     }
 }

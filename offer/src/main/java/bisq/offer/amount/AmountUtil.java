@@ -52,7 +52,7 @@ public class AmountUtil {
         return AmountSpecUtil.findBaseSideFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .or(() -> AmountSpecUtil.findQuoteSideFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
@@ -68,7 +68,7 @@ public class AmountUtil {
         return AmountSpecUtil.findBaseSideMinAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .or(() -> AmountSpecUtil.findQuoteSideMinAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
@@ -84,7 +84,7 @@ public class AmountUtil {
         return AmountSpecUtil.findBaseSideMaxAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .or(() -> AmountSpecUtil.findQuoteSideMaxAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
@@ -100,7 +100,7 @@ public class AmountUtil {
         return AmountSpecUtil.findBaseSideMinOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .or(() -> AmountSpecUtil.findQuoteSideMinOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
@@ -115,7 +115,7 @@ public class AmountUtil {
         return AmountSpecUtil.findBaseSideMaxOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .or(() -> AmountSpecUtil.findQuoteSideMaxOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
@@ -136,7 +136,7 @@ public class AmountUtil {
         return AmountSpecUtil.findQuoteSideFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                 .or(() -> AmountSpecUtil.findBaseSideFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
@@ -152,7 +152,7 @@ public class AmountUtil {
         return AmountSpecUtil.findQuoteSideMinAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                 .or(() -> AmountSpecUtil.findBaseSideMinAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
@@ -168,7 +168,7 @@ public class AmountUtil {
         return AmountSpecUtil.findQuoteSideMaxAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                 .or(() -> AmountSpecUtil.findBaseSideMaxAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
@@ -184,7 +184,7 @@ public class AmountUtil {
         return AmountSpecUtil.findQuoteSideMinOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                 .or(() -> AmountSpecUtil.findBaseSideMinOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
@@ -199,7 +199,7 @@ public class AmountUtil {
         return AmountSpecUtil.findQuoteSideMaxOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                 .or(() -> AmountSpecUtil.findBaseSideMaxOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 }

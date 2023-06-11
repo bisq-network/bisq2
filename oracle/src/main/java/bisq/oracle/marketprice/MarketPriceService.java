@@ -21,7 +21,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
@@ -152,8 +152,8 @@ public class MarketPriceService {
         return Optional.ofNullable(marketPrice);
     }
 
-    public Optional<Quote> findMarketPriceQuote(Market market) {
-        return findMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
+    public Optional<PriceQuote> findMarketPriceQuote(Market market) {
+        return findMarketPrice(market).map(MarketPrice::getPriceQuote).stream().findAny();
     }
 
     public CompletableFuture<Map<Market, MarketPrice>> request() {
@@ -214,8 +214,8 @@ public class MarketPriceService {
                     boolean isFiat = TradeCurrency.isFiat(currencyCode);
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
-                    Quote quote = Quote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
-                    map.put(quote.getMarket(), new MarketPrice(quote, currencyCode, timestampSec * 1000, dataProvider));
+                    PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
+                    map.put(priceQuote.getMarket(), new MarketPrice(priceQuote, currencyCode, timestampSec * 1000, dataProvider));
                 }
             } catch (Throwable t) {
                 // We do not fail the whole request if one entry would be invalid

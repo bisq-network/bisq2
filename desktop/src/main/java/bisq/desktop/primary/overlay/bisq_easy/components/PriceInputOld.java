@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.components;
 
 import bisq.common.currency.Market;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
@@ -48,12 +48,12 @@ public class PriceInputOld {
         controller.setSelectedMarket(selectedMarket);
     }
 
-    public ReadOnlyObjectProperty<Quote> quoteProperty() {
+    public ReadOnlyObjectProperty<PriceQuote> quoteProperty() {
         return controller.model.quote;
     }
 
-    public void setQuote(Quote quote) {
-        controller.model.quote.set(quote);
+    public void setQuote(PriceQuote priceQuote) {
+        controller.model.quote.set(priceQuote);
     }
 
     public void setIsTakeOffer() {
@@ -145,12 +145,12 @@ public class PriceInputOld {
             if (model.selectedMarket == null) return;
             MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
-            model.quote.set(marketPrice.getQuote());
+            model.quote.set(marketPrice.getPriceQuote());
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Quote> quote = new SimpleObjectProperty<>();
+        private final ObjectProperty<PriceQuote> quote = new SimpleObjectProperty<>();
         private Market selectedMarket;
         private boolean hasFocus;
         private final StringProperty marketString = new SimpleStringProperty();
@@ -176,7 +176,7 @@ public class PriceInputOld {
         private final MaterialTextField textField;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
-        private final ChangeListener<Quote> quoteListener;
+        private final ChangeListener<PriceQuote> quoteListener;
         private final Label rightLabel;
 
         private View(Model model, Controller controller, PriceValidator validator) {

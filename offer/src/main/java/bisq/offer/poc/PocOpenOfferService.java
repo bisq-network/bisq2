@@ -22,7 +22,7 @@ import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
@@ -119,7 +119,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
     public CompletableFuture<PocOffer> createOffer(Market selectedMarket,
                                                    Direction direction,
                                                    Monetary baseSideAmount,
-                                                   Quote fixPrice,
+                                                   PriceQuote fixPrice,
                                                    ProtocolType selectedProtocolTyp,
                                                    List<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts,
                                                    List<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts,

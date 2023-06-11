@@ -26,7 +26,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -97,7 +97,7 @@ public class TakeOfferReviewController implements Controller {
             // If taker is buyer we set the sellers price from the offer
             model.setSellersPriceSpec(bisqEasyOffer.getPriceSpec());
 
-            Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
+            Optional<PriceQuote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
                     .map(QuoteFormatter::formatWithQuoteCode)
@@ -112,7 +112,7 @@ public class TakeOfferReviewController implements Controller {
         if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
             model.setSellersPriceSpec(priceSpec);
 
-            Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
+            Optional<PriceQuote> sellersQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
                     .map(QuoteFormatter::formatWithQuoteCode)
@@ -207,8 +207,8 @@ public class TakeOfferReviewController implements Controller {
     private void applySellersPriceDetails() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         Market market = bisqEasyOffer.getMarket();
-        Optional<Quote> marketPriceQuote = marketPriceService.findMarketPrice(market)
-                .map(MarketPrice::getQuote);
+        Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market)
+                .map(MarketPrice::getPriceQuote);
         String marketPrice = marketPriceQuote
                 .map(QuoteFormatter::formatWithQuoteCode)
                 .orElse(Res.get("na"));

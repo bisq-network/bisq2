@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.closedTrades;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.contract.poc.PocContract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
@@ -58,7 +58,7 @@ public class ClosedTradeListItem implements TableItem {
         market = offer.getMarket().toString();
         baseAmount = AmountFormatter.formatAmount(contract.getBaseSideAmount());
         quoteAmount = AmountFormatter.formatAmount(contract.getQuoteSideAmount());
-        price = QuoteFormatter.format(Quote.of(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
+        price = QuoteFormatter.format(PriceQuote.from(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
         String baseSidePayment = offer.getBaseSidePaymentSpecs().stream()
                 .map(PaymentSpec::getPaymentMethodName)

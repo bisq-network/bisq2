@@ -17,7 +17,7 @@
 
 package bisq.offer.utils;
 
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.offer.price.PriceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -29,58 +29,58 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class PriceUtilTest {
     @Test
     void testOffsetOf() {
-        Quote marketQuote = Quote.fromFiatPrice(50000, "USD");
-        Quote offerQuote = Quote.fromFiatPrice(50000, "USD");
+        PriceQuote marketPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
+        PriceQuote offerPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
 
-        double offset = PriceUtil.getPercentageToMarketPrice(marketQuote, offerQuote);
+        double offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
         assertEquals(0, offset);
 
-        offerQuote = Quote.fromFiatPrice(55000, "USD");
-        offset = PriceUtil.getPercentageToMarketPrice(marketQuote, offerQuote);
+        offerPriceQuote = PriceQuote.fromFiatPrice(55000, "USD");
+        offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
         log.error("" + offset);
 
         assertEquals(0.1d, offset);
 
-        offerQuote = Quote.fromFiatPrice(45000, "USD");
-        offset = PriceUtil.getPercentageToMarketPrice(marketQuote, offerQuote);
+        offerPriceQuote = PriceQuote.fromFiatPrice(45000, "USD");
+        offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
         assertEquals(-0.1, offset);
 
-        offerQuote = Quote.fromFiatPrice(100000, "USD");
-        offset = PriceUtil.getPercentageToMarketPrice(marketQuote, offerQuote);
+        offerPriceQuote = PriceQuote.fromFiatPrice(100000, "USD");
+        offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
         assertEquals(1, offset); // 100% of marketQuote
 
-        offerQuote = Quote.fromFiatPrice(150000, "USD");
-        offset = PriceUtil.getPercentageToMarketPrice(marketQuote, offerQuote);
+        offerPriceQuote = PriceQuote.fromFiatPrice(150000, "USD");
+        offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
         assertEquals(2, offset); // 200% of marketQuote
 
-        offerQuote = Quote.fromFiatPrice(0, "USD");
-        offset = PriceUtil.getPercentageToMarketPrice(marketQuote, offerQuote);
+        offerPriceQuote = PriceQuote.fromFiatPrice(0, "USD");
+        offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
         assertEquals(-1, offset);
 
         assertThrows(IllegalArgumentException.class,
-                () -> PriceUtil.getPercentageToMarketPrice(Quote.fromFiatPrice(0, "USD"),
-                        Quote.fromFiatPrice(50000, "USD")));
+                () -> PriceUtil.getPercentageToMarketPrice(PriceQuote.fromFiatPrice(0, "USD"),
+                        PriceQuote.fromFiatPrice(50000, "USD")));
     }
 
     @Test
     void testFromMarketPriceOffset() {
-        Quote marketQuote = Quote.fromFiatPrice(50000, "USD");
+        PriceQuote marketPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
 
-        Quote quote = PriceUtil.fromMarketPriceMarkup(marketQuote, 0);
-        assertEquals(500000000, quote.getValue());
-        assertEquals(4, quote.getPrecision());
-        assertEquals("BTC/USD", quote.getMarket().getMarketCodes());
+        PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote, 0);
+        assertEquals(500000000, priceQuote.getValue());
+        assertEquals(4, priceQuote.getPrecision());
+        assertEquals("BTC/USD", priceQuote.getMarket().getMarketCodes());
 
-        quote = PriceUtil.fromMarketPriceMarkup(marketQuote, 1);
-        assertEquals(1000000000, quote.getValue());
+        priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote, 1);
+        assertEquals(1000000000, priceQuote.getValue());
 
-        quote = PriceUtil.fromMarketPriceMarkup(marketQuote, -1);
-        assertEquals(0, quote.getValue());
+        priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote, -1);
+        assertEquals(0, priceQuote.getValue());
 
-        quote = PriceUtil.fromMarketPriceMarkup(marketQuote, 0.1);
-        assertEquals(550000000, quote.getValue());
+        priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote, 0.1);
+        assertEquals(550000000, priceQuote.getValue());
 
-        quote = PriceUtil.fromMarketPriceMarkup(marketQuote, -0.1);
-        assertEquals(450000000, quote.getValue());
+        priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote, -0.1);
+        assertEquals(450000000, priceQuote.getValue());
     }
 }

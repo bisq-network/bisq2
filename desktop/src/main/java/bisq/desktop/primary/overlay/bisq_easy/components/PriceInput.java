@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.components;
 
 import bisq.common.currency.Market;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
@@ -49,7 +49,7 @@ public class PriceInput {
         controller.setMarket(market);
     }
 
-    public ReadOnlyObjectProperty<Quote> getQuote() {
+    public ReadOnlyObjectProperty<PriceQuote> getQuote() {
         return controller.model.quote;
     }
 
@@ -61,7 +61,7 @@ public class PriceInput {
         controller.model.description.set(description);
     }
 
-    public void setQuote(Quote price) {
+    public void setQuote(PriceQuote price) {
         controller.model.quote.set(price);
     }
 
@@ -154,19 +154,19 @@ public class PriceInput {
                 return;
             }
             try {
-                Quote quote = PriceParser.parse(price, model.market);
-                checkArgument(quote.getValue() > 0);
-                model.quote.set(quote);
+                PriceQuote priceQuote = PriceParser.parse(price, model.market);
+                checkArgument(priceQuote.getValue() > 0);
+                model.quote.set(priceQuote);
             } catch (Throwable ignore) {
                 onQuoteChanged(model.quote.get());
             }
         }
 
-        private void onQuoteChanged(Quote quote) {
+        private void onQuoteChanged(PriceQuote priceQuote) {
             if (model.isFocused) {
                 return;
             }
-            model.priceString.set(quote == null ? "" : QuoteFormatter.format(quote));
+            model.priceString.set(priceQuote == null ? "" : QuoteFormatter.format(priceQuote));
         }
 
         private void onFocusedChanged(boolean isFocused) {
@@ -179,12 +179,12 @@ public class PriceInput {
         private void setQuoteFromMarketPrice() {
             if (model.market == null) return;
             marketPriceService.findMarketPrice(model.market)
-                    .ifPresent(marketPrice -> model.quote.set(marketPrice.getQuote()));
+                    .ifPresent(marketPrice -> model.quote.set(marketPrice.getPriceQuote()));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Quote> quote = new SimpleObjectProperty<>();
+        private final ObjectProperty<PriceQuote> quote = new SimpleObjectProperty<>();
         private final StringProperty priceString = new SimpleStringProperty();
 
         private Market market;

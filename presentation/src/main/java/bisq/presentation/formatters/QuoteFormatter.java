@@ -18,42 +18,42 @@
 package bisq.presentation.formatters;
 
 import bisq.common.locale.LocaleRepository;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.DecimalFormatters;
 
 import java.util.Locale;
 
 public class QuoteFormatter {
-    public static String formatWithQuoteCode(Quote quote) {
-        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), true);
+    public static String formatWithQuoteCode(PriceQuote priceQuote) {
+        return formatWithQuoteCode(priceQuote, LocaleRepository.getDefaultLocale(), true);
     }
 
-    public static String formatWithQuoteCode(Quote quote, boolean useLowPrecision) {
-        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), useLowPrecision);
+    public static String formatWithQuoteCode(PriceQuote priceQuote, boolean useLowPrecision) {
+        return formatWithQuoteCode(priceQuote, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
-    public static String formatWithQuoteCode(Quote quote, Locale locale, boolean useLowPrecision) {
-        return format(quote, locale, useLowPrecision) + " " + quote.getMarket().getMarketCodes();
+    public static String formatWithQuoteCode(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
+        return format(priceQuote, locale, useLowPrecision) + " " + priceQuote.getMarket().getMarketCodes();
     }
 
-    public static String format(Quote quote) {
-        return format(quote, LocaleRepository.getDefaultLocale());
+    public static String format(PriceQuote priceQuote) {
+        return format(priceQuote, LocaleRepository.getDefaultLocale());
     }
 
-    public static String format(Quote quote, boolean useLowPrecision) {
-        return format(quote, LocaleRepository.getDefaultLocale(), useLowPrecision);
+    public static String format(PriceQuote priceQuote, boolean useLowPrecision) {
+        return format(priceQuote, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
-    public static String format(Quote quote, Locale locale) {
-        return getDecimalFormat(quote, locale, true).format(quote.asDouble());
+    public static String format(PriceQuote priceQuote, Locale locale) {
+        return getDecimalFormat(priceQuote, locale, true).format(priceQuote.asDouble());
     }
 
-    public static String format(Quote quote, Locale locale, boolean useLowPrecision) {
-        return getDecimalFormat(quote, locale, useLowPrecision).format(quote.asDouble());
+    public static String format(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
+        return getDecimalFormat(priceQuote, locale, useLowPrecision).format(priceQuote.asDouble());
     }
 
-    private static DecimalFormatters.Format getDecimalFormat(Quote quote, Locale locale, boolean useLowPrecision) {
-        int exponent = useLowPrecision ? quote.getLowPrecision() : quote.getPrecision();
+    private static DecimalFormatters.Format getDecimalFormat(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
+        int exponent = useLowPrecision ? priceQuote.getLowPrecision() : priceQuote.getPrecision();
         return DecimalFormatters.getDecimalFormat(locale, exponent);
     }
 }

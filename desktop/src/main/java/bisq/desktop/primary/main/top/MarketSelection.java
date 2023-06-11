@@ -213,7 +213,7 @@ public class MarketSelection {
         private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             codes = marketPrice.getMarket().getMarketCodes();
-            price = QuoteFormatter.format(marketPrice.getQuote(), true);
+            price = QuoteFormatter.format(marketPrice.getPriceQuote(), true);
         }
 
         @Override

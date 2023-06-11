@@ -17,7 +17,7 @@
 
 package bisq.offer.price;
 
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -34,7 +34,7 @@ public class OfferPriceFormatter {
         return PriceUtil.findQuote(marketPriceService, offer).map(getFormatFunction(showCode)).orElse(Res.get("na"));
     }
 
-    private static Function<Quote, String> getFormatFunction(boolean showCode) {
+    private static Function<PriceQuote, String> getFormatFunction(boolean showCode) {
         return showCode ? QuoteFormatter::formatWithQuoteCode : QuoteFormatter::format;
     }
 }

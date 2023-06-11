@@ -45,7 +45,7 @@ message AmountSpec {
 
 // PriceSpec
 message FixPrice {
-  common.Quote quote = 1;
+  common.PriceQuote quote = 1;
 }
 message FloatPrice {
   double percentage = 1;
@@ -127,6 +127,7 @@ message BisqEasyOffer {
 }
 
 
+// proof of concept stuff
 message PocOffer {
   string id = 1;
   uint64 date = 2;

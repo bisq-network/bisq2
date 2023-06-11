@@ -21,7 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.poc.PocOffer;
@@ -39,7 +39,7 @@ public class TakeOfferModel implements Model {
     PocOffer offer;
     Monetary baseSideAmount;
     Monetary quoteSideAmount;
-    Quote fixPrice;
+    PriceQuote fixPrice;
     private ProtocolType selectedProtocolType;
 
     private Account<?, ? extends Payment<?>> selectedBaseSideAccount;

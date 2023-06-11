@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AmountInput;
@@ -51,7 +51,7 @@ public class AmountPriceGroup {
         return controller.model.quoteSideAmount;
     }
 
-    public ReadOnlyObjectProperty<Quote> quoteProperty() {
+    public ReadOnlyObjectProperty<PriceQuote> quoteProperty() {
         return controller.model.quote;
     }
 
@@ -71,7 +71,7 @@ public class AmountPriceGroup {
         controller.quoteAmount.setAmount(amount);
     }
 
-    public void setQuote(Quote price) {
+    public void setQuote(PriceQuote price) {
         controller.price.setQuote(price);
     }
 
@@ -95,7 +95,7 @@ public class AmountPriceGroup {
         @Getter
         private final View view;
         private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
-        private final ChangeListener<Quote> quoteListener;
+        private final ChangeListener<PriceQuote> quoteListener;
         private final AmountInput baseAmount;
         private final AmountInput quoteAmount;
         private final PriceInput price;
@@ -140,21 +140,21 @@ public class AmountPriceGroup {
         }
 
         private void setQuoteFromBase() {
-            Quote quote = model.quote.get();
-            if (quote == null) return;
+            PriceQuote priceQuote = model.quote.get();
+            if (priceQuote == null) return;
             Monetary baseCurrencyAmount = model.baseSideAmount.get();
             if (baseCurrencyAmount == null) return;
-            if (quote.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
-            quoteAmount.setAmount(quote.toQuoteMonetary(baseCurrencyAmount));
+            if (priceQuote.getBaseSideMonetary().getClass() != baseCurrencyAmount.getClass()) return;
+            quoteAmount.setAmount(priceQuote.toQuoteSideMonetary(baseCurrencyAmount));
         }
 
         private void setBaseFromQuote() {
-            Quote quote = model.quote.get();
-            if (quote == null) return;
+            PriceQuote priceQuote = model.quote.get();
+            if (priceQuote == null) return;
             Monetary quoteCurrencyAmount = model.quoteSideAmount.get();
             if (quoteCurrencyAmount == null) return;
-            if (quote.getQuoteMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
-            baseAmount.setAmount(quote.toBaseMonetary(quoteCurrencyAmount));
+            if (priceQuote.getQuoteSideMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
+            baseAmount.setAmount(priceQuote.toBaseSideMonetary(quoteCurrencyAmount));
         }
 
         private void applyQuote() {
@@ -169,12 +169,12 @@ public class AmountPriceGroup {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
         private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
-        private final ReadOnlyObjectProperty<Quote> quote;
+        private final ReadOnlyObjectProperty<PriceQuote> quote;
         private boolean isCreateOffer = true;
 
         private Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
                       ReadOnlyObjectProperty<Monetary> quoteSideAmount,
-                      ReadOnlyObjectProperty<Quote> quote) {
+                      ReadOnlyObjectProperty<PriceQuote> quote) {
             this.baseSideAmount = baseSideAmount;
             this.quoteSideAmount = quoteSideAmount;
             this.quote = quote;

@@ -156,7 +156,7 @@ public class CreateOfferReviewOfferController implements Controller {
         if (direction.isSell()) {
             if (priceSpec instanceof FixPriceSpec) {
                 FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
-                String price = QuoteFormatter.formatWithQuoteCode(fixPriceSpec.getQuote());
+                String price = QuoteFormatter.formatWithQuoteCode(fixPriceSpec.getPriceQuote());
                 priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.fixPrice", price);
             } else if (priceSpec instanceof FloatPriceSpec) {
                 FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;

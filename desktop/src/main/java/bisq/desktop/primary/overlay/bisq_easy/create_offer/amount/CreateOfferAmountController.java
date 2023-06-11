@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
@@ -84,17 +84,17 @@ public class CreateOfferAmountController implements Controller {
     }
 
     public void setPriceSpec(PriceSpec priceSpec) {
-        Quote quote;
+        PriceQuote priceQuote;
         if (priceSpec instanceof FixPriceSpec) {
-            quote = ((FixPriceSpec) priceSpec).getQuote();
+            priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
         } else if (priceSpec instanceof FloatPriceSpec) {
             double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-            quote = PriceUtil.fromMarketPriceMarkup(getMarketPriceQuote(), percentage);
+            priceQuote = PriceUtil.fromMarketPriceMarkup(getMarketPriceQuote(), percentage);
         } else {
-            quote = getMarketPriceQuote();
+            priceQuote = getMarketPriceQuote();
         }
-        minAmountComponent.setQuote(quote);
-        maxOrFixAmountComponent.setQuote(quote);
+        minAmountComponent.setQuote(priceQuote);
+        maxOrFixAmountComponent.setQuote(priceQuote);
     }
 
     public void reset() {
@@ -198,7 +198,7 @@ public class CreateOfferAmountController implements Controller {
         }
     }
 
-    private Quote getMarketPriceQuote() {
+    private PriceQuote getMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
     }
 
