@@ -18,8 +18,9 @@
 package bisq.offer.poc;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.Payment;
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -122,35 +123,35 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                                    Direction direction,
                                                    Monetary baseSideAmount,
                                                    PriceQuote fixPrice,
-                                                   ProtocolType selectedProtocolTyp,
-                                                   List<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts,
-                                                   List<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts,
-                                                   List<Payment.Method> selectedBaseSidePaymentMethods,
-                                                   List<Payment.Method> selectedQuoteSidePaymentMethods) {
+                                                   TradeProtocolType selectedProtocolTyp,
+                                                   List<Account<?, ? extends PaymentMethod<?>>> selectedBaseSideAccounts,
+                                                   List<Account<?, ? extends PaymentMethod<?>>> selectedQuoteSideAccounts,
+                                                   List<PaymentRail> selectedBaseSidePaymentPaymentRails,
+                                                   List<PaymentRail> selectedQuoteSidePaymentPaymentRails) {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.getNetworkId();
-            List<ProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
+            List<TradeProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
             FixPriceSpec priceSpec = new FixPriceSpec(fixPrice);
 
             List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
                 baseSidePaymentMethodSpecs = selectedBaseSideAccounts.stream()
-                        .map(e -> new BitcoinPaymentMethodSpec(e.getPayment().getPaymentMethodName(), Optional.of(e.getAccountName())))
+                        .map(e -> new BitcoinPaymentMethodSpec(e.getPaymentMethod().getName(), Optional.of(e.getAccountName())))
                         .collect(Collectors.toList());
             } else {
-                baseSidePaymentMethodSpecs = selectedBaseSidePaymentMethods.stream()
+                baseSidePaymentMethodSpecs = selectedBaseSidePaymentPaymentRails.stream()
                         .map(e -> new BitcoinPaymentMethodSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
             List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
                 quoteSidePaymentMethodSpecs = selectedQuoteSideAccounts.stream()
-                        .map(e -> new FiatPaymentMethodSpec(e.getPayment().getPaymentMethodName(), Optional.of(e.getAccountName())))
+                        .map(e -> new FiatPaymentMethodSpec(e.getPaymentMethod().getName(), Optional.of(e.getAccountName())))
                         .collect(Collectors.toList());
             } else {
-                quoteSidePaymentMethodSpecs = selectedQuoteSidePaymentMethods.stream()
+                quoteSidePaymentMethodSpecs = selectedQuoteSidePaymentPaymentRails.stream()
                         .map(e -> new FiatPaymentMethodSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }

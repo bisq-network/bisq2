@@ -19,8 +19,10 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.Payment;
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.PaymentUtil;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
@@ -44,7 +46,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     @Getter
     private final Persistence<AccountStore> persistence;
     @Getter
-    private transient final ObservableSet<Account<?, ? extends Payment<?>>> accounts = new ObservableSet<>();
+    private transient final ObservableSet<Account<?, ? extends PaymentMethod<?>>> accounts = new ObservableSet<>();
 
     public AccountService(NetworkService networkService,
                           PersistenceService persistenceService,
@@ -72,7 +74,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<String, Account<?, ? extends Payment<?>>> getAccountByNameMap() {
+    public Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
 
@@ -80,13 +82,13 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         return !getAccountByNameMap().isEmpty();
     }
 
-    public void addPaymentAccount(Account<?, ? extends Payment<?>> account) {
+    public void addPaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
         getAccountByNameMap().put(account.getAccountName(), account);
         accounts.add(account);
         persist();
     }
 
-    public void removePaymentAccount(Account<?, ? extends Payment<?>> account) {
+    public void removePaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
         getAccountByNameMap().remove(account.getAccountName());
         accounts.remove(account);
         if (account.equals(getSelectedAccount())) {
@@ -95,29 +97,29 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         persist();
     }
 
-    public Optional<Account<?, ? extends Payment<?>>> findAccount(String name) {
+    public Optional<Account<?, ? extends PaymentMethod<?>>> findAccount(String name) {
         return Optional.ofNullable(getAccountByNameMap().get(name));
     }
 
-    public Observable<Account<?, ? extends Payment<?>>> selectedAccountAsObservable() {
+    public Observable<Account<?, ? extends PaymentMethod<?>>> selectedAccountAsObservable() {
         return persistableStore.getSelectedAccount();
     }
 
     @Nullable
-    public Account<?, ? extends Payment<?>> getSelectedAccount() {
+    public Account<?, ? extends PaymentMethod<?>> getSelectedAccount() {
         return selectedAccountAsObservable().get();
     }
 
-    public void setSelectedAccount(Account<?, ? extends Payment<?>> account) {
+    public void setSelectedAccount(Account<?, ? extends PaymentMethod<?>> account) {
         selectedAccountAsObservable().set(account);
         persist();
     }
 
-    public List<Account<?, ? extends Payment<?>>> getMatchingAccounts(ProtocolType protocolTyp,
-                                                                      String currencyCode) {
-        Set<? extends Payment.Method> paymentMethods = new HashSet<>(Payment.getPaymentMethods(protocolTyp, currencyCode));
+    public List<Account<?, ? extends PaymentMethod<?>>> getMatchingAccounts(TradeProtocolType protocolTyp,
+                                                                            String currencyCode) {
+        Set<? extends PaymentRail> paymentMethods = new HashSet<>(PaymentUtil.getPaymentMethods(protocolTyp, currencyCode));
         return persistableStore.getAccountByName().values().stream()
-                .filter(account -> paymentMethods.contains(account.getPayment().getMethod()))
+                .filter(account -> paymentMethods.contains(account.getPaymentMethod().getPaymentRail()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
     }

@@ -17,7 +17,7 @@
 
 package bisq.offer.payment_method;
 
-import bisq.account.payment_method.BitcoinPayment;
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.offer.Offer;
 
 import java.util.Collection;
@@ -27,14 +27,14 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class PaymentMethodUtil {
-    public static List<PaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPayment.Method> bitcoinPaymentMethods) {
+    public static List<PaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentRail> bitcoinPaymentMethods) {
         return bitcoinPaymentMethods.stream()
                 .map(bitcoinPaymentMethod -> new BitcoinPaymentMethodSpec(bitcoinPaymentMethod.name()))
                 .collect(Collectors.toList());
     }
 
     public static List<PaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
-        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPayment.Method.MAINCHAIN));
+        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentRail.MAIN_CHAIN));
     }
 
     public static List<PaymentMethodSpec> createFiatPaymentMethodSpecs(List<String> paymentMethodNames) {

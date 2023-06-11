@@ -15,20 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.protocol_type;
+package bisq.account.payment_method;
 
-import bisq.common.util.ProtobufUtils;
-
-public enum LoanProtocolType implements ProtocolType {
-    COLLATERALIZED,
-    REPUTATION;
-
-    @Override
-    public bisq.account.protobuf.LoanProtocolType toProto() {
-        return bisq.account.protobuf.LoanProtocolType.valueOf(name());
-    }
-
-    public static LoanProtocolType fromProto(bisq.account.protobuf.LoanProtocolType proto) {
-        return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name());
-    }
+public interface PaymentRail {
+    String name();
 }

@@ -19,16 +19,20 @@ package bisq.account.protocol_type;
 
 import bisq.common.util.ProtobufUtils;
 
-public enum LoanProtocolType implements ProtocolType {
-    COLLATERALIZED,
-    REPUTATION;
+public enum TradeProtocolType implements ProtocolType {
+    BISQ_EASY,
+    BISQ_MULTISIG,
+    LIQUID_SWAP,
+    BSQ_SWAP,
+    LIGHTNING_X,
+    MONERO_SWAP;
 
     @Override
-    public bisq.account.protobuf.LoanProtocolType toProto() {
-        return bisq.account.protobuf.LoanProtocolType.valueOf(name());
+    public bisq.account.protobuf.TradeProtocolType toProto() {
+        return bisq.account.protobuf.TradeProtocolType.valueOf(name());
     }
 
-    public static LoanProtocolType fromProto(bisq.account.protobuf.LoanProtocolType proto) {
-        return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name());
+    public static TradeProtocolType fromProto(bisq.account.protobuf.TradeProtocolType proto) {
+        return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name());
     }
 }

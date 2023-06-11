@@ -17,7 +17,7 @@
 
 package bisq.contract;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.offer.Offer;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ import lombok.Getter;
 public class TwoPartyContract<T extends Offer> extends Contract<T> {
     protected final Party taker;
 
-    public TwoPartyContract(T swapOffer, ProtocolType protocolType, Party taker) {
+    public TwoPartyContract(T swapOffer, TradeProtocolType protocolType, Party taker) {
         super(swapOffer, protocolType);
         this.taker = taker;
     }
@@ -40,7 +40,7 @@ public class TwoPartyContract<T extends Offer> extends Contract<T> {
 
     public static TwoPartyContract<? extends Offer> fromProto(bisq.contract.protobuf.Contract proto) {
         return new TwoPartyContract<>(Offer.fromProto(proto.getOffer()),
-                ProtocolType.fromProto(proto.getProtocolType()),
+                TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(proto.getTwoPartyContract().getTaker()));
     }
 }

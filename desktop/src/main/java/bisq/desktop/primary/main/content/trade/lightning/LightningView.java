@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.lightning;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
 public class LightningView extends ProtocolRoadmapView<LightningModel, LightningController> {
@@ -28,7 +28,7 @@ public class LightningView extends ProtocolRoadmapView<LightningModel, Lightning
 
     @Override
     protected String getKey() {
-        return ProtocolType.LIGHTNING_X.name();
+        return TradeProtocolType.LIGHTNING_X.name();
     }
 
     @Override

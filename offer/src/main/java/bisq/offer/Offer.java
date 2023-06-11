@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -51,7 +51,7 @@ public abstract class Offer implements Proto {
     protected final Market market;
     private final AmountSpec amountSpec;
     protected final PriceSpec priceSpec;
-    protected final List<ProtocolType> protocolTypes;
+    protected final List<TradeProtocolType> protocolTypes;
     protected final List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
     protected final List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
     protected final List<OfferOption> offerOptions;
@@ -63,7 +63,7 @@ public abstract class Offer implements Proto {
                  Market market,
                  AmountSpec amountSpec,
                  PriceSpec priceSpec,
-                 List<ProtocolType> protocolTypes,
+                 List<TradeProtocolType> protocolTypes,
                  List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
                  List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
                  List<OfferOption> offerOptions) {
@@ -81,7 +81,7 @@ public abstract class Offer implements Proto {
         this.offerOptions = new ArrayList<>(offerOptions);
 
         // All lists need to sort deterministically as the data is used in the proof of work check
-        this.protocolTypes.sort(Comparator.comparingInt(ProtocolType::hashCode));
+        this.protocolTypes.sort(Comparator.comparingInt(TradeProtocolType::hashCode));
         this.baseSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.quoteSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.offerOptions.sort(Comparator.comparingInt(OfferOption::hashCode));
@@ -98,7 +98,7 @@ public abstract class Offer implements Proto {
                 .setMarket(market.toProto())
                 .setAmountSpec(amountSpec.toProto())
                 .setPriceSpec(priceSpec.toProto())
-                .addAllProtocolTypes(protocolTypes.stream().map(ProtocolType::toProto).collect(Collectors.toList()))
+                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProto).collect(Collectors.toList()))
                 .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()));

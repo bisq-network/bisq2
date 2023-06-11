@@ -17,7 +17,7 @@
 
 package bisq.protocol;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
@@ -134,12 +134,12 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         }*/
     }
 
-    public void takeOffer(ProtocolType protocolType,
+    public void takeOffer(TradeProtocolType protocolType,
                           Contract<?> contract,
                           NetworkIdWithKeyPair myNodeIdAndKeyPair) {
     }
 
-    public CompletableFuture<TakerProtocol<?, TakerProtocolModel<?>>> takeOffer1(ProtocolType protocolType,
+    public CompletableFuture<TakerProtocol<?, TakerProtocolModel<?>>> takeOffer1(TradeProtocolType protocolType,
                                                                                  Offer offer,
                                                                                  Monetary baseSideAmount,
                                                                                  Monetary quoteSideAmount,

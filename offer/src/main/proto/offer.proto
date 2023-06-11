@@ -124,7 +124,7 @@ message Offer {
   Direction direction = 5;
   AmountSpec amountSpec = 6;
   PriceSpec priceSpec = 7;
-  repeated account.ProtocolType protocolTypes = 8;
+  repeated account.TradeProtocolType protocolTypes = 8;
   repeated PaymentMethodSpec baseSidePaymentSpecs = 9;
   repeated PaymentMethodSpec quoteSidePaymentSpecs = 10;
   repeated OfferOption offerOptions = 11;
@@ -148,7 +148,7 @@ message PocOffer {
   Direction direction = 5;
   sint64 baseAmount = 6;
   PriceSpec priceSpec = 7;
-  repeated account.ProtocolType protocolTypes = 8;
+  repeated account.TradeProtocolType protocolTypes = 8;
   repeated PaymentMethodSpec baseSidePaymentSpecs = 9;
   repeated PaymentMethodSpec quoteSidePaymentSpecs = 10;
   repeated OfferOption offerOptions = 11;

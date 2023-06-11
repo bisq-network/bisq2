@@ -17,7 +17,7 @@
 
 package bisq.offer.poc;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -74,7 +74,7 @@ public final class PocOffer implements DistributedData {
     private final Direction direction;
     private final long baseAmount;
     private final PriceSpec priceSpec;
-    private final List<ProtocolType> protocolTypes;
+    private final List<TradeProtocolType> protocolTypes;
     private final List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
     private final List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
     private final List<OfferOption> offerOptions;
@@ -87,7 +87,7 @@ public final class PocOffer implements DistributedData {
                     Direction direction,
                     long baseAmount,
                     PriceSpec priceSpec,
-                    List<ProtocolType> protocolTypes,
+                    List<TradeProtocolType> protocolTypes,
                     List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
                     List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
                     List<OfferOption> offerOptions) {
@@ -112,7 +112,7 @@ public final class PocOffer implements DistributedData {
                      Direction direction,
                      long baseAmount,
                      PriceSpec priceSpec,
-                     List<ProtocolType> protocolTypes,
+                     List<TradeProtocolType> protocolTypes,
                      List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
                      List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
                      List<OfferOption> offerOptions,
@@ -150,7 +150,7 @@ public final class PocOffer implements DistributedData {
                 .setDirection(direction.toProto())
                 .setBaseAmount(baseAmount)
                 .setPriceSpec(priceSpec.toProto())
-                .addAllProtocolTypes(protocolTypes.stream().map(ProtocolType::toProto).collect(Collectors.toList()))
+                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProto).collect(Collectors.toList()))
                 .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()))
@@ -159,8 +159,8 @@ public final class PocOffer implements DistributedData {
     }
 
     public static PocOffer fromProto(bisq.offer.protobuf.PocOffer proto) {
-        List<ProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
-                .map(ProtocolType::fromProto)
+        List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
+                .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
         List<PaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
                 .map(e -> BitcoinPaymentMethodSpec.fromProto(e.getBitcoinPaymentMethodSpec()))
@@ -195,7 +195,7 @@ public final class PocOffer implements DistributedData {
         };
     }
 
-    public Optional<ProtocolType> findProtocolType() {
+    public Optional<TradeProtocolType> findProtocolType() {
         if (protocolTypes.isEmpty()) {
             return Optional.empty();
         } else if (protocolTypes.size() == 1) {

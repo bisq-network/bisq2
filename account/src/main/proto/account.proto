@@ -24,7 +24,7 @@ option java_multiple_files = true;
 import "common.proto";
 
 // ProtocolType
-enum ProtocolType {
+enum TradeProtocolType {
   BISQ_EASY = 0;
   BISQ_MULTISIG = 1;
   LIQUID_SWAP = 2;
@@ -32,32 +32,31 @@ enum ProtocolType {
   LIGHTNING_X = 4;
   MONERO_SWAP = 5;
 }
-
 enum LoanProtocolType {
   COLLATERALIZED = 0;
   REPUTATION = 1;
 }
-message BaseProtocolType {
+message ProtocolType {
   oneof message {
-    ProtocolType protocolType = 10;
+    TradeProtocolType tradeProtocolType = 10;
     LoanProtocolType loanProtocolType = 11;
   }
 }
 
-// Payment
-message Payment {
-  string paymentMethodName = 1;
+// PaymentMethod
+message PaymentMethod {
+  string name = 1;
   oneof message {
-    FiatPayment fiatPayment = 10;
-    BitcoinPayment bitcoinPayment = 11;
-    CryptoPayment cryptoPayment = 12;
+    FiatPaymentMethod fiatPaymentMethod = 10;
+    BitcoinPaymentMethod bitcoinPaymentMethod = 11;
+    CryptoPaymentMethod cryptoPaymentMethod = 12;
   }
 }
-message FiatPayment{
+message FiatPaymentMethod {
 }
-message BitcoinPayment{
+message BitcoinPaymentMethod {
 }
-message CryptoPayment{
+message CryptoPaymentMethod {
   string currencyCode = 1;
 }
 
@@ -96,7 +95,7 @@ message Account {
   sint64 creationDate = 1;
   string accountName = 2;
   AccountPayload accountPayload = 3;
-  Payment payment = 4;
+  PaymentMethod paymentMethod = 4;
   common.TradeCurrency selectedTradeCurrency = 6;
 
   oneof message {

@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment_method.FiatPayment;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,15 +28,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccountPayload, FiatPayment> {
-    private static final FiatPayment PAYMENT = new FiatPayment(FiatPayment.Method.USER_DEFINED);
+public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccountPayload, FiatPaymentMethod> {
+    private static FiatPaymentMethod PAYMENT_METHOD;
+
+    private static FiatPaymentMethod getPaymentMethod(String accountName) {
+        if (PAYMENT_METHOD == null) {
+            PAYMENT_METHOD = new FiatPaymentMethod(accountName);
+        }
+        return PAYMENT_METHOD;
+    }
 
     public UserDefinedFiatAccount(String accountName, String accountData) {
-        this(accountName, new UserDefinedFiatAccountPayload(StringUtils.createUid(), PAYMENT.getPaymentMethodName(), accountData));
+        this(accountName, new UserDefinedFiatAccountPayload(StringUtils.createUid(), getPaymentMethod(accountName).getName(), accountData));
     }
 
     private UserDefinedFiatAccount(String accountName, UserDefinedFiatAccountPayload userDefinedFiatAccountPayload) {
-        super(accountName, PAYMENT, userDefinedFiatAccountPayload);
+        super(accountName, getPaymentMethod(accountName), userDefinedFiatAccountPayload);
     }
 
     @Override
