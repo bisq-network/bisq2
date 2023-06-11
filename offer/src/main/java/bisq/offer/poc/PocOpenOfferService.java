@@ -32,7 +32,7 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
-import bisq.offer.price.FixPriceSpec;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.settlement.SettlementSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -50,26 +50,26 @@ import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
-public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
+public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore> {
 
     public interface Listener {
-        void onOpenOfferAdded(OpenOffer openOffer);
+        void onOpenOfferAdded(PocOpenOffer openOffer);
 
-        void onOpenOfferRemoved(OpenOffer openOffer);
+        void onOpenOfferRemoved(PocOpenOffer openOffer);
     }
 
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("OpenOfferService.dispatcher");
     @Getter
-    private final OpenOfferStore persistableStore = new OpenOfferStore();
+    private final PocOpenOfferStore persistableStore = new PocOpenOfferStore();
     @Getter
-    private final Persistence<OpenOfferStore> persistence;
+    private final Persistence<PocOpenOfferStore> persistence;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public OpenOfferService(NetworkService networkService,
-                            IdentityService identityService,
-                            PersistenceService persistenceService) {
+    public PocOpenOfferService(NetworkService networkService,
+                               IdentityService identityService,
+                               PersistenceService persistenceService) {
         this.networkService = networkService;
         this.identityService = identityService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
@@ -92,25 +92,25 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                 });
     }
 
-    public ObservableSet<OpenOffer> getOpenOffers() {
+    public ObservableSet<PocOpenOffer> getOpenOffers() {
         return persistableStore.getOpenOffers();
     }
 
     public void add(PocOffer offer) {
-        OpenOffer openOffer = new OpenOffer(offer);
+        PocOpenOffer openOffer = new PocOpenOffer(offer);
         persistableStore.add(openOffer);
         runAsync(() -> listeners.forEach(l -> l.onOpenOfferAdded(openOffer)), executorService);
         persist();
     }
 
     public void remove(PocOffer offer) {
-        OpenOffer openOffer = new OpenOffer(offer);
+        PocOpenOffer openOffer = new PocOpenOffer(offer);
         persistableStore.remove(openOffer);
         runAsync(() -> listeners.forEach(l -> l.onOpenOfferRemoved(openOffer)), executorService);
         persist();
     }
 
-    public Optional<OpenOffer> findOpenOffer(String offerId) {
+    public Optional<PocOpenOffer> findOpenOffer(String offerId) {
         return persistableStore.getOpenOffers().stream()
                 .filter(openOffer -> openOffer.getOffer().getId().equals(offerId))
                 .findAny();

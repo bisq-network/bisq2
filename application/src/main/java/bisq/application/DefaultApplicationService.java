@@ -25,7 +25,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.offer.poc.OfferService;
+import bisq.offer.poc.PocOfferService;
 import bisq.oracle.OracleService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.protocol.ProtocolService;
@@ -73,7 +73,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final IdentityService identityService;
     private final OracleService oracleService;
     private final AccountService accountService;
-    private final OfferService offerService;
+    private final PocOfferService offerService;
     private final UserService userService;
     private final ChatService chatService;
     private final SettingsService settingsService;
@@ -115,7 +115,7 @@ public class DefaultApplicationService extends ApplicationService {
 
         accountService = new AccountService(networkService, persistenceService, identityService);
 
-        offerService = new OfferService(networkService, identityService, persistenceService);
+        offerService = new PocOfferService(networkService, identityService, persistenceService);
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,

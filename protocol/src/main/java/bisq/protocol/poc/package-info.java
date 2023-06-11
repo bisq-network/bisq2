@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount;
 
-public interface BaseAmountSpec extends AmountSpec {
-}
+package bisq.protocol.poc;
+
+/**
+ * Proof of concept implementation for MultiSig protocol.
+ */

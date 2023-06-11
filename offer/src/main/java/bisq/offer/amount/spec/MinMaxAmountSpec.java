@@ -15,29 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price;
+package bisq.offer.amount.spec;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-/**
- * The current market price is used.
- */
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MarketPriceSpec implements PriceSpec {
+public abstract class MinMaxAmountSpec implements AmountSpec {
+    protected final long minAmount;
+    protected final long maxAmount;
 
-    public MarketPriceSpec() {
-    }
-
-    @Override
-    public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setMarketPrice(bisq.offer.protobuf.MarketPrice.newBuilder()).build();
-    }
-
-    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {
-        return new MarketPriceSpec();
+    public MinMaxAmountSpec(long minAmount, long maxAmount) {
+        this.minAmount = minAmount;
+        this.maxAmount = maxAmount;
     }
 }

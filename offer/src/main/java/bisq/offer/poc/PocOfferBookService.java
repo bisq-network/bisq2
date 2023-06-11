@@ -30,12 +30,12 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class OfferBookService {
+public class PocOfferBookService {
     @Getter
     private final ObservableSet<PocOffer> offers = new ObservableSet<>();
     private final DataService dataService;
 
-    public OfferBookService(NetworkService networkService) {
+    public PocOfferBookService(NetworkService networkService) {
         checkArgument(networkService.getDataService().isPresent(),
                 "networkService.getDataService() is expected to be present if OfferBookService is used");
         dataService = networkService.getDataService().get();

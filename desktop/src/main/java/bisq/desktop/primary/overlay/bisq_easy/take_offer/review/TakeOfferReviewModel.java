@@ -19,9 +19,9 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.desktop.common.view.Model;
-import bisq.offer.amount.AmountSpec;
+import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.PriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -60,5 +60,5 @@ class TakeOfferReviewModel implements Model {
     @Setter
     private AmountSpec tradeAmountSpec;
     @Setter
-    private PriceSpec tradePriceSpec;
+    private PriceSpec sellersPriceSpec;
 }

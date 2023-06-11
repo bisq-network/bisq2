@@ -63,7 +63,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
     private Scene rootScene;
-    private Subscription showProgressBoxPin;
+    private Subscription showProgressBoxPin, takeOfferButtonVisiblePin;
 
     public TakeOfferView(TakeOfferModel model, TakeOfferController controller) {
         super(new VBox(), model, controller);
@@ -110,6 +110,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         content.setAlignment(Pos.CENTER);
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
+        VBox.setMargin(content, new Insets(0, 40, 0, 40));
         root.getChildren().addAll(topPane, content, Spacer.fillVBox(), buttons);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
@@ -149,6 +150,12 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
             progressBox.getChildren().add(0, getSeparator());
             progressBox.getChildren().add(0, amount);
         }
+        if (model.isPriceVisible()) {
+            Label price = getTopPaneLabel(Res.get("bisqEasy.takeOffer.price"));
+            navigationProgressLabelList.add(0, price);
+            progressBox.getChildren().add(0, getSeparator());
+            progressBox.getChildren().add(0, price);
+        }
 
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
@@ -161,9 +168,17 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         backButton.managedProperty().bind(model.getBackButtonVisible());
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
 
-
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
+
+        takeOfferButtonVisiblePin = EasyBind.subscribe(model.getTakeOfferButtonVisible(), takeOfferButtonVisible -> {
+            if (takeOfferButtonVisible) {
+                backButton.prefWidthProperty().bind(takeOfferButton.widthProperty());
+            } else {
+                backButton.prefWidthProperty().unbind();
+                backButton.setPrefWidth(Region.USE_COMPUTED_SIZE);
+            }
+        });
 
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
@@ -172,11 +187,17 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
 
+        if (!model.getShowProgressBox().get()) {
+            progressBox.setOpacity(0);
+            topPane.setStyle("-fx-background-color: transparent");
+        }
         showProgressBoxPin = EasyBind.subscribe(model.getShowProgressBox(), showProgressBox -> {
             if (showProgressBox) {
+                // VBox.setMargin(content, new Insets(0, 0, 0, 0));
                 Transitions.fadeIn(progressBox, 200);
                 topPane.setStyle("-fx-background-color: -bisq-grey-23");
             } else {
+                // VBox.setMargin(content, new Insets(0, 40, 0, 40));
                 Transitions.fadeOut(progressBox, 200);
                 topPane.setStyle("-fx-background-color: transparent");
             }
@@ -201,6 +222,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
+        backButton.prefWidthProperty().unbind();
         closeButton.visibleProperty().unbind();
 
 
@@ -208,6 +230,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         model.getView().removeListener(viewChangeListener);
 
         showProgressBoxPin.unsubscribe();
+        takeOfferButtonVisiblePin.unsubscribe();
 
         nextButton.setOnAction(null);
         takeOfferButton.setOnAction(null);

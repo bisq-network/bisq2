@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount;
+package bisq.offer.amount.spec;
 
-public interface QuoteAmountSpec extends AmountSpec {
+public interface BaseAmountSpec extends AmountSpec {
 }

@@ -23,9 +23,9 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
-import bisq.offer.poc.OpenOffer;
-import bisq.offer.poc.OpenOfferService;
 import bisq.offer.poc.PocOffer;
+import bisq.offer.poc.PocOpenOffer;
+import bisq.offer.poc.PocOpenOfferService;
 import javafx.beans.property.BooleanProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -51,7 +51,7 @@ public class OpenOffersController implements Controller {
     private final OpenOffersModel model;
     @Getter
     private final OpenOffersView view;
-    private final OpenOfferService openOfferService;
+    private final PocOpenOfferService openOfferService;
 
     private Pin offerListPin;
 
@@ -65,7 +65,7 @@ public class OpenOffersController implements Controller {
 
     @Override
     public void onActivate() {
-        offerListPin = FxBindings.<OpenOffer, OpenOfferListItem>bind(model.getListItems())
+        offerListPin = FxBindings.<PocOpenOffer, OpenOfferListItem>bind(model.getListItems())
                 .map(openOffer -> new OpenOfferListItem(openOffer, model.marketPriceService))
                 .to(openOfferService.getOpenOffers());
 

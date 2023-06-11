@@ -23,10 +23,10 @@ import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public final class OpenOffer implements Proto {
+public final class PocOpenOffer implements Proto {
     private final PocOffer offer;
 
-    public OpenOffer(PocOffer offer) {
+    public PocOpenOffer(PocOffer offer) {
         this.offer = offer;
     }
 
@@ -36,7 +36,7 @@ public final class OpenOffer implements Proto {
                 .build();
     }
 
-    public static OpenOffer fromProto(bisq.offer.protobuf.OpenOffer proto) {
-        return new OpenOffer(PocOffer.fromProto(proto.getOffer()));
+    public static PocOpenOffer fromProto(bisq.offer.protobuf.OpenOffer proto) {
+        return new PocOpenOffer(PocOffer.fromProto(proto.getOffer()));
     }
 }

@@ -29,26 +29,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class OpenOfferStore implements PersistableStore<OpenOfferStore> {
+public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferStore> {
     @Getter
-    private final ObservableSet<OpenOffer> openOffers = new ObservableSet<>();
+    private final ObservableSet<PocOpenOffer> openOffers = new ObservableSet<>();
 
-    public OpenOfferStore() {
+    public PocOpenOfferStore() {
     }
 
-    private OpenOfferStore(Set<OpenOffer> openOffers) {
+    private PocOpenOfferStore(Set<PocOpenOffer> openOffers) {
         this.openOffers.addAll(openOffers);
     }
 
     @Override
     public bisq.offer.protobuf.OpenOfferStore toProto() {
         return bisq.offer.protobuf.OpenOfferStore.newBuilder()
-                .addAllOpenOffers(openOffers.stream().map(OpenOffer::toProto).collect(Collectors.toSet()))
+                .addAllOpenOffers(openOffers.stream().map(PocOpenOffer::toProto).collect(Collectors.toSet()))
                 .build();
     }
 
-    public static OpenOfferStore fromProto(bisq.offer.protobuf.OpenOfferStore proto) {
-        return new OpenOfferStore(proto.getOpenOffersList().stream().map(OpenOffer::fromProto).collect(Collectors.toSet()));
+    public static PocOpenOfferStore fromProto(bisq.offer.protobuf.OpenOfferStore proto) {
+        return new PocOpenOfferStore(proto.getOpenOffersList().stream().map(PocOpenOffer::fromProto).collect(Collectors.toSet()));
     }
 
     @Override
@@ -63,21 +63,21 @@ public final class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     }
 
     @Override
-    public OpenOfferStore getClone() {
-        return new OpenOfferStore(openOffers);
+    public PocOpenOfferStore getClone() {
+        return new PocOpenOfferStore(openOffers);
     }
 
     @Override
-    public void applyPersisted(OpenOfferStore persisted) {
+    public void applyPersisted(PocOpenOfferStore persisted) {
         openOffers.clear();
         openOffers.addAll(persisted.getOpenOffers());
     }
 
-    public void add(OpenOffer openOffer) {
+    public void add(PocOpenOffer openOffer) {
         openOffers.add(openOffer);
     }
 
-    public void remove(OpenOffer openOffer) {
+    public void remove(PocOpenOffer openOffer) {
         openOffers.remove(openOffer);
     }
 }

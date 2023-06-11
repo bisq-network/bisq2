@@ -67,21 +67,21 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
     protected final long value;
     protected final String code;
     protected final int precision;
-    protected final int minPrecision;
+    protected final int lowPrecision;
 
-    protected Monetary(String id, long value, String code, int precision, int minPrecision) {
+    protected Monetary(String id, long value, String code, int precision, int lowPrecision) {
         this.id = id;
         this.value = value;
         this.code = code;
         this.precision = precision;
-        this.minPrecision = minPrecision;
+        this.lowPrecision = lowPrecision;
     }
 
     /**
      * @param faceValue Monetary value as face value. E.g. 123.45 USD or 1.12345678 BTC
      */
-    protected Monetary(String id, double faceValue, String code, int precision, int minPrecision) {
-        this(id, doubleValueToLong(faceValue, precision), code, precision, minPrecision);
+    protected Monetary(String id, double faceValue, String code, int precision, int lowPrecision) {
+        this(id, doubleValueToLong(faceValue, precision), code, precision, lowPrecision);
     }
 
     public abstract bisq.common.protobuf.Monetary toProto();
@@ -92,7 +92,7 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
                 .setValue(value)
                 .setCode(code)
                 .setPrecision(precision)
-                .setMinPrecision(minPrecision);
+                .setLowPrecision(lowPrecision);
     }
 
     public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {

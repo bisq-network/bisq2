@@ -72,7 +72,7 @@ public class AmountFormatter {
 
     private static DecimalFormatters.Format getDecimalFormat(Monetary amount, Locale locale, boolean useLowPrecision) {
         return useLowPrecision ?
-                DecimalFormatters.getDecimalFormat(locale, amount.getMinPrecision()) :
+                DecimalFormatters.getDecimalFormat(locale, amount.getLowPrecision()) :
                 DecimalFormatters.getDecimalFormat(locale, amount.getPrecision());
     }
 }

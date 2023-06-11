@@ -21,6 +21,10 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Quote;
 import bisq.common.util.MathUtils;
 import bisq.offer.Offer;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 
@@ -59,10 +63,10 @@ public class PriceUtil {
     }
 
     public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, Offer offer) {
-        return findPercentFromMarketPrice(marketPriceService, offer.getMarket(), offer.getPriceSpec());
+        return findPercentFromMarketPrice(marketPriceService, offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, Market market, PriceSpec priceSpec) {
+    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
         Optional<Double> percentage;
         if (priceSpec instanceof FixPriceSpec) {
             Quote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
@@ -117,37 +121,6 @@ public class PriceUtil {
     // PriceSpec
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<FixPriceSpec> findFixPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec instanceof FixPriceSpec) {
-            return Optional.of((FixPriceSpec) priceSpec);
-        }
-        return Optional.empty();
-    }
-
-    public static Optional<FloatPriceSpec> findFloatPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec instanceof FloatPriceSpec) {
-            return Optional.of((FloatPriceSpec) priceSpec);
-        }
-        return Optional.empty();
-    }
-
-    public static Optional<MarketPriceSpec> findMarketPriceSpec(PriceSpec priceSpec) {
-        if (priceSpec instanceof MarketPriceSpec) {
-            return Optional.of((MarketPriceSpec) priceSpec);
-        }
-        return Optional.empty();
-    }
-
-    public static Optional<FloatPriceSpec> findFloatPriceSpec(MarketPriceService marketPriceService, Quote quote) {
-        return marketPriceService.findMarketPrice(quote.getMarket())
-                .map(MarketPrice::getQuote).stream()
-                .map(marketPrice -> {
-                    double exact = (double) quote.getValue() / (double) marketPrice.getValue() - 1;
-                    return MathUtils.roundDouble(exact, 4);
-                })
-                .map(FloatPriceSpec::new)
-                .findAny();
-    }
 
     //todo
     public static PriceSpec fromPercentage(double percentage) {

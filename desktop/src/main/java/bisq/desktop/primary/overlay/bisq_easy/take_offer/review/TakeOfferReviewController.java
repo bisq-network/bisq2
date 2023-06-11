@@ -37,11 +37,12 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.amount.AmountSpec;
 import bisq.offer.amount.AmountUtil;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.FixAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.PriceSpec;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
@@ -51,7 +52,6 @@ import bisq.support.MediationService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -67,7 +67,6 @@ public class TakeOfferReviewController implements Controller {
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
-    private Subscription priceInputPin;
 
     public TakeOfferReviewController(DefaultApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
         chatService = applicationService.getChatService();
@@ -90,45 +89,35 @@ public class TakeOfferReviewController implements Controller {
         String marketCodes = market.getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.takeOffer.review.price.sellersPrice", marketCodes));
 
-        Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
-        sellersQuote.ifPresentOrElse(priceInput::setQuote,
-                () -> log.warn("Cannot set quote at price input as no floatPriceSpec found or no market price available"));
-        model.getSellersPrice().set(sellersQuote
-                .map(QuoteFormatter::formatWithQuoteCode)
-                .orElse(Res.get("na")));
-        Optional<Quote> marketPriceQuote = marketPriceService.findMarketPrice(market)
-                .map(MarketPrice::getQuote);
-        String marketPrice = marketPriceQuote
-                .map(QuoteFormatter::formatWithQuoteCode)
-                .orElse(Res.get("na"));
-        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer);
-        double percent = percentFromMarketPrice.orElse(0d);
-        String details;
-        if (percent == 0) {
-            details = Res.get("bisqEasy.takeOffer.review.sellersPrice.marketPrice", marketPrice);
-        } else {
-            String aboveOrBelow = percent > 0 ?
-                    Res.get("above") :
-                    Res.get("below");
-            String percentAsString = percentFromMarketPrice.map(PercentageFormatter::formatToPercentWithSymbol)
-                    .orElse(Res.get("na"));
-            details = Res.get("bisqEasy.takeOffer.review.sellersPrice.aboveOrBelowMarketPrice",
-                    percentAsString, aboveOrBelow, marketPrice);
+        if (bisqEasyOffer.getAmountSpec() instanceof FixAmountSpec) {
+            model.setTradeAmountSpec(bisqEasyOffer.getAmountSpec());
         }
-        model.getSellersPriceDetails().set(details);
 
-        if (bisqEasyOffer.getDirection().isSell()) {
-            model.setTradePriceSpec(bisqEasyOffer.getPriceSpec());
-        } else {
-            // todo add price tab
-            model.setTradePriceSpec(bisqEasyOffer.getPriceSpec());
+        if (bisqEasyOffer.getTakersDirection().isBuy()) {
+            // If taker is buyer we set the sellers price from the offer
+            model.setSellersPriceSpec(bisqEasyOffer.getPriceSpec());
+
+            Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
+            sellersQuote.ifPresent(priceInput::setQuote);
+            model.getSellersPrice().set(sellersQuote
+                    .map(QuoteFormatter::formatWithQuoteCode)
+                    .orElse(Res.get("na")));
+            applySellersPriceDetails();
         }
     }
 
-    //todo
+
     public void setTradePriceSpec(PriceSpec priceSpec) {
-        if (priceSpec != null) {
-            model.setTradePriceSpec(priceSpec);
+        // Only handle if taker is seller
+        if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
+            model.setSellersPriceSpec(priceSpec);
+
+            Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
+            sellersQuote.ifPresent(priceInput::setQuote);
+            model.getSellersPrice().set(sellersQuote
+                    .map(QuoteFormatter::formatWithQuoteCode)
+                    .orElse(Res.get("na")));
+            applySellersPriceDetails();
         }
     }
 
@@ -147,7 +136,6 @@ public class TakeOfferReviewController implements Controller {
             model.getMethod().set(model.getSettlementMethod().get());
         }
     }
-
 
     public void doTakeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
@@ -172,13 +160,13 @@ public class TakeOfferReviewController implements Controller {
     @Override
     public void onActivate() {
         AmountSpec takersAmountSpec = model.getTradeAmountSpec();
-        PriceSpec takersPriceSpec = model.getTradePriceSpec();
+        PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         Market market = model.getBisqEasyOffer().getMarket();
 
-        Optional<Monetary> quoteAmount = AmountUtil.findFixQuoteAmount(marketPriceService, takersAmountSpec, takersPriceSpec, market);
+        Optional<Monetary> quoteAmount = AmountUtil.findFixQuoteAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
         String formattedQuoteAmount = quoteAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
 
-        Optional<Monetary> baseAmount = AmountUtil.findFixBaseAmount(marketPriceService, takersAmountSpec, takersPriceSpec, market);
+        Optional<Monetary> baseAmount = AmountUtil.findFixBaseAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
         String formattedBaseAmount = baseAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 
@@ -186,8 +174,8 @@ public class TakeOfferReviewController implements Controller {
         model.getToPay().set(takersDirection.isBuy() ? formattedQuoteAmount : formattedBaseAmount);
         model.getToReceive().set(takersDirection.isSell() ? formattedQuoteAmount : formattedBaseAmount);
 
-        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, market, takersPriceSpec);
-        String sellersPremium = Res.get("na");
+        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, sellersPriceSpec, market);
+        String sellersPremium;
         if (quoteAmount.isPresent() && baseAmount.isPresent() && percentFromMarketPrice.isPresent()) {
             double percentage = percentFromMarketPrice.get();
             long quoteSidePremium = MathUtils.roundDoubleToLong(quoteAmount.get().getValue() * percentage);
@@ -200,12 +188,10 @@ public class TakeOfferReviewController implements Controller {
             sellersPremium = Res.get("na");
         }
         model.getSellersPremium().set(sellersPremium);
-        //  priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onSellerQuoteChanged);
     }
 
     @Override
     public void onDeactivate() {
-        // priceInputPin.unsubscribe();
     }
 
 
@@ -216,18 +202,31 @@ public class TakeOfferReviewController implements Controller {
 
     private void close() {
         OverlayController.hide();
-        // If we got started from initial onboarding we are still at Splash screen, so we need to move to main
-        Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
-    private void onSellerQuoteChanged(Quote quote) {
-        model.getSellersPrice().set(quote != null ? QuoteFormatter.format(quote, true) : "");
-//todo
-        String percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, model.getBisqEasyOffer())
-                .map(percentage -> {
-                    return " / " + PercentageFormatter.formatToPercentWithSymbol(percentage);
-                })
-                .orElse("");
+    private void applySellersPriceDetails() {
+        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+        Market market = bisqEasyOffer.getMarket();
+        Optional<Quote> marketPriceQuote = marketPriceService.findMarketPrice(market)
+                .map(MarketPrice::getQuote);
+        String marketPrice = marketPriceQuote
+                .map(QuoteFormatter::formatWithQuoteCode)
+                .orElse(Res.get("na"));
+        Optional<Double> percentFromMarketPrice;
+        percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, model.getSellersPriceSpec(), market);
+        double percent = percentFromMarketPrice.orElse(0d);
+        String details;
+        if (percent == 0) {
+            details = Res.get("bisqEasy.takeOffer.review.sellersPrice.marketPrice", marketPrice);
+        } else {
+            String aboveOrBelow = percent > 0 ?
+                    Res.get("above") :
+                    Res.get("below");
+            String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
+                    .orElse(Res.get("na"));
+            details = Res.get("bisqEasy.takeOffer.review.sellersPrice.aboveOrBelowMarketPrice",
+                    percentAsString, aboveOrBelow, marketPrice);
+        }
+        model.getSellersPriceDetails().set(details);
     }
-
 }

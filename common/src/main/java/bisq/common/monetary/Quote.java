@@ -61,7 +61,7 @@ public final class Quote implements Comparable<Quote>, Proto {
         this.baseMonetary = baseMonetary;
         this.quoteMonetary = quoteMonetary;
         this.precision = quoteMonetary.precision;
-        lowPrecision = quoteMonetary.minPrecision;
+        lowPrecision = quoteMonetary.lowPrecision;
 
         market = new Market(baseMonetary.getCode(), quoteMonetary.getCode(), baseMonetary.getName(), quoteMonetary.getName());
     }

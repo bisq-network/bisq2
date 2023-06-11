@@ -15,31 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount;
+package bisq.offer.price.spec;
 
+import bisq.common.monetary.Quote;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 /**
- * No min. amount supported
+ * Fix price defined as a long value.
  */
 @Getter
 @ToString
-@EqualsAndHashCode(callSuper = true)
-public final class FixQuoteAmountSpec extends FixAmountSpec implements QuoteAmountSpec {
-    public FixQuoteAmountSpec(long amount) {
-        super(amount);
+@EqualsAndHashCode
+public final class FixPriceSpec implements PriceSpec {
+    private final Quote quote;
+
+    public FixPriceSpec(Quote quote) {
+        this.quote = quote;
     }
 
     @Override
-    public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixQuoteAmountSpec(bisq.offer.protobuf.FixQuoteAmountSpec.newBuilder()
-                        .setAmount(amount))
+    public bisq.offer.protobuf.PriceSpec toProto() {
+        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
+                        .setQuote(quote.toProto()))
                 .build();
     }
 
-    public static FixQuoteAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return new FixQuoteAmountSpec(proto.getFixQuoteAmountSpec().getAmount());
+    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
+        return new FixPriceSpec(Quote.fromProto(proto.getQuote()));
     }
 }

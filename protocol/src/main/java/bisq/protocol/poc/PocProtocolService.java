@@ -29,8 +29,8 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.offer.poc.OpenOfferService;
 import bisq.offer.poc.PocOffer;
+import bisq.offer.poc.PocOpenOfferService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -53,14 +53,14 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Po
     private final Persistence<PocProtocolStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final OpenOfferService openOfferService;
+    private final PocOpenOfferService openOfferService;
     @Getter
     private final ObservableSet<PocProtocol<? extends PocProtocolModel>> protocols = new ObservableSet<>();
 
     public PocProtocolService(NetworkService networkService,
                               IdentityService identityService,
                               PersistenceService persistenceService,
-                              OpenOfferService openOfferService) {
+                              PocOpenOfferService openOfferService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.openOfferService = openOfferService;

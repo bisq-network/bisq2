@@ -31,7 +31,7 @@ import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.components.ProtocolSelection;
 import bisq.desktop.primary.main.content.trade.components.SettlementSelection;
 import bisq.offer.Direction;
-import bisq.offer.poc.OpenOfferService;
+import bisq.offer.poc.PocOpenOfferService;
 import javafx.collections.SetChangeListener;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,7 +63,7 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
     private final MultiSigCreateOfferModel model;
     @Getter
     private final MultiSigCreateOfferView view;
-    private final OpenOfferService openOfferService;
+    private final PocOpenOfferService openOfferService;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
     private final AmountPriceGroup amountPriceGroup;

@@ -38,7 +38,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final static int FEEDBACK_WIDTH = 700;
 
     private final Label subtitle;
-    private final VBox content, takeOfferSuccess;
+    private final VBox takeOfferSuccess;
     private final Button takeOfferSuccessButton;
     private final Label amounts;
     private final Label toPay;
@@ -47,25 +47,24 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final Label sellersPrice;
     private final Label sellersPriceDetails;
     private final Label sellersPremium;
+    private final GridPane gridPane;
     private Subscription showTakeOfferSuccessPin;
 
     TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller, Pane sellersPriceComponent) {
         super(new StackPane(), model, controller);
 
-        GridPane gridPane = new GridPane();
-        gridPane.setHgap(20);
+        gridPane = new GridPane();
+        gridPane.setHgap(10);
         gridPane.setVgap(10);
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(25);
         ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(25);
         ColumnConstraints col3 = new ColumnConstraints();
-        col3.setPercentWidth(50);
-        gridPane.getColumnConstraints().addAll(col1, col2, col3);
-
-        content = new VBox(10);
-        content.setAlignment(Pos.TOP_LEFT);
-        content.setPadding(new Insets(0, 40, 0, 40));
+        col3.setPercentWidth(25);
+        ColumnConstraints col4 = new ColumnConstraints();
+        col4.setPercentWidth(25);
+        gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
 
         String descriptionStyle = "take-offer-review-description";
         String valueStyle = "take-offer-review-value";
@@ -75,15 +74,18 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
         headline.getStyleClass().add("take-offer-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(-55, 0, 20, 0));
+        // GridPane.setMargin(headline, new Insets(-TakeOfferView.TOP_PANE_HEIGHT + 5, 20, 20, 0));
+        GridPane.setMargin(headline, new Insets(0, 20, 10, 0));
         GridPane.setRowIndex(headline, rowIndex);
-        GridPane.setColumnSpan(headline, 3);
+        GridPane.setColumnIndex(headline, 1);
+        GridPane.setColumnSpan(headline, 2);
         gridPane.getChildren().add(headline);
+        gridPane.setMouseTransparent(true);
 
         rowIndex++;
         Region line1 = getLine();
         GridPane.setRowIndex(line1, rowIndex);
-        GridPane.setColumnSpan(line1, 3);
+        GridPane.setColumnSpan(line1, 4);
         gridPane.getChildren().add(line1);
 
         rowIndex++;
@@ -91,7 +93,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         subtitle.getStyleClass().addAll("take-offer-review-subtitle");
         GridPane.setMargin(subtitle, new Insets(16, 0, 0, 0));
         GridPane.setRowIndex(subtitle, rowIndex);
-        GridPane.setColumnSpan(subtitle, 3);
+        GridPane.setColumnSpan(subtitle, 4);
         gridPane.getChildren().add(subtitle);
 
         rowIndex++;
@@ -99,7 +101,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         amounts.getStyleClass().add("take-offer-review-subtitle-value");
         GridPane.setMargin(amounts, new Insets(-7, 0, 17, 0));
         GridPane.setRowIndex(amounts, rowIndex);
-        GridPane.setColumnSpan(amounts, 3);
+        GridPane.setColumnSpan(amounts, 4);
         gridPane.getChildren().add(amounts);
 
         rowIndex++;
@@ -107,14 +109,14 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         gridPaneHeadline.getStyleClass().add("take-offer-review-grid-headline");
         GridPane.setMargin(gridPaneHeadline, new Insets(0, 0, -2, 0));
         GridPane.setRowIndex(gridPaneHeadline, rowIndex);
-        GridPane.setColumnSpan(gridPaneHeadline, 3);
+        GridPane.setColumnSpan(gridPaneHeadline, 4);
         gridPane.getChildren().add(gridPaneHeadline);
 
         rowIndex++;
         Region line2 = getLine();
         GridPane.setMargin(line2, new Insets(0, 0, 3, 0));
         GridPane.setRowIndex(line2, rowIndex);
-        GridPane.setColumnSpan(line2, 3);
+        GridPane.setColumnSpan(line2, 4);
         gridPane.getChildren().add(line2);
 
         rowIndex++;
@@ -173,6 +175,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         sellersPriceDetails.getStyleClass().add(valueDetailsStyle);
         GridPane.setRowIndex(sellersPriceDetails, rowIndex);
         GridPane.setColumnIndex(sellersPriceDetails, 2);
+        GridPane.setColumnSpan(sellersPriceDetails, 2);
         gridPane.getChildren().add(sellersPriceDetails);
 
         rowIndex++;
@@ -192,23 +195,23 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         sellersPremiumDetails.getStyleClass().add(valueDetailsStyle);
         GridPane.setRowIndex(sellersPremiumDetails, rowIndex);
         GridPane.setColumnIndex(sellersPremiumDetails, 2);
+        GridPane.setColumnSpan(sellersPremiumDetails, 2);
         gridPane.getChildren().add(sellersPremiumDetails);
 
         rowIndex++;
         Region line3 = getLine();
         GridPane.setMargin(line3, new Insets(2, 0, 0, 0));
         GridPane.setRowIndex(line3, rowIndex);
-        GridPane.setColumnSpan(line3, 3);
+        GridPane.setColumnSpan(line3, 4);
         gridPane.getChildren().add(line3);
-
-        content.getChildren().addAll(Spacer.fillVBox(), gridPane, Spacer.fillVBox());
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
         takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
 
         StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, takeOfferSuccess);
+
+        root.getChildren().addAll(gridPane, takeOfferSuccess);
     }
 
 
@@ -229,10 +232,10 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
                 show -> {
                     takeOfferSuccess.setVisible(show);
                     if (show) {
-                        Transitions.blurStrong(content, 0);
+                        Transitions.blurStrong(gridPane, 0);
                         Transitions.slideInTop(takeOfferSuccess, 450);
                     } else {
-                        Transitions.removeEffect(content);
+                        Transitions.removeEffect(gridPane);
                     }
                 });
     }

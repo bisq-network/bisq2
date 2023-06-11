@@ -46,10 +46,6 @@ public class CreateUserProfileController extends NavigationController {
     }
 
     @Override
-    public void onNavigateToChild(NavigationTarget navigationTarget) {
-    }
-
-    @Override
     public void onActivate() {
     }
 

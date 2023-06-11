@@ -40,6 +40,8 @@ public class TakeOfferModel extends NavigationModel {
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
     @Setter
+    private boolean priceVisible;
+    @Setter
     private boolean amountVisible;
     @Setter
     private boolean settlementVisible;
@@ -53,6 +55,6 @@ public class TakeOfferModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TAKE_OFFER_AMOUNT;
+        return NavigationTarget.TAKE_OFFER_PRICE;
     }
 }

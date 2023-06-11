@@ -15,34 +15,38 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price;
+package bisq.offer.price.spec;
 
-import bisq.common.monetary.Quote;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Fix price defined as a long value.
+ * A floating price based on the current market price.
  */
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FixPriceSpec implements PriceSpec {
-    private final Quote quote;
+public final class FloatPriceSpec implements PriceSpec {
+    private final double percentage;
 
-    public FixPriceSpec(Quote quote) {
-        this.quote = quote;
+    /**
+     * @param percentage  The percentage value normalized to 1 (1 = 100%) above or below the market price.
+     *                    Positive value means higher than market price. 
+     *                    E.g. 0.1 means `marketPrice * 1.1`, -0.2 means `marketPrice * 0.8`
+     */
+    public FloatPriceSpec(double percentage) {
+        this.percentage = percentage;
     }
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
-                        .setQuote(quote.toProto()))
+        return getPriceSpecBuilder().setFloatPrice(bisq.offer.protobuf.FloatPrice.newBuilder()
+                        .setPercentage(percentage))
                 .build();
     }
 
-    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPriceSpec(Quote.fromProto(proto.getQuote()));
+    public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) {
+        return new FloatPriceSpec(proto.getPercentage());
     }
 }

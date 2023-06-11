@@ -19,8 +19,8 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.price;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import bisq.offer.price.MarketPriceSpec;
-import bisq.offer.price.PriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;

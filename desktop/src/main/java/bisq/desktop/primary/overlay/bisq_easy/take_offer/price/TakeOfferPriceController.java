@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.create_offer.price;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.price;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
@@ -24,8 +24,12 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.*;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.price.spec.PriceSpecUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.settings.CookieKey;
@@ -40,27 +44,25 @@ import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWi
 import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
-public class PriceController implements Controller {
-    private final PriceModel model;
+public class TakeOfferPriceController implements Controller {
+    private final TakeOfferPriceModel model;
     @Getter
-    private final PriceView view;
+    private final TakeOfferPriceView view;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Subscription priceInputPin;
 
-    public PriceController(DefaultApplicationService applicationService) {
+    public TakeOfferPriceController(DefaultApplicationService applicationService) {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         settingsService = applicationService.getSettingsService();
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
-        model = new PriceModel();
-        view = new PriceView(model, this, priceInput);
+        model = new TakeOfferPriceModel();
+        view = new TakeOfferPriceView(model, this, priceInput);
     }
 
-    public void setMarket(Market market) {
-        if (market == null) {
-            return;
-        }
+    public void init(BisqEasyOffer bisqEasyOffer) {
+        Market market = bisqEasyOffer.getMarket();
         priceInput.setMarket(market);
         model.setMarket(market);
     }
@@ -116,16 +118,9 @@ public class PriceController implements Controller {
     }
 
     private void applyPriceSpec() {
-        if (model.getUseFixPrice().get()) {
-            model.getPriceSpec().set(new FixPriceSpec(priceInput.getQuote().get()));
-        } else {
-            double percentage = model.getPercentage().get();
-            if (percentage == 0) {
-                model.getPriceSpec().set(new MarketPriceSpec());
-            } else {
-                model.getPriceSpec().set(new FloatPriceSpec(percentage));
-            }
-        }
+        model.getPriceSpec().set(model.getUseFixPrice().get() ?
+                new FixPriceSpec(priceInput.getQuote().get()) :
+                new FloatPriceSpec(model.getPercentage().get()));
     }
 
     private void onQuoteInput(Quote quote) {

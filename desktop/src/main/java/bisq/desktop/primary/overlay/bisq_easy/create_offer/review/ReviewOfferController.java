@@ -34,14 +34,14 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.amount.AmountSpec;
 import bisq.offer.amount.AmountUtil;
-import bisq.offer.amount.MinMaxAmountSpec;
 import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.MinMaxAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.FixPriceSpec;
-import bisq.offer.price.FloatPriceSpec;
-import bisq.offer.price.PriceSpec;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.settlement.SettlementFormatter;
 import bisq.offer.settlement.SettlementUtil;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -172,7 +172,7 @@ public class ReviewOfferController implements Controller {
         String directionString = Res.get(direction.name().toLowerCase()).toUpperCase();
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof MinMaxAmountSpec;
-        String amountString = OfferAmountFormatter.getQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
+        String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
@@ -249,8 +249,6 @@ public class ReviewOfferController implements Controller {
     private void close() {
         resetHandler.run();
         OverlayController.hide();
-        // If we got started from initial onboarding we are still at Splash screen, so we need to move to main
-        Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
     @SuppressWarnings("RedundantIfStatement")
@@ -287,18 +285,14 @@ public class ReviewOfferController implements Controller {
                 if (!peersOffer.getMarket().equals(bisqEasyOffer.getMarket())) {
                     return false;
                 }
-                Optional<Monetary> myMinOrFixQuoteAmount = AmountUtil.findMinQuoteAmount(marketPriceService, bisqEasyOffer)
-                        .or(() -> AmountUtil.findFixQuoteAmount(marketPriceService, bisqEasyOffer));
-                Optional<Monetary> peersMaxOrFixQuoteAmount = AmountUtil.findMaxQuoteAmount(marketPriceService, peersOffer)
-                        .or(() -> AmountUtil.findFixQuoteAmount(marketPriceService, peersOffer));
+                Optional<Monetary> myMinOrFixQuoteAmount = AmountUtil.findMinOrFixQuoteAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersMaxOrFixQuoteAmount = AmountUtil.findMaxOrFixQuoteAmount(marketPriceService, peersOffer);
                 if (myMinOrFixQuoteAmount.orElseThrow().getValue() > peersMaxOrFixQuoteAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                Optional<Monetary> myMaxOrFixQuoteAmount = AmountUtil.findMaxQuoteAmount(marketPriceService, bisqEasyOffer)
-                        .or(() -> AmountUtil.findFixQuoteAmount(marketPriceService, bisqEasyOffer));
-                Optional<Monetary> peersMinOrFixQuoteAmount = AmountUtil.findMinQuoteAmount(marketPriceService, peersOffer)
-                        .or(() -> AmountUtil.findFixQuoteAmount(marketPriceService, peersOffer));
+                Optional<Monetary> myMaxOrFixQuoteAmount = AmountUtil.findMaxOrFixQuoteAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersMinOrFixQuoteAmount = AmountUtil.findMinOrFixQuoteAmount(marketPriceService, peersOffer);
                 if (myMaxOrFixQuoteAmount.orElseThrow().getValue() < peersMinOrFixQuoteAmount.orElseThrow().getValue()) {
                     return false;
                 }

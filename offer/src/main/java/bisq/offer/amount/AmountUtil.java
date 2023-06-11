@@ -20,16 +20,24 @@ package bisq.offer.amount;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.offer.Offer;
-import bisq.offer.price.PriceSpec;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 
 import java.util.Optional;
 
+/**
+ * Public APIs for getting different types of amounts:
+ * - Base side / quote side
+ * - fixPriceAmount, minAmount, maxAmount
+ * - Combinations of fallbacks for fixPriceAmount, minAmount, maxAmount
+ */
 public class AmountUtil {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // BaseAmount: The quote side amount gets calculated by using the given priceSpec
+    // BaseAmount: If no BaseAmountSpec we calculate it from the QuoteAmountSpec with the PriceSpec
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Optional<Monetary> findFixBaseAmount(MarketPriceService marketPriceService, Offer offer) {
@@ -40,8 +48,8 @@ public class AmountUtil {
                                                        AmountSpec amountSpec,
                                                        PriceSpec priceSpec,
                                                        Market market) {
-        return findAmountFromFixBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> findAmountFromFixQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
+        return AmountSpecUtil.findFixBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findFixQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toBaseMonetary(quoteAmount))
                         ));
@@ -55,8 +63,8 @@ public class AmountUtil {
                                                        AmountSpec amountSpec,
                                                        PriceSpec priceSpec,
                                                        Market market) {
-        return findMinAmountFromMinMaxBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> findMinAmountFromMinMaxQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
+        return AmountSpecUtil.findMinBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findMinQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toBaseMonetary(quoteAmount))
                         ));
@@ -70,23 +78,23 @@ public class AmountUtil {
                                                        AmountSpec amountSpec,
                                                        PriceSpec priceSpec,
                                                        Market market) {
-        return findMaxAmountFromMinMaxBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> findMaxAmountFromMinMaxQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
+        return AmountSpecUtil.findMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toBaseMonetary(quoteAmount))
                         ));
     }
 
-    public static Optional<Monetary> findAmountOrMaxBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findAmountOrMaxBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    public static Optional<Monetary> findFixOrMaxBaseAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findFixOrMaxBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findAmountOrMaxBaseAmount(MarketPriceService marketPriceService,
-                                                               AmountSpec amountSpec,
-                                                               PriceSpec priceSpec,
-                                                               Market market) {
-        return findAmountOrMaxAmountFromBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> findAmountOrMaxAmountFromQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
+    public static Optional<Monetary> findFixOrMaxBaseAmount(MarketPriceService marketPriceService,
+                                                            AmountSpec amountSpec,
+                                                            PriceSpec priceSpec,
+                                                            Market market) {
+        return AmountSpecUtil.findFixOrMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findFixOrMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toBaseMonetary(quoteAmount))
                         ));
@@ -94,7 +102,7 @@ public class AmountUtil {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // QuoteAmount: The base side amount gets calculated by using the given priceSpec
+    // QuoteAmount: If no QuoteAmountSpec we calculate it from the BaseAmountSpec with the PriceSpec
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Optional<Monetary> findFixQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
@@ -105,13 +113,17 @@ public class AmountUtil {
                                                         AmountSpec amountSpec,
                                                         PriceSpec priceSpec,
                                                         Market market) {
-        return findAmountFromFixQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> findAmountFromFixBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
+        return AmountSpecUtil.findFixQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findFixBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toQuoteMonetary(baseAmount))
                         ));
     }
 
+    public static Optional<Monetary> findMinOrFixQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findMinQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket())
+                .or(() -> findFixQuoteAmount(marketPriceService, offer));
+    }
 
     public static Optional<Monetary> findMinQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
         return findMinQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
@@ -121,11 +133,16 @@ public class AmountUtil {
                                                         AmountSpec amountSpec,
                                                         PriceSpec priceSpec,
                                                         Market market) {
-        return findMinAmountFromMinMaxQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> findMinAmountFromMinMaxBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
+        return AmountSpecUtil.findMinQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findMinBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toQuoteMonetary(baseAmount))
                         ));
+    }
+
+    public static Optional<Monetary> findMaxOrFixQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findMaxQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket())
+                .or(() -> AmountUtil.findFixQuoteAmount(marketPriceService, offer));
     }
 
     public static Optional<Monetary> findMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
@@ -136,118 +153,25 @@ public class AmountUtil {
                                                         AmountSpec amountSpec,
                                                         PriceSpec priceSpec,
                                                         Market market) {
-        return findMaxAmountFromMinMaxQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> findMaxAmountFromMinMaxBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
+        return AmountSpecUtil.findMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toQuoteMonetary(baseAmount))
                         ));
     }
 
-    public static Optional<Monetary> findAmountOrMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findAmountOrMaxQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    public static Optional<Monetary> findFixOrMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findFixOrMaxQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findAmountOrMaxQuoteAmount(MarketPriceService marketPriceService,
-                                                                AmountSpec amountSpec,
-                                                                PriceSpec priceSpec,
-                                                                Market market) {
-        return findAmountOrMaxAmountFromQuoteAmountSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> findAmountOrMaxAmountFromBaseAmountSpec(amountSpec, market.getBaseCurrencyCode())
+    public static Optional<Monetary> findFixOrMaxQuoteAmount(MarketPriceService marketPriceService,
+                                                             AmountSpec amountSpec,
+                                                             PriceSpec priceSpec,
+                                                             Market market) {
+        return AmountSpecUtil.findFixOrMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findFixOrMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toQuoteMonetary(baseAmount))
                         ));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private utils for BaseAmount
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private static Optional<Monetary> findAmountFromFixBaseAmountSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findFixBaseAmountSpec(amountSpec)
-                .map(FixBaseAmountSpec::getAmount)
-                .map(amount -> Monetary.from(amount, baseCurrencyCode));
-    }
-
-    private static Optional<Monetary> findMinAmountFromMinMaxBaseAmountSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findMinMaxBaseAmountSpec(amountSpec)
-                .map(MinMaxBaseAmountSpec::getMinAmount)
-                .map(amount -> Monetary.from(amount, baseCurrencyCode));
-    }
-
-    private static Optional<Monetary> findMaxAmountFromMinMaxBaseAmountSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findMinMaxBaseAmountSpec(amountSpec)
-                .map(MinMaxBaseAmountSpec::getMaxAmount)
-                .map(amount -> Monetary.from(amount, baseCurrencyCode));
-    }
-
-    private static Optional<Monetary> findAmountOrMaxAmountFromBaseAmountSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findAmountFromFixBaseAmountSpec(amountSpec, baseCurrencyCode)
-                .or(() -> findMaxAmountFromMinMaxBaseAmountSpec(amountSpec, baseCurrencyCode));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private utils for QuoteAmount
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private static Optional<Monetary> findAmountFromFixQuoteAmountSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findFixQuoteAmountSpec(amountSpec)
-                .map(FixQuoteAmountSpec::getAmount)
-                .map(amount -> Monetary.from(amount, quoteCurrencyCode));
-    }
-
-    private static Optional<Monetary> findMinAmountFromMinMaxQuoteAmountSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findMinMaxQuoteAmountSpec(amountSpec)
-                .map(MinMaxQuoteAmountSpec::getMinAmount)
-                .map(amount -> Monetary.from(amount, quoteCurrencyCode));
-    }
-
-    private static Optional<Monetary> findMaxAmountFromMinMaxQuoteAmountSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findMinMaxQuoteAmountSpec(amountSpec)
-                .map(MinMaxQuoteAmountSpec::getMaxAmount)
-                .map(amount -> Monetary.from(amount, quoteCurrencyCode));
-    }
-
-    private static Optional<Monetary> findAmountOrMaxAmountFromQuoteAmountSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findAmountFromFixQuoteAmountSpec(amountSpec, quoteCurrencyCode)
-                .or(() -> findMaxAmountFromMinMaxQuoteAmountSpec(amountSpec, quoteCurrencyCode));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Utils for AmountSpec
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private static Optional<FixBaseAmountSpec> findFixBaseAmountSpec(AmountSpec amountSpec) {
-        if (amountSpec instanceof FixBaseAmountSpec) {
-            return Optional.of((FixBaseAmountSpec) amountSpec);
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<MinMaxBaseAmountSpec> findMinMaxBaseAmountSpec(AmountSpec amountSpec) {
-        if (amountSpec instanceof MinMaxBaseAmountSpec) {
-            return Optional.of(((MinMaxBaseAmountSpec) amountSpec));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<FixQuoteAmountSpec> findFixQuoteAmountSpec(AmountSpec amountSpec) {
-        if (amountSpec instanceof FixQuoteAmountSpec) {
-            return Optional.of((FixQuoteAmountSpec) amountSpec);
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<MinMaxQuoteAmountSpec> findMinMaxQuoteAmountSpec(AmountSpec amountSpec) {
-        if (amountSpec instanceof MinMaxQuoteAmountSpec) {
-            return Optional.of(((MinMaxQuoteAmountSpec) amountSpec));
-        } else {
-            return Optional.empty();
-        }
     }
 }

@@ -21,10 +21,11 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.price.TakeOfferPriceController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakeOfferReviewController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement.TakeOfferSettlementController;
 import bisq.i18n.Res;
-import bisq.offer.amount.AmountSpec;
+import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.settlement.SettlementUtil;
 import javafx.application.Platform;
@@ -43,6 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TakeOfferController extends NavigationController implements InitWithDataController<TakeOfferController.InitData> {
+
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -67,10 +69,11 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferModel model;
     @Getter
     private final TakeOfferView view;
+    private final TakeOfferPriceController takeOfferPriceController;
     private final TakeOfferAmountController takeOfferAmountController;
     private final TakeOfferSettlementController takeOfferSettlementController;
     private final TakeOfferReviewController takeOfferReviewController;
-    private Subscription takersAmountSpecPin, methodNamePin;
+    private Subscription tradePriceSpecPin, tradeAmountSpecPin, methodNamePin;
 
     public TakeOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.TAKE_OFFER);
@@ -80,6 +83,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
 
+        takeOfferPriceController = new TakeOfferPriceController(applicationService);
         takeOfferAmountController = new TakeOfferAmountController(applicationService);
         takeOfferSettlementController = new TakeOfferSettlementController(applicationService);
         takeOfferReviewController = new TakeOfferReviewController(applicationService, this::setMainButtonsVisibleState);
@@ -93,15 +97,19 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
+        takeOfferPriceController.init(bisqEasyOffer);
         takeOfferAmountController.init(bisqEasyOffer, initData.getTakersAmountSpec());
         takeOfferSettlementController.init(bisqEasyOffer, initData.getTakersSettlementMethodNames());
         takeOfferReviewController.init(bisqEasyOffer);
 
-
+        model.setPriceVisible(bisqEasyOffer.getDirection().isBuy());
         model.setAmountVisible(bisqEasyOffer.hasAmountRange());
         model.setSettlementVisible(bisqEasyOffer.getQuoteSideSettlementSpecs().size() > 1);
 
         model.getChildTargets().clear();
+        if (model.isPriceVisible()) {
+            model.getChildTargets().add(NavigationTarget.TAKE_OFFER_PRICE);
+        }
         if (model.isAmountVisible()) {
             model.getChildTargets().add(NavigationTarget.TAKE_OFFER_AMOUNT);
         }
@@ -119,52 +127,63 @@ public class TakeOfferController extends NavigationController implements InitWit
     public void onActivate() {
         model.getBackButtonText().set(Res.get("back"));
         model.getNextButtonVisible().set(true);
-        takersAmountSpecPin = EasyBind.subscribe(takeOfferAmountController.getTakersAmountSpec(), takeOfferReviewController::setTradeAmountSpec);
-        methodNamePin = EasyBind.subscribe(takeOfferSettlementController.getSelectedMethodName(), methodName -> {
-            takeOfferReviewController.setSettlementMethodName(methodName);
-            updateNextButtonDisabledState(methodName);
-        });
+        tradePriceSpecPin = EasyBind.subscribe(takeOfferPriceController.getPriceSpec(),
+                priceSpec -> {
+                    takeOfferAmountController.setTradePriceSpec(priceSpec);
+                    takeOfferReviewController.setTradePriceSpec(priceSpec);
+                });
+        tradeAmountSpecPin = EasyBind.subscribe(takeOfferAmountController.getTakersAmountSpec(),
+                takeOfferReviewController::setTradeAmountSpec);
+        methodNamePin = EasyBind.subscribe(takeOfferSettlementController.getSelectedMethodName(),
+                methodName -> {
+                    takeOfferReviewController.setSettlementMethodName(methodName);
+                    updateNextButtonDisabledState();
+                });
     }
 
     @Override
     public void onDeactivate() {
-        takersAmountSpecPin.unsubscribe();
+        tradePriceSpecPin.unsubscribe();
+        tradeAmountSpecPin.unsubscribe();
         methodNamePin.unsubscribe();
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
-        model.getNextButtonText().set(navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW ?
+        boolean isTakeOfferReview = navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW;
+        model.getNextButtonText().set(isTakeOfferReview ?
                 Res.get("bisqEasy.takeOffer.review.takeOffer") :
                 Res.get("next"));
-        model.getShowProgressBox().set(navigationTarget != NavigationTarget.TAKE_OFFER_REVIEW);
+        model.getShowProgressBox().set(!isTakeOfferReview);
         model.getSelectedChildTarget().set(navigationTarget);
         setMainButtonsVisibleState(true);
-        updateNextButtonDisabledState(takeOfferSettlementController.getSelectedMethodName().get());
-        model.getTakeOfferButtonVisible().set(navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW);
-        model.getNextButtonVisible().set(navigationTarget != NavigationTarget.TAKE_OFFER_REVIEW);
+        updateNextButtonDisabledState();
+        model.getTakeOfferButtonVisible().set(isTakeOfferReview);
+        model.getNextButtonVisible().set(!isTakeOfferReview);
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        if (navigationTarget == NavigationTarget.TAKE_OFFER_AMOUNT && !model.isAmountVisible()) {
-            if (model.isSettlementVisible()) {
-                Navigation.navigateTo(NavigationTarget.TAKE_OFFER_SETTLEMENT);
-                return Optional.empty();
-            } else {
-                Navigation.navigateTo(NavigationTarget.TAKE_OFFER_REVIEW);
-                return Optional.empty();
-            }
-        } else if (navigationTarget == NavigationTarget.TAKE_OFFER_SETTLEMENT && !model.isSettlementVisible()) {
-            Navigation.navigateTo(NavigationTarget.TAKE_OFFER_REVIEW);
-            return Optional.empty();
-        }
-
         switch (navigationTarget) {
+            case TAKE_OFFER_PRICE: {
+                if (!model.isPriceVisible()) {
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER_AMOUNT);
+                    return Optional.empty();
+                }
+                return Optional.of(takeOfferPriceController);
+            }
             case TAKE_OFFER_AMOUNT: {
+                if (!model.isAmountVisible()) {
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER_SETTLEMENT);
+                    return Optional.empty();
+                }
                 return Optional.of(takeOfferAmountController);
             }
             case TAKE_OFFER_SETTLEMENT: {
+                if (!model.isSettlementVisible()) {
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER_REVIEW);
+                    return Optional.empty();
+                }
                 return Optional.of(takeOfferSettlementController);
             }
             case TAKE_OFFER_REVIEW: {
@@ -184,7 +203,7 @@ public class TakeOfferController extends NavigationController implements InitWit
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState(takeOfferSettlementController.getSelectedMethodName().get());
+            updateNextButtonDisabledState();
         }
     }
 
@@ -196,7 +215,7 @@ public class TakeOfferController extends NavigationController implements InitWit
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState(takeOfferSettlementController.getSelectedMethodName().get());
+            updateNextButtonDisabledState();
         }
     }
 
@@ -214,9 +233,9 @@ public class TakeOfferController extends NavigationController implements InitWit
         applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
-    private void updateNextButtonDisabledState(String methodName) {
+    private void updateNextButtonDisabledState() {
         if (NavigationTarget.TAKE_OFFER_SETTLEMENT == model.getSelectedChildTarget().get()) {
-            model.getNextButtonDisabled().set(methodName == null);
+            model.getNextButtonDisabled().set(takeOfferSettlementController.getSelectedMethodName().get() == null);
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -224,11 +243,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     private void setMainButtonsVisibleState(boolean value) {
         NavigationTarget navigationTarget = model.getSelectedChildTarget().get();
-        boolean isAmount = navigationTarget == NavigationTarget.TAKE_OFFER_AMOUNT;
-        boolean isSettlementWithNoAmount = navigationTarget == NavigationTarget.TAKE_OFFER_SETTLEMENT && !model.isAmountVisible();
-        boolean isReviewWithNoSettlementAndNoAmount = navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW && !model.isAmountVisible() && !model.isSettlementVisible();
-        boolean hasPreviousTab = !(isAmount || isSettlementWithNoAmount || isReviewWithNoSettlementAndNoAmount);
-        model.getBackButtonVisible().set(value && hasPreviousTab);
+        model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
         model.getCloseButtonVisible().set(value);
     }
 }

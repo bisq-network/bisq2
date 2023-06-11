@@ -86,8 +86,8 @@ public final class Fiat extends Monetary {
         super(code, faceValue, code, precision, 2);
     }
 
-    private Fiat(String id, long value, String code, int precision, int minPrecision) {
-        super(id, value, code, precision, minPrecision);
+    private Fiat(String id, long value, String code, int precision, int lowPrecision) {
+        super(id, value, code, precision, lowPrecision);
     }
 
     public bisq.common.protobuf.Monetary toProto() {
@@ -99,7 +99,7 @@ public final class Fiat extends Monetary {
                 baseProto.getValue(),
                 baseProto.getCode(),
                 baseProto.getPrecision(),
-                baseProto.getMinPrecision());
+                baseProto.getLowPrecision());
     }
 
 

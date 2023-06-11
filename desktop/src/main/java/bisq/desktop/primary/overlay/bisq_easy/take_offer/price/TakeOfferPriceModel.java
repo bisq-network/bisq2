@@ -15,29 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.price;
 
 import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Model;
-import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
-
 @Getter
-public class AmountModel implements Model {
-    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
-    private final StringProperty toggleButtonText = new SimpleStringProperty();
-    private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
+public class TakeOfferPriceModel implements Model {
     @Setter
-    @Nullable
-    private Market market = MarketRepository.getDefault();
+    private Market market = null;
+    private final DoubleProperty percentage = new SimpleDoubleProperty();
+    private final StringProperty percentageAsString = new SimpleStringProperty();
+    private final StringProperty priceAsString = new SimpleStringProperty();
+    private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
+    private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
 
     public void reset() {
-        isMinAmountEnabled.set(false);
-        toggleButtonText.set(null);
+        market = null;
+        percentageAsString.set(null);
+        priceAsString.set(null);
+        priceSpec.set(new MarketPriceSpec());
     }
 }

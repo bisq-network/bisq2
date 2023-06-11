@@ -54,6 +54,7 @@ public enum NavigationTarget {
     CREATE_OFFER_REVIEW_OFFER(CREATE_OFFER, false),
 
     TAKE_OFFER(OVERLAY, false),
+    TAKE_OFFER_PRICE(TAKE_OFFER, false),
     TAKE_OFFER_AMOUNT(TAKE_OFFER, false),
     TAKE_OFFER_SETTLEMENT(TAKE_OFFER, false),
     TAKE_OFFER_REVIEW(TAKE_OFFER, false),

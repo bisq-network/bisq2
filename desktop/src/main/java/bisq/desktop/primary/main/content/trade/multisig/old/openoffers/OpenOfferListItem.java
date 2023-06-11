@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.trade.multisig.old.openoffers;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.poc.OpenOffer;
 import bisq.offer.poc.PocOffer;
+import bisq.offer.poc.PocOpenOffer;
 import bisq.offer.settlement.SettlementSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class OpenOfferListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String id;
-    private final OpenOffer openOffer;
+    private final PocOpenOffer openOffer;
     private final PocOffer offer;
     private final String market;
     private final MarketPriceService marketPriceService;
@@ -48,7 +48,7 @@ public class OpenOfferListItem implements TableItem {
     private final String settlement;
     private final String options;
 
-    OpenOfferListItem(OpenOffer openOffer, MarketPriceService marketPriceService) {
+    OpenOfferListItem(PocOpenOffer openOffer, MarketPriceService marketPriceService) {
         this.openOffer = openOffer;
         this.offer = openOffer.getOffer();
         this.marketPriceService = marketPriceService;

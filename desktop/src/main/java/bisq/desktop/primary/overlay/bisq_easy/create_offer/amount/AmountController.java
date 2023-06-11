@@ -24,13 +24,13 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.amount.AmountSpec;
-import bisq.offer.amount.FixQuoteAmountSpec;
-import bisq.offer.amount.MinMaxQuoteAmountSpec;
-import bisq.offer.price.FixPriceSpec;
-import bisq.offer.price.FloatPriceSpec;
-import bisq.offer.price.PriceSpec;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.FixQuoteAmountSpec;
+import bisq.offer.amount.spec.MinMaxQuoteAmountSpec;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -46,10 +46,10 @@ public class AmountController implements Controller {
     private final AmountModel model;
     @Getter
     private final AmountView view;
-    private final AmountComponent minAmountComponent, maxAmountComponent;
+    private final AmountComponent minAmountComponent, maxOrFixAmountComponent;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
-    private Subscription isMinAmountEnabledPin, maxAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
+    private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
     public AmountController(DefaultApplicationService applicationService) {
@@ -59,11 +59,11 @@ public class AmountController implements Controller {
 
         minAmountComponent = new AmountComponent(applicationService, true);
         minAmountComponent.setDescription(Res.get("onboarding.amount.description.minAmount"));
-        maxAmountComponent = new AmountComponent(applicationService, true);
+        maxOrFixAmountComponent = new AmountComponent(applicationService, true);
 
         view = new AmountView(model, this,
                 minAmountComponent,
-                maxAmountComponent);
+                maxOrFixAmountComponent);
     }
 
     public void setDirection(Direction direction) {
@@ -71,7 +71,7 @@ public class AmountController implements Controller {
             return;
         }
         minAmountComponent.setDirection(direction);
-        maxAmountComponent.setDirection(direction);
+        maxOrFixAmountComponent.setDirection(direction);
     }
 
     public void setMarket(Market market) {
@@ -79,7 +79,7 @@ public class AmountController implements Controller {
             return;
         }
         minAmountComponent.setMarket(market);
-        maxAmountComponent.setMarket(market);
+        maxOrFixAmountComponent.setMarket(market);
         model.setMarket(market);
     }
 
@@ -94,12 +94,12 @@ public class AmountController implements Controller {
             quote = getMarketPriceQuote();
         }
         minAmountComponent.setQuote(quote);
-        maxAmountComponent.setQuote(quote);
+        maxOrFixAmountComponent.setQuote(quote);
     }
 
     public void reset() {
         minAmountComponent.reset();
-        maxAmountComponent.reset();
+        maxOrFixAmountComponent.reset();
         model.reset();
     }
 
@@ -117,13 +117,13 @@ public class AmountController implements Controller {
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
                 value -> {
                     if (model.getIsMinAmountEnabled().get()) {
-                        if (value != null && maxAmountComponent.getBaseSideAmount().get() != null &&
-                                value.getValue() > maxAmountComponent.getBaseSideAmount().get().getValue()) {
-                            maxAmountComponent.setBaseSideAmount(value);
+                        if (value != null && maxOrFixAmountComponent.getBaseSideAmount().get() != null &&
+                                value.getValue() > maxOrFixAmountComponent.getBaseSideAmount().get().getValue()) {
+                            maxOrFixAmountComponent.setBaseSideAmount(value);
                         }
                     }
                 });
-        maxAmountCompBaseSideAmountPin = EasyBind.subscribe(maxAmountComponent.getBaseSideAmount(),
+        maxOrFixAmountCompBaseSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getBaseSideAmount(),
                 value -> {
                     if (model.getIsMinAmountEnabled().get() &&
                             value != null && minAmountComponent.getBaseSideAmount().get() != null &&
@@ -135,15 +135,15 @@ public class AmountController implements Controller {
         minAmountCompQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
                 value -> {
                     if (model.getIsMinAmountEnabled().get()) {
-                        if (value != null && maxAmountComponent.getQuoteSideAmount().get() != null &&
-                                value.getValue() > maxAmountComponent.getQuoteSideAmount().get().getValue()) {
-                            maxAmountComponent.setQuoteSideAmount(value);
+                        if (value != null && maxOrFixAmountComponent.getQuoteSideAmount().get() != null &&
+                                value.getValue() > maxOrFixAmountComponent.getQuoteSideAmount().get().getValue()) {
+                            maxOrFixAmountComponent.setQuoteSideAmount(value);
 
                         }
                     }
                     applyAmountSpec();
                 });
-        maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxAmountComponent.getQuoteSideAmount(),
+        maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getQuoteSideAmount(),
                 value -> {
                     if (model.getIsMinAmountEnabled().get() &&
                             value != null && minAmountComponent.getQuoteSideAmount().get() != null &&
@@ -158,9 +158,9 @@ public class AmountController implements Controller {
                     Res.get("onboarding.amount.removeMinAmountOption") :
                     Res.get("onboarding.amount.addMinAmountOption"));
 
-            maxAmountComponent.setDescription(isMinAmountEnabled ?
+            maxOrFixAmountComponent.setDescription(isMinAmountEnabled ?
                     Res.get("onboarding.amount.description.maxAmount") :
-                    Res.get("onboarding.amount.description.maxAmountOnly"));
+                    Res.get("onboarding.amount.description.fixAmount"));
 
             applyAmountSpec();
         });
@@ -171,7 +171,7 @@ public class AmountController implements Controller {
     @Override
     public void onDeactivate() {
         isMinAmountEnabledPin.unsubscribe();
-        maxAmountCompBaseSideAmountPin.unsubscribe();
+        maxOrFixAmountCompBaseSideAmountPin.unsubscribe();
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
@@ -184,10 +184,18 @@ public class AmountController implements Controller {
     }
 
     private void applyAmountSpec() {
-        model.getAmountSpec().set(model.getIsMinAmountEnabled().get() ?
-                new MinMaxQuoteAmountSpec(minAmountComponent.getQuoteSideAmount().get().getValue(), maxAmountComponent.getQuoteSideAmount().get().getValue()) :
-                new FixQuoteAmountSpec(maxAmountComponent.getQuoteSideAmount().get().getValue())
-        );
+        long maxOrFixAmount = maxOrFixAmountComponent.getQuoteSideAmount().get().getValue();
+
+        if (model.getIsMinAmountEnabled().get()) {
+            long minAmount = minAmountComponent.getQuoteSideAmount().get().getValue();
+            if (minAmount == maxOrFixAmount) {
+                model.getAmountSpec().set(new FixQuoteAmountSpec(maxOrFixAmount));
+            } else {
+                model.getAmountSpec().set(new MinMaxQuoteAmountSpec(minAmount, maxOrFixAmount));
+            }
+        } else {
+            model.getAmountSpec().set(new FixQuoteAmountSpec(maxOrFixAmount));
+        }
     }
 
     private Quote getMarketPriceQuote() {

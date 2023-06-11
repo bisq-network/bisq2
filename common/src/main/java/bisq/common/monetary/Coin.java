@@ -136,8 +136,8 @@ public final class Coin extends Monetary {
         super(code + " [crypto]", faceValue, code, precision, code.equals("BSQ") ? 2 : 4);
     }
 
-    private Coin(String id, long value, String code, int precision, int minPrecision) {
-        super(id, value, code, precision, minPrecision);
+    private Coin(String id, long value, String code, int precision, int lowPrecision) {
+        super(id, value, code, precision, lowPrecision);
     }
 
     public bisq.common.protobuf.Monetary toProto() {
@@ -149,7 +149,7 @@ public final class Coin extends Monetary {
                 baseProto.getValue(),
                 baseProto.getCode(),
                 baseProto.getPrecision(),
-                baseProto.getMinPrecision());
+                baseProto.getLowPrecision());
     }
 
     public Coin add(Coin value) {

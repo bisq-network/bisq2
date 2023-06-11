@@ -15,21 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount;
+package bisq.offer.poc;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-@Getter
-@ToString
-@EqualsAndHashCode
-public abstract class MinMaxAmountSpec implements AmountSpec {
-    protected final long minAmount;
-    protected final long maxAmount;
-
-    public MinMaxAmountSpec(long minAmount, long maxAmount) {
-        this.minAmount = minAmount;
-        this.maxAmount = maxAmount;
-    }
-}
+/**
+ * Proof of concept implementation for MultiSig protocol.
+ */

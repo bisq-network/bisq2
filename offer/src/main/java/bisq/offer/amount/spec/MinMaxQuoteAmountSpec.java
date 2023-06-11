@@ -15,31 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount;
+package bisq.offer.amount.spec;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-/**
- * No min. amount supported
- */
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FixBaseAmountSpec extends FixAmountSpec implements BaseAmountSpec {
-    public FixBaseAmountSpec(long amount) {
-        super(amount);
+public final class MinMaxQuoteAmountSpec extends MinMaxAmountSpec implements QuoteAmountSpec {
+    public MinMaxQuoteAmountSpec(long minAmount, long maxAmount) {
+        super(minAmount, maxAmount);
     }
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixBaseAmountSpec(bisq.offer.protobuf.FixBaseAmountSpec.newBuilder()
-                        .setAmount(amount))
+        return getAmountSpecBuilder().setMinMaxQuoteAmountSpec(bisq.offer.protobuf.MinMaxQuoteAmountSpec.newBuilder()
+                        .setMinAmount(minAmount)
+                        .setMaxAmount(maxAmount))
                 .build();
     }
 
-    public static FixBaseAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return new FixBaseAmountSpec(proto.getFixBaseAmountSpec().getAmount());
+    public static MinMaxQuoteAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
+        return new MinMaxQuoteAmountSpec(proto.getMinMaxQuoteAmountSpec().getMinAmount(),
+                proto.getMinMaxQuoteAmountSpec().getMaxAmount()
+        );
     }
 }

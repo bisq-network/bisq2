@@ -15,19 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
+package bisq.offer.amount.spec;
 
-import bisq.desktop.common.view.Model;
-import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-public class TakeOfferAmountModel implements Model {
-    @Setter
-    private BisqEasyOffer bisqEasyOffer;
-    private final ObjectProperty<AmountSpec> takersAmountSpec = new SimpleObjectProperty<>();
+public interface QuoteAmountSpec extends AmountSpec {
 }

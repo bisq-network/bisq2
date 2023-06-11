@@ -34,7 +34,7 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
     private final Button toggleButton;
     private final VBox minAmountRoot;
 
-    public AmountView(AmountModel model, AmountController controller, AmountComponent minAmountComponent, AmountComponent maxAmountComponent) {
+    public AmountView(AmountModel model, AmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -43,7 +43,7 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         minAmountRoot = minAmountComponent.getView().getRoot();
-        HBox amountBox = new HBox(20, minAmountRoot, maxAmountComponent.getView().getRoot());
+        HBox amountBox = new HBox(20, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
         toggleButton = new Button(Res.get("onboarding.amount.addMinAmountOption"));

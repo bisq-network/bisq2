@@ -18,15 +18,17 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
-import bisq.offer.amount.AmountSpec;
 import bisq.offer.amount.AmountUtil;
-import bisq.offer.amount.FixQuoteAmountSpec;
 import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.FixQuoteAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -53,29 +55,42 @@ public class TakeOfferAmountController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec) {
+        model.setBisqEasyOffer(bisqEasyOffer);
+
         amountComponent.setDirection(bisqEasyOffer.getDirection());
-        amountComponent.setMarket(bisqEasyOffer.getMarket());
-        amountComponent.setMinMaxRange(AmountUtil.findMinQuoteAmount(marketPriceService, bisqEasyOffer).orElseThrow(),
-                AmountUtil.findMaxQuoteAmount(marketPriceService, bisqEasyOffer).orElseThrow());
+        Market market = bisqEasyOffer.getMarket();
+        amountComponent.setMarket(market);
+        amountComponent.setMinMaxRange(AmountUtil.findMinOrFixQuoteAmount(marketPriceService, bisqEasyOffer).orElseThrow(),
+                AmountUtil.findMaxOrFixQuoteAmount(marketPriceService, bisqEasyOffer).orElseThrow());
 
         String direction = bisqEasyOffer.getTakersDirection().isBuy() ?
                 Res.get("buy").toUpperCase() :
                 Res.get("sell").toUpperCase();
 
         amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
-                bisqEasyOffer.getMarket().getQuoteCurrencyCode(),
+                market.getQuoteCurrencyCode(),
                 direction,
-                OfferAmountFormatter.getMinQuoteAmount(marketPriceService, bisqEasyOffer),
-                OfferAmountFormatter.getMaxQuoteAmount(marketPriceService, bisqEasyOffer)));
+                OfferAmountFormatter.formatMinQuoteAmount(marketPriceService, bisqEasyOffer, false),
+                OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer)));
 
-        PriceUtil.findQuote(marketPriceService, bisqEasyOffer).ifPresent(amountComponent::setQuote);
+        if (bisqEasyOffer.getTakersDirection().isBuy()) {
+            // If taker is buyer we set the sellers price from the offer
+            PriceUtil.findQuote(marketPriceService, bisqEasyOffer).ifPresent(amountComponent::setQuote);
+        }
 
         takersAmountSpec.ifPresent(amountSpec -> {
-            AmountUtil.findAmountOrMaxQuoteAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
+            AmountUtil.findFixOrMaxQuoteAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
                     .ifPresent(amountComponent::setQuoteSideAmount);
-            AmountUtil.findAmountOrMaxBaseAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
+            AmountUtil.findFixOrMaxBaseAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
                     .ifPresent(amountComponent::setBaseSideAmount);
         });
+    }
+
+    public void setTradePriceSpec(PriceSpec priceSpec) {
+        // Only handle if taker is seller
+        if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
+            PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket()).ifPresent(amountComponent::setQuote);
+        }
     }
 
     public ReadOnlyObjectProperty<AmountSpec> getTakersAmountSpec() {
@@ -84,9 +99,8 @@ public class TakeOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        quoteSideAmountPin = EasyBind.subscribe(amountComponent.getQuoteSideAmount(), quoteSideAmount -> {
-            model.getTakersAmountSpec().set(new FixQuoteAmountSpec(quoteSideAmount.getValue()));
-        });
+        quoteSideAmountPin = EasyBind.subscribe(amountComponent.getQuoteSideAmount(),
+                quoteSideAmount -> model.getTakersAmountSpec().set(new FixQuoteAmountSpec(quoteSideAmount.getValue())));
     }
 
     @Override

@@ -15,29 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.price;
+package bisq.offer.amount.spec;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
-public interface PriceSpec extends Proto {
+public interface AmountSpec extends Proto {
 
-    bisq.offer.protobuf.PriceSpec toProto();
+    bisq.offer.protobuf.AmountSpec toProto();
 
-    default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder() {
-        return bisq.offer.protobuf.PriceSpec.newBuilder();
+    default bisq.offer.protobuf.AmountSpec.Builder getAmountSpecBuilder() {
+        return bisq.offer.protobuf.AmountSpec.newBuilder();
     }
 
-    static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
+    static AmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
         switch (proto.getMessageCase()) {
-            case FIXPRICE: {
-                return FixPriceSpec.fromProto(proto.getFixPrice());
+            case FIXBASEAMOUNTSPEC: {
+                return FixBaseAmountSpec.fromProto(proto);
             }
-            case FLOATPRICE: {
-                return FloatPriceSpec.fromProto(proto.getFloatPrice());
+            case FIXQUOTEAMOUNTSPEC: {
+                return FixQuoteAmountSpec.fromProto(proto);
             }
-            case MARKETPRICE: {
-                return MarketPriceSpec.fromProto(proto.getMarketPrice());
+            case MINMAXBASEAMOUNTSPEC: {
+                return MinMaxBaseAmountSpec.fromProto(proto);
+            }
+            case MINMAXQUOTEAMOUNTSPEC: {
+                return MinMaxQuoteAmountSpec.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

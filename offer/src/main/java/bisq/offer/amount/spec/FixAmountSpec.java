@@ -15,31 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.view;
+package bisq.offer.amount.spec;
 
-import javafx.scene.Parent;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
- * By default, we do not use caching. If a child controller should be cached by its parent Navigation controller,
- * it has to implement the Controller interface.
+ * No min. amount supported
  */
-public interface Controller {
-    View<? extends Parent, ? extends Model, ? extends Controller> getView();
+@Getter
+@ToString
+@EqualsAndHashCode
+public abstract class FixAmountSpec implements AmountSpec {
+    protected final long amount;
 
-    // The internal methods should be only used by framework classes (e.g. NavigationController)
-    default void onActivateInternal() {
-        onActivate();
-    }
-
-    default void onDeactivateInternal() {
-        onDeactivate();
-    }
-
-    void onActivate();
-
-    void onDeactivate();
-
-    default boolean useCaching() {
-        return true;
+    public FixAmountSpec(long amount) {
+        this.amount = amount;
     }
 }

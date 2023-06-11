@@ -25,7 +25,7 @@ import bisq.presentation.formatters.QuoteFormatter;
 
 import java.util.function.Function;
 
-public class OfferQuoteFormatter {
+public class OfferPriceFormatter {
     public static String formatQuote(MarketPriceService marketPriceService, Offer offer) {
         return formatQuote(marketPriceService, offer, true);
     }

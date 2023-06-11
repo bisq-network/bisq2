@@ -104,6 +104,7 @@ public class SettlementMethodController implements Controller {
             maybeAddMethodName(methodName);
         } else {
             model.getSelectedMethodNames().remove(methodName);
+            setCookie();
         }
     }
 

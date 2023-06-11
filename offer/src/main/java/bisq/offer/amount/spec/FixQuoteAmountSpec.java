@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.amount;
+package bisq.offer.amount.spec;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,11 +26,20 @@ import lombok.ToString;
  */
 @Getter
 @ToString
-@EqualsAndHashCode
-public abstract class FixAmountSpec implements AmountSpec {
-    protected final long amount;
+@EqualsAndHashCode(callSuper = true)
+public final class FixQuoteAmountSpec extends FixAmountSpec implements QuoteAmountSpec {
+    public FixQuoteAmountSpec(long amount) {
+        super(amount);
+    }
 
-    public FixAmountSpec(long amount) {
-        this.amount = amount;
+    @Override
+    public bisq.offer.protobuf.AmountSpec toProto() {
+        return getAmountSpecBuilder().setFixQuoteAmountSpec(bisq.offer.protobuf.FixQuoteAmountSpec.newBuilder()
+                        .setAmount(amount))
+                .build();
+    }
+
+    public static FixQuoteAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
+        return new FixQuoteAmountSpec(proto.getFixQuoteAmountSpec().getAmount());
     }
 }

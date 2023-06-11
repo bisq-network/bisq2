@@ -29,7 +29,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.Offer;
-import bisq.offer.poc.OpenOfferService;
+import bisq.offer.poc.PocOpenOfferService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -53,14 +53,14 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     private final Persistence<ProtocolStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final OpenOfferService openOfferService;
+    private final PocOpenOfferService openOfferService;
     @Getter
     private final ObservableSet<Protocol<?, ?>> protocols = new ObservableSet<>();
 
     public ProtocolService(NetworkService networkService,
                            IdentityService identityService,
                            PersistenceService persistenceService,
-                           OpenOfferService openOfferService) {
+                           PocOpenOfferService openOfferService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.openOfferService = openOfferService;
