@@ -47,10 +47,10 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class QuotedMessageBlock {
+public class CitationBlock {
     private final Controller controller;
 
-    public QuotedMessageBlock(DefaultApplicationService applicationService) {
+    public CitationBlock(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
