@@ -52,7 +52,7 @@ public class AmountPriceGroup {
     }
 
     public ReadOnlyObjectProperty<PriceQuote> quoteProperty() {
-        return controller.model.quote;
+        return controller.model.priceQuote;
     }
 
 
@@ -126,7 +126,7 @@ public class AmountPriceGroup {
             if (model.isCreateOffer) {
                 model.baseSideAmount.addListener(baseCurrencyAmountListener);
                 model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
-                model.quote.addListener(quoteListener);
+                model.priceQuote.addListener(quoteListener);
             }
         }
 
@@ -135,12 +135,12 @@ public class AmountPriceGroup {
             if (model.isCreateOffer) {
                 model.baseSideAmount.removeListener(baseCurrencyAmountListener);
                 model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
-                model.quote.removeListener(quoteListener);
+                model.priceQuote.removeListener(quoteListener);
             }
         }
 
         private void setQuoteFromBase() {
-            PriceQuote priceQuote = model.quote.get();
+            PriceQuote priceQuote = model.priceQuote.get();
             if (priceQuote == null) return;
             Monetary baseCurrencyAmount = model.baseSideAmount.get();
             if (baseCurrencyAmount == null) return;
@@ -149,7 +149,7 @@ public class AmountPriceGroup {
         }
 
         private void setBaseFromQuote() {
-            PriceQuote priceQuote = model.quote.get();
+            PriceQuote priceQuote = model.priceQuote.get();
             if (priceQuote == null) return;
             Monetary quoteCurrencyAmount = model.quoteSideAmount.get();
             if (quoteCurrencyAmount == null) return;
@@ -169,15 +169,15 @@ public class AmountPriceGroup {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
         private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
-        private final ReadOnlyObjectProperty<PriceQuote> quote;
+        private final ReadOnlyObjectProperty<PriceQuote> priceQuote;
         private boolean isCreateOffer = true;
 
         private Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
                       ReadOnlyObjectProperty<Monetary> quoteSideAmount,
-                      ReadOnlyObjectProperty<PriceQuote> quote) {
+                      ReadOnlyObjectProperty<PriceQuote> priceQuote) {
             this.baseSideAmount = baseSideAmount;
             this.quoteSideAmount = quoteSideAmount;
-            this.quote = quote;
+            this.priceQuote = priceQuote;
         }
     }
 

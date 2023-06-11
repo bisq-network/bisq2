@@ -50,7 +50,7 @@ public class PriceInput {
     }
 
     public ReadOnlyObjectProperty<PriceQuote> getQuote() {
-        return controller.model.quote;
+        return controller.model.priceQuote;
     }
 
     public ReadOnlyStringProperty descriptionProperty() {
@@ -62,7 +62,7 @@ public class PriceInput {
     }
 
     public void setQuote(PriceQuote price) {
-        controller.model.quote.set(price);
+        controller.model.priceQuote.set(price);
     }
 
     public void setIsTakeOffer() {
@@ -113,7 +113,7 @@ public class PriceInput {
             if (model.market != null && model.description.get() == null) {
                 model.description.set(Res.get("priceInput.description", model.market.getMarketCodes()));
             }
-            if (model.isEditable && model.quote.get() == null) {
+            if (model.isEditable && model.priceQuote.get() == null) {
                 setQuoteFromMarketPrice();
             }
         }
@@ -125,13 +125,13 @@ public class PriceInput {
             marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
                 UIThread.run(() -> {
                     // We only set it initially
-                    if (model.quote.get() != null) return;
+                    if (model.priceQuote.get() != null) return;
                     setQuoteFromMarketPrice();
                 });
             });
 
             pricePin = EasyBind.subscribe(model.priceString, this::onPriceInput);
-            quotePin = EasyBind.subscribe(model.quote, this::onQuoteChanged);
+            quotePin = EasyBind.subscribe(model.priceQuote, this::onQuoteChanged);
         }
 
         @Override
@@ -150,15 +150,15 @@ public class PriceInput {
                     price.isEmpty() ||
                     model.market == null ||
                     !validator.validate(price).isValid) {
-                onQuoteChanged(model.quote.get());
+                onQuoteChanged(model.priceQuote.get());
                 return;
             }
             try {
                 PriceQuote priceQuote = PriceParser.parse(price, model.market);
                 checkArgument(priceQuote.getValue() > 0);
-                model.quote.set(priceQuote);
+                model.priceQuote.set(priceQuote);
             } catch (Throwable ignore) {
-                onQuoteChanged(model.quote.get());
+                onQuoteChanged(model.priceQuote.get());
             }
         }
 
@@ -179,12 +179,12 @@ public class PriceInput {
         private void setQuoteFromMarketPrice() {
             if (model.market == null) return;
             marketPriceService.findMarketPrice(model.market)
-                    .ifPresent(marketPrice -> model.quote.set(marketPrice.getPriceQuote()));
+                    .ifPresent(marketPrice -> model.priceQuote.set(marketPrice.getPriceQuote()));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<PriceQuote> quote = new SimpleObjectProperty<>();
+        private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
         private final StringProperty priceString = new SimpleStringProperty();
 
         private Market market;
@@ -196,7 +196,7 @@ public class PriceInput {
         }
 
         public void reset() {
-            quote.set(null);
+            priceQuote.set(null);
             market = null;
             isFocused = false;
             description.set(null);

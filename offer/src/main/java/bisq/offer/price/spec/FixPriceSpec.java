@@ -38,11 +38,11 @@ public final class FixPriceSpec implements PriceSpec {
     @Override
     public bisq.offer.protobuf.PriceSpec toProto() {
         return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
-                        .setQuote(priceQuote.toProto()))
+                        .setPriceQuote(priceQuote.toProto()))
                 .build();
     }
 
     public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPriceSpec(PriceQuote.fromProto(proto.getQuote()));
+        return new FixPriceSpec(PriceQuote.fromProto(proto.getPriceQuote()));
     }
 }

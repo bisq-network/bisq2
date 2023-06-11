@@ -45,7 +45,7 @@ message AmountSpec {
 
 // PriceSpec
 message FixPrice {
-  common.PriceQuote quote = 1;
+  common.PriceQuote priceQuote = 1;
 }
 message FloatPrice {
   double percentage = 1;

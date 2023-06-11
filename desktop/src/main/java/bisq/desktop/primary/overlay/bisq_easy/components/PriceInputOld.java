@@ -49,11 +49,11 @@ public class PriceInputOld {
     }
 
     public ReadOnlyObjectProperty<PriceQuote> quoteProperty() {
-        return controller.model.quote;
+        return controller.model.priceQuote;
     }
 
     public void setQuote(PriceQuote priceQuote) {
-        controller.model.quote.set(priceQuote);
+        controller.model.priceQuote.set(priceQuote);
     }
 
     public void setIsTakeOffer() {
@@ -97,7 +97,7 @@ public class PriceInputOld {
                 model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.getBaseCurrencyCode()));
             }
             if (model.isCreateOffer) {
-                model.quote.set(null);
+                model.priceQuote.set(null);
                 setQuoteFromMarketPrice();
             }
         }
@@ -109,7 +109,7 @@ public class PriceInputOld {
             marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
                 UIThread.run(() -> {
                     // We only set it initially
-                    if (model.quote.get() != null) return;
+                    if (model.priceQuote.get() != null) return;
                     setQuoteFromMarketPrice();
                 });
             });
@@ -130,27 +130,27 @@ public class PriceInputOld {
             if (value == null) return;
             if (model.hasFocus) return;
             if (value.isEmpty()) {
-                model.quote.set(null);
+                model.priceQuote.set(null);
                 return;
             }
             if (!validator.validate(value).isValid) {
-                model.quote.set(null);
+                model.priceQuote.set(null);
                 return;
             }
             if (model.selectedMarket == null) return;
-            model.quote.set(PriceParser.parse(value, model.selectedMarket));
+            model.priceQuote.set(PriceParser.parse(value, model.selectedMarket));
         }
 
         private void setQuoteFromMarketPrice() {
             if (model.selectedMarket == null) return;
             MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
-            model.quote.set(marketPrice.getPriceQuote());
+            model.priceQuote.set(marketPrice.getPriceQuote());
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<PriceQuote> quote = new SimpleObjectProperty<>();
+        private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
         private Market selectedMarket;
         private boolean hasFocus;
         private final StringProperty marketString = new SimpleStringProperty();
@@ -161,7 +161,7 @@ public class PriceInputOld {
         }
 
         public void reset() {
-            quote.set(null);
+            priceQuote.set(null);
             selectedMarket = null;
             hasFocus = false;
             marketString.set(null);
@@ -221,8 +221,8 @@ public class PriceInputOld {
             rightLabel.textProperty().bind(model.marketString);
 
             textField.descriptionProperty().bind(model.description);
-            model.quote.addListener(quoteListener);
-            textField.setText(model.quote.get() == null ? "" : PriceFormatter.format(model.quote.get()));
+            model.priceQuote.addListener(quoteListener);
+            textField.setText(model.priceQuote.get() == null ? "" : PriceFormatter.format(model.priceQuote.get()));
         }
 
         @Override
@@ -233,7 +233,7 @@ public class PriceInputOld {
             }
             rightLabel.textProperty().unbind();
             textField.descriptionProperty().unbind();
-            model.quote.removeListener(quoteListener);
+            model.priceQuote.removeListener(quoteListener);
         }
     }
 }
