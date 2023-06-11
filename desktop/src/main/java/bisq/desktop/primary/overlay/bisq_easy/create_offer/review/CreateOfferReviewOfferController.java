@@ -46,7 +46,7 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -156,7 +156,7 @@ public class CreateOfferReviewOfferController implements Controller {
         if (direction.isSell()) {
             if (priceSpec instanceof FixPriceSpec) {
                 FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
-                String price = QuoteFormatter.formatWithQuoteCode(fixPriceSpec.getPriceQuote());
+                String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
                 priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.fixPrice", price);
             } else if (priceSpec instanceof FloatPriceSpec) {
                 FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;

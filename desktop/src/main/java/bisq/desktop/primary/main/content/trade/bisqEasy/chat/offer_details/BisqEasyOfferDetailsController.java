@@ -30,7 +30,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -90,7 +90,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
 
         model.getPrice().set(PriceUtil.findQuote(marketPriceService, bisqEasyOffer)
                 .map(quote -> {
-                    String price = QuoteFormatter.format(quote, true);
+                    String price = PriceFormatter.format(quote, true);
                     String percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
                             .map(PercentageFormatter::formatToPercentWithSymbol)
                             .orElse("");

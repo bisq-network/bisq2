@@ -47,7 +47,7 @@ import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.MediationService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -100,7 +100,7 @@ public class TakeOfferReviewController implements Controller {
             Optional<PriceQuote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
-                    .map(QuoteFormatter::formatWithQuoteCode)
+                    .map(PriceFormatter::formatWithCode)
                     .orElse(Res.get("na")));
             applySellersPriceDetails();
         }
@@ -115,7 +115,7 @@ public class TakeOfferReviewController implements Controller {
             Optional<PriceQuote> sellersQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
-                    .map(QuoteFormatter::formatWithQuoteCode)
+                    .map(PriceFormatter::formatWithCode)
                     .orElse(Res.get("na")));
             applySellersPriceDetails();
         }
@@ -210,7 +210,7 @@ public class TakeOfferReviewController implements Controller {
         Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market)
                 .map(MarketPrice::getPriceQuote);
         String marketPrice = marketPriceQuote
-                .map(QuoteFormatter::formatWithQuoteCode)
+                .map(PriceFormatter::formatWithCode)
                 .orElse(Res.get("na"));
         Optional<Double> percentFromMarketPrice;
         percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, model.getSellersPriceSpec(), market);

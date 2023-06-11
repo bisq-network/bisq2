@@ -26,7 +26,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -206,7 +206,7 @@ public class PriceInputOld {
             textInputListener = (o, old, newValue) -> controller.onQuoteInput(textField.getText());
 
             // Listeners on model change
-            quoteListener = (o, old, newValue) -> textField.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
+            quoteListener = (o, old, newValue) -> textField.setText(newValue == null ? "" : PriceFormatter.format(newValue));
         }
 
         @Override
@@ -222,7 +222,7 @@ public class PriceInputOld {
 
             textField.descriptionProperty().bind(model.description);
             model.quote.addListener(quoteListener);
-            textField.setText(model.quote.get() == null ? "" : QuoteFormatter.format(model.quote.get()));
+            textField.setText(model.quote.get() == null ? "" : PriceFormatter.format(model.quote.get()));
         }
 
         @Override

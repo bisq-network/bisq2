@@ -25,7 +25,7 @@ import bisq.desktop.common.utils.validation.PriceValidator;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.*;
 import javafx.scene.layout.Pane;
@@ -166,7 +166,7 @@ public class PriceInput {
             if (model.isFocused) {
                 return;
             }
-            model.priceString.set(priceQuote == null ? "" : QuoteFormatter.format(priceQuote));
+            model.priceString.set(priceQuote == null ? "" : PriceFormatter.format(priceQuote));
         }
 
         private void onFocusedChanged(boolean isFocused) {

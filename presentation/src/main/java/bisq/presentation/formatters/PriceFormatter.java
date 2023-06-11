@@ -23,16 +23,16 @@ import bisq.common.util.DecimalFormatters;
 
 import java.util.Locale;
 
-public class QuoteFormatter {
-    public static String formatWithQuoteCode(PriceQuote priceQuote) {
-        return formatWithQuoteCode(priceQuote, LocaleRepository.getDefaultLocale(), true);
+public class PriceFormatter {
+    public static String formatWithCode(PriceQuote priceQuote) {
+        return formatWithCode(priceQuote, LocaleRepository.getDefaultLocale(), true);
     }
 
-    public static String formatWithQuoteCode(PriceQuote priceQuote, boolean useLowPrecision) {
-        return formatWithQuoteCode(priceQuote, LocaleRepository.getDefaultLocale(), useLowPrecision);
+    public static String formatWithCode(PriceQuote priceQuote, boolean useLowPrecision) {
+        return formatWithCode(priceQuote, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
-    public static String formatWithQuoteCode(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
+    public static String formatWithCode(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
         return format(priceQuote, locale, useLowPrecision) + " " + priceQuote.getMarket().getMarketCodes();
     }
 
@@ -53,7 +53,7 @@ public class QuoteFormatter {
     }
 
     private static DecimalFormatters.Format getDecimalFormat(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
-        int exponent = useLowPrecision ? priceQuote.getLowPrecision() : priceQuote.getPrecision();
-        return DecimalFormatters.getDecimalFormat(locale, exponent);
+        int precision = useLowPrecision ? priceQuote.getLowPrecision() : priceQuote.getPrecision();
+        return DecimalFormatters.getDecimalFormat(locale, precision);
     }
 }

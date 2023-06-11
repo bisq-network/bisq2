@@ -27,7 +27,7 @@ import bisq.i18n.Res;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.*;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -135,7 +135,7 @@ public class CreateOfferPriceController implements Controller {
             return;
         }
         if (isQuoteValid(priceQuote)) {
-            model.getPriceAsString().set(QuoteFormatter.format(priceQuote, true));
+            model.getPriceAsString().set(PriceFormatter.format(priceQuote, true));
             applyPercentageFromQuote(priceQuote);
             applyPriceSpec();
         } else {
