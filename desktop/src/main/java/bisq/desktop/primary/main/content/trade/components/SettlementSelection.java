@@ -19,8 +19,8 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
+import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
-import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -75,19 +75,19 @@ public class SettlementSelection {
         return controller.view.getRoot();
     }
 
-    public ObservableSet<Account<?, ? extends Settlement<?>>> getSelectedBaseSideAccounts() {
+    public ObservableSet<Account<?, ? extends Payment<?>>> getSelectedBaseSideAccounts() {
         return controller.model.selectedBaseSideAccounts;
     }
 
-    public ObservableSet<Account<?, ? extends Settlement<?>>> getSelectedQuoteSideAccounts() {
+    public ObservableSet<Account<?, ? extends Payment<?>>> getSelectedQuoteSideAccounts() {
         return controller.model.selectedQuoteSideAccounts;
     }
 
-    public ObservableSet<Settlement.Method> getSelectedBaseSideSettlementMethods() {
+    public ObservableSet<Payment.Method> getSelectedBaseSideSettlementMethods() {
         return controller.model.selectedBaseSideSettlementMethods;
     }
 
-    public ObservableSet<Settlement.Method> getSelectedQuoteSideSettlementMethods() {
+    public ObservableSet<Payment.Method> getSelectedQuoteSideSettlementMethods() {
         return controller.model.selectedQuoteSideSettlementMethods;
     }
 
@@ -147,11 +147,11 @@ public class SettlementSelection {
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(collect);
 
-            model.baseSideSettlementObservableList.setAll(Settlement.getSettlementMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
+            model.baseSideSettlementObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
                     .map(e -> new SettlementListItem(e, market.getBaseCurrencyCode()))
                     .collect(Collectors.toList()));
-            model.quoteSideSettlementObservableList.setAll(Settlement.getSettlementMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
+            model.quoteSideSettlementObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
                     .map(e -> new SettlementListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));
@@ -221,7 +221,7 @@ public class SettlementSelection {
             var observableAccountsSet = isBaseSide ?
                     model.selectedBaseSideAccounts :
                     model.selectedQuoteSideAccounts;
-            ObservableSet<Settlement.Method> observableSettlementMethodsSet = isBaseSide ?
+            ObservableSet<Payment.Method> observableSettlementMethodsSet = isBaseSide ?
                     model.selectedBaseSideSettlementMethods :
                     model.selectedQuoteSideSettlementMethods;
             if (selected) {
@@ -234,7 +234,7 @@ public class SettlementSelection {
         }
 
         private void onSettlementSelectionChanged(SettlementListItem listItem, boolean selected, boolean isBaseSide) {
-            ObservableSet<Settlement.Method> observableSet = isBaseSide ?
+            ObservableSet<Payment.Method> observableSet = isBaseSide ?
                     model.selectedBaseSideSettlementMethods :
                     model.selectedQuoteSideSettlementMethods;
             if (selected) {
@@ -256,10 +256,10 @@ public class SettlementSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObservableSet<Account<?, ? extends Settlement<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Account<?, ? extends Settlement<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Settlement.Method> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Settlement.Method> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Payment.Method> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Payment.Method> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
 
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
@@ -435,15 +435,15 @@ public class SettlementSelection {
 
     @Getter
     private static class AccountListItem implements TableItem {
-        private final Account<?, ? extends Settlement<?>> account;
+        private final Account<?, ? extends Payment<?>> account;
         private final String accountName;
-        private final Settlement.Method settlementMethod;
+        private final Payment.Method settlementMethod;
         private final String settlementMethodName;
 
-        private AccountListItem(Account<?, ? extends Settlement<?>> account) {
+        private AccountListItem(Account<?, ? extends Payment<?>> account) {
             this.account = account;
             accountName = account.getAccountName();
-            settlementMethod = account.getSettlement().getMethod();
+            settlementMethod = account.getPayment().getMethod();
             //  settlementMethodName = Res.get(settlementMethod.getSettlementMethodName());
             settlementMethodName = Res.get(settlementMethod.name());
         }
@@ -459,10 +459,10 @@ public class SettlementSelection {
 
     @Getter
     private static class SettlementListItem implements TableItem {
-        private final Settlement.Method settlementMethod;
+        private final Payment.Method settlementMethod;
         private final String name;
 
-        private SettlementListItem(Settlement.Method settlementMethod, String currencyCode) {
+        private SettlementListItem(Payment.Method settlementMethod, String currencyCode) {
             this.settlementMethod = settlementMethod;
             //todo
             // name = settlementMethod.getDisplayName(currencyCode);

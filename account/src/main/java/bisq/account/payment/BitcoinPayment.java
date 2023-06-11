@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.settlement;
+package bisq.account.payment;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.CryptoCurrencyRepository;
@@ -27,29 +27,29 @@ import java.util.List;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
-    public static List<BitcoinSettlement.Method> getSettlementMethods() {
-        return List.of(BitcoinSettlement.Method.values());
+public class BitcoinPayment extends Payment<BitcoinPayment.Method> {
+    public static List<BitcoinPayment.Method> getPaymentMethods() {
+        return List.of(BitcoinPayment.Method.values());
     }
 
-    public static BitcoinSettlement from(String settlementMethodName) {
+    public static BitcoinPayment from(String paymentMethodName) {
         try {
-            return new BitcoinSettlement(BitcoinSettlement.Method.valueOf(settlementMethodName));
+            return new BitcoinPayment(BitcoinPayment.Method.valueOf(paymentMethodName));
         } catch (IllegalArgumentException e) {
-            return new BitcoinSettlement(settlementMethodName);
+            return new BitcoinPayment(paymentMethodName);
         }
     }
 
-    public static List<BitcoinSettlement.Method> getSettlementMethods(ProtocolType protocolType) {
+    public static List<BitcoinPayment.Method> getPaymentMethods(ProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
             case BISQ_MULTISIG:
-                return BitcoinSettlement.getSettlementMethods();
+                return BitcoinPayment.getPaymentMethods();
             case MONERO_SWAP:
             case LIQUID_SWAP:
             case BSQ_SWAP:
             case LIGHTNING_X:
-                throw new IllegalArgumentException("No settlementMethods for that protocolType");
+                throw new IllegalArgumentException("No paymentMethods for that protocolType");
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }
@@ -60,7 +60,7 @@ public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
     // Method enum
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Method implements Settlement.Method {
+    public enum Method implements Payment.Method {
         USER_DEFINED,
         MAINCHAIN,
         LN,
@@ -75,25 +75,25 @@ public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method> {
     // Class instance
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public BitcoinSettlement(BitcoinSettlement.Method method) {
+    public BitcoinPayment(BitcoinPayment.Method method) {
         super(method);
     }
 
-    public BitcoinSettlement(String settlementMethodName) {
-        super(settlementMethodName);
+    public BitcoinPayment(String paymentMethodName) {
+        super(paymentMethodName);
     }
 
-    protected BitcoinSettlement.Method getFallbackMethod() {
-        return BitcoinSettlement.Method.USER_DEFINED;
+    protected BitcoinPayment.Method getFallbackMethod() {
+        return BitcoinPayment.Method.USER_DEFINED;
     }
 
     @Override
-    public bisq.account.protobuf.Settlement toProto() {
-        return getSettlementBuilder().setBitcoinSettlement(bisq.account.protobuf.BitcoinSettlement.newBuilder()).build();
+    public bisq.account.protobuf.Payment toProto() {
+        return getPaymentBuilder().setBitcoinPayment(bisq.account.protobuf.BitcoinPayment.newBuilder()).build();
     }
 
-    public static BitcoinSettlement fromProto(bisq.account.protobuf.Settlement proto) {
-        return BitcoinSettlement.from(proto.getSettlementMethodName());
+    public static BitcoinPayment fromProto(bisq.account.protobuf.Payment proto) {
+        return BitcoinPayment.from(proto.getPaymentMethodName());
     }
 
     @Override

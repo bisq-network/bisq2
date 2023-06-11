@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
 
-import bisq.account.settlement.FiatSettlement;
+import bisq.account.payment.FiatPayment;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
@@ -64,7 +64,7 @@ public class CreateOfferPaymentMethodController implements Controller {
 
         model.getMarket().set(market);
         model.getSelectedMethodNames().clear();
-        List<FiatSettlement.Method> methods = FiatSettlement.getSettlementMethodsForCode(market.getQuoteCurrencyCode());
+        List<FiatPayment.Method> methods = FiatPayment.getPaymentMethodsForCode(market.getQuoteCurrencyCode());
         model.getAllMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
         model.getAllMethodNames().addAll(model.getAddedCustomMethodNames());
         model.getIsSettlementMethodsEmpty().set(model.getAllMethodNames().isEmpty());

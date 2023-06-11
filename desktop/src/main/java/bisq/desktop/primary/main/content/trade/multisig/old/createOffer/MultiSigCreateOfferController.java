@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
@@ -69,9 +69,9 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
     private final SettlementSelection settlementSelection;
-    private final SetChangeListener<Account<?, ? extends Settlement<?>>> selectedBaseSideAccountsListener,
+    private final SetChangeListener<Account<?, ? extends Payment<?>>> selectedBaseSideAccountsListener,
             selectedQuoteSideAccountsListener;
-    private final SetChangeListener<Settlement.Method> selectedBaseSideSettlementMethodsListener,
+    private final SetChangeListener<Payment.Method> selectedBaseSideSettlementMethodsListener,
             selectedQuoteSideSettlementMethodsListener;
     private Subscription selectedMarketSubscription, directionSubscription, protocolSelectionSubscription,
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;

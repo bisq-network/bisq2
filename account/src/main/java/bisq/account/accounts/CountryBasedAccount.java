@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
@@ -29,14 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, S extends Settlement<?>> extends Account<P, S> {
+public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, S extends Payment<?>> extends Account<P, S> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,
-                               S settlement,
+                               S payment,
                                P payload,
                                Country country) {
-        super(accountName, settlement, payload);
+        super(accountName, payment, payload);
         this.country = country;
     }
 

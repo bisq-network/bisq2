@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer;
 
 import bisq.account.accounts.Account;
+import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
-import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
@@ -42,10 +42,10 @@ public class TakeOfferModel implements Model {
     Quote fixPrice;
     private ProtocolType selectedProtocolType;
 
-    private Account<?, ? extends Settlement<?>> selectedBaseSideAccount;
-    private Account<?, ? extends Settlement<?>> selectedQuoteSideAccount;
-    private Settlement.Method selectedBaseSideSettlementMethod;
-    private Settlement.Method selectedQuoteSideSettlementMethod;
+    private Account<?, ? extends Payment<?>> selectedBaseSideAccount;
+    private Account<?, ? extends Payment<?>> selectedQuoteSideAccount;
+    private Payment.Method selectedBaseSideSettlementMethod;
+    private Payment.Method selectedQuoteSideSettlementMethod;
 
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;

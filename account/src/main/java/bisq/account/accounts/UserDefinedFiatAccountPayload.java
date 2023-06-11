@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class UserDefinedFiatAccountPayload extends AccountPayload {
     private final String accountData;
 
-    public UserDefinedFiatAccountPayload(String id, String settlementMethodName, String accountData) {
-        super(id, settlementMethodName);
+    public UserDefinedFiatAccountPayload(String id, String paymentMethodName, String accountData) {
+        super(id, paymentMethodName);
         this.accountData = accountData;
     }
 
@@ -43,6 +43,6 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload {
     }
 
     public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getSettlementMethodName(), proto.getUserDefinedFiatAccountPayload().getAccountData());
+        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getUserDefinedFiatAccountPayload().getAccountData());
     }
 }

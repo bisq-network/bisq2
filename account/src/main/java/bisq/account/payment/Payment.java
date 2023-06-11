@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.settlement;
+package bisq.account.payment;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.TradeCurrency;
@@ -27,32 +27,32 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public abstract class Settlement<M extends Settlement.Method> implements Proto {
-    public static List<? extends Method> getSettlementMethods(ProtocolType protocolType, String currencyCode) {
+public abstract class Payment<M extends Payment.Method> implements Proto {
+    public static List<? extends Method> getPaymentMethods(ProtocolType protocolType, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatSettlement.getSettlementMethodsForProtocolType(protocolType);
+            return FiatPayment.getPaymentMethodsForProtocolType(protocolType);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinSettlement.getSettlementMethods(protocolType);
+                return BitcoinPayment.getPaymentMethods(protocolType);
             } else {
-                return CryptoSettlement.getSettlementMethods(protocolType);
+                return CryptoPayment.getPaymentMethods(protocolType);
             }
         }
     }
 
-    public static Settlement<? extends Method> from(String settlementMethodName, String currencyCode) {
+    public static Payment<? extends Method> from(String paymentMethodName, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatSettlement.fromName(settlementMethodName);
+            return FiatPayment.fromName(paymentMethodName);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinSettlement.from(settlementMethodName);
+                return BitcoinPayment.from(paymentMethodName);
             } else {
-                return CryptoSettlement.from(settlementMethodName, currencyCode);
+                return CryptoPayment.from(paymentMethodName, currencyCode);
             }
         }
     }
 
-    public static Method getSettlementMethod(String name, String currencyCode) {
+    public static Method getPaymentMethod(String name, String currencyCode) {
         return from(name, currencyCode).getMethod();
     }
 
@@ -60,36 +60,36 @@ public abstract class Settlement<M extends Settlement.Method> implements Proto {
         String name();
     }
 
-    protected final String settlementMethodName;
+    protected final String paymentMethodName;
     protected final M method;
 
-    public Settlement(M method) {
-        this.settlementMethodName = method.name();
+    public Payment(M method) {
+        this.paymentMethodName = method.name();
         this.method = method;
     }
 
-    public Settlement(String settlementMethodName) {
-        this.settlementMethodName = settlementMethodName;
+    public Payment(String paymentMethodName) {
+        this.paymentMethodName = paymentMethodName;
         this.method = getFallbackMethod();
     }
 
-    public abstract bisq.account.protobuf.Settlement toProto();
+    public abstract bisq.account.protobuf.Payment toProto();
 
-    protected bisq.account.protobuf.Settlement.Builder getSettlementBuilder() {
-        return bisq.account.protobuf.Settlement.newBuilder()
-                .setSettlementMethodName(settlementMethodName);
+    protected bisq.account.protobuf.Payment.Builder getPaymentBuilder() {
+        return bisq.account.protobuf.Payment.newBuilder()
+                .setPaymentMethodName(paymentMethodName);
     }
 
-    public static Settlement<? extends Method> fromProto(bisq.account.protobuf.Settlement proto) {
+    public static Payment<? extends Method> fromProto(bisq.account.protobuf.Payment proto) {
         switch (proto.getMessageCase()) {
-            case FIATSETTLEMENT: {
-                return FiatSettlement.fromProto(proto);
+            case FIATPAYMENT: {
+                return FiatPayment.fromProto(proto);
             }
-            case BITCOINSETTLEMENT: {
-                return BitcoinSettlement.fromProto(proto);
+            case BITCOINPAYMENT: {
+                return BitcoinPayment.fromProto(proto);
             }
-            case CRYPTOSETTLEMENT: {
-                return CryptoSettlement.fromProto(proto);
+            case CRYPTOPAYMENT: {
+                return CryptoPayment.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {
@@ -105,6 +105,6 @@ public abstract class Settlement<M extends Settlement.Method> implements Proto {
     public abstract List<TradeCurrency> getTradeCurrencies();
 
     protected String getDisplayName(String code) {
-        return Res.get(getSettlementMethodName());
+        return Res.get(getPaymentMethodName());
     }
 }

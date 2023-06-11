@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlement;
+import bisq.account.payment.FiatPayment;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,15 +28,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccountPayload, FiatSettlement> {
-    private static final FiatSettlement SETTLEMENT = new FiatSettlement(FiatSettlement.Method.USER_DEFINED);
+public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccountPayload, FiatPayment> {
+    private static final FiatPayment PAYMENT = new FiatPayment(FiatPayment.Method.USER_DEFINED);
 
     public UserDefinedFiatAccount(String accountName, String accountData) {
-        this(accountName, new UserDefinedFiatAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), accountData));
+        this(accountName, new UserDefinedFiatAccountPayload(StringUtils.createUid(), PAYMENT.getPaymentMethodName(), accountData));
     }
 
     private UserDefinedFiatAccount(String accountName, UserDefinedFiatAccountPayload userDefinedFiatAccountPayload) {
-        super(accountName, SETTLEMENT, userDefinedFiatAccountPayload);
+        super(accountName, PAYMENT, userDefinedFiatAccountPayload);
     }
 
     @Override

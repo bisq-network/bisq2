@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 /**
  * Account is only stored locally and never shared with the peer. It can contain sensitive data.
  */
@@ -36,26 +37,26 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, S extends Settlement<?>> implements Proto {
+public abstract class Account<P extends AccountPayload, S extends Payment<?>> implements Proto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final S settlement;
+    protected final S payment;
 
     public Account(String accountName,
-                   S settlement,
+                   S payment,
                    P accountPayload) {
-        this(new Date().getTime(), accountName, settlement, accountPayload);
+        this(new Date().getTime(), accountName, payment, accountPayload);
     }
 
     public Account(long creationDate,
                    String accountName,
-                   S settlement,
+                   S payment,
                    P accountPayload) {
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
-        this.settlement = settlement;
+        this.payment = payment;
     }
 
     public abstract bisq.account.protobuf.Account toProto();
@@ -64,7 +65,7 @@ public abstract class Account<P extends AccountPayload, S extends Settlement<?>>
         return bisq.account.protobuf.Account.newBuilder()
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setSettlement(settlement.toProto())
+                .setPayment(payment.toProto())
                 .setAccountPayload(accountPayload.toProto());
     }
 
@@ -88,6 +89,6 @@ public abstract class Account<P extends AccountPayload, S extends Settlement<?>>
 
 
     public Set<String> getTradeCurrencyCodes() {
-        return settlement.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+        return payment.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
     }
 }

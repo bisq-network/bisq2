@@ -17,7 +17,7 @@
 
 package bisq.offer.settlement;
 
-import bisq.account.settlement.BitcoinSettlement;
+import bisq.account.payment.BitcoinPayment;
 import bisq.offer.Offer;
 
 import java.util.Collection;
@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class SettlementUtil {
     public static List<SettlementSpec> createBaseSideSpecsForBitcoinMainChain() {
-        return List.of(new SettlementSpec(BitcoinSettlement.Method.MAINCHAIN.name()));
+        return List.of(new SettlementSpec(BitcoinPayment.Method.MAINCHAIN.name()));
     }
 
     public static List<SettlementSpec> createQuoteSideSpecsFromMethodNames(List<String> paymentMethodNames) {

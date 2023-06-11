@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.accounts;
 
 import bisq.account.accounts.Account;
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -31,24 +31,24 @@ import java.util.Collection;
 
 @Slf4j
 public class PaymentAccountsModel implements Model {
-    private final ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Account<?, ? extends Payment<?>>> selectedAccount = new SimpleObjectProperty<>();
     private final StringProperty accountData = new SimpleStringProperty("");
     private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
-    private final ObservableList<Account<?, ? extends Settlement<?>>> accounts = FXCollections.observableArrayList();
-    private final SortedList<Account<?, ? extends Settlement<?>>> sortedAccounts = new SortedList<>(accounts);
+    private final ObservableList<Account<?, ? extends Payment<?>>> accounts = FXCollections.observableArrayList();
+    private final SortedList<Account<?, ? extends Payment<?>>> sortedAccounts = new SortedList<>(accounts);
 
     // selectedAccount
     @Nullable
-    public Account<?, ? extends Settlement<?>> getSelectedAccount() {
+    public Account<?, ? extends Payment<?>> getSelectedAccount() {
         return selectedAccount.get();
     }
 
-    public ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccountProperty() {
+    public ObjectProperty<Account<?, ? extends Payment<?>>> selectedAccountProperty() {
         return selectedAccount;
     }
 
-    public void setSelectedAccount(Account<?, ? extends Settlement<?>> selectedAccount) {
+    public void setSelectedAccount(Account<?, ? extends Payment<?>> selectedAccount) {
         this.selectedAccount.set(selectedAccount);
     }
 
@@ -95,11 +95,11 @@ public class PaymentAccountsModel implements Model {
           return accounts;
       }
   */
-    public void setAllAccounts(Collection<Account<?, ? extends Settlement<?>>> collection) {
+    public void setAllAccounts(Collection<Account<?, ? extends Payment<?>>> collection) {
         accounts.setAll(collection);
     }
 
-    public SortedList<Account<?, ? extends Settlement<?>>> getSortedAccounts() {
+    public SortedList<Account<?, ? extends Payment<?>>> getSortedAccounts() {
         return sortedAccounts;
     }
 }

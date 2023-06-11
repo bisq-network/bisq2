@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlement;
+import bisq.account.payment.FiatPayment;
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatSettlement> {
-    private static final FiatSettlement SETTLEMENT = new FiatSettlement(FiatSettlement.Method.SEPA);
+public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatPayment> {
+    private static final FiatPayment PAYMENT = new FiatPayment(FiatPayment.Method.SEPA);
 
     public SepaAccount(String accountName,
                        String holderName,
@@ -38,12 +38,12 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, F
                        String bic,
                        Country country) {
         this(accountName,
-                new SepaAccountPayload(StringUtils.createUid(), SETTLEMENT.getSettlementMethodName(), holderName, iban, bic, country.getCode()),
+                new SepaAccountPayload(StringUtils.createUid(), PAYMENT.getPaymentMethodName(), holderName, iban, bic, country.getCode()),
                 country);
     }
 
     private SepaAccount(String accountName, SepaAccountPayload sepaAccountPayload, Country country) {
-        super(accountName, SETTLEMENT, sepaAccountPayload, country);
+        super(accountName, PAYMENT, sepaAccountPayload, country);
     }
 
     @Override

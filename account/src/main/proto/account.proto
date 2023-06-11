@@ -44,27 +44,27 @@ message BaseProtocolType {
   }
 }
 
-// Settlement
-message Settlement {
-  string settlementMethodName = 1;
+// Payment
+message Payment {
+  string paymentMethodName = 1;
   oneof message {
-    FiatSettlement fiatSettlement = 10;
-    BitcoinSettlement bitcoinSettlement = 11;
-    CryptoSettlement cryptoSettlement = 12;
+    FiatPayment fiatPayment = 10;
+    BitcoinPayment bitcoinPayment = 11;
+    CryptoPayment cryptoPayment = 12;
   }
 }
-message FiatSettlement{
+message FiatPayment{
 }
-message BitcoinSettlement{
+message BitcoinPayment{
 }
-message CryptoSettlement{
+message CryptoPayment{
   string currencyCode = 1;
 }
 
 // AccountPayload
 message AccountPayload {
   string id = 1;
-  string settlementMethodName = 2;
+  string paymentMethodName = 2;
   oneof message {
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
     RevolutAccountPayload RevolutAccountPayload = 21;
@@ -96,7 +96,7 @@ message Account {
   uint64 creationDate = 1;
   string accountName = 2;
   AccountPayload accountPayload = 3;
-  Settlement settlement = 4;
+  Payment payment = 4;
   common.TradeCurrency selectedTradeCurrency = 6;
 
   oneof message {

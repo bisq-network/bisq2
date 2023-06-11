@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
@@ -419,7 +419,7 @@ public class ChatMessagesComponent {
                 //todo
                 new Popup().information("TODO").show();
             } else {
-                Account<?, ? extends Settlement<?>> selectedAccount = accountService.getSelectedAccount();
+                Account<?, ? extends Payment<?>> selectedAccount = accountService.getSelectedAccount();
                 if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
                     ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
                     checkArgument(chatChannel instanceof BisqEasyPrivateTradeChatChannel);
@@ -443,7 +443,7 @@ public class ChatMessagesComponent {
             }
         }
 
-        void onPaymentAccountSelected(@Nullable Account<?, ? extends Settlement<?>> account) {
+        void onPaymentAccountSelected(@Nullable Account<?, ? extends Payment<?>> account) {
             if (account != null) {
                 accountService.setSelectedAccount(account);
             }
@@ -544,8 +544,8 @@ public class ChatMessagesComponent {
         private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty paymentAccountSelectionVisible = new SimpleBooleanProperty();
-        private final ObservableList<Account<?, ? extends Settlement<?>>> paymentAccounts = FXCollections.observableArrayList();
-        private final ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccount = new SimpleObjectProperty<>();
+        private final ObservableList<Account<?, ? extends Payment<?>>> paymentAccounts = FXCollections.observableArrayList();
+        private final ObjectProperty<Account<?, ? extends Payment<?>>> selectedAccount = new SimpleObjectProperty<>();
 
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
         private final StringProperty textInput = new SimpleStringProperty("");
@@ -570,15 +570,15 @@ public class ChatMessagesComponent {
         }
 
         @Nullable
-        public Account<?, ? extends Settlement<?>> getSelectedAccount() {
+        public Account<?, ? extends Payment<?>> getSelectedAccount() {
             return selectedAccount.get();
         }
 
-        public ObjectProperty<Account<?, ? extends Settlement<?>>> selectedAccountProperty() {
+        public ObjectProperty<Account<?, ? extends Payment<?>>> selectedAccountProperty() {
             return selectedAccount;
         }
 
-        public void setSelectedAccount(Account<?, ? extends Settlement<?>> selectedAccount) {
+        public void setSelectedAccount(Account<?, ? extends Payment<?>> selectedAccount) {
             this.selectedAccount.set(selectedAccount);
         }
     }
@@ -589,7 +589,7 @@ public class ChatMessagesComponent {
 
         private final BisqTextArea inputField;
         private final Button sendButton, createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton, leaveChannelButton;
-        private final AutoCompleteComboBox<Account<?, ? extends Settlement<?>>> paymentAccountsComboBox;
+        private final AutoCompleteComboBox<Account<?, ? extends Payment<?>>> paymentAccountsComboBox;
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private final Pane userProfileSelectionRoot;
@@ -658,12 +658,12 @@ public class ChatMessagesComponent {
             paymentAccountsComboBox = new AutoCompleteComboBox<>(model.getPaymentAccounts());
             paymentAccountsComboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(Account<?, ? extends Settlement<?>> object) {
+                public String toString(Account<?, ? extends Payment<?>> object) {
                     return object != null ? object.getAccountName() : "";
                 }
 
                 @Override
-                public Account<?, ? extends Settlement<?>> fromString(String string) {
+                public Account<?, ? extends Payment<?>> fromString(String string) {
                     return null;
                 }
             });
