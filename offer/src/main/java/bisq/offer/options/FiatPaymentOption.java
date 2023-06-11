@@ -21,27 +21,27 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-//todo should be part of settlement spec?
+//todo should be part of payment spec?
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FiatSettlementOption implements OfferOption {
+public final class FiatPaymentOption implements OfferOption {
     private final String countyCodeOfBank;
     private final String bankName;
 
-    public FiatSettlementOption(String countyCodeOfBank, String bankName) {
+    public FiatPaymentOption(String countyCodeOfBank, String bankName) {
         this.countyCodeOfBank = countyCodeOfBank;
         this.bankName = bankName;
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setFiatSettlementOption(bisq.offer.protobuf.FiatSettlementOption.newBuilder()
+        return getOfferOptionBuilder().setFiatPaymentOption(bisq.offer.protobuf.FiatPaymentOption.newBuilder()
                         .setCountyCodeOfBank(countyCodeOfBank)
                         .setBankName(bankName))
                 .build();
     }
 
-    public static FiatSettlementOption fromProto(bisq.offer.protobuf.FiatSettlementOption proto) {
-        return new FiatSettlementOption(proto.getCountyCodeOfBank(), proto.getBankName());
+    public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto) {
+        return new FiatPaymentOption(proto.getCountyCodeOfBank(), proto.getBankName());
     }
 }

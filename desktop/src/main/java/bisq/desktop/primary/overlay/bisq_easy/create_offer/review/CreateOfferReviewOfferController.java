@@ -39,11 +39,11 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.MinMaxAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment.PaymentFormatter;
+import bisq.offer.payment.PaymentUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.offer.settlement.SettlementFormatter;
-import bisq.offer.settlement.SettlementUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -176,7 +176,7 @@ public class CreateOfferReviewOfferController implements Controller {
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
-                SettlementFormatter.asQuoteSideSettlementMethodsString(model.getSettlementMethodNames()),
+                PaymentFormatter.asQuoteSidePaymentMethodsString(model.getSettlementMethodNames()),
                 priceInfo);
 
         model.setMyOfferText(chatMessageText);
@@ -297,8 +297,8 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                List<String> settlementMethods = SettlementUtil.getQuoteSideSettlementMethodNames(peersOffer);
-                if (SettlementUtil.getQuoteSideSettlementMethodNames(bisqEasyOffer).stream().noneMatch(settlementMethods::contains)) {
+                List<String> settlementMethods = PaymentUtil.getQuoteSidePaymentMethodNames(peersOffer);
+                if (PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(settlementMethods::contains)) {
                     return false;
                 }
 

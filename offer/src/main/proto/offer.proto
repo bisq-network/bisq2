@@ -53,8 +53,8 @@ message PriceSpec {
   }
 }
 
-message SettlementSpec {
-  string settlementMethodName = 1;
+message PaymentSpec {
+  string paymentMethodName = 1;
   optional string saltedMakerAccountId = 2;
 }
 
@@ -81,7 +81,7 @@ message FeeOption {
   string feeTxId = 12;
 }
 
-message FiatSettlementOption {
+message FiatPaymentOption {
   string countyCodeOfBank = 1;
   string bankName = 2;
 }
@@ -91,7 +91,7 @@ message OfferOption {
     TradeTermsOption tradeTermsOption = 1;
     ReputationOption reputationOption = 2;
     CollateralOption collateralOption = 4;
-    FiatSettlementOption fiatSettlementOption = 5;
+    FiatPaymentOption fiatPaymentOption = 5;
     FeeOption feeOption = 6;
   }
 }
@@ -106,8 +106,8 @@ message Offer {
   AmountSpec amountSpec = 6;
   PriceSpec priceSpec = 7;
   repeated account.ProtocolType protocolTypes = 8;
-  repeated SettlementSpec baseSideSettlementSpecs = 9;
-  repeated SettlementSpec quoteSideSettlementSpecs = 10;
+  repeated PaymentSpec baseSidePaymentSpecs = 9;
+  repeated PaymentSpec quoteSidePaymentSpecs = 10;
   repeated OfferOption offerOptions = 11;
   oneof message {
     BisqEasyOffer bisqEasyOffer = 30;
@@ -129,8 +129,8 @@ message PocOffer {
   uint64 baseAmount = 6;
   PriceSpec priceSpec = 7;
   repeated account.ProtocolType protocolTypes = 8;
-  repeated SettlementSpec baseSideSettlementSpecs = 9;
-  repeated SettlementSpec quoteSideSettlementSpecs = 10;
+  repeated PaymentSpec baseSidePaymentSpecs = 9;
+  repeated PaymentSpec quoteSidePaymentSpecs = 10;
   repeated OfferOption offerOptions = 11;
   network.MetaData metaData = 12;
 }

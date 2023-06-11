@@ -27,7 +27,7 @@ import bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement.TakeOfferSet
 import bisq.i18n.Res;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.settlement.SettlementUtil;
+import bisq.offer.payment.PaymentUtil;
 import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -104,7 +104,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
         model.setPriceVisible(bisqEasyOffer.getDirection().isBuy());
         model.setAmountVisible(bisqEasyOffer.hasAmountRange());
-        model.setSettlementVisible(bisqEasyOffer.getQuoteSideSettlementSpecs().size() > 1);
+        model.setSettlementVisible(bisqEasyOffer.getQuoteSidePaymentSpecs().size() > 1);
 
         model.getChildTargets().clear();
         if (model.isPriceVisible()) {
@@ -116,7 +116,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         if (model.isSettlementVisible()) {
             model.getChildTargets().add(NavigationTarget.TAKE_OFFER_SETTLEMENT);
         } else {
-            List<String> methodNames = SettlementUtil.getQuoteSideSettlementMethodNames(bisqEasyOffer);
+            List<String> methodNames = PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer);
             checkArgument(methodNames.size() == 1);
             takeOfferReviewController.setSettlementMethodName(methodNames.get(0));
         }

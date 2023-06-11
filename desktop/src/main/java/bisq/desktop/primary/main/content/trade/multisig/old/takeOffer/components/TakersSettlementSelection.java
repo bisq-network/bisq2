@@ -28,8 +28,8 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.payment.PaymentSpec;
 import bisq.offer.poc.PocOffer;
-import bisq.offer.settlement.SettlementSpec;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -147,13 +147,13 @@ public class TakersSettlementSelection {
             model.visibility.set(true);
 
             String baseSideCode = market.getBaseCurrencyCode();
-            Set<Payment.Method> baseSideSettlementMethodByName = model.offer.getBaseSideSettlementSpecs().stream()
-                    .map(SettlementSpec::getSettlementMethodName)
+            Set<Payment.Method> baseSideSettlementMethodByName = model.offer.getBaseSidePaymentSpecs().stream()
+                    .map(PaymentSpec::getPaymentMethodName)
                     .map(settlementMethodName -> Payment.getPaymentMethod(settlementMethodName, baseSideCode))
                     .collect(Collectors.toSet());
             String quoteSideCode = market.getQuoteCurrencyCode();
-            Set<Payment.Method> quoteSideSettlementMethodByName = model.offer.getQuoteSideSettlementSpecs().stream()
-                    .map(SettlementSpec::getSettlementMethodName)
+            Set<Payment.Method> quoteSideSettlementMethodByName = model.offer.getQuoteSidePaymentSpecs().stream()
+                    .map(PaymentSpec::getPaymentMethodName)
                     .map(settlementMethodName -> Payment.getPaymentMethod(settlementMethodName, quoteSideCode))
                     .collect(Collectors.toSet());
 

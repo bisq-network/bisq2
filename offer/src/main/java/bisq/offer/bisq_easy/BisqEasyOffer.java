@@ -10,9 +10,9 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.payment.PaymentSpec;
+import bisq.offer.payment.PaymentUtil;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.offer.settlement.SettlementSpec;
-import bisq.offer.settlement.SettlementUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,7 +33,7 @@ public final class BisqEasyOffer extends Offer {
                          Market market,
                          AmountSpec amountSpec,
                          PriceSpec priceSpec,
-                         List<String> settlementMethodNames,
+                         List<String> paymentMethodNames,
                          String makersTradeTerms,
                          long requiredTotalReputationScore,
                          String chatMessageText) {
@@ -45,8 +45,8 @@ public final class BisqEasyOffer extends Offer {
                 amountSpec,
                 priceSpec,
                 List.of(ProtocolType.BISQ_EASY),
-                SettlementUtil.createBaseSideSpecsForBitcoinMainChain(),
-                SettlementUtil.createQuoteSideSpecsFromMethodNames(settlementMethodNames),
+                PaymentUtil.createBaseSideSpecsForBitcoinMainChain(),
+                PaymentUtil.createQuoteSideSpecsFromMethodNames(paymentMethodNames),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
                 chatMessageText
         );
@@ -60,8 +60,8 @@ public final class BisqEasyOffer extends Offer {
                           AmountSpec amountSpec,
                           PriceSpec priceSpec,
                           List<ProtocolType> protocolTypes,
-                          List<SettlementSpec> baseSideSettlementSpecs,
-                          List<SettlementSpec> quoteSideSettlementSpecs,
+                          List<PaymentSpec> baseSidePaymentSpecs,
+                          List<PaymentSpec> quoteSidePaymentSpecs,
                           List<OfferOption> offerOptions,
                           String chatMessageText) {
         super(id,
@@ -72,8 +72,8 @@ public final class BisqEasyOffer extends Offer {
                 amountSpec,
                 priceSpec,
                 protocolTypes,
-                baseSideSettlementSpecs,
-                quoteSideSettlementSpecs,
+                baseSidePaymentSpecs,
+                quoteSidePaymentSpecs,
                 offerOptions);
         this.chatMessageText = chatMessageText;
     }
@@ -90,11 +90,11 @@ public final class BisqEasyOffer extends Offer {
         List<ProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
                 .map(ProtocolType::fromProto)
                 .collect(Collectors.toList());
-        List<SettlementSpec> baseSideSettlementSpecs = proto.getBaseSideSettlementSpecsList().stream()
-                .map(SettlementSpec::fromProto)
+        List<PaymentSpec> baseSidePaymentSpecs = proto.getBaseSidePaymentSpecsList().stream()
+                .map(PaymentSpec::fromProto)
                 .collect(Collectors.toList());
-        List<SettlementSpec> quoteSideSettlementSpecs = proto.getQuoteSideSettlementSpecsList().stream()
-                .map(SettlementSpec::fromProto)
+        List<PaymentSpec> quoteSidePaymentSpecs = proto.getQuoteSidePaymentSpecsList().stream()
+                .map(PaymentSpec::fromProto)
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
@@ -107,8 +107,8 @@ public final class BisqEasyOffer extends Offer {
                 AmountSpec.fromProto(proto.getAmountSpec()),
                 PriceSpec.fromProto(proto.getPriceSpec()),
                 protocolTypes,
-                baseSideSettlementSpecs,
-                quoteSideSettlementSpecs,
+                baseSidePaymentSpecs,
+                quoteSidePaymentSpecs,
                 offerOptions,
                 proto.getBisqEasyOffer().getChatMessageText());
     }

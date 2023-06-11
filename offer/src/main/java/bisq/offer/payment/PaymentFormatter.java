@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.settlement;
+package bisq.offer.payment;
 
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -25,17 +25,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SettlementFormatter {
-    public static String asQuoteSideSettlementMethodsString(List<String> methodNames) {
-        return asString(SettlementUtil.createQuoteSideSpecsFromMethodNames(methodNames));
+public class PaymentFormatter {
+    public static String asQuoteSidePaymentMethodsString(List<String> methodNames) {
+        return asString(PaymentUtil.createQuoteSideSpecsFromMethodNames(methodNames));
     }
 
-    public static String asQuoteSideSettlementMethodsString(Offer offer) {
-        return asString(offer.getQuoteSideSettlementSpecs());
+    public static String asQuoteSidePaymentMethodsString(Offer offer) {
+        return asString(offer.getQuoteSidePaymentSpecs());
     }
 
-    private static List<String> getDisplayStringList(Collection<SettlementSpec> settlementSpecs) {
-        return SettlementUtil.getSettlementMethodNames(settlementSpecs).stream()
+    private static List<String> getDisplayStringList(Collection<PaymentSpec> paymentSpecs) {
+        return PaymentUtil.getPaymentMethodNames(paymentSpecs).stream()
                 .map(methodName -> {
                     if (Res.has(methodName)) {
                         return Res.get(methodName);
@@ -47,7 +47,7 @@ public class SettlementFormatter {
                 .collect(Collectors.toList());
     }
 
-    private static String asString(List<SettlementSpec> settlementSpecs) {
-        return Joiner.on(", ").join(getDisplayStringList(settlementSpecs));
+    private static String asString(List<PaymentSpec> paymentSpecs) {
+        return Joiner.on(", ").join(getDisplayStringList(paymentSpecs));
     }
 }

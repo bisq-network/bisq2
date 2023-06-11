@@ -20,9 +20,9 @@ package bisq.desktop.primary.main.content.trade.multisig.old.openoffers;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.offer.payment.PaymentSpec;
 import bisq.offer.poc.PocOffer;
 import bisq.offer.poc.PocOpenOffer;
-import bisq.offer.settlement.SettlementSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -59,12 +59,12 @@ public class OpenOfferListItem implements TableItem {
         quoteAmount = AmountFormatter.formatAmount(offer.getQuoteAmountAsMonetary(marketPriceService));
         price = QuoteFormatter.format(offer.getQuote(marketPriceService));
 
-        String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String baseSideSettlement = offer.getBaseSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
-        String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String quoteSideSettlement = offer.getQuoteSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
@@ -74,8 +74,8 @@ public class OpenOfferListItem implements TableItem {
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 
-        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSideSettlementSpecs().size() > 1;
-        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSideSettlementSpecs().size() > 1;
+        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentSpecs().size() > 1;
+        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentSpecs().size() > 1;
         if (isBaseSideFiatOrMultiple && !isQuoteSideFiatOrMultiple) {
             settlement = baseSideSettlement;
         } else if (isQuoteSideFiatOrMultiple && !isBaseSideFiatOrMultiple) {

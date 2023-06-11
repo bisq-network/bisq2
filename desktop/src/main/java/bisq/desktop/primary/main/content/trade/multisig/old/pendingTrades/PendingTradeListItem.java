@@ -22,8 +22,8 @@ import bisq.common.monetary.Quote;
 import bisq.contract.poc.PocContract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.offer.payment.PaymentSpec;
 import bisq.offer.poc.PocOffer;
-import bisq.offer.settlement.SettlementSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.protocol.poc.PocProtocol;
@@ -60,12 +60,12 @@ public class PendingTradeListItem implements TableItem {
         quoteAmount = AmountFormatter.formatAmount(contract.getQuoteSideAmount());
         price = QuoteFormatter.format(Quote.of(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
-        String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String baseSideSettlement = offer.getBaseSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
-        String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String quoteSideSettlement = offer.getQuoteSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
@@ -75,8 +75,8 @@ public class PendingTradeListItem implements TableItem {
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 
-        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSideSettlementSpecs().size() > 1;
-        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSideSettlementSpecs().size() > 1;
+        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentSpecs().size() > 1;
+        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentSpecs().size() > 1;
         if (isBaseSideFiatOrMultiple && !isQuoteSideFiatOrMultiple) {
             settlement = baseSideSettlement;
         } else if (isQuoteSideFiatOrMultiple && !isBaseSideFiatOrMultiple) {
