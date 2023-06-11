@@ -17,8 +17,9 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.payment_method;
 
-import bisq.account.payment_method.FiatPaymentRail;
-import bisq.account.payment_method.FiatPaymentUtil;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
@@ -33,8 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class CreateOfferPaymentMethodController implements Controller {
@@ -51,11 +52,8 @@ public class CreateOfferPaymentMethodController implements Controller {
         view = new CreateOfferPaymentMethodView(model, this);
     }
 
-    /**
-     * @return Enum names of FiatPayment.Method or custom names
-     */
-    public ObservableList<String> getPaymentMethodNames() {
-        return model.getSelectedMethodNames();
+    public ObservableList<FiatPaymentMethod> getFiatPaymentMethods() {
+        return model.getSelectedFiatPaymentMethods();
     }
 
     public void setMarket(Market market) {
@@ -64,11 +62,10 @@ public class CreateOfferPaymentMethodController implements Controller {
         }
 
         model.getMarket().set(market);
-        model.getSelectedMethodNames().clear();
-        List<FiatPaymentRail> methods = FiatPaymentUtil.getFiatPaymentRailsForCurrencyCode(market.getQuoteCurrencyCode());
-        model.getAllMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
-        model.getAllMethodNames().addAll(model.getAddedCustomMethodNames());
-        model.getIsPaymentMethodsEmpty().set(model.getAllMethodNames().isEmpty());
+        model.getSelectedFiatPaymentMethods().clear();
+        model.getFiatPaymentMethods().setAll(FiatPaymentMethodUtil.getFiatPaymentMethods(market.getQuoteCurrencyCode()));
+        model.getFiatPaymentMethods().addAll(model.getAddedCustomFiatPaymentMethods());
+        model.getIsPaymentMethodsEmpty().set(model.getFiatPaymentMethods().isEmpty());
     }
 
     public void reset() {
@@ -78,16 +75,21 @@ public class CreateOfferPaymentMethodController implements Controller {
     @Override
     public void onActivate() {
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
-                .ifPresent(methodNames -> {
-                    List.of(methodNames.split(",")).forEach(methodName -> {
-                        if (model.getAllMethodNames().contains(methodName)) {
-                            maybeAddMethodName(methodName);
+                .ifPresent(names -> {
+                    List.of(names.split(",")).forEach(name -> {
+                        if (name.isEmpty()) {
+                            return;
+                        }
+                        FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.from(name);
+                        boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
+                        if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
+                            maybeAddFiatPaymentMethod(fiatPaymentMethod);
                         } else {
-                            maybeAddCustomMethod(methodName);
+                            maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
                         }
                     });
                 });
-        customMethodPin = EasyBind.subscribe(model.getCustomMethodName(),
+        customMethodPin = EasyBind.subscribe(model.getCustomFiatPaymentMethodName(),
                 customMethod -> model.getIsAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
     }
 
@@ -96,60 +98,67 @@ public class CreateOfferPaymentMethodController implements Controller {
         customMethodPin.unsubscribe();
     }
 
-    void onTogglePaymentMethod(String methodName, boolean isSelected) {
+    void onTogglePaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
         if (isSelected) {
-            if (model.getSelectedMethodNames().size() >= 4) {
+            if (model.getSelectedFiatPaymentMethods().size() >= 4) {
                 new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
                 return;
             }
-            maybeAddMethodName(methodName);
+            maybeAddFiatPaymentMethod(fiatPaymentMethod);
         } else {
-            model.getSelectedMethodNames().remove(methodName);
+            model.getSelectedFiatPaymentMethods().remove(fiatPaymentMethod);
             setCookie();
         }
     }
 
-
     void onAddCustomMethod() {
-        if (model.getSelectedMethodNames().size() >= 4) {
+        if (model.getSelectedFiatPaymentMethods().size() >= 4) {
             new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
             return;
         }
-        String customMethod = model.getCustomMethodName().get();
-        maybeAddCustomMethod(customMethod);
+        maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(model.getCustomFiatPaymentMethodName().get()));
     }
 
-    private void maybeAddMethodName(String methodName) {
-        if (!model.getSelectedMethodNames().contains(methodName)) {
-            model.getSelectedMethodNames().add(methodName);
+    private void maybeAddFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
+        if (!model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
+            model.getSelectedFiatPaymentMethods().add(fiatPaymentMethod);
             setCookie();
         }
-        if (!model.getAllMethodNames().contains(methodName)) {
-            model.getAllMethodNames().add(methodName);
+        if (!model.getFiatPaymentMethods().contains(fiatPaymentMethod)) {
+            model.getFiatPaymentMethods().add(fiatPaymentMethod);
         }
     }
 
-    private void maybeAddCustomMethod(String customMethod) {
-        if (customMethod != null && !customMethod.isEmpty()) {
-            if (!model.getAddedCustomMethodNames().contains(customMethod)) {
-                model.getAddedCustomMethodNames().add(customMethod);
+    private void maybeAddCustomFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
+        if (fiatPaymentMethod != null) {
+            if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
+                String customName = fiatPaymentMethod.getName().toUpperCase().strip();
+                if (isPredefinedPaymentMethodsContainName(customName)) {
+                    new Popup().warning(Res.get("onboarding.method.warn.customNameMatchesPredefinedMethod")).show();
+                    model.getCustomFiatPaymentMethodName().set("");
+                    return;
+                }
+                model.getAddedCustomFiatPaymentMethods().add(fiatPaymentMethod);
             }
-            maybeAddMethodName(customMethod);
-
-            model.getCustomMethodName().set("");
+            maybeAddFiatPaymentMethod(fiatPaymentMethod);
+            model.getCustomFiatPaymentMethodName().set("");
         }
     }
 
-    void onRemoveCustomMethod(String customMethod) {
-        model.getAddedCustomMethodNames().remove(customMethod);
-        model.getSelectedMethodNames().remove(customMethod);
-        model.getAllMethodNames().remove(customMethod);
+    private boolean isPredefinedPaymentMethodsContainName(String name) {
+        return new HashSet<>(PaymentMethodUtil.getPaymentMethodNames(model.getFiatPaymentMethods())).contains(name);
+    }
+
+    void onRemoveCustomMethod(FiatPaymentMethod fiatPaymentMethod) {
+        model.getAddedCustomFiatPaymentMethods().remove(fiatPaymentMethod);
+        model.getSelectedFiatPaymentMethods().remove(fiatPaymentMethod);
+        model.getFiatPaymentMethods().remove(fiatPaymentMethod);
         setCookie();
     }
 
     private void setCookie() {
         settingsService.setCookie(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey(),
-                Joiner.on(",").join(model.getSelectedMethodNames()));
+                Joiner.on(",").join(PaymentMethodUtil.getPaymentMethodNames(model.getSelectedFiatPaymentMethods())));
     }
 
     private String getCookieSubKey() {

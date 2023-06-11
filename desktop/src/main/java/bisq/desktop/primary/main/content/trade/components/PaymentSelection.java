@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.trade.components;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentRail;
-import bisq.account.payment_method.PaymentUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
@@ -149,11 +149,11 @@ public class PaymentSelection {
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(collect);
 
-            model.baseSidePaymentObservableList.setAll(PaymentUtil.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
+            model.baseSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
                     .map(e -> new PaymentListItem(e, market.getBaseCurrencyCode()))
                     .collect(Collectors.toList()));
-            model.quoteSidePaymentObservableList.setAll(PaymentUtil.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
+            model.quoteSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
                     .map(e -> new PaymentListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));

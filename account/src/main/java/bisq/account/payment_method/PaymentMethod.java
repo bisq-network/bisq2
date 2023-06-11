@@ -21,30 +21,53 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
-public abstract class PaymentMethod<T extends PaymentRail> implements Proto {
+@EqualsAndHashCode
+public abstract class PaymentMethod<R extends PaymentRail> implements Proto {
     protected final String name;
-    protected final T paymentRail;
+    protected final R paymentRail;
+
+    @EqualsAndHashCode.Exclude
+    protected transient final String displayString;
+    @EqualsAndHashCode.Exclude
+    protected transient final String shortDisplayString;
 
     /**
      * @param paymentRail The method to be associated with that payment method
      */
-    public PaymentMethod(T paymentRail) {
+    protected PaymentMethod(R paymentRail) {
         this.name = paymentRail.name();
         this.paymentRail = paymentRail;
+
+        displayString = createDisplayString();
+        shortDisplayString = createShortDisplayString();
     }
 
     /**
      * @param customName Provide custom payment method name not covered by a Method enum.
      *                   In that case we set the method to the fallback method (e.g. USER_DEFINED).
      */
-    public PaymentMethod(String customName) {
+    protected PaymentMethod(String customName) {
         this.name = customName;
         this.paymentRail = getCustomPaymentRail();
+
+        // Avoid accidentally using a translation string in case the customName would match a key
+        displayString = name;
+        shortDisplayString = name;
+    }
+
+    protected String createDisplayString() {
+        return Res.has(name) ? Res.get(name) : name;
+    }
+
+    protected String createShortDisplayString() {
+        String shortName = name + "_SHORT";
+        return Res.has(shortName) ? Res.get(shortName) : createDisplayString();
     }
 
     public abstract bisq.account.protobuf.PaymentMethod toProto();
@@ -73,11 +96,11 @@ public abstract class PaymentMethod<T extends PaymentRail> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    protected abstract T getCustomPaymentRail();
+    protected abstract R getCustomPaymentRail();
 
     public abstract List<TradeCurrency> getTradeCurrencies();
 
-    protected String getDisplayName(String code) {
-        return Res.get(getName());
+    public boolean isCustomPaymentMethod() {
+        return paymentRail == getCustomPaymentRail();
     }
 }

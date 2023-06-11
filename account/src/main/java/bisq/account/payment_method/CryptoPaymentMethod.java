@@ -30,12 +30,21 @@ import java.util.List;
 public class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     private final String currencyCode;
 
-    public CryptoPaymentMethod(CryptoPaymentRail paymentRail, String currencyCode) {
-        super(paymentRail);
+    public static CryptoPaymentMethod fromPaymentRail(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
+        return new CryptoPaymentMethod(cryptoPaymentRail, currencyCode);
+    }
+
+    public static CryptoPaymentMethod fromCustomName(String customName, String currencyCode) {
+        return new CryptoPaymentMethod(customName, currencyCode);
+    }
+
+
+    private CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
+        super(cryptoPaymentRail);
         this.currencyCode = currencyCode;
     }
 
-    public CryptoPaymentMethod(String name, String currencyCode) {
+    private CryptoPaymentMethod(String name, String currencyCode) {
         super(name);
         this.currencyCode = currencyCode;
     }
@@ -49,12 +58,12 @@ public class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     }
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return CryptoPaymentUtil.from(proto.getName(), proto.getCryptoPaymentMethod().getCurrencyCode());
+        return CryptoPaymentMethodUtil.from(proto.getName(), proto.getCryptoPaymentMethod().getCurrencyCode());
     }
 
     @Override
     protected CryptoPaymentRail getCustomPaymentRail() {
-        return CryptoPaymentRail.USER_DEFINED;
+        return CryptoPaymentRail.CUSTOM;
     }
 
     @Override

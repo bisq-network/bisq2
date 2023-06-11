@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload, FiatPaymentMethod> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = new FiatPaymentMethod(FiatPaymentRail.SEPA);
+    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
 
     public SepaAccount(String accountName,
                        String holderName,

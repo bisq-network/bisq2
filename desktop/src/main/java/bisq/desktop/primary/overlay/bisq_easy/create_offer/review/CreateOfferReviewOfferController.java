@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
@@ -57,7 +58,10 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -112,9 +116,9 @@ public class CreateOfferReviewOfferController implements Controller {
         }
     }
 
-    public void setPaymentMethodNames(List<String> paymentMethodNames) {
-        if (paymentMethodNames != null) {
-            model.setPaymentMethodNames(paymentMethodNames);
+    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+        if (fiatPaymentMethods != null) {
+            model.setFiatPaymentMethods(fiatPaymentMethods);
         }
     }
 
@@ -173,10 +177,11 @@ public class CreateOfferReviewOfferController implements Controller {
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
+        String paymentMethodNames = PaymentMethodFormatter.formatPaymentMethodNames(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
-                PaymentMethodFormatter.formatPaymentMethodNames(model.getPaymentMethodNames()),
+                paymentMethodNames,
                 priceInfo);
 
         model.setMyOfferText(chatMessageText);
@@ -187,7 +192,7 @@ public class CreateOfferReviewOfferController implements Controller {
                 model.getMarket(),
                 amountSpec,
                 priceSpec,
-                new ArrayList<>(model.getPaymentMethodNames()),
+                model.getFiatPaymentMethods(),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
                 chatMessageText);
@@ -223,9 +228,9 @@ public class CreateOfferReviewOfferController implements Controller {
 
     void onTakeOffer(CreateOfferReviewOfferView.ListItem listItem) {
         OverlayController.hide(() -> {
-            TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
-                    Optional.of(model.getAmountSpec()),
-                    model.getPaymentMethodNames());
+                    TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
+                            Optional.of(model.getAmountSpec()),
+                            model.getFiatPaymentMethods());
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, initData);
                     resetHandler.run();
                 }

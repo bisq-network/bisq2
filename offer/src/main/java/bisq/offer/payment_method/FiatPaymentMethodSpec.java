@@ -17,6 +17,7 @@
 
 package bisq.offer.payment_method;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,6 +31,10 @@ public final class FiatPaymentMethodSpec implements PaymentMethodSpec {
 
     private final String paymentMethodName;
     private final Optional<String> saltedMakerAccountId;
+
+    public FiatPaymentMethodSpec(FiatPaymentMethod fiatPaymentMethod) {
+        this(fiatPaymentMethod.getName(), Optional.empty());
+    }
 
     public FiatPaymentMethodSpec(String paymentMethodName) {
         this(paymentMethodName, Optional.empty());

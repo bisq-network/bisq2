@@ -21,34 +21,35 @@ import bisq.account.protocol_type.TradeProtocolType;
 
 import java.util.List;
 
-public class BitcoinPaymentUtil {
-    public static BitcoinPaymentMethod from(String name) {
+public class CryptoPaymentMethodUtil {
+    public static CryptoPaymentMethod from(String name, String currencyCode) {
         try {
-            return new BitcoinPaymentMethod(BitcoinPaymentRail.valueOf(name));
+            CryptoPaymentRail cryptoPaymentRail = CryptoPaymentRail.valueOf(name);
+            CryptoPaymentMethod cryptoPaymentMethod = CryptoPaymentMethod.fromPaymentRail(cryptoPaymentRail, currencyCode);
+            if (!cryptoPaymentMethod.isCustomPaymentMethod()) {
+                return cryptoPaymentMethod;
+            }
         } catch (Throwable ignore) {
-            return new BitcoinPaymentMethod(name);
         }
+        return CryptoPaymentMethod.fromCustomName(name, currencyCode);
     }
 
-    public static List<BitcoinPaymentRail> getBitcoinPaymentRails() {
-        return List.of(BitcoinPaymentRail.values());
+    public static List<CryptoPaymentRail> getCryptoPaymentRails() {
+        return List.of(CryptoPaymentRail.values());
     }
 
-    public static List<BitcoinPaymentRail> getLNPaymentRails() {
-        return List.of(BitcoinPaymentRail.LN);
-    }
-
-    public static List<BitcoinPaymentRail> getBitcoinPaymentRails(TradeProtocolType protocolType) {
+    public static List<CryptoPaymentRail> getCryptoPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
+                throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
             case BISQ_MULTISIG:
-                return getBitcoinPaymentRails();
             case LIGHTNING_X:
-                return getLNPaymentRails();
+                // BTC to alt-coin trade use case
+                return getCryptoPaymentRails();
             case MONERO_SWAP:
             case LIQUID_SWAP:
             case BSQ_SWAP:
-                throw new IllegalArgumentException("No paymentMethods for that protocolType");
+                return List.of(CryptoPaymentRail.NATIVE_CHAIN);
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }

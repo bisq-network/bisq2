@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.component
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentRail;
-import bisq.account.payment_method.PaymentUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
@@ -151,12 +151,12 @@ public class TakersPaymentSelection {
             String baseSideCode = market.getBaseCurrencyCode();
             Set<PaymentRail> baseSidePaymentPaymentRailByName = model.offer.getBaseSidePaymentMethodSpecs().stream()
                     .map(PaymentMethodSpec::getPaymentMethodName)
-                    .map(method -> PaymentUtil.getPaymentMethod(method, baseSideCode))
+                    .map(method -> PaymentMethodUtil.getPaymentMethod(method, baseSideCode))
                     .collect(Collectors.toSet());
             String quoteSideCode = market.getQuoteCurrencyCode();
             Set<PaymentRail> quoteSidePaymentPaymentRailByName = model.offer.getQuoteSidePaymentMethodSpecs().stream()
                     .map(PaymentMethodSpec::getPaymentMethodName)
-                    .map(method -> PaymentUtil.getPaymentMethod(method, quoteSideCode))
+                    .map(method -> PaymentMethodUtil.getPaymentMethod(method, quoteSideCode))
                     .collect(Collectors.toSet());
 
             model.baseSideAccountObservableList.clear();
@@ -185,7 +185,7 @@ public class TakersPaymentSelection {
                 model.selectedQuoteSidePaymentMethod.set(model.selectedQuoteSideAccountListItem.get().getPaymentPaymentRail());
             }
 
-            model.baseSidePaymentMethodObservableList.setAll(PaymentUtil.getPaymentMethods(selectedProtocolType, baseSideCode)
+            model.baseSidePaymentMethodObservableList.setAll(PaymentMethodUtil.getPaymentMethods(selectedProtocolType, baseSideCode)
                     .stream()
                     .filter(baseSidePaymentPaymentRailByName::contains)
                     .map(e -> new PaymentListItem(e, baseSideCode))
@@ -196,7 +196,7 @@ public class TakersPaymentSelection {
                 model.selectedBaseSidePaymentMethod.set(model.selectedBaseSidePaymentMethodListItem.get().getPaymentPaymentRail());
             }
 
-            model.quoteSidePaymentMethodObservableList.setAll(PaymentUtil.getPaymentMethods(selectedProtocolType, quoteSideCode)
+            model.quoteSidePaymentMethodObservableList.setAll(PaymentMethodUtil.getPaymentMethods(selectedProtocolType, quoteSideCode)
                     .stream()
                     .filter(quoteSidePaymentPaymentRailByName::contains)
                     .map(e -> new PaymentListItem(e, quoteSideCode))

@@ -21,28 +21,35 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.TradeCurrency;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class PaymentUtil {
+public class PaymentMethodUtil {
+    public static List<String> getPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods) {
+        return paymentMethods.stream()
+                .map(PaymentMethod::getName)
+                .collect(Collectors.toList());
+    }
+
     public static List<? extends PaymentRail> getPaymentMethods(TradeProtocolType protocolType, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatPaymentUtil.getFiatPaymentRails(protocolType);
+            return FiatPaymentRailUtil.getFiatPaymentRails(protocolType);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinPaymentUtil.getBitcoinPaymentRails(protocolType);
+                return BitcoinPaymentMethodUtil.getBitcoinPaymentRails(protocolType);
             } else {
-                return CryptoPaymentUtil.getCryptoPaymentRails(protocolType);
+                return CryptoPaymentMethodUtil.getCryptoPaymentRails(protocolType);
             }
         }
     }
 
-    public static PaymentMethod<? extends PaymentRail> from(String paymentMethodName, String currencyCode) {
+    public static PaymentMethod<? extends PaymentRail> from(String name, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatPaymentUtil.from(paymentMethodName);
+            return FiatPaymentMethodUtil.from(name);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinPaymentUtil.from(paymentMethodName);
+                return BitcoinPaymentMethodUtil.from(name);
             } else {
-                return CryptoPaymentUtil.from(paymentMethodName, currencyCode);
+                return CryptoPaymentMethodUtil.from(name, currencyCode);
             }
         }
     }

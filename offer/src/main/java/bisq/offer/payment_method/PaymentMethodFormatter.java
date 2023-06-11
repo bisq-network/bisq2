@@ -17,6 +17,7 @@
 
 package bisq.offer.payment_method;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import com.google.common.base.Joiner;
@@ -32,6 +33,13 @@ public class PaymentMethodFormatter {
      */
     public static String formatPaymentMethodNames(List<String> paymentMethodNames) {
         return toCommaSeparatedString(toDisplayStrings(paymentMethodNames));
+    }
+
+    public static String formatPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
+        List<String> paymentMethodsAsDisplayStrings = toDisplayStrings(paymentMethods.stream()
+                .map(method -> useShortDisplayString ? method.getShortDisplayString() : method.getDisplayString())
+                .collect(Collectors.toList()));
+        return toCommaSeparatedString(paymentMethodsAsDisplayStrings);
     }
 
     public static String formatQuoteSidePaymentMethods(Offer offer) {

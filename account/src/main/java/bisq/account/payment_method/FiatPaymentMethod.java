@@ -28,12 +28,21 @@ import java.util.List;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
-    public FiatPaymentMethod(FiatPaymentRail paymentRail) {
+    public static FiatPaymentMethod fromPaymentRail(FiatPaymentRail fiatPaymentRail) {
+        return new FiatPaymentMethod(fiatPaymentRail);
+    }
+
+    public static FiatPaymentMethod fromCustomName(String customName) {
+        return new FiatPaymentMethod(customName);
+    }
+
+
+    private FiatPaymentMethod(FiatPaymentRail paymentRail) {
         super(paymentRail);
     }
 
-    public FiatPaymentMethod(String name) {
-        super(name);
+    private FiatPaymentMethod(String customName) {
+        super(customName);
     }
 
     @Override
@@ -42,12 +51,12 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
     }
 
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return FiatPaymentUtil.from(proto.getName());
+        return FiatPaymentMethodUtil.from(proto.getName());
     }
 
     @Override
     protected FiatPaymentRail getCustomPaymentRail() {
-        return FiatPaymentRail.USER_DEFINED;
+        return FiatPaymentRail.CUSTOM;
     }
 
     @Override

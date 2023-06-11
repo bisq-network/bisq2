@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.payment_method;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
@@ -26,20 +27,19 @@ import lombok.Getter;
 
 @Getter
 public class CreateOfferPaymentMethodModel implements Model {
-    // Method enum name or custom name
-    private final ObservableList<String> allMethodNames = FXCollections.observableArrayList();
-    private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
-    private final ObservableList<String> selectedMethodNames = FXCollections.observableArrayList();
-    private final StringProperty customMethodName = new SimpleStringProperty();
+    private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
+    private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
-        allMethodNames.clear();
-        addedCustomMethodNames.clear();
-        selectedMethodNames.clear();
-        customMethodName.set(null);
+        fiatPaymentMethods.clear();
+        selectedFiatPaymentMethods.clear();
+        addedCustomFiatPaymentMethods.clear();
+        customFiatPaymentMethodName.set("");
         isPaymentMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
         market.set(null);

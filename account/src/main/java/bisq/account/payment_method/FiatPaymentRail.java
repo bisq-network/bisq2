@@ -21,16 +21,15 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public enum FiatPaymentRail implements PaymentRail {
-    USER_DEFINED(new ArrayList<>(), new ArrayList<>()),
+    CUSTOM(new ArrayList<>(), new ArrayList<>()),
     SEPA(FiatPaymentRailUtil.getSepaEuroCountries()),
     SEPA_INSTANT(FiatPaymentRailUtil.getSepaEuroCountries()),
     ZELLE(List.of("US")),
@@ -40,11 +39,16 @@ public enum FiatPaymentRail implements PaymentRail {
     SWIFT();
 
     @Getter
+    @EqualsAndHashCode.Exclude
     private final List<Country> countries;
     @Getter
+    @EqualsAndHashCode.Exclude
     private final List<TradeCurrency> tradeCurrencies;
     @Getter
+    @EqualsAndHashCode.Exclude
     private final List<String> currencyCodes;
+    @EqualsAndHashCode.Exclude
+    private final Set<String> currencyCodesAsSet;
 
     FiatPaymentRail() {
         this(null, null);
@@ -76,8 +80,14 @@ public enum FiatPaymentRail implements PaymentRail {
         this.currencyCodes = currencyCodes != null ?
                 currencyCodes :
                 tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toList());
+
+        currencyCodesAsSet = new HashSet<>(this.currencyCodes);
         // sorting this.currencyCodes throws an ExceptionInInitializerError. Not clear why. 
         // But currencyCodes comes from hard coded values, so it is deterministic anyway.
+    }
+
+    public boolean supportsCurrency(String currencyCode) {
+        return currencyCodesAsSet.contains(currencyCode);
     }
 }
 

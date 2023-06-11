@@ -27,11 +27,20 @@ import java.util.List;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
-    public BitcoinPaymentMethod(BitcoinPaymentRail paymentRail) {
+    public static BitcoinPaymentMethod fromPaymentRail(BitcoinPaymentRail bitcoinPaymentRail) {
+        return new BitcoinPaymentMethod(bitcoinPaymentRail);
+    }
+
+    public static BitcoinPaymentMethod fromCustomName(String customName) {
+        return new BitcoinPaymentMethod(customName);
+    }
+
+
+    private BitcoinPaymentMethod(BitcoinPaymentRail paymentRail) {
         super(paymentRail);
     }
 
-    public BitcoinPaymentMethod(String name) {
+    private BitcoinPaymentMethod(String name) {
         super(name);
     }
 
@@ -41,12 +50,12 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return BitcoinPaymentUtil.from(proto.getName());
+        return BitcoinPaymentMethodUtil.from(proto.getName());
     }
 
     @Override
     protected BitcoinPaymentRail getCustomPaymentRail() {
-        return BitcoinPaymentRail.USER_DEFINED;
+        return BitcoinPaymentRail.CUSTOM;
     }
 
     @Override

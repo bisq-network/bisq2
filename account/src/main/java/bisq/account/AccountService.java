@@ -20,8 +20,8 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentRail;
-import bisq.account.payment_method.PaymentUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -117,7 +117,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
 
     public List<Account<?, ? extends PaymentMethod<?>>> getMatchingAccounts(TradeProtocolType protocolTyp,
                                                                             String currencyCode) {
-        Set<? extends PaymentRail> paymentMethods = new HashSet<>(PaymentUtil.getPaymentMethods(protocolTyp, currencyCode));
+        Set<? extends PaymentRail> paymentMethods = new HashSet<>(PaymentMethodUtil.getPaymentMethods(protocolTyp, currencyCode));
         return persistableStore.getAccountByName().values().stream()
                 .filter(account -> paymentMethods.contains(account.getPaymentMethod().getPaymentRail()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))

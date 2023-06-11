@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
@@ -51,16 +52,16 @@ public class TakeOfferController extends NavigationController implements InitWit
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
         private final Optional<AmountSpec> takersAmountSpec;
-        private final List<String> takersPaymentMethodNames;
+        private final List<FiatPaymentMethod> takersPaymentMethods;
 
         public InitData(BisqEasyOffer bisqEasyOffer) {
             this(bisqEasyOffer, Optional.empty(), new ArrayList<>());
         }
 
-        public InitData(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec, List<String> takersPaymentMethodNames) {
+        public InitData(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec, List<FiatPaymentMethod> takersPaymentMethods) {
             this.bisqEasyOffer = bisqEasyOffer;
             this.takersAmountSpec = takersAmountSpec;
-            this.takersPaymentMethodNames = takersPaymentMethodNames;
+            this.takersPaymentMethods = takersPaymentMethods;
         }
     }
 
@@ -99,7 +100,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
         takeOfferPriceController.init(bisqEasyOffer);
         takeOfferAmountController.init(bisqEasyOffer, initData.getTakersAmountSpec());
-        takeOfferPaymentController.init(bisqEasyOffer, initData.getTakersPaymentMethodNames());
+        takeOfferPaymentController.init(bisqEasyOffer, initData.getTakersPaymentMethods());
         takeOfferReviewController.init(bisqEasyOffer);
 
         model.setPriceVisible(bisqEasyOffer.getDirection().isBuy());

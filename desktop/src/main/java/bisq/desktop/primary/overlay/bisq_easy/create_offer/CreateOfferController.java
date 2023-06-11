@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
@@ -66,7 +67,7 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferAmountController createOfferAmountController;
     private final CreateOfferPaymentMethodController createOfferPaymentMethodController;
     private final CreateOfferReviewOfferController createOfferReviewOfferController;
-    private final ListChangeListener<String> paymentMethodsListener;
+    private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin;
 
@@ -133,7 +134,7 @@ public class CreateOfferController extends NavigationController implements InitW
         });
 
         handlePaymentMethodsUpdate();
-        createOfferPaymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
+        createOfferPaymentMethodController.getFiatPaymentMethods().addListener(paymentMethodsListener);
     }
 
     @Override
@@ -143,7 +144,7 @@ public class CreateOfferController extends NavigationController implements InitW
         amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
-        createOfferPaymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
+        createOfferPaymentMethodController.getFiatPaymentMethods().removeListener(paymentMethodsListener);
     }
 
     public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
@@ -232,7 +233,7 @@ public class CreateOfferController extends NavigationController implements InitW
         if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(createOfferMarketController.getMarket().get() == null);
         } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(createOfferPaymentMethodController.getPaymentMethodNames().isEmpty());
+            model.getNextButtonDisabled().set(createOfferPaymentMethodController.getFiatPaymentMethods().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -245,7 +246,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     private void handlePaymentMethodsUpdate() {
-        createOfferReviewOfferController.setPaymentMethodNames(createOfferPaymentMethodController.getPaymentMethodNames());
+        createOfferReviewOfferController.setFiatPaymentMethods(createOfferPaymentMethodController.getFiatPaymentMethods());
         updateNextButtonDisabledState();
     }
 }

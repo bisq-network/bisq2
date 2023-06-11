@@ -17,6 +17,8 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -27,6 +29,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,9 +43,10 @@ public class TakeOfferPaymentController implements Controller {
         view = new TakeOfferPaymentView(model, this);
     }
 
-    public void init(BisqEasyOffer bisqEasyOffer, List<String> takersPaymentMethodNames) {
+    public void init(BisqEasyOffer bisqEasyOffer, List<FiatPaymentMethod> takersPaymentMethods) {
         model.getOfferedMethodNames().setAll(PaymentMethodUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer));
 
+        Set<String> takersPaymentMethodNames = takersPaymentMethods.stream().map(PaymentMethod::getName).collect(Collectors.toSet());
         List<String> matchingNames = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
                 .map(PaymentMethodSpec::getPaymentMethodName)
                 .filter(takersPaymentMethodNames::contains)

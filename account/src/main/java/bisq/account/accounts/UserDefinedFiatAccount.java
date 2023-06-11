@@ -33,7 +33,7 @@ public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccount
 
     private static FiatPaymentMethod getPaymentMethod(String accountName) {
         if (PAYMENT_METHOD == null) {
-            PAYMENT_METHOD = new FiatPaymentMethod(accountName);
+            PAYMENT_METHOD = FiatPaymentMethod.fromCustomName(accountName);
         }
         return PAYMENT_METHOD;
     }

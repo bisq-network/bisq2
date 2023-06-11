@@ -18,7 +18,7 @@
 package bisq.account.payment_method;
 
 public enum BitcoinPaymentRail implements PaymentRail {
-    USER_DEFINED,
+    CUSTOM,
     MAIN_CHAIN,
     LN,
     LBTC,

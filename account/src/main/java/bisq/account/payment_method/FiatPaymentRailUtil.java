@@ -17,6 +17,7 @@
 
 package bisq.account.payment_method;
 
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 
@@ -25,7 +26,52 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class FiatPaymentRailUtil {
+public class FiatPaymentRailUtil {
+
+    public static List<FiatPaymentRail> getFiatPaymentRails() {
+        return List.of(FiatPaymentRail.values());
+    }
+
+    public static List<FiatPaymentRail> getFiatPaymentRails(TradeProtocolType protocolType) {
+        switch (protocolType) {
+            case BISQ_EASY:
+            case BISQ_MULTISIG:
+            case LIGHTNING_X:
+                return getFiatPaymentRails();
+            case MONERO_SWAP:
+            case LIQUID_SWAP:
+            case BSQ_SWAP:
+                throw new IllegalArgumentException("No paymentMethods for that protocolType");
+            default:
+                throw new RuntimeException("Not handled case: protocolType=" + protocolType);
+        }
+    }
+
+    public static List<FiatPaymentRail> getFiatPaymentRails(String currencyCode) {
+        return getFiatPaymentRails().stream()
+                .filter(fiatPaymentRail -> {
+                    if (currencyCode.equals("EUR") &&
+                            (fiatPaymentRail == FiatPaymentRail.SWIFT ||
+                                    fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK)) {
+                        // For EUR, we don't add SWIFT and NATIONAL_BANK
+                        return false;
+                    }
+                    // We add NATIONAL_BANK to all
+                    if (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK) {
+                        return true;
+                    }
+                    return fiatPaymentRail.supportsCurrency(currencyCode);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static List<String> getFiatPaymentRailNames(String currencyCode) {
+        return getFiatPaymentRails(currencyCode).stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+    }
+
+
     static List<String> getSepaEuroCountries() {
         return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");

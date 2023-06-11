@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPaymentMethod> {
-    private static final FiatPaymentMethod PAYMENT_METHOD = new FiatPaymentMethod(FiatPaymentRail.REVOLUT);
+    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
 
     public RevolutAccount(String accountName, String email) {
         this(accountName, new RevolutAccountPayload(StringUtils.createUid(), PAYMENT_METHOD.getName(), email));
