@@ -31,7 +31,7 @@ public class CreateOfferPaymentMethodModel implements Model {
     private final ObservableList<String> addedCustomMethodNames = FXCollections.observableArrayList();
     private final ObservableList<String> selectedMethodNames = FXCollections.observableArrayList();
     private final StringProperty customMethodName = new SimpleStringProperty();
-    private final BooleanProperty isSettlementMethodsEmpty = new SimpleBooleanProperty();
+    private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
@@ -40,7 +40,7 @@ public class CreateOfferPaymentMethodModel implements Model {
         addedCustomMethodNames.clear();
         selectedMethodNames.clear();
         customMethodName.set(null);
-        isSettlementMethodsEmpty.set(false);
+        isPaymentMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
         market.set(null);
     }

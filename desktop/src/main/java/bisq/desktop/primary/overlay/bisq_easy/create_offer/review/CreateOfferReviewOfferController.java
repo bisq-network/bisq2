@@ -112,9 +112,9 @@ public class CreateOfferReviewOfferController implements Controller {
         }
     }
 
-    public void setSettlementMethodNames(List<String> settlementMethodNames) {
-        if (settlementMethodNames != null) {
-            model.setSettlementMethodNames(settlementMethodNames);
+    public void setPaymentMethodNames(List<String> paymentMethodNames) {
+        if (paymentMethodNames != null) {
+            model.setPaymentMethodNames(paymentMethodNames);
         }
     }
 
@@ -176,7 +176,7 @@ public class CreateOfferReviewOfferController implements Controller {
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
-                PaymentFormatter.asQuoteSidePaymentMethodsString(model.getSettlementMethodNames()),
+                PaymentFormatter.asQuoteSidePaymentMethodsString(model.getPaymentMethodNames()),
                 priceInfo);
 
         model.setMyOfferText(chatMessageText);
@@ -187,7 +187,7 @@ public class CreateOfferReviewOfferController implements Controller {
                 model.getMarket(),
                 amountSpec,
                 priceSpec,
-                new ArrayList<>(model.getSettlementMethodNames()),
+                new ArrayList<>(model.getPaymentMethodNames()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
                 chatMessageText);
@@ -223,9 +223,9 @@ public class CreateOfferReviewOfferController implements Controller {
 
     void onTakeOffer(CreateOfferReviewOfferView.ListItem listItem) {
         OverlayController.hide(() -> {
-                    TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
-                            Optional.of(model.getAmountSpec()),
-                            model.getSettlementMethodNames());
+            TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
+                    Optional.of(model.getAmountSpec()),
+                    model.getPaymentMethodNames());
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, initData);
                     resetHandler.run();
                 }
@@ -297,8 +297,8 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                List<String> settlementMethods = PaymentUtil.getQuoteSidePaymentMethodNames(peersOffer);
-                if (PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(settlementMethods::contains)) {
+                List<String> paymentMethodNames = PaymentUtil.getQuoteSidePaymentMethodNames(peersOffer);
+                if (PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
                     return false;
                 }
 

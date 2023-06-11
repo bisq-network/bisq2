@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.SimpleStringProperty;
@@ -25,7 +25,7 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @Getter
-public class TakeOfferSettlementModel implements Model {
+public class TakeOfferPaymentModel implements Model {
     // Method enum name or custom name
     private final ObservableList<String> offeredMethodNames = FXCollections.observableArrayList();
     private final StringProperty selectedMethodName = new SimpleStringProperty();

@@ -46,7 +46,7 @@ class CreateOfferReviewOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
-    private List<String> settlementMethodNames;
+    private List<String> paymentMethodNames;
     @Setter
     private String myOfferText;
     @Setter
@@ -67,7 +67,7 @@ class CreateOfferReviewOfferModel implements Model {
         selectedChannel = null;
         direction = null;
         market = null;
-        settlementMethodNames.clear();
+        paymentMethodNames.clear();
         myOfferText = null;
         myOfferMessage = null;
         isMinAmountEnabled = false;

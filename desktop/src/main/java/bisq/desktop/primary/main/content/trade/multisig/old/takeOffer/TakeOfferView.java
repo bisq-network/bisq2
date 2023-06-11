@@ -39,7 +39,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
                          TakeOfferController controller,
                          Pane directionSelection,
                          Pane amountPrice,
-                         Pane settlement) {
+                         Pane paymentMethod) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
@@ -68,7 +68,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
                 directionSelection,
                 protocolLabel,
                 amountPrice,
-                settlement,
+                paymentMethod,
                 new HBox(15, takeOfferButton, cancelButton));
     }
 

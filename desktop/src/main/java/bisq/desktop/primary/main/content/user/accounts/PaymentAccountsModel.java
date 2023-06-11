@@ -91,10 +91,6 @@ public class PaymentAccountsModel implements Model {
         this.deleteButtonDisabled.set(deleteButtonDisabled);
     }
 
-    /*  public ObservableList<Account<?, ? extends Settlement<?>>> getAccounts() {
-          return accounts;
-      }
-  */
     public void setAllAccounts(Collection<Account<?, ? extends Payment<?>>> collection) {
         accounts.setAll(collection);
     }

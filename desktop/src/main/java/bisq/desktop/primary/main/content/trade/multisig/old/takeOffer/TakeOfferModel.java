@@ -44,8 +44,8 @@ public class TakeOfferModel implements Model {
 
     private Account<?, ? extends Payment<?>> selectedBaseSideAccount;
     private Account<?, ? extends Payment<?>> selectedQuoteSideAccount;
-    private Payment.Method selectedBaseSideSettlementMethod;
-    private Payment.Method selectedQuoteSideSettlementMethod;
+    private Payment.Method selectedBaseSidePaymentMethod;
+    private Payment.Method selectedQuoteSidePaymentMethod;
 
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;

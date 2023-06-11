@@ -28,8 +28,8 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MarketSelection;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.primary.main.content.trade.components.PaymentSelection;
 import bisq.desktop.primary.main.content.trade.components.ProtocolSelection;
-import bisq.desktop.primary.main.content.trade.components.SettlementSelection;
 import bisq.offer.Direction;
 import bisq.offer.poc.PocOpenOfferService;
 import javafx.collections.SetChangeListener;
@@ -68,11 +68,11 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
     private final DirectionSelection directionSelection;
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
-    private final SettlementSelection settlementSelection;
+    private final PaymentSelection paymentSelection;
     private final SetChangeListener<Account<?, ? extends Payment<?>>> selectedBaseSideAccountsListener,
             selectedQuoteSideAccountsListener;
-    private final SetChangeListener<Payment.Method> selectedBaseSideSettlementMethodsListener,
-            selectedQuoteSideSettlementMethodsListener;
+    private final SetChangeListener<Payment.Method> selectedBaseSidePaymentMethodsListener,
+            selectedQuoteSidePaymentMethodsListener;
     private Subscription selectedMarketSubscription, directionSubscription, protocolSelectionSubscription,
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;
 
@@ -84,19 +84,19 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
         directionSelection = new DirectionSelection();
         amountPriceGroup = new AmountPriceGroup(applicationService.getOracleService().getMarketPriceService());
         protocolSelection = new ProtocolSelection();
-        settlementSelection = new SettlementSelection(applicationService.getAccountService());
+        paymentSelection = new PaymentSelection(applicationService.getAccountService());
 
         view = new MultiSigCreateOfferView(model, this,
                 marketSelection.getRoot(),
                 directionSelection.getRoot(),
                 amountPriceGroup.getRoot(),
                 protocolSelection.getRoot(),
-                settlementSelection.getRoot());
+                paymentSelection.getRoot());
 
-        selectedBaseSideAccountsListener = c -> model.setAllSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
-        selectedQuoteSideAccountsListener = c -> model.setAllSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
-        selectedBaseSideSettlementMethodsListener = c -> model.setAllSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
-        selectedQuoteSideSettlementMethodsListener = c -> model.setAllSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
+        selectedBaseSideAccountsListener = c -> model.setAllSelectedBaseSideAccounts(paymentSelection.getSelectedBaseSideAccounts());
+        selectedQuoteSideAccountsListener = c -> model.setAllSelectedQuoteSideAccounts(paymentSelection.getSelectedQuoteSideAccounts());
+        selectedBaseSidePaymentMethodsListener = c -> model.setAllSelectedBaseSidePaymentMethods(paymentSelection.getSelectedBaseSidePaymentMethods());
+        selectedQuoteSidePaymentMethodsListener = c -> model.setAllSelectedQuoteSidePaymentMethods(paymentSelection.getSelectedQuoteSidePaymentMethods());
     }
 
     @Override
@@ -116,18 +116,18 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
                     directionSelection.setSelectedMarket(selectedMarket);
                     amountPriceGroup.setSelectedMarket(selectedMarket);
                     protocolSelection.setSelectedMarket(selectedMarket);
-                    settlementSelection.setSelectedMarket(selectedMarket);
+                    paymentSelection.setSelectedMarket(selectedMarket);
                 });
         directionSubscription = EasyBind.subscribe(directionSelection.directionProperty(),
                 direction -> {
                     model.setDirection(direction);
                     amountPriceGroup.setDirection(direction);
-                    settlementSelection.setDirection(direction);
+                    paymentSelection.setDirection(direction);
                 });
         protocolSelectionSubscription = EasyBind.subscribe(protocolSelection.selectedProtocolType(),
                 selectedProtocolType -> {
                     model.setSelectedProtocolType(selectedProtocolType);
-                    settlementSelection.setSelectedProtocolType(selectedProtocolType);
+                    paymentSelection.setSelectedProtocolType(selectedProtocolType);
                     model.getCreateOfferButtonVisibleProperty().set(selectedProtocolType != null);
                 });
         baseSideAmountSubscription = EasyBind.subscribe(amountPriceGroup.baseSideAmountProperty(),
@@ -137,15 +137,15 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
         fixPriceSubscription = EasyBind.subscribe(amountPriceGroup.quoteProperty(),
                 model::setFixPrice);
 
-        settlementSelection.getSelectedBaseSideAccounts().addListener(selectedBaseSideAccountsListener);
-        settlementSelection.getSelectedQuoteSideAccounts().addListener(selectedQuoteSideAccountsListener);
-        settlementSelection.getSelectedBaseSideSettlementMethods().addListener(selectedBaseSideSettlementMethodsListener);
-        settlementSelection.getSelectedQuoteSideSettlementMethods().addListener(selectedQuoteSideSettlementMethodsListener);
+        paymentSelection.getSelectedBaseSideAccounts().addListener(selectedBaseSideAccountsListener);
+        paymentSelection.getSelectedQuoteSideAccounts().addListener(selectedQuoteSideAccountsListener);
+        paymentSelection.getSelectedBaseSidePaymentMethods().addListener(selectedBaseSidePaymentMethodsListener);
+        paymentSelection.getSelectedQuoteSidePaymentMethods().addListener(selectedQuoteSidePaymentMethodsListener);
 
-        model.setAllSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
-        model.setAllSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
-        model.setAllSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
-        model.setAllSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
+        model.setAllSelectedBaseSideAccounts(paymentSelection.getSelectedBaseSideAccounts());
+        model.setAllSelectedQuoteSideAccounts(paymentSelection.getSelectedQuoteSideAccounts());
+        model.setAllSelectedBaseSidePaymentMethods(paymentSelection.getSelectedBaseSidePaymentMethods());
+        model.setAllSelectedQuoteSidePaymentMethods(paymentSelection.getSelectedQuoteSidePaymentMethods());
     }
 
     @Override
@@ -157,10 +157,10 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
         quoteSideAmountSubscription.unsubscribe();
         fixPriceSubscription.unsubscribe();
 
-        settlementSelection.getSelectedBaseSideAccounts().removeListener(selectedBaseSideAccountsListener);
-        settlementSelection.getSelectedQuoteSideAccounts().removeListener(selectedQuoteSideAccountsListener);
-        settlementSelection.getSelectedBaseSideSettlementMethods().removeListener(selectedBaseSideSettlementMethodsListener);
-        settlementSelection.getSelectedQuoteSideSettlementMethods().removeListener(selectedQuoteSideSettlementMethodsListener);
+        paymentSelection.getSelectedBaseSideAccounts().removeListener(selectedBaseSideAccountsListener);
+        paymentSelection.getSelectedQuoteSideAccounts().removeListener(selectedQuoteSideAccountsListener);
+        paymentSelection.getSelectedBaseSidePaymentMethods().removeListener(selectedBaseSidePaymentMethodsListener);
+        paymentSelection.getSelectedQuoteSidePaymentMethods().removeListener(selectedQuoteSidePaymentMethodsListener);
     }
 
     public void onCreateOffer() {
@@ -171,8 +171,8 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
                         model.getSelectedProtocolType(),
                         new ArrayList<>(model.getSelectedBaseSideAccounts()),
                         new ArrayList<>(model.getSelectedQuoteSideAccounts()),
-                        new ArrayList<>(model.getSelectedBaseSideSettlementMethods()),
-                        new ArrayList<>(model.getSelectedQuoteSideSettlementMethods()))
+                        new ArrayList<>(model.getSelectedBaseSidePaymentMethods()),
+                        new ArrayList<>(model.getSelectedQuoteSidePaymentMethods()))
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
                         model.getOfferProperty().set(offer);

@@ -127,13 +127,13 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void setSettlementMethodName(String methodName) {
+    public void setPaymentMethodName(String methodName) {
         if (methodName != null) {
-            model.getSettlementMethod().set(Res.has(methodName) ? Res.get(methodName) : methodName);
+            model.getPaymentMethod().set(Res.has(methodName) ? Res.get(methodName) : methodName);
 
             String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("buying").toUpperCase() : Res.get("selling").toUpperCase();
-            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getSettlementMethod().get().toUpperCase()));
-            model.getMethod().set(model.getSettlementMethod().get());
+            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getPaymentMethod().get().toUpperCase()));
+            model.getMethod().set(model.getPaymentMethod().get());
         }
     }
 

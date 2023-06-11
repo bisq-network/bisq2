@@ -45,7 +45,7 @@ public class PendingTradeListItem implements TableItem {
     private final String price;
     private final String baseAmount;
     private final String quoteAmount;
-    private final String settlement;
+    private final String paymentMethod;
     private final String options;
     private final PocProtocol<? extends PocProtocolModel> protocol;
 
@@ -60,11 +60,11 @@ public class PendingTradeListItem implements TableItem {
         quoteAmount = AmountFormatter.formatAmount(contract.getQuoteSideAmount());
         price = QuoteFormatter.format(Quote.of(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
-        String baseSideSettlement = offer.getBaseSidePaymentSpecs().stream()
+        String baseSidePaymentMethod = offer.getBaseSidePaymentSpecs().stream()
                 .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
-        String quoteSideSettlement = offer.getQuoteSidePaymentSpecs().stream()
+        String quoteSidePaymentMethod = offer.getQuoteSidePaymentSpecs().stream()
                 .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
@@ -78,16 +78,15 @@ public class PendingTradeListItem implements TableItem {
         boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentSpecs().size() > 1;
         boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentSpecs().size() > 1;
         if (isBaseSideFiatOrMultiple && !isQuoteSideFiatOrMultiple) {
-            settlement = baseSideSettlement;
+            paymentMethod = baseSidePaymentMethod;
         } else if (isQuoteSideFiatOrMultiple && !isBaseSideFiatOrMultiple) {
-            settlement = quoteSideSettlement;
+            paymentMethod = quoteSidePaymentMethod;
         } else if (isBaseSideFiatOrMultiple) {
             // both
-            settlement = Res.get("offerbook.table.settlement.multi",
-                    baseCurrencyCode, baseSideSettlement, quoteCurrencyCode, quoteSideSettlement);
+            paymentMethod = Res.get("offerbook.table.paymentMethod.multi",
+                    baseCurrencyCode, baseSidePaymentMethod, quoteCurrencyCode, quoteSidePaymentMethod);
         } else {
-            // none (both are using non fiat mandatory settlement method 
-            settlement = "";
+            paymentMethod = "";
         }
 
         options = ""; //todo

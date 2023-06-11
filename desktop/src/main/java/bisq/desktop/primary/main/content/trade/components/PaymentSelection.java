@@ -52,10 +52,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class SettlementSelection {
+public class PaymentSelection {
     private final Controller controller;
 
-    public SettlementSelection(AccountService accountService) {
+    public PaymentSelection(AccountService accountService) {
         controller = new Controller(accountService);
     }
 
@@ -83,12 +83,12 @@ public class SettlementSelection {
         return controller.model.selectedQuoteSideAccounts;
     }
 
-    public ObservableSet<Payment.Method> getSelectedBaseSideSettlementMethods() {
-        return controller.model.selectedBaseSideSettlementMethods;
+    public ObservableSet<Payment.Method> getSelectedBaseSidePaymentMethods() {
+        return controller.model.selectedBaseSidePaymentMethods;
     }
 
-    public ObservableSet<Payment.Method> getSelectedQuoteSideSettlementMethods() {
-        return controller.model.selectedQuoteSideSettlementMethods;
+    public ObservableSet<Payment.Method> getSelectedQuoteSidePaymentMethods() {
+        return controller.model.selectedQuoteSidePaymentMethods;
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -125,8 +125,8 @@ public class SettlementSelection {
 
             model.selectedBaseSideAccounts.clear();
             model.selectedQuoteSideAccounts.clear();
-            model.selectedBaseSideSettlementMethods.clear();
-            model.selectedQuoteSideSettlementMethods.clear();
+            model.selectedBaseSidePaymentMethods.clear();
+            model.selectedQuoteSidePaymentMethods.clear();
 
             ProtocolType selectedProtocolTyp = model.selectedProtocolType;
             if (selectedProtocolTyp == null) {
@@ -147,13 +147,13 @@ public class SettlementSelection {
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(collect);
 
-            model.baseSideSettlementObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
+            model.baseSidePaymentObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
-                    .map(e -> new SettlementListItem(e, market.getBaseCurrencyCode()))
+                    .map(e -> new PaymentListItem(e, market.getBaseCurrencyCode()))
                     .collect(Collectors.toList()));
-            model.quoteSideSettlementObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
+            model.quoteSidePaymentObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
-                    .map(e -> new SettlementListItem(e, market.getQuoteCurrencyCode()))
+                    .map(e -> new PaymentListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));
 
             // For Fiat, we show always accounts. If no accounts set up yet the user gets the create-account button 
@@ -169,9 +169,8 @@ public class SettlementSelection {
                 model.quoteSideAccountsVisibility.set(!model.quoteSideAccountObservableList.isEmpty());
             }
 
-            // If no account is visible we show the settlement
-            model.baseSideSettlementVisibility.set(!model.baseSideAccountsVisibility.get());
-            model.quoteSideSettlementVisibility.set(!model.quoteSideAccountsVisibility.get());
+            model.baseSidePaymentVisibility.set(!model.baseSideAccountsVisibility.get());
+            model.quoteSidePaymentVisibility.set(!model.quoteSideAccountsVisibility.get());
 
             updateStrings();
         }
@@ -194,14 +193,14 @@ public class SettlementSelection {
                 model.baseSideDescription.set(Res.get("createOffer.account.description",
                         baseSideVerb, market.getBaseCurrencyCode()));
             } else {
-                model.baseSideDescription.set(Res.get("createOffer.settlement.description",
+                model.baseSideDescription.set(Res.get("createOffer.paymentMethod.description",
                         baseSideVerb, market.getBaseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
                 model.quoteSideDescription.set(Res.get("createOffer.account.description",
                         quoteSideVerb, market.getQuoteCurrencyCode()));
             } else {
-                model.quoteSideDescription.set(Res.get("createOffer.settlement.description",
+                model.quoteSideDescription.set(Res.get("createOffer.paymentMethod.description",
                         quoteSideVerb, market.getQuoteCurrencyCode()));
             }
         }
@@ -221,26 +220,26 @@ public class SettlementSelection {
             var observableAccountsSet = isBaseSide ?
                     model.selectedBaseSideAccounts :
                     model.selectedQuoteSideAccounts;
-            ObservableSet<Payment.Method> observableSettlementMethodsSet = isBaseSide ?
-                    model.selectedBaseSideSettlementMethods :
-                    model.selectedQuoteSideSettlementMethods;
+            ObservableSet<Payment.Method> observablePaymentMethodsSet = isBaseSide ?
+                    model.selectedBaseSidePaymentMethods :
+                    model.selectedQuoteSidePaymentMethods;
             if (selected) {
                 observableAccountsSet.add(listItem.account);
-                observableSettlementMethodsSet.add(listItem.settlementMethod);
+                observablePaymentMethodsSet.add(listItem.paymnetMethod);
             } else {
                 observableAccountsSet.remove(listItem.account);
-                observableSettlementMethodsSet.remove(listItem.settlementMethod);
+                observablePaymentMethodsSet.remove(listItem.paymnetMethod);
             }
         }
 
-        private void onSettlementSelectionChanged(SettlementListItem listItem, boolean selected, boolean isBaseSide) {
+        private void onPaymentSelectionChanged(PaymentListItem listItem, boolean selected, boolean isBaseSide) {
             ObservableSet<Payment.Method> observableSet = isBaseSide ?
-                    model.selectedBaseSideSettlementMethods :
-                    model.selectedQuoteSideSettlementMethods;
+                    model.selectedBaseSidePaymentMethods :
+                    model.selectedQuoteSidePaymentMethods;
             if (selected) {
-                observableSet.add(listItem.settlementMethod);
+                observableSet.add(listItem.paymentMethod);
             } else {
-                observableSet.remove(listItem.settlementMethod);
+                observableSet.remove(listItem.paymentMethod);
             }
         }
 
@@ -258,15 +257,15 @@ public class SettlementSelection {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Payment.Method> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Payment.Method> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Payment.Method> selectedBaseSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Payment.Method> selectedQuoteSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
 
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
         private final StringProperty quoteSideDescription = new SimpleStringProperty();
         private final BooleanProperty visibility = new SimpleBooleanProperty();
-        private final BooleanProperty baseSideSettlementVisibility = new SimpleBooleanProperty();
-        private final BooleanProperty quoteSideSettlementVisibility = new SimpleBooleanProperty();
+        private final BooleanProperty baseSidePaymentVisibility = new SimpleBooleanProperty();
+        private final BooleanProperty quoteSidePaymentVisibility = new SimpleBooleanProperty();
         private final BooleanProperty baseSideAccountsVisibility = new SimpleBooleanProperty();
         private final BooleanProperty quoteSideAccountsVisibility = new SimpleBooleanProperty();
 
@@ -275,10 +274,10 @@ public class SettlementSelection {
         private final ObservableList<AccountListItem> quoteSideAccountObservableList = FXCollections.observableArrayList();
         private final SortedList<AccountListItem> quoteSideAccountSortedList = new SortedList<>(quoteSideAccountObservableList);
 
-        private final ObservableList<SettlementListItem> baseSideSettlementObservableList = FXCollections.observableArrayList();
-        private final SortedList<SettlementListItem> baseSideSettlementSortedList = new SortedList<>(baseSideSettlementObservableList);
-        private final ObservableList<SettlementListItem> quoteSideSettlementObservableList = FXCollections.observableArrayList();
-        private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
+        private final ObservableList<PaymentListItem> baseSidePaymentObservableList = FXCollections.observableArrayList();
+        private final SortedList<PaymentListItem> baseSidePaymentSortedList = new SortedList<>(baseSidePaymentObservableList);
+        private final ObservableList<PaymentListItem> quoteSidePaymentObservableList = FXCollections.observableArrayList();
+        private final SortedList<PaymentListItem> quoteSidePaymentSortedList = new SortedList<>(quoteSidePaymentObservableList);
 
         private Market selectedMarket;
         private Direction direction;
@@ -292,7 +291,7 @@ public class SettlementSelection {
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final Label baseSideLabel, quoteSideLabel;
         private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
-        private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
+        private final BisqTableView<PaymentListItem> baseSidePaymentTableView, quoteSidePaymentTableView;
         private final Button baseSideButton, quoteSideButton;
 
         private View(Model model,
@@ -312,14 +311,14 @@ public class SettlementSelection {
             VBox baseSidePlaceHolderBox = createPlaceHolderBox(baseSideButton);
             baseSideAccountsTableView.setPlaceholder(baseSidePlaceHolderBox);
 
-            baseSideSettlementTableView = new BisqTableView<>(model.baseSideSettlementSortedList);
-            baseSideSettlementTableView.setFixHeight(tableHeight);
-            configSettlementTableView(baseSideSettlementTableView, true);
-            VBox.setMargin(baseSideSettlementTableView, new Insets(0, 0, 20, 0));
+            baseSidePaymentTableView = new BisqTableView<>(model.baseSidePaymentSortedList);
+            baseSidePaymentTableView.setFixHeight(tableHeight);
+            configPaymentTableView(baseSidePaymentTableView, true);
+            VBox.setMargin(baseSidePaymentTableView, new Insets(0, 0, 20, 0));
 
             VBox baseSideBox = new VBox();
             baseSideBox.setSpacing(10);
-            baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsTableView, baseSideSettlementTableView);
+            baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsTableView, baseSidePaymentTableView);
 
             quoteSideLabel = new Label();
             quoteSideLabel.getStyleClass().add("titled-group-bg-label-active");
@@ -332,14 +331,14 @@ public class SettlementSelection {
             VBox quoteSidePlaceHolderBox = createPlaceHolderBox(quoteSideButton);
             quoteSideAccountsTableView.setPlaceholder(quoteSidePlaceHolderBox);
 
-            quoteSideSettlementTableView = new BisqTableView<>(model.quoteSideSettlementSortedList);
-            quoteSideSettlementTableView.setFixHeight(tableHeight);
-            configSettlementTableView(quoteSideSettlementTableView, false);
-            VBox.setMargin(quoteSideSettlementTableView, new Insets(0, 0, 20, 0));
+            quoteSidePaymentTableView = new BisqTableView<>(model.quoteSidePaymentSortedList);
+            quoteSidePaymentTableView.setFixHeight(tableHeight);
+            configPaymentTableView(quoteSidePaymentTableView, false);
+            VBox.setMargin(quoteSidePaymentTableView, new Insets(0, 0, 20, 0));
 
             VBox quoteSideBox = new VBox();
             quoteSideBox.setSpacing(10);
-            quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideAccountsTableView, quoteSideSettlementTableView);
+            quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideAccountsTableView, quoteSidePaymentTableView);
 
             HBox.setHgrow(baseSideBox, Priority.ALWAYS);
             HBox.setHgrow(quoteSideBox, Priority.ALWAYS);
@@ -362,10 +361,10 @@ public class SettlementSelection {
             quoteSideAccountsTableView.visibleProperty().bind(model.quoteSideAccountsVisibility);
             quoteSideAccountsTableView.managedProperty().bind(model.quoteSideAccountsVisibility);
 
-            baseSideSettlementTableView.visibleProperty().bind(model.baseSideSettlementVisibility);
-            baseSideSettlementTableView.managedProperty().bind(model.baseSideSettlementVisibility);
-            quoteSideSettlementTableView.visibleProperty().bind(model.quoteSideSettlementVisibility);
-            quoteSideSettlementTableView.managedProperty().bind(model.quoteSideSettlementVisibility);
+            baseSidePaymentTableView.visibleProperty().bind(model.baseSidePaymentVisibility);
+            baseSidePaymentTableView.managedProperty().bind(model.baseSidePaymentVisibility);
+            quoteSidePaymentTableView.visibleProperty().bind(model.quoteSidePaymentVisibility);
+            quoteSidePaymentTableView.managedProperty().bind(model.quoteSidePaymentVisibility);
         }
 
         @Override
@@ -384,10 +383,10 @@ public class SettlementSelection {
             quoteSideAccountsTableView.visibleProperty().unbind();
             quoteSideAccountsTableView.managedProperty().unbind();
 
-            baseSideSettlementTableView.visibleProperty().unbind();
-            baseSideSettlementTableView.managedProperty().unbind();
-            quoteSideSettlementTableView.visibleProperty().unbind();
-            quoteSideSettlementTableView.managedProperty().unbind();
+            baseSidePaymentTableView.visibleProperty().unbind();
+            baseSidePaymentTableView.managedProperty().unbind();
+            quoteSidePaymentTableView.visibleProperty().unbind();
+            quoteSidePaymentTableView.managedProperty().unbind();
         }
 
         private VBox createPlaceHolderBox(Button baseSideButton) {
@@ -408,7 +407,7 @@ public class SettlementSelection {
             tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
                     .title(Res.get("createOffer.account.table.method"))
                     .minWidth(120)
-                    .valueSupplier(AccountListItem::getSettlementMethodName)
+                    .valueSupplier(AccountListItem::getPaymentMethodName)
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
                     .title(Res.get("createOffer.account.table.select"))
@@ -418,17 +417,17 @@ public class SettlementSelection {
                     .build());
         }
 
-        private void configSettlementTableView(BisqTableView<SettlementListItem> tableView, boolean isBaseSide) {
-            tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
+        private void configPaymentTableView(BisqTableView<PaymentListItem> tableView, boolean isBaseSide) {
+            tableView.getColumns().add(new BisqTableColumn.Builder<PaymentListItem>()
                     .title(Res.get("createOffer.account.table.method"))
                     .minWidth(150)
-                    .valueSupplier(SettlementListItem::getName)
+                    .valueSupplier(PaymentListItem::getName)
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<PaymentListItem>()
                     .title(Res.get("createOffer.account.table.select"))
                     .minWidth(40)
                     .defaultCellFactory(BisqTableColumn.DefaultCellFactory.CHECKBOX)
-                    .toggleHandler((item, selected) -> controller.onSettlementSelectionChanged(item, selected, isBaseSide))
+                    .toggleHandler((item, selected) -> controller.onPaymentSelectionChanged(item, selected, isBaseSide))
                     .build());
         }
     }
@@ -437,15 +436,14 @@ public class SettlementSelection {
     private static class AccountListItem implements TableItem {
         private final Account<?, ? extends Payment<?>> account;
         private final String accountName;
-        private final Payment.Method settlementMethod;
-        private final String settlementMethodName;
+        private final Payment.Method paymnetMethod;
+        private final String paymentMethodName;
 
         private AccountListItem(Account<?, ? extends Payment<?>> account) {
             this.account = account;
             accountName = account.getAccountName();
-            settlementMethod = account.getPayment().getMethod();
-            //  settlementMethodName = Res.get(settlementMethod.getSettlementMethodName());
-            settlementMethodName = Res.get(settlementMethod.name());
+            paymnetMethod = account.getPayment().getMethod();
+            paymentMethodName = Res.get(paymnetMethod.name());
         }
 
         @Override
@@ -458,15 +456,13 @@ public class SettlementSelection {
     }
 
     @Getter
-    private static class SettlementListItem implements TableItem {
-        private final Payment.Method settlementMethod;
+    private static class PaymentListItem implements TableItem {
+        private final Payment.Method paymentMethod;
         private final String name;
 
-        private SettlementListItem(Payment.Method settlementMethod, String currencyCode) {
-            this.settlementMethod = settlementMethod;
-            //todo
-            // name = settlementMethod.getDisplayName(currencyCode);
-            name = settlementMethod.name();
+        private PaymentListItem(Payment.Method paymentMethod, String currencyCode) {
+            this.paymentMethod = paymentMethod;
+            name = paymentMethod.name();
         }
 
         @Override

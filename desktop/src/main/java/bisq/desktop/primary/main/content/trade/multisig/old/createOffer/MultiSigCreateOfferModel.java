@@ -53,8 +53,8 @@ public class MultiSigCreateOfferModel implements Model {
 
     private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
     private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Payment.Method> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Payment.Method> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Payment.Method> selectedBaseSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Payment.Method> selectedQuoteSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
 
     private final ObjectProperty<PocOffer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
@@ -87,13 +87,13 @@ public class MultiSigCreateOfferModel implements Model {
         selectedQuoteSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedBaseSideSettlementMethods(ObservableSet<Payment.Method> set) {
-        selectedBaseSideSettlementMethods.clear();
-        selectedBaseSideSettlementMethods.addAll(set);
+    public void setAllSelectedBaseSidePaymentMethods(ObservableSet<Payment.Method> set) {
+        selectedBaseSidePaymentMethods.clear();
+        selectedBaseSidePaymentMethods.addAll(set);
     }
 
-    public void setAllSelectedQuoteSideSettlementMethods(ObservableSet<Payment.Method> set) {
-        selectedQuoteSideSettlementMethods.clear();
-        selectedQuoteSideSettlementMethods.addAll(set);
+    public void setAllSelectedQuoteSidePaymentMethods(ObservableSet<Payment.Method> set) {
+        selectedQuoteSidePaymentMethods.clear();
+        selectedQuoteSidePaymentMethods.addAll(set);
     }
 }
