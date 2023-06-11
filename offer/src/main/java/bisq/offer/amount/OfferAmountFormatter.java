@@ -36,41 +36,104 @@ public class OfferAmountFormatter {
     // BaseAmount
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // Either min-max or fixed
     public static String formatBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return formatBaseAmount(marketPriceService, offer, true);
+        return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), true);
     }
 
     public static String formatBaseAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        if (offer.hasAmountRange()) {
-            return formatMinMaxBaseAmount(marketPriceService, offer, withCode);
+        return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode);
+    }
+
+    public static String formatBaseAmount(MarketPriceService marketPriceService,
+                                          AmountSpec amountSpec,
+                                          PriceSpec priceSpec,
+                                          Market market,
+                                          boolean hasAmountRange,
+                                          boolean withCode) {
+        if (hasAmountRange) {
+            return formatBaseSideRangeAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
         } else {
-            return formatFixOrMaxBaseAmount(marketPriceService, offer, withCode);
+            return formatBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
         }
     }
 
-    public static String formatMinBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return formatMinBaseAmount(marketPriceService, offer, true);
+    // Fixed
+    public static String formatBaseSideFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatBaseSideFixedAmount(marketPriceService, offer, true);
     }
 
-    public static String formatMinBaseAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return AmountUtil.findMinBaseAmount(marketPriceService, offer).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    public static String formatBaseSideFixedAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatBaseSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
     }
 
-    public static String formatMaxBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return formatMaxBaseAmount(marketPriceService, offer, true);
+    public static String formatBaseSideFixedAmount(MarketPriceService marketPriceService,
+                                                   AmountSpec amountSpec,
+                                                   PriceSpec priceSpec,
+                                                   Market market,
+                                                   boolean withCode) {
+        return AmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
     }
 
-    public static String formatMaxBaseAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return AmountUtil.findMaxBaseAmount(marketPriceService, offer).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    // Min
+    public static String formatBaseSideMinAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatBaseSideMinAmount(marketPriceService, offer, true);
     }
 
-    public static String formatFixOrMaxBaseAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return AmountUtil.findFixOrMaxBaseAmount(marketPriceService, offer).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    public static String formatBaseSideMinAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatBaseSideMinAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
     }
 
-    public static String formatMinMaxBaseAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return formatMinBaseAmount(marketPriceService, offer) + " - " +
-                formatMaxBaseAmount(marketPriceService, offer, withCode);
+    public static String formatBaseSideMinAmount(MarketPriceService marketPriceService,
+                                                 AmountSpec amountSpec,
+                                                 PriceSpec priceSpec,
+                                                 Market market,
+                                                 boolean withCode) {
+        return AmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    }
+
+    // Max
+    public static String formatBaseSideMaxAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatBaseSideMaxAmount(marketPriceService, offer, true);
+    }
+
+    public static String formatBaseSideMaxAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatBaseSideMaxAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
+    }
+
+    public static String formatBaseSideMaxAmount(MarketPriceService marketPriceService,
+                                                 AmountSpec amountSpec,
+                                                 PriceSpec priceSpec,
+                                                 Market market,
+                                                 boolean withCode) {
+        return AmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    }
+
+    // Max or fixed
+    public static String formatBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatBaseSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
+    }
+
+    public static String formatBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                        AmountSpec amountSpec,
+                                                        PriceSpec priceSpec,
+                                                        Market market,
+                                                        boolean withCode) {
+        return AmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    }
+
+    // Range (Min - Max)
+    public static String formatBaseSideRangeAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatBaseSideRangeAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
+    }
+
+    public static String formatBaseSideRangeAmount(MarketPriceService marketPriceService,
+                                                   AmountSpec amountSpec,
+                                                   PriceSpec priceSpec,
+                                                   Market market,
+                                                   boolean withCode) {
+        return formatBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market, false) + " - " +
+                formatBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
     }
 
 
@@ -78,13 +141,13 @@ public class OfferAmountFormatter {
     // QuoteAmount
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // Either min-max or fixed
+    public static String formatQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), true);
+    }
+
     public static String formatQuoteAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return formatQuoteAmount(marketPriceService,
-                offer.getAmountSpec(),
-                offer.getPriceSpec(),
-                offer.getMarket(),
-                offer.hasAmountRange(),
-                withCode);
+        return formatQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode);
     }
 
     public static String formatQuoteAmount(MarketPriceService marketPriceService,
@@ -94,67 +157,88 @@ public class OfferAmountFormatter {
                                            boolean hasAmountRange,
                                            boolean withCode) {
         if (hasAmountRange) {
-            return formatMinMaxQuoteAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
+            return formatQuoteSideRangeAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
         } else {
-            return formatFixOrMaxQuoteAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
+            return formatQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
         }
     }
 
-    public static String formatMinQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return formatMinQuoteAmount(marketPriceService, offer, true);
+    // Fixed
+    public static String formatQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatQuoteSideFixedAmount(marketPriceService, offer, true);
     }
 
-
-    public static String formatMinQuoteAmount(MarketPriceService marketPriceService,
-                                              AmountSpec amountSpec,
-                                              PriceSpec priceSpec,
-                                              Market market,
-                                              boolean withCode) {
-        return AmountUtil.findMinQuoteAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    public static String formatQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatQuoteSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
     }
 
-    public static String formatMinQuoteAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return AmountUtil.findMinQuoteAmount(marketPriceService, offer).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    public static String formatQuoteSideFixedAmount(MarketPriceService marketPriceService,
+                                                    AmountSpec amountSpec,
+                                                    PriceSpec priceSpec,
+                                                    Market market,
+                                                    boolean withCode) {
+        return AmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
     }
 
-    public static String formatMaxQuoteAmount(MarketPriceService marketPriceService,
-                                              AmountSpec amountSpec,
-                                              PriceSpec priceSpec,
-                                              Market market,
-                                              boolean withCode) {
-        return AmountUtil.findMaxQuoteAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    // Min
+    public static String formatQuoteSideMinAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatQuoteSideMinAmount(marketPriceService, offer, true);
     }
 
-    public static String formatMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return formatMaxQuoteAmount(marketPriceService, offer, true);
+    public static String formatQuoteSideMinAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatQuoteSideMinAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
     }
 
-    public static String formatMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return AmountUtil.findMaxQuoteAmount(marketPriceService, offer).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    public static String formatQuoteSideMinAmount(MarketPriceService marketPriceService,
+                                                  AmountSpec amountSpec,
+                                                  PriceSpec priceSpec,
+                                                  Market market,
+                                                  boolean withCode) {
+        return AmountUtil.findQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
     }
 
-    public static String formatFixOrMaxQuoteAmount(MarketPriceService marketPriceService, AmountSpec amountSpec,
-                                                   PriceSpec priceSpec,
-                                                   Market market, boolean withCode) {
-        return AmountUtil.findFixOrMaxQuoteAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    // Max
+    public static String formatQuoteSideMaxAmount(MarketPriceService marketPriceService, Offer offer) {
+        return formatQuoteSideMaxAmount(marketPriceService, offer, true);
     }
 
-    public static String formatFixOrMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return AmountUtil.findFixOrMaxQuoteAmount(marketPriceService, offer).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    public static String formatQuoteSideMaxAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatQuoteSideMaxAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
     }
 
-    public static String formatMinMaxQuoteAmount(MarketPriceService marketPriceService,
-                                                 AmountSpec amountSpec,
-                                                 PriceSpec priceSpec,
-                                                 Market market,
-                                                 boolean withCode) {
-        return formatMinQuoteAmount(marketPriceService, amountSpec, priceSpec, market, false) + " - " +
-                formatMaxQuoteAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
+    public static String formatQuoteSideMaxAmount(MarketPriceService marketPriceService,
+                                                  AmountSpec amountSpec,
+                                                  PriceSpec priceSpec,
+                                                  Market market,
+                                                  boolean withCode) {
+        return AmountUtil.findQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
     }
 
-    public static String formatMinMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
-        return formatMinQuoteAmount(marketPriceService, offer, withCode) + " - " +
-                formatMaxQuoteAmount(marketPriceService, offer, withCode);
+    // Max or fixed
+    public static String formatQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatQuoteSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
+    }
+
+    public static String formatQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                         AmountSpec amountSpec,
+                                                         PriceSpec priceSpec,
+                                                         Market market,
+                                                         boolean withCode) {
+        return AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("na"));
+    }
+
+    // Range (Min - Max)
+    public static String formatQuoteSideRangeAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
+        return formatQuoteSideRangeAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
+    }
+
+    public static String formatQuoteSideRangeAmount(MarketPriceService marketPriceService,
+                                                    AmountSpec amountSpec,
+                                                    PriceSpec priceSpec,
+                                                    Market market,
+                                                    boolean withCode) {
+        return formatQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market, false) + " - " +
+                formatQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
     }
 
 

@@ -21,25 +21,26 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * No min. amount supported
+ */
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class MinMaxBaseAmountSpec extends MinMaxAmountSpec implements BaseAmountSpec {
-    public MinMaxBaseAmountSpec(long minAmount, long maxAmount) {
-        super(minAmount, maxAmount);
+public final class QuoteSideFixedAmountSpec extends FixedAmountSpec implements QuoteSideAmountSpec {
+    public QuoteSideFixedAmountSpec(long amount) {
+        super(amount);
     }
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setMinMaxBaseAmountSpec(bisq.offer.protobuf.MinMaxBaseAmountSpec.newBuilder()
-                        .setMinAmount(minAmount)
-                        .setMaxAmount(maxAmount))
+        return getAmountSpecBuilder().setFixedAmountSpec(
+                        getFixedAmountSpecBuilder().setQuoteSideFixedAmountSpec(
+                                bisq.offer.protobuf.QuoteSideFixedAmountSpec.newBuilder()))
                 .build();
     }
 
-    public static MinMaxBaseAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return new MinMaxBaseAmountSpec(proto.getMinMaxBaseAmountSpec().getMinAmount(),
-                proto.getMinMaxBaseAmountSpec().getMaxAmount()
-        );
+    public static QuoteSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {
+        return new QuoteSideFixedAmountSpec(proto.getAmount());
     }
 }

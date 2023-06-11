@@ -369,7 +369,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
             userName = authorUserProfileId.map(UserProfile::getUserName).orElse("");
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(Quote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
-            amountAsLong = AmountUtil.findFixOrMaxQuoteAmount(marketPriceService, bisqEasyOffer).map(Monetary::getValue).orElse(0L);
+            amountAsLong = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).map(Monetary::getValue).orElse(0L);
             amountDisplayString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
             reputationScore = authorUserProfileId.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);

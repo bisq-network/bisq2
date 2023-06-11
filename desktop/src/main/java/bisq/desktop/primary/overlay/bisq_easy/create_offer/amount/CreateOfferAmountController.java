@@ -25,8 +25,8 @@ import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.FixQuoteAmountSpec;
-import bisq.offer.amount.spec.MinMaxQuoteAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -189,12 +189,12 @@ public class CreateOfferAmountController implements Controller {
         if (model.getIsMinAmountEnabled().get()) {
             long minAmount = minAmountComponent.getQuoteSideAmount().get().getValue();
             if (minAmount == maxOrFixAmount) {
-                model.getAmountSpec().set(new FixQuoteAmountSpec(maxOrFixAmount));
+                model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
             } else {
-                model.getAmountSpec().set(new MinMaxQuoteAmountSpec(minAmount, maxOrFixAmount));
+                model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
             }
         } else {
-            model.getAmountSpec().set(new FixQuoteAmountSpec(maxOrFixAmount));
+            model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
         }
     }
 

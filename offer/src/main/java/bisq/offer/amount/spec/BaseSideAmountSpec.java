@@ -17,19 +17,5 @@
 
 package bisq.offer.amount.spec;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-@Getter
-@ToString
-@EqualsAndHashCode
-public abstract class MinMaxAmountSpec implements AmountSpec {
-    protected final long minAmount;
-    protected final long maxAmount;
-
-    public MinMaxAmountSpec(long minAmount, long maxAmount) {
-        this.minAmount = minAmount;
-        this.maxAmount = maxAmount;
-    }
+public interface BaseSideAmountSpec extends AmountSpec {
 }

@@ -39,7 +39,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.FixAmountSpec;
+import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
@@ -89,7 +89,7 @@ public class TakeOfferReviewController implements Controller {
         String marketCodes = market.getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.takeOffer.review.price.sellersPrice", marketCodes));
 
-        if (bisqEasyOffer.getAmountSpec() instanceof FixAmountSpec) {
+        if (bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec) {
             model.setTradeAmountSpec(bisqEasyOffer.getAmountSpec());
         }
 
@@ -163,10 +163,10 @@ public class TakeOfferReviewController implements Controller {
         PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         Market market = model.getBisqEasyOffer().getMarket();
 
-        Optional<Monetary> quoteAmount = AmountUtil.findFixQuoteAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
+        Optional<Monetary> quoteAmount = AmountUtil.findQuoteSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
         String formattedQuoteAmount = quoteAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
 
-        Optional<Monetary> baseAmount = AmountUtil.findFixBaseAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
+        Optional<Monetary> baseAmount = AmountUtil.findBaseSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
         String formattedBaseAmount = baseAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 

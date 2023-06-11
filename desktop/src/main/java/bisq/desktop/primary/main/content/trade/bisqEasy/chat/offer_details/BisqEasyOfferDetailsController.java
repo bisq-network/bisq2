@@ -75,17 +75,17 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                 market.getQuoteCurrencyCode()));
 
         if (bisqEasyOffer.hasAmountRange()) {
-            model.getBaseSideAmount().set(OfferAmountFormatter.formatMinBaseAmount(marketPriceService, bisqEasyOffer) + " - " +
-                    OfferAmountFormatter.formatMaxBaseAmount(marketPriceService, bisqEasyOffer));
+            model.getBaseSideAmount().set(OfferAmountFormatter.formatBaseSideMinAmount(marketPriceService, bisqEasyOffer) + " - " +
+                    OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, bisqEasyOffer));
         } else {
             model.getBaseSideAmount().set(OfferAmountFormatter.formatBaseAmount(marketPriceService, bisqEasyOffer));
         }
 
         if (bisqEasyOffer.hasAmountRange()) {
-            model.getQuoteSideAmount().set(OfferAmountFormatter.formatMinQuoteAmount(marketPriceService, bisqEasyOffer) + " - " +
-                    OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
+            model.getQuoteSideAmount().set(OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer) + " - " +
+                    OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer));
         } else {
-            model.getQuoteSideAmount().set(OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
+            model.getQuoteSideAmount().set(OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer));
         }
 
         model.getPrice().set(PriceUtil.findQuote(marketPriceService, bisqEasyOffer)

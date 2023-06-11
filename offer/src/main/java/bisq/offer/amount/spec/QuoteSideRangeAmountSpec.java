@@ -24,22 +24,20 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class MinMaxQuoteAmountSpec extends MinMaxAmountSpec implements QuoteAmountSpec {
-    public MinMaxQuoteAmountSpec(long minAmount, long maxAmount) {
+public final class QuoteSideRangeAmountSpec extends RangeAmountSpec implements QuoteSideAmountSpec {
+    public QuoteSideRangeAmountSpec(long minAmount, long maxAmount) {
         super(minAmount, maxAmount);
     }
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setMinMaxQuoteAmountSpec(bisq.offer.protobuf.MinMaxQuoteAmountSpec.newBuilder()
-                        .setMinAmount(minAmount)
-                        .setMaxAmount(maxAmount))
+        return getAmountSpecBuilder().setRangeAmountSpec(
+                        getRangeAmountSpecBuilder().setQuoteSideRangeAmountSpec(
+                                bisq.offer.protobuf.QuoteSideRangeAmountSpec.newBuilder()))
                 .build();
     }
 
-    public static MinMaxQuoteAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return new MinMaxQuoteAmountSpec(proto.getMinMaxQuoteAmountSpec().getMinAmount(),
-                proto.getMinMaxQuoteAmountSpec().getMaxAmount()
-        );
+    public static QuoteSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
+        return new QuoteSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
     }
 }
