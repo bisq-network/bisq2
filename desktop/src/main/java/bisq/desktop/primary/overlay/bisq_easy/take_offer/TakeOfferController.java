@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.payment.TakeOfferPaymentController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method.TakeOfferPaymentController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.price.TakeOfferPriceController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakeOfferReviewController;
 import bisq.i18n.Res;

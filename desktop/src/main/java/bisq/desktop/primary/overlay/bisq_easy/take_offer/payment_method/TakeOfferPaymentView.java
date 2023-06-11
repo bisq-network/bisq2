@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;

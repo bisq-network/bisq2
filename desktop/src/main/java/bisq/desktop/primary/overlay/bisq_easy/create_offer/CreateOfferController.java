@@ -23,7 +23,7 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.CreateOfferAmountController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.CreateOfferDirectionController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.CreateOfferMarketController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.CreateOfferPaymentMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.payment_method.CreateOfferPaymentMethodController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.price.CreateOfferPriceController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.CreateOfferReviewOfferController;
 import bisq.i18n.Res;
