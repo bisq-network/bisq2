@@ -46,7 +46,6 @@ public class TakeOfferModel extends NavigationModel {
     @Setter
     private boolean paymentMethodVisible;
     private final List<NavigationTarget> childTargets = new ArrayList<>();
-    private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
     private boolean animateRightOut = true;
 

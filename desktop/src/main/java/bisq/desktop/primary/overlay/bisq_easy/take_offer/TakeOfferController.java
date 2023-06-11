@@ -148,19 +148,19 @@ public class TakeOfferController extends NavigationController implements InitWit
         methodNamePin.unsubscribe();
     }
 
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+    public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
         boolean isTakeOfferReview = navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW;
         model.getNextButtonText().set(isTakeOfferReview ?
                 Res.get("bisqEasy.takeOffer.review.takeOffer") :
                 Res.get("next"));
         model.getShowProgressBox().set(!isTakeOfferReview);
-        model.getSelectedChildTarget().set(navigationTarget);
         setMainButtonsVisibleState(true);
         updateNextButtonDisabledState();
         model.getTakeOfferButtonVisible().set(isTakeOfferReview);
         model.getNextButtonVisible().set(!isTakeOfferReview);
     }
+
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -201,7 +201,6 @@ public class TakeOfferController extends NavigationController implements InitWit
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
             updateNextButtonDisabledState();
         }
@@ -213,7 +212,6 @@ public class TakeOfferController extends NavigationController implements InitWit
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
-            model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
             updateNextButtonDisabledState();
         }
@@ -234,7 +232,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     }
 
     private void updateNextButtonDisabledState() {
-        if (NavigationTarget.TAKE_OFFER_PAYMENT == model.getSelectedChildTarget().get()) {
+        if (NavigationTarget.TAKE_OFFER_PAYMENT == model.getNavigationTarget()) {
             model.getNextButtonDisabled().set(takeOfferPaymentController.getSelectedMethodName().get() == null);
         } else {
             model.getNextButtonDisabled().set(false);
@@ -242,7 +240,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     }
 
     private void setMainButtonsVisibleState(boolean value) {
-        NavigationTarget navigationTarget = model.getSelectedChildTarget().get();
+        NavigationTarget navigationTarget = model.getNavigationTarget();
         model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
         model.getCloseButtonVisible().set(value);
     }

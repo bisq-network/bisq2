@@ -28,50 +28,60 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class NavigationController implements Controller {
     protected final NavigationTarget host;
     private final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
-    private Optional<NavigationTarget> selectedChildTarget = Optional.empty();
 
     public NavigationController(NavigationTarget host) {
         this.host = host;
     }
 
     void processNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
-        onNavigate(navigationTarget, data);
-        Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
-        while (candidate.isPresent()) {
-            if (selectedChildTarget.isPresent() && selectedChildTarget.get() == candidate.get()) {
+        onStartProcessNavigationTarget(navigationTarget, data);
+        NavigationModel model = getModel();
+        Optional<NavigationTarget> optionalCandidateTarget = Optional.of(navigationTarget);
+        while (optionalCandidateTarget.isPresent()) {
+            NavigationTarget candidateTarget = optionalCandidateTarget.get();
+            if (model.getResolvedTarget().isPresent() && model.getResolvedTarget().get() == candidateTarget) {
                 // We as host controller have already selected the child target in question.
                 // We exit the loop here.
                 break;
             }
-            Optional<Controller> childController = findController(candidate.get(), data);
-            if (childController.isPresent()) {
-                // We as host handle that target and found the controller. 
-                Controller controller = childController.get();
-                onNavigateToChild(navigationTarget);
-                getModel().setNavigationTarget(candidate.get());
-                getModel().setView(controller.getView());
-                selectedChildTarget = candidate;
+            Optional<Controller> optionalChildController = findController(candidateTarget, data);
+            if (optionalChildController.isPresent()) {
+                // We as host have found the controller and handle that target. 
+                Controller childController = optionalChildController.get();
+                model.setNavigationTarget(candidateTarget);
+                model.setResolvedTarget(optionalCandidateTarget);
+                model.setView(childController.getView());
                 Navigation.persistNavigationTarget(navigationTarget);
+                onNavigationTargetApplied(navigationTarget, data);
                 break;
             } else {
-                // If we as host do not handle that child target we go down one parent to see we have handled 
-                // any other target in the path. 
+                // If we as host do not handle that child target we go down to our parent to see if we handle 
+                // any other target on the path. 
                 // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop
-                candidate = candidate.get().getParent();
+                optionalCandidateTarget = candidateTarget.getParent();
+                if (optionalCandidateTarget.isEmpty()) {
+                    onNoNavigationTargetApplied(navigationTarget, data);
+                }
             }
         }
     }
 
-    public void onNavigateToChild(NavigationTarget navigationTarget) {
+    // Called before the navigation target gets processed
+    protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
+    }
+
+    // Gets called after we have successfully applied a child target 
+    protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
+    }
+
+    // Gets called after we have reached the root without handling the target
+    protected void onNoNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
     }
 
     public void resetSelectedChildTarget() {
-        selectedChildTarget = Optional.empty();
-        getModel().setView(null);
         getModel().setNavigationTarget(getModel().getDefaultNavigationTarget());
-    }
-
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        getModel().setResolvedTarget(Optional.empty());
+        getModel().setView(null);
     }
 
     @Override
@@ -112,19 +122,15 @@ public abstract class NavigationController implements Controller {
         if (controllerCache.containsKey(navigationTarget)) {
             Controller controller = controllerCache.get(navigationTarget);
             if (controller instanceof InitWithDataController) {
-                @SuppressWarnings("rawtypes")
-                InitWithDataController initWithDataController = (InitWithDataController) controller;
+                InitWithDataController<?> initWithDataController = (InitWithDataController<?>) controller;
                 data.ifPresent(initWithDataController::initWithObject);
             }
-
             return Optional.of(controller);
         } else {
             return createController(navigationTarget)
                     .map(controller -> {
-                        //todo
                         if (controller instanceof InitWithDataController) {
-                            @SuppressWarnings("rawtypes")
-                            InitWithDataController initWithDataController = (InitWithDataController) controller;
+                            InitWithDataController<?> initWithDataController = (InitWithDataController<?>) controller;
                             data.ifPresent(initWithDataController::initWithObject);
                         }
                         if (controller.useCaching()) {

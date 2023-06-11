@@ -146,7 +146,7 @@ public class CreateOfferController extends NavigationController implements InitW
         createOfferPaymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
     }
 
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+    public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
         model.getNextButtonText().set(Res.get("next"));
         model.getBackButtonText().set(Res.get("back"));
