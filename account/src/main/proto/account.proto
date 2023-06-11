@@ -93,7 +93,7 @@ message SepaAccountPayload {
 
 // Account
 message Account {
-  uint64 creationDate = 1;
+  sint64 creationDate = 1;
   string accountName = 2;
   AccountPayload accountPayload = 3;
   Payment payment = 4;

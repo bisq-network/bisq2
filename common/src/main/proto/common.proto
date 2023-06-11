@@ -66,10 +66,10 @@ message Fiat {
 
 message Monetary {
   string id = 1;
-  int64 value = 2;
+  sint64 value = 2;
   string code = 3;
-  int32 precision = 4;
-  int32 lowPrecision = 5;
+  sint32 precision = 4;
+  sint32 lowPrecision = 5;
 
   oneof message {
     Coin coin = 10;
@@ -78,7 +78,7 @@ message Monetary {
 }
 
 message PriceQuote {
-  int64 value = 1;
+  sint64 value = 1;
   Monetary baseSideMonetary = 2;
   Monetary quoteSideMonetary = 3;
 }
@@ -90,5 +90,5 @@ message ByteArrayMapEntry {
 
 message StringLongPair {
   string key = 1;
-  uint64 value = 2;
+  sint64 value = 2;
 }

@@ -58,7 +58,7 @@ message ChatMessage {
   optional string text = 4;
   string authorUserProfileId = 5;
   optional Citation citation = 6;
-  uint64 date = 7;
+  sint64 date = 7;
   bool wasEdited = 8;
   ChatMessageType chatMessageType = 9;
   network.MetaData metaData = 10;
