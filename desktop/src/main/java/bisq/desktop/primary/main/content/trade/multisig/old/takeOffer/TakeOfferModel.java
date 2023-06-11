@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;

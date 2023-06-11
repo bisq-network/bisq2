@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.component
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
@@ -28,7 +28,7 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.payment.PaymentSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.poc.PocOffer;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -147,13 +147,13 @@ public class TakersPaymentSelection {
             model.visibility.set(true);
 
             String baseSideCode = market.getBaseCurrencyCode();
-            Set<Payment.Method> baseSidePaymentMethodByName = model.offer.getBaseSidePaymentSpecs().stream()
-                    .map(PaymentSpec::getPaymentMethodName)
+            Set<Payment.Method> baseSidePaymentMethodByName = model.offer.getBaseSidePaymentMethodSpecs().stream()
+                    .map(PaymentMethodSpec::getPaymentMethodName)
                     .map(method -> Payment.getPaymentMethod(method, baseSideCode))
                     .collect(Collectors.toSet());
             String quoteSideCode = market.getQuoteCurrencyCode();
-            Set<Payment.Method> quoteSidePaymentMethodByName = model.offer.getQuoteSidePaymentSpecs().stream()
-                    .map(PaymentSpec::getPaymentMethodName)
+            Set<Payment.Method> quoteSidePaymentMethodByName = model.offer.getQuoteSidePaymentMethodSpecs().stream()
+                    .map(PaymentMethodSpec::getPaymentMethodName)
                     .map(method -> Payment.getPaymentMethod(method, quoteSideCode))
                     .collect(Collectors.toSet());
 

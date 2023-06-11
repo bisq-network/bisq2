@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment.FiatPayment;
+import bisq.account.payment_method.FiatPayment;
 import bisq.common.locale.Country;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;

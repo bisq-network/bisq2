@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
 
-import bisq.account.payment.FiatPayment;
+import bisq.account.payment_method.FiatPayment;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;

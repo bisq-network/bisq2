@@ -18,7 +18,7 @@
 package bisq.account;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.common.observable.Observable;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;

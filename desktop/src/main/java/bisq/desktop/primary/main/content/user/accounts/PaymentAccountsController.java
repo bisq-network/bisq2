@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.user.accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;

@@ -19,7 +19,7 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;

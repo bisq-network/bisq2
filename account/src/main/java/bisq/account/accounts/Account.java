@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;

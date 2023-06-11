@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment;
+package bisq.account.payment_method;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.TradeCurrency;

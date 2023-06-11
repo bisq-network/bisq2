@@ -15,25 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment;
+package bisq.offer.payment_method;
 
-import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
 
-//todo use pattern as in amount with interface
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class PaymentSpec implements Proto {
+public final class FiatPaymentMethodSpec implements PaymentMethodSpec {
 
     private final String paymentMethodName;
     private final Optional<String> saltedMakerAccountId;
 
-    public PaymentSpec(String paymentMethodName) {
+    public FiatPaymentMethodSpec(String paymentMethodName) {
         this(paymentMethodName, Optional.empty());
     }
 
@@ -45,20 +43,20 @@ public final class PaymentSpec implements Proto {
      *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
      *                             offers using different identities but the same payment account.
      */
-    public PaymentSpec(String paymentMethodName, Optional<String> saltedMakerAccountId) {
+    public FiatPaymentMethodSpec(String paymentMethodName, Optional<String> saltedMakerAccountId) {
         this.paymentMethodName = paymentMethodName;
         this.saltedMakerAccountId = saltedMakerAccountId;
     }
 
-    public bisq.offer.protobuf.PaymentSpec toProto() {
-        bisq.offer.protobuf.PaymentSpec.Builder builder = bisq.offer.protobuf.PaymentSpec.newBuilder()
+    public bisq.offer.protobuf.PaymentMethodSpec toProto() {
+        bisq.offer.protobuf.FiatPaymentMethodSpec.Builder builder = bisq.offer.protobuf.FiatPaymentMethodSpec.newBuilder()
                 .setPaymentMethodName(paymentMethodName);
         saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
-        return builder.build();
+        return getPaymentMethodSpecBuilder().setFiatPaymentMethodSpec(builder).build();
     }
 
-    public static PaymentSpec fromProto(bisq.offer.protobuf.PaymentSpec proto) {
-        return new PaymentSpec(proto.getPaymentMethodName(),
+    public static FiatPaymentMethodSpec fromProto(bisq.offer.protobuf.FiatPaymentMethodSpec proto) {
+        return new FiatPaymentMethodSpec(proto.getPaymentMethodName(),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }
 }

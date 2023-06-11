@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment;
+package bisq.account.payment_method;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.CryptoCurrencyRepository;
@@ -23,35 +23,33 @@ import bisq.common.currency.TradeCurrency;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class CryptoPayment extends Payment<CryptoPayment.Method> {
-    public static List<CryptoPayment.Method> getPaymentMethods() {
-        return List.of(CryptoPayment.Method.values());
+public class BitcoinPayment extends Payment<BitcoinPayment.Method> {
+    public static List<BitcoinPayment.Method> getPaymentMethods() {
+        return List.of(BitcoinPayment.Method.values());
     }
 
-    public static CryptoPayment from(String paymentMethodName, String currencyCode) {
+    public static BitcoinPayment from(String paymentMethodName) {
         try {
-            return new CryptoPayment(CryptoPayment.Method.valueOf(paymentMethodName), currencyCode);
+            return new BitcoinPayment(BitcoinPayment.Method.valueOf(paymentMethodName));
         } catch (IllegalArgumentException e) {
-            return new CryptoPayment(paymentMethodName, currencyCode);
+            return new BitcoinPayment(paymentMethodName);
         }
     }
 
-    public static List<CryptoPayment.Method> getPaymentMethods(ProtocolType protocolType) {
+    public static List<BitcoinPayment.Method> getPaymentMethods(ProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
-                throw new IllegalArgumentException("No support for CryptoPayments for BISQ_EASY");
             case BISQ_MULTISIG:
-            case LIGHTNING_X:
-                return CryptoPayment.getPaymentMethods();
+                return BitcoinPayment.getPaymentMethods();
             case MONERO_SWAP:
             case LIQUID_SWAP:
             case BSQ_SWAP:
-                return List.of(CryptoPayment.Method.NATIVE_CHAIN);
+            case LIGHTNING_X:
+                throw new IllegalArgumentException("No paymentMethods for that protocolType");
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }
@@ -64,7 +62,11 @@ public class CryptoPayment extends Payment<CryptoPayment.Method> {
 
     public enum Method implements Payment.Method {
         USER_DEFINED,
-        NATIVE_CHAIN,
+        MAINCHAIN,
+        LN,
+        LBTC,
+        RBTC,
+        WBTC,
         OTHER;
     }
 
@@ -73,39 +75,29 @@ public class CryptoPayment extends Payment<CryptoPayment.Method> {
     // Class instance
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private final String currencyCode;
-
-    public CryptoPayment(CryptoPayment.Method method, String currencyCode) {
+    public BitcoinPayment(BitcoinPayment.Method method) {
         super(method);
-        this.currencyCode = currencyCode;
     }
 
-    public CryptoPayment(String paymentMethodName, String currencyCode) {
+    public BitcoinPayment(String paymentMethodName) {
         super(paymentMethodName);
-        this.currencyCode = currencyCode;
     }
 
-    @Override
-    protected CryptoPayment.Method getFallbackMethod() {
-        return CryptoPayment.Method.USER_DEFINED;
+    protected BitcoinPayment.Method getFallbackMethod() {
+        return BitcoinPayment.Method.USER_DEFINED;
     }
 
     @Override
     public bisq.account.protobuf.Payment toProto() {
-        return getPaymentBuilder().setCryptoPayment(
-                        bisq.account.protobuf.CryptoPayment.newBuilder()
-                                .setCurrencyCode(currencyCode))
-                .build();
+        return getPaymentBuilder().setBitcoinPayment(bisq.account.protobuf.BitcoinPayment.newBuilder()).build();
     }
 
-    public static CryptoPayment fromProto(bisq.account.protobuf.Payment proto) {
-        return CryptoPayment.from(proto.getPaymentMethodName(), proto.getCryptoPayment().getCurrencyCode());
+    public static BitcoinPayment fromProto(bisq.account.protobuf.Payment proto) {
+        return BitcoinPayment.from(proto.getPaymentMethodName());
     }
 
     @Override
     public List<TradeCurrency> getTradeCurrencies() {
-        return CryptoCurrencyRepository.find(currencyCode)
-                .map(e -> List.of((TradeCurrency) e))
-                .orElse(new ArrayList<>());
+        return List.of(CryptoCurrencyRepository.BITCOIN);
     }
 }

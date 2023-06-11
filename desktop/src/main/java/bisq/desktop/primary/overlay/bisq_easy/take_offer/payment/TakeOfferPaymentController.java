@@ -20,8 +20,8 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment.PaymentSpec;
-import bisq.offer.payment.PaymentUtil;
+import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodUtil;
 import javafx.beans.property.ReadOnlyStringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +41,10 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer, List<String> takersPaymentMethodNames) {
-        model.getOfferedMethodNames().setAll(PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer));
+        model.getOfferedMethodNames().setAll(PaymentMethodUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer));
 
-        List<String> matchingNames = bisqEasyOffer.getQuoteSidePaymentSpecs().stream()
-                .map(PaymentSpec::getPaymentMethodName)
+        List<String> matchingNames = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
+                .map(PaymentMethodSpec::getPaymentMethodName)
                 .filter(takersPaymentMethodNames::contains)
                 .collect(Collectors.toList());
         // We only preselect if there is exactly one match

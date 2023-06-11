@@ -22,7 +22,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.contract.poc.PocContract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.payment.PaymentSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.poc.PocOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
@@ -60,12 +60,12 @@ public class PendingTradeListItem implements TableItem {
         quoteAmount = AmountFormatter.formatAmount(contract.getQuoteSideAmount());
         price = PriceFormatter.format(PriceQuote.from(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
-        String baseSidePaymentMethod = offer.getBaseSidePaymentSpecs().stream()
-                .map(PaymentSpec::getPaymentMethodName)
+        String baseSidePaymentMethod = offer.getBaseSidePaymentMethodSpecs().stream()
+                .map(PaymentMethodSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
-        String quoteSidePaymentMethod = offer.getQuoteSidePaymentSpecs().stream()
-                .map(PaymentSpec::getPaymentMethodName)
+        String quoteSidePaymentMethod = offer.getQuoteSidePaymentMethodSpecs().stream()
+                .map(PaymentMethodSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
@@ -75,8 +75,8 @@ public class PendingTradeListItem implements TableItem {
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 
-        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentSpecs().size() > 1;
-        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentSpecs().size() > 1;
+        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentMethodSpecs().size() > 1;
+        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentMethodSpecs().size() > 1;
         if (isBaseSideFiatOrMultiple && !isQuoteSideFiatOrMultiple) {
             paymentMethod = baseSidePaymentMethod;
         } else if (isQuoteSideFiatOrMultiple && !isBaseSideFiatOrMultiple) {

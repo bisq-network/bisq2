@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;

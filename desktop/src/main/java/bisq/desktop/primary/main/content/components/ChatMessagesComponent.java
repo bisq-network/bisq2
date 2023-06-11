@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;

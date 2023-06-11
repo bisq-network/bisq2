@@ -26,7 +26,7 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOption;
-import bisq.offer.payment.PaymentSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,8 +52,8 @@ public abstract class Offer implements Proto {
     private final AmountSpec amountSpec;
     protected final PriceSpec priceSpec;
     protected final List<ProtocolType> protocolTypes;
-    protected final List<PaymentSpec> baseSidePaymentSpecs;
-    protected final List<PaymentSpec> quoteSidePaymentSpecs;
+    protected final List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
+    protected final List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
     protected final List<OfferOption> offerOptions;
 
     public Offer(String id,
@@ -64,8 +64,8 @@ public abstract class Offer implements Proto {
                  AmountSpec amountSpec,
                  PriceSpec priceSpec,
                  List<ProtocolType> protocolTypes,
-                 List<PaymentSpec> baseSidePaymentSpecs,
-                 List<PaymentSpec> quoteSidePaymentSpecs,
+                 List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
+                 List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
                  List<OfferOption> offerOptions) {
         this.id = id;
         this.date = date;
@@ -76,14 +76,14 @@ public abstract class Offer implements Proto {
         this.priceSpec = priceSpec;
         // We might get an immutable list, but we need to sort it, so wrap it into an ArrayList
         this.protocolTypes = new ArrayList<>(protocolTypes);
-        this.baseSidePaymentSpecs = new ArrayList<>(baseSidePaymentSpecs);
-        this.quoteSidePaymentSpecs = new ArrayList<>(quoteSidePaymentSpecs);
+        this.baseSidePaymentMethodSpecs = new ArrayList<>(baseSidePaymentMethodSpecs);
+        this.quoteSidePaymentMethodSpecs = new ArrayList<>(quoteSidePaymentMethodSpecs);
         this.offerOptions = new ArrayList<>(offerOptions);
 
         // All lists need to sort deterministically as the data is used in the proof of work check
         this.protocolTypes.sort(Comparator.comparingInt(ProtocolType::hashCode));
-        this.baseSidePaymentSpecs.sort(Comparator.comparingInt(PaymentSpec::hashCode));
-        this.quoteSidePaymentSpecs.sort(Comparator.comparingInt(PaymentSpec::hashCode));
+        this.baseSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
+        this.quoteSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.offerOptions.sort(Comparator.comparingInt(OfferOption::hashCode));
     }
 
@@ -99,8 +99,8 @@ public abstract class Offer implements Proto {
                 .setAmountSpec(amountSpec.toProto())
                 .setPriceSpec(priceSpec.toProto())
                 .addAllProtocolTypes(protocolTypes.stream().map(ProtocolType::toProto).collect(Collectors.toList()))
-                .addAllBaseSidePaymentSpecs(baseSidePaymentSpecs.stream().map(PaymentSpec::toProto).collect(Collectors.toList()))
-                .addAllQuoteSidePaymentSpecs(quoteSidePaymentSpecs.stream().map(PaymentSpec::toProto).collect(Collectors.toList()))
+                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
+                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()));
     }
 

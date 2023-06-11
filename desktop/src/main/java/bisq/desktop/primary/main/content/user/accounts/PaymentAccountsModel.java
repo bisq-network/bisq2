@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.accounts;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;

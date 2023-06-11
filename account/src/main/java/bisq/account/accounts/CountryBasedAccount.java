@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.Payment;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;

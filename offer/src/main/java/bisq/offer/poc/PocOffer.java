@@ -28,7 +28,9 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
-import bisq.offer.payment.PaymentSpec;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -73,8 +75,8 @@ public final class PocOffer implements DistributedData {
     private final long baseAmount;
     private final PriceSpec priceSpec;
     private final List<ProtocolType> protocolTypes;
-    private final List<PaymentSpec> baseSidePaymentSpecs;
-    private final List<PaymentSpec> quoteSidePaymentSpecs;
+    private final List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
+    private final List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
     private final List<OfferOption> offerOptions;
     private final MetaData metaData;
 
@@ -86,8 +88,8 @@ public final class PocOffer implements DistributedData {
                     long baseAmount,
                     PriceSpec priceSpec,
                     List<ProtocolType> protocolTypes,
-                    List<PaymentSpec> baseSidePaymentSpecs,
-                    List<PaymentSpec> quoteSidePaymentSpecs,
+                    List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
+                    List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
                     List<OfferOption> offerOptions) {
         this(id,
                 date,
@@ -97,8 +99,8 @@ public final class PocOffer implements DistributedData {
                 baseAmount,
                 priceSpec,
                 protocolTypes,
-                baseSidePaymentSpecs,
-                quoteSidePaymentSpecs,
+                baseSidePaymentMethodSpecs,
+                quoteSidePaymentMethodSpecs,
                 offerOptions,
                 new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, PocOffer.class.getSimpleName()));
     }
@@ -111,8 +113,8 @@ public final class PocOffer implements DistributedData {
                      long baseAmount,
                      PriceSpec priceSpec,
                      List<ProtocolType> protocolTypes,
-                     List<PaymentSpec> baseSidePaymentSpecs,
-                     List<PaymentSpec> quoteSidePaymentSpecs,
+                     List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
+                     List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
                      List<OfferOption> offerOptions,
                      MetaData metaData) {
         this.id = id;
@@ -123,8 +125,8 @@ public final class PocOffer implements DistributedData {
         this.baseAmount = baseAmount;
         this.priceSpec = priceSpec;
         this.protocolTypes = protocolTypes;
-        this.baseSidePaymentSpecs = baseSidePaymentSpecs;
-        this.quoteSidePaymentSpecs = quoteSidePaymentSpecs;
+        this.baseSidePaymentMethodSpecs = baseSidePaymentMethodSpecs;
+        this.quoteSidePaymentMethodSpecs = quoteSidePaymentMethodSpecs;
         this.offerOptions = offerOptions;
         this.metaData = metaData;
     }
@@ -149,8 +151,8 @@ public final class PocOffer implements DistributedData {
                 .setBaseAmount(baseAmount)
                 .setPriceSpec(priceSpec.toProto())
                 .addAllProtocolTypes(protocolTypes.stream().map(ProtocolType::toProto).collect(Collectors.toList()))
-                .addAllBaseSidePaymentSpecs(baseSidePaymentSpecs.stream().map(PaymentSpec::toProto).collect(Collectors.toList()))
-                .addAllQuoteSidePaymentSpecs(quoteSidePaymentSpecs.stream().map(PaymentSpec::toProto).collect(Collectors.toList()))
+                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
+                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()))
                 .setMetaData(metaData.toProto())
                 .build();
@@ -160,11 +162,11 @@ public final class PocOffer implements DistributedData {
         List<ProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
                 .map(ProtocolType::fromProto)
                 .collect(Collectors.toList());
-        List<PaymentSpec> baseSidePaymentSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(PaymentSpec::fromProto)
+        List<PaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
+                .map(e -> BitcoinPaymentMethodSpec.fromProto(e.getBitcoinPaymentMethodSpec()))
                 .collect(Collectors.toList());
-        List<PaymentSpec> quoteSidePaymentSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentSpec::fromProto)
+        List<PaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
+                .map(e -> FiatPaymentMethodSpec.fromProto(e.getFiatPaymentMethodSpec()))
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
@@ -177,8 +179,8 @@ public final class PocOffer implements DistributedData {
                 proto.getBaseAmount(),
                 PriceSpec.fromProto(proto.getPriceSpec()),
                 protocolTypes,
-                baseSidePaymentSpecs,
-                quoteSidePaymentSpecs,
+                baseSidePaymentMethodSpecs,
+                quoteSidePaymentMethodSpecs,
                 offerOptions,
                 MetaData.fromProto(proto.getMetaData()));
     }

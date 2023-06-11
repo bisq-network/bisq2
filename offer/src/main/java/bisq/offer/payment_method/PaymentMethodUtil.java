@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.payment;
+package bisq.offer.payment_method;
 
-import bisq.account.payment.BitcoinPayment;
+import bisq.account.payment_method.BitcoinPayment;
 import bisq.offer.Offer;
 
 import java.util.Collection;
@@ -26,32 +26,38 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class PaymentUtil {
-    public static List<PaymentSpec> createBaseSideSpecsForBitcoinMainChain() {
-        return List.of(new PaymentSpec(BitcoinPayment.Method.MAINCHAIN.name()));
+public class PaymentMethodUtil {
+    public static List<PaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPayment.Method> bitcoinPaymentMethods) {
+        return bitcoinPaymentMethods.stream()
+                .map(bitcoinPaymentMethod -> new BitcoinPaymentMethodSpec(bitcoinPaymentMethod.name()))
+                .collect(Collectors.toList());
     }
 
-    public static List<PaymentSpec> createQuoteSideSpecsFromMethodNames(List<String> paymentMethodNames) {
+    public static List<PaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
+        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPayment.Method.MAINCHAIN));
+    }
+
+    public static List<PaymentMethodSpec> createFiatPaymentMethodSpecs(List<String> paymentMethodNames) {
         checkArgument(!paymentMethodNames.isEmpty());
         return paymentMethodNames.stream()
-                .map(PaymentSpec::new)
+                .map(FiatPaymentMethodSpec::new)
                 .collect(Collectors.toList());
     }
 
 
-    public static List<String> getPaymentMethodNames(Collection<PaymentSpec> paymentSpecs) {
-        return paymentSpecs.stream()
-                .map(PaymentSpec::getPaymentMethodName)
+    public static List<String> toPaymentMethodNames(Collection<PaymentMethodSpec> paymentMethodSpecs) {
+        return paymentMethodSpecs.stream()
+                .map(PaymentMethodSpec::getPaymentMethodName)
                 .sorted()
                 .collect(Collectors.toList());
     }
 
 
     public static List<String> getBaseSidePaymentMethodNames(Offer offer) {
-        return getPaymentMethodNames(offer.getBaseSidePaymentSpecs());
+        return toPaymentMethodNames(offer.getBaseSidePaymentMethodSpecs());
     }
 
     public static List<String> getQuoteSidePaymentMethodNames(Offer offer) {
-        return getPaymentMethodNames(offer.getQuoteSidePaymentSpecs());
+        return toPaymentMethodNames(offer.getQuoteSidePaymentMethodSpecs());
     }
 }

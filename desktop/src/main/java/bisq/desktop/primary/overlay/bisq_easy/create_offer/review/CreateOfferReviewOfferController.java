@@ -39,8 +39,8 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment.PaymentFormatter;
-import bisq.offer.payment.PaymentUtil;
+import bisq.offer.payment_method.PaymentMethodFormatter;
+import bisq.offer.payment_method.PaymentMethodUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -176,7 +176,7 @@ public class CreateOfferReviewOfferController implements Controller {
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
-                PaymentFormatter.asQuoteSidePaymentMethodsString(model.getPaymentMethodNames()),
+                PaymentMethodFormatter.formatPaymentMethodNames(model.getPaymentMethodNames()),
                 priceInfo);
 
         model.setMyOfferText(chatMessageText);
@@ -297,8 +297,8 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                List<String> paymentMethodNames = PaymentUtil.getQuoteSidePaymentMethodNames(peersOffer);
-                if (PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
+                List<String> paymentMethodNames = PaymentMethodUtil.getQuoteSidePaymentMethodNames(peersOffer);
+                if (PaymentMethodUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
                     return false;
                 }
 
