@@ -53,10 +53,10 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        headLineLabel = new Label(Res.get("userProfile.step2.headline"));
+        headLineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("userProfile.step2.subTitle"));
+        Label subtitleLabel = new Label(Res.get("user.userProfile.new.step2.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
         subtitleLabel.setMinHeight(40); // does not wrap without that...
@@ -80,10 +80,10 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
 
-        statement = new MaterialTextField(Res.get("userProfile.statement"), Res.get("userProfile.statement.prompt"));
+        statement = new MaterialTextField(Res.get("user.userProfile.new.statement"), Res.get("user.userProfile.new.statement.prompt"));
         statement.setPrefWidth(width);
 
-        terms = new MaterialTextArea(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
+        terms = new MaterialTextArea(Res.get("user.userProfile.new.terms"), Res.get("user.userProfile.new.terms.prompt"));
         terms.setPrefWidth(width);
         terms.setFixedHeight(100);
 

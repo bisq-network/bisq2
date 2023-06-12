@@ -69,6 +69,6 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
     }
 
     public String getDescription() {
-        return Res.get("social.marketChannel.description", market.toString());
+        return Res.get("bisqEasy.tradeChannel.description", market.toString());
     }
 }

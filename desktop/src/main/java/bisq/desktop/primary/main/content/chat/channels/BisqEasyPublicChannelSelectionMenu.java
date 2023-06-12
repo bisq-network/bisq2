@@ -183,7 +183,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     .filter(publicTradeChatMessage -> publicTradeChatMessage.isMyMessage(userIdentityService))
                     .findAny();
             if (myOpenOffer.isPresent()) {
-                new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
+                new Popup().warning(Res.get("bisqEasy.channelSelection.public.leave.warn")).show();
             } else {
                 doLeaveChannel(channel);
                 model.marketsList.add(new View.MarketListItem(channel.getMarket()));
@@ -240,7 +240,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                             model.sortedMarketsList,
                             c -> getMarketListCell(),
                             controller::onJoinChannel,
-                            Res.get("tradeChat.addMarketChannel").toUpperCase(),
+                            Res.get("bisqEasy.channelSelection.public.addMarketChannel").toUpperCase(),
                             Res.get("action.search"),
                             350, 5, 23, 31.5)
                             .show());
@@ -255,7 +255,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         @Override
         protected String getHeadlineText() {
-            return Res.get("social.marketChannels");
+            return Res.get("bisqEasy.channelSelection.public.headline");
         }
 
         protected ListCell<View.MarketListItem> getMarketListCell() {
@@ -269,7 +269,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
 
-                    badge.setTooltip(Res.get("social.marketChannels.numMessages"));
+                    badge.setTooltip(Res.get("bisqEasy.channelSelection.public.numMessages"));
                     badge.setPosition(Pos.CENTER_RIGHT);
 
                     hBox.setSpacing(10);

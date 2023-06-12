@@ -140,7 +140,7 @@ public class CitationBlock {
             root.setStyle("-fx-background-color: -bisq-dark-grey;");
             root.setPadding(new Insets(0, 15, 0, 20));
 
-            Label headline = new Label(Res.get("social.reply.headline"));
+            Label headline = new Label(Res.get("chat.message.citation.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-10");
             headline.getStyleClass().addAll("font-light", "font-size-11");
 

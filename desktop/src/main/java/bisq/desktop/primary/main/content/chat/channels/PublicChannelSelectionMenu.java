@@ -79,7 +79,7 @@ public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
 
         @Override
         protected String getHeadlineText() {
-            return Res.get("social.publicChannels");
+            return Res.get("chat.channelSelection.public.headline");
         }
 
         protected ListCell<ChannelItem> getListCell() {

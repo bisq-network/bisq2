@@ -459,7 +459,7 @@ public class ChatMessagesComponent {
                 if (myUserProfilesInChannel.size() > 0) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
                     if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity())) {
-                        new Popup().information(Res.get("chat.sendMessage.differentUserProfile.popup"))
+                        new Popup().information(Res.get("chat.message.send.differentUserProfile.warn"))
                                 .closeButtonText(Res.get("confirmation.no"))
                                 .actionButtonText(Res.get("confirmation.yes"))
                                 .onAction(() -> doSendMessage(text))
@@ -485,7 +485,7 @@ public class ChatMessagesComponent {
             if (chatChannel instanceof BisqEasyPublicChatChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
-                    new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
+                    new Popup().information(Res.get("chat.message.send..offerOnly.warn"))
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(() -> settingsService.setOffersOnly(false))
                             .closeButtonText(Res.get("confirmation.no"))
@@ -497,8 +497,8 @@ public class ChatMessagesComponent {
                 if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyPrivateTradeChatChannel) chatChannel).isMediator()) {
                     chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(text, citation, (BisqEasyPrivateTradeChatChannel) chatChannel);
                 } else {
-                    new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup"))
-                            .actionButtonText(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup.openGuide"))
+                    new Popup().information(Res.get("bisqEasy.privateChannel.send.tradeRulesNotConfirmed.warn"))
+                            .actionButtonText(Res.get("bisqEasy.privateChannel.send.tradeRulesNotConfirmed.popup.openGuide"))
                             .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                             .show();
                 }
@@ -585,7 +585,7 @@ public class ChatMessagesComponent {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
+        public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final BisqTextArea inputField;
         private final Button sendButton, createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton, leaveChannelButton;
@@ -603,7 +603,7 @@ public class ChatMessagesComponent {
 
             inputField = new BisqTextArea();
             inputField.setId("chat-input-field");
-            inputField.setPromptText(Res.get("social.chat.input.prompt"));
+            inputField.setPromptText(Res.get("chat.message.input.prompt"));
 
             sendButton = new Button("", ImageUtil.getImageViewById("chat-send"));
             sendButton.setId("chat-messages-send-button");
@@ -651,7 +651,7 @@ public class ChatMessagesComponent {
             openDisputeButton = createAndGetChatButton(Res.get("bisqEasy.openDispute"), 110);
             openDisputeButton.getStyleClass().add("outlined-button");
 
-            leaveChannelButton = createAndGetChatButton(Res.get("social.privateChannel.leave"), 120);
+            leaveChannelButton = createAndGetChatButton(Res.get("bisqEasy.channelSelection.private.leave"), 120);
             leaveChannelButton.getStyleClass().add("outlined-button");
 
             //todo

@@ -117,11 +117,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             }
 
             model.nickName.set(userProfile.getNickName());
-            model.nym.set(Res.get("chat.userProfile.nym", userProfile.getNym()));
-            model.userProfileId.set(Res.get("social.createUserProfile.id", userProfile.getId()));
+            model.nym.set(Res.get("chat.sideBar.userProfile.nym", userProfile.getNym()));
+            model.userProfileId.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
             model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
 
-            model.ignoreButtonText.set(Res.get("social.ignore"));
+            model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.ignore"));
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
 
@@ -152,10 +152,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
             if (model.ignoreUserSelected.get()) {
                 userProfileService.ignoreUserProfile(model.userProfile);
-                model.ignoreButtonText.set(Res.get("social.undoIgnore"));
+                model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.undoIgnore"));
             } else {
                 userProfileService.undoIgnoreUserProfile(model.userProfile);
-                model.ignoreButtonText.set(Res.get("social.ignore"));
+                model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.ignore"));
             }
             model.ignoreUserStateHandler.ifPresent(Runnable::run);
         }
@@ -223,7 +223,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             //root.setPadding(new Insets(0, 25, 0, 35));
             root.setAlignment(Pos.TOP_CENTER);
 
-            Label headline = new Label(Res.get("chat.sidebar.userProfile.headline"));
+            Label headline = new Label(Res.get("chat.sideBar.userProfile.headline"));
             headline.setId("chat-sidebar-headline");
 
             closeButton = BisqIconButton.createIconButton("close");
@@ -251,31 +251,31 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             userProfileId.setTooltip(new Tooltip(model.userProfileId.get()));
             VBox.setMargin(userProfileId, new Insets(0, 0, 25, 0));
 
-            privateMsgButton = new Button(Res.get("chat.userProfile.sendPrivateMessage"));
+            privateMsgButton = new Button(Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
-            statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);
+            statementBox = getInfoBox(Res.get("chat.sideBar.userProfile.statement"), false);
             statement = (Label) statementBox.getChildren().get(1);
 
-            Label reputationLabel = new Label(Res.get("social.chatUser.reputation").toUpperCase());
+            Label reputationLabel = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
             reputationLabel.getStyleClass().addAll("bisq-text-4", "bisq-text-grey-9", "font-semi-bold");
             reputationScoreDisplay = new ReputationScoreDisplay();
             reputationScoreDisplay.setAlignment(Pos.CENTER_LEFT);
             VBox reputationBox = new VBox(2, reputationLabel, reputationScoreDisplay);
             VBox.setMargin(reputationBox, new Insets(2, 0, 0, 0));
 
-            VBox totalReputationScoreBox = getInfoBox(Res.get("social.chatUser.totalReputationScore"), false);
+            VBox totalReputationScoreBox = getInfoBox(Res.get("chat.sideBar.userProfile.totalReputationScore"), false);
             totalReputationScore = (Label) totalReputationScoreBox.getChildren().get(1);
 
-            VBox profileAgeBox = getInfoBox(Res.get("social.chatUser.profileAge"), false);
+            VBox profileAgeBox = getInfoBox(Res.get("chat.sideBar.userProfile.profileAge"), false);
             profileAge = (Label) profileAgeBox.getChildren().get(1);
 
-            Label optionsLabel = new Label(Res.get("social.chatUser.options").toUpperCase());
+            Label optionsLabel = new Label(Res.get("chat.sideBar.userProfile.options").toUpperCase());
             optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
 
-            mention = new Hyperlink(Res.get("social.mention"));
+            mention = new Hyperlink(Res.get("chat.sideBar.userProfile.mention"));
             ignore = new Hyperlink();
-            report = new Hyperlink(Res.get("social.report"));
+            report = new Hyperlink(Res.get("chat.sideBar.userProfile.report"));
             //todo report is not implemented yet so we hide it
             optionsBox = new VBox(5, optionsLabel, mention, ignore/*, report*/);
             optionsBox.setAlignment(Pos.CENTER_LEFT);
@@ -284,12 +284,12 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(25, -20, 15, -20));
 
-            termsBox = getInfoBox(Res.get("social.chatUser.terms"), true);
+            termsBox = getInfoBox(Res.get("chat.sideBar.userProfile.terms"), true);
             terms = (Label) termsBox.getChildren().get(1);
             VBox.setMargin(topHBox, new Insets(0, -20, 30, 0));
             root.getChildren().addAll(topHBox, nickName, roboIconImageView, nym, userProfileId, privateMsgButton,
-                    statementBox, reputationBox, totalReputationScoreBox, profileAgeBox,
-                    optionsBox, separator, termsBox);
+                    reputationBox, totalReputationScoreBox, profileAgeBox,
+                    optionsBox, separator, statementBox, termsBox);
         }
 
         @Override

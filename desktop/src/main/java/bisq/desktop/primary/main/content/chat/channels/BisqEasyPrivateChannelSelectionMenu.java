@@ -180,7 +180,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
         @Override
         protected String getHeadlineText() {
-            return Res.get("chat.privateTradeChannels");
+            return Res.get("bisqEasy.channelSelection.private.headline");
         }
 
         protected ListCell<ChannelItem> getListCell() {

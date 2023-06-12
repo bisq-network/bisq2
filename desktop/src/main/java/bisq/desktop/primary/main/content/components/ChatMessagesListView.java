@@ -278,7 +278,7 @@ public class ChatMessagesListView {
                         if (authorUserIdentity.equals(userIdentityService.getSelectedUserIdentity())) {
                             doDeleteMessage(chatMessage, authorUserIdentity);
                         } else {
-                            new Popup().information(Res.get("chat.deleteMessage.wrongUserProfile.popup"))
+                            new Popup().information(Res.get("chat.message.delete.differentUserProfile.warn"))
                                     .closeButtonText(Res.get("confirmation.no"))
                                     .actionButtonText(Res.get("confirmation.yes"))
                                     .onAction(() -> {
@@ -334,14 +334,14 @@ public class ChatMessagesListView {
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
 
             List<BisqPopupMenuItem> items = new ArrayList<>();
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
+            items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.copyMessage"),
                     () -> onCopyMessage(chatMessage)));
             if (!model.isMyMessage(chatMessage)) {
                 if (chatMessage instanceof PublicChatMessage) {
-                    items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
+                    items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.ignoreUser"),
                             () -> onIgnoreUser(chatMessage)));
                 }
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"),
+                items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.reportUser"),
                         () -> onReportUser(chatMessage)));
             }
 
@@ -442,7 +442,7 @@ public class ChatMessagesListView {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
+        private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
 

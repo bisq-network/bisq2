@@ -83,7 +83,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         searchBox = new SearchBox();
         searchBox.setPrefWidth(200);
         helpButton = BisqIconButton.createIconButton("icon-help", Res.get("action.help"));
-        channelInfoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.channelInfo"));
+        channelInfoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
         HBox.setMargin(channelInfoButton, new Insets(0, 0, 0, -5));
 
         centerToolbar = new HBox(

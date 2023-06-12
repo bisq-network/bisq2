@@ -85,24 +85,24 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         HBox selectionButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), createNewProfileButton);
         formVBox.getChildren().add(selectionButtonHBox);
 
-        nymId = addField(Res.get("social.chatUser.nymId"));
-        nymId.setIconTooltip(Res.get("social.chatUser.nymId.tooltip"));
+        nymId = addField(Res.get("user.userProfile.nymId"));
+        nymId.setIconTooltip(Res.get("user.userProfile.nymId.tooltip"));
 
-        profileId = addField(Res.get("social.chatUser.profileId"));
-        profileId.setIconTooltip(Res.get("social.chatUser.profileId.tooltip"));
+        profileId = addField(Res.get("user.userProfile.profileId"));
+        profileId.setIconTooltip(Res.get("user.userProfile.profileId.tooltip"));
 
-        profileAge = addField(Res.get("social.chatUser.profileAge"));
-        profileAge.setIconTooltip(Res.get("social.chatUser.profileAge.tooltip"));
+        profileAge = addField(Res.get("user.userProfile.profileAge"));
+        profileAge.setIconTooltip(Res.get("user.userProfile.profileAge.tooltip"));
 
-        reputationScoreField = addField(Res.get("social.chatUser.reputation"));
+        reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
-        statement = addField(Res.get("social.chatUser.statement"), Res.get("social.chatUser.statement.prompt"));
+        statement = addField(Res.get("user.userProfile.statement"), Res.get("user.userProfile.statement.prompt"));
         statement.setEditable(true);
         statement.setIcon(AwesomeIcon.EDIT);
         statement.getIconButton().setOpacity(0.3);
         statement.getIconButton().setMouseTransparent(true);
 
-        terms = addTextArea(Res.get("social.chatUser.terms"), Res.get("social.chatUser.terms.prompt"));
+        terms = addTextArea(Res.get("user.userProfile.terms"), Res.get("user.userProfile.terms.prompt"));
         terms.setEditable(true);
         terms.setIcon(AwesomeIcon.EDIT);
         terms.getIconButton().setOpacity(0.2);
