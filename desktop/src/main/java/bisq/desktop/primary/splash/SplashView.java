@@ -70,7 +70,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         appStateSubscription = EasyBind.subscribe(model.getApplicationState(),
                 state -> {
                     if (state != null) {
-                        appStatusLabel.setText(Res.get("applicationService.state." + state.name()).toUpperCase());
+                        appStatusLabel.setText(Res.get("loading.state." + state.name()).toUpperCase());
                     }
                 });
     }
