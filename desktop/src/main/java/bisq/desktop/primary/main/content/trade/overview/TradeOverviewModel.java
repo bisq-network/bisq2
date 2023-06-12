@@ -15,26 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multisig;
+package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
-public class MultiSigController implements Controller {
-    @Getter
-    private final MultiSigView view;
-
-    public MultiSigController(DefaultApplicationService applicationService) {
-        MultiSigModel model = new MultiSigModel();
-        view = new MultiSigView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
+@Getter
+public class TradeOverviewModel implements Model {
+    private final ObservableList<ProtocolListItem> listItems = FXCollections.observableArrayList();
+    private final SortedList<ProtocolListItem> sortedItems = new SortedList<>(listItems);
 }

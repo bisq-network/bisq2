@@ -15,26 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multisig;
+package bisq.desktop.primary.main.content.trade.poc.old;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
-public class MultiSigController implements Controller {
-    @Getter
-    private final MultiSigView view;
+public class MultiSigModel extends TabModel {
+    public BooleanProperty showCreateOffer = new SimpleBooleanProperty();
+    public BooleanProperty showTakeOffer = new SimpleBooleanProperty();
 
-    public MultiSigController(DefaultApplicationService applicationService) {
-        MultiSigModel model = new MultiSigModel();
-        view = new MultiSigView(model, this);
+    public MultiSigModel() {
     }
 
     @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.MULTI_SIG_OFFER_BOOK;
     }
 }

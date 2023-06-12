@@ -22,7 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewView;
 import bisq.i18n.Res;
 import bisq.protocol.TradeProtocolDescription;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -38,7 +38,7 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
+public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
     private static final int VERTICAL_MARGIN = 30;
 
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
@@ -141,7 +141,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         button.getStyleClass().add("medium-large-button");
         button.setOnAction(e -> controller.onSelect(protocol));
         if (protocol.getSwapProtocolType() == TradeProtocolDescription.Type.BISQ_EASY) {
-            button.setText(Res.get("select"));
+            button.setText(Res.get("tradeApps.select"));
             button.setDefaultButton(true);
         } else {
             button.setText(Res.get("learnMore"));

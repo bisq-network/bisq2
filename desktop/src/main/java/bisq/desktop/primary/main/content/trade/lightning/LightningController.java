@@ -37,9 +37,4 @@ public class LightningController implements Controller {
     @Override
     public void onDeactivate() {
     }
-
-    @Override
-    public boolean useCaching() {
-        return false;
-    }
 }

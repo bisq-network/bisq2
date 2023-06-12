@@ -37,9 +37,4 @@ public class LiquidSwapController implements Controller {
     @Override
     public void onDeactivate() {
     }
-
-    @Override
-    public boolean useCaching() {
-        return false;
-    }
 }

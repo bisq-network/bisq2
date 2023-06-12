@@ -15,26 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multisig;
+package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.View;
+import javafx.scene.layout.Region;
+import lombok.extern.slf4j.Slf4j;
 
-public class MultiSigController implements Controller {
-    @Getter
-    private final MultiSigView view;
-
-    public MultiSigController(DefaultApplicationService applicationService) {
-        MultiSigModel model = new MultiSigModel();
-        view = new MultiSigView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
+@Slf4j
+public abstract class TradeOverviewView<R extends Region, M extends TradeOverviewModel, C extends TradeOverviewController<?>> extends View<R, M, C> {
+    public TradeOverviewView(R root, M model, C controller) {
+        super(root, model, controller);
     }
 }

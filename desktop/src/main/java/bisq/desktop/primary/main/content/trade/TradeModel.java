@@ -23,10 +23,6 @@ import lombok.Getter;
 
 @Getter
 public class TradeModel extends TabModel {
-
-    public TradeModel() {
-    }
-
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TRADE_OVERVIEW_GRID;

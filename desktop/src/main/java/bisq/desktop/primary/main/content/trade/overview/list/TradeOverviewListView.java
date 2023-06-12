@@ -23,8 +23,8 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseModel;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewModel;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
@@ -43,10 +43,10 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOverviewBaseModel, TradeOverviewListController> {
+public class TradeOverviewListView extends TradeOverviewView<VBox, TradeOverviewModel, TradeOverviewListController> {
     private final BisqTableView<ProtocolListItem> tableView;
 
-    public TradeOverviewListView(TradeOverviewBaseModel model, TradeOverviewListController controller) {
+    public TradeOverviewListView(TradeOverviewModel model, TradeOverviewListController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
@@ -103,16 +103,6 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getConvenience().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getConvenience().ordinal(), ProtocolListItem::getConvenienceInfo))
                 .build());
-    /*    tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("tradeApps.costs"))
-                .minWidth(80)
-                .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getCost().ordinal(), ProtocolListItem::getCostInfo))
-                .build());*/
-     /*   tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("tradeApps.speed"))
-                .minWidth(80)
-                .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getSpeed().ordinal(), ProtocolListItem::getSpeedInfo))
-                .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("tradeApps.release"))
                 .minWidth(80)
@@ -121,7 +111,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .fixWidth(150)
-                .value(Res.get("select"))
+                .value(Res.get("tradeApps.select"))
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .actionHandler(controller::onSelect)
                 .build());
