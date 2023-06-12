@@ -18,7 +18,7 @@
 package bisq.account;
 
 import bisq.account.accounts.Account;
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.common.observable.Observable;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -34,15 +34,15 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class AccountStore implements PersistableStore<AccountStore> {
-    private final Map<String, Account<?, ? extends Settlement<?>>> accountByName = new ConcurrentHashMap<>();
-    private final Observable<Account<?, ? extends Settlement<?>>> selectedAccount = new Observable<>();
+    private final Map<String, Account<?, ? extends Payment<?>>> accountByName = new ConcurrentHashMap<>();
+    private final Observable<Account<?, ? extends Payment<?>>> selectedAccount = new Observable<>();
 
     public AccountStore() {
         this(new HashMap<>(), Optional.empty());
     }
 
-    public AccountStore(Map<String, Account<?, ? extends Settlement<?>>> accountByName,
-                        Optional<Account<?, ? extends Settlement<?>>> selectedAccount) {
+    public AccountStore(Map<String, Account<?, ? extends Payment<?>>> accountByName,
+                        Optional<Account<?, ? extends Payment<?>>> selectedAccount) {
         this.accountByName.putAll(accountByName);
         this.selectedAccount.set(selectedAccount.orElse(null));
     }
@@ -89,11 +89,11 @@ public final class AccountStore implements PersistableStore<AccountStore> {
         selectedAccount.set(persisted.selectedAccount.get());
     }
 
-    Map<String, Account<?, ? extends Settlement<?>>> getAccountByName() {
+    Map<String, Account<?, ? extends Payment<?>>> getAccountByName() {
         return accountByName;
     }
 
-    Observable<Account<?, ? extends Settlement<?>>> getSelectedAccount() {
+    Observable<Account<?, ? extends Payment<?>>> getSelectedAccount() {
         return selectedAccount;
     }
 }

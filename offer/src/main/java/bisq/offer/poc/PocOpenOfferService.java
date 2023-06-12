@@ -18,8 +18,8 @@
 package bisq.offer.poc;
 
 import bisq.account.accounts.Account;
+import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
-import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -32,8 +32,8 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
+import bisq.offer.payment.PaymentSpec;
 import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.settlement.SettlementSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -121,10 +121,10 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                                    Monetary baseSideAmount,
                                                    Quote fixPrice,
                                                    ProtocolType selectedProtocolTyp,
-                                                   List<Account<?, ? extends Settlement<?>>> selectedBaseSideAccounts,
-                                                   List<Account<?, ? extends Settlement<?>>> selectedQuoteSideAccounts,
-                                                   List<Settlement.Method> selectedBaseSideSettlementMethods,
-                                                   List<Settlement.Method> selectedQuoteSideSettlementMethods) {
+                                                   List<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts,
+                                                   List<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts,
+                                                   List<Payment.Method> selectedBaseSidePaymentMethods,
+                                                   List<Payment.Method> selectedQuoteSidePaymentMethods) {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.getNetworkId();
@@ -132,24 +132,24 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
 
             FixPriceSpec priceSpec = new FixPriceSpec(fixPrice);
 
-            List<SettlementSpec> baseSideSettlementSpecs;
+            List<PaymentSpec> baseSidePaymentSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
-                baseSideSettlementSpecs = selectedBaseSideAccounts.stream()
-                        .map(e -> new SettlementSpec(e.getSettlement().getSettlementMethodName(), Optional.of(e.getAccountName())))
+                baseSidePaymentSpecs = selectedBaseSideAccounts.stream()
+                        .map(e -> new PaymentSpec(e.getPayment().getPaymentMethodName(), Optional.of(e.getAccountName())))
                         .collect(Collectors.toList());
             } else {
-                baseSideSettlementSpecs = selectedBaseSideSettlementMethods.stream()
-                        .map(e -> new SettlementSpec(e.name(), Optional.empty()))
+                baseSidePaymentSpecs = selectedBaseSidePaymentMethods.stream()
+                        .map(e -> new PaymentSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
-            List<SettlementSpec> quoteSideSettlementSpecs;
+            List<PaymentSpec> quoteSidePaymentSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
-                quoteSideSettlementSpecs = selectedQuoteSideAccounts.stream()
-                        .map(e -> new SettlementSpec(e.getSettlement().getSettlementMethodName(), Optional.of(e.getAccountName())))
+                quoteSidePaymentSpecs = selectedQuoteSideAccounts.stream()
+                        .map(e -> new PaymentSpec(e.getPayment().getPaymentMethodName(), Optional.of(e.getAccountName())))
                         .collect(Collectors.toList());
             } else {
-                quoteSideSettlementSpecs = selectedQuoteSideSettlementMethods.stream()
-                        .map(e -> new SettlementSpec(e.name(), Optional.empty()))
+                quoteSidePaymentSpecs = selectedQuoteSidePaymentMethods.stream()
+                        .map(e -> new PaymentSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
 
@@ -163,8 +163,8 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                     baseSideAmount.getValue(),
                     priceSpec,
                     protocolTypes,
-                    baseSideSettlementSpecs,
-                    quoteSideSettlementSpecs,
+                    baseSidePaymentSpecs,
+                    quoteSidePaymentSpecs,
                     offerOptions
             );
         });

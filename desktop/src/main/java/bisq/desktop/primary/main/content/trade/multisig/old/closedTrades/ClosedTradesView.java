@@ -75,8 +75,8 @@ public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTrades
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
                 .minWidth(100)
-                .title(Res.get("offerbook.table.header.settlement"))
-                .valueSupplier(ClosedTradeListItem::getSettlement)
+                .title(Res.get("offerbook.table.header.paymentMethod"))
+                .valueSupplier(ClosedTradeListItem::getPaymentMethod)
                 .build());
     }
 }

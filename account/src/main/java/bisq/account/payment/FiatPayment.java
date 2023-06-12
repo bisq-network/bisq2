@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.settlement;
+package bisq.account.payment;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.FiatCurrencyRepository;
@@ -36,44 +36,44 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class FiatSettlement extends Settlement<FiatSettlement.Method> {
+public class FiatPayment extends Payment<FiatPayment.Method> {
 
-    public static List<Method> getSettlementMethods() {
+    public static List<Method> getPaymentMethods() {
         Method[] values = Method.values();
         return List.of(values);
     }
 
-    public static FiatSettlement fromName(String settlementMethodName) {
+    public static FiatPayment fromName(String paymentMethodName) {
         try {
-            return new FiatSettlement(FiatSettlement.Method.valueOf(settlementMethodName));
+            return new FiatPayment(FiatPayment.Method.valueOf(paymentMethodName));
         } catch (IllegalArgumentException e) {
-            return new FiatSettlement(settlementMethodName);
+            return new FiatPayment(paymentMethodName);
         }
     }
 
-    public static List<FiatSettlement.Method> getSettlementMethodsForProtocolType(ProtocolType protocolType) {
+    public static List<FiatPayment.Method> getPaymentMethodsForProtocolType(ProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
             case BISQ_MULTISIG:
-                return FiatSettlement.getSettlementMethods();
+                return FiatPayment.getPaymentMethods();
             case MONERO_SWAP:
             case LIQUID_SWAP:
             case BSQ_SWAP:
             case LIGHTNING_X:
-                throw new IllegalArgumentException("No settlementMethods for that protocolType");
+                throw new IllegalArgumentException("No paymentMethods for that protocolType");
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }
     }
 
-    public static List<String> getSettlementMethodEnumNamesForCode(String currencyCode) {
-        return getSettlementMethodsForCode(currencyCode).stream()
+    public static List<String> getPaymentMethodEnumNamesForCode(String currencyCode) {
+        return getPaymentMethodsForCode(currencyCode).stream()
                 .map(Enum::name)
                 .collect(Collectors.toList());
     }
 
-    public static List<FiatSettlement.Method> getSettlementMethodsForCode(String currencyCode) {
-        return FiatSettlement.getSettlementMethods().stream()
+    public static List<FiatPayment.Method> getPaymentMethodsForCode(String currencyCode) {
+        return FiatPayment.getPaymentMethods().stream()
                 .filter(method -> {
                     if (currencyCode.equals("EUR") && (method == Method.SWIFT || method == Method.NATIONAL_BANK)) {
                         // For EUR, we don't add SWIFT and NATIONAL_BANK
@@ -93,7 +93,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     // Method enum
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Method implements Settlement.Method {
+    public enum Method implements Payment.Method {
         USER_DEFINED(new ArrayList<>(), new ArrayList<>()),
         SEPA(getSepaEuroCountries()),
         SEPA_INSTANT(getSepaEuroCountries()),
@@ -150,25 +150,25 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     // Class instance
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public FiatSettlement(Method method) {
+    public FiatPayment(Method method) {
         super(method);
     }
 
-    public FiatSettlement(String settlementMethodName) {
-        super(settlementMethodName);
+    public FiatPayment(String paymentMethodName) {
+        super(paymentMethodName);
     }
 
     @Override
-    public bisq.account.protobuf.Settlement toProto() {
-        return getSettlementBuilder().setFiatSettlement(bisq.account.protobuf.FiatSettlement.newBuilder()).build();
+    public bisq.account.protobuf.Payment toProto() {
+        return getPaymentBuilder().setFiatPayment(bisq.account.protobuf.FiatPayment.newBuilder()).build();
     }
 
-    public static FiatSettlement fromProto(bisq.account.protobuf.Settlement proto) {
-        return FiatSettlement.fromName(proto.getSettlementMethodName());
+    public static FiatPayment fromProto(bisq.account.protobuf.Payment proto) {
+        return FiatPayment.fromName(proto.getPaymentMethodName());
     }
 
     @Override
-    protected FiatSettlement.Method getFallbackMethod() {
+    protected FiatPayment.Method getFallbackMethod() {
         return Method.USER_DEFINED;
     }
 

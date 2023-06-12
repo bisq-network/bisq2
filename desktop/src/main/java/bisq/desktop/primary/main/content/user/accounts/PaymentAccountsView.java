@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.accounts;
 
 import bisq.account.accounts.Account;
-import bisq.account.settlement.Settlement;
+import bisq.account.payment.Payment;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -40,7 +40,7 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
     private final Button createButton, deletedButton, saveButton;
     private final MaterialTextArea accountData;
     private final VBox formVBox;
-    private final AutoCompleteComboBox<Account<?, ? extends Settlement<?>>> accountSelection;
+    private final AutoCompleteComboBox<Account<?, ? extends Payment<?>>> accountSelection;
     private Subscription selectedAccountPin;
 
     public PaymentAccountsView(PaymentAccountsModel model, PaymentAccountsController controller) {
@@ -59,12 +59,12 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
         accountSelection.setPrefWidth(300);
         accountSelection.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Account<?, ? extends Settlement<?>> object) {
+            public String toString(Account<?, ? extends Payment<?>> object) {
                 return object != null ? object.getAccountName() : "";
             }
 
             @Override
-            public Account<?, ? extends Settlement<?>> fromString(String string) {
+            public Account<?, ? extends Payment<?>> fromString(String string) {
                 return null;
             }
         });

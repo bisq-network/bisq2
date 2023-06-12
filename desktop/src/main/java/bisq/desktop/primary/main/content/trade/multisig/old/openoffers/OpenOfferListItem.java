@@ -20,9 +20,9 @@ package bisq.desktop.primary.main.content.trade.multisig.old.openoffers;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.offer.payment.PaymentSpec;
 import bisq.offer.poc.PocOffer;
 import bisq.offer.poc.PocOpenOffer;
-import bisq.offer.settlement.SettlementSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -45,7 +45,7 @@ public class OpenOfferListItem implements TableItem {
     private final String price;
     private final String baseAmount;
     private final String quoteAmount;
-    private final String settlement;
+    private final String paymentMethod;
     private final String options;
 
     OpenOfferListItem(PocOpenOffer openOffer, MarketPriceService marketPriceService) {
@@ -59,12 +59,12 @@ public class OpenOfferListItem implements TableItem {
         quoteAmount = AmountFormatter.formatAmount(offer.getQuoteAmountAsMonetary(marketPriceService));
         price = QuoteFormatter.format(offer.getQuote(marketPriceService));
 
-        String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String baseSidePaymentMethod = offer.getBaseSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
-        String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String quoteSidePaymentMethod = offer.getQuoteSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
@@ -74,19 +74,18 @@ public class OpenOfferListItem implements TableItem {
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 
-        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSideSettlementSpecs().size() > 1;
-        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSideSettlementSpecs().size() > 1;
+        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentSpecs().size() > 1;
+        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentSpecs().size() > 1;
         if (isBaseSideFiatOrMultiple && !isQuoteSideFiatOrMultiple) {
-            settlement = baseSideSettlement;
+            paymentMethod = baseSidePaymentMethod;
         } else if (isQuoteSideFiatOrMultiple && !isBaseSideFiatOrMultiple) {
-            settlement = quoteSideSettlement;
+            paymentMethod = quoteSidePaymentMethod;
         } else if (isBaseSideFiatOrMultiple) {
             // both
-            settlement = Res.get("offerbook.table.settlement.multi",
-                    baseCurrencyCode, baseSideSettlement, quoteCurrencyCode, quoteSideSettlement);
+            paymentMethod = Res.get("offerbook.table.paymentMethod.multi",
+                    baseCurrencyCode, baseSidePaymentMethod, quoteCurrencyCode, quoteSidePaymentMethod);
         } else {
-            // none (both are using non fiat mandatory settlement method 
-            settlement = "";
+            paymentMethod = "";
         }
 
         options = ""; //todo

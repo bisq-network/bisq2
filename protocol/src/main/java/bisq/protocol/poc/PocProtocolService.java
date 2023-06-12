@@ -137,8 +137,8 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Po
                                                                                 PocOffer offer,
                                                                                 Monetary baseSideAmount,
                                                                                 Monetary quoteSideAmount,
-                                                                                String baseSideSettlementMethod,
-                                                                                String quoteSideSettlementMethod) {
+                                                                                String baseSidePaymentMethod,
+                                                                                String quoteSidePaymentMethod) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
                     PocContract contract = new PocContract(identity.getNetworkId(),
@@ -146,8 +146,8 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Po
                             offer,
                             baseSideAmount,
                             quoteSideAmount,
-                            baseSideSettlementMethod,
-                            quoteSideSettlementMethod);
+                            baseSidePaymentMethod,
+                            quoteSidePaymentMethod);
                     TakerPocProtocolModel protocolModel = new TakerPocProtocolModel(contract);
                     TakerPocProtocol<TakerPocProtocolModel> protocol = getTakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
                     persistableStore.add(protocolModel);

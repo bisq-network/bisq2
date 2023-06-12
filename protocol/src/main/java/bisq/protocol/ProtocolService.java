@@ -143,8 +143,8 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                                                                                  Offer offer,
                                                                                  Monetary baseSideAmount,
                                                                                  Monetary quoteSideAmount,
-                                                                                 String baseSideSettlementMethod,
-                                                                                 String quoteSideSettlementMethod) {
+                                                                                 String baseSidePaymentMethod,
+                                                                                 String quoteSidePaymentMethod) {
        /* return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
                     Contract contract = new Contract(identity.getNetworkId(),
@@ -152,8 +152,8 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                             offer,
                             baseSideAmount,
                             quoteSideAmount,
-                            baseSideSettlementMethod,
-                            quoteSideSettlementMethod);
+                            baseSidePaymentMethod,
+                            quoteSidePaymentMethod);
                     TakerProtocolModel protocolModel = new TakerProtocolModel(contract);
                     TakerProtocol<TakerProtocolModel> protocol = getTakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
                     persistableStore.add(protocolModel);

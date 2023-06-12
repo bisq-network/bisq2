@@ -22,8 +22,8 @@ import bisq.common.monetary.Quote;
 import bisq.contract.poc.PocContract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.offer.payment.PaymentSpec;
 import bisq.offer.poc.PocOffer;
-import bisq.offer.settlement.SettlementSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.protocol.poc.PocProtocol;
@@ -45,7 +45,7 @@ public class ClosedTradeListItem implements TableItem {
     private final String price;
     private final String baseAmount;
     private final String quoteAmount;
-    private final String settlement;
+    private final String paymentMethod;
     private final String options;
     private final PocProtocol<? extends PocProtocolModel> protocol;
 
@@ -60,12 +60,12 @@ public class ClosedTradeListItem implements TableItem {
         quoteAmount = AmountFormatter.formatAmount(contract.getQuoteSideAmount());
         price = QuoteFormatter.format(Quote.of(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
-        String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String baseSidePayment = offer.getBaseSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
-        String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
+        String quoteSidePayment = offer.getQuoteSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
@@ -75,19 +75,18 @@ public class ClosedTradeListItem implements TableItem {
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 
-        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSideSettlementSpecs().size() > 1;
-        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSideSettlementSpecs().size() > 1;
+        boolean isBaseSideFiatOrMultiple = isBaseCurrencyFiat || offer.getBaseSidePaymentSpecs().size() > 1;
+        boolean isQuoteSideFiatOrMultiple = isQuoteCurrencyFiat || offer.getQuoteSidePaymentSpecs().size() > 1;
         if (isBaseSideFiatOrMultiple && !isQuoteSideFiatOrMultiple) {
-            settlement = baseSideSettlement;
+            paymentMethod = baseSidePayment;
         } else if (isQuoteSideFiatOrMultiple && !isBaseSideFiatOrMultiple) {
-            settlement = quoteSideSettlement;
+            paymentMethod = quoteSidePayment;
         } else if (isBaseSideFiatOrMultiple) {
             // both
-            settlement = Res.get("offerbook.table.settlement.multi",
-                    baseCurrencyCode, baseSideSettlement, quoteCurrencyCode, quoteSideSettlement);
+            paymentMethod = Res.get("offerbook.table.paymentMethod.multi",
+                    baseCurrencyCode, baseSidePayment, quoteCurrencyCode, quoteSidePayment);
         } else {
-            // none (both are using non fiat mandatory settlement method 
-            settlement = "";
+            paymentMethod = "";
         }
 
         options = ""; //todo

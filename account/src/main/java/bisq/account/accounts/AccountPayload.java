@@ -33,11 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public abstract class AccountPayload implements Proto {
     protected final String id;
-    private final String settlementMethodName;
+    private final String paymentMethodName;
 
-    public AccountPayload(String id, String settlementMethodName) {
+    public AccountPayload(String id, String paymentMethodName) {
         this.id = id;
-        this.settlementMethodName = settlementMethodName;
+        this.paymentMethodName = paymentMethodName;
     }
 
     public abstract bisq.account.protobuf.AccountPayload toProto();
@@ -45,7 +45,7 @@ public abstract class AccountPayload implements Proto {
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder() {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id)
-                .setSettlementMethodName(settlementMethodName);
+                .setPaymentMethodName(paymentMethodName);
     }
 
     public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

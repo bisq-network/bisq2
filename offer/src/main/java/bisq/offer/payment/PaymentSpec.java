@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.settlement;
+package bisq.offer.payment;
 
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
@@ -28,37 +28,37 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class SettlementSpec implements Proto {
+public final class PaymentSpec implements Proto {
 
-    private final String settlementMethodName;
+    private final String paymentMethodName;
     private final Optional<String> saltedMakerAccountId;
 
-    public SettlementSpec(String settlementMethodName) {
-        this(settlementMethodName, Optional.empty());
+    public PaymentSpec(String paymentMethodName) {
+        this(paymentMethodName, Optional.empty());
     }
 
     /**
-     * @param settlementMethodName Name of SettlementMethod enum
+     * @param paymentMethodName    Name of PaymentMethod enum
      * @param saltedMakerAccountId Salted local ID of maker's payment account.
-     *                             In case maker had multiple payment accounts for same settlement method they
+     *                             In case maker had multiple payment accounts for same payment method they
      *                             can define which account to use for that offer.
      *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
      *                             offers using different identities but the same payment account.
      */
-    public SettlementSpec(String settlementMethodName, Optional<String> saltedMakerAccountId) {
-        this.settlementMethodName = settlementMethodName;
+    public PaymentSpec(String paymentMethodName, Optional<String> saltedMakerAccountId) {
+        this.paymentMethodName = paymentMethodName;
         this.saltedMakerAccountId = saltedMakerAccountId;
     }
 
-    public bisq.offer.protobuf.SettlementSpec toProto() {
-        bisq.offer.protobuf.SettlementSpec.Builder builder = bisq.offer.protobuf.SettlementSpec.newBuilder()
-                .setSettlementMethodName(settlementMethodName);
+    public bisq.offer.protobuf.PaymentSpec toProto() {
+        bisq.offer.protobuf.PaymentSpec.Builder builder = bisq.offer.protobuf.PaymentSpec.newBuilder()
+                .setPaymentMethodName(paymentMethodName);
         saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
         return builder.build();
     }
 
-    public static SettlementSpec fromProto(bisq.offer.protobuf.SettlementSpec proto) {
-        return new SettlementSpec(proto.getSettlementMethodName(),
+    public static PaymentSpec fromProto(bisq.offer.protobuf.PaymentSpec proto) {
+        return new PaymentSpec(proto.getPaymentMethodName(),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }
 }

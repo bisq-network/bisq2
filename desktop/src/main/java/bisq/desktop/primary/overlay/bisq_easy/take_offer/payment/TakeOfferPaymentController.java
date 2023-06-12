@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.settlement.SettlementSpec;
-import bisq.offer.settlement.SettlementUtil;
+import bisq.offer.payment.PaymentSpec;
+import bisq.offer.payment.PaymentUtil;
 import javafx.beans.property.ReadOnlyStringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +30,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class TakeOfferSettlementController implements Controller {
-    private final TakeOfferSettlementModel model;
+public class TakeOfferPaymentController implements Controller {
+    private final TakeOfferPaymentModel model;
     @Getter
-    private final TakeOfferSettlementView view;
+    private final TakeOfferPaymentView view;
 
-    public TakeOfferSettlementController(DefaultApplicationService applicationService) {
-        model = new TakeOfferSettlementModel();
-        view = new TakeOfferSettlementView(model, this);
+    public TakeOfferPaymentController(DefaultApplicationService applicationService) {
+        model = new TakeOfferPaymentModel();
+        view = new TakeOfferPaymentView(model, this);
     }
 
-    public void init(BisqEasyOffer bisqEasyOffer, List<String> takersSettlementMethodNames) {
-        model.getOfferedMethodNames().setAll(SettlementUtil.getQuoteSideSettlementMethodNames(bisqEasyOffer));
+    public void init(BisqEasyOffer bisqEasyOffer, List<String> takersPaymentMethodNames) {
+        model.getOfferedMethodNames().setAll(PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer));
 
-        List<String> matchingNames = bisqEasyOffer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::getSettlementMethodName)
-                .filter(takersSettlementMethodNames::contains)
+        List<String> matchingNames = bisqEasyOffer.getQuoteSidePaymentSpecs().stream()
+                .map(PaymentSpec::getPaymentMethodName)
+                .filter(takersPaymentMethodNames::contains)
                 .collect(Collectors.toList());
         // We only preselect if there is exactly one match
         if (matchingNames.size() == 1) {
@@ -55,7 +55,7 @@ public class TakeOfferSettlementController implements Controller {
 
 
     /**
-     * @return Enum name of FiatSettlement.Method or custom name
+     * @return Enum name of FiatPayment.Method or custom name
      */
     public ReadOnlyStringProperty getSelectedMethodName() {
         return model.getSelectedMethodName();

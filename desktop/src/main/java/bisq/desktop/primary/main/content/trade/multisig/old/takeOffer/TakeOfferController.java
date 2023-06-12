@@ -25,7 +25,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.multisig.old.pendingTrades.PendingTradesController;
-import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.components.TakersSettlementSelection;
+import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.components.TakersPaymentSelection;
 import bisq.offer.Direction;
 import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -61,10 +61,10 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     private final TakeOfferView view;
 
     private final AmountPriceGroup amountPriceGroup;
-    private final TakersSettlementSelection settlementSelection;
+    private final TakersPaymentSelection paymentMethodSelection;
     private final DirectionSelection directionSelection;
     private Subscription selectedBaseSideAccountSubscription, selectedQuoteSideAccountSubscription,
-            selectedBaseSideSettlementMethodSubscription, selectedQuoteSideSettlementMethodSubscription;
+            selectedBaseSidePaymentMethodSubscription, selectedQuoteSidePaymentMethodSubscription;
 
     public TakeOfferController(DefaultApplicationService applicationService) {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
@@ -79,11 +79,11 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         directionSelection.setIsTakeOffer();
         amountPriceGroup = new AmountPriceGroup(marketPriceService);
         amountPriceGroup.setIsTakeOffer();
-        settlementSelection = new TakersSettlementSelection(applicationService.getAccountService());
+        paymentMethodSelection = new TakersPaymentSelection(applicationService.getAccountService());
         view = new TakeOfferView(model, this,
                 directionSelection.getRoot(),
                 amountPriceGroup.getRoot(),
-                settlementSelection.getRoot());
+                paymentMethodSelection.getRoot());
     }
 
     @Override
@@ -107,43 +107,43 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         amountPriceGroup.setQuoteSideAmount(model.quoteSideAmount);
         amountPriceGroup.setQuote(model.fixPrice);
 
-        settlementSelection.setSelectedMarket(market);
-        settlementSelection.setDirection(direction);
-        settlementSelection.setSelectedProtocolType(model.getSelectedProtocolType());
-        settlementSelection.setOffer(offer);
+        paymentMethodSelection.setSelectedMarket(market);
+        paymentMethodSelection.setDirection(direction);
+        paymentMethodSelection.setSelectedProtocolType(model.getSelectedProtocolType());
+        paymentMethodSelection.setOffer(offer);
 
         model.showTakeOfferTab = initData.showTakeOfferTab;
     }
 
     @Override
     public void onActivate() {
-        selectedBaseSideAccountSubscription = EasyBind.subscribe(settlementSelection.getSelectedBaseSideAccount(),
+        selectedBaseSideAccountSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedBaseSideAccount(),
                 model::setSelectedBaseSideAccount);
-        selectedQuoteSideAccountSubscription = EasyBind.subscribe(settlementSelection.getSelectedQuoteSideAccount(),
+        selectedQuoteSideAccountSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedQuoteSideAccount(),
                 model::setSelectedQuoteSideAccount);
-        selectedBaseSideSettlementMethodSubscription = EasyBind.subscribe(settlementSelection.getSelectedBaseSideSettlementMethod(),
-                model::setSelectedBaseSideSettlementMethod);
-        selectedQuoteSideSettlementMethodSubscription = EasyBind.subscribe(settlementSelection.getSelectedQuoteSideSettlementMethod(),
-                model::setSelectedQuoteSideSettlementMethod);
+        selectedBaseSidePaymentMethodSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedBaseSidePaymentMethod(),
+                model::setSelectedBaseSidePaymentMethod);
+        selectedQuoteSidePaymentMethodSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedQuoteSidePaymentMethod(),
+                model::setSelectedQuoteSidePaymentMethod);
     }
 
     @Override
     public void onDeactivate() {
         selectedBaseSideAccountSubscription.unsubscribe();
         selectedQuoteSideAccountSubscription.unsubscribe();
-        selectedBaseSideSettlementMethodSubscription.unsubscribe();
-        selectedQuoteSideSettlementMethodSubscription.unsubscribe();
+        selectedBaseSidePaymentMethodSubscription.unsubscribe();
+        selectedQuoteSidePaymentMethodSubscription.unsubscribe();
     }
 
     public void onTakeOffer() {
-        String baseSideSettlementMethod = model.getSelectedBaseSideSettlementMethod().name();
-        String quoteSideSettlementMethod = model.getSelectedQuoteSideSettlementMethod().name();
+        String baseSidePaymentMethod = model.getSelectedBaseSidePaymentMethod().name();
+        String quoteSidePaymentMethod = model.getSelectedQuoteSidePaymentMethod().name();
         pocProtocolService.takeOffer(model.getSelectedProtocolType(),
                         model.offer,
                         model.baseSideAmount,
                         model.quoteSideAmount,
-                        baseSideSettlementMethod,
-                        quoteSideSettlementMethod)
+                        baseSidePaymentMethod,
+                        quoteSidePaymentMethod)
                 .whenComplete((protocol, throwable) -> {
                     model.showTakeOfferTab.set(false);
                     Navigation.navigateTo(NavigationTarget.MULTI_SIG_PENDING_TRADES, new PendingTradesController.InitData(protocol));

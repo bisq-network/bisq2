@@ -36,24 +36,24 @@ public final class PocContract implements Proto {
     private final PocOffer offer;
     private final Monetary baseSideAmount;
     private final Monetary quoteSideAmount;
-    private final String baseSideSettlementMethod;
-    private final String quoteSideSettlementMethod;
+    private final String baseSidePaymentMethod;
+    private final String quoteSidePaymentMethod;
 
     public PocContract(NetworkId takerNetworkId,
                        ProtocolType protocolType,
                        PocOffer offer,
                        Monetary baseSideAmount,
                        Monetary quoteSideAmount,
-                       String baseSideSettlementMethod,
-                       String quoteSideSettlementMethod) {
+                       String baseSidePaymentMethod,
+                       String quoteSidePaymentMethod) {
 
         this.takerNetworkId = takerNetworkId;
         this.protocolType = protocolType;
         this.offer = offer;
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
-        this.baseSideSettlementMethod = baseSideSettlementMethod;
-        this.quoteSideSettlementMethod = quoteSideSettlementMethod;
+        this.baseSidePaymentMethod = baseSidePaymentMethod;
+        this.quoteSidePaymentMethod = quoteSidePaymentMethod;
     }
 
     @Override

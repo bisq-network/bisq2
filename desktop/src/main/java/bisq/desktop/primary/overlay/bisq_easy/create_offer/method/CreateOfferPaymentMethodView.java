@@ -45,7 +45,7 @@ import java.util.List;
 public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
 
     private final MaterialTextField custom;
-    private final ListChangeListener<String> allSettlementMethodsListener;
+    private final ListChangeListener<String> allPaymentMethodsListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
     private final BisqIconButton addButton;
@@ -90,9 +90,9 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
         VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
         root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
-        allSettlementMethodsListener = c -> {
+        allPaymentMethodsListener = c -> {
             c.next();
-            fillSettlementMethods();
+            fillPaymentMethods();
         };
         root.setOnMousePressed(e -> root.requestFocus());
     }
@@ -100,10 +100,10 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
     @Override
     protected void onViewAttached() {
         custom.textProperty().bindBidirectional(model.getCustomMethodName());
-        nonFoundLabel.visibleProperty().bind(model.getIsSettlementMethodsEmpty());
-        nonFoundLabel.managedProperty().bind(model.getIsSettlementMethodsEmpty());
-        flowPane.visibleProperty().bind(model.getIsSettlementMethodsEmpty().not());
-        flowPane.managedProperty().bind(model.getIsSettlementMethodsEmpty().not());
+        nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
+        nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
+        flowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        flowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
         addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
 
         addButton.setOnAction(e -> controller.onAddCustomMethod());
@@ -113,8 +113,8 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
 
-        model.getAllMethodNames().addListener(allSettlementMethodsListener);
-        fillSettlementMethods();
+        model.getAllMethodNames().addListener(allPaymentMethodsListener);
+        fillPaymentMethods();
     }
 
     @Override
@@ -130,15 +130,15 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
         addCustomMethodIconEnabledPin.unsubscribe();
 
-        model.getAllMethodNames().removeListener(allSettlementMethodsListener);
+        model.getAllMethodNames().removeListener(allPaymentMethodsListener);
     }
 
-    private void fillSettlementMethods() {
+    private void fillPaymentMethods() {
         flowPane.getChildren().clear();
-        List<String> allSettlementMethodNames = new ArrayList<>(model.getAllMethodNames());
-        allSettlementMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
+        List<String> allPaymentMethodNames = new ArrayList<>(model.getAllMethodNames());
+        allPaymentMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
 
-        for (String methodName : allSettlementMethodNames) {
+        for (String methodName : allPaymentMethodNames) {
             // enum name or custom name
             String displayString = methodName;
             if (Res.has(methodName)) {
@@ -153,7 +153,7 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
             if (model.getSelectedMethodNames().contains(methodName)) {
                 chipButton.setSelected(true);
             }
-            chipButton.setOnAction(() -> controller.onToggleSettlementMethod(methodName, chipButton.isSelected()));
+            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(methodName, chipButton.isSelected()));
             String finalDisplayString = displayString;
             model.getAddedCustomMethodNames().stream()
                     .filter(customMethod -> customMethod.equals(methodName))

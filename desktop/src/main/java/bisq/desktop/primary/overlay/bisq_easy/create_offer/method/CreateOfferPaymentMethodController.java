@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
 
-import bisq.account.settlement.FiatSettlement;
+import bisq.account.payment.FiatPayment;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
@@ -51,9 +51,9 @@ public class CreateOfferPaymentMethodController implements Controller {
     }
 
     /**
-     * @return Enum names of FiatSettlement.Method or custom names
+     * @return Enum names of FiatPayment.Method or custom names
      */
-    public ObservableList<String> getSettlementMethodNames() {
+    public ObservableList<String> getPaymentMethodNames() {
         return model.getSelectedMethodNames();
     }
 
@@ -64,10 +64,10 @@ public class CreateOfferPaymentMethodController implements Controller {
 
         model.getMarket().set(market);
         model.getSelectedMethodNames().clear();
-        List<FiatSettlement.Method> methods = FiatSettlement.getSettlementMethodsForCode(market.getQuoteCurrencyCode());
+        List<FiatPayment.Method> methods = FiatPayment.getPaymentMethodsForCode(market.getQuoteCurrencyCode());
         model.getAllMethodNames().setAll(methods.stream().map(Enum::name).collect(Collectors.toList()));
         model.getAllMethodNames().addAll(model.getAddedCustomMethodNames());
-        model.getIsSettlementMethodsEmpty().set(model.getAllMethodNames().isEmpty());
+        model.getIsPaymentMethodsEmpty().set(model.getAllMethodNames().isEmpty());
     }
 
     public void reset() {
@@ -95,7 +95,7 @@ public class CreateOfferPaymentMethodController implements Controller {
         customMethodPin.unsubscribe();
     }
 
-    void onToggleSettlementMethod(String methodName, boolean isSelected) {
+    void onTogglePaymentMethod(String methodName, boolean isSelected) {
         if (isSelected) {
             if (model.getSelectedMethodNames().size() >= 4) {
                 new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();

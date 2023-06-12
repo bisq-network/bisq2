@@ -117,8 +117,8 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
                 .minWidth(100)
-                .title(Res.get("offerbook.table.header.settlement"))
-                .valueSupplier(OfferListItem::getSettlement)
+                .title(Res.get("offerbook.table.header.paymentMethod"))
+                .valueSupplier(OfferListItem::getPaymentMethod)
                 .build());
       /*  tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
                 .minWidth(150)
@@ -127,7 +127,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
                 .fixWidth(200)
-                .title(Res.get("offerbook.table.header.settlement"))
+                .title(Res.get("offerbook.table.header.paymentMethod"))
                 .valueSupplier(model::getActionButtonTitle)
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .buttonClass(BisqIconButton.class)

@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class RevolutAccountPayload extends AccountPayload {
     private final String email;
 
-    public RevolutAccountPayload(String id, String settlementMethodName, String email) {
-        super(id, settlementMethodName);
+    public RevolutAccountPayload(String id, String paymentMethodName, String email) {
+        super(id, paymentMethodName);
         this.email = email;
     }
 
@@ -43,6 +43,6 @@ public final class RevolutAccountPayload extends AccountPayload {
     }
 
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new RevolutAccountPayload(proto.getId(), proto.getSettlementMethodName(), proto.getRevolutAccountPayload().getEmail());
+        return new RevolutAccountPayload(proto.getId(), proto.getPaymentMethodName(), proto.getRevolutAccountPayload().getEmail());
     }
 }

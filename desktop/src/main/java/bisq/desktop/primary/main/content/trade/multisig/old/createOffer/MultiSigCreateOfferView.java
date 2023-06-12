@@ -44,7 +44,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
                                    Pane direction,
                                    Pane amountPrice,
                                    Pane protocol,
-                                   Pane settlement) {
+                                   Pane paymentMethod) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
@@ -73,7 +73,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
         publishButton.setVisible(false);
 
         protocol.setMaxWidth(845);
-        settlement.setMaxWidth(845);
+        paymentMethod.setMaxWidth(845);
         offerSummary.setMaxWidth(845);
 
 
@@ -83,7 +83,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
                 direction,
                 amountPrice,
                 protocol,
-                settlement,
+                paymentMethod,
                 new HBox(15, createOfferButton, cancelButton),
                 offerSummary,
                 publishButton);

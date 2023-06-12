@@ -66,7 +66,7 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferAmountController createOfferAmountController;
     private final CreateOfferPaymentMethodController createOfferPaymentMethodController;
     private final CreateOfferReviewOfferController createOfferReviewOfferController;
-    private final ListChangeListener<String> settlementMethodsListener;
+    private final ListChangeListener<String> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin;
 
@@ -82,7 +82,7 @@ public class CreateOfferController extends NavigationController implements InitW
                 NavigationTarget.CREATE_OFFER_DIRECTION,
                 NavigationTarget.CREATE_OFFER_MARKET,
                 NavigationTarget.CREATE_OFFER_AMOUNT,
-                NavigationTarget.CREATE_OFFER_SETTLEMENT_METHOD,
+                NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
@@ -93,9 +93,9 @@ public class CreateOfferController extends NavigationController implements InitW
         createOfferPaymentMethodController = new CreateOfferPaymentMethodController(applicationService);
         createOfferReviewOfferController = new CreateOfferReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
 
-        settlementMethodsListener = c -> {
+        paymentMethodsListener = c -> {
             c.next();
-            handleSettlementMethodsUpdate();
+            handlePaymentMethodsUpdate();
         };
     }
 
@@ -132,8 +132,8 @@ public class CreateOfferController extends NavigationController implements InitW
             createOfferReviewOfferController.setPriceSpec(priceSpec);
         });
 
-        handleSettlementMethodsUpdate();
-        createOfferPaymentMethodController.getSettlementMethodNames().addListener(settlementMethodsListener);
+        handlePaymentMethodsUpdate();
+        createOfferPaymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class CreateOfferController extends NavigationController implements InitW
         amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
-        createOfferPaymentMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);
+        createOfferPaymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
@@ -169,7 +169,7 @@ public class CreateOfferController extends NavigationController implements InitW
             case CREATE_OFFER_AMOUNT: {
                 return Optional.of(createOfferAmountController);
             }
-            case CREATE_OFFER_SETTLEMENT_METHOD: {
+            case CREATE_OFFER_PAYMENT_METHOD: {
                 return Optional.of(createOfferPaymentMethodController);
             }
             case CREATE_OFFER_REVIEW_OFFER: {
@@ -231,8 +231,8 @@ public class CreateOfferController extends NavigationController implements InitW
     private void updateNextButtonDisabledState() {
         if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(createOfferMarketController.getMarket().get() == null);
-        } else if (NavigationTarget.CREATE_OFFER_SETTLEMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(createOfferPaymentMethodController.getSettlementMethodNames().isEmpty());
+        } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(createOfferPaymentMethodController.getPaymentMethodNames().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -244,8 +244,8 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getCloseButtonVisible().set(value);
     }
 
-    private void handleSettlementMethodsUpdate() {
-        createOfferReviewOfferController.setSettlementMethodNames(createOfferPaymentMethodController.getSettlementMethodNames());
+    private void handlePaymentMethodsUpdate() {
+        createOfferReviewOfferController.setPaymentMethodNames(createOfferPaymentMethodController.getPaymentMethodNames());
         updateNextButtonDisabledState();
     }
 }

@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
+import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
-import bisq.account.settlement.Settlement;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -51,10 +51,10 @@ public class MultiSigCreateOfferModel implements Model {
     @Setter
     private Quote fixPrice;
 
-    private final ObservableSet<Account<?, ? extends Settlement<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Account<?, ? extends Settlement<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Settlement.Method> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Settlement.Method> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Payment.Method> selectedBaseSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Payment.Method> selectedQuoteSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
 
     private final ObjectProperty<PocOffer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
@@ -77,23 +77,23 @@ public class MultiSigCreateOfferModel implements Model {
         return createOfferButtonVisibleProperty;
     }
 
-    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<?, ? extends Settlement<?>>> set) {
+    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<?, ? extends Payment<?>>> set) {
         selectedBaseSideAccounts.clear();
         selectedBaseSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<?, ? extends Settlement<?>>> set) {
+    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<?, ? extends Payment<?>>> set) {
         selectedQuoteSideAccounts.clear();
         selectedQuoteSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedBaseSideSettlementMethods(ObservableSet<Settlement.Method> set) {
-        selectedBaseSideSettlementMethods.clear();
-        selectedBaseSideSettlementMethods.addAll(set);
+    public void setAllSelectedBaseSidePaymentMethods(ObservableSet<Payment.Method> set) {
+        selectedBaseSidePaymentMethods.clear();
+        selectedBaseSidePaymentMethods.addAll(set);
     }
 
-    public void setAllSelectedQuoteSideSettlementMethods(ObservableSet<Settlement.Method> set) {
-        selectedQuoteSideSettlementMethods.clear();
-        selectedQuoteSideSettlementMethods.addAll(set);
+    public void setAllSelectedQuoteSidePaymentMethods(ObservableSet<Payment.Method> set) {
+        selectedQuoteSidePaymentMethods.clear();
+        selectedQuoteSidePaymentMethods.addAll(set);
     }
 }

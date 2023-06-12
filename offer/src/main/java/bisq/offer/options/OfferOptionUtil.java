@@ -57,10 +57,10 @@ public class OfferOptionUtil {
                 .findAny();
     }
 
-    public static Optional<FiatSettlementOption> findFiatSettlementOption(Collection<OfferOption> offerOptions) {
+    public static Optional<FiatPaymentOption> findFiatPaymentOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(option -> option instanceof FiatSettlementOption)
-                .map(option -> (FiatSettlementOption) option)
+                .filter(option -> option instanceof FiatPaymentOption)
+                .map(option -> (FiatPaymentOption) option)
                 .findAny();
     }
 

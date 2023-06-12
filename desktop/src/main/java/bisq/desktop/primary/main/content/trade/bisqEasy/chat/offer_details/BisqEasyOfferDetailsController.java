@@ -25,8 +25,8 @@ import bisq.i18n.Res;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.payment.PaymentFormatter;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.settlement.SettlementFormatter;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
@@ -98,7 +98,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                 })
                 .orElse(Res.get("na")));
         model.getPriceDescription().set(Res.get("bisqEasy.offerDetails.price", bisqEasyOffer.getMarket().getMarketCodes()));
-        model.getPaymentMethods().set(SettlementFormatter.asQuoteSideSettlementMethodsString(bisqEasyOffer));
+        model.getPaymentMethods().set(PaymentFormatter.asQuoteSidePaymentMethodsString(bisqEasyOffer));
 
         model.getId().set(bisqEasyOffer.getId());
         model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));

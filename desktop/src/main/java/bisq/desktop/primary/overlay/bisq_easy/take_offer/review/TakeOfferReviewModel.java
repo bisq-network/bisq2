@@ -38,9 +38,9 @@ class TakeOfferReviewModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     @Setter
     private UserProfile peersUserProfile;
-    private final StringProperty settlementMethod = new SimpleStringProperty();
+    private final StringProperty paymentMethod = new SimpleStringProperty();
     @Setter
-    private List<String> settlementMethodNames;
+    private List<String> paymentMethodNames;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
     @Setter

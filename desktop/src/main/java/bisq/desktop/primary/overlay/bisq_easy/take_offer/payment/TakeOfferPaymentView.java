@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.settlement;
+package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -36,11 +36,11 @@ import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
-public class TakeOfferSettlementView extends View<VBox, TakeOfferSettlementModel, TakeOfferSettlementController> {
+public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, TakeOfferPaymentController> {
     private final FlowPane flowPane;
     private final ToggleGroup toggleGroup = new ToggleGroup();
 
-    public TakeOfferSettlementView(TakeOfferSettlementModel model, TakeOfferSettlementController controller) {
+    public TakeOfferPaymentView(TakeOfferPaymentModel model, TakeOfferPaymentController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

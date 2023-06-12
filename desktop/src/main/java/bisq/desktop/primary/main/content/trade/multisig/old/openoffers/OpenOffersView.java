@@ -75,8 +75,8 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
                 .minWidth(100)
-                .title(Res.get("offerbook.table.header.settlement"))
-                .valueSupplier(OpenOfferListItem::getSettlement)
+                .title(Res.get("offerbook.table.header.paymentMethod"))
+                .valueSupplier(OpenOfferListItem::getPaymentMethod)
                 .build());
       /*  tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
                 .minWidth(150)

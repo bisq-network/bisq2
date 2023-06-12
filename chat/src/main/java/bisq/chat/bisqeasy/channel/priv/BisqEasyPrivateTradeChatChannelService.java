@@ -152,7 +152,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                     UserProfile maker = channel.getPeer();
                     String direction = bisqEasyOffer.getTakersDirectionAsDisplayString();
                     String amount = bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString(true);
-                    String methods = bisqEasyOffer.getQuoteSideSettlementMethodsAsDisplayString();
+                    String methods = bisqEasyOffer.getQuoteSidePaymentMethodsAsDisplayString();
                     String text = Res.get("bisqEasy.takeOffer.takerRequest",
                             direction, amount, methods);
 

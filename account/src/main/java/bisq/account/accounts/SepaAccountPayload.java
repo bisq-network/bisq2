@@ -31,8 +31,8 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     private final String iban;
     private final String bic;
 
-    public SepaAccountPayload(String id, String settlementMethodName, String holderName, String iban, String bic, String countryCode) {
-        super(id, settlementMethodName, countryCode);
+    public SepaAccountPayload(String id, String paymentMethodName, String holderName, String iban, String bic, String countryCode) {
+        super(id, paymentMethodName, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -52,7 +52,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SepaAccountPayload sepaAccountPayload = countryBasedAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getId(),
-                proto.getSettlementMethodName(),
+                proto.getPaymentMethodName(),
                 sepaAccountPayload.getHolderName(),
                 sepaAccountPayload.getIban(),
                 sepaAccountPayload.getBic(),

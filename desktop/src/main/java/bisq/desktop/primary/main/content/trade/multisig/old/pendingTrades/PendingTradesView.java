@@ -75,8 +75,8 @@ public class PendingTradesView extends View<VBox, PendingTradesModel, PendingTra
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<PendingTradeListItem>()
                 .minWidth(100)
-                .title(Res.get("offerbook.table.header.settlement"))
-                .valueSupplier(PendingTradeListItem::getSettlement)
+                .title(Res.get("offerbook.table.header.paymentMethod"))
+                .valueSupplier(PendingTradeListItem::getPaymentMethod)
                 .build());
     }
 }

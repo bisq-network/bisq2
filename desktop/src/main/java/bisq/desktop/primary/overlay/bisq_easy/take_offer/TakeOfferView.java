@@ -138,11 +138,11 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
-        if (model.isSettlementVisible()) {
-            Label settlement = getTopPaneLabel(Res.get("bisqEasy.takeOffer.method"));
-            navigationProgressLabelList.add(0, settlement);
+        if (model.isPaymentMethodVisible()) {
+            Label paymentMethod = getTopPaneLabel(Res.get("bisqEasy.takeOffer.method"));
+            navigationProgressLabelList.add(0, paymentMethod);
             progressBox.getChildren().add(0, getSeparator());
-            progressBox.getChildren().add(0, settlement);
+            progressBox.getChildren().add(0, paymentMethod);
         }
         if (model.isAmountVisible()) {
             Label amount = getTopPaneLabel(Res.get("bisqEasy.takeOffer.amount"));

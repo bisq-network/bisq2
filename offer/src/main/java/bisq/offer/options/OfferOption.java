@@ -39,8 +39,8 @@ public interface OfferOption extends Proto {
             case COLLATERALOPTION: {
                 return CollateralOption.fromProto(proto.getCollateralOption());
             }
-            case FIATSETTLEMENTOPTION: {
-                return FiatSettlementOption.fromProto(proto.getFiatSettlementOption());
+            case FIATPAYMENTOPTION: {
+                return FiatPaymentOption.fromProto(proto.getFiatPaymentOption());
             }
             case FEEOPTION: {
                 return FeeOption.fromProto(proto.getFeeOption());

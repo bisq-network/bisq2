@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.settlement;
+package bisq.offer.payment;
 
-import bisq.account.settlement.BitcoinSettlement;
+import bisq.account.payment.BitcoinPayment;
 import bisq.offer.Offer;
 
 import java.util.Collection;
@@ -26,32 +26,32 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class SettlementUtil {
-    public static List<SettlementSpec> createBaseSideSpecsForBitcoinMainChain() {
-        return List.of(new SettlementSpec(BitcoinSettlement.Method.MAINCHAIN.name()));
+public class PaymentUtil {
+    public static List<PaymentSpec> createBaseSideSpecsForBitcoinMainChain() {
+        return List.of(new PaymentSpec(BitcoinPayment.Method.MAINCHAIN.name()));
     }
 
-    public static List<SettlementSpec> createQuoteSideSpecsFromMethodNames(List<String> paymentMethodNames) {
+    public static List<PaymentSpec> createQuoteSideSpecsFromMethodNames(List<String> paymentMethodNames) {
         checkArgument(!paymentMethodNames.isEmpty());
         return paymentMethodNames.stream()
-                .map(SettlementSpec::new)
+                .map(PaymentSpec::new)
                 .collect(Collectors.toList());
     }
 
 
-    public static List<String> getSettlementMethodNames(Collection<SettlementSpec> settlementSpecs) {
-        return settlementSpecs.stream()
-                .map(SettlementSpec::getSettlementMethodName)
+    public static List<String> getPaymentMethodNames(Collection<PaymentSpec> paymentSpecs) {
+        return paymentSpecs.stream()
+                .map(PaymentSpec::getPaymentMethodName)
                 .sorted()
                 .collect(Collectors.toList());
     }
 
 
-    public static List<String> getBaseSideSettlementMethodNames(Offer offer) {
-        return getSettlementMethodNames(offer.getBaseSideSettlementSpecs());
+    public static List<String> getBaseSidePaymentMethodNames(Offer offer) {
+        return getPaymentMethodNames(offer.getBaseSidePaymentSpecs());
     }
 
-    public static List<String> getQuoteSideSettlementMethodNames(Offer offer) {
-        return getSettlementMethodNames(offer.getQuoteSideSettlementSpecs());
+    public static List<String> getQuoteSidePaymentMethodNames(Offer offer) {
+        return getPaymentMethodNames(offer.getQuoteSidePaymentSpecs());
     }
 }

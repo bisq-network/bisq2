@@ -27,7 +27,7 @@ import bisq.i18n.Res;
 import bisq.offer.OfferFormatter;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.settlement.SettlementFormatter;
+import bisq.offer.payment.PaymentFormatter;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import bisq.user.profile.UserProfile;
@@ -72,7 +72,7 @@ public class TradeAssistantOfferController implements Controller {
         }
 
         model.getAmount().set(OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
-        model.getPaymentMethods().set(SettlementFormatter.asQuoteSideSettlementMethodsString(bisqEasyOffer));
+        model.getPaymentMethods().set(PaymentFormatter.asQuoteSidePaymentMethodsString(bisqEasyOffer));
 
         model.getOpenUserProfileButtonLabel().set(Res.get("tradeAssistant.offer.peer.openUserProfile", peersUserName));
     }
