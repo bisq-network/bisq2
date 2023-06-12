@@ -51,7 +51,7 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        return getChannelBuilder().setPublicBisqEasyOfferChatChannel(bisq.chat.protobuf.BisqEasyPublicChatChannel.newBuilder()
+        return getChatChannelBuilder().setPublicBisqEasyOfferChatChannel(bisq.chat.protobuf.BisqEasyPublicChatChannel.newBuilder()
                         .setMarket(market.toProto()))
                 .build();
     }
