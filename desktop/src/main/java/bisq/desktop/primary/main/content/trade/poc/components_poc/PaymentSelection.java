@@ -185,11 +185,11 @@ public class PaymentSelection {
             if (market == null) return;
 
             String baseSideVerb = direction == Direction.SELL ?
-                    Res.get("sending") :
-                    Res.get("receiving");
+                    Res.get("poc.sending") :
+                    Res.get("poc.receiving");
             String quoteSideVerb = direction == Direction.BUY ?
-                    Res.get("sending") :
-                    Res.get("receiving");
+                    Res.get("poc.sending") :
+                    Res.get("poc.receiving");
 
             if (model.baseSideAccountsVisibility.get()) {
                 model.baseSideDescription.set(Res.get("createOffer.account.description",
