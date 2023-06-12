@@ -36,7 +36,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         super(new VBox(10), model, controller);
 
         String key = getKey();
-        headline = new MultiLineLabel(Res.get("academy." + key));
+        headline = new MultiLineLabel(Res.get("academy.overview." + key));
         headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
         headline.getStyleClass().addAll("font-size-20", "font-light");
         headline.setGraphicTextGap(10);
