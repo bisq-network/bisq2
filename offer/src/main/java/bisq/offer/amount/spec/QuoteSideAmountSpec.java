@@ -17,5 +17,5 @@
 
 package bisq.offer.amount.spec;
 
-public interface BaseAmountSpec extends AmountSpec {
+public interface QuoteSideAmountSpec extends AmountSpec {
 }

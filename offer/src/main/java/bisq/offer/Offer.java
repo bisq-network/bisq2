@@ -23,7 +23,7 @@ import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.MinMaxAmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment.PaymentSpec;
@@ -146,6 +146,6 @@ public abstract class Offer implements Proto {
     }
 
     public boolean hasAmountRange() {
-        return amountSpec instanceof MinMaxAmountSpec;
+        return amountSpec instanceof RangeAmountSpec;
     }
 }

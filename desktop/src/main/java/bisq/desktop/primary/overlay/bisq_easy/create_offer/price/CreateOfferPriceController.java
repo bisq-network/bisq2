@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.price;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
@@ -27,7 +27,7 @@ import bisq.i18n.Res;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.*;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -98,8 +98,8 @@ public class CreateOfferPriceController implements Controller {
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageAsString().set("");
                 model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
-                Quote quote = PriceUtil.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
-                priceInput.setQuote(quote);
+                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
+                priceInput.setQuote(priceQuote);
                 applyPriceSpec();
             } catch (NumberFormatException t) {
                 new Popup().warning(Res.get("onboarding.price.warn.invalidPrice")).show();
@@ -128,46 +128,46 @@ public class CreateOfferPriceController implements Controller {
         }
     }
 
-    private void onQuoteInput(Quote quote) {
-        if (quote == null) {
+    private void onQuoteInput(PriceQuote priceQuote) {
+        if (priceQuote == null) {
             model.getPercentage().set(0);
             model.getPercentageAsString().set("");
             return;
         }
-        if (isQuoteValid(quote)) {
-            model.getPriceAsString().set(QuoteFormatter.format(quote, true));
-            applyPercentageFromQuote(quote);
+        if (isQuoteValid(priceQuote)) {
+            model.getPriceAsString().set(PriceFormatter.format(priceQuote, true));
+            applyPercentageFromQuote(priceQuote);
             applyPriceSpec();
         } else {
             new Popup().warning(Res.get("onboarding.price.warn.invalidPrice")).show();
-            Quote marketPrice = findMarketPriceQuote();
+            PriceQuote marketPrice = findMarketPriceQuote();
             priceInput.setQuote(marketPrice);
             applyPercentageFromQuote(marketPrice);
             applyPriceSpec();
         }
     }
 
-    private void applyPercentageFromQuote(Quote quote) {
-        double percentage = getPercentage(quote);
+    private void applyPercentageFromQuote(PriceQuote priceQuote) {
+        double percentage = getPercentage(priceQuote);
         model.getPercentage().set(percentage);
         model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
     }
 
 
     //todo add validator and give feedback
-    private boolean isQuoteValid(Quote quote) {
-        double percentage = getPercentage(quote);
+    private boolean isQuoteValid(PriceQuote priceQuote) {
+        double percentage = getPercentage(priceQuote);
         if (percentage >= -0.1 && percentage <= 0.5) {
             return true;
         }
         return false;
     }
 
-    private double getPercentage(Quote quote) {
-        return PriceSpecUtil.createFloatPriceSpec(marketPriceService, quote).orElseThrow().getPercentage();
+    private double getPercentage(PriceQuote priceQuote) {
+        return PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote).orElseThrow().getPercentage();
     }
 
-    private Quote findMarketPriceQuote() {
+    private PriceQuote findMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
     }
 

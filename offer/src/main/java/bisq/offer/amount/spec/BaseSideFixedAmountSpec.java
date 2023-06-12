@@ -27,19 +27,20 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FixBaseAmountSpec extends FixAmountSpec implements BaseAmountSpec {
-    public FixBaseAmountSpec(long amount) {
+public final class BaseSideFixedAmountSpec extends FixedAmountSpec implements BaseSideAmountSpec {
+    public BaseSideFixedAmountSpec(long amount) {
         super(amount);
     }
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixBaseAmountSpec(bisq.offer.protobuf.FixBaseAmountSpec.newBuilder()
-                        .setAmount(amount))
+        return getAmountSpecBuilder().setFixedAmountSpec(
+                        getFixedAmountSpecBuilder().setBaseSideFixedAmountSpec(
+                                bisq.offer.protobuf.BaseSideFixedAmountSpec.newBuilder()))
                 .build();
     }
 
-    public static FixBaseAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return new FixBaseAmountSpec(proto.getFixBaseAmountSpec().getAmount());
+    public static BaseSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {
+        return new BaseSideFixedAmountSpec(proto.getAmount());
     }
 }

@@ -37,7 +37,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.MinMaxAmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment.PaymentFormatter;
 import bisq.offer.payment.PaymentUtil;
@@ -46,7 +46,7 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -156,7 +156,7 @@ public class CreateOfferReviewOfferController implements Controller {
         if (direction.isSell()) {
             if (priceSpec instanceof FixPriceSpec) {
                 FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
-                String price = QuoteFormatter.formatWithQuoteCode(fixPriceSpec.getQuote());
+                String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
                 priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.fixPrice", price);
             } else if (priceSpec instanceof FloatPriceSpec) {
                 FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
@@ -171,7 +171,7 @@ public class CreateOfferReviewOfferController implements Controller {
 
         String directionString = Res.get(direction.name().toLowerCase()).toUpperCase();
         AmountSpec amountSpec = model.getAmountSpec();
-        boolean hasAmountRange = amountSpec instanceof MinMaxAmountSpec;
+        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
@@ -285,15 +285,15 @@ public class CreateOfferReviewOfferController implements Controller {
                 if (!peersOffer.getMarket().equals(bisqEasyOffer.getMarket())) {
                     return false;
                 }
-                Optional<Monetary> myMinOrFixQuoteAmount = AmountUtil.findMinOrFixQuoteAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersMaxOrFixQuoteAmount = AmountUtil.findMaxOrFixQuoteAmount(marketPriceService, peersOffer);
-                if (myMinOrFixQuoteAmount.orElseThrow().getValue() > peersMaxOrFixQuoteAmount.orElseThrow().getValue()) {
+                Optional<Monetary> myQuoteSideMinOrFixedAmount = AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+                if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                Optional<Monetary> myMaxOrFixQuoteAmount = AmountUtil.findMaxOrFixQuoteAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersMinOrFixQuoteAmount = AmountUtil.findMinOrFixQuoteAmount(marketPriceService, peersOffer);
-                if (myMaxOrFixQuoteAmount.orElseThrow().getValue() < peersMinOrFixQuoteAmount.orElseThrow().getValue()) {
+                Optional<Monetary> myQuoteSideMaxOrFixedAmount = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersQuoteSideMinOrFixedAmount = AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+                if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 

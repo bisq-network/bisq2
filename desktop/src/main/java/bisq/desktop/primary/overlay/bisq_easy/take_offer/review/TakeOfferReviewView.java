@@ -159,7 +159,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         gridPane.getChildren().add(method);
 
         rowIndex++;
-        Label sellersPriceDescription = new Label(Res.get("bisqEasy.takeOffer.review.sellersPrice"));
+        Label sellersPriceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.sellersPrice"));
         sellersPriceDescription.getStyleClass().add(descriptionStyle);
         GridPane.setRowIndex(sellersPriceDescription, rowIndex);
         GridPane.setColumnIndex(sellersPriceDescription, 0);

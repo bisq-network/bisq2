@@ -38,7 +38,7 @@ import bisq.desktop.primary.main.content.chat.channels.TwoPartyPrivateChannelSel
 import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
-import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
+import bisq.desktop.primary.main.content.components.CitationBlock;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -76,7 +76,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final DefaultApplicationService applicationService;
     protected final TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
     protected final ChannelSidebar channelSidebar;
-    protected final QuotedMessageBlock quotedMessageBlock;
+    protected final CitationBlock citationBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
@@ -99,7 +99,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                     chatMessagesComponent.resetSelectedChatMessage();
                 },
                 this::openUserProfileSidebar);
-        quotedMessageBlock = new QuotedMessageBlock(applicationService);
+        citationBlock = new CitationBlock(applicationService);
 
         createDependencies(chatChannelDomain);
 

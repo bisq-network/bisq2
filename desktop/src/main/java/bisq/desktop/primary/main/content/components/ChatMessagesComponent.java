@@ -125,7 +125,7 @@ public class ChatMessagesComponent {
         private final View view;
         private final Consumer<UserProfile> openUserProfileSidebarHandler;
         private final UserIdentityService userIdentityService;
-        private final QuotedMessageBlock citationBlock;
+        private final CitationBlock citationBlock;
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
         private final SettingsService settingsService;
@@ -151,7 +151,7 @@ public class ChatMessagesComponent {
             mediationService = applicationService.getSupportService().getMediationService();
             walletService = applicationService.getWalletService();
 
-            citationBlock = new QuotedMessageBlock(applicationService);
+            citationBlock = new CitationBlock(applicationService);
 
             UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 

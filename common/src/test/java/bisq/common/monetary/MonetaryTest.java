@@ -55,108 +55,108 @@ public class MonetaryTest {
     void testQuotes() {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
         Fiat usd = Fiat.fromFaceValue(50000d, "USD");
-        Quote quote = Quote.of(btc, usd);
-        assertEquals(500000000, quote.getValue());
-        assertEquals(50000.0, quote.asDouble());
-        assertEquals(4, quote.getPrecision());
-        assertEquals("USD", quote.getQuoteMonetary().code);
-        assertEquals("BTC", quote.getBaseMonetary().getCode());
-        assertEquals("BTC/USD", quote.getMarket().getMarketCodes());
+        PriceQuote priceQuote = PriceQuote.from(btc, usd);
+        assertEquals(500000000, priceQuote.getValue());
+        assertEquals(50000.0, priceQuote.asDouble());
+        assertEquals(4, priceQuote.getPrecision());
+        assertEquals("USD", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("BTC", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("BTC/USD", priceQuote.getMarket().getMarketCodes());
 
         usd = Fiat.fromFaceValue(50000.1249d, "USD");
-        quote = Quote.of(btc, usd);
-        assertEquals(500001249, quote.getValue());
-        assertEquals(50000.1249, quote.asDouble());
+        priceQuote = PriceQuote.from(btc, usd);
+        assertEquals(500001249, priceQuote.getValue());
+        assertEquals(50000.1249, priceQuote.asDouble());
 
         usd = Fiat.fromFaceValue(50000.1250d, "USD");
-        quote = Quote.of(btc, usd);
-        assertEquals(50000.1250, quote.asDouble());
+        priceQuote = PriceQuote.from(btc, usd);
+        assertEquals(50000.1250, priceQuote.asDouble());
 
         btc = Coin.asBtcFromValue(100000000);
         usd = Fiat.fromValue(500001250, "USD");
-        quote = Quote.of(btc, usd);
-        assertEquals(500001250, quote.getValue());
-        assertEquals(50000.1250, quote.asDouble());
+        priceQuote = PriceQuote.from(btc, usd);
+        assertEquals(500001250, priceQuote.getValue());
+        assertEquals(50000.1250, priceQuote.asDouble());
 
         // btc - alt
         Coin xmr = Coin.asXmrFromFaceValue(150d);
         btc = Coin.asBtcFromFaceValue(1.0);
-        quote = Quote.of(xmr, btc);
-        assertEquals(666667, quote.getValue());
-        assertEquals(0.00666667, quote.asDouble());
-        assertEquals(8, quote.getPrecision());
-        assertEquals("BTC", quote.getQuoteMonetary().code);
-        assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/BTC", quote.getMarket().getMarketCodes());
+        priceQuote = PriceQuote.from(xmr, btc);
+        assertEquals(666667, priceQuote.getValue());
+        assertEquals(0.00666667, priceQuote.asDouble());
+        assertEquals(8, priceQuote.getPrecision());
+        assertEquals("BTC", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("XMR", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("XMR/BTC", priceQuote.getMarket().getMarketCodes());
 
         xmr = Coin.asXmrFromFaceValue(1d);
         btc = Coin.asBtcFromFaceValue(0.00666667);
-        quote = Quote.of(xmr, btc);
-        assertEquals(666667, quote.getValue());
-        assertEquals(0.00666667, quote.asDouble());
-        assertEquals(8, quote.getPrecision());
-        assertEquals("BTC", quote.getQuoteMonetary().code);
-        assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/BTC", quote.getMarket().getMarketCodes());
+        priceQuote = PriceQuote.from(xmr, btc);
+        assertEquals(666667, priceQuote.getValue());
+        assertEquals(0.00666667, priceQuote.asDouble());
+        assertEquals(8, priceQuote.getPrecision());
+        assertEquals("BTC", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("XMR", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("XMR/BTC", priceQuote.getMarket().getMarketCodes());
 
         // XMR/ETH
         xmr = Coin.asXmrFromFaceValue(1d);     // 250
         Coin eth = Coin.fromFaceValue(0.1, "ETH"); //2500
-        quote = Quote.of(xmr, eth);
-        assertEquals(10000000, quote.getValue());
-        assertEquals(0.1, quote.asDouble());
-        assertEquals(8, quote.getPrecision());
-        assertEquals("ETH", quote.getQuoteMonetary().code);
-        assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/ETH", quote.getMarket().getMarketCodes());
+        priceQuote = PriceQuote.from(xmr, eth);
+        assertEquals(10000000, priceQuote.getValue());
+        assertEquals(0.1, priceQuote.asDouble());
+        assertEquals(8, priceQuote.getPrecision());
+        assertEquals("ETH", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("XMR", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("XMR/ETH", priceQuote.getMarket().getMarketCodes());
 
         // ETH/XMR
         eth = Coin.fromFaceValue(1d, "ETH"); //2500
         xmr = Coin.asXmrFromFaceValue(10d);     // 250
-        quote = Quote.of(eth, xmr);
-        assertEquals(10000000000000L, quote.getValue());
-        assertEquals(10, quote.asDouble());
-        assertEquals(12, quote.getPrecision());
-        assertEquals("XMR", quote.getQuoteMonetary().code);
-        assertEquals("ETH", quote.getBaseMonetary().getCode());
-        assertEquals("ETH/XMR", quote.getMarket().getMarketCodes());
+        priceQuote = PriceQuote.from(eth, xmr);
+        assertEquals(10000000000000L, priceQuote.getValue());
+        assertEquals(10, priceQuote.asDouble());
+        assertEquals(12, priceQuote.getPrecision());
+        assertEquals("XMR", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("ETH", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("ETH/XMR", priceQuote.getMarket().getMarketCodes());
 
         // USD/EUR
         usd = Fiat.fromFaceValue(1d, "USD");
         Fiat eur = Fiat.fromFaceValue(0.8, "EUR");
-        quote = Quote.of(usd, eur);
-        assertEquals(8000, quote.getValue());
-        assertEquals(0.8, quote.asDouble());
-        assertEquals(4, quote.getPrecision());
-        assertEquals("EUR", quote.getQuoteMonetary().code);
-        assertEquals("USD", quote.getBaseMonetary().getCode());
-        assertEquals("USD/EUR", quote.getMarket().getMarketCodes());
+        priceQuote = PriceQuote.from(usd, eur);
+        assertEquals(8000, priceQuote.getValue());
+        assertEquals(0.8, priceQuote.asDouble());
+        assertEquals(4, priceQuote.getPrecision());
+        assertEquals("EUR", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("USD", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("USD/EUR", priceQuote.getMarket().getMarketCodes());
 
         // EUR/USD
         eur = Fiat.fromFaceValue(1d, "EUR");
         usd = Fiat.fromFaceValue(1.2d, "USD");
-        quote = Quote.of(eur, usd);
-        assertEquals(12000, quote.getValue());
-        assertEquals(1.2, quote.asDouble());
-        assertEquals(4, quote.getPrecision());
-        assertEquals("USD", quote.getQuoteMonetary().code);
-        assertEquals("EUR", quote.getBaseMonetary().getCode());
-        assertEquals("EUR/USD", quote.getMarket().getMarketCodes());
+        priceQuote = PriceQuote.from(eur, usd);
+        assertEquals(12000, priceQuote.getValue());
+        assertEquals(1.2, priceQuote.asDouble());
+        assertEquals(4, priceQuote.getPrecision());
+        assertEquals("USD", priceQuote.getQuoteSideMonetary().code);
+        assertEquals("EUR", priceQuote.getBaseSideMonetary().getCode());
+        assertEquals("EUR/USD", priceQuote.getMarket().getMarketCodes());
 
         // large numbers just below overflow
         xmr = Coin.asXmrFromFaceValue(1500000d);
         btc = Coin.asBtcFromFaceValue(10000.0);
-        quote = Quote.of(xmr, btc);
-        assertEquals(666667, quote.getValue());
-        assertEquals(0.00666667, quote.asDouble());
+        priceQuote = PriceQuote.from(xmr, btc);
+        assertEquals(666667, priceQuote.getValue());
+        assertEquals(0.00666667, priceQuote.asDouble());
 
         try {
             // overflow as we movePointRight by 12 with xmr
             xmr = Coin.asXmrFromFaceValue(15000000d);
             btc = Coin.asBtcFromFaceValue(100000.0);
-            quote = Quote.of(xmr, btc);
-            assertEquals(666667, quote.getValue());
-            assertEquals(0.00666667, quote.asDouble());
+            priceQuote = PriceQuote.from(xmr, btc);
+            assertEquals(666667, priceQuote.getValue());
+            assertEquals(0.00666667, priceQuote.asDouble());
         } catch (Exception e) {
             assertTrue(e instanceof ArithmeticException);
         }

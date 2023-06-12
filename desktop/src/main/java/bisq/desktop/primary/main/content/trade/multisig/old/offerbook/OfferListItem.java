@@ -24,7 +24,7 @@ import bisq.offer.payment.PaymentSpec;
 import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class OfferListItem implements TableItem {
         market = offer.getMarket().toString();
         baseAmount = AmountFormatter.formatAmount(offer.getBaseAmountAsMonetary());
         quoteAmount = AmountFormatter.formatAmount(offer.getQuoteAmountAsMonetary(marketPriceService));
-        price = QuoteFormatter.format(offer.getQuote(marketPriceService));
+        price = PriceFormatter.format(offer.getQuote(marketPriceService));
 
         String baseSidePaymentMethod = offer.getBaseSidePaymentSpecs().stream()
                 .map(PaymentSpec::getPaymentMethodName)

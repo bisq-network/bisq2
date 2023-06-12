@@ -17,7 +17,7 @@
 
 package bisq.offer.price.spec;
 
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -43,11 +43,11 @@ public class PriceSpecUtil {
                 Optional.empty();
     }
 
-    public static Optional<FloatPriceSpec> createFloatPriceSpec(MarketPriceService marketPriceService, Quote quote) {
-        return marketPriceService.findMarketPrice(quote.getMarket())
-                .map(MarketPrice::getQuote).stream()
+    public static Optional<FloatPriceSpec> createFloatPriceSpec(MarketPriceService marketPriceService, PriceQuote priceQuote) {
+        return marketPriceService.findMarketPrice(priceQuote.getMarket())
+                .map(MarketPrice::getPriceQuote).stream()
                 .map(marketPrice -> {
-                    double exact = (double) quote.getValue() / (double) marketPrice.getValue() - 1;
+                    double exact = (double) priceQuote.getValue() / (double) marketPrice.getValue() - 1;
                     return MathUtils.roundDouble(exact, 4);
                 })
                 .map(FloatPriceSpec::new)

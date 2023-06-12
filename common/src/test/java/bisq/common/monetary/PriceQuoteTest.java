@@ -24,18 +24,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
-public class QuoteTest {
+public class PriceQuoteTest {
     @Test
     void testToQuoteMonetary() {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
-        Quote quote = Quote.fromFiatPrice(50000, "USD");
-        Monetary quoteMonetary = Quote.toQuoteMonetary(btc, quote);
-        assertTrue(quoteMonetary instanceof Fiat);
-        assertEquals(500000000, quoteMonetary.value);
+        PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
+        Monetary quoteSideMonetary = priceQuote.toQuoteSideMonetary(btc);
+        assertTrue(quoteSideMonetary instanceof Fiat);
+        assertEquals(500000000, quoteSideMonetary.value);
 
         btc = Coin.asBtcFromFaceValue(2.0);
-        quote = Quote.fromFiatPrice(50000, "USD");
-        quoteMonetary = Quote.toQuoteMonetary(btc, quote);
-        assertEquals(1000000000, quoteMonetary.value);
+        priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
+        quoteSideMonetary = priceQuote.toQuoteSideMonetary(btc);
+        assertEquals(1000000000, quoteSideMonetary.value);
     }
 }

@@ -18,7 +18,7 @@
 package bisq.offer.price;
 
 import bisq.common.currency.Market;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.offer.Offer;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -45,21 +45,21 @@ public class PriceUtil {
      * @param percentage  Offset from market price in percent normalize to 1 (=100%).
      * @return The quote representing the offset from market price
      */
-    public static Quote fromMarketPriceMarkup(Quote marketPrice, double percentage) {
+    public static PriceQuote fromMarketPriceMarkup(PriceQuote marketPrice, double percentage) {
         checkArgument(percentage >= -1, "Offset must > -1");
         double price = marketPrice.asDouble() * (1 + percentage);
-        return Quote.fromPrice(price, marketPrice.getBaseMonetary().getCode(), marketPrice.getQuoteMonetary().getCode());
+        return PriceQuote.fromPrice(price, marketPrice.getBaseSideMonetary().getCode(), marketPrice.getQuoteSideMonetary().getCode());
     }
 
     /**
      * @param marketPrice The quote representing the market price
-     * @param quote       The quote we want to compare to the market price
+     * @param priceQuote  The quote we want to compare to the market price
      * @return The percentage offset from the market price. Positive value means that quote is above market price.
      * Result is rounded to precision 4 (2 decimal places at percentage representation)
      */
-    public static double getPercentageToMarketPrice(Quote marketPrice, Quote quote) {
+    public static double getPercentageToMarketPrice(PriceQuote marketPrice, PriceQuote priceQuote) {
         checkArgument(marketPrice.getValue() > 0, "marketQuote must be positive");
-        return MathUtils.roundDouble(quote.getValue() / (double) marketPrice.getValue() - 1, 4);
+        return MathUtils.roundDouble(priceQuote.getValue() / (double) marketPrice.getValue() - 1, 4);
     }
 
     public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, Offer offer) {
@@ -69,7 +69,7 @@ public class PriceUtil {
     public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
         Optional<Double> percentage;
         if (priceSpec instanceof FixPriceSpec) {
-            Quote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
+            PriceQuote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
             percentage = findMarketPriceQuote(marketPriceService, market).map(marketPrice ->
                     getPercentageToMarketPrice(marketPrice, fixPrice));
         } else if (priceSpec instanceof MarketPriceSpec) {
@@ -87,11 +87,11 @@ public class PriceUtil {
     // Quote
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<Quote> findQuote(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, Offer offer) {
         return findQuote(marketPriceService, offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Quote> findQuote(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
+    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
         if (priceSpec instanceof FixPriceSpec) {
             return Optional.of(getFixePriceQuote((FixPriceSpec) priceSpec));
         } else if (priceSpec instanceof MarketPriceSpec) {
@@ -103,17 +103,17 @@ public class PriceUtil {
         }
     }
 
-    public static Quote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
-        return fixPriceSpec.getQuote();
+    public static PriceQuote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
+        return fixPriceSpec.getPriceQuote();
     }
 
-    public static Optional<Quote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec, Market market) {
+    public static Optional<PriceQuote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec, Market market) {
         return findMarketPriceQuote(marketPriceService, market)
                 .map(marketQuote -> fromMarketPriceMarkup(marketQuote, floatPriceSpec.getPercentage()));
     }
 
-    public static Optional<Quote> findMarketPriceQuote(MarketPriceService marketPriceService, Market market) {
-        return marketPriceService.findMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
+    public static Optional<PriceQuote> findMarketPriceQuote(MarketPriceService marketPriceService, Market market) {
+        return marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote).stream().findAny();
     }
 
 

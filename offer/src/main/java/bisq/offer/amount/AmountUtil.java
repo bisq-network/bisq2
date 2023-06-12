@@ -40,63 +40,82 @@ public class AmountUtil {
     // BaseAmount: If no BaseAmountSpec we calculate it from the QuoteAmountSpec with the PriceSpec
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<Monetary> findFixBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findFixBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    // Fixed
+    public static Optional<Monetary> findBaseSideFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findBaseSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findFixBaseAmount(MarketPriceService marketPriceService,
-                                                       AmountSpec amountSpec,
-                                                       PriceSpec priceSpec,
-                                                       Market market) {
-        return AmountSpecUtil.findFixBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> AmountSpecUtil.findFixQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+    public static Optional<Monetary> findBaseSideFixedAmount(MarketPriceService marketPriceService,
+                                                             AmountSpec amountSpec,
+                                                             PriceSpec priceSpec,
+                                                             Market market) {
+        return AmountSpecUtil.findBaseSideFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
-    public static Optional<Monetary> findMinBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findMinBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    // Min
+    public static Optional<Monetary> findBaseSideMinAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findBaseSideMinAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findMinBaseAmount(MarketPriceService marketPriceService,
-                                                       AmountSpec amountSpec,
-                                                       PriceSpec priceSpec,
-                                                       Market market) {
-        return AmountSpecUtil.findMinBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> AmountSpecUtil.findMinQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+    public static Optional<Monetary> findBaseSideMinAmount(MarketPriceService marketPriceService,
+                                                           AmountSpec amountSpec,
+                                                           PriceSpec priceSpec,
+                                                           Market market) {
+        return AmountSpecUtil.findBaseSideMinAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideMinAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
-    public static Optional<Monetary> findMaxBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findMaxBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    // Max
+    public static Optional<Monetary> findBaseSideMaxAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findBaseSideMaxAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findMaxBaseAmount(MarketPriceService marketPriceService,
-                                                       AmountSpec amountSpec,
-                                                       PriceSpec priceSpec,
-                                                       Market market) {
-        return AmountSpecUtil.findMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> AmountSpecUtil.findMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+    public static Optional<Monetary> findBaseSideMaxAmount(MarketPriceService marketPriceService,
+                                                           AmountSpec amountSpec,
+                                                           PriceSpec priceSpec,
+                                                           Market market) {
+        return AmountSpecUtil.findBaseSideMaxAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideMaxAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
-    public static Optional<Monetary> findFixOrMaxBaseAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findFixOrMaxBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    // Combinations
+    public static Optional<Monetary> findBaseSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findBaseSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findFixOrMaxBaseAmount(MarketPriceService marketPriceService,
-                                                            AmountSpec amountSpec,
-                                                            PriceSpec priceSpec,
-                                                            Market market) {
-        return AmountSpecUtil.findFixOrMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
-                .or(() -> AmountSpecUtil.findFixOrMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+    public static Optional<Monetary> findBaseSideMinOrFixedAmount(MarketPriceService marketPriceService,
+                                                                  AmountSpec amountSpec,
+                                                                  PriceSpec priceSpec,
+                                                                  Market market) {
+        return AmountSpecUtil.findBaseSideMinOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideMinOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                         .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toBaseMonetary(quoteAmount))
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
+                        ));
+    }
+
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findBaseSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    }
+
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                                  AmountSpec amountSpec,
+                                                                  PriceSpec priceSpec,
+                                                                  Market market) {
+        return AmountSpecUtil.findBaseSideMaxOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideMaxOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                        .flatMap(quoteAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                                .map(quote -> quote.toBaseSideMonetary(quoteAmount))
                         ));
     }
 
@@ -105,73 +124,82 @@ public class AmountUtil {
     // QuoteAmount: If no QuoteAmountSpec we calculate it from the BaseAmountSpec with the PriceSpec
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<Monetary> findFixQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findFixQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    // Fixed
+    public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findQuoteSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findFixQuoteAmount(MarketPriceService marketPriceService,
-                                                        AmountSpec amountSpec,
-                                                        PriceSpec priceSpec,
-                                                        Market market) {
-        return AmountSpecUtil.findFixQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> AmountSpecUtil.findFixBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+    public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService,
+                                                              AmountSpec amountSpec,
+                                                              PriceSpec priceSpec,
+                                                              Market market) {
+        return AmountSpecUtil.findQuoteSideFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
-    public static Optional<Monetary> findMinOrFixQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findMinQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket())
-                .or(() -> findFixQuoteAmount(marketPriceService, offer));
+    // Min
+    public static Optional<Monetary> findQuoteSideMinAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findQuoteSideMinAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findMinQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findMinQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
-    }
-
-    public static Optional<Monetary> findMinQuoteAmount(MarketPriceService marketPriceService,
-                                                        AmountSpec amountSpec,
-                                                        PriceSpec priceSpec,
-                                                        Market market) {
-        return AmountSpecUtil.findMinQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> AmountSpecUtil.findMinBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+    public static Optional<Monetary> findQuoteSideMinAmount(MarketPriceService marketPriceService,
+                                                            AmountSpec amountSpec,
+                                                            PriceSpec priceSpec,
+                                                            Market market) {
+        return AmountSpecUtil.findQuoteSideMinAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideMinAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
-    public static Optional<Monetary> findMaxOrFixQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findMaxQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket())
-                .or(() -> AmountUtil.findFixQuoteAmount(marketPriceService, offer));
+    // Max
+    public static Optional<Monetary> findQuoteSideMaxAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findQuoteSideMaxAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findMaxQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
-    }
-
-    public static Optional<Monetary> findMaxQuoteAmount(MarketPriceService marketPriceService,
-                                                        AmountSpec amountSpec,
-                                                        PriceSpec priceSpec,
-                                                        Market market) {
-        return AmountSpecUtil.findMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> AmountSpecUtil.findMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+    public static Optional<Monetary> findQuoteSideMaxAmount(MarketPriceService marketPriceService,
+                                                            AmountSpec amountSpec,
+                                                            PriceSpec priceSpec,
+                                                            Market market) {
+        return AmountSpecUtil.findQuoteSideMaxAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideMaxAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 
-    public static Optional<Monetary> findFixOrMaxQuoteAmount(MarketPriceService marketPriceService, Offer offer) {
-        return findFixOrMaxQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    // Combinations
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findQuoteSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Monetary> findFixOrMaxQuoteAmount(MarketPriceService marketPriceService,
-                                                             AmountSpec amountSpec,
-                                                             PriceSpec priceSpec,
-                                                             Market market) {
-        return AmountSpecUtil.findFixOrMaxQuoteAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
-                .or(() -> AmountSpecUtil.findFixOrMaxBaseAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService,
+                                                                   AmountSpec amountSpec,
+                                                                   PriceSpec priceSpec,
+                                                                   Market market) {
+        return AmountSpecUtil.findQuoteSideMinOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideMinOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
-                                .map(quote -> quote.toQuoteMonetary(baseAmount))
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
+                        ));
+    }
+
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+        return findQuoteSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
+    }
+
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                                   AmountSpec amountSpec,
+                                                                   PriceSpec priceSpec,
+                                                                   Market market) {
+        return AmountSpecUtil.findQuoteSideMaxOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideMaxOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                        .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                                .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
     }
 }

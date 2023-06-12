@@ -26,7 +26,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -39,7 +39,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.FixAmountSpec;
+import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
@@ -47,7 +47,7 @@ import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.MediationService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -89,7 +89,7 @@ public class TakeOfferReviewController implements Controller {
         String marketCodes = market.getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.takeOffer.review.price.sellersPrice", marketCodes));
 
-        if (bisqEasyOffer.getAmountSpec() instanceof FixAmountSpec) {
+        if (bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec) {
             model.setTradeAmountSpec(bisqEasyOffer.getAmountSpec());
         }
 
@@ -97,10 +97,10 @@ public class TakeOfferReviewController implements Controller {
             // If taker is buyer we set the sellers price from the offer
             model.setSellersPriceSpec(bisqEasyOffer.getPriceSpec());
 
-            Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
+            Optional<PriceQuote> sellersQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
-                    .map(QuoteFormatter::formatWithQuoteCode)
+                    .map(PriceFormatter::formatWithCode)
                     .orElse(Res.get("na")));
             applySellersPriceDetails();
         }
@@ -112,10 +112,10 @@ public class TakeOfferReviewController implements Controller {
         if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
             model.setSellersPriceSpec(priceSpec);
 
-            Optional<Quote> sellersQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
+            Optional<PriceQuote> sellersQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
-                    .map(QuoteFormatter::formatWithQuoteCode)
+                    .map(PriceFormatter::formatWithCode)
                     .orElse(Res.get("na")));
             applySellersPriceDetails();
         }
@@ -163,10 +163,10 @@ public class TakeOfferReviewController implements Controller {
         PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         Market market = model.getBisqEasyOffer().getMarket();
 
-        Optional<Monetary> quoteAmount = AmountUtil.findFixQuoteAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
+        Optional<Monetary> quoteAmount = AmountUtil.findQuoteSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
         String formattedQuoteAmount = quoteAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
 
-        Optional<Monetary> baseAmount = AmountUtil.findFixBaseAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
+        Optional<Monetary> baseAmount = AmountUtil.findBaseSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
         String formattedBaseAmount = baseAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 
@@ -207,10 +207,10 @@ public class TakeOfferReviewController implements Controller {
     private void applySellersPriceDetails() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         Market market = bisqEasyOffer.getMarket();
-        Optional<Quote> marketPriceQuote = marketPriceService.findMarketPrice(market)
-                .map(MarketPrice::getQuote);
+        Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market)
+                .map(MarketPrice::getPriceQuote);
         String marketPrice = marketPriceQuote
-                .map(QuoteFormatter::formatWithQuoteCode)
+                .map(PriceFormatter::formatWithCode)
                 .orElse(Res.get("na"));
         Optional<Double> percentFromMarketPrice;
         percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, model.getSellersPriceSpec(), market);

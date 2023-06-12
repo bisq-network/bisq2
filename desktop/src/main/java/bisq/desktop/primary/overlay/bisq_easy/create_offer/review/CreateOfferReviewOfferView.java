@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -367,9 +367,9 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
             this.bisqEasyOffer = bisqEasyOffer;
             authorUserProfileId = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
             userName = authorUserProfileId.map(UserProfile::getUserName).orElse("");
-            priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(Quote::getValue).orElse(0L);
+            priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
-            amountAsLong = AmountUtil.findFixOrMaxQuoteAmount(marketPriceService, bisqEasyOffer).map(Monetary::getValue).orElse(0L);
+            amountAsLong = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).map(Monetary::getValue).orElse(0L);
             amountDisplayString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
             reputationScore = authorUserProfileId.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);

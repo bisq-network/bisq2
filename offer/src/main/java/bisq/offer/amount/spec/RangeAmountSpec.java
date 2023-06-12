@@ -17,24 +17,36 @@
 
 package bisq.offer.amount.spec;
 
-import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public interface AmountSpec extends Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public abstract class RangeAmountSpec implements AmountSpec {
+    protected final long minAmount;
+    protected final long maxAmount;
 
-    bisq.offer.protobuf.AmountSpec toProto();
-
-    default bisq.offer.protobuf.AmountSpec.Builder getAmountSpecBuilder() {
-        return bisq.offer.protobuf.AmountSpec.newBuilder();
+    public RangeAmountSpec(long minAmount, long maxAmount) {
+        this.minAmount = minAmount;
+        this.maxAmount = maxAmount;
     }
 
-    static AmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
+    public bisq.offer.protobuf.RangeAmountSpec.Builder getRangeAmountSpecBuilder() {
+        return bisq.offer.protobuf.RangeAmountSpec.newBuilder()
+                .setMinAmount(minAmount)
+                .setMaxAmount(maxAmount);
+    }
+
+    static RangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
         switch (proto.getMessageCase()) {
-            case FIXEDAMOUNTSPEC: {
-                return FixedAmountSpec.fromProto(proto.getFixedAmountSpec());
+            case BASESIDERANGEAMOUNTSPEC: {
+                return BaseSideRangeAmountSpec.fromProto(proto);
             }
-            case RANGEAMOUNTSPEC: {
-                return RangeAmountSpec.fromProto(proto.getRangeAmountSpec());
+            case QUOTESIDERANGEAMOUNTSPEC: {
+                return QuoteSideRangeAmountSpec.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

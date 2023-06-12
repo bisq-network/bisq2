@@ -77,10 +77,10 @@ message Monetary {
   }
 }
 
-message Quote {
+message PriceQuote {
   int64 value = 1;
-  Monetary baseMonetary = 2;
-  Monetary quoteMonetary = 3;
+  Monetary baseSideMonetary = 2;
+  Monetary quoteSideMonetary = 3;
 }
 
 message ByteArrayMapEntry {

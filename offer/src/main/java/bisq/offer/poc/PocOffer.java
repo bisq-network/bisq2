@@ -20,7 +20,7 @@ package bisq.offer.poc;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
@@ -210,8 +210,8 @@ public final class PocOffer implements DistributedData {
     public Monetary getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPriceSpec) {
             Monetary base = getBaseAmountAsMonetary();
-            Quote quote = ((FixPriceSpec) priceSpec).getQuote();
-            long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
+            PriceQuote priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
+            long quoteAmountValue = priceQuote.toQuoteSideMonetary(base).getValue();
             return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
         } else if (priceSpec instanceof FloatPriceSpec) {
             Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
@@ -222,9 +222,9 @@ public final class PocOffer implements DistributedData {
         }
     }
 
-    public Quote getQuote(MarketPriceService marketPriceService) {
+    public PriceQuote getQuote(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPriceSpec) {
-            return ((FixPriceSpec) priceSpec).getQuote();
+            return ((FixPriceSpec) priceSpec).getPriceQuote();
         } else if (priceSpec instanceof FloatPriceSpec) {
             Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
             //todo

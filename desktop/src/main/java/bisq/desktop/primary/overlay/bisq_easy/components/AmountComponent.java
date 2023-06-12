@@ -24,7 +24,7 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
@@ -96,9 +96,9 @@ public class AmountComponent {
         controller.setMinMaxRange(minRangeValue, maxRangeValue);
     }
 
-    public void setQuote(Quote quote) {
-        if (quote != null) {
-            controller.setQuote(quote);
+    public void setQuote(PriceQuote priceQuote) {
+        if (priceQuote != null) {
+            controller.setQuote(priceQuote);
         }
     }
 
@@ -117,7 +117,7 @@ public class AmountComponent {
         private final BigAmountInput quoteSideAmountInput;
         private final SmallAmountInput baseSideAmountInput;
         private final ChangeListener<Monetary> baseSideAmountFromModelListener, quoteSideAmountFromModelListener;
-        private final ChangeListener<Quote> quoteListener;
+        private final ChangeListener<PriceQuote> quoteListener;
         private final PriceInput price;
         private final ChangeListener<Number> sliderListener;
         private Subscription baseAmountFromModelPin, baseAmountFromCompPin,
@@ -223,8 +223,8 @@ public class AmountComponent {
             applyInitialRangeValues();
         }
 
-        public void setQuote(Quote quote) {
-            price.setQuote(quote);
+        public void setQuote(PriceQuote priceQuote) {
+            price.setQuote(priceQuote);
         }
 
         private void reset() {
@@ -248,12 +248,12 @@ public class AmountComponent {
 
             baseSideAmountInput.setAmount(null);
             if (model.getQuoteSideAmount().get() == null) {
-                Quote quote = price.getQuote().get();
-                if (quote != null) {
+                PriceQuote priceQuote = price.getQuote().get();
+                if (priceQuote != null) {
                     Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
                     Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
                     long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
-                    Monetary exactAmount = Fiat.fromValue(midValue, quote.getQuoteMonetary().getCode());
+                    Monetary exactAmount = Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
                     quoteSideAmountInput.setAmount(exactAmount.round(0));
                 } else {
                     log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
@@ -322,8 +322,8 @@ public class AmountComponent {
         }
 
         private void applyInitialRangeValues() {
-            Quote quote = price.getQuote().get();
-            if (quote == null) {
+            PriceQuote priceQuote = price.getQuote().get();
+            if (priceQuote == null) {
                 return;
             }
 
@@ -335,7 +335,7 @@ public class AmountComponent {
             if (model.getMinRangeBaseSideValue().get() == null) {
                 Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ?
                         minRangeMonetary :
-                        quote.toBaseMonetary(minRangeMonetary);
+                        priceQuote.toBaseSideMonetary(minRangeMonetary);
                 model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
                 if (!model.useQuoteCurrencyForMinMaxRange) {
                     model.getMinRangeValueAsString().set(Res.get("onboarding.amount.minRangeValue",
@@ -345,7 +345,7 @@ public class AmountComponent {
             if (model.getMaxRangeBaseSideValue().get() == null) {
                 Monetary maxRangeMonetaryAsCoin = !isMaxRangeMonetaryFiat ?
                         maxRangeMonetary :
-                        quote.toBaseMonetary(maxRangeMonetary);
+                        priceQuote.toBaseSideMonetary(maxRangeMonetary);
                 model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
                 if (!model.useQuoteCurrencyForMinMaxRange) {
                     model.getMaxRangeValueAsString().set(Res.get("onboarding.amount.maxRangeValue",
@@ -356,7 +356,7 @@ public class AmountComponent {
             if (model.getMinRangeQuoteSideValue().get() == null) {
                 Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ?
                         minRangeMonetary :
-                        quote.toQuoteMonetary(minRangeMonetary).round(0);
+                        priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
                 model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
                 if (model.useQuoteCurrencyForMinMaxRange) {
                     model.getMinRangeValueAsString().set(Res.get("onboarding.amount.minRangeValue",
@@ -367,7 +367,7 @@ public class AmountComponent {
             if (model.getMaxRangeQuoteSideValue().get() == null) {
                 Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ?
                         maxRangeMonetary :
-                        quote.toQuoteMonetary(maxRangeMonetary).round(0);
+                        priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
                 model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
                 if (model.useQuoteCurrencyForMinMaxRange) {
                     model.getMaxRangeValueAsString().set(Res.get("onboarding.amount.maxRangeValue",
@@ -392,19 +392,19 @@ public class AmountComponent {
         }
 
         private void setQuoteFromBase() {
-            Quote quote = price.getQuote().get();
-            if (quote == null) return;
+            PriceQuote priceQuote = price.getQuote().get();
+            if (priceQuote == null) return;
             Monetary baseSideAmount = model.getBaseSideAmount().get();
             if (baseSideAmount == null) return;
-            quoteSideAmountInput.setAmount(quote.toQuoteMonetary(baseSideAmount).round(0));
+            quoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
         }
 
         private void setBaseFromQuote() {
-            Quote quote = price.getQuote().get();
-            if (quote == null) return;
+            PriceQuote priceQuote = price.getQuote().get();
+            if (priceQuote == null) return;
             Monetary quoteSideAmount = model.getQuoteSideAmount().get();
             if (quoteSideAmount == null) return;
-            baseSideAmountInput.setAmount(quote.toBaseMonetary(quoteSideAmount));
+            baseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
         }
 
         private void applyQuote() {

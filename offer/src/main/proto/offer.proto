@@ -12,33 +12,40 @@ enum Direction {
   SELL = 1;
 }
 
-// Specs
-message FixBaseAmountSpec {
+// AmountSpec
+message BaseSideFixedAmountSpec {
+}
+message QuoteSideFixedAmountSpec {
+}
+message BaseSideRangeAmountSpec {
+}
+message QuoteSideRangeAmountSpec {
+}
+message FixedAmountSpec {
   uint64 amount = 1;
+  oneof message {
+    BaseSideFixedAmountSpec baseSideFixedAmountSpec = 10;
+    QuoteSideFixedAmountSpec quoteSideFixedAmountSpec = 11;
+  }
 }
-message FixQuoteAmountSpec {
-  uint64 amount = 2;
-}
-
-message MinMaxBaseAmountSpec {
+message RangeAmountSpec {
   uint64 minAmount = 1;
   uint64 maxAmount = 2;
-}
-message MinMaxQuoteAmountSpec {
-  uint64 minAmount = 1;
-  uint64 maxAmount = 2;
+  oneof message {
+    BaseSideRangeAmountSpec baseSideRangeAmountSpec = 10;
+    QuoteSideRangeAmountSpec quoteSideRangeAmountSpec = 11;
+  }
 }
 message AmountSpec {
   oneof message {
-    FixBaseAmountSpec fixBaseAmountSpec = 1;
-    FixQuoteAmountSpec fixQuoteAmountSpec = 2;
-    MinMaxBaseAmountSpec minMaxBaseAmountSpec = 3;
-    MinMaxQuoteAmountSpec minMaxQuoteAmountSpec = 4;
+    FixedAmountSpec fixedAmountSpec = 1;
+    RangeAmountSpec rangeAmountSpec = 2;
   }
 }
 
+// PriceSpec
 message FixPrice {
-  common.Quote quote = 1;
+  common.PriceQuote priceQuote = 1;
 }
 message FloatPrice {
   double percentage = 1;
@@ -120,6 +127,7 @@ message BisqEasyOffer {
 }
 
 
+// proof of concept stuff
 message PocOffer {
   string id = 1;
   uint64 date = 2;

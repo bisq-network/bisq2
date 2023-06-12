@@ -22,7 +22,7 @@ import bisq.account.payment.Payment;
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.poc.PocOffer;
@@ -49,7 +49,7 @@ public class MultiSigCreateOfferModel implements Model {
     @Setter
     private Monetary quoteSideAmount;
     @Setter
-    private Quote fixPrice;
+    private PriceQuote fixPrice;
 
     private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
     private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());

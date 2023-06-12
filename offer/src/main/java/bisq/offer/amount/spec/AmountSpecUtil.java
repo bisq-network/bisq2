@@ -29,30 +29,35 @@ import java.util.Optional;
 public class AmountSpecUtil {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // BaseAmount: Monetary from BaseAmountSpec otherwise empty Optional
+    // BaseAmount: Monetary from BaseSideAmountSpec otherwise empty Optional
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<Monetary> findFixBaseAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findFixBaseAmountSpec(amountSpec)
-                .map(FixBaseAmountSpec::getAmount)
+    public static Optional<Monetary> findBaseSideFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+        return findBaseSideFixedAmountSpec(amountSpec)
+                .map(BaseSideFixedAmountSpec::getAmount)
                 .map(amount -> Monetary.from(amount, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findMinBaseAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findMinMaxBaseAmountSpec(amountSpec)
-                .map(MinMaxBaseAmountSpec::getMinAmount)
+    public static Optional<Monetary> findBaseSideMinAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+        return findBaseSideRangeAmountSpec(amountSpec)
+                .map(BaseSideRangeAmountSpec::getMinAmount)
                 .map(amount -> Monetary.from(amount, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findMaxBaseAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findMinMaxBaseAmountSpec(amountSpec)
-                .map(MinMaxBaseAmountSpec::getMaxAmount)
+    public static Optional<Monetary> findBaseSideMaxAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+        return findBaseSideRangeAmountSpec(amountSpec)
+                .map(BaseSideRangeAmountSpec::getMaxAmount)
                 .map(amount -> Monetary.from(amount, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findFixOrMaxBaseAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
-        return findFixBaseAmountFromSpec(amountSpec, baseCurrencyCode)
-                .or(() -> findMaxBaseAmountFromSpec(amountSpec, baseCurrencyCode));
+    public static Optional<Monetary> findBaseSideMinOrFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+        return findBaseSideMinAmountFromSpec(amountSpec, baseCurrencyCode)
+                .or(() -> findBaseSideFixedAmountFromSpec(amountSpec, baseCurrencyCode));
+    }
+
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+        return findBaseSideMaxAmountFromSpec(amountSpec, baseCurrencyCode)
+                .or(() -> findBaseSideFixedAmountFromSpec(amountSpec, baseCurrencyCode));
     }
 
 
@@ -60,27 +65,32 @@ public class AmountSpecUtil {
     // QuoteAmount: Monetary from QuoteAmountSpec otherwise empty Optional
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<Monetary> findFixQuoteAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findFixQuoteAmountSpec(amountSpec)
-                .map(FixQuoteAmountSpec::getAmount)
+    public static Optional<Monetary> findQuoteSideFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+        return findQuoteSideFixedAmountSpec(amountSpec)
+                .map(QuoteSideFixedAmountSpec::getAmount)
                 .map(amount -> Monetary.from(amount, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findMinQuoteAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findMinMaxQuoteAmountSpec(amountSpec)
-                .map(MinMaxQuoteAmountSpec::getMinAmount)
+    public static Optional<Monetary> findQuoteSideMinAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+        return findQuoteSideRangeAmountSpec(amountSpec)
+                .map(QuoteSideRangeAmountSpec::getMinAmount)
                 .map(amount -> Monetary.from(amount, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findMaxQuoteAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findMinMaxQuoteAmountSpec(amountSpec)
-                .map(MinMaxQuoteAmountSpec::getMaxAmount)
+    public static Optional<Monetary> findQuoteSideMaxAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+        return findQuoteSideRangeAmountSpec(amountSpec)
+                .map(QuoteSideRangeAmountSpec::getMaxAmount)
                 .map(amount -> Monetary.from(amount, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findFixOrMaxQuoteAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
-        return findFixQuoteAmountFromSpec(amountSpec, quoteCurrencyCode)
-                .or(() -> findMaxQuoteAmountFromSpec(amountSpec, quoteCurrencyCode));
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+        return findQuoteSideMinAmountFromSpec(amountSpec, quoteCurrencyCode)
+                .or(() -> findQuoteSideFixedAmountFromSpec(amountSpec, quoteCurrencyCode));
+    }
+
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+        return findQuoteSideMaxAmountFromSpec(amountSpec, quoteCurrencyCode)
+                .or(() -> findQuoteSideFixedAmountFromSpec(amountSpec, quoteCurrencyCode));
     }
 
 
@@ -88,27 +98,27 @@ public class AmountSpecUtil {
     // Find AmountSpec implementations
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<FixBaseAmountSpec> findFixBaseAmountSpec(AmountSpec amountSpec) {
-        return amountSpec instanceof FixBaseAmountSpec ?
-                Optional.of((FixBaseAmountSpec) amountSpec) :
+    public static Optional<BaseSideFixedAmountSpec> findBaseSideFixedAmountSpec(AmountSpec amountSpec) {
+        return amountSpec instanceof BaseSideFixedAmountSpec ?
+                Optional.of((BaseSideFixedAmountSpec) amountSpec) :
                 Optional.empty();
     }
 
-    public static Optional<MinMaxBaseAmountSpec> findMinMaxBaseAmountSpec(AmountSpec amountSpec) {
-        return amountSpec instanceof MinMaxBaseAmountSpec ?
-                Optional.of((MinMaxBaseAmountSpec) amountSpec) :
+    public static Optional<BaseSideRangeAmountSpec> findBaseSideRangeAmountSpec(AmountSpec amountSpec) {
+        return amountSpec instanceof BaseSideRangeAmountSpec ?
+                Optional.of((BaseSideRangeAmountSpec) amountSpec) :
                 Optional.empty();
     }
 
-    public static Optional<FixQuoteAmountSpec> findFixQuoteAmountSpec(AmountSpec amountSpec) {
-        return amountSpec instanceof FixQuoteAmountSpec ?
-                Optional.of((FixQuoteAmountSpec) amountSpec) :
+    public static Optional<QuoteSideFixedAmountSpec> findQuoteSideFixedAmountSpec(AmountSpec amountSpec) {
+        return amountSpec instanceof QuoteSideFixedAmountSpec ?
+                Optional.of((QuoteSideFixedAmountSpec) amountSpec) :
                 Optional.empty();
     }
 
-    public static Optional<MinMaxQuoteAmountSpec> findMinMaxQuoteAmountSpec(AmountSpec amountSpec) {
-        return amountSpec instanceof MinMaxQuoteAmountSpec ?
-                Optional.of((MinMaxQuoteAmountSpec) amountSpec) :
+    public static Optional<QuoteSideRangeAmountSpec> findQuoteSideRangeAmountSpec(AmountSpec amountSpec) {
+        return amountSpec instanceof QuoteSideRangeAmountSpec ?
+                Optional.of((QuoteSideRangeAmountSpec) amountSpec) :
                 Optional.empty();
     }
 }

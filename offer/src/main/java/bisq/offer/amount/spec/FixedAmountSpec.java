@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,10 +28,29 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class FixAmountSpec implements AmountSpec {
+public abstract class FixedAmountSpec implements AmountSpec {
     protected final long amount;
 
-    public FixAmountSpec(long amount) {
+    public FixedAmountSpec(long amount) {
         this.amount = amount;
+    }
+
+    public bisq.offer.protobuf.FixedAmountSpec.Builder getFixedAmountSpecBuilder() {
+        return bisq.offer.protobuf.FixedAmountSpec.newBuilder().setAmount(amount);
+    }
+
+    static FixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {
+        switch (proto.getMessageCase()) {
+            case BASESIDEFIXEDAMOUNTSPEC: {
+                return BaseSideFixedAmountSpec.fromProto(proto);
+            }
+            case QUOTESIDEFIXEDAMOUNTSPEC: {
+                return QuoteSideFixedAmountSpec.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

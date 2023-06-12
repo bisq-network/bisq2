@@ -25,7 +25,7 @@ import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -213,7 +213,7 @@ public class MarketSelection {
         private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             codes = marketPrice.getMarket().getMarketCodes();
-            price = QuoteFormatter.format(marketPrice.getQuote(), true);
+            price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
         }
 
         @Override

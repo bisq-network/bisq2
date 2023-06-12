@@ -30,7 +30,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,22 +75,22 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                 market.getQuoteCurrencyCode()));
 
         if (bisqEasyOffer.hasAmountRange()) {
-            model.getBaseSideAmount().set(OfferAmountFormatter.formatMinBaseAmount(marketPriceService, bisqEasyOffer) + " - " +
-                    OfferAmountFormatter.formatMaxBaseAmount(marketPriceService, bisqEasyOffer));
+            model.getBaseSideAmount().set(OfferAmountFormatter.formatBaseSideMinAmount(marketPriceService, bisqEasyOffer) + " - " +
+                    OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, bisqEasyOffer));
         } else {
             model.getBaseSideAmount().set(OfferAmountFormatter.formatBaseAmount(marketPriceService, bisqEasyOffer));
         }
 
         if (bisqEasyOffer.hasAmountRange()) {
-            model.getQuoteSideAmount().set(OfferAmountFormatter.formatMinQuoteAmount(marketPriceService, bisqEasyOffer) + " - " +
-                    OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
+            model.getQuoteSideAmount().set(OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer) + " - " +
+                    OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer));
         } else {
-            model.getQuoteSideAmount().set(OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
+            model.getQuoteSideAmount().set(OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer));
         }
 
         model.getPrice().set(PriceUtil.findQuote(marketPriceService, bisqEasyOffer)
                 .map(quote -> {
-                    String price = QuoteFormatter.format(quote, true);
+                    String price = PriceFormatter.format(quote, true);
                     String percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
                             .map(PercentageFormatter::formatToPercentWithSymbol)
                             .orElse("");

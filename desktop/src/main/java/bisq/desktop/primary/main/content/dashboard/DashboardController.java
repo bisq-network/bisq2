@@ -28,7 +28,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.presentation.formatters.QuoteFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -98,7 +98,7 @@ public class DashboardController implements Controller {
         if (selectedMarket != null) {
             UIThread.run(() -> {
                 MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(selectedMarket);
-                model.getMarketPrice().set(QuoteFormatter.format(marketPrice.getQuote(), true));
+                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
                 model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
             });
         }

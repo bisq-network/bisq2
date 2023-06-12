@@ -21,25 +21,23 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-/**
- * No min. amount supported
- */
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class FixQuoteAmountSpec extends FixAmountSpec implements QuoteAmountSpec {
-    public FixQuoteAmountSpec(long amount) {
-        super(amount);
+public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements BaseSideAmountSpec {
+    public BaseSideRangeAmountSpec(long minAmount, long maxAmount) {
+        super(minAmount, maxAmount);
     }
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixQuoteAmountSpec(bisq.offer.protobuf.FixQuoteAmountSpec.newBuilder()
-                        .setAmount(amount))
+        return getAmountSpecBuilder().setRangeAmountSpec(
+                        getRangeAmountSpecBuilder().setBaseSideRangeAmountSpec(
+                                bisq.offer.protobuf.BaseSideRangeAmountSpec.newBuilder()))
                 .build();
     }
 
-    public static FixQuoteAmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return new FixQuoteAmountSpec(proto.getFixQuoteAmountSpec().getAmount());
+    public static BaseSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
+        return new BaseSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
     }
 }
