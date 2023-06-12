@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MarketSelection;
-import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.primary.main.content.trade.components_poc.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.multisig.old.createOffer.MultiSigCreateOfferController;
 import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.TakeOfferController;
 import bisq.i18n.Res;

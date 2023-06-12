@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.components;
+package bisq.desktop.primary.main.content.trade.components_poc;
 
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
