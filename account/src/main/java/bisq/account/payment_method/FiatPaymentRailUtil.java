@@ -51,12 +51,12 @@ public class FiatPaymentRailUtil {
         return getFiatPaymentRails().stream()
                 .filter(fiatPaymentRail -> {
                     if (currencyCode.equals("EUR") &&
-                            (fiatPaymentRail == FiatPaymentRail.SWIFT ||
-                                    fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK)) {
-                        // For EUR, we don't add SWIFT and NATIONAL_BANK
+                            (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK)) {
+                        // For EUR, we don't add NATIONAL_BANK as SEPA is the common payment rail for EUR
+                        // SWIFT is added to support non-EUR countries offering EUR accounts like Switzerland
                         return false;
                     }
-                    // We add NATIONAL_BANK to all
+                    // We add NATIONAL_BANK to all others
                     if (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK) {
                         return true;
                     }

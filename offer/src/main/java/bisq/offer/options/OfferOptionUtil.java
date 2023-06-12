@@ -71,12 +71,12 @@ public class OfferOptionUtil {
                 .findAny();
     }
 
-    public static Optional<String> findMakersTradeTerms(Offer offer) {
+    public static Optional<String> findMakersTradeTerms(Offer<?, ?> offer) {
         return OfferOptionUtil.findTradeTermsOption(offer.getOfferOptions()).stream().findAny()
                 .map(TradeTermsOption::getMakersTradeTerms);
     }
 
-    public static Optional<Long> findRequiredTotalReputationScore(Offer offer) {
+    public static Optional<Long> findRequiredTotalReputationScore(Offer<?, ?> offer) {
         return OfferOptionUtil.findReputationOption(offer.getOfferOptions()).stream().findAny()
                 .map(ReputationOption::getRequiredTotalReputationScore);
     }

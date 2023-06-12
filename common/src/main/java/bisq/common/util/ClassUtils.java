@@ -15,14 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.payment_method;
+package bisq.common.util;
 
-public enum CryptoPaymentRail implements PaymentRail {
-    CUSTOM,                             // Custom defined payment rail by the user
-    BSQ,                                // BSQ (colored coin on the BTC blockchain)
-    MONERO,                             // Monero blockchain
-    LIQUID,                             // Liquid side chain
-    NATIVE_CHAIN,                       // The native chain of that cryptocurrency
-    ATOMIC_SWAP_CAPABLE_CHAIN,          // A blockchain capable for atomic cross chain swaps
-    OTHER;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
+
+@Slf4j
+public class ClassUtils {
+
+    public static <T> Optional<T> safeCast(Object object, Class<T> clazz) {
+        if (clazz.isInstance(object)) {
+            try {
+                //noinspection unchecked
+                T casted = (T) object;
+                return Optional.of(casted);
+            } catch (ClassCastException t) {
+                log.error("Could not cast object {} to class {}", object, clazz);
+                return Optional.empty();
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
 }

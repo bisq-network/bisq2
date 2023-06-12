@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -38,10 +38,6 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
@@ -130,6 +126,11 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
         addButton.setOnAction(null);
 
+        flowPane.getChildren().stream()
+                .filter(e -> e instanceof ChipButton)
+                .map(e -> (ChipButton) e)
+                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
+
         addCustomMethodIconEnabledPin.unsubscribe();
 
         model.getFiatPaymentMethods().removeListener(paymentMethodListener);
@@ -137,30 +138,32 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
     private void fillPaymentMethods() {
         flowPane.getChildren().clear();
-        List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>(model.getFiatPaymentMethods());
-        fiatPaymentMethods.sort(Comparator.comparing(PaymentMethod::getDisplayString));
-
-        for (FiatPaymentMethod method : fiatPaymentMethods) {
+        for (FiatPaymentMethod fiatPaymentMethod : model.getSortedFiatPaymentMethods()) {
             // enum name or custom name
-            ChipButton chipButton = new ChipButton(method.getShortDisplayString());
-            if (model.getSelectedFiatPaymentMethods().contains(method)) {
+            ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
+            if (model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 chipButton.setSelected(true);
             }
-            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(method, chipButton.isSelected()));
+            chipButton.setOnAction(() -> {
+                boolean wasAdded = controller.onTogglePaymentMethod(fiatPaymentMethod, chipButton.isSelected());
+                if (!wasAdded) {
+                    UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
+                }
+            });
             model.getAddedCustomFiatPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(method))
+                    .filter(customMethod -> customMethod.equals(fiatPaymentMethod))
                     .findAny()
                     .ifPresentOrElse(
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(method));
-                                if (method.getShortDisplayString().length() > 13) {
-                                    chipButton.setTooltip(new BisqTooltip(method.getDisplayString()));
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(fiatPaymentMethod));
+                                if (fiatPaymentMethod.getShortDisplayString().length() > 13) {
+                                    chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
                                 }
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(method.getName());
+                                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
                                 chipButton.setLeftIcon(icon);
                             });
             flowPane.getChildren().add(chipButton);

@@ -34,24 +34,21 @@ public class BitcoinPaymentMethodUtil {
         return BitcoinPaymentMethod.fromCustomName(name);
     }
 
-    public static List<BitcoinPaymentRail> getBitcoinPaymentRails() {
+    public static List<BitcoinPaymentRail> getAllBitcoinPaymentRails() {
         return List.of(BitcoinPaymentRail.values());
-    }
-
-    public static List<BitcoinPaymentRail> getLNPaymentRails() {
-        return List.of(BitcoinPaymentRail.LN);
     }
 
     public static List<BitcoinPaymentRail> getBitcoinPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
+                return getAllBitcoinPaymentRails();               // Support any BTC rail 
             case BISQ_MULTISIG:
-                return getBitcoinPaymentRails();
-            case LIGHTNING_X:
-                return getLNPaymentRails();
             case MONERO_SWAP:
-            case LIQUID_SWAP:
             case BSQ_SWAP:
+                return List.of(BitcoinPaymentRail.MAIN_CHAIN);    // Require BTC main chain
+            case LIGHTNING_X:
+                return List.of(BitcoinPaymentRail.LN);
+            case LIQUID_SWAP:
                 throw new IllegalArgumentException("No paymentMethods for that protocolType");
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);

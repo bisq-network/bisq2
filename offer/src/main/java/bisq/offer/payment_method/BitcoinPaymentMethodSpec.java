@@ -17,6 +17,7 @@
 
 package bisq.offer.payment_method;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,33 +26,23 @@ import java.util.Optional;
 
 @Getter
 @ToString
-@EqualsAndHashCode
-public final class BitcoinPaymentMethodSpec implements PaymentMethodSpec {
-    private final String address;
-    private final Optional<String> saltedMakerAccountId;
+@EqualsAndHashCode(callSuper = true)
+public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPaymentMethod> {
 
-    public BitcoinPaymentMethodSpec(String address) {
-        this(address, Optional.empty());
+    public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod) {
+        super(paymentMethod);
     }
 
-    public BitcoinPaymentMethodSpec(String address, Optional<String> saltedMakerAccountId) {
-        this.address = address;
-        this.saltedMakerAccountId = saltedMakerAccountId;
+    public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
+        super(paymentMethod, saltedMakerAccountId);
     }
 
     public bisq.offer.protobuf.PaymentMethodSpec toProto() {
-        bisq.offer.protobuf.BitcoinPaymentMethodSpec.Builder builder = bisq.offer.protobuf.BitcoinPaymentMethodSpec.newBuilder()
-                .setAddress(address);
-        saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
-        return getPaymentMethodSpecBuilder().setBitcoinPaymentMethodSpec(builder).build();
+        return getPaymentMethodSpecBuilder().setBitcoinPaymentMethodSpec(bisq.offer.protobuf.BitcoinPaymentMethodSpec.newBuilder()).build();
     }
 
-    public static BitcoinPaymentMethodSpec fromProto(bisq.offer.protobuf.BitcoinPaymentMethodSpec proto) {
-        return new BitcoinPaymentMethodSpec(proto.getAddress(),
+    public static BitcoinPaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+        return new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
-    }
-
-    public String getPaymentMethodName() {
-        return address;
     }
 }

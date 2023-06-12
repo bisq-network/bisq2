@@ -75,8 +75,8 @@ public final class PocOffer implements DistributedData {
     private final long baseAmount;
     private final PriceSpec priceSpec;
     private final List<TradeProtocolType> protocolTypes;
-    private final List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
-    private final List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
+    private final List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs;
+    private final List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs;
     private final List<OfferOption> offerOptions;
     private final MetaData metaData;
 
@@ -88,8 +88,8 @@ public final class PocOffer implements DistributedData {
                     long baseAmount,
                     PriceSpec priceSpec,
                     List<TradeProtocolType> protocolTypes,
-                    List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
-                    List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                    List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                    List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
                     List<OfferOption> offerOptions) {
         this(id,
                 date,
@@ -113,8 +113,8 @@ public final class PocOffer implements DistributedData {
                      long baseAmount,
                      PriceSpec priceSpec,
                      List<TradeProtocolType> protocolTypes,
-                     List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
-                     List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                     List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                     List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
                      List<OfferOption> offerOptions,
                      MetaData metaData) {
         this.id = id;
@@ -162,11 +162,11 @@ public final class PocOffer implements DistributedData {
         List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
                 .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
-        List<PaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(e -> BitcoinPaymentMethodSpec.fromProto(e.getBitcoinPaymentMethodSpec()))
+        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
+                .map(PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto)
                 .collect(Collectors.toList());
-        List<PaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(e -> FiatPaymentMethodSpec.fromProto(e.getFiatPaymentMethodSpec()))
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
+                .map(PaymentMethodSpec::<FiatPaymentMethodSpec>fromProto)
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)

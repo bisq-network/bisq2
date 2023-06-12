@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class Offer implements Proto {
+public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMethodSpec<?>> implements Proto {
     protected final String id;
     protected final long date;
     protected final NetworkId makerNetworkId;
@@ -52,8 +52,8 @@ public abstract class Offer implements Proto {
     private final AmountSpec amountSpec;
     protected final PriceSpec priceSpec;
     protected final List<TradeProtocolType> protocolTypes;
-    protected final List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
-    protected final List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
+    protected final List<B> baseSidePaymentMethodSpecs;
+    protected final List<Q> quoteSidePaymentMethodSpecs;
     protected final List<OfferOption> offerOptions;
 
     public Offer(String id,
@@ -64,8 +64,8 @@ public abstract class Offer implements Proto {
                  AmountSpec amountSpec,
                  PriceSpec priceSpec,
                  List<TradeProtocolType> protocolTypes,
-                 List<PaymentMethodSpec> baseSidePaymentMethodSpecs,
-                 List<PaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                 List<B> baseSidePaymentMethodSpecs,
+                 List<Q> quoteSidePaymentMethodSpecs,
                  List<OfferOption> offerOptions) {
         this.id = id;
         this.date = date;
@@ -105,7 +105,7 @@ public abstract class Offer implements Proto {
     }
 
 
-    public static Offer fromProto(bisq.offer.protobuf.Offer proto) {
+    public static Offer<? extends PaymentMethodSpec<?>, ? extends PaymentMethodSpec<?>> fromProto(bisq.offer.protobuf.Offer proto) {
         switch (proto.getMessageCase()) {
             case BISQEASYOFFER: {
                 return BisqEasyOffer.fromProto(proto);

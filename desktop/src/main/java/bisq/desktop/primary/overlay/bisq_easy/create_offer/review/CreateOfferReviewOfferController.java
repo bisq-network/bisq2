@@ -40,8 +40,8 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.PaymentMethodFormatter;
-import bisq.offer.payment_method.PaymentMethodUtil;
+import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -58,10 +58,7 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -177,7 +174,7 @@ public class CreateOfferReviewOfferController implements Controller {
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
-        String paymentMethodNames = PaymentMethodFormatter.formatPaymentMethodNames(model.getFiatPaymentMethods(), true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.formatPaymentMethodNames(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
@@ -192,7 +189,7 @@ public class CreateOfferReviewOfferController implements Controller {
                 model.getMarket(),
                 amountSpec,
                 priceSpec,
-                model.getFiatPaymentMethods(),
+                new ArrayList<>(model.getFiatPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
                 chatMessageText);
@@ -302,8 +299,8 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                List<String> paymentMethodNames = PaymentMethodUtil.getQuoteSidePaymentMethodNames(peersOffer);
-                if (PaymentMethodUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
+                List<String> paymentMethodNames = PaymentMethodSpecUtil.getQuoteSidePaymentMethodNames(peersOffer);
+                if (PaymentMethodSpecUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
                     return false;
                 }
 

@@ -17,6 +17,8 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.ChipToggleButton;
@@ -25,15 +27,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, TakeOfferPaymentController> {
@@ -70,35 +68,23 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
     @Override
     protected void onViewAttached() {
         flowPane.getChildren().clear();
-        List<String> allMethodNames = new ArrayList<>(model.getOfferedMethodNames());
-        allMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
-
-        for (String methodName : allMethodNames) {
-            // enum name or custom name
-            String displayString = methodName;
-            if (Res.has(methodName)) {
-                String shortName = methodName + "_SHORT";
-                if (Res.has(shortName)) {
-                    displayString = Res.get(shortName);
-                } else {
-                    displayString = Res.get(methodName);
-                }
+        for (FiatPaymentMethod fiatPaymentMethod : model.getSortedOfferedFiatPaymentMethods()) {
+            ChipToggleButton chipToggleButton = new ChipToggleButton(fiatPaymentMethod.getShortDisplayString(), toggleGroup);
+            if (!fiatPaymentMethod.isCustomPaymentMethod()) {
+                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
+                chipToggleButton.setLeftIcon(icon);
             }
-            ChipToggleButton chipToggleButton = new ChipToggleButton(displayString, toggleGroup);
-            chipToggleButton.setUserData(methodName);
-            chipToggleButton.setSelected(methodName.equals(model.getSelectedMethodName().get()));
+            chipToggleButton.setOnAction(() -> controller.onTogglePaymentMethod(fiatPaymentMethod, chipToggleButton.isSelected()));
+            chipToggleButton.setSelected(fiatPaymentMethod.equals(model.getSelectedFiatPaymentMethod().get()));
             flowPane.getChildren().add(chipToggleButton);
         }
-        EasyBind.subscribe(toggleGroup.selectedToggleProperty(), selectedToggle -> {
-            if (selectedToggle != null) {
-                controller.onSelect((String) selectedToggle.getUserData());
-            } else {
-                controller.onDeselect();
-            }
-        });
     }
 
     @Override
     protected void onViewDetached() {
+        flowPane.getChildren().stream()
+                .filter(e -> e instanceof ChipToggleButton)
+                .map(e -> (ChipToggleButton) e)
+                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
     }
 }

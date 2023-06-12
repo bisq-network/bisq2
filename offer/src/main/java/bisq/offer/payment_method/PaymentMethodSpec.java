@@ -17,30 +17,84 @@
 
 package bisq.offer.payment_method;
 
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-public interface PaymentMethodSpec extends Proto {
-    String getPaymentMethodName();
+import java.util.Optional;
 
-    bisq.offer.protobuf.PaymentMethodSpec toProto();
+@Getter
+@EqualsAndHashCode
+public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>> implements Proto {
+    protected final Optional<String> saltedMakerAccountId;
+    protected final T paymentMethod;
 
-    default bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder() {
-        return bisq.offer.protobuf.PaymentMethodSpec.newBuilder();
+    public PaymentMethodSpec(T paymentMethod) {
+        this(paymentMethod, Optional.empty());
     }
 
-    static PaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    /**
+     * @param paymentMethod        The paymentMethod
+     * @param saltedMakerAccountId Salted local ID of maker's payment account.
+     *                             In case maker had multiple payment accounts for same payment method they
+     *                             can define which account to use for that offer.
+     *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
+     *                             offers using different identities but the same payment account.
+     */
+    public PaymentMethodSpec(T paymentMethod, Optional<String> saltedMakerAccountId) {
+        this.paymentMethod = paymentMethod;
+        this.saltedMakerAccountId = saltedMakerAccountId;
+    }
+
+    public abstract bisq.offer.protobuf.PaymentMethodSpec toProto();
+
+    public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder() {
+        bisq.offer.protobuf.PaymentMethodSpec.Builder builder = bisq.offer.protobuf.PaymentMethodSpec.newBuilder()
+                .setPaymentMethod(paymentMethod.toProto());
+        saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
+        return builder;
+    }
+
+    // We use unsafe cast here as in case the proto data would not match our expected class we would get anyway 
+    // an exception.
+    public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
         switch (proto.getMessageCase()) {
             case FIATPAYMENTMETHODSPEC: {
-                return FiatPaymentMethodSpec.fromProto(proto.getFiatPaymentMethodSpec());
+                //noinspection unchecked
+                return (T) FiatPaymentMethodSpec.fromProto(proto);
             }
             case BITCOINPAYMENTMETHODSPEC: {
-                return BitcoinPaymentMethodSpec.fromProto(proto.getBitcoinPaymentMethodSpec());
+                //noinspection unchecked
+                return (T) BitcoinPaymentMethodSpec.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }
         throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static <T extends PaymentMethodSpec<? extends PaymentMethod<? extends PaymentRail>>> T fromProt1o(bisq.offer.protobuf.PaymentMethodSpec proto) {
+        switch (proto.getMessageCase()) {
+            case FIATPAYMENTMETHODSPEC: {
+                //noinspection unchecked
+                return (T) FiatPaymentMethodSpec.fromProto(proto);
+            }
+            case BITCOINPAYMENTMETHODSPEC: {
+                //noinspection unchecked
+                return (T) BitcoinPaymentMethodSpec.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public String getPaymentMethodName() {
+        return paymentMethod.getName();
     }
 }

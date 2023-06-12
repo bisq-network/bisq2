@@ -26,11 +26,20 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * PaymentMethod wraps the PaymentRail by its enum name and provides util methods.
+ * Its main purpose is to support custom payment methods and to provide a backward compatible solution when
+ * new PaymentRail gets added.
+ * For that reason do not persist the paymentRail. In case a user with a newer version would have
+ * a paymentRail not existing at another peer the peer with the older version would consider it as a custom
+ * payment method and would still be able to deal with it.
+ */
 @Getter
 @EqualsAndHashCode
-public abstract class PaymentMethod<R extends PaymentRail> implements Proto {
+public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, Proto {
     protected final String name;
-    protected final R paymentRail;
+    // We do not persist the paymentRail but still include it in EqualsAndHashCode.
+    protected transient final R paymentRail;
 
     @EqualsAndHashCode.Exclude
     protected transient final String displayString;
@@ -70,6 +79,7 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Proto {
         return Res.has(shortName) ? Res.get(shortName) : createDisplayString();
     }
 
+    @Override
     public abstract bisq.account.protobuf.PaymentMethod toProto();
 
     protected bisq.account.protobuf.PaymentMethod.Builder getPaymentMethodBuilder() {
@@ -102,5 +112,10 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Proto {
 
     public boolean isCustomPaymentMethod() {
         return paymentRail == getCustomPaymentRail();
+    }
+
+    @Override
+    public int compareTo(PaymentMethod<R> o) {
+        return name.compareTo(o.getName());
     }
 }

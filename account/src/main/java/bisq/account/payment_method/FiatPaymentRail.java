@@ -28,8 +28,12 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The payment rails for fiat payments.
+ * Provide static data associated with the payment rail.
+ */
 public enum FiatPaymentRail implements PaymentRail {
-    CUSTOM(new ArrayList<>(), new ArrayList<>()),
+    CUSTOM(new ArrayList<>(), new ArrayList<>()),             // Custom defined payment rail by the user
     SEPA(FiatPaymentRailUtil.getSepaEuroCountries()),
     SEPA_INSTANT(FiatPaymentRailUtil.getSepaEuroCountries()),
     ZELLE(List.of("US")),

@@ -44,12 +44,13 @@ public class CryptoPaymentMethodUtil {
                 throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
             case BISQ_MULTISIG:
             case LIGHTNING_X:
-                // BTC to alt-coin trade use case
                 return getCryptoPaymentRails();
             case MONERO_SWAP:
+                return List.of(CryptoPaymentRail.MONERO);
             case LIQUID_SWAP:
+                return List.of(CryptoPaymentRail.LIQUID);
             case BSQ_SWAP:
-                return List.of(CryptoPaymentRail.NATIVE_CHAIN);
+                return List.of(CryptoPaymentRail.BSQ);
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }

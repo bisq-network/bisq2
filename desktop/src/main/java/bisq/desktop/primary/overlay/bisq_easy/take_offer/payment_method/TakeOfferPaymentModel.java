@@ -17,16 +17,18 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
 public class TakeOfferPaymentModel implements Model {
-    // Method enum name or custom name
-    private final ObservableList<String> offeredMethodNames = FXCollections.observableArrayList();
-    private final StringProperty selectedMethodName = new SimpleStringProperty();
+    private final ObservableList<FiatPaymentMethod> offeredFiatPaymentMethods = FXCollections.observableArrayList();
+    private final SortedList<FiatPaymentMethod> sortedOfferedFiatPaymentMethods = new SortedList<>(offeredFiatPaymentMethods);
+    private final ObjectProperty<FiatPaymentMethod> selectedFiatPaymentMethod = new SimpleObjectProperty<>();
 }

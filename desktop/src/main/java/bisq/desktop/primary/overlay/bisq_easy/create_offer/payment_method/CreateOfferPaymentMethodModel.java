@@ -23,11 +23,13 @@ import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
 public class CreateOfferPaymentMethodModel implements Model {
     private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
+    private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
     private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");

@@ -170,10 +170,15 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
                         model.getBaseSideAmount(),
                         model.getFixPrice(),
                         model.getSelectedProtocolType(),
-                        new ArrayList<>(model.getSelectedBaseSideAccounts()),
+                        // todo changes with generics not applied to poc code
+                      /*  new ArrayList<>(model.getSelectedBaseSideAccounts()),
                         new ArrayList<>(model.getSelectedQuoteSideAccounts()),
                         new ArrayList<>(model.getSelectedBaseSidePaymentPaymentRails()),
-                        new ArrayList<>(model.getSelectedQuoteSidePaymentPaymentRails()))
+                        new ArrayList<>(model.getSelectedQuoteSidePaymentPaymentRails()))*/
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>())
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
                         model.getOfferProperty().set(offer);

@@ -18,8 +18,10 @@
 package bisq.offer.poc;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -35,7 +37,6 @@ import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -124,10 +125,10 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                                    Monetary baseSideAmount,
                                                    PriceQuote fixPrice,
                                                    TradeProtocolType selectedProtocolTyp,
-                                                   List<Account<?, ? extends PaymentMethod<?>>> selectedBaseSideAccounts,
-                                                   List<Account<?, ? extends PaymentMethod<?>>> selectedQuoteSideAccounts,
-                                                   List<PaymentRail> selectedBaseSidePaymentPaymentRails,
-                                                   List<PaymentRail> selectedQuoteSidePaymentPaymentRails) {
+                                                   List<Account<?, BitcoinPaymentMethod>> selectedBaseSideAccounts,
+                                                   List<Account<?, FiatPaymentMethod>> selectedQuoteSideAccounts,
+                                                   List<BitcoinPaymentRail> selectedBaseSidePaymentPaymentRails,
+                                                   List<FiatPaymentRail> selectedQuoteSidePaymentPaymentRails) {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.getNetworkId();
@@ -135,24 +136,24 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
 
             FixPriceSpec priceSpec = new FixPriceSpec(fixPrice);
 
-            List<PaymentMethodSpec> baseSidePaymentMethodSpecs;
+            List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
                 baseSidePaymentMethodSpecs = selectedBaseSideAccounts.stream()
-                        .map(e -> new BitcoinPaymentMethodSpec(e.getPaymentMethod().getName(), Optional.of(e.getAccountName())))
+                        .map(e -> new BitcoinPaymentMethodSpec(e.getPaymentMethod(), Optional.of(e.getAccountName())))
                         .collect(Collectors.toList());
             } else {
                 baseSidePaymentMethodSpecs = selectedBaseSidePaymentPaymentRails.stream()
-                        .map(e -> new BitcoinPaymentMethodSpec(e.name(), Optional.empty()))
+                        .map(e -> new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(e), Optional.empty()))
                         .collect(Collectors.toList());
             }
-            List<PaymentMethodSpec> quoteSidePaymentMethodSpecs;
+            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
                 quoteSidePaymentMethodSpecs = selectedQuoteSideAccounts.stream()
-                        .map(e -> new FiatPaymentMethodSpec(e.getPaymentMethod().getName(), Optional.of(e.getAccountName())))
+                        .map(e -> new FiatPaymentMethodSpec(e.getPaymentMethod(), Optional.of(e.getAccountName())))
                         .collect(Collectors.toList());
             } else {
                 quoteSidePaymentMethodSpecs = selectedQuoteSidePaymentPaymentRails.stream()
-                        .map(e -> new FiatPaymentMethodSpec(e.name(), Optional.empty()))
+                        .map(e -> new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(e), Optional.empty()))
                         .collect(Collectors.toList());
             }
 

@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -127,13 +128,13 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void setPaymentMethodName(String methodName) {
-        if (methodName != null) {
-            model.getPaymentMethod().set(Res.has(methodName) ? Res.get(methodName) : methodName);
+    public void setFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
+        if (fiatPaymentMethod != null) {
+            model.getFiatPaymentMethodDisplayString().set(fiatPaymentMethod.getDisplayString());
 
             String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("buying").toUpperCase() : Res.get("selling").toUpperCase();
-            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getPaymentMethod().get().toUpperCase()));
-            model.getMethod().set(model.getPaymentMethod().get());
+            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getFiatPaymentMethodDisplayString().get().toUpperCase()));
+            model.getMethod().set(model.getFiatPaymentMethodDisplayString().get());
         }
     }
 

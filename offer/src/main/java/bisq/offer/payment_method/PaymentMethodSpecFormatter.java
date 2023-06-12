@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PaymentMethodFormatter {
+public class PaymentMethodSpecFormatter {
     /**
      * @param paymentMethodNames The names of the payment methods or custom payment method names entered by the user.
      * @return A comma separated list of the display strings of the paymentMethodNames
@@ -42,12 +42,12 @@ public class PaymentMethodFormatter {
         return toCommaSeparatedString(paymentMethodsAsDisplayStrings);
     }
 
-    public static String formatQuoteSidePaymentMethods(Offer offer) {
+    public static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> String formatQuoteSidePaymentMethods(Offer<?, T> offer) {
         return toCommaSeparatedString(toDisplayStrings(offer.getQuoteSidePaymentMethodSpecs()));
     }
 
-    private static List<String> toDisplayStrings(List<PaymentMethodSpec> paymentMethodSpecs) {
-        return toDisplayStrings(PaymentMethodUtil.toPaymentMethodNames(paymentMethodSpecs));
+    private static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> List<String> toDisplayStrings(List<T> paymentMethodSpecs) {
+        return toDisplayStrings(PaymentMethodSpecUtil.getPaymentMethodNames(paymentMethodSpecs));
     }
 
     /**

@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -74,6 +76,7 @@ public class CreateOfferPaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
                 .ifPresent(names -> {
                     List.of(names.split(",")).forEach(name -> {
@@ -98,17 +101,18 @@ public class CreateOfferPaymentMethodController implements Controller {
         customMethodPin.unsubscribe();
     }
 
-    void onTogglePaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
+    boolean onTogglePaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
         if (isSelected) {
             if (model.getSelectedFiatPaymentMethods().size() >= 4) {
                 new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
-                return;
+                return false;
             }
             maybeAddFiatPaymentMethod(fiatPaymentMethod);
         } else {
             model.getSelectedFiatPaymentMethods().remove(fiatPaymentMethod);
             setCookie();
         }
+        return true;
     }
 
     void onAddCustomMethod() {
