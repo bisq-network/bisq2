@@ -60,12 +60,12 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
         pubKeyHash = new MaterialTextField(Res.get("user.reputation.pubKeyHash"), "");
         pubKeyHash.setEditable(false);
         pubKeyHash.setIcon(AwesomeIcon.COPY);
-        pubKeyHash.setIconTooltip(Res.get("copyToClipboard"));
+        pubKeyHash.setIconTooltip(Res.get("action.copyToClipboard"));
 
-        closeButton = new Button(Res.get("close"));
+        closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
-        learnMore = new Hyperlink(Res.get("learnMore"));
-        backButton = new Button(Res.get("back"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        backButton = new Button(Res.get("action.back"));
 
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

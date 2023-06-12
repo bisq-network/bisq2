@@ -241,7 +241,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                             c -> getMarketListCell(),
                             controller::onJoinChannel,
                             Res.get("tradeChat.addMarketChannel").toUpperCase(),
-                            Res.get("search"),
+                            Res.get("action.search"),
                             350, 5, 23, 31.5)
                             .show());
         }

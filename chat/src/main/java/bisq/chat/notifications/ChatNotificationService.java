@@ -280,7 +280,7 @@ public class ChatNotificationService implements Service {
             if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
                 BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
-                title = Res.get("takeOfferMessage");
+                title = Res.get("bisqEasy.notification.takeOfferMessage");
                 notificationsService.sendNotification(notificationId, title, msg);
                 return;
             }
@@ -302,7 +302,7 @@ public class ChatNotificationService implements Service {
                     .orElseThrow();
         } else {
             // All PrivateChatMessages excluding PrivateTradeChatMessage
-            channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " + Res.get("privateMessage");
+            channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " + Res.get("chat.privateMessage");
         }
         title = StringUtils.truncate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
         notificationsService.sendNotification(notificationId, title, chatNotification.getMessage());

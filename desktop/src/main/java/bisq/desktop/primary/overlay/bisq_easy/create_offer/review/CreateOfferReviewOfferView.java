@@ -107,7 +107,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
         createOfferText.setWrapText(true);
         createOfferText.setId("chat-messages-message");
 
-        createOfferButton = new Button(Res.get("createOffer"));
+        createOfferButton = new Button(Res.get("offer.createOffer"));
         createOfferButton.setDefaultButton(true);
         createOfferButton.setMinWidth(BUTTON_WIDTH);
         createOfferButton.setMaxWidth(BUTTON_WIDTH);
@@ -188,7 +188,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 createOfferButton.getStyleClass().remove("outlined-button");
                 createOfferHBox.setMinWidth(OFFER_BOX_WIDTH);
                 createOfferHBox.setMaxWidth(createOfferHBox.getMinWidth());
-                headLineLabel.setText(Res.get("createOffer"));
+                headLineLabel.setText(Res.get("offer.createOffer"));
 
                 VBox.setMargin(headLineLabel, new Insets(-100, 0, 0, 0));
                 VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
@@ -219,8 +219,8 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
             return;
         }
         String peer = model.getDirection() == Direction.BUY ?
-                Res.get("seller") :
-                Res.get("buyer");
+                Res.get("offer.seller") :
+                Res.get("offer.buyer");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(peer)
                 .isFirst()
@@ -271,7 +271,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                     .build());
         }
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("reputation"))
+                .title(Res.get("bisqEasy.reputation"))
                 .minWidth(120)
                 .setCellFactory(new Callback<>() {
                     @Override
@@ -296,7 +296,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 .build());
         BisqTableColumn<ListItem> takeOffer = new BisqTableColumn.Builder<ListItem>()
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
-                .value(Res.get("takeOffer"))
+                .value(Res.get("offer.takeOffer"))
                 .minWidth(150)
                 .actionHandler(controller::onTakeOffer)
                 .updateItemWithButtonHandler((item, button) -> {

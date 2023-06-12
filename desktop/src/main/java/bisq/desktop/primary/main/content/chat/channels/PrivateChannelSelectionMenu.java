@@ -99,7 +99,7 @@ public abstract class PrivateChannelSelectionMenu<
                                 new Popup().warning(Res.get("social.privateChannel.leave.warning",
                                                 privateChatChannel.getMyUserIdentity().getUserName()))
                                         .dontShowAgainId(dontShowAgainId)
-                                        .closeButtonText(Res.get("cancel"))
+                                        .closeButtonText(Res.get("action.cancel"))
                                         .actionButtonText(Res.get("social.privateChannel.leave"))
                                         .onAction(() -> doLeaveChannel(privateChatChannel))
                                         .show();

@@ -126,7 +126,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     @Override
     public void onActivate() {
-        model.getBackButtonText().set(Res.get("back"));
+        model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
         tradePriceSpecPin = EasyBind.subscribe(takeOfferPriceController.getPriceSpec(),
                 priceSpec -> {
@@ -154,7 +154,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         boolean isTakeOfferReview = navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW;
         model.getNextButtonText().set(isTakeOfferReview ?
                 Res.get("bisqEasy.takeOffer.review.takeOffer") :
-                Res.get("next"));
+                Res.get("action.next"));
         model.getShowProgressBox().set(!isTakeOfferReview);
         setMainButtonsVisibleState(true);
         updateNextButtonDisabledState();

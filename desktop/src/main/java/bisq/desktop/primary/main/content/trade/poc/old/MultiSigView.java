@@ -31,10 +31,10 @@ public class MultiSigView extends TabView<MultiSigModel, MultiSigControllerOld> 
     public MultiSigView(MultiSigModel model, MultiSigControllerOld controller) {
         super(model, controller);
 
-        addTab(Res.get("offerBook"), NavigationTarget.MULTI_SIG_OFFER_BOOK);
-        addTab(Res.get("openOffers"), NavigationTarget.MULTI_SIG_OPEN_OFFERS);
-        addTab(Res.get("pendingTrades"), NavigationTarget.MULTI_SIG_PENDING_TRADES);
-        addTab(Res.get("closedTrades"), NavigationTarget.MULTI_SIG_CLOSED_TRADES);
+        addTab(Res.get("poc.offerBook"), NavigationTarget.MULTI_SIG_OFFER_BOOK);
+        addTab(Res.get("poc.openOffers"), NavigationTarget.MULTI_SIG_OPEN_OFFERS);
+        addTab(Res.get("poc.pendingTrades"), NavigationTarget.MULTI_SIG_PENDING_TRADES);
+        addTab(Res.get("poc.closedTrades"), NavigationTarget.MULTI_SIG_CLOSED_TRADES);
 
         headLine.setText(Res.get("multiSig"));
 

@@ -79,7 +79,7 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
         accountData.getIconButton().setMouseTransparent(true);
         accountData.setFixedHeight(300);
 
-        saveButton = new Button(Res.get("save"));
+        saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));

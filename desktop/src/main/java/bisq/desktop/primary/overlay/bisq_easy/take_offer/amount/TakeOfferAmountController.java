@@ -64,8 +64,8 @@ public class TakeOfferAmountController implements Controller {
                 AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow());
 
         String direction = bisqEasyOffer.getTakersDirection().isBuy() ?
-                Res.get("buy").toUpperCase() :
-                Res.get("sell").toUpperCase();
+                Res.get("offer.buy").toUpperCase() :
+                Res.get("offer.sell").toUpperCase();
 
         amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
                 market.getQuoteCurrencyCode(),

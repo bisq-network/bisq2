@@ -120,7 +120,7 @@ public class ComboBoxOverlay<T> {
         });
         UIThread.runOnNextRenderFrame(comboBox::forceRedraw);
 
-        placeHolder = new Label(Res.get("noData"));
+        placeHolder = new Label(Res.get("data.noDataAvailable"));
         placeHolder.setVisible(false);
         placeHolder.setManaged(false);
         placeHolder.getStyleClass().add("bisq-text-3");

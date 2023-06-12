@@ -51,12 +51,12 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
 
         VBox formula = new VBox(10, getField("weight", String.valueOf(SignedWitnessService.WEIGHT)), getField("totalScore"));
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

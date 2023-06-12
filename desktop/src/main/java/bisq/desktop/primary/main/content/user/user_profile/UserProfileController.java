@@ -84,7 +84,7 @@ public class UserProfileController implements Controller {
 
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
                                 .map(TimeFormatter::formatAgeInDays)
-                                .orElse(Res.get("na")));
+                                .orElse(Res.get("data.na")));
                     }
                 }
         );
@@ -147,7 +147,7 @@ public class UserProfileController implements Controller {
             new Popup().warning(Res.get("user.userProfile.deleteProfile.warning"))
                     .onAction(this::doDelete)
                     .actionButtonText(Res.get("user.userProfile.deleteProfile.warning.yes"))
-                    .closeButtonText(Res.get("cancel"))
+                    .closeButtonText(Res.get("action.cancel"))
                     .show();
         }
     }

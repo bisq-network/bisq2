@@ -46,7 +46,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         root.setPadding(new Insets(POPUP_PADDING, POPUP_PADDING, POPUP_PADDING, POPUP_PADDING));
         root.getStyleClass().add("bisq-dark-bg");
 
-        Label headlineLabel = new Label(Res.get("takeOffer"));
+        Label headlineLabel = new Label(Res.get("offer.takeOffer"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
         HBox headLineBox = new HBox(15, Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
         VBox.setMargin(headLineBox, new Insets(-27, 0, 0, 0));
@@ -60,7 +60,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         takeOfferButton = new AutoSizeButton(Res.get("takeOffer.button"));
         takeOfferButton.setDefaultButton(true);
 
-        Button cancelButton = new Button(Res.get("cancel"));
+        Button cancelButton = new Button(Res.get("action.cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
         root.getChildren().addAll(

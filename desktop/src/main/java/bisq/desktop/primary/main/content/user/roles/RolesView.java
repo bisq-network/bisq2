@@ -192,7 +192,7 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
                     .orElse(0L);
             profileAgeString = profileAgeService.getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
-                    .orElse(Res.get("na"));
+                    .orElse(Res.get("data.na"));
 
             userName = userProfile.getUserName();
         }

@@ -51,14 +51,14 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         content = new Text(Res.get("tradeGuide.tab1.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         HBox buttons = new HBox(20, backButton, nextButton);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));

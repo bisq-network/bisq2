@@ -108,7 +108,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         terms.getIconButton().setOpacity(0.2);
         terms.getIconButton().setMouseTransparent(true);
 
-        saveButton = new Button(Res.get("save"));
+        saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
         deletedButton = new Button(Res.get("user.userProfile.deleteProfile"));

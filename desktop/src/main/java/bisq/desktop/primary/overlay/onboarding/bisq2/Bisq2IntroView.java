@@ -46,7 +46,7 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         Label headlineLabel = new Label(Res.get("onboarding.bisq2.headline"));
         headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
 
-        nextButton = new Button(Res.get("start"));
+        nextButton = new Button(Res.get("action.start"));
         nextButton.setDefaultButton(true);
 
         HBox hBox = new HBox(23, getWidgetBox(Res.get("onboarding.bisq2.headline1"),

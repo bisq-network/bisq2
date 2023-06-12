@@ -130,7 +130,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             model.profileAge.set(reputationService.getProfileAgeService().getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
-                    .orElse(Res.get("na")));
+                    .orElse(Res.get("data.na")));
 
             // If we selected our own user we don't show certain features
             model.isPeer.set(!userIdentityService.isUserIdentityPresent(userProfile.getId()));

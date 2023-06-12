@@ -42,7 +42,7 @@ public class NetworkInfoModel implements Model {
     private final Set<Transport.Type> supportedTransportTypes;
 
     private final KeyPairService keyPairService;
-    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("na"));
+    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
 
     public NetworkInfoModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();

@@ -53,15 +53,15 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
 
         marketSelection.setMinWidth(280);
 
-        Label headlineLabel = new Label(Res.get("createOffer"));
+        Label headlineLabel = new Label(Res.get("offer.createOffer"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
         HBox headLineBox = new HBox(15, Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
-        createOfferButton = new Button(Res.get("createOffer"));
+        createOfferButton = new Button(Res.get("offer.createOffer"));
         createOfferButton.setDefaultButton(true);
-        Button cancelButton = new Button(Res.get("cancel"));
+        Button cancelButton = new Button(Res.get("action.cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
         //todo temp

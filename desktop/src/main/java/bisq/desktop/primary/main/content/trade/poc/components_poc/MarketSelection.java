@@ -102,7 +102,7 @@ public class MarketSelection {
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            comboBox = new AutoCompleteComboBox<>(model.markets, "markets");
+            comboBox = new AutoCompleteComboBox<>(model.markets, "offer.markets");
             root.getChildren().addAll(comboBox);
 
             comboBox.setConverter(new StringConverter<>() {

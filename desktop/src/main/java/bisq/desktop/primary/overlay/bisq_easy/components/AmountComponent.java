@@ -185,7 +185,7 @@ public class AmountComponent {
                 return;
             }
             model.setDirection(direction);
-            model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("buying") : Res.get("selling"));
+            model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
 
             baseSideAmountInput.setShowEstimationPrefix(direction.isBuy());
             baseSideAmountInput.setUseLowPrecision(direction.isBuy());

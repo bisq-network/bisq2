@@ -59,9 +59,9 @@ public class NodeListItem implements TableItem {
                 .map(i -> Res.get("settings.network.nodes.type.pool"))
                 .or(() -> identityService.findActiveIdentityByNodeId(node.getNodeId()).map(i -> Res.get("settings.network.nodes.type.active")))
                 .or(() -> identityService.findRetiredIdentityByNodeId(node.getNodeId()).map(i -> Res.get("settings.network.nodes.type.retired")))
-                .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("na"));
+                .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("data.na"));
         domainId = identityService.findAnyIdentityByNodeId(node.getNodeId()).map(Identity::getTag)
-                .orElse(Res.get("na"));
+                .orElse(Res.get("data.na"));
         address = node.findMyAddress().orElseThrow().getFullAddress();
 
         numConnections.set(String.valueOf(node.getAllConnections().count()));

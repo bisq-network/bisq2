@@ -34,7 +34,7 @@ public class CreateNewProfileStep1View extends CreateProfileView {
 
         this.createNewProfileStep1Controller = controller;
 
-        createProfileButton.setText(Res.get("next"));
+        createProfileButton.setText(Res.get("action.next"));
     }
 
     @Override

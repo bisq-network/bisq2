@@ -56,7 +56,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
 
     private void configTableView() {
         BisqTableColumn<WalletTransactionListItem> column = new BisqTableColumn.Builder<WalletTransactionListItem>()
-                .title(Res.get("date"))
+                .title(Res.get("temporal.date"))
                 .minWidth(200)
                 .valueSupplier(WalletTransactionListItem::getDateAsString)
                 .isSortable(true)

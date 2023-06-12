@@ -144,7 +144,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
             button.setText(Res.get("tradeApps.select"));
             button.setDefaultButton(true);
         } else {
-            button.setText(Res.get("learnMore"));
+            button.setText(Res.get("action.learnMore"));
             button.getStyleClass().addAll("outlined-button", "grey-outlined-button");
         }
         GridPane.setMargin(button, new Insets(20, 0, 5, 0));

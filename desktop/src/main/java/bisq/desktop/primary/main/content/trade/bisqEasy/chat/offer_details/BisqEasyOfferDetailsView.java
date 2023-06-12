@@ -105,7 +105,7 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
         requiredTotalReputationScore = getField(Res.get("bisqEasy.offerDetails.requiredTotalReputationScore"));
         detailFields.getChildren().add(requiredTotalReputationScore);
 
-        closeButton = new Button(Res.get("close"));
+        closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
         HBox buttonBox = new HBox(/*Spacer.fillHBox(),*/ closeButton);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);

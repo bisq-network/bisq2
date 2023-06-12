@@ -94,13 +94,13 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
                 Spacer.fillHBox(),
                 closeButton);
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         takeOfferButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOffer"));
         takeOfferButton.setDefaultButton(true);
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
         HBox buttons = new HBox(10, backButton, nextButton, takeOfferButton);
         buttons.setAlignment(Pos.CENTER);
 

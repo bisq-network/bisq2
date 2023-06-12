@@ -179,7 +179,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
             String peer = getPeer().getUserName();
             String optionalMediatorPostfix = mediator
                     .filter(mediator -> isInMediation())
-                    .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("mediator") + ")")
+                    .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("bisqEasy.mediator") + ")")
                     .orElse("");
             return shortOfferId + ": " + peer + optionalMediatorPostfix;
         }

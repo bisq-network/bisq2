@@ -53,10 +53,10 @@ public class SignedWitnessTab1View extends View<VBox, SignedWitnessTab1Model, Si
         Label info2 = new Label(Res.get("user.reputation.signedWitness.info2"));
         info2.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         HBox buttons = new HBox(20, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

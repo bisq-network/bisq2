@@ -75,10 +75,10 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         closeButton = topPane.getSecond();
         progressLabelList = topPane.getThird();
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
         HBox buttons = new HBox(10, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 

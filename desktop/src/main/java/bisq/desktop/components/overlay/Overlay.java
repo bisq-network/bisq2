@@ -417,28 +417,28 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T useReportBugButton() {
-        this.closeButtonText = Res.get("reportBug");
+        this.closeButtonText = Res.get("popup.reportBug");
         this.closeHandlerOptional = Optional.of(() -> Browser.open("https://bisq.network/source/bisq/issues"));
         return cast();
     }
 
     public T useIUnderstandButton() {
-        this.closeButtonText = Res.get("iUnderstand");
+        this.closeButtonText = Res.get("action.iUnderstand");
         return cast();
     }
 
     public T actionButtonTextWithGoTo(String target) {
-        this.actionButtonText = Res.get("goTo", Res.get(target));
+        this.actionButtonText = Res.get("action.goTo", Res.get(target));
         return cast();
     }
 
     public T secondaryActionButtonTextWithGoTo(String target) {
-        this.secondaryActionButtonText = Res.get("goTo", Res.get(target));
+        this.secondaryActionButtonText = Res.get("action.goTo", Res.get(target));
         return cast();
     }
 
     public T closeButtonTextWithGoTo(String target) {
-        this.closeButtonText = Res.get("goTo", Res.get(target));
+        this.closeButtonText = Res.get("action.goTo", Res.get(target));
         return cast();
     }
 
@@ -453,7 +453,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T useShutDownButton() {
-        this.actionButtonText = Res.get("shutDown");
+        this.actionButtonText = Res.get("action.shutDown");
         this.actionHandlerOptional = Optional.ofNullable(shutdownHandler);
         return cast();
     }
@@ -915,7 +915,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (dontShowAgainId != null) {
             // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null) {
-                dontShowAgainText = Res.get("dontShowAgain");
+                dontShowAgainText = Res.get("action.dontShowAgain");
             }
 
             CheckBox dontShowAgainCheckBox = new CheckBox(dontShowAgainText);
@@ -934,7 +934,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void addButtons() {
         if (!hideCloseButton) {
-            closeButton = new Button(closeButtonText == null ? Res.get("close") : closeButtonText);
+            closeButton = new Button(closeButtonText == null ? Res.get("action.close") : closeButtonText);
             closeButton.setOnAction(event -> doClose());
             closeButton.setMinWidth(70);
             HBox.setHgrow(closeButton, Priority.SOMETIMES);
@@ -946,7 +946,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.add(buttonBox, 0, gridPane.getRowCount(), 2, 1);
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
-            actionButton = new Button(actionButtonText == null ? Res.get("ok") : actionButtonText);
+            actionButton = new Button(actionButtonText == null ? Res.get("confirmation.ok") : actionButtonText);
 
             if (!disableActionButton)
                 actionButton.setDefaultButton(true);

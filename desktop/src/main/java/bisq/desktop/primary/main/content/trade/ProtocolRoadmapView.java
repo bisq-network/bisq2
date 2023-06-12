@@ -64,7 +64,7 @@ public abstract class ProtocolRoadmapView<M extends Model, C extends Controller>
         tradeOffs = new MultiLineLabel(Res.get("tradeApps." + key + ".tradeOffs"));
         tradeOffs.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));

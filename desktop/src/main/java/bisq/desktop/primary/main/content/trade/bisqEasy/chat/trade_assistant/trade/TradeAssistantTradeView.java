@@ -71,7 +71,7 @@ public class TradeAssistantTradeView extends View<VBox, TradeAssistantTradeModel
         HBox tradePhaseHBox = pair.getFirst();
         tradePhaseLabels = pair.getSecond();
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
         confirmButton = new Button();
         confirmButton.setDefaultButton(true);
 

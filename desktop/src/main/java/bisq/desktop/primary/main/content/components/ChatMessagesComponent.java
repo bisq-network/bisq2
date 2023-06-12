@@ -388,7 +388,7 @@ public class ChatMessagesComponent {
                             new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
                                     .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
                         })
-                        .closeButtonText(Res.get("cancel"))
+                        .closeButtonText(Res.get("action.cancel"))
                         .show();
             } else {
                 new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
@@ -460,8 +460,8 @@ public class ChatMessagesComponent {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
                     if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity())) {
                         new Popup().information(Res.get("chat.sendMessage.differentUserProfile.popup"))
-                                .closeButtonText(Res.get("no"))
-                                .actionButtonText(Res.get("yes"))
+                                .closeButtonText(Res.get("confirmation.no"))
+                                .actionButtonText(Res.get("confirmation.yes"))
                                 .onAction(() -> doSendMessage(text))
                                 .show();
                         return;
@@ -486,9 +486,9 @@ public class ChatMessagesComponent {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
-                            .actionButtonText(Res.get("yes"))
+                            .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(() -> settingsService.setOffersOnly(false))
-                            .closeButtonText(Res.get("no"))
+                            .closeButtonText(Res.get("confirmation.no"))
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
@@ -639,7 +639,7 @@ public class ChatMessagesComponent {
             HBox bottomHBox = new HBox(10);
 
             int height = 32;
-            createOfferButton = createAndGetChatButton(Res.get("createOffer"), 120);
+            createOfferButton = createAndGetChatButton(Res.get("offer.createOffer"), 120);
             createOfferButton.setDefaultButton(true);
 
             sendBtcAddressButton = createAndGetChatButton(Res.get("bisqEasy.sendBtcAddress"), 160);

@@ -133,9 +133,9 @@ public class AmountInput {
             model.prompt.set(Res.get("createOffer.volume.prompt", code));
             String dir;
             if (model.isBaseCurrency) {
-                dir = model.direction == Direction.BUY ? Res.get("buy") : Res.get("sell");
+                dir = model.direction == Direction.BUY ? Res.get("offer.buy") : Res.get("offer.sell");
             } else {
-                dir = model.direction == Direction.BUY ? Res.get("spend") : Res.get("receive");
+                dir = model.direction == Direction.BUY ? Res.get("offer.spend") : Res.get("offer.receive");
             }
             model.description.set(Res.get("createOffer.amount.description", code, dir));
         }

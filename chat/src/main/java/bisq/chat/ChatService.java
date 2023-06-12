@@ -105,7 +105,7 @@ public class ChatService implements Service {
         addToCommonPublicChatChannelServices(ChatChannelDomain.DISCUSSION,
                 List.of(new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "bisq"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "bitcoin"),
-                        new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "markets"),
+                        new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "offer.markets"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "economy"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "offTopic")));
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.DISCUSSION);

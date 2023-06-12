@@ -97,8 +97,8 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         HBox centerHBox = new HBox(10, roboVBox, fieldsAndButtonsVBox);
         centerHBox.setAlignment(Pos.TOP_CENTER);
 
-        cancelButton = new Button(Res.get("cancel"));
-        saveButton = new Button(Res.get("save"));
+        cancelButton = new Button(Res.get("action.cancel"));
+        saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
         HBox buttons = new HBox(20, cancelButton, saveButton);

@@ -58,7 +58,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         // showAllMarkets.setPadding(new Insets(6, 0, 0, 0));
         HBox.setMargin(showAllMarkets, new Insets(-6, 0, 0, 0));
 
-        createOfferButton = new Button(Res.get("createOffer"));
+        createOfferButton = new Button(Res.get("offer.createOffer"));
         createOfferButton.setDefaultButton(true);
         HBox.setMargin(createOfferButton, new Insets(-5, 0, 0, 0));
 

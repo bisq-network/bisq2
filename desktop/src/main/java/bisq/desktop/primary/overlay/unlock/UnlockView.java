@@ -51,7 +51,7 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
         unlockButton = new Button(Res.get("unlock.button"));
         unlockButton.setDefaultButton(true);
-        cancelButton = new Button(Res.get("cancel"));
+        cancelButton = new Button(Res.get("action.cancel"));
         HBox buttons = new HBox(20, unlockButton, cancelButton);
         HBox.setMargin(buttons, new Insets(20, 0, 0, 0));
         root.getChildren().setAll(headline, password, buttons);

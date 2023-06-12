@@ -149,8 +149,8 @@ public class CreateOfferController extends NavigationController implements InitW
 
     public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
-        model.getNextButtonText().set(Res.get("next"));
-        model.getBackButtonText().set(Res.get("back"));
+        model.getNextButtonText().set(Res.get("action.next"));
+        model.getBackButtonText().set(Res.get("action.back"));
         model.getBackButtonVisible().set(navigationTarget != NavigationTarget.CREATE_OFFER_DIRECTION);
         model.getNextButtonVisible().set(navigationTarget != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
     }

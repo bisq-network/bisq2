@@ -155,7 +155,7 @@ public class MarketSelection {
                         model.items,
                         c -> getListCell(),
                         controller::onSelected,
-                        Res.get("search"),
+                        Res.get("action.search"),
                         null,
                         250, 30, 20, 125)
                         .show();

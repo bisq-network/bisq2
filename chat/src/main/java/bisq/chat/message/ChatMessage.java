@@ -169,7 +169,7 @@ public abstract class ChatMessage implements Proto {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getText() {
-        return optionalText.orElse(Res.get("na"));
+        return optionalText.orElse(Res.get("data.na"));
     }
 
     public boolean wasMentioned(UserIdentity userIdentity) {

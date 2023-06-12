@@ -49,7 +49,7 @@ public class TimeFormatter {
 
     public static String formatAgeInDays(long date) {
         long ageInDays = getAgeInDays(date);
-        String postFix = ageInDays > 1 ? Res.get("days") : Res.get("day");
+        String postFix = ageInDays > 1 ? Res.get("temporal.days") : Res.get("temporal.day");
         return ageInDays + " " + postFix;
     }
 
