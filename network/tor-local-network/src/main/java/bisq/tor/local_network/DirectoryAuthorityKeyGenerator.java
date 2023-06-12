@@ -29,9 +29,9 @@ public class DirectoryAuthorityKeyGenerator {
     private static final String PEM_PASSPHRASE_PROMPT = "Enter PEM pass phrase:";
     private static final String PEM_VERIFY_PASSPHRASE_PROMPT = "\nVerifying - Enter PEM pass phrase:";
 
-    private final TorDAKeyGenProcess keyGenProcess;
+    private final DirectoryIdentityKeyGenProcess keyGenProcess;
 
-    public DirectoryAuthorityKeyGenerator(TorDAKeyGenProcess keyGenProcess) {
+    public DirectoryAuthorityKeyGenerator(DirectoryIdentityKeyGenProcess keyGenProcess) {
         this.keyGenProcess = keyGenProcess;
     }
 
