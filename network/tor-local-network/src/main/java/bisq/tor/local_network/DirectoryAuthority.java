@@ -26,11 +26,19 @@ import java.nio.file.Path;
 @Getter
 public class DirectoryAuthority {
     private final String nickname;
+
     private final Path dataDir;
 
     private final int controlPort;
     private final int orPort;
     private final int dirPort;
 
+    private final String v3LongTermSigningKeyFingerprint;
+    private final String torKeyFingerprint;
+
     private final String exitPolicy = "ExitPolicy accept *:*";
+
+    public Path getTorrcPath() {
+        return dataDir.resolve("torrc");
+    }
 }
