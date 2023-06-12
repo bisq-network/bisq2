@@ -58,7 +58,7 @@ public class MultiSigControllerOld extends TabController<MultiSigModel> implemen
     }
 
     @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+    public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.showCreateOffer.set(navigationTarget == NavigationTarget.MULTI_SIG_CREATE_OFFER);
         model.showTakeOffer.set(navigationTarget == NavigationTarget.MULTI_SIG_TAKE_OFFER);
     }

@@ -23,18 +23,29 @@ import javafx.scene.Parent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public abstract class NavigationModel implements Model {
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
     protected NavigationTarget navigationTarget;
+    private Optional<NavigationTarget> resolvedTarget = Optional.empty();
 
     void setNavigationTarget(NavigationTarget navigationTarget) {
         this.navigationTarget = navigationTarget;
     }
 
-    NavigationTarget getNavigationTarget() {
+    public NavigationTarget getNavigationTarget() {
         return navigationTarget;
+    }
+
+    Optional<NavigationTarget> getResolvedTarget() {
+        return resolvedTarget;
+    }
+
+    void setResolvedTarget(Optional<NavigationTarget> selectedChildTarget) {
+        this.resolvedTarget = selectedChildTarget;
     }
 
     public abstract NavigationTarget getDefaultNavigationTarget();

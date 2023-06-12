@@ -74,7 +74,7 @@ public class MainController extends NavigationController {
     }
 
     @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+    public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         leftNavController.setNavigationTarget(navigationTarget);
     }
 }
