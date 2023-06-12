@@ -66,7 +66,7 @@ public class KeyHandlerUtil {
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_AMOUNT);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
+                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_SETTLEMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.H, keyEvent)) {

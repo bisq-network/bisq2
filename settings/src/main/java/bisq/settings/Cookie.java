@@ -18,9 +18,9 @@
 package bisq.settings;
 
 import bisq.common.proto.Proto;
-import bisq.common.util.ProtobufUtils;
 import bisq.settings.protobuf.CookieMapEntry;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,9 +45,9 @@ public final class Cookie implements Proto {
     public bisq.settings.protobuf.Cookie toProto() {
         return bisq.settings.protobuf.Cookie.newBuilder()
                 .addAllCookieMapEntries(map.entrySet().stream()
-                        .map(e -> CookieMapEntry.newBuilder()
-                                .setCookieKey(e.getKey().name())
-                                .setValue(e.getValue()).build())
+                        .map(entry -> CookieMapEntry.newBuilder()
+                                .setCookieKey(entry.getKey().getKeyForProto())
+                                .setValue(entry.getValue()).build())
                         .collect(Collectors.toList()))
                 .build();
     }
@@ -55,46 +55,70 @@ public final class Cookie implements Proto {
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
         return new Cookie(proto.getCookieMapEntriesList().stream()
                 .collect(Collectors.toMap(
-                        e -> ProtobufUtils.enumFromProto(CookieKey.class, e.getCookieKey()),
+                        entry -> CookieKey.fromProto(entry.getCookieKey()),
                         CookieMapEntry::getValue)));
     }
 
-  
+
     public Optional<String> asString(CookieKey key) {
-        return map.containsKey(key) ?
-                Optional.of(map.get(key)) :
-                Optional.empty();
+        return asString(key, null);
+    }
+
+    public Optional<String> asString(CookieKey key, @Nullable String subKey) {
+        return Optional.ofNullable(map.get(key))
+                .map(stringValue -> {
+                    if (subKey != null && subKey.equals(key.getSubKey())) {
+                        stringValue = stringValue.replace(key.getSubKey(), "");
+                    }
+                    return stringValue;
+                });
     }
 
     public Optional<Double> asDouble(CookieKey key) {
-        try {
-            return map.containsKey(key) ?
-                    Optional.of(Double.parseDouble(map.get(key))) :
-                    Optional.empty();
-        } catch (Throwable t) {
-            return Optional.empty();
-        }
+        return asDouble(key, null);
+    }
+
+    public Optional<Double> asDouble(CookieKey key, @Nullable String subKey) {
+        return asString(key, subKey)
+                .flatMap(stringValue -> {
+                    try {
+                        return Optional.of(Double.parseDouble(stringValue));
+                    } catch (Throwable t) {
+                        return Optional.empty();
+                    }
+                }).stream().findAny();
     }
 
     public Optional<Boolean> asBoolean(CookieKey key) {
-        return map.containsKey(key) ?
-                Optional.of(map.get(key).equals("1")) :
-                Optional.empty();
+        return asBoolean(key, null);
     }
+
+    public Optional<Boolean> asBoolean(CookieKey key, @Nullable String subKey) {
+        return asString(key, subKey)
+                .map(stringValue -> stringValue.equals("1"));
+    }
+
     void putAsString(CookieKey key, String value) {
+        if (key.isUseSubKey()) {
+            value = key.getSubKey() + value;
+        }
         map.put(key, value);
     }
 
     void putAll(Map<CookieKey, String> map) {
-        this.map.putAll(map);
+        map.forEach(this::putAsString);
     }
 
     void putAsBoolean(CookieKey key, boolean value) {
-        map.put(key, value ? "1" : "0");
+        putAsString(key, value ? "1" : "0");
     }
 
     void putAsDouble(CookieKey key, double value) {
-        map.put(key, String.valueOf(value));
+        putAsString(key, String.valueOf(value));
+    }
+
+    void remove(CookieKey key) {
+        map.remove(key);
     }
 
     Map<CookieKey, String> getMap() {

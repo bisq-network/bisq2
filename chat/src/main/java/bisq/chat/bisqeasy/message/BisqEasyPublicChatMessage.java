@@ -124,7 +124,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
     }
 
     @Override
-    public boolean hasTradeChatOffer() {
+    public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }
 }

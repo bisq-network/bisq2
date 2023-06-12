@@ -22,7 +22,11 @@ import bisq.common.currency.Market;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.price.PriceUtil;
+import bisq.offer.settlement.SettlementFormatter;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
@@ -30,6 +34,8 @@ import bisq.presentation.formatters.QuoteFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class BisqEasyOfferDetailsController implements InitWithDataController<BisqEasyOfferDetailsController.InitData> {
@@ -68,41 +74,43 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         model.getQuoteSideAmountDescription().set(Res.get("bisqEasy.offerDetails.quoteSideAmount",
                 market.getQuoteCurrencyCode()));
 
-        if (bisqEasyOffer.getBaseSideMaxAmount().getValue() == bisqEasyOffer.getBaseSideMinAmount().getValue()) {
-            model.getBaseSideAmount().set(bisqEasyOffer.getBaseSideAmountAsDisplayString());
+        if (bisqEasyOffer.hasAmountRange()) {
+            model.getBaseSideAmount().set(OfferAmountFormatter.formatMinBaseAmount(marketPriceService, bisqEasyOffer) + " - " +
+                    OfferAmountFormatter.formatMaxBaseAmount(marketPriceService, bisqEasyOffer));
         } else {
-            model.getBaseSideAmount().set(bisqEasyOffer.getBaseSideMinAmountAsDisplayString() + " - " +
-                    bisqEasyOffer.getBaseSideMaxAmountAsDisplayString());
+            model.getBaseSideAmount().set(OfferAmountFormatter.formatBaseAmount(marketPriceService, bisqEasyOffer));
         }
 
-        if (bisqEasyOffer.getQuoteSideMaxAmount().getValue() == bisqEasyOffer.getQuoteSideMinAmount().getValue()) {
-            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+        if (bisqEasyOffer.hasAmountRange()) {
+            model.getQuoteSideAmount().set(OfferAmountFormatter.formatMinQuoteAmount(marketPriceService, bisqEasyOffer) + " - " +
+                    OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
         } else {
-            model.getQuoteSideAmount().set(bisqEasyOffer.getQuoteSideMinAmountAsDisplayString() + " - " +
-                    bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
+            model.getQuoteSideAmount().set(OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
         }
 
-
-        model.getPrice().set(bisqEasyOffer.findQuote(marketPriceService)
+        model.getPrice().set(PriceUtil.findQuote(marketPriceService, bisqEasyOffer)
                 .map(quote -> {
                     String price = QuoteFormatter.format(quote, true);
-                    String percentFromMarketPrice = bisqEasyOffer.findPercentFromMarketPrice(marketPriceService).map(PercentageFormatter::formatToPercentWithSymbol)
+                    String percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
+                            .map(PercentageFormatter::formatToPercentWithSymbol)
                             .orElse("");
                     return Res.get("bisqEasy.offerDetails.priceValue", price, percentFromMarketPrice);
                 })
                 .orElse(Res.get("na")));
         model.getPriceDescription().set(Res.get("bisqEasy.offerDetails.price", bisqEasyOffer.getMarket().getMarketCodes()));
-        model.getPaymentMethods().set(bisqEasyOffer.getQuoteSideSettlementMethodsAsDisplayString());
+        model.getPaymentMethods().set(SettlementFormatter.asQuoteSideSettlementMethodsString(bisqEasyOffer));
 
         model.getId().set(bisqEasyOffer.getId());
         model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 
-        model.getMakersTradeTermsVisible().set(bisqEasyOffer.findMakersTradeTerms().isPresent());
-        bisqEasyOffer.findMakersTradeTerms().ifPresent(makersTradeTerms ->
+        Optional<String> tradeTerms = OfferOptionUtil.findMakersTradeTerms(bisqEasyOffer);
+        model.getMakersTradeTermsVisible().set(tradeTerms.isPresent());
+        tradeTerms.ifPresent(makersTradeTerms ->
                 model.getMakersTradeTerms().set(makersTradeTerms));
 
-        model.getRequiredTotalReputationScoreVisible().set(bisqEasyOffer.findRequiredTotalReputationScore().isPresent());
-        bisqEasyOffer.findRequiredTotalReputationScore().ifPresent(requiredTotalReputationScore ->
+        Optional<Long> reputationScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer);
+        model.getRequiredTotalReputationScoreVisible().set(reputationScore.isPresent());
+        reputationScore.ifPresent(requiredTotalReputationScore ->
                 model.getRequiredTotalReputationScore().set("" + requiredTotalReputationScore)); //todo
     }
 

@@ -147,6 +147,12 @@ public class MaterialTextField extends Pane {
 
     public void requestFocus() {
         field.requestFocus();
+        field.deselect();
+        field.selectHome();
+    }
+
+    public void deselect() {
+        field.deselect();
     }
 
     public void hideIcon() {
@@ -226,13 +232,9 @@ public class MaterialTextField extends Pane {
         return descriptionLabel;
     }
 
-
     protected void onMouseEntered() {
-        if (!field.isEditable()) {
-            return;
-        }
         removeBgStyles();
-        if (field.isFocused()) {
+        if (field.isFocused() && field.isEditable()) {
             bg.getStyleClass().add("material-text-field-bg-selected");
         } else {
             bg.getStyleClass().add("material-text-field-bg-hover");
@@ -240,11 +242,8 @@ public class MaterialTextField extends Pane {
     }
 
     protected void onMouseExited() {
-        if (!field.isEditable()) {
-            return;
-        }
         removeBgStyles();
-        if (field.isFocused()) {
+        if (field.isFocused() && field.isEditable()) {
             bg.getStyleClass().add("material-text-field-bg-selected");
         } else {
             bg.getStyleClass().add("material-text-field-bg");
@@ -252,10 +251,7 @@ public class MaterialTextField extends Pane {
     }
 
     protected void onInputTextFieldFocus(boolean focus) {
-        if (!field.isEditable()) {
-            return;
-        }
-        if (focus) {
+        if (focus && field.isEditable()) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, getWidth());

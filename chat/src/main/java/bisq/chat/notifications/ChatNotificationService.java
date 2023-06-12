@@ -289,7 +289,7 @@ public class ChatNotificationService implements Service {
         if (chatMessage instanceof PublicChatMessage) {
             if (chatMessage instanceof BisqEasyPublicChatMessage) {
                 BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasTradeChatOffer()) {
+                if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasBisqEasyOffer()) {
                     return;
                 }
                 BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;

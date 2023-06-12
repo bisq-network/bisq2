@@ -32,9 +32,9 @@ import bisq.desktop.primary.main.content.trade.multisig.old.createOffer.MultiSig
 import bisq.desktop.primary.main.content.trade.multisig.old.takeOffer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.poc.OfferBookService;
-import bisq.offer.poc.OpenOfferService;
 import bisq.offer.poc.PocOffer;
+import bisq.offer.poc.PocOfferBookService;
+import bisq.offer.poc.PocOpenOfferService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.scene.control.ButtonBase;
 import lombok.Getter;
@@ -49,8 +49,8 @@ public class OfferbookController implements Controller {
     private final OfferbookView view;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
-    private final OpenOfferService openOfferService;
-    private final OfferBookService offerBookService;
+    private final PocOpenOfferService openOfferService;
+    private final PocOfferBookService offerBookService;
 
     private Pin offerListPin;
     private Subscription selectedMarketSubscription, directionSubscription;

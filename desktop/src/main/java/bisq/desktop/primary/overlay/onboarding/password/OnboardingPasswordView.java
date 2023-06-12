@@ -58,7 +58,9 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
 
         setPasswordButton = new Button(Res.get("user.password.button.savePassword"));
         setPasswordButton.setDefaultButton(true);
+
         skipButton = new Button(Res.get("onboarding.password.button.skip"));
+        skipButton.getStyleClass().add("outlined-button");
         HBox buttons = new HBox(20, setPasswordButton, skipButton);
         buttons.setAlignment(Pos.CENTER);
         VBox.setMargin(headline, new Insets(40, 0, 0, 0));

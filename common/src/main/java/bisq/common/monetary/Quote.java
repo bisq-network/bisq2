@@ -61,15 +61,15 @@ public final class Quote implements Comparable<Quote>, Proto {
         this.baseMonetary = baseMonetary;
         this.quoteMonetary = quoteMonetary;
         this.precision = quoteMonetary.precision;
-        lowPrecision = quoteMonetary.minPrecision;
+        lowPrecision = quoteMonetary.lowPrecision;
 
         market = new Market(baseMonetary.getCode(), quoteMonetary.getCode(), baseMonetary.getName(), quoteMonetary.getName());
     }
 
     public bisq.common.protobuf.Quote toProto() {
         return bisq.common.protobuf.Quote.newBuilder().setValue(value)
-                .setBaseMonetary(baseMonetary.getMonetaryBuilder())
-                .setQuoteMonetary(quoteMonetary.getMonetaryBuilder())
+                .setBaseMonetary(baseMonetary.toProto())
+                .setQuoteMonetary(quoteMonetary.toProto())
                 .build();
     }
 
@@ -85,7 +85,7 @@ public final class Quote implements Comparable<Quote>, Proto {
      * @return A quote object using 1 BTC as base coin.
      */
     public static Quote fromFiatPrice(double price, String fiatCurrencyCode) {
-        return Quote.of(Coin.asBtc(1.0), Fiat.of(price, fiatCurrencyCode));
+        return Quote.of(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(price, fiatCurrencyCode));
     }
 
     /**
@@ -94,7 +94,7 @@ public final class Quote implements Comparable<Quote>, Proto {
      * @return A quote object using 1 unit of the altcoin as base coin.
      */
     public static Quote fromAltCoinPrice(double price, String altCoinCode) {
-        return Quote.of(Coin.of(1.0, altCoinCode), Coin.asBtc(price));
+        return Quote.of(Coin.fromFaceValue(1.0, altCoinCode), Coin.asBtcFromFaceValue(price));
     }
 
     /**
@@ -105,11 +105,11 @@ public final class Quote implements Comparable<Quote>, Proto {
      */
     public static Quote fromPrice(double price, String baseCurrencyCode, String quoteCurrencyCode) {
         Monetary baseMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
-                Fiat.of(1d, baseCurrencyCode) :
-                Coin.of(1d, baseCurrencyCode);
+                Fiat.fromFaceValue(1d, baseCurrencyCode) :
+                Coin.fromFaceValue(1d, baseCurrencyCode);
         Monetary quoteMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
-                Fiat.of(price, quoteCurrencyCode) :
-                Coin.of(price, quoteCurrencyCode);
+                Fiat.fromFaceValue(price, quoteCurrencyCode) :
+                Coin.fromFaceValue(price, quoteCurrencyCode);
 
         return Quote.of(baseMonetary, quoteMonetary);
     }
@@ -120,11 +120,11 @@ public final class Quote implements Comparable<Quote>, Proto {
 
     public static Quote fromPrice(long value, String baseCurrencyCode, String quoteCurrencyCode) {
         Monetary baseMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
-                Fiat.of(1d, baseCurrencyCode) :
-                Coin.of(1d, baseCurrencyCode);
+                Fiat.fromFaceValue(1d, baseCurrencyCode) :
+                Coin.fromFaceValue(1d, baseCurrencyCode);
         Monetary quoteMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
-                Fiat.of(value, quoteCurrencyCode) :
-                Coin.of(value, quoteCurrencyCode);
+                Fiat.fromValue(value, quoteCurrencyCode) :
+                Coin.fromValue(value, quoteCurrencyCode);
 
         return Quote.of(baseMonetary, quoteMonetary);
     }
@@ -143,30 +143,6 @@ public final class Quote implements Comparable<Quote>, Proto {
                 .divide(BigDecimal.valueOf(baseMonetary.value), RoundingMode.HALF_UP)
                 .longValue();
         return new Quote(value, baseMonetary, quoteMonetary);
-    }
-
-    /**
-     * A quote created from a market price quote and a percentage offset
-     *
-     * @param marketPrice Current market price
-     * @param offset      Offset from market price in percent (values: -1 to +1).
-     * @return The quote representing the offset from market price
-     */
-    public static Quote fromMarketPriceOffset(Quote marketPrice, double offset) {
-        checkArgument(offset >= -1 && offset <= 1, "Offset must be in range -1 to +1");
-        double price = marketPrice.asDouble() * (1 + offset);
-        return Quote.fromPrice(price, marketPrice.baseMonetary.code, marketPrice.quoteMonetary.code);
-    }
-
-    /**
-     * @param marketQuote The quote representing the market price
-     * @param offerQuote  The quote we want to compare to the market price
-     * @return The percentage offset from the market price. Positive value means that offerQuote is above market price.
-     * Result is rounded to precision 4 (2 decimal places at percentage representation)
-     */
-    public static double offsetOf(Quote marketQuote, Quote offerQuote) {
-        checkArgument(marketQuote.value > 0, "marketQuote must be positive");
-        return MathUtils.roundDouble(offerQuote.value / (double) marketQuote.value - 1, 4);
     }
 
     /**

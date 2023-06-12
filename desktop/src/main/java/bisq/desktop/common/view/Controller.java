@@ -42,7 +42,4 @@ public interface Controller {
     default boolean useCaching() {
         return true;
     }
-
-    default void onNavigateToChild(NavigationTarget navigationTarget) {
-    }
 }

@@ -68,7 +68,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Getter
     private final ObservableSet<String> walletAddresses = new ObservableSet<>();
     @Getter
-    private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
+    private final Observable<Coin> balance = new Observable<>(Coin.asBtcFromValue(0));
     @Getter
     private final ObservableSet<Transaction> transactions = new ObservableSet<>();
     @Getter
@@ -195,7 +195,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     public CompletableFuture<Coin> requestBalance() {
         return CompletableFuture.supplyAsync(() -> {
             double balance = wallet.getBalance();
-            Coin balanceAsCoin = Coin.asBtc(balance);
+            Coin balanceAsCoin = Coin.asBtcFromFaceValue(balance);
             this.balance.set(balanceAsCoin);
             return balanceAsCoin;
         });

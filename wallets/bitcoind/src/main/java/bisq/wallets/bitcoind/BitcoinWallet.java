@@ -100,7 +100,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
                     List<TransactionInput> inputs = new ArrayList<>();
                     List<TransactionOutput> outputs = new ArrayList<>();
                     int lockTime = 0;
-                    Coin amount = Coin.asBtc(0);
+                    Coin amount = Coin.asBtcFromValue(0);
                     boolean incoming = true;
                     return new Transaction(tx.getTxId(),
                             inputs,

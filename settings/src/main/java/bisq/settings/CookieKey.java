@@ -17,6 +17,16 @@
 
 package bisq.settings;
 
+import bisq.common.util.ProtobufUtils;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Slf4j
 // Used for persistence of Cookie. We use enum name as key.
 public enum CookieKey {
     STAGE_X,
@@ -25,6 +35,54 @@ public enum CookieKey {
     STAGE_H,
     NAVIGATION_TARGET,
     FILE_CHOOSER_DIR,
+    CREATE_OFFER_METHODS(true),
+    CREATE_OFFER_USE_FIX_PRICE(true),
     TRADE_ASSISTANT_COLLAPSED,
-    CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED
+    CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED;
+
+    @Setter
+    @Getter
+    @Nullable
+    private String subKey;
+    private final boolean useSubKey;
+
+    CookieKey(boolean useSubKey) {
+        this.useSubKey = useSubKey;
+    }
+
+    CookieKey() {
+        this(false);
+    }
+
+    public boolean isUseSubKey() {
+        if (useSubKey) {
+            checkArgument(subKey != null,
+                    "If the enum has useSubKey set the subKey must not be null. CookieKey=" + this);
+        }
+        return useSubKey;
+    }
+
+    // We do not use protobuf for the enum for more flexibility
+    String getKeyForProto() {
+        String key = name();
+        if (isUseSubKey()) {
+            key = key + "." + subKey;
+        }
+        return key;
+    }
+
+    @Nullable
+    static CookieKey fromProto(String key) {
+        String[] tokens = key.split("\\.");
+        String name = tokens[0];
+        CookieKey cookieKey = ProtobufUtils.enumFromProto(CookieKey.class, name);
+        if (cookieKey != null && tokens.length > 1) {
+            String subKey = tokens[1];
+            checkArgument(cookieKey.useSubKey,
+                    "If the subKey is not null, the enum must have useSubKey set to true. CookieKey=" +
+                            cookieKey + ". subKey=" + subKey);
+            cookieKey.setSubKey(subKey);
+        }
+        return cookieKey;
+    }
 }

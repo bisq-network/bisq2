@@ -20,12 +20,14 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.AmountController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.DirectionController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.MarketController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.PaymentMethodController;
-import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.ReviewOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.CreateOfferAmountController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.direction.CreateOfferDirectionController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.market.CreateOfferMarketController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.method.CreateOfferPaymentMethodController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.price.CreateOfferPriceController;
+import bisq.desktop.primary.overlay.bisq_easy.create_offer.review.CreateOfferReviewOfferController;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import lombok.EqualsAndHashCode;
@@ -40,6 +42,7 @@ import java.util.Optional;
 
 @Slf4j
 public class CreateOfferController extends NavigationController implements InitWithDataController<CreateOfferController.InitData> {
+
 
     @Getter
     @EqualsAndHashCode
@@ -57,15 +60,15 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
-    private final DirectionController directionController;
-    private final MarketController marketController;
-    private final AmountController amountController;
-    private final PaymentMethodController paymentMethodController;
-    private final ReviewOfferController reviewOfferController;
-    private final ListChangeListener<String> paymentMethodsListener;
-    private Subscription directionSubscription, marketSubscription, baseSideMinAmountSubscription,
-            baseSideMaxAmountSubscription, quoteSideMinAmountSubscription, quoteSideMaxAmountSubscription,
-            isMinAmountEnabledSubscription;
+    private final CreateOfferDirectionController createOfferDirectionController;
+    private final CreateOfferMarketController createOfferMarketController;
+    private final CreateOfferPriceController createOfferPriceController;
+    private final CreateOfferAmountController createOfferAmountController;
+    private final CreateOfferPaymentMethodController createOfferPaymentMethodController;
+    private final CreateOfferReviewOfferController createOfferReviewOfferController;
+    private final ListChangeListener<String> settlementMethodsListener;
+    private Subscription directionPin, marketPin, amountSpecPin,
+            isMinAmountEnabledPin, priceSpecPin;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -79,112 +82,98 @@ public class CreateOfferController extends NavigationController implements InitW
                 NavigationTarget.CREATE_OFFER_DIRECTION,
                 NavigationTarget.CREATE_OFFER_MARKET,
                 NavigationTarget.CREATE_OFFER_AMOUNT,
-                NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
+                NavigationTarget.CREATE_OFFER_SETTLEMENT_METHOD,
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
-        directionController = new DirectionController(applicationService, this::onNext, this::setButtonsVisible);
-        marketController = new MarketController(applicationService, this::onNext);
-        amountController = new AmountController(applicationService);
-        paymentMethodController = new PaymentMethodController(applicationService);
-        reviewOfferController = new ReviewOfferController(applicationService, this::setButtonsVisible, this::reset);
+        createOfferDirectionController = new CreateOfferDirectionController(applicationService, this::onNext, this::setMainButtonsVisibleState);
+        createOfferMarketController = new CreateOfferMarketController(applicationService, this::onNext);
+        createOfferPriceController = new CreateOfferPriceController(applicationService);
+        createOfferAmountController = new CreateOfferAmountController(applicationService);
+        createOfferPaymentMethodController = new CreateOfferPaymentMethodController(applicationService);
+        createOfferReviewOfferController = new CreateOfferReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
 
-        paymentMethodsListener = c -> {
+        settlementMethodsListener = c -> {
             c.next();
-            handlePaymentMethodsUpdate();
+            handleSettlementMethodsUpdate();
         };
     }
 
     @Override
     public void initWithData(InitData initData) {
-        reviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
+        createOfferReviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
     }
 
     @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
 
-        directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
-            reviewOfferController.setDirection(direction);
-            amountController.setDirection(direction);
+        directionPin = EasyBind.subscribe(createOfferDirectionController.getDirection(), direction -> {
+            createOfferReviewOfferController.setDirection(direction);
+            createOfferAmountController.setDirection(direction);
+            model.getPriceProgressItemVisible().set(direction == Direction.SELL);
+            if (direction == Direction.SELL) {
+                model.getChildTargets().add(2, NavigationTarget.CREATE_OFFER_PRICE);
+            } else {
+                model.getChildTargets().remove(NavigationTarget.CREATE_OFFER_PRICE);
+            }
         });
-        marketSubscription = EasyBind.subscribe(marketController.getMarket(), market -> {
-            reviewOfferController.setMarket(market);
-            paymentMethodController.setMarket(market);
-            amountController.setMarket(market);
-            updateNextButtonState();
+        marketPin = EasyBind.subscribe(createOfferMarketController.getMarket(), market -> {
+            createOfferReviewOfferController.setMarket(market);
+            createOfferPaymentMethodController.setMarket(market);
+            createOfferPriceController.setMarket(market);
+            createOfferAmountController.setMarket(market);
+            updateNextButtonDisabledState();
         });
-        baseSideMinAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMinAmount(), reviewOfferController::setBaseSideMinAmount);
-        baseSideMaxAmountSubscription = EasyBind.subscribe(amountController.getBaseSideMaxAmount(), reviewOfferController::setBaseSideMaxAmount);
-        quoteSideMinAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMinAmount(), reviewOfferController::setQuoteSideMinAmount);
-        quoteSideMaxAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideMaxAmount(), reviewOfferController::setQuoteSideMaxAmount);
-        isMinAmountEnabledSubscription = EasyBind.subscribe(amountController.getIsMinAmountEnabled(), reviewOfferController::setIsMinAmountEnabled);
+        amountSpecPin = EasyBind.subscribe(createOfferAmountController.getAmountSpec(), createOfferReviewOfferController::setAmountSpec);
+        isMinAmountEnabledPin = EasyBind.subscribe(createOfferAmountController.getIsMinAmountEnabled(), createOfferReviewOfferController::setIsMinAmountEnabled);
+        priceSpecPin = EasyBind.subscribe(createOfferPriceController.getPriceSpec(), priceSpec -> {
+            createOfferAmountController.setPriceSpec(priceSpec);
+            createOfferReviewOfferController.setPriceSpec(priceSpec);
+        });
 
-        paymentMethodController.getPaymentMethodNames().addListener(paymentMethodsListener);
-        reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
-        handlePaymentMethodsUpdate();
+        handleSettlementMethodsUpdate();
+        createOfferPaymentMethodController.getSettlementMethodNames().addListener(settlementMethodsListener);
     }
 
     @Override
     public void onDeactivate() {
-        directionSubscription.unsubscribe();
-        marketSubscription.unsubscribe();
-        baseSideMinAmountSubscription.unsubscribe();
-        baseSideMaxAmountSubscription.unsubscribe();
-        quoteSideMinAmountSubscription.unsubscribe();
-        quoteSideMaxAmountSubscription.unsubscribe();
-        isMinAmountEnabledSubscription.unsubscribe();
-
-        paymentMethodController.getPaymentMethodNames().removeListener(paymentMethodsListener);
+        directionPin.unsubscribe();
+        marketPin.unsubscribe();
+        amountSpecPin.unsubscribe();
+        isMinAmountEnabledPin.unsubscribe();
+        priceSpecPin.unsubscribe();
+        createOfferPaymentMethodController.getSettlementMethodNames().removeListener(settlementMethodsListener);
     }
 
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.getNextButtonVisible().set(true);
-        model.getBackButtonVisible().set(true);
         model.getCloseButtonVisible().set(true);
         model.getNextButtonText().set(Res.get("next"));
         model.getBackButtonText().set(Res.get("back"));
-
-        switch (navigationTarget) {
-            case CREATE_OFFER_DIRECTION: {
-                model.getBackButtonVisible().set(false);
-                break;
-            }
-            case CREATE_OFFER_MARKET: {
-                break;
-            }
-            case CREATE_OFFER_AMOUNT: {
-                break;
-            }
-            case CREATE_OFFER_PAYMENT_METHOD: {
-                break;
-            }
-            case CREATE_OFFER_REVIEW_OFFER: {
-                model.getNextButtonVisible().set(false);
-                break;
-            }
-            default: {
-            }
-        }
+        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.CREATE_OFFER_DIRECTION);
+        model.getNextButtonVisible().set(navigationTarget != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CREATE_OFFER_DIRECTION: {
-                return Optional.of(directionController);
+                return Optional.of(createOfferDirectionController);
             }
             case CREATE_OFFER_MARKET: {
-                return Optional.of(marketController);
+                return Optional.of(createOfferMarketController);
+            }
+            case CREATE_OFFER_PRICE: {
+                return Optional.of(createOfferPriceController);
             }
             case CREATE_OFFER_AMOUNT: {
-                return Optional.of(amountController);
+                return Optional.of(createOfferAmountController);
             }
-            case CREATE_OFFER_PAYMENT_METHOD: {
-                return Optional.of(paymentMethodController);
+            case CREATE_OFFER_SETTLEMENT_METHOD: {
+                return Optional.of(createOfferPaymentMethodController);
             }
             case CREATE_OFFER_REVIEW_OFFER: {
-                return Optional.of(reviewOfferController);
+                return Optional.of(createOfferReviewOfferController);
             }
             default: {
                 return Optional.empty();
@@ -200,7 +189,7 @@ public class CreateOfferController extends NavigationController implements InitW
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonState();
+            updateNextButtonDisabledState();
         }
     }
 
@@ -212,7 +201,7 @@ public class CreateOfferController extends NavigationController implements InitW
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonState();
+            updateNextButtonDisabledState();
         }
     }
 
@@ -229,33 +218,34 @@ public class CreateOfferController extends NavigationController implements InitW
     private void reset() {
         resetSelectedChildTarget();
 
-        directionController.reset();
-        marketController.reset();
-        amountController.reset();
-        paymentMethodController.reset();
-        reviewOfferController.reset();
+        createOfferDirectionController.reset();
+        createOfferMarketController.reset();
+        createOfferPriceController.reset();
+        createOfferAmountController.reset();
+        createOfferPaymentMethodController.reset();
+        createOfferReviewOfferController.reset();
 
         model.reset();
     }
 
-    private void updateNextButtonState() {
+    private void updateNextButtonDisabledState() {
         if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
-        } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(paymentMethodController.getPaymentMethodNames().isEmpty());
+            model.getNextButtonDisabled().set(createOfferMarketController.getMarket().get() == null);
+        } else if (NavigationTarget.CREATE_OFFER_SETTLEMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(createOfferPaymentMethodController.getSettlementMethodNames().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);
         }
     }
 
-    private void setButtonsVisible(boolean value) {
+    private void setMainButtonsVisibleState(boolean value) {
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
         model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
     }
 
-    private void handlePaymentMethodsUpdate() {
-        reviewOfferController.setPaymentMethodNames(paymentMethodController.getPaymentMethodNames());
-        updateNextButtonState();
+    private void handleSettlementMethodsUpdate() {
+        createOfferReviewOfferController.setSettlementMethodNames(createOfferPaymentMethodController.getSettlementMethodNames());
+        updateNextButtonDisabledState();
     }
 }

@@ -179,7 +179,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         public void onLeaveChannel(BisqEasyPublicChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
-                    .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
+                    .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
                     .filter(publicTradeChatMessage -> publicTradeChatMessage.isMyMessage(userIdentityService))
                     .findAny();
             if (myOpenOffer.isPresent()) {

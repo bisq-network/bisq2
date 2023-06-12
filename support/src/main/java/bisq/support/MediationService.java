@@ -20,7 +20,6 @@ package bisq.support;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.application.Service;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
@@ -161,8 +160,8 @@ public class MediationService implements Service, DataService.Listener, MessageL
         return selectMediator(mediators, makersProfileId, takersProfileId);
     }
 
-    public Optional<UserProfile> takerSelectMediator(BisqEasyPublicChatMessage chatMessage) {
-        return userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
+    public Optional<UserProfile> takerSelectMediator(String makersProfileId) {
+        return userProfileService.findUserProfile(makersProfileId)
                 .flatMap(makerUserProfile -> {
                     UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
                     return takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());

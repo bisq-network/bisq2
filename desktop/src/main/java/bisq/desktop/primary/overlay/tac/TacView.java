@@ -125,7 +125,6 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
-        log.error("root.getScene().getWindow().getWidth() " + root.getScene().getWindow().getWidth());
     }
 
     private void updateHeight() {
@@ -146,8 +145,6 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
             double paddedWidth = width - padding;
             rootScene.getWindow().setWidth(paddedWidth);
             root.setPrefWidth(paddedWidth);
-
-            log.error("root.getScene().getWindow().getWidth() " + root.getScene().getWindow().getWidth());
         }
     }
 

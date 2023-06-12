@@ -31,7 +31,6 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
@@ -160,9 +159,10 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                         .map(service -> Res.get("chat.bisqEasy.trade.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
                         .orElse(""));
 
-                if (!settingsService.getTradeRulesConfirmed().get()) {
+                //TODO
+              /*  if (!settingsService.getTradeRulesConfirmed().get()) {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
-                }
+                }*/
 
                 tradeAssistantController.setBisqEasyPrivateTradeChatChannel(privateChannel);
             } else if (isTwoPartyPrivateChatChannel) {

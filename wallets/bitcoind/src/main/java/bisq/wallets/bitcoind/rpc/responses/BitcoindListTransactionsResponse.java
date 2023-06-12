@@ -56,7 +56,7 @@ public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<Bitco
 
         @Override
         public Coin getAmount() {
-            return Coin.asBtc(amount);
+            return Coin.asBtcFromFaceValue(amount);
         }
 
         @Override

@@ -18,9 +18,11 @@
 package bisq.presentation.formatters;
 
 import bisq.common.util.MathUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
 
+@Slf4j
 public class PercentageFormatter {
     public static String formatToPercentWithSymbol(double value) {
         return formatToPercent(value) + "%";

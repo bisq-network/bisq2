@@ -24,7 +24,11 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.offer_details.BisqEasyOfferDetailsController;
 import bisq.i18n.Res;
+import bisq.offer.OfferFormatter;
+import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.settlement.SettlementFormatter;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -39,9 +43,11 @@ public class TradeAssistantOfferController implements Controller {
     private final TradeAssistantOfferModel model;
     private final KeyPairService keyPairService;
     private final Consumer<UserProfile> openUserProfileSidebarHandler;
+    private final MarketPriceService marketPriceService;
 
     public TradeAssistantOfferController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         keyPairService = applicationService.getSecurityService().getKeyPairService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
         this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
 
         model = new TradeAssistantOfferModel();
@@ -51,8 +57,8 @@ public class TradeAssistantOfferController implements Controller {
     public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
         BisqEasyOffer bisqEasyOffer = privateChannel.getBisqEasyOffer();
         model.setBisqEasyOffer(bisqEasyOffer);
-        String makersDirection = bisqEasyOffer.getMakersDirectionAsDisplayString();
-        String takersDirection = bisqEasyOffer.getTakersDirectionAsDisplayString();
+        String makersDirection = OfferFormatter.getMakersDirectionAsDisplayString(bisqEasyOffer);
+        String takersDirection = OfferFormatter.getTakersDirectionAsDisplayString(bisqEasyOffer);
 
         UserProfile peersUserProfile = privateChannel.getPeer();
         model.setPeersUserProfile(peersUserProfile);
@@ -65,8 +71,8 @@ public class TradeAssistantOfferController implements Controller {
             model.getOfferTitle().set(Res.get("tradeAssistant.offer.taker.offerTitle", peersUserName));
         }
 
-        model.getAmount().set(bisqEasyOffer.getQuoteSideMaxAmountAsDisplayString());
-        model.getPaymentMethods().set(bisqEasyOffer.getQuoteSideSettlementMethodsAsDisplayString());
+        model.getAmount().set(OfferAmountFormatter.formatMaxQuoteAmount(marketPriceService, bisqEasyOffer));
+        model.getPaymentMethods().set(SettlementFormatter.asQuoteSideSettlementMethodsString(bisqEasyOffer));
 
         model.getOpenUserProfileButtonLabel().set(Res.get("tradeAssistant.offer.peer.openUserProfile", peersUserName));
     }

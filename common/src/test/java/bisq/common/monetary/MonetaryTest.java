@@ -53,8 +53,8 @@ public class MonetaryTest {
 
     @Test
     void testQuotes() {
-        Coin btc = Coin.asBtc(1.0);
-        Fiat usd = Fiat.of(50000d, "USD");
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
+        Fiat usd = Fiat.fromFaceValue(50000d, "USD");
         Quote quote = Quote.of(btc, usd);
         assertEquals(500000000, quote.getValue());
         assertEquals(50000.0, quote.asDouble());
@@ -63,24 +63,24 @@ public class MonetaryTest {
         assertEquals("BTC", quote.getBaseMonetary().getCode());
         assertEquals("BTC/USD", quote.getMarket().getMarketCodes());
 
-        usd = Fiat.of(50000.1249d, "USD");
+        usd = Fiat.fromFaceValue(50000.1249d, "USD");
         quote = Quote.of(btc, usd);
         assertEquals(500001249, quote.getValue());
         assertEquals(50000.1249, quote.asDouble());
 
-        usd = Fiat.of(50000.1250d, "USD");
+        usd = Fiat.fromFaceValue(50000.1250d, "USD");
         quote = Quote.of(btc, usd);
         assertEquals(50000.1250, quote.asDouble());
 
-        btc = Coin.asBtc(100000000);
-        usd = Fiat.of(500001250, "USD");
+        btc = Coin.asBtcFromValue(100000000);
+        usd = Fiat.fromValue(500001250, "USD");
         quote = Quote.of(btc, usd);
         assertEquals(500001250, quote.getValue());
         assertEquals(50000.1250, quote.asDouble());
 
         // btc - alt
-        Coin xmr = Coin.asXmr(150d);
-        btc = Coin.asBtc(1.0);
+        Coin xmr = Coin.asXmrFromFaceValue(150d);
+        btc = Coin.asBtcFromFaceValue(1.0);
         quote = Quote.of(xmr, btc);
         assertEquals(666667, quote.getValue());
         assertEquals(0.00666667, quote.asDouble());
@@ -89,8 +89,8 @@ public class MonetaryTest {
         assertEquals("XMR", quote.getBaseMonetary().getCode());
         assertEquals("XMR/BTC", quote.getMarket().getMarketCodes());
 
-        xmr = Coin.asXmr(1d);
-        btc = Coin.asBtc(0.00666667);
+        xmr = Coin.asXmrFromFaceValue(1d);
+        btc = Coin.asBtcFromFaceValue(0.00666667);
         quote = Quote.of(xmr, btc);
         assertEquals(666667, quote.getValue());
         assertEquals(0.00666667, quote.asDouble());
@@ -100,8 +100,8 @@ public class MonetaryTest {
         assertEquals("XMR/BTC", quote.getMarket().getMarketCodes());
 
         // XMR/ETH
-        xmr = Coin.asXmr(1d);     // 250
-        Coin eth = Coin.of(0.1, "ETH"); //2500
+        xmr = Coin.asXmrFromFaceValue(1d);     // 250
+        Coin eth = Coin.fromFaceValue(0.1, "ETH"); //2500
         quote = Quote.of(xmr, eth);
         assertEquals(10000000, quote.getValue());
         assertEquals(0.1, quote.asDouble());
@@ -111,8 +111,8 @@ public class MonetaryTest {
         assertEquals("XMR/ETH", quote.getMarket().getMarketCodes());
 
         // ETH/XMR
-        eth = Coin.of(1d, "ETH"); //2500
-        xmr = Coin.asXmr(10d);     // 250
+        eth = Coin.fromFaceValue(1d, "ETH"); //2500
+        xmr = Coin.asXmrFromFaceValue(10d);     // 250
         quote = Quote.of(eth, xmr);
         assertEquals(10000000000000L, quote.getValue());
         assertEquals(10, quote.asDouble());
@@ -122,8 +122,8 @@ public class MonetaryTest {
         assertEquals("ETH/XMR", quote.getMarket().getMarketCodes());
 
         // USD/EUR
-        usd = Fiat.of(1d, "USD");
-        Fiat eur = Fiat.of(0.8, "EUR");
+        usd = Fiat.fromFaceValue(1d, "USD");
+        Fiat eur = Fiat.fromFaceValue(0.8, "EUR");
         quote = Quote.of(usd, eur);
         assertEquals(8000, quote.getValue());
         assertEquals(0.8, quote.asDouble());
@@ -133,8 +133,8 @@ public class MonetaryTest {
         assertEquals("USD/EUR", quote.getMarket().getMarketCodes());
 
         // EUR/USD
-        eur = Fiat.of(1d, "EUR");
-        usd = Fiat.of(1.2d, "USD");
+        eur = Fiat.fromFaceValue(1d, "EUR");
+        usd = Fiat.fromFaceValue(1.2d, "USD");
         quote = Quote.of(eur, usd);
         assertEquals(12000, quote.getValue());
         assertEquals(1.2, quote.asDouble());
@@ -144,16 +144,16 @@ public class MonetaryTest {
         assertEquals("EUR/USD", quote.getMarket().getMarketCodes());
 
         // large numbers just below overflow
-        xmr = Coin.asXmr(1500000d);
-        btc = Coin.asBtc(10000.0);
+        xmr = Coin.asXmrFromFaceValue(1500000d);
+        btc = Coin.asBtcFromFaceValue(10000.0);
         quote = Quote.of(xmr, btc);
         assertEquals(666667, quote.getValue());
         assertEquals(0.00666667, quote.asDouble());
 
         try {
             // overflow as we movePointRight by 12 with xmr
-            xmr = Coin.asXmr(15000000d);
-            btc = Coin.asBtc(100000.0);
+            xmr = Coin.asXmrFromFaceValue(15000000d);
+            btc = Coin.asBtcFromFaceValue(100000.0);
             quote = Quote.of(xmr, btc);
             assertEquals(666667, quote.getValue());
             assertEquals(0.00666667, quote.asDouble());

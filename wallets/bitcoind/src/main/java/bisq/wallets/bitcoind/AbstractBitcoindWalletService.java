@@ -80,7 +80,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         this.optionalRpcConfig = optionalRpcConfig;
         this.walletName = walletName;
 
-        observableBalanceAsCoin = new Observable<>(Coin.of(0, currencyCode));
+        observableBalanceAsCoin = new Observable<>(Coin.fromValue(0, currencyCode));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +261,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         CompletableFuture.runAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             double balance = wallet.getBalance();
-            Coin coin = Coin.of(balance, currencyCode);
+            Coin coin = Coin.fromFaceValue(balance, currencyCode);
 
             // Balance changed?
             if (!observableBalanceAsCoin.get().equals(coin)) {

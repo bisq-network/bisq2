@@ -143,8 +143,17 @@ public class MarketPriceService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public Optional<MarketPrice> getMarketPrice(Market market) {
-        return Optional.ofNullable(marketPriceByCurrencyMap.get(market));
+    public Optional<MarketPrice> findMarketPrice(Market market) {
+        MarketPrice marketPrice = marketPriceByCurrencyMap.get(market);
+        if (marketPrice == null) {
+            log.warn("marketPrice for {} not found.\n" +
+                    "Available marketPriceByCurrencyMap={}", market, marketPriceByCurrencyMap);
+        }
+        return Optional.ofNullable(marketPrice);
+    }
+
+    public Optional<Quote> findMarketPriceQuote(Market market) {
+        return findMarketPrice(market).map(MarketPrice::getQuote).stream().findAny();
     }
 
     public CompletableFuture<Map<Market, MarketPrice>> request() {

@@ -31,6 +31,7 @@ import bisq.desktop.primary.main.content.user.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.user.reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.primary.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import bisq.desktop.primary.overlay.tac.TacController;
 import bisq.desktop.primary.overlay.unlock.UnlockController;
@@ -124,6 +125,9 @@ public class OverlayController extends NavigationController {
             }
             case CREATE_OFFER: {
                 return Optional.of(new CreateOfferController(applicationService));
+            }
+            case TAKE_OFFER: {
+                return Optional.of(new TakeOfferController(applicationService));
             }
             case BISQ_EASY_GUIDE: {
                 return Optional.of(new BisqEasyGuideController(applicationService));
