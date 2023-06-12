@@ -35,7 +35,7 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
+public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2Model, CreateNewProfileStep2Controller> {
     private final ImageView roboIconView;
     private final MaterialTextField statement;
     private final MaterialTextArea terms;
@@ -44,7 +44,7 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
     protected final Label headLineLabel;
     private Scene rootScene;
 
-    public GenerateNewProfileStep2View(GenerateNewProfileStep2Model model, GenerateNewProfileStep2Controller controller) {
+    public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);

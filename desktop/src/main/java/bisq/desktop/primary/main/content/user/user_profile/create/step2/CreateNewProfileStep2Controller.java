@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class GenerateNewProfileStep2Controller implements InitWithDataController<GenerateNewProfileStep2Controller.InitData> {
+public class CreateNewProfileStep2Controller implements InitWithDataController<CreateNewProfileStep2Controller.InitData> {
 
     @Getter
     @ToString
@@ -60,13 +60,13 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         }
     }
 
-    protected final GenerateNewProfileStep2Model model;
+    protected final CreateNewProfileStep2Model model;
     @Getter
-    protected final GenerateNewProfileStep2View view;
+    protected final CreateNewProfileStep2View view;
     protected final UserIdentityService userIdentityService;
     private final DefaultApplicationService applicationService;
 
-    public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
+    public CreateNewProfileStep2Controller(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         this.applicationService = applicationService;
 
@@ -74,12 +74,12 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         view = createView();
     }
 
-    protected GenerateNewProfileStep2View createView() {
-        return new GenerateNewProfileStep2View(model, this);
+    protected CreateNewProfileStep2View createView() {
+        return new CreateNewProfileStep2View(model, this);
     }
 
-    protected GenerateNewProfileStep2Model createModel() {
-        return new GenerateNewProfileStep2Model();
+    protected CreateNewProfileStep2Model createModel() {
+        return new CreateNewProfileStep2Model();
     }
 
     @Override

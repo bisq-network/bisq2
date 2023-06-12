@@ -34,7 +34,7 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GenerateProfileView extends View<VBox, GenerateProfileModel, GenerateProfileController> {
+public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProfileController> {
     protected final Button regenerateButton;
     protected final Button createProfileButton;
     protected final Label nym;
@@ -44,7 +44,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
     protected final ProgressIndicator createProfileIndicator;
     private final Label feedbackLabel;
 
-    public GenerateProfileView(GenerateProfileModel model, GenerateProfileController controller) {
+    public CreateProfileView(CreateProfileModel model, CreateProfileController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

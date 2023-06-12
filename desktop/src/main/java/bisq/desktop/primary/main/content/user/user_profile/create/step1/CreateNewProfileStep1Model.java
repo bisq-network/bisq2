@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create.step1;
 
-import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileModel;
+import bisq.desktop.primary.overlay.onboarding.create_profile.CreateProfileModel;
 import lombok.Getter;
 
 @Getter
-public class GenerateNewProfileStep1Model extends GenerateProfileModel {
+public class CreateNewProfileStep1Model extends CreateProfileModel {
 }

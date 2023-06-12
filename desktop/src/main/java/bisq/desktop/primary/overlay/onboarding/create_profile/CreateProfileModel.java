@@ -28,7 +28,7 @@ import lombok.Setter;
 import java.util.Optional;
 
 @Getter
-public class GenerateProfileModel implements Model {
+public class CreateProfileModel implements Model {
     @Setter
     private Optional<KeyPairAndId> keyPairAndId = Optional.empty();
     @Setter

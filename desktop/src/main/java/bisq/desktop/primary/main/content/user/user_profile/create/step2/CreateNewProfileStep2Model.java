@@ -29,7 +29,7 @@ import lombok.Setter;
 import java.util.Optional;
 
 @Getter
-public class GenerateNewProfileStep2Model implements Model {
+public class CreateNewProfileStep2Model implements Model {
     @Setter
     private Optional<KeyPairAndId> tempKeyPairAndId = Optional.empty();
     @Setter

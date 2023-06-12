@@ -20,34 +20,34 @@ package bisq.desktop.primary.main.content.user.user_profile.create.step1;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.user.user_profile.create.step2.GenerateNewProfileStep2Controller;
+import bisq.desktop.primary.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileController;
-import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileModel;
-import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileView;
+import bisq.desktop.primary.overlay.onboarding.create_profile.CreateProfileController;
+import bisq.desktop.primary.overlay.onboarding.create_profile.CreateProfileModel;
+import bisq.desktop.primary.overlay.onboarding.create_profile.CreateProfileView;
 import javafx.application.Platform;
 
-public class GenerateNewProfileStep1Controller extends GenerateProfileController {
+public class CreateNewProfileStep1Controller extends CreateProfileController {
     private final DefaultApplicationService applicationService;
 
-    public GenerateNewProfileStep1Controller(DefaultApplicationService applicationService) {
+    public CreateNewProfileStep1Controller(DefaultApplicationService applicationService) {
         super(applicationService);
         this.applicationService = applicationService;
     }
 
     @Override
-    protected GenerateProfileView getGenerateProfileView() {
-        return new GenerateNewProfileStep1View((GenerateNewProfileStep1Model) model, this);
+    protected CreateProfileView getGenerateProfileView() {
+        return new CreateNewProfileStep1View((CreateNewProfileStep1Model) model, this);
     }
 
     @Override
-    protected GenerateProfileModel getGenerateProfileModel() {
-        return new GenerateNewProfileStep1Model();
+    protected CreateProfileModel getGenerateProfileModel() {
+        return new CreateNewProfileStep1Model();
     }
 
     @Override
     protected void onCreateUserProfile() {
-        GenerateNewProfileStep2Controller.InitData initData = new GenerateNewProfileStep2Controller.InitData(
+        CreateNewProfileStep2Controller.InitData initData = new CreateNewProfileStep2Controller.InitData(
                 model.getKeyPairAndId(),
                 model.getPooledIdentity(),
                 model.getProofOfWork().orElseThrow(),

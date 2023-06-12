@@ -18,21 +18,21 @@
 package bisq.desktop.primary.main.content.user.user_profile.create.step1;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileView;
+import bisq.desktop.primary.overlay.onboarding.create_profile.CreateProfileView;
 import bisq.i18n.Res;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GenerateNewProfileStep1View extends GenerateProfileView {
+public class CreateNewProfileStep1View extends CreateProfileView {
 
-    private final GenerateNewProfileStep1Controller generateNewProfileStep1Controller;
+    private final CreateNewProfileStep1Controller createNewProfileStep1Controller;
     private Scene rootScene;
 
-    public GenerateNewProfileStep1View(GenerateNewProfileStep1Model model, GenerateNewProfileStep1Controller controller) {
+    public CreateNewProfileStep1View(CreateNewProfileStep1Model model, CreateNewProfileStep1Controller controller) {
         super(model, controller);
 
-        this.generateNewProfileStep1Controller = controller;
+        this.createNewProfileStep1Controller = controller;
 
         createProfileButton.setText(Res.get("next"));
     }
@@ -43,8 +43,8 @@ public class GenerateNewProfileStep1View extends GenerateProfileView {
 
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, generateNewProfileStep1Controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, generateNewProfileStep1Controller::onCancel);
+            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, createNewProfileStep1Controller::onQuit);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, createNewProfileStep1Controller::onCancel);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
     }

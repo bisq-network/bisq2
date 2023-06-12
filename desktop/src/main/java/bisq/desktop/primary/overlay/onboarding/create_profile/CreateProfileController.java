@@ -48,10 +48,10 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
-public class GenerateProfileController implements Controller {
-    protected final GenerateProfileModel model;
+public class CreateProfileController implements Controller {
+    protected final CreateProfileModel model;
     @Getter
-    protected final GenerateProfileView view;
+    protected final CreateProfileView view;
     protected final UserIdentityService userIdentityService;
     protected final KeyPairService keyPairService;
     protected final ProofOfWorkService proofOfWorkService;
@@ -61,7 +61,7 @@ public class GenerateProfileController implements Controller {
     protected final List<Identity> pooledIdentities = new ArrayList<>();
     protected boolean pooledIdentitiesInitialized;
 
-    public GenerateProfileController(DefaultApplicationService applicationService) {
+    public CreateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -71,12 +71,12 @@ public class GenerateProfileController implements Controller {
         view = getGenerateProfileView();
     }
 
-    protected GenerateProfileView getGenerateProfileView() {
-        return new GenerateProfileView(model, this);
+    protected CreateProfileView getGenerateProfileView() {
+        return new CreateProfileView(model, this);
     }
 
-    protected GenerateProfileModel getGenerateProfileModel() {
-        return new GenerateProfileModel();
+    protected CreateProfileModel getGenerateProfileModel() {
+        return new CreateProfileModel();
     }
 
     @Override
