@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisq2;
+package bisq.desktop.primary.overlay.onboarding.welcome;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -32,10 +32,10 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroController> {
+public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
     private final Button nextButton;
 
-    public Bisq2IntroView(Bisq2IntroModel model, Bisq2IntroController controller) {
+    public WelcomeView(WelcomeModel model, WelcomeController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(23);

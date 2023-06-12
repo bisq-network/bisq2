@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisq2;
+package bisq.desktop.primary.overlay.onboarding.welcome;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
@@ -25,16 +25,16 @@ import bisq.settings.DontShowAgainService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.settings.DontShowAgainKey.BISQ_2_INTRO;
+import static bisq.settings.DontShowAgainKey.WELCOME;
 
 @Slf4j
-public class Bisq2IntroController implements Controller {
+public class WelcomeController implements Controller {
     @Getter
-    private final Bisq2IntroView view;
+    private final WelcomeView view;
 
-    public Bisq2IntroController(DefaultApplicationService applicationService) {
-        Bisq2IntroModel model = new Bisq2IntroModel();
-        view = new Bisq2IntroView(model, this);
+    public WelcomeController(DefaultApplicationService applicationService) {
+        WelcomeModel model = new WelcomeModel();
+        view = new WelcomeView(model, this);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class Bisq2IntroController implements Controller {
     }
 
     void onNext() {
-        DontShowAgainService.dontShowAgain(BISQ_2_INTRO);
+        DontShowAgainService.dontShowAgain(WELCOME);
         Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
     }
 }

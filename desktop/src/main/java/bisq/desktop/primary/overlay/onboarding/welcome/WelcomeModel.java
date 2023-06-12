@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisq2;
+package bisq.desktop.primary.overlay.onboarding.welcome;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
 
 @Getter
-public class Bisq2IntroModel implements Model {
+public class WelcomeModel implements Model {
 }
