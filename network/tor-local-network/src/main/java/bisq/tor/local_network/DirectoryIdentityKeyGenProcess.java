@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class TorDAKeyGenProcess {
+public class DirectoryIdentityKeyGenProcess {
     private final Path torKeyDirPath;
     private final String directoryAddress;
 
@@ -38,7 +38,7 @@ public class TorDAKeyGenProcess {
     @Getter
     private Optional<OutputStream> outputStream = Optional.empty();
 
-    public TorDAKeyGenProcess(Path torKeyDirPath, String directoryAddress) {
+    public DirectoryIdentityKeyGenProcess(Path torKeyDirPath, String directoryAddress) {
         this.torKeyDirPath = torKeyDirPath;
         this.directoryAddress = directoryAddress;
     }

@@ -52,7 +52,7 @@ public class InputStreamWaiterTests {
 
     @Test
     @Timeout(value = 30)
-    public void waitForPasswordPromptPartialReads() throws IOException, InterruptedException {
+    public void waitForPasswordPromptPartialReads() throws IOException {
         var pipedOutputStream = new PipedOutputStream();
         var pipedInputStream = new PipedInputStream(pipedOutputStream);
 

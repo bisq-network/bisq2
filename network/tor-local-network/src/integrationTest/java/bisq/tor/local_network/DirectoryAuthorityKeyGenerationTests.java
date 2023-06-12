@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class DirectoryAuthorityKeyGenerationTests {
     @Test
     public void generateKeys(@TempDir Path tempDir) throws IOException, InterruptedException {
-        var torDAKeyGenProcess = new TorDAKeyGenProcess(tempDir, "127.0.0.1:8080");
+        var torDAKeyGenProcess = new DirectoryIdentityKeyGenProcess(tempDir, "127.0.0.1:8080");
         var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator(torDAKeyGenProcess);
         directoryAuthorityKeyGenerator.generate("my_passphrase");
 
