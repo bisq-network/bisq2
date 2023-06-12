@@ -29,6 +29,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.Offer;
+import bisq.offer.poc.OfferService;
 import bisq.offer.poc.PocOpenOfferService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -60,10 +61,10 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     public ProtocolService(NetworkService networkService,
                            IdentityService identityService,
                            PersistenceService persistenceService,
-                           PocOpenOfferService openOfferService) {
+                           OfferService openService) {
         this.networkService = networkService;
         this.identityService = identityService;
-        this.openOfferService = openOfferService;
+        this.openOfferService = openService.getOpenOfferService();
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         networkService.addMessageListener(this);

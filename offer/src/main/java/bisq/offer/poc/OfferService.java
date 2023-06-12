@@ -28,11 +28,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class PocOfferService implements Service {
+public class OfferService implements Service {
     private final PocOpenOfferService openOfferService;
     private final PocOfferBookService offerBookService;
 
-    public PocOfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
+    public OfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
         openOfferService = new PocOpenOfferService(networkService, identityService, persistenceService);
         offerBookService = new PocOfferBookService(networkService);
     }
