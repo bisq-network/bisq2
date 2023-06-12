@@ -22,7 +22,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import java.util.List;
 
 public class CryptoPaymentMethodUtil {
-    public static CryptoPaymentMethod from(String name, String currencyCode) {
+    public static CryptoPaymentMethod getPaymentMethod(String name, String currencyCode) {
         try {
             CryptoPaymentRail cryptoPaymentRail = CryptoPaymentRail.valueOf(name);
             CryptoPaymentMethod cryptoPaymentMethod = CryptoPaymentMethod.fromPaymentRail(cryptoPaymentRail, currencyCode);
@@ -34,17 +34,17 @@ public class CryptoPaymentMethodUtil {
         return CryptoPaymentMethod.fromCustomName(name, currencyCode);
     }
 
-    public static List<CryptoPaymentRail> getCryptoPaymentRails() {
+    public static List<CryptoPaymentRail> getPaymentRails() {
         return List.of(CryptoPaymentRail.values());
     }
 
-    public static List<CryptoPaymentRail> getCryptoPaymentRails(TradeProtocolType protocolType) {
+    public static List<CryptoPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
                 throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
             case BISQ_MULTISIG:
             case LIGHTNING_X:
-                return getCryptoPaymentRails();
+                return getPaymentRails();
             case MONERO_SWAP:
                 return List.of(CryptoPaymentRail.MONERO);
             case LIQUID_SWAP:

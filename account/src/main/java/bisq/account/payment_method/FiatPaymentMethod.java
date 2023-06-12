@@ -51,7 +51,7 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
     }
 
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return FiatPaymentMethodUtil.from(proto.getName());
+        return FiatPaymentMethodUtil.getPaymentMethod(proto.getName());
     }
 
     @Override

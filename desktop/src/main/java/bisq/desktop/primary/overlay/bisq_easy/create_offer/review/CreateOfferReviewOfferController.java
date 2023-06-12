@@ -174,7 +174,7 @@ public class CreateOfferReviewOfferController implements Controller {
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
-        String paymentMethodNames = PaymentMethodSpecFormatter.formatPaymentMethodNames(model.getFiatPaymentMethods(), true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.paymentMethodsToCommaSeparatedString(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
@@ -299,8 +299,10 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                List<String> paymentMethodNames = PaymentMethodSpecUtil.getQuoteSidePaymentMethodNames(peersOffer);
-                if (PaymentMethodSpecUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
+                List<String> paymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+                //  List<String> paymentMethodNames = PaymentMethodSpecUtil.getQuoteSidePaymentMethodNames(peersOffer);
+                List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+                if (quoteSidePaymentMethodNames.stream().noneMatch(paymentMethodNames::contains)) {
                     return false;
                 }
 

@@ -28,16 +28,16 @@ import java.util.stream.Collectors;
 
 public class FiatPaymentRailUtil {
 
-    public static List<FiatPaymentRail> getFiatPaymentRails() {
+    public static List<FiatPaymentRail> getPaymentRails() {
         return List.of(FiatPaymentRail.values());
     }
 
-    public static List<FiatPaymentRail> getFiatPaymentRails(TradeProtocolType protocolType) {
+    public static List<FiatPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
             case BISQ_MULTISIG:
             case LIGHTNING_X:
-                return getFiatPaymentRails();
+                return getPaymentRails();
             case MONERO_SWAP:
             case LIQUID_SWAP:
             case BSQ_SWAP:
@@ -47,8 +47,8 @@ public class FiatPaymentRailUtil {
         }
     }
 
-    public static List<FiatPaymentRail> getFiatPaymentRails(String currencyCode) {
-        return getFiatPaymentRails().stream()
+    public static List<FiatPaymentRail> getPaymentRails(String currencyCode) {
+        return getPaymentRails().stream()
                 .filter(fiatPaymentRail -> {
                     if (currencyCode.equals("EUR") &&
                             (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK)) {
@@ -62,12 +62,6 @@ public class FiatPaymentRailUtil {
                     }
                     return fiatPaymentRail.supportsCurrency(currencyCode);
                 })
-                .collect(Collectors.toList());
-    }
-
-    public static List<String> getFiatPaymentRailNames(String currencyCode) {
-        return getFiatPaymentRails(currencyCode).stream()
-                .map(Enum::name)
                 .collect(Collectors.toList());
     }
 

@@ -46,8 +46,8 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer, List<FiatPaymentMethod> takersPaymentMethods) {
-        List<FiatPaymentMethod> paymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        model.getOfferedFiatPaymentMethods().setAll(paymentMethods);
+        List<FiatPaymentMethod> fiatPaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        model.getOfferedFiatPaymentMethods().setAll(fiatPaymentMethods);
         Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(takersPaymentMethods);
         List<FiatPaymentMethod> matchingPaymentMethods = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
                 .map(PaymentMethodSpec::getPaymentMethod)

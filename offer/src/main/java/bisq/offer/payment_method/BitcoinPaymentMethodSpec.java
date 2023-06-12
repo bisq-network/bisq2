@@ -28,7 +28,6 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPaymentMethod> {
-
     public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod) {
         super(paymentMethod);
     }

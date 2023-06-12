@@ -149,11 +149,11 @@ public class PaymentSelection {
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(collect);
 
-            model.baseSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
+            model.baseSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentRails(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
                     .map(e -> new PaymentListItem(e, market.getBaseCurrencyCode()))
                     .collect(Collectors.toList()));
-            model.quoteSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
+            model.quoteSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentRails(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
                     .map(e -> new PaymentListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));

@@ -24,5 +24,5 @@ public enum BitcoinPaymentRail implements PaymentRail {
     LBTC,           // BTC wrapped on the Liquid side chain
     RBTC,           // BTC wrapped on the RSK blockchain
     WBTC,           // BTC wrapped on the ETH
-    OTHER;
+    OTHER
 }

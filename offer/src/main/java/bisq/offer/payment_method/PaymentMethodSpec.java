@@ -58,17 +58,15 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         return builder;
     }
 
-    // We use unsafe cast here as in case the proto data would not match our expected class we would get anyway 
-    // an exception.
-    public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    // Alternative signature would be: `public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.offer.protobuf.PaymentMethodSpec proto)`
+    // This would require an unsafe cast  (T) for the return type.
+    // The caller would provide the expected type. E.g. `PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto`
+    // By using specific methods we avoid those issues and the code is more readable without generics overhead.
+
+    public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.offer.protobuf.PaymentMethodSpec proto) {
         switch (proto.getMessageCase()) {
             case FIATPAYMENTMETHODSPEC: {
-                //noinspection unchecked
-                return (T) FiatPaymentMethodSpec.fromProto(proto);
-            }
-            case BITCOINPAYMENTMETHODSPEC: {
-                //noinspection unchecked
-                return (T) BitcoinPaymentMethodSpec.fromProto(proto);
+                return FiatPaymentMethodSpec.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -77,15 +75,10 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public static <T extends PaymentMethodSpec<? extends PaymentMethod<? extends PaymentRail>>> T fromProt1o(bisq.offer.protobuf.PaymentMethodSpec proto) {
+    public static BitcoinPaymentMethodSpec protoToBitcoinPaymentMethodSpec(bisq.offer.protobuf.PaymentMethodSpec proto) {
         switch (proto.getMessageCase()) {
-            case FIATPAYMENTMETHODSPEC: {
-                //noinspection unchecked
-                return (T) FiatPaymentMethodSpec.fromProto(proto);
-            }
             case BITCOINPAYMENTMETHODSPEC: {
-                //noinspection unchecked
-                return (T) BitcoinPaymentMethodSpec.fromProto(proto);
+                return BitcoinPaymentMethodSpec.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

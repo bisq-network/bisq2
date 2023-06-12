@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FiatPaymentMethodUtil {
-    public static FiatPaymentMethod from(String name) {
+    public static FiatPaymentMethod getPaymentMethod(String name) {
         try {
             FiatPaymentRail fiatPaymentRail = FiatPaymentRail.valueOf(name);
             FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethod.fromPaymentRail(fiatPaymentRail);
@@ -33,8 +33,8 @@ public class FiatPaymentMethodUtil {
         return FiatPaymentMethod.fromCustomName(name);
     }
 
-    public static List<FiatPaymentMethod> getFiatPaymentMethods(String currencyCode) {
-        return FiatPaymentRailUtil.getFiatPaymentRails(currencyCode).stream()
+    public static List<FiatPaymentMethod> getPaymentMethods(String currencyCode) {
+        return FiatPaymentRailUtil.getPaymentRails(currencyCode).stream()
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
     }

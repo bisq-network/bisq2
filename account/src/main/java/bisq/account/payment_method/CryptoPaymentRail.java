@@ -24,5 +24,5 @@ public enum CryptoPaymentRail implements PaymentRail {
     LIQUID,                             // Liquid side chain
     NATIVE_CHAIN,                       // The native chain of that cryptocurrency
     ATOMIC_SWAP_CAPABLE_CHAIN,          // A blockchain capable for atomic cross chain swaps
-    OTHER;
+    OTHER
 }

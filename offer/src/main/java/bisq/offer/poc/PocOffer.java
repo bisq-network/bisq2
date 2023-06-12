@@ -163,10 +163,10 @@ public final class PocOffer implements DistributedData {
                 .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::<BitcoinPaymentMethodSpec>fromProto)
+                .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
                 .collect(Collectors.toList());
         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::<FiatPaymentMethodSpec>fromProto)
+                .map(PaymentMethodSpec::protoToFiatPaymentMethodSpec)
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)

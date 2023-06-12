@@ -22,7 +22,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import java.util.List;
 
 public class BitcoinPaymentMethodUtil {
-    public static BitcoinPaymentMethod from(String name) {
+    public static BitcoinPaymentMethod getPaymentMethod(String name) {
         try {
             BitcoinPaymentRail bitcoinPaymentRail = BitcoinPaymentRail.valueOf(name);
             BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethod.fromPaymentRail(bitcoinPaymentRail);
@@ -34,14 +34,14 @@ public class BitcoinPaymentMethodUtil {
         return BitcoinPaymentMethod.fromCustomName(name);
     }
 
-    public static List<BitcoinPaymentRail> getAllBitcoinPaymentRails() {
+    public static List<BitcoinPaymentRail> getPaymentRails() {
         return List.of(BitcoinPaymentRail.values());
     }
 
-    public static List<BitcoinPaymentRail> getBitcoinPaymentRails(TradeProtocolType protocolType) {
+    public static List<BitcoinPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
-                return getAllBitcoinPaymentRails();               // Support any BTC rail 
+                return getPaymentRails();               // Support any BTC rail 
             case BISQ_MULTISIG:
             case MONERO_SWAP:
             case BSQ_SWAP:

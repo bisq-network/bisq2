@@ -65,7 +65,7 @@ public class CreateOfferPaymentMethodController implements Controller {
 
         model.getMarket().set(market);
         model.getSelectedFiatPaymentMethods().clear();
-        model.getFiatPaymentMethods().setAll(FiatPaymentMethodUtil.getFiatPaymentMethods(market.getQuoteCurrencyCode()));
+        model.getFiatPaymentMethods().setAll(FiatPaymentMethodUtil.getPaymentMethods(market.getQuoteCurrencyCode()));
         model.getFiatPaymentMethods().addAll(model.getAddedCustomFiatPaymentMethods());
         model.getIsPaymentMethodsEmpty().set(model.getFiatPaymentMethods().isEmpty());
     }
@@ -83,7 +83,7 @@ public class CreateOfferPaymentMethodController implements Controller {
                         if (name.isEmpty()) {
                             return;
                         }
-                        FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.from(name);
+                        FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
                         boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
                         if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
                             maybeAddFiatPaymentMethod(fiatPaymentMethod);

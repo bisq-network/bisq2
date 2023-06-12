@@ -19,7 +19,6 @@ package bisq.offer.payment_method;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
 import com.google.common.base.Joiner;
 
 import java.util.Collection;
@@ -27,27 +26,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PaymentMethodSpecFormatter {
-    /**
-     * @param paymentMethodNames The names of the payment methods or custom payment method names entered by the user.
-     * @return A comma separated list of the display strings of the paymentMethodNames
-     */
-    public static String formatPaymentMethodNames(List<String> paymentMethodNames) {
-        return toCommaSeparatedString(toDisplayStrings(paymentMethodNames));
+    public static String paymentMethodSpecsToCommaSeparatedString(List<? extends PaymentMethodSpec<?>> paymentMethodSpecs) {
+        return paymentMethodSpecsToCommaSeparatedString(paymentMethodSpecs, true);
     }
 
-    public static String formatPaymentMethodNames(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
-        List<String> paymentMethodsAsDisplayStrings = toDisplayStrings(paymentMethods.stream()
+    public static String paymentMethodSpecsToCommaSeparatedString(List<? extends PaymentMethodSpec<?>> paymentMethodSpecs, boolean useShortDisplayString) {
+        return toCommaSeparatedString(paymentMethodSpecs.stream()
+                .map(PaymentMethodSpec::getPaymentMethod)
                 .map(method -> useShortDisplayString ? method.getShortDisplayString() : method.getDisplayString())
                 .collect(Collectors.toList()));
-        return toCommaSeparatedString(paymentMethodsAsDisplayStrings);
     }
 
-    public static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> String formatQuoteSidePaymentMethods(Offer<?, T> offer) {
-        return toCommaSeparatedString(toDisplayStrings(offer.getQuoteSidePaymentMethodSpecs()));
+    public static String paymentMethodsToCommaSeparatedString(List<? extends PaymentMethod<?>> paymentMethods) {
+        return paymentMethodsToCommaSeparatedString(paymentMethods, true);
     }
 
-    private static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> List<String> toDisplayStrings(List<T> paymentMethodSpecs) {
-        return toDisplayStrings(PaymentMethodSpecUtil.getPaymentMethodNames(paymentMethodSpecs));
+    public static String paymentMethodsToCommaSeparatedString(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
+        return toCommaSeparatedString(paymentMethods.stream()
+                .map(method -> useShortDisplayString ? method.getShortDisplayString() : method.getDisplayString())
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -56,12 +53,21 @@ public class PaymentMethodSpecFormatter {
      * If no translation string is found we use the provided paymentMethodName (e.g. for custom paymentMethodNames)
      */
     private static List<String> toDisplayStrings(Collection<String> paymentMethodNames) {
+        return toDisplayStrings(paymentMethodNames, true);
+    }
+
+    private static List<String> toDisplayStrings(Collection<String> paymentMethodNames, boolean useShortDisplayString) {
+        //   String shortName = name + "_SHORT";
+        //        return Res.has(shortName) ? Res.get(shortName) : createDisplayString();
         return paymentMethodNames.stream()
-                .map(paymentMethodName -> {
-                    if (Res.has(paymentMethodName)) {
-                        return Res.get(paymentMethodName);
+                .map(name -> {
+                    String shortName = name + "_SHORT";
+                    if (useShortDisplayString && Res.has(shortName)) {
+                        return Res.get(shortName);
+                    } else if (Res.has(name)) {
+                        return Res.get(name);
                     } else {
-                        return paymentMethodName;
+                        return name;
                     }
                 })
                 .sorted()

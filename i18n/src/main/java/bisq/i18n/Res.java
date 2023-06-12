@@ -43,10 +43,6 @@ public class Res {
     public static String get(String key) {
         try {
             if (defaultBundle.containsKey(key)) {
-                if (key.equals("SEPA")) {
-                    var dd = defaultBundle.getString(key);
-                    log.error(dd);
-                }
                 return defaultBundle.getString(key);
             } else if (DevMode.isDevMode()) {
                 log.error("Missing resource for key: {}", key);

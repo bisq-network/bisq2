@@ -72,7 +72,7 @@ public class TradeAssistantOfferController implements Controller {
         }
 
         model.getAmount().set(OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer));
-        model.getPaymentMethods().set(PaymentMethodSpecFormatter.formatQuoteSidePaymentMethods(bisqEasyOffer));
+        model.getPaymentMethods().set(PaymentMethodSpecFormatter.paymentMethodSpecsToCommaSeparatedString(bisqEasyOffer.getQuoteSidePaymentMethodSpecs()));
 
         model.getOpenUserProfileButtonLabel().set(Res.get("tradeAssistant.offer.peer.openUserProfile", peersUserName));
     }

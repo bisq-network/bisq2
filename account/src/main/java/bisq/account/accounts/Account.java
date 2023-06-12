@@ -37,21 +37,21 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, S extends PaymentMethod<?>> implements Proto {
+public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements Proto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final S paymentMethod;
+    protected final M paymentMethod;
 
     public Account(String accountName,
-                   S paymentMethod,
+                   M paymentMethod,
                    P accountPayload) {
         this(new Date().getTime(), accountName, paymentMethod, accountPayload);
     }
 
     public Account(long creationDate,
                    String accountName,
-                   S paymentMethod,
+                   M paymentMethod,
                    P accountPayload) {
         this.creationDate = creationDate;
         this.accountName = accountName;

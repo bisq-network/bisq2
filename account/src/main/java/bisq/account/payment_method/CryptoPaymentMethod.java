@@ -58,7 +58,7 @@ public class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     }
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return CryptoPaymentMethodUtil.from(proto.getName(), proto.getCryptoPaymentMethod().getCurrencyCode());
+        return CryptoPaymentMethodUtil.getPaymentMethod(proto.getName(), proto.getCryptoPaymentMethod().getCurrencyCode());
     }
 
     @Override

@@ -21,28 +21,14 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.offer.Offer;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class PaymentMethodSpecUtil {
-    public static Optional<FiatPaymentMethodSpec> findFiatPaymentMethodSpec(PaymentMethodSpec paymentMethodSpec) {
-        return paymentMethodSpec instanceof FiatPaymentMethodSpec ?
-                Optional.of((FiatPaymentMethodSpec) paymentMethodSpec) :
-                Optional.empty();
-    }
-
-    public static Optional<BitcoinPaymentMethodSpec> findBitcoinPaymentMethodSpec(PaymentMethodSpec paymentMethodSpec) {
-        return paymentMethodSpec instanceof BitcoinPaymentMethodSpec ?
-                Optional.of((BitcoinPaymentMethodSpec) paymentMethodSpec) :
-                Optional.empty();
-    }
-
     public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentRail> bitcoinPaymentRails) {
         return bitcoinPaymentRails.stream()
                 .map(BitcoinPaymentMethod::fromPaymentRail)
@@ -67,17 +53,7 @@ public class PaymentMethodSpecUtil {
                 .collect(Collectors.toList());
     }
 
-    public static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> List<String> getPaymentMethodNames(Collection<T> paymentMethodSpecs) {
-        return getPaymentMethods(paymentMethodSpecs).stream()
-                .map(PaymentMethod::getName)
-                .collect(Collectors.toList());
-    }
-
-    public static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> List<String> getBaseSidePaymentMethodNames(Offer<T, ?> offer) {
-        return getPaymentMethodNames(offer.getBaseSidePaymentMethodSpecs());
-    }
-
-    public static <M extends PaymentMethod<?>, T extends PaymentMethodSpec<M>> List<String> getQuoteSidePaymentMethodNames(Offer<?, T> offer) {
-        return getPaymentMethodNames(offer.getQuoteSidePaymentMethodSpecs());
+    public static List<String> getPaymentMethodNames(Collection<? extends PaymentMethodSpec<?>> paymentMethodSpecs) {
+        return paymentMethodSpecs.stream().map(PaymentMethodSpec::getPaymentMethodName).collect(Collectors.toList());
     }
 }

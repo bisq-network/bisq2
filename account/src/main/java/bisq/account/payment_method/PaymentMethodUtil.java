@@ -30,32 +30,32 @@ public class PaymentMethodUtil {
                 .collect(Collectors.toList());
     }
 
-    public static List<? extends PaymentRail> getPaymentMethods(TradeProtocolType protocolType, String currencyCode) {
+    public static List<? extends PaymentRail> getPaymentRails(TradeProtocolType protocolType, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatPaymentRailUtil.getFiatPaymentRails(protocolType);
+            return FiatPaymentRailUtil.getPaymentRails(protocolType);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinPaymentMethodUtil.getBitcoinPaymentRails(protocolType);
+                return BitcoinPaymentMethodUtil.getPaymentRails(protocolType);
             } else {
-                return CryptoPaymentMethodUtil.getCryptoPaymentRails(protocolType);
+                return CryptoPaymentMethodUtil.getPaymentRails(protocolType);
             }
         }
     }
 
-    public static PaymentMethod<? extends PaymentRail> from(String name, String currencyCode) {
+    public static PaymentMethod<? extends PaymentRail> getPaymentMethod(String name, String currencyCode) {
         if (TradeCurrency.isFiat(currencyCode)) {
-            return FiatPaymentMethodUtil.from(name);
+            return FiatPaymentMethodUtil.getPaymentMethod(name);
         } else {
             if (currencyCode.equals("BTC")) {
-                return BitcoinPaymentMethodUtil.from(name);
+                return BitcoinPaymentMethodUtil.getPaymentMethod(name);
             } else {
-                return CryptoPaymentMethodUtil.from(name, currencyCode);
+                return CryptoPaymentMethodUtil.getPaymentMethod(name, currencyCode);
             }
         }
     }
 
-    public static PaymentRail getPaymentMethod(String name, String currencyCode) {
-        return from(name, currencyCode).getPaymentRail();
+    public static PaymentRail getPaymentRail(String name, String currencyCode) {
+        return getPaymentMethod(name, currencyCode).getPaymentRail();
     }
 
 }

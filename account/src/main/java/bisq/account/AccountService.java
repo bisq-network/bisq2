@@ -117,7 +117,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
 
     public List<Account<?, ? extends PaymentMethod<?>>> getMatchingAccounts(TradeProtocolType protocolTyp,
                                                                             String currencyCode) {
-        Set<? extends PaymentRail> paymentMethods = new HashSet<>(PaymentMethodUtil.getPaymentMethods(protocolTyp, currencyCode));
+        Set<? extends PaymentRail> paymentMethods = new HashSet<>(PaymentMethodUtil.getPaymentRails(protocolTyp, currencyCode));
         return persistableStore.getAccountByName().values().stream()
                 .filter(account -> paymentMethods.contains(account.getPaymentMethod().getPaymentRail()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
