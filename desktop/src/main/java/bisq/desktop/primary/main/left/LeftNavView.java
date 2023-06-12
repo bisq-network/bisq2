@@ -77,59 +77,59 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.setSpacing(6);
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
 
-        LeftNavButton dashBoard = createNavigationButton(Res.get("dashboard"),
+        LeftNavButton dashBoard = createNavigationButton(Res.get("navigation.dashboard"),
                 "nav-community",
                 NavigationTarget.DASHBOARD, false);
 
-        tradeAppsButton = createNavigationButton(Res.get("tradeApps"),
+        tradeAppsButton = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
                 NavigationTarget.TRADE_OVERVIEW, true);
 
         VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("bisqEasy"), NavigationTarget.BISQ_EASY, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTISIG, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP, tradeAppsButton),
-                // createSubmenuNavigationButton(Res.get("moneroSwap"), NavigationTarget.MONERO_SWAP, trade),
-                // createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LIGHTNING_X, trade),
-                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, tradeAppsButton)
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.bisqEasy"), NavigationTarget.BISQ_EASY, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.multiSig"), NavigationTarget.BISQ_MULTISIG, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.liquidSwap"), NavigationTarget.LIQUID_SWAP, tradeAppsButton),
+                // createSubmenuNavigationButton(Res.get("navigation.tradeApps.moneroSwap"), NavigationTarget.MONERO_SWAP, tradeAppsButton),
+                // createSubmenuNavigationButton(Res.get("navigation.tradeApps.lightning"), NavigationTarget.LIGHTNING_X, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.bsqSwap"), NavigationTarget.BSQ_SWAP, tradeAppsButton)
         );
 
-        LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
+        LeftNavButton wallet = createNavigationButton(Res.get("navigation.wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
-        learnButton = createNavigationButton(Res.get("learn"),
+        learnButton = createNavigationButton(Res.get("navigation.academy"),
                 "nav-learn",
                 NavigationTarget.ACADEMY_OVERVIEW, true);
 
         VBox learnSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("academy.foss"), NavigationTarget.FOSS_ACADEMY, learnButton)
+                createSubmenuNavigationButton(Res.get("navigation.academy.bisq"), NavigationTarget.BISQ_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("navigation.academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("navigation.academy.security"), NavigationTarget.SECURITY_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("navigation.academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("navigation.academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("navigation.academy.foss"), NavigationTarget.FOSS_ACADEMY, learnButton)
         );
 
-        LeftNavButton chat = createNavigationButton(Res.get("discussion"),
+        LeftNavButton chat = createNavigationButton(Res.get("navigation.discussion"),
                 "nav-chat",
                 NavigationTarget.DISCUSSION, false);
 
-        LeftNavButton events = createNavigationButton(Res.get("events"),
+        LeftNavButton events = createNavigationButton(Res.get("navigation.events"),
                 "nav-events",
                 NavigationTarget.EVENTS, false);
 
-        LeftNavButton support = createNavigationButton(Res.get("support"),
+        LeftNavButton support = createNavigationButton(Res.get("navigation.support"),
                 "nav-support",
                 NavigationTarget.SUPPORT, false);
 
 
         //todo lower priority menu add design
 
-        LeftNavButton settings = createNavigationButton(Res.get("settings"),
+        LeftNavButton settings = createNavigationButton(Res.get("navigation.settings"),
                 "nav-settings",
                 NavigationTarget.SETTINGS, false);
-        LeftNavButton user = createNavigationButton(Res.get("userOptions"),
+        LeftNavButton user = createNavigationButton(Res.get("navigation.userOptions"),
                 "nav-user",
                 NavigationTarget.USER, false);
 
@@ -432,7 +432,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
             getChildren().addAll(
                     getNetworkBox(
-                            Res.get("peers"),
+                            Res.get("navigation.network.info.tor"),
                             "tor",
                             model.getTorNumConnections(),
                             model.getTorNumTargetConnections(),
@@ -440,7 +440,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     ),
                     Spacer.fillHBox(),
                     getNetworkBox(
-                            Res.get("i2p"),
+                            Res.get("navigation.network.info.i2p"),
                             "i2p",
                             model.getI2pNumConnections(),
                             model.getI2pNumTargetConnections(),
