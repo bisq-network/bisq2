@@ -1,4 +1,4 @@
-package bisq.desktop.primary.overlay.onboarding.profile;
+package bisq.desktop.primary.overlay.onboarding.create_profile;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

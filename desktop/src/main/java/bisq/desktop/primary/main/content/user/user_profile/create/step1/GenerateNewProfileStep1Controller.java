@@ -22,9 +22,9 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.user.user_profile.create.step2.GenerateNewProfileStep2Controller;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileController;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileModel;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileView;
+import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileController;
+import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileModel;
+import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileView;
 import javafx.application.Platform;
 
 public class GenerateNewProfileStep1Controller extends GenerateProfileController {

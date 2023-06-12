@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.user_profile.create.step1;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileView;
+import bisq.desktop.primary.overlay.onboarding.create_profile.GenerateProfileView;
 import bisq.i18n.Res;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
