@@ -84,11 +84,11 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
     }
 
     private MaterialTextField getField(String key) {
-        return getField(key, Res.get("reputation.burnedBsq." + key));
+        return getField(key, Res.get("user.reputation.burnedBsq." + key));
     }
 
     private MaterialTextField getField(String key, String value) {
-        MaterialTextField field = new MaterialTextField(Res.get("reputation." + key));
+        MaterialTextField field = new MaterialTextField(Res.get("user.reputation." + key));
         field.setEditable(false);
         field.setText(value);
         field.setMaxWidth(400);

@@ -81,11 +81,11 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
     }
 
     private MaterialTextField getField(String key) {
-        return getField(key, Res.get("reputation.signedWitness." + key));
+        return getField(key, Res.get("user.reputation.signedWitness." + key));
     }
 
     private MaterialTextField getField(String key, String value) {
-        MaterialTextField field = new MaterialTextField(Res.get("reputation." + key));
+        MaterialTextField field = new MaterialTextField(Res.get("user.reputation." + key));
         field.setEditable(false);
         field.setText(value);
         field.setMaxWidth(400);

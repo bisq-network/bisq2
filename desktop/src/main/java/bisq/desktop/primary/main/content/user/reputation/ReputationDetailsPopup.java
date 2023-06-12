@@ -206,7 +206,7 @@ public class ReputationDetailsPopup extends VBox {
             age = TimeFormatter.getAgeInDays(date);
 
             dateString = DateFormatter.formatDateTime(date);
-            sourceString = Res.get("reputation.source." + reputationSource.name());
+            sourceString = Res.get("user.reputation.source." + reputationSource.name());
             ageString = TimeFormatter.formatAgeInDays(date);
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"))).orElse("-");
             scoreString = String.valueOf(score);

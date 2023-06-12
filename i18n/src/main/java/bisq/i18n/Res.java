@@ -36,13 +36,13 @@ public class Res {
         bundles.addAll(List.of(defaultBundle,
                 ResourceBundle.getBundle("application", locale),
                 ResourceBundle.getBundle("payment_method", locale),
-                ResourceBundle.getBundle("navigation.wallet", locale),
+                ResourceBundle.getBundle("wallet", locale),
                 ResourceBundle.getBundle("chat", locale),
                 ResourceBundle.getBundle("trade_apps", locale),
                 ResourceBundle.getBundle("bisq_easy", locale),
                 ResourceBundle.getBundle("academy", locale),
                 ResourceBundle.getBundle("user", locale),
-                ResourceBundle.getBundle("navigation.settings", locale),
+                ResourceBundle.getBundle("settings", locale),
                 ResourceBundle.getBundle("temp_poc", locale)    // used by poc code, will get removed at some point
         ));
     }
