@@ -22,7 +22,7 @@ option java_package = "bisq.presentation.protobuf";
 option java_multiple_files = true;
 
 message DateAndConsumedFlag {
-  uint64 date = 1;
+  sint64 date = 1;
   bool consumed = 2;
 }
 message NotificationsStore {

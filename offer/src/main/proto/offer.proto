@@ -22,15 +22,15 @@ message BaseSideRangeAmountSpec {
 message QuoteSideRangeAmountSpec {
 }
 message FixedAmountSpec {
-  uint64 amount = 1;
+  sint64 amount = 1;
   oneof message {
     BaseSideFixedAmountSpec baseSideFixedAmountSpec = 10;
     QuoteSideFixedAmountSpec quoteSideFixedAmountSpec = 11;
   }
 }
 message RangeAmountSpec {
-  uint64 minAmount = 1;
-  uint64 maxAmount = 2;
+  sint64 minAmount = 1;
+  sint64 maxAmount = 2;
   oneof message {
     BaseSideRangeAmountSpec baseSideRangeAmountSpec = 10;
     QuoteSideRangeAmountSpec quoteSideRangeAmountSpec = 11;
@@ -74,8 +74,8 @@ message TradeTermsOption {
 }
 
 message CollateralOption {
-  uint64 buyerSecurityDeposit = 1;
-  uint64 sellerSecurityDeposit = 2;
+  sint64 buyerSecurityDeposit = 1;
+  sint64 sellerSecurityDeposit = 2;
 }
 
 message FeeOption {
@@ -84,7 +84,7 @@ message FeeOption {
     BSQ = 1;
   }
   FeeType feeType = 10;
-  uint32 blockHeightAtFeePayment = 11;
+  sint32 blockHeightAtFeePayment = 11;
   string feeTxId = 12;
 }
 
@@ -106,7 +106,7 @@ message OfferOption {
 // Offer
 message Offer {
   string id = 1;
-  uint64 date = 2;
+  sint64 date = 2;
   network.NetworkId makerNetworkId = 3;
   common.Market market = 4;
   Direction direction = 5;
@@ -130,11 +130,11 @@ message BisqEasyOffer {
 // proof of concept stuff
 message PocOffer {
   string id = 1;
-  uint64 date = 2;
+  sint64 date = 2;
   network.NetworkId makerNetworkId = 3;
   common.Market market = 4;
   Direction direction = 5;
-  uint64 baseAmount = 6;
+  sint64 baseAmount = 6;
   PriceSpec priceSpec = 7;
   repeated account.ProtocolType protocolTypes = 8;
   repeated PaymentSpec baseSidePaymentSpecs = 9;

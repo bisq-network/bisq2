@@ -57,8 +57,8 @@ message UserProfileStore {
 
 message ProofOfBurnProof {
   string txId = 1;
-  uint64 burntAmount = 2;
-  uint64 date = 3;
+  sint64 burntAmount = 2;
+  sint64 date = 3;
 }
 message BondedRoleProof {
   string txId = 1;
@@ -70,17 +70,17 @@ message InvitationProof {
 
 message AccountAgeStore {
   repeated string jsonRequests = 1;
-  uint64 lastRequested = 2;
+  sint64 lastRequested = 2;
 }
 
 message SignedWitnessStore {
   repeated string jsonRequests = 1;
-  uint64 lastRequested = 2;
+  sint64 lastRequested = 2;
 }
 
 message ProfileAgeStore {
   repeated string profileIds = 1;
-  uint64 lastRequested = 2;
+  sint64 lastRequested = 2;
 }
 
 enum RoleType {

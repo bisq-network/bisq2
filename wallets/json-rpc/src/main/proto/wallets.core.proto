@@ -23,7 +23,7 @@ option java_multiple_files = true;
 
 message RpcConfig {
   string hostname = 1;
-  int32 port = 2;
+  sint32 port = 2;
   string user = 3;
   string password = 4;
 }

@@ -59,8 +59,8 @@ message ProofOfWork {
 
 message ScryptParameters {
   bytes salt = 1;
-  uint32 cost = 2;
-  uint32 blockSize = 3;
-  uint32 parallelization = 4;
-  uint32 keyLength = 5;
+  sint32 cost = 2;
+  sint32 blockSize = 3;
+  sint32 parallelization = 4;
+  sint32 keyLength = 5;
 }

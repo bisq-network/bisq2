@@ -12,7 +12,7 @@ import "google/protobuf/any.proto";
 
 message Address {
   string host = 1;
-  uint32 port = 2;
+  sint32 port = 2;
 }
 
 message AddressTransportTypeTuple {
@@ -32,12 +32,12 @@ message Capability {
 }
 
 message Load {
-  uint32 numConnections = 1;
+  sint32 numConnections = 1;
 }
 
 message FilterEntry {
   bytes hash = 1;
-  uint32 sequenceNumber = 2;
+  sint32 sequenceNumber = 2;
 }
 
 message DataFilter {
@@ -46,14 +46,14 @@ message DataFilter {
 
 message Inventory {
   repeated DataRequest entries = 1;
-  uint32 numDropped = 2;
+  sint32 numDropped = 2;
 }
 
 message Peer {
   Capability capability = 1;
   Load load = 2;
   bool isOutboundConnection = 3;
-  uint64 created = 4;
+  sint64 created = 4;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -76,41 +76,41 @@ message CloseConnectionMessage {
 }
 
 message PeerExchangeRequest {
-  uint32 nonce = 1;
+  sint32 nonce = 1;
   repeated Peer peers = 2;
 }
 message PeerExchangeResponse {
-  uint32 nonce = 1;
+  sint32 nonce = 1;
   repeated Peer peers = 2;
 }
 
 message AddressValidationRequest {
-  uint32 nonce = 1;
+  sint32 nonce = 1;
 }
 message AddressValidationResponse {
-  uint32 requestNonce = 1;
+  sint32 requestNonce = 1;
 }
 
 message Ping {
-  uint32 nonce = 1;
+  sint32 nonce = 1;
 }
 message Pong {
-  uint32 requestNonce = 1;
+  sint32 requestNonce = 1;
 }
 
 message ConfidentialMessage {
-  uint32 version = 1;
+  sint32 version = 1;
   security.ConfidentialData confidentialData = 2;
   string receiverKeyId = 3;
 }
 
 message InventoryRequest {
   DataFilter dataFilter = 1;
-  uint32 nonce = 2;
+  sint32 nonce = 2;
 }
 message InventoryResponse {
   Inventory inventory = 1;
-  uint32 requestNonce = 2;
+  sint32 requestNonce = 2;
 }
 
 message ExternalNetworkMessage {
@@ -156,8 +156,8 @@ message NetworkMessage {
 ////////////////////////////////////////////////////////////////////
 
 message MetaData {
-  uint64 ttl = 1;
-  uint32 maxSizeInBytes = 2;
+  sint64 ttl = 1;
+  sint32 maxSizeInBytes = 2;
   string fileName = 3;
 }
 message AuthorizedData {
@@ -175,9 +175,9 @@ message AuthenticatedData {
 }
 message AuthenticatedSequentialData {
   AuthenticatedData authenticatedData = 1;
-  uint32 sequenceNumber = 2;
+  sint32 sequenceNumber = 2;
   bytes pubKeyHash = 3;
-  uint64 created = 4;
+  sint64 created = 4;
 }
 message AddAuthenticatedDataRequest {
   AuthenticatedSequentialData authenticatedSequentialData = 1;
@@ -188,15 +188,15 @@ message RemoveAuthenticatedDataRequest {
   MetaData metaData = 1;
   bytes hash = 2;
   bytes ownerPublicKeyBytes = 3;
-  uint32 sequenceNumber = 4;
+  sint32 sequenceNumber = 4;
   bytes signature = 5;
-  uint64 created = 6;
+  sint64 created = 6;
 }
 message RefreshAuthenticatedDataRequest {
   MetaData metaData = 1;
   bytes hash = 2;
   bytes ownerPublicKeyBytes = 3;
-  uint32 sequenceNumber = 4;
+  sint32 sequenceNumber = 4;
   bytes signature = 5;
 }
 
@@ -206,9 +206,9 @@ message MailboxData {
 }
 message MailboxSequentialData {
   MailboxData mailboxData = 1;
-  uint32 sequenceNumber = 2;
+  sint32 sequenceNumber = 2;
   bytes senderPublicKeyHash = 3;
-  uint64 created = 4;
+  sint64 created = 4;
   bytes receiversPubKeyBytes = 5;
   bytes receiversPubKeyHash = 6;
 }
@@ -222,7 +222,7 @@ message RemoveMailboxRequest {
   bytes hash = 2;
   bytes receiverPublicKeyBytes = 3;
   bytes signature = 4;
-  uint64 created = 5;
+  sint64 created = 5;
 }
 
 message AddAppendOnlyDataRequest {
@@ -253,11 +253,11 @@ message DataRequest {
 
 message AuthorizationToken {
   security.ProofOfWork proofOfWork = 1;
-  uint32 messageCounter = 2;
+  sint32 messageCounter = 2;
 }
 
 message NetworkEnvelope {
-  uint32 version = 1;
+  sint32 version = 1;
   AuthorizationToken authorizationToken = 2;
   NetworkMessage networkMessage = 3;
 }
