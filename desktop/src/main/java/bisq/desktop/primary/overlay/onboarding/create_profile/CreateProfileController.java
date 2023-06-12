@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.onboarding.create_profile;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -221,7 +222,7 @@ public class CreateProfileController implements Controller {
         model.getRoboHashIconVisible().set(false);
         model.getReGenerateButtonDisabled().set(true);
         model.getPowProgress().set(-1);
-        model.getNym().set(Res.get("generateNym.nym.generating"));
+        model.getNym().set(Res.get("onboarding.createProfile.nym.generating"));
     }
 
     private void applyIdentityData(byte[] pubKeyHash, String nym) {

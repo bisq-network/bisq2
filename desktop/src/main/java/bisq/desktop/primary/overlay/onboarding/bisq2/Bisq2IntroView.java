@@ -43,20 +43,20 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
 
         ImageView logo = ImageUtil.getImageViewById("logo-mark-midsize");
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.onBoarding.bisq2.intro.headline"));
+        Label headlineLabel = new Label(Res.get("onboarding.bisq2.headline"));
         headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
 
         nextButton = new Button(Res.get("start"));
         nextButton.setDefaultButton(true);
 
-        HBox hBox = new HBox(23, getWidgetBox(Res.get("bisqEasy.onBoarding.bisq2.intro.headline1"),
-                Res.get("bisqEasy.onBoarding.bisq2.intro.line1"),
+        HBox hBox = new HBox(23, getWidgetBox(Res.get("onboarding.bisq2.headline1"),
+                Res.get("onboarding.bisq2.line1"),
                 "intro-1"),
-                getWidgetBox(Res.get("bisqEasy.onBoarding.bisq2.intro.headline2"),
-                        Res.get("bisqEasy.onBoarding.bisq2.intro.line2"),
+                getWidgetBox(Res.get("onboarding.bisq2.headline2"),
+                        Res.get("onboarding.bisq2.line2"),
                         "intro-2"),
-                getWidgetBox(Res.get("bisqEasy.onBoarding.bisq2.intro.headline3"),
-                        Res.get("bisqEasy.onBoarding.bisq2.intro.line3"),
+                getWidgetBox(Res.get("onboarding.bisq2.headline3"),
+                        Res.get("onboarding.bisq2.line3"),
                         "intro-3"));
         hBox.setAlignment(Pos.CENTER);
         hBox.setPadding(new Insets(20));

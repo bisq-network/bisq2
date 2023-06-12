@@ -53,16 +53,16 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headLineLabel = new Label(Res.get("generateNym.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.createProfile.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("generateNym.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.createProfile.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
         subtitleLabel.setMinHeight(40); // does not wrap without that...
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        nickname = new MaterialTextField(Res.get("social.chatUser.nickName"), Res.get("addNickName.nickName.prompt"));
+        nickname = new MaterialTextField(Res.get("onboarding.createProfile.nickName"), Res.get("onboarding.createProfile.nickName.prompt"));
         nickname.setMaxWidth(250);
 
         roboIconView = new ImageView();
@@ -70,7 +70,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         int size = 120;
         roboIconView.setFitWidth(size);
         roboIconView.setFitHeight(size);
-        Tooltip.install(roboIconView, new Tooltip(Res.get("generateNym.regenerate")));
+        Tooltip.install(roboIconView, new Tooltip(Res.get("onboarding.createProfile.regenerate")));
 
         int indicatorSize = size / 2;
         powProgressIndicator = new ProgressIndicator();
@@ -83,7 +83,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         roboIconPane.setMaxSize(size, size);
         roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
 
-        Label titleLabel = new Label(Res.get("generateNym.nym").toUpperCase());
+        Label titleLabel = new Label(Res.get("onboarding.createProfile.nym").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
 
         nym = new Label();
@@ -96,9 +96,9 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         VBox roboVBox = new VBox(8, roboIconPane, nymBox);
         roboVBox.setAlignment(Pos.CENTER);
 
-        regenerateButton = new Button(Res.get("generateNym.regenerate"));
+        regenerateButton = new Button(Res.get("onboarding.createProfile.regenerate"));
 
-        createProfileButton = new Button(Res.get("generateNym.createProfile"));
+        createProfileButton = new Button(Res.get("onboarding.createProfile.createProfile"));
         createProfileButton.setGraphicTextGap(8.0);
         createProfileButton.setContentDisplay(ContentDisplay.RIGHT);
         createProfileButton.setDefaultButton(true);
@@ -110,7 +110,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         createProfileIndicator.setManaged(false);
         createProfileIndicator.setVisible(false);
 
-        feedbackLabel = new Label(Res.get("generateNym.createProfile.busy"));
+        feedbackLabel = new Label(Res.get("onboarding.createProfile.createProfile.busy"));
         feedbackLabel.setManaged(false);
         feedbackLabel.setVisible(false);
         feedbackLabel.getStyleClass().add("bisq-text-18");

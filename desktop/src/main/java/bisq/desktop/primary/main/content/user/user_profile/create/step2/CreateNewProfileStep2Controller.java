@@ -19,10 +19,10 @@ package bisq.desktop.primary.main.content.user.user_profile.create.step2;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.create_profile.KeyPairAndId;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;

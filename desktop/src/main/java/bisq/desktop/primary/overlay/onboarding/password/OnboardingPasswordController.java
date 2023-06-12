@@ -97,7 +97,7 @@ public class OnboardingPasswordController implements Controller {
                         UIThread.run(() -> {
                             OverlayController.hide();
                             model.getSetPasswordButtonDisabled().set(true);
-                            UIThread.runOnNextRenderFrame(() -> new Popup().feedback(Res.get("user.password.savePassword.success"))
+                            UIThread.runOnNextRenderFrame(() -> new Popup().feedback(Res.get("onboarding.password.savePassword.success"))
                                     .onClose(this::close)
                                     .show());
                         });

@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create.step2;
 
+import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.overlay.onboarding.create_profile.KeyPairAndId;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
