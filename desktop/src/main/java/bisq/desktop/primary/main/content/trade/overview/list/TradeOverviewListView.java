@@ -69,7 +69,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
 
     private void configDataTableView() {
         BisqTableColumn<ProtocolListItem> column = new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.protocol"))
+                .title(Res.get("tradeApps.protocol"))
                 .minWidth(180)
                 .isFirst()
                 .comparator(Comparator.comparing(ProtocolListItem::getProtocolsName))
@@ -77,50 +77,49 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                 .build();
         tableView.getColumns().add(column);
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.markets"))
+                .title(Res.get("tradeApps.markets"))
                 .minWidth(80)
                 .isFirst()
                 .valueSupplier(ProtocolListItem::getMarkets)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.security"))
+                .title(Res.get("tradeApps.security"))
                 .minWidth(80)
                 .isFirst()
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getSecurity().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getSecurity().ordinal(), ProtocolListItem::getSecurityInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.privacy"))
+                .title(Res.get("tradeApps.privacy"))
                 .minWidth(80)
                 .isFirst()
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getPrivacy().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getPrivacy().ordinal(), ProtocolListItem::getPrivacyInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.convenience"))
+                .title(Res.get("tradeApps.convenience"))
                 .minWidth(80)
                 .isFirst()
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getConvenience().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getConvenience().ordinal(), ProtocolListItem::getConvenienceInfo))
                 .build());
     /*    tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.costs"))
+                .title(Res.get("tradeApps.costs"))
                 .minWidth(80)
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getCost().ordinal(), ProtocolListItem::getCostInfo))
                 .build());*/
      /*   tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.speed"))
+                .title(Res.get("tradeApps.speed"))
                 .minWidth(80)
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getSpeed().ordinal(), ProtocolListItem::getSpeedInfo))
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.release"))
+                .title(Res.get("tradeApps.release"))
                 .minWidth(80)
                 .isFirst()
                 .valueSupplier(ProtocolListItem::getReleaseDate)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
-                .title(Res.get("trade.protocols.table.header.access"))
                 .fixWidth(150)
                 .value(Res.get("select"))
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)

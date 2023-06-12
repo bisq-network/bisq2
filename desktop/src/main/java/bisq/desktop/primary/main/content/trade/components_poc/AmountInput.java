@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.desktop.primary.main.content.trade.components_poc;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -169,7 +170,7 @@ public class AmountInput {
             super(new Pane(), model, controller);
 
             materialTextField = new MaterialTextField(Res.get("satoshisquareapp.createOffer.maxAmount"),
-                    Res.get("addNickName.nickName.prompt"));
+                    "");
             materialTextField.setPrefWidth(WIDTH);
             materialTextField.setValidator(validator);
 

@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.desktop.primary.main.content.trade.components_poc;
 
 import bisq.common.currency.Market;
-import bisq.i18n.Res;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -102,7 +102,7 @@ public class MarketSelection {
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            comboBox = new AutoCompleteComboBox<>(model.markets, Res.get("markets"));
+            comboBox = new AutoCompleteComboBox<>(model.markets, "markets");
             root.getChildren().addAll(comboBox);
 
             comboBox.setConverter(new StringConverter<>() {

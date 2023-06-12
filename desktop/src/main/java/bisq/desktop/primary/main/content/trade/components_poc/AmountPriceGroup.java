@@ -22,7 +22,6 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.controls.AmountInput;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.offer.Direction;
 import bisq.oracle.marketprice.MarketPriceService;

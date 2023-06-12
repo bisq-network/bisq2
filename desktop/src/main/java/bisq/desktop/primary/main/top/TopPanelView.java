@@ -72,7 +72,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
     }
 
     private Triple<HBox, Label, Label> createBalanceBox() {
-        Label titleLabel = new Label(Res.get("wallet.balance").toUpperCase());
+        Label titleLabel = new Label(Res.get("topPanel.wallet.balance").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-18");
 
         Label valueLabel = new Label();

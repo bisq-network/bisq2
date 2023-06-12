@@ -38,30 +38,30 @@ public abstract class ProtocolRoadmapView<M extends Model, C extends Controller>
         super(new VBox(10), model, controller);
 
         String key = getKey();
-        headline = new MultiLineLabel(Res.get("trade.protocols." + key));
+        headline = new MultiLineLabel(Res.get("tradeApps." + key));
         headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
         headline.getStyleClass().addAll("font-size-20", "font-light");
         headline.setGraphicTextGap(10);
 
-        subHeadline = new MultiLineLabel(Res.get("trade.protocols." + key + ".subHeadline"));
+        subHeadline = new MultiLineLabel(Res.get("tradeApps." + key + ".subHeadline"));
         subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
 
-        overviewHeadline = new MultiLineLabel(Res.get("trade.protocols.overview"));
+        overviewHeadline = new MultiLineLabel(Res.get("tradeApps.overview"));
         overviewHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        overview = new MultiLineLabel(Res.get("trade.protocols." + key + ".overview"));
+        overview = new MultiLineLabel(Res.get("tradeApps." + key + ".overview"));
         overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
 
-        releaseHeadline = new MultiLineLabel(Res.get("trade.protocols.release"));
+        releaseHeadline = new MultiLineLabel(Res.get("tradeApps.release"));
         releaseHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        release = new MultiLineLabel(Res.get("trade.protocols." + key + ".release"));
+        release = new MultiLineLabel(Res.get("tradeApps." + key + ".release"));
         release.getStyleClass().addAll("font-size-12", "font-light");
 
-        tradeOffsHeadline = new MultiLineLabel(Res.get("trade.protocols.tradeOffs"));
+        tradeOffsHeadline = new MultiLineLabel(Res.get("tradeApps.tradeOffs"));
         tradeOffsHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        tradeOffs = new MultiLineLabel(Res.get("trade.protocols." + key + ".tradeOffs"));
+        tradeOffs = new MultiLineLabel(Res.get("tradeApps." + key + ".tradeOffs"));
         tradeOffs.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
 
         learnMore = new Hyperlink(Res.get("learnMore"));

@@ -111,7 +111,7 @@ public class PriceInput {
 
         private void updateFromMarketPrice() {
             if (model.market != null && model.description.get() == null) {
-                model.description.set(Res.get("priceInput.description", model.market.getMarketCodes()));
+                model.description.set(Res.get("component.priceInput.description", model.market.getMarketCodes()));
             }
             if (model.isEditable && model.priceQuote.get() == null) {
                 setQuoteFromMarketPrice();
@@ -212,7 +212,7 @@ public class PriceInput {
         private View(Model model, Controller controller, PriceValidator validator) {
             super(new VBox(), model, controller);
 
-            textInput = new MaterialTextField(model.description.get(), Res.get("priceInput.prompt"));
+            textInput = new MaterialTextField(model.description.get(), Res.get("component.priceInput.prompt"));
             textInput.setPrefWidth(WIDTH);
             textInput.setValidator(validator);
 
