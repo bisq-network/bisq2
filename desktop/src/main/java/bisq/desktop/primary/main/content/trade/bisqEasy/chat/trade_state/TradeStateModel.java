@@ -15,12 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.state;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_state;
 
+import bisq.account.accounts.Account;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,16 +36,20 @@ import java.util.List;
 @Getter
 public class TradeStateModel implements Model {
     @Setter
+    private BisqEasyPrivateTradeChatChannel selectedChannel;
+    @Setter
     private BisqEasyOffer bisqEasyOffer;
+    private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
     private final StringProperty tradeInfo = new SimpleStringProperty();
+    private final StringProperty phaseInfo = new SimpleStringProperty();
     private final StringProperty phase2 = new SimpleStringProperty();
     private final StringProperty phase3 = new SimpleStringProperty();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
-    private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final IntegerProperty activePhaseIndex = new SimpleIntegerProperty();
+    private final ObservableList<Account<?, ?>> paymentAccounts = FXCollections.observableArrayList();
+    private final ObjectProperty<Account<?, ?>> selectedAccount = new SimpleObjectProperty<>();
 }

@@ -15,24 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.state;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_state;
 
+import bisq.account.accounts.Account;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Triple;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
+import javafx.scene.Cursor;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -42,30 +46,41 @@ import java.util.List;
 
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
-    private final List<Triple<HBox, Label, Badge>> phaseItems;
-    private final Button nextButton, actionButton, openDisputeButton;
+    private final Label tradeInfo, phaseInfo, phase2Label, phase3Label;
+    //   private final VBox contentPane;
+    private final HBox headerHBox;
+    private final Button collapseButton, expandButton, actionButton, openDisputeButton;
     private final Hyperlink openTradeGuide;
-    private final Label phaseInfo, phase2Label, phase3Label;
-    private final Label tradeInfo;
-    private Subscription activePhaseIndexPin, widthPin;
-    private Subscription topPaneBoxVisibleSubscription;
-    private final ChangeListener<Number> currentIndexListener;
+    private final List<Triple<HBox, Label, Badge>> phaseItems;
+    private final HBox phaseAndInfoBox;
+    private Subscription isCollapsedPin, activePhaseIndexPin;
+    private final AutoCompleteComboBox<Account<?, ?>> paymentAccountsComboBox;
 
     public TradeStateView(TradeStateModel model,
                           TradeStateController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(0), model, controller);
 
-        root.setSpacing(20);
-        root.setAlignment(Pos.TOP_LEFT);
+        root.getStyleClass().addAll("bisq-box-2");
+        root.setPadding(new Insets(15, 30, 30, 30));
 
+        // Header
         tradeInfo = new Label();
         tradeInfo.getStyleClass().add("bisq-easy-trade-state-headline");
 
-        openTradeGuide = new Hyperlink(Res.get("bisqEasy.assistant.header.openTradeGuide"));
+        collapseButton = BisqIconButton.createIconButton("collapse");
+        expandButton = BisqIconButton.createIconButton("expand");
 
-        nextButton = new Button(Res.get("action.next"));
-        nextButton.setDefaultButton(true);
+        HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
+        HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
+        HBox.setMargin(tradeInfo, new Insets(0, 0, 0, -2));
+        headerHBox = new HBox(tradeInfo, Spacer.fillHBox(), collapseButton, expandButton);
+        headerHBox.setCursor(Cursor.HAND);
 
+        Tooltip tooltip = new Tooltip(Res.get("bisqEasy.assistant.header.expandCollapse.tooltip"));
+        tooltip.setStyle("-fx-show-delay: 500ms;");
+        Tooltip.install(headerHBox, tooltip);
+
+        // Phase progress
         Label phaseHeadline = new Label(Res.get("bisqEasy.assistant.tradeState.phase.headline"));
         phaseHeadline.getStyleClass().add("bisq-easy-trade-state-sub-headline");
 
@@ -83,14 +98,21 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         phase3Label = phaseItem3.getSecond();
         phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
-        openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
-        openDisputeButton.getStyleClass().add("grey-transparent-outlined-button");
+        openTradeGuide = new Hyperlink(Res.get("bisqEasy.assistant.header.openTradeGuide"));
 
-        VBox.setMargin(phaseHeadline, new Insets(0, 0, 20, 0));
-        VBox.setMargin(openDisputeButton, new Insets(20, 0, 0, 0));
-        Separator hLine = getHLine();
-        VBox.setMargin(hLine, new Insets(40, 0, 0, 0));
+        openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
+        // openDisputeButton.getStyleClass().add("grey-transparent-outlined-button");
+        openDisputeButton.getStyleClass().add("outlined-button");
+
+        Region separator = Layout.separator();
+        Region separator2 = Layout.separator();
+
+        // VBox.setMargin(separator, new Insets(0, 0, 20, 0));
+        VBox.setMargin(phaseHeadline, new Insets(20, 0, 20, 0));
+        VBox.setMargin(openTradeGuide, new Insets(30, 0, 0, 2));
+        VBox.setMargin(separator2, new Insets(10, 0, 20, 0));
         VBox phaseBox = new VBox(
+                separator,
                 phaseHeadline,
                 phase1HBox,
                 getVLine(),
@@ -100,52 +122,74 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                 getVLine(),
                 phase4HBox,
                 Spacer.fillVBox(),
-                hLine,
+                openTradeGuide,
+                separator2,
                 openDisputeButton
         );
         phaseBox.setMinWidth(300);
         phaseBox.setMaxWidth(phaseBox.getMinWidth());
 
+        // Phase info
         Label phaseInfoHeadline = new Label(Res.get("bisqEasy.assistant.tradeState.phaseInfo.headline"));
         phaseInfoHeadline.getStyleClass().add("bisq-easy-trade-state-sub-headline");
 
-        phaseInfo = new Label(Res.get("bisqEasy.assistant.tradeState.phaseInfo.phase1"));
+        phaseInfo = new Label();
         phaseInfo.getStyleClass().add("bisq-easy-trade-state-info-text");
         phaseInfo.setWrapText(true);
 
         actionButton = new Button();
-        actionButton.getStyleClass().add("outlined-button");
+        actionButton.setDefaultButton(true);
 
-        Separator separator1 = getHLine();
-        separator1.setOpacity(0.5);
-        separator1.setPadding(new Insets(0, 0, -10, 0));
-
-        Separator separator2 = getHLine();
-        separator2.setOpacity(0.5);
-        separator2.setPadding(new Insets(0, 0, -10, 0));
-
-        VBox infoBox = new VBox(20, phaseInfoHeadline, phaseInfo, Spacer.fillVBox(), getHLine(), actionButton);
+        VBox infoBox = new VBox(20, Layout.separator(), phaseInfoHeadline, phaseInfo, Spacer.fillVBox(), Layout.separator(), actionButton);
 
         HBox.setHgrow(infoBox, Priority.ALWAYS);
-        HBox phaseAndInfoBox = new HBox(0, phaseBox, infoBox);
-        phaseAndInfoBox.setPadding(new Insets(20));
-        phaseAndInfoBox.getStyleClass().add("bisq-content-bg");
+        phaseAndInfoBox = new HBox(phaseBox, infoBox);
 
-        VBox.setMargin(tradeInfo, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(tradeInfo, phaseAndInfoBox, nextButton);
 
-        currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
+        VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
+        root.getChildren().addAll(headerHBox, phaseAndInfoBox);
+
+
+        //todo
+        paymentAccountsComboBox = new AutoCompleteComboBox<>(model.getPaymentAccounts());
+        paymentAccountsComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Account<?, ? extends PaymentMethod<?>> object) {
+                return object != null ? object.getAccountName() : "";
+            }
+
+            @Override
+            public Account<?, ? extends PaymentMethod<?>> fromString(String string) {
+                return null;
+            }
+        });
     }
 
-    private Separator getHLine() {
-        Separator separator = new Separator();
-        separator.setOpacity(0.4);
-        return separator;
-    }
 
     @Override
     protected void onViewAttached() {
         tradeInfo.textProperty().bind(model.getTradeInfo());
+        collapseButton.setOnAction(e -> controller.onCollapse());
+        expandButton.setOnAction(e -> controller.onExpand());
+        headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
+        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
+            collapseButton.setManaged(!isCollapsed);
+            collapseButton.setVisible(!isCollapsed);
+            expandButton.setManaged(isCollapsed);
+            expandButton.setVisible(isCollapsed);
+
+            if (isCollapsed) {
+                VBox.setMargin(headerHBox, new Insets(0, 0, -17, 0));
+            } else {
+                VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
+            }
+
+            phaseAndInfoBox.setManaged(!isCollapsed);
+            phaseAndInfoBox.setVisible(!isCollapsed);
+        });
+
+
+        phaseInfo.textProperty().bind(model.getPhaseInfo());
         phase2Label.textProperty().bind(model.getPhase2());
         phase3Label.textProperty().bind(model.getPhase3());
         actionButton.textProperty().bind(model.getActionButtonText());
@@ -154,20 +198,9 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         openDisputeButton.visibleProperty().bind(model.getOpenDisputeButtonVisible());
         openDisputeButton.managedProperty().bind(model.getOpenDisputeButtonVisible());
 
-        nextButton.setOnAction(e -> controller.onNext());
         actionButton.setOnAction(e -> controller.onAction());
         openDisputeButton.setOnAction(e -> controller.onOpenDispute());
         openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
-
-        model.getCurrentIndex().addListener(currentIndexListener);
-
-        topPaneBoxVisibleSubscription = EasyBind.subscribe(model.getTopPaneBoxVisible(), visible -> {
-           /* if (visible) {
-                VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
-            } else {
-                VBox.setMargin(buttons, new Insets(0, 0, 240, 0));
-            }*/
-        });
 
         activePhaseIndexPin = EasyBind.subscribe(model.getActivePhaseIndex(),
                 activePhaseIndex -> {
@@ -189,12 +222,26 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                     }
                 });
 
-      /*  widthPin = EasyBind.subscribe(root.widthProperty(),
-                w -> infoLabel.setWrappingWidth(w.doubleValue() - 30));*/
+
+        paymentAccountsComboBox.setOnChangeConfirmed(e -> {
+            if (paymentAccountsComboBox.getSelectionModel().getSelectedItem() == null) {
+                paymentAccountsComboBox.getSelectionModel().select(model.getSelectedAccount().get());
+                return;
+            }
+            controller.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
+        });
     }
 
     @Override
     protected void onViewDetached() {
+        tradeInfo.textProperty().unbind();
+        collapseButton.setOnAction(null);
+        expandButton.setOnAction(null);
+        headerHBox.setOnMouseClicked(null);
+        isCollapsedPin.unsubscribe();
+
+
+        phaseInfo.textProperty().unbind();
         phase2Label.textProperty().unbind();
         phase3Label.textProperty().unbind();
         actionButton.textProperty().unbind();
@@ -207,11 +254,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         openDisputeButton.setOnAction(null);
         openTradeGuide.setOnAction(null);
 
-        model.getCurrentIndex().removeListener(currentIndexListener);
-
-        topPaneBoxVisibleSubscription.unsubscribe();
         activePhaseIndexPin.unsubscribe();
-        // widthPin.unsubscribe();
+        paymentAccountsComboBox.setOnChangeConfirmed(null);
     }
 
     private Separator getVLine() {

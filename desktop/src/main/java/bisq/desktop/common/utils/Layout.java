@@ -51,7 +51,7 @@ public class Layout {
 
     public static Region separator() {
         Region separator = new Region();
-        separator.getStyleClass().addAll("separator");
+        separator.getStyleClass().add("separator");
         return separator;
     }
 
