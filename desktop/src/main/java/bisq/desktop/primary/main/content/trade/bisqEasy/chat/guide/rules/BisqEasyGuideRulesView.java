@@ -45,10 +45,10 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.tab3.headline"));
+        Label headline = new Label(Res.get("tradeGuide.rules.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeGuide.tab3.content"));
+        content = new Text(Res.get("tradeGuide.rules.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
@@ -56,7 +56,7 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
         backButton = new Button(Res.get("action.back"));
         closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
-        confirmButton = new Button(Res.get("tradeGuide.tab3.confirm"));
+        confirmButton = new Button(Res.get("tradeGuide.rules.confirm"));
         confirmButton.setDefaultButton(true);
         HBox buttons = new HBox(20, backButton, closeButton, confirmButton);
         VBox.setVgrow(content, Priority.ALWAYS);

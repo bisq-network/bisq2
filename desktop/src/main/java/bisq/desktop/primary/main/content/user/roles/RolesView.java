@@ -185,7 +185,7 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
         public ListItem(AuthorizedData authorizedData, ProfileAgeService profileAgeService) {
             data = (AuthorizedRoleRegistrationData) authorizedData.getAuthorizedDistributedData();
             this.userProfile = data.getUserProfile();
-            this.roleType = Res.get("roles.type." + data.getRoleType());
+            this.roleType = Res.get("user.roles.type." + data.getRoleType());
             this.publicKeyAsHex = data.getPublicKeyAsHex();
 
             profileAge = profileAgeService.getProfileAge(userProfile)

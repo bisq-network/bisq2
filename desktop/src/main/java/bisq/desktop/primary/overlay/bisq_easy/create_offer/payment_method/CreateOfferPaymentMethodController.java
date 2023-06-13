@@ -104,7 +104,7 @@ public class CreateOfferPaymentMethodController implements Controller {
     boolean onTogglePaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
         if (isSelected) {
             if (model.getSelectedFiatPaymentMethods().size() >= 4) {
-                new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
+                new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.maxMethodsReached")).show();
                 return false;
             }
             maybeAddFiatPaymentMethod(fiatPaymentMethod);
@@ -117,7 +117,7 @@ public class CreateOfferPaymentMethodController implements Controller {
 
     void onAddCustomMethod() {
         if (model.getSelectedFiatPaymentMethods().size() >= 4) {
-            new Popup().warning(Res.get("onboarding.method.warn.maxMethodsReached")).show();
+            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.maxMethodsReached")).show();
             return;
         }
         maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(model.getCustomFiatPaymentMethodName().get()));
@@ -138,7 +138,7 @@ public class CreateOfferPaymentMethodController implements Controller {
             if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 String customName = fiatPaymentMethod.getName().toUpperCase().strip();
                 if (isPredefinedPaymentMethodsContainName(customName)) {
-                    new Popup().warning(Res.get("onboarding.method.warn.customNameMatchesPredefinedMethod")).show();
+                    new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.customNameMatchesPredefinedMethod")).show();
                     model.getCustomFiatPaymentMethodName().set("");
                     return;
                 }

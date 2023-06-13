@@ -170,7 +170,7 @@ public class UserProfileController implements Controller {
     }
 
     private void applyReputationScore() {
-        if (model.getSelectedUserIdentity() == null) {
+        if (model.getSelectedUserIdentity().get() == null) {
             return;
         }
         ReputationScore reputationScore = reputationService.getReputationScore(model.getSelectedUserIdentity().get().getUserProfile());

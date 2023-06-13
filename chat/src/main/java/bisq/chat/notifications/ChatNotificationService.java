@@ -280,7 +280,7 @@ public class ChatNotificationService implements Service {
             if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
                 BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
-                title = Res.get("bisqEasy.notification.takeOfferMessage");
+                title = Res.get("bisqEasy.privateChannel.notification.offerTaken");
                 notificationsService.sendNotification(notificationId, title, msg);
                 return;
             }

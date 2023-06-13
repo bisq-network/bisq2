@@ -145,7 +145,7 @@ public class SmallAmountInput {
         @Setter
         private boolean useLowPrecision;
         @Setter
-        private String tooltip = Res.get("bisqEasy.components.smallAmountInput.buyer.tooltip");
+        private String tooltip = Res.get("bisqEasy.component.amount.baseSide.buyer.tooltip");
         private final boolean isBaseCurrency;
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();

@@ -667,7 +667,7 @@ public class ChatMessagesListView {
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(430));
                                         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
 
-                                        Label reputationLabel = new Label(Res.get("bisqEasy.reputation").toUpperCase());
+                                        Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
                                         reputationLabel.getStyleClass().add("bisq-text-7");
 
                                         reputationScoreDisplay.applyReputationScore(item.getReputationScore());

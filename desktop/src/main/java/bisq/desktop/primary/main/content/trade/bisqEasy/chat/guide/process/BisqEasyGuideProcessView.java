@@ -44,10 +44,10 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.tab2.headline"));
+        Label headline = new Label(Res.get("tradeGuide.process.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeGuide.tab2.content"));
+        content = new Text(Res.get("tradeGuide.process.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         backButton = new Button(Res.get("action.back"));

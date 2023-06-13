@@ -174,13 +174,13 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
-        Label direction = createAndGetProgressLabel(Res.get("onboarding.navProgress.direction"));
-        Label market = createAndGetProgressLabel(Res.get("onboarding.navProgress.market"));
-        priceProgressItemLabel = createAndGetProgressLabel(Res.get("onboarding.navProgress.price"));
+        Label direction = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.direction"));
+        Label market = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.market"));
+        priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.price"));
         priceProgressItemSeparator = createAndGetSeparator();
-        Label amount = createAndGetProgressLabel(Res.get("onboarding.navProgress.amount"));
-        Label method = createAndGetProgressLabel(Res.get("onboarding.navProgress.method"));
-        Label complete = createAndGetProgressLabel(Res.get("onboarding.navProgress.review"));
+        Label amount = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.amount"));
+        Label method = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.method"));
+        Label complete = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
 
         Button closeButton = BisqIconButton.createIconButton("close");
 

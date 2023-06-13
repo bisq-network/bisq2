@@ -58,7 +58,7 @@ public class CreateOfferAmountController implements Controller {
         model = new CreateOfferAmountModel();
 
         minAmountComponent = new AmountComponent(applicationService, true);
-        minAmountComponent.setDescription(Res.get("onboarding.amount.description.minAmount"));
+        minAmountComponent.setDescription(Res.get("bisqEasy.createOffer.amount.description.minAmount"));
         maxOrFixAmountComponent = new AmountComponent(applicationService, true);
 
         view = new CreateOfferAmountView(model, this,
@@ -155,12 +155,12 @@ public class CreateOfferAmountController implements Controller {
 
         isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
             model.getToggleButtonText().set(isMinAmountEnabled ?
-                    Res.get("onboarding.amount.removeMinAmountOption") :
-                    Res.get("onboarding.amount.addMinAmountOption"));
+                    Res.get("bisqEasy.createOffer.amount.removeMinAmountOption") :
+                    Res.get("bisqEasy.createOffer.amount.addMinAmountOption"));
 
             maxOrFixAmountComponent.setDescription(isMinAmountEnabled ?
-                    Res.get("onboarding.amount.description.maxAmount") :
-                    Res.get("onboarding.amount.description.fixAmount"));
+                    Res.get("bisqEasy.createOffer.amount.description.maxAmount") :
+                    Res.get("bisqEasy.createOffer.amount.description.fixAmount"));
 
             applyAmountSpec();
         });

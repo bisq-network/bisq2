@@ -158,24 +158,24 @@ public class CreateOfferReviewOfferController implements Controller {
             if (priceSpec instanceof FixPriceSpec) {
                 FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
                 String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-                priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.fixPrice", price);
+                priceInfo = Res.get("bisqEasy.createOffer.review.chatMessage.fixPrice", price);
             } else if (priceSpec instanceof FloatPriceSpec) {
                 FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
                 String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
-                priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.floatPrice", percent);
+                priceInfo = Res.get("bisqEasy.createOffer.review.chatMessage.floatPrice", percent);
             } else {
-                priceInfo = Res.get("createOffer.bisqEasyOffer.chatMessage.marketPrice");
+                priceInfo = Res.get("bisqEasy.createOffer.review.chatMessage.marketPrice");
             }
         } else {
             priceInfo = "";
         }
 
-        String directionString = Res.get(direction.name().toLowerCase()).toUpperCase();
+        String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
         String paymentMethodNames = PaymentMethodSpecFormatter.paymentMethodsToCommaSeparatedString(model.getFiatPaymentMethods(), true);
-        String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
+        String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
                 amountString,
                 paymentMethodNames,

@@ -173,7 +173,7 @@ public class UserProfileSelection {
 
         @Override
         public String toString() {
-            return userIdentity.getUserName();
+            return userIdentity != null ? userIdentity.getUserName() : "";
         }
     }
 

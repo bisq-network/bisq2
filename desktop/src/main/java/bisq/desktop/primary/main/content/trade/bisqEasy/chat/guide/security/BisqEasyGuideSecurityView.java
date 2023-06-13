@@ -45,10 +45,10 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.tab1.headline"));
+        Label headline = new Label(Res.get("tradeGuide.security.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeGuide.tab1.content"));
+        content = new Text(Res.get("tradeGuide.security.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         backButton = new Button(Res.get("action.back"));

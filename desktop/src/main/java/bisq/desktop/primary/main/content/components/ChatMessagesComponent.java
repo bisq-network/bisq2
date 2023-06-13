@@ -379,19 +379,19 @@ public class ChatMessagesComponent {
             BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
             Optional<UserProfile> mediator = privateTradeChannel.getMediator();
             if (mediator.isPresent()) {
-                new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
-                        .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
-                        .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
+                new Popup().headLine(Res.get("bisqEasy.mediation.request.confirm.headline"))
+                        .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
+                        .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                         .onAction(() -> {
                             privateTradeChannel.setIsInMediation(true);
                             mediationService.requestMediation(privateTradeChannel);
-                            new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
-                                    .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+                            new Popup().headLine(Res.get("bisqEasy.mediation.request.feedback.headline"))
+                                    .feedback(Res.get("bisqEasy.mediation.request.feedback.msg")).show();
                         })
                         .closeButtonText(Res.get("action.cancel"))
                         .show();
             } else {
-                new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
+                new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
             }
         }
 

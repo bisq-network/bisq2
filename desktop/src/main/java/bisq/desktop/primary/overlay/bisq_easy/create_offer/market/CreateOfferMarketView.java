@@ -54,10 +54,10 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("onboarding.market.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.market.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.market.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.market.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
@@ -107,20 +107,20 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("onboarding.market.columns.name"))
+                .title(Res.get("bisqEasy.createOffer.market.columns.name"))
                 .isFirst()
                 .minWidth(100)
                 .comparator(Comparator.comparing(MarketListItem::getMarketCodes))
                 .setCellFactory(getNameCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("onboarding.market.columns.numOffers"))
+                .title(Res.get("bisqEasy.createOffer.market.columns.numOffers"))
                 .minWidth(60)
                 .valueSupplier(MarketListItem::getNumOffers)
                 .comparator(Comparator.comparing(MarketListItem::getNumOffersAsInteger))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("onboarding.market.columns.numPeers"))
+                .title(Res.get("bisqEasy.createOffer.market.columns.numPeers"))
                 .minWidth(60)
                 .valueSupplier(MarketListItem::getNumUsers)
                 .comparator(Comparator.comparing(MarketListItem::getNumUsersAsInteger))

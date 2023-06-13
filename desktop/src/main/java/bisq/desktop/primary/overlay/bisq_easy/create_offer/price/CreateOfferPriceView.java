@@ -52,22 +52,22 @@ public class CreateOfferPriceView extends View<VBox, CreateOfferPriceModel, Crea
 
         // root.setPadding(new Insets(40, 200, 0, 160));
 
-        Label headLine = new Label(Res.get("onboarding.price.headline"));
+        Label headLine = new Label(Res.get("bisqEasy.price.headline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.price.subtitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(400);
 
-        percentage = new MaterialTextField(Res.get("onboarding.price.percentage"));
+        percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage"));
 
         useFixPriceToggle = new ToggleButton();
         useFixPriceToggle.setGraphic(ImageUtil.getImageViewById("toggle_price"));
         useFixPriceToggle.getStyleClass().add("icon-button");
-        useFixPriceToggle.setTooltip(new BisqTooltip(Res.get("onboarding.price.toggle.tooltip")));
+        useFixPriceToggle.setTooltip(new BisqTooltip(Res.get("bisqEasy.price.toggle.tooltip")));
 
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);

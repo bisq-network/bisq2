@@ -54,17 +54,17 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("onboarding.method.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.method.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(450);
 
-        nonFoundLabel = new Label(Res.get("onboarding.method.noneFound"));
+        nonFoundLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
@@ -73,9 +73,9 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
         flowPane.setVgap(20);
         flowPane.setHgap(20);
 
-        custom = new MaterialTextField(Res.get("onboarding.method.customMethod"),
+        custom = new MaterialTextField(Res.get("bisqEasy.createOffer.paymentMethod.customMethod"),
                 null,
-                Res.get("onboarding.method.customMethod.prompt"));
+                Res.get("bisqEasy.createOffer.paymentMethod.customMethod.prompt"));
         custom.setPrefWidth(300);
         custom.setIcon("add-white");
         addButton = custom.getIconButton();
