@@ -50,19 +50,18 @@
 
 /*******************************************************************************
  *                                                                             *
- * Borders                                                                     *
+ * Lines                                                                     *
  *                                                                             *
  ******************************************************************************/
 
-.separator {
+.h-line {
     -fx-border-color: -bisq-grey-17;
     -fx-border-width: 1 0 0 0;
 }
 
-
-.separator-medium-grey {
-    -fx-border-color: -bisq-grey-16;
-    -fx-border-width: 1 0 0 0;
+.v-line {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0 1 0 0;
 }
 
 
@@ -73,12 +72,12 @@
  ******************************************************************************/
 
 .separator:horizontal .line {
-    -fx-border-color: -bisq-grey-dimmed;
+    -fx-border-color: -bisq-grey-17;
     -fx-border-width: 0.5;
 }
 
 .separator:vertical .line {
-    -fx-border-color: -bisq-grey-dimmed;
+    -fx-border-color: -bisq-grey-17;
     -fx-border-width: 0.5;
 }
 

@@ -69,7 +69,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         // Left
         left = new VBox(
                 publicChannelSelection,
-                Layout.separator(),
+                Layout.hLine(),
                 twoPartyPrivateChatChannelSelection,
                 Spacer.fillVBox());
         left.getStyleClass().add("bisq-grey-2-bg");
@@ -106,7 +106,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         sideBar.setFillWidth(true);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        topSeparator = Layout.separator();
+        topSeparator = Layout.hLine();
         centerVBox = new VBox(centerToolbar, topSeparator, chatMessagesComponent);
         chatMessagesComponent.setMinWidth(700);
         HBox.setHgrow(left, Priority.NEVER);

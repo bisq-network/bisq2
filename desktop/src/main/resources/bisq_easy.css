@@ -48,26 +48,32 @@
 .bisq-easy-trade-state-badge {
     -fx-padding: 0 0 0 0;
 }
-
 .bisq-easy-trade-state-badge .badge-pane {
     -fx-background-radius: 25;
     -fx-pref-width: 25;
     -fx-pref-height: 25;
 }
 
-.bisq-easy-trade-state-badge .badge-pane .label {
-    -fx-font-size: 0.93em;
-    -fx-text-fill: -bisq-white !important;
-    -fx-font-family: "IBM Plex Sans";
-}
-
-
 .bisq-easy-trade-state-badge-inactive .badge-pane {
-    -fx-background-color: -bisq-grey-disabled;
+    -fx-background-color: -bisq-grey-21;
 }
 
 .bisq-easy-trade-state-badge-active .badge-pane {
     -fx-background-color: -bisq-green;
+}
+
+.bisq-easy-trade-state-badge .badge-pane .label {
+    -fx-font-size: 0.93em;
+}
+
+.bisq-easy-trade-state-badge-inactive .badge-pane .label {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-badge-active .badge-pane .label {
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 

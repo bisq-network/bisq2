@@ -59,7 +59,7 @@ public class BisqEasyChatView extends ChatView {
         this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
         this.tradeStateViewRoot = tradeStateViewRoot;
 
-        left.getChildren().add(1, Layout.separator());
+        left.getChildren().add(1, Layout.hLine());
         left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
 
         bisqEasyChatModel = model;

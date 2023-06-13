@@ -49,9 +49,17 @@ public class Layout {
     }
 
 
-    public static Region separator() {
+    public static Region hLine() {
         Region separator = new Region();
-        separator.getStyleClass().add("separator");
+        separator.setMinHeight(1);
+        separator.getStyleClass().add("h-line");
+        return separator;
+    }
+
+    public static Region vLine() {
+        Region separator = new Region();
+        separator.setMaxWidth(1);
+        separator.getStyleClass().add("v-line");
         return separator;
     }
 
