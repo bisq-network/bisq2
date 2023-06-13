@@ -19,51 +19,34 @@ package bisq.account.protocol_type;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.proto.ProtoEnum;
-import bisq.common.proto.UnresolvableProtobufMessageException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public interface BaseProtocolType extends ProtoEnum {
-    static BaseProtocolType fromProto(bisq.account.protobuf.BaseProtocolType proto) {
-        switch (proto.getMessageCase()) {
-            case PROTOCOLTYPE: {
-                return ProtocolType.fromProto(proto.getProtocolType());
-            }
-            case LOANPROTOCOLTYPE: {
-                return LoanProtocolType.fromProto(proto.getLoanProtocolType());
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
-    }
-
-    static List<ProtocolType> getProtocols(Market market) {
-        List<ProtocolType> result = new ArrayList<>();
+public class ProtocolTypeUtil {
+    public static List<TradeProtocolType> getProtocols(Market market) {
+        List<TradeProtocolType> result = new ArrayList<>();
         if (isBisqEasySupported(market)) {
-            result.add(ProtocolType.BISQ_EASY);
+            result.add(TradeProtocolType.BISQ_EASY);
         }
         if (isBtcXmrSwapSupported(market)) {
-            result.add(ProtocolType.MONERO_SWAP);
+            result.add(TradeProtocolType.MONERO_SWAP);
         }
         if (isLiquidSwapSupported(market)) {
-            result.add(ProtocolType.LIQUID_SWAP);
+            result.add(TradeProtocolType.LIQUID_SWAP);
         }
         if (isBsqSwapSupported(market)) {
-            result.add(ProtocolType.BSQ_SWAP);
+            result.add(TradeProtocolType.BSQ_SWAP);
         }
         if (isLNSwapSupported(market)) {
-            result.add(ProtocolType.LIGHTNING_X);
+            result.add(TradeProtocolType.LIGHTNING_X);
         }
         if (isMultiSigSupported(market)) {
-            result.add(ProtocolType.BISQ_MULTISIG);
+            result.add(TradeProtocolType.BISQ_MULTISIG);
         }
 
-        result.sort(Comparator.comparingInt(ProtocolType::ordinal));
+        result.sort(Comparator.comparingInt(TradeProtocolType::ordinal));
         return result;
     }
 
@@ -81,7 +64,7 @@ public interface BaseProtocolType extends ProtoEnum {
     }
 
     private static boolean isLiquidSwapSupported(Market market) {
-        //todo we need a asset repository to check if any asset is a liquid asset
+        //todo we need an asset repository to check if any asset is a liquid asset
         return (market.getBaseCurrencyCode().equals("L-BTC") ||
                 market.getQuoteCurrencyCode().equals("L-BTC"));
     }

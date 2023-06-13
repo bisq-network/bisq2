@@ -38,7 +38,7 @@ class TakeOfferReviewModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     @Setter
     private UserProfile peersUserProfile;
-    private final StringProperty paymentMethod = new SimpleStringProperty();
+    private final StringProperty fiatPaymentMethodDisplayString = new SimpleStringProperty();
     @Setter
     private List<String> paymentMethodNames;
     @Setter

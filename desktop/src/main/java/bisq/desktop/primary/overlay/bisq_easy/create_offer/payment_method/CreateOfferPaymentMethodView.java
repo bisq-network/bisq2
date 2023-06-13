@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.create_offer.method;
+package bisq.desktop.primary.overlay.bisq_easy.create_offer.payment_method;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -37,15 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
 @Slf4j
 public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
 
     private final MaterialTextField custom;
-    private final ListChangeListener<String> allPaymentMethodsListener;
+    private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
     private final BisqIconButton addButton;
@@ -90,7 +88,7 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
         VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
         root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
-        allPaymentMethodsListener = c -> {
+        paymentMethodListener = c -> {
             c.next();
             fillPaymentMethods();
         };
@@ -99,7 +97,7 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
     @Override
     protected void onViewAttached() {
-        custom.textProperty().bindBidirectional(model.getCustomMethodName());
+        custom.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
         flowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
@@ -113,13 +111,13 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
 
-        model.getAllMethodNames().addListener(allPaymentMethodsListener);
+        model.getFiatPaymentMethods().addListener(paymentMethodListener);
         fillPaymentMethods();
     }
 
     @Override
     protected void onViewDetached() {
-        custom.textProperty().unbindBidirectional(model.getCustomMethodName());
+        custom.textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         flowPane.visibleProperty().unbind();
@@ -128,47 +126,44 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
         addButton.setOnAction(null);
 
+        flowPane.getChildren().stream()
+                .filter(e -> e instanceof ChipButton)
+                .map(e -> (ChipButton) e)
+                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
+
         addCustomMethodIconEnabledPin.unsubscribe();
 
-        model.getAllMethodNames().removeListener(allPaymentMethodsListener);
+        model.getFiatPaymentMethods().removeListener(paymentMethodListener);
     }
 
     private void fillPaymentMethods() {
         flowPane.getChildren().clear();
-        List<String> allPaymentMethodNames = new ArrayList<>(model.getAllMethodNames());
-        allPaymentMethodNames.sort(Comparator.comparing(e -> Res.has(e) ? Res.get(e) : e));
-
-        for (String methodName : allPaymentMethodNames) {
+        for (FiatPaymentMethod fiatPaymentMethod : model.getSortedFiatPaymentMethods()) {
             // enum name or custom name
-            String displayString = methodName;
-            if (Res.has(methodName)) {
-                String shortName = methodName + "_SHORT";
-                if (Res.has(shortName)) {
-                    displayString = Res.get(shortName);
-                } else {
-                    displayString = Res.get(methodName);
-                }
-            }
-            ChipButton chipButton = new ChipButton(displayString);
-            if (model.getSelectedMethodNames().contains(methodName)) {
+            ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
+            if (model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 chipButton.setSelected(true);
             }
-            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(methodName, chipButton.isSelected()));
-            String finalDisplayString = displayString;
-            model.getAddedCustomMethodNames().stream()
-                    .filter(customMethod -> customMethod.equals(methodName))
+            chipButton.setOnAction(() -> {
+                boolean wasAdded = controller.onTogglePaymentMethod(fiatPaymentMethod, chipButton.isSelected());
+                if (!wasAdded) {
+                    UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
+                }
+            });
+            model.getAddedCustomFiatPaymentMethods().stream()
+                    .filter(customMethod -> customMethod.equals(fiatPaymentMethod))
                     .findAny()
                     .ifPresentOrElse(
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(methodName));
-                                if (methodName.length() > 13) {
-                                    chipButton.setTooltip(new BisqTooltip(finalDisplayString));
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(fiatPaymentMethod));
+                                if (fiatPaymentMethod.getShortDisplayString().length() > 13) {
+                                    chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
                                 }
                             },
                             () -> {
-                                // A provided method
-                                ImageView icon = ImageUtil.getImageViewById(methodName);
+                                // Lookup for an image with the id of the enum name (REVOLUT)
+                                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
                                 chipButton.setLeftIcon(icon);
                             });
             flowPane.getChildren().add(chipButton);

@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.user.accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -91,7 +91,7 @@ public class PaymentAccountsController implements Controller {
         selectedAccountPin.unbind();
     }
 
-    void onSelectAccount(Account<?, ? extends Payment<?>> account) {
+    void onSelectAccount(Account<?, ? extends PaymentMethod<?>> account) {
         if (account != null) {
             accountService.setSelectedAccount(account);
         }

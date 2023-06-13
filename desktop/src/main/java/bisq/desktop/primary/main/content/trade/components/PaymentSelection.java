@@ -19,8 +19,10 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
+import bisq.account.payment_method.PaymentRail;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -67,7 +69,7 @@ public class PaymentSelection {
         controller.setDirection(direction);
     }
 
-    public void setSelectedProtocolType(ProtocolType selectedProtocolType) {
+    public void setSelectedProtocolType(TradeProtocolType selectedProtocolType) {
         controller.setSelectedProtocolType(selectedProtocolType);
     }
 
@@ -75,20 +77,20 @@ public class PaymentSelection {
         return controller.view.getRoot();
     }
 
-    public ObservableSet<Account<?, ? extends Payment<?>>> getSelectedBaseSideAccounts() {
+    public ObservableSet<Account<?, ? extends PaymentMethod<?>>> getSelectedBaseSideAccounts() {
         return controller.model.selectedBaseSideAccounts;
     }
 
-    public ObservableSet<Account<?, ? extends Payment<?>>> getSelectedQuoteSideAccounts() {
+    public ObservableSet<Account<?, ? extends PaymentMethod<?>>> getSelectedQuoteSideAccounts() {
         return controller.model.selectedQuoteSideAccounts;
     }
 
-    public ObservableSet<Payment.Method> getSelectedBaseSidePaymentMethods() {
-        return controller.model.selectedBaseSidePaymentMethods;
+    public ObservableSet<PaymentRail> getSelectedBaseSidePaymentMethods() {
+        return controller.model.selectedBaseSidePaymentPaymentRails;
     }
 
-    public ObservableSet<Payment.Method> getSelectedQuoteSidePaymentMethods() {
-        return controller.model.selectedQuoteSidePaymentMethods;
+    public ObservableSet<PaymentRail> getSelectedQuoteSidePaymentMethods() {
+        return controller.model.selectedQuoteSidePaymentPaymentRails;
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -111,7 +113,7 @@ public class PaymentSelection {
             resetAndApplyData();
         }
 
-        private void setSelectedProtocolType(ProtocolType selectedProtocolType) {
+        private void setSelectedProtocolType(TradeProtocolType selectedProtocolType) {
             model.selectedProtocolType = selectedProtocolType;
             resetAndApplyData();
         }
@@ -125,10 +127,10 @@ public class PaymentSelection {
 
             model.selectedBaseSideAccounts.clear();
             model.selectedQuoteSideAccounts.clear();
-            model.selectedBaseSidePaymentMethods.clear();
-            model.selectedQuoteSidePaymentMethods.clear();
+            model.selectedBaseSidePaymentPaymentRails.clear();
+            model.selectedQuoteSidePaymentPaymentRails.clear();
 
-            ProtocolType selectedProtocolTyp = model.selectedProtocolType;
+            TradeProtocolType selectedProtocolTyp = model.selectedProtocolType;
             if (selectedProtocolTyp == null) {
                 model.visibility.set(false);
                 return;
@@ -147,11 +149,11 @@ public class PaymentSelection {
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(collect);
 
-            model.baseSidePaymentObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getBaseCurrencyCode())
+            model.baseSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentRails(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
                     .map(e -> new PaymentListItem(e, market.getBaseCurrencyCode()))
                     .collect(Collectors.toList()));
-            model.quoteSidePaymentObservableList.setAll(Payment.getPaymentMethods(selectedProtocolTyp, market.getQuoteCurrencyCode())
+            model.quoteSidePaymentObservableList.setAll(PaymentMethodUtil.getPaymentRails(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
                     .map(e -> new PaymentListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));
@@ -220,26 +222,26 @@ public class PaymentSelection {
             var observableAccountsSet = isBaseSide ?
                     model.selectedBaseSideAccounts :
                     model.selectedQuoteSideAccounts;
-            ObservableSet<Payment.Method> observablePaymentMethodsSet = isBaseSide ?
-                    model.selectedBaseSidePaymentMethods :
-                    model.selectedQuoteSidePaymentMethods;
+            ObservableSet<PaymentRail> observablePaymentMethodsSet = isBaseSide ?
+                    model.selectedBaseSidePaymentPaymentRails :
+                    model.selectedQuoteSidePaymentPaymentRails;
             if (selected) {
                 observableAccountsSet.add(listItem.account);
-                observablePaymentMethodsSet.add(listItem.paymnetMethod);
+                observablePaymentMethodsSet.add(listItem.paymnetPaymentRail);
             } else {
                 observableAccountsSet.remove(listItem.account);
-                observablePaymentMethodsSet.remove(listItem.paymnetMethod);
+                observablePaymentMethodsSet.remove(listItem.paymnetPaymentRail);
             }
         }
 
         private void onPaymentSelectionChanged(PaymentListItem listItem, boolean selected, boolean isBaseSide) {
-            ObservableSet<Payment.Method> observableSet = isBaseSide ?
-                    model.selectedBaseSidePaymentMethods :
-                    model.selectedQuoteSidePaymentMethods;
+            ObservableSet<PaymentRail> observableSet = isBaseSide ?
+                    model.selectedBaseSidePaymentPaymentRails :
+                    model.selectedQuoteSidePaymentPaymentRails;
             if (selected) {
-                observableSet.add(listItem.paymentMethod);
+                observableSet.add(listItem.paymentPaymentRail);
             } else {
-                observableSet.remove(listItem.paymentMethod);
+                observableSet.remove(listItem.paymentPaymentRail);
             }
         }
 
@@ -255,10 +257,10 @@ public class PaymentSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Payment.Method> selectedBaseSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Payment.Method> selectedQuoteSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Account<?, ? extends PaymentMethod<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Account<?, ? extends PaymentMethod<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<PaymentRail> selectedBaseSidePaymentPaymentRails = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<PaymentRail> selectedQuoteSidePaymentPaymentRails = FXCollections.observableSet(new HashSet<>());
 
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
@@ -281,7 +283,7 @@ public class PaymentSelection {
 
         private Market selectedMarket;
         private Direction direction;
-        private ProtocolType selectedProtocolType;
+        private TradeProtocolType selectedProtocolType;
 
         private Model(AccountService accountService) {
             this.accountService = accountService;
@@ -434,16 +436,16 @@ public class PaymentSelection {
 
     @Getter
     private static class AccountListItem implements TableItem {
-        private final Account<?, ? extends Payment<?>> account;
+        private final Account<?, ? extends PaymentMethod<?>> account;
         private final String accountName;
-        private final Payment.Method paymnetMethod;
+        private final PaymentRail paymnetPaymentRail;
         private final String paymentMethodName;
 
-        private AccountListItem(Account<?, ? extends Payment<?>> account) {
+        private AccountListItem(Account<?, ? extends PaymentMethod<?>> account) {
             this.account = account;
             accountName = account.getAccountName();
-            paymnetMethod = account.getPayment().getMethod();
-            paymentMethodName = Res.get(paymnetMethod.name());
+            paymnetPaymentRail = account.getPaymentMethod().getPaymentRail();
+            paymentMethodName = Res.get(paymnetPaymentRail.name());
         }
 
         @Override
@@ -457,12 +459,12 @@ public class PaymentSelection {
 
     @Getter
     private static class PaymentListItem implements TableItem {
-        private final Payment.Method paymentMethod;
+        private final PaymentRail paymentPaymentRail;
         private final String name;
 
-        private PaymentListItem(Payment.Method paymentMethod, String currencyCode) {
-            this.paymentMethod = paymentMethod;
-            name = paymentMethod.name();
+        private PaymentListItem(PaymentRail paymentPaymentRail, String currencyCode) {
+            this.paymentPaymentRail = paymentPaymentRail;
+            name = paymentPaymentRail.name();
         }
 
         @Override

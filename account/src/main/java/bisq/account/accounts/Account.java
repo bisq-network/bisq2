@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -37,26 +37,26 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, S extends Payment<?>> implements Proto {
+public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements Proto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final S payment;
+    protected final M paymentMethod;
 
     public Account(String accountName,
-                   S payment,
+                   M paymentMethod,
                    P accountPayload) {
-        this(new Date().getTime(), accountName, payment, accountPayload);
+        this(new Date().getTime(), accountName, paymentMethod, accountPayload);
     }
 
     public Account(long creationDate,
                    String accountName,
-                   S payment,
+                   M paymentMethod,
                    P accountPayload) {
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
-        this.payment = payment;
+        this.paymentMethod = paymentMethod;
     }
 
     public abstract bisq.account.protobuf.Account toProto();
@@ -65,7 +65,7 @@ public abstract class Account<P extends AccountPayload, S extends Payment<?>> im
         return bisq.account.protobuf.Account.newBuilder()
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setPayment(payment.toProto())
+                .setPaymentMethod(paymentMethod.toProto())
                 .setAccountPayload(accountPayload.toProto());
     }
 
@@ -89,6 +89,6 @@ public abstract class Account<P extends AccountPayload, S extends Payment<?>> im
 
 
     public Set<String> getTradeCurrencyCodes() {
-        return payment.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+        return paymentMethod.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
     }
 }

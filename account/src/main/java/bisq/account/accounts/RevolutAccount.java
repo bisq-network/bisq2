@@ -17,7 +17,8 @@
 
 package bisq.account.accounts;
 
-import bisq.account.payment.FiatPayment;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,15 +29,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPayment> {
-    private static final FiatPayment PAYMENT = new FiatPayment(FiatPayment.Method.REVOLUT);
+public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPaymentMethod> {
+    private static final FiatPaymentMethod PAYMENT_METHOD = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT);
 
     public RevolutAccount(String accountName, String email) {
-        this(accountName, new RevolutAccountPayload(StringUtils.createUid(), PAYMENT.getPaymentMethodName(), email));
+        this(accountName, new RevolutAccountPayload(StringUtils.createUid(), PAYMENT_METHOD.getName(), email));
     }
 
     private RevolutAccount(String accountName, RevolutAccountPayload revolutAccountPayload) {
-        super(accountName, PAYMENT, revolutAccountPayload);
+        super(accountName, PAYMENT_METHOD, revolutAccountPayload);
     }
 
     @Override

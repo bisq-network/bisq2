@@ -17,7 +17,7 @@
 
 package bisq.contract.poc;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public final class PocContract implements Proto {
     private final NetworkId takerNetworkId;
-    private final ProtocolType protocolType;
+    private final TradeProtocolType protocolType;
     private final PocOffer offer;
     private final Monetary baseSideAmount;
     private final Monetary quoteSideAmount;
@@ -40,7 +40,7 @@ public final class PocContract implements Proto {
     private final String quoteSidePaymentMethod;
 
     public PocContract(NetworkId takerNetworkId,
-                       ProtocolType protocolType,
+                       TradeProtocolType protocolType,
                        PocOffer offer,
                        Monetary baseSideAmount,
                        Monetary quoteSideAmount,

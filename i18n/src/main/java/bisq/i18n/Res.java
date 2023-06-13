@@ -33,7 +33,7 @@ public class Res {
         if ("en".equalsIgnoreCase(locale.getLanguage())) {
             locale = Locale.ROOT;
         }
-        defaultBundle = ResourceBundle.getBundle("default", locale, new UTF8Control());
+        defaultBundle = ResourceBundle.getBundle("default", locale);
     }
 
     public static String get(String key, Object... arguments) {

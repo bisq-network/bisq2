@@ -18,8 +18,9 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.takeOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
@@ -40,12 +41,12 @@ public class TakeOfferModel implements Model {
     Monetary baseSideAmount;
     Monetary quoteSideAmount;
     PriceQuote fixPrice;
-    private ProtocolType selectedProtocolType;
+    private TradeProtocolType selectedProtocolType;
 
-    private Account<?, ? extends Payment<?>> selectedBaseSideAccount;
-    private Account<?, ? extends Payment<?>> selectedQuoteSideAccount;
-    private Payment.Method selectedBaseSidePaymentMethod;
-    private Payment.Method selectedQuoteSidePaymentMethod;
+    private Account<?, ? extends PaymentMethod<?>> selectedBaseSideAccount;
+    private Account<?, ? extends PaymentMethod<?>> selectedQuoteSideAccount;
+    private PaymentRail selectedBaseSidePaymentPaymentRail;
+    private PaymentRail selectedQuoteSidePaymentPaymentRail;
 
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;

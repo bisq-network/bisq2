@@ -122,9 +122,9 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         selectedQuoteSideAccountSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedQuoteSideAccount(),
                 model::setSelectedQuoteSideAccount);
         selectedBaseSidePaymentMethodSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedBaseSidePaymentMethod(),
-                model::setSelectedBaseSidePaymentMethod);
+                model::setSelectedBaseSidePaymentPaymentRail);
         selectedQuoteSidePaymentMethodSubscription = EasyBind.subscribe(paymentMethodSelection.getSelectedQuoteSidePaymentMethod(),
-                model::setSelectedQuoteSidePaymentMethod);
+                model::setSelectedQuoteSidePaymentPaymentRail);
     }
 
     @Override
@@ -136,8 +136,8 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     }
 
     public void onTakeOffer() {
-        String baseSidePaymentMethod = model.getSelectedBaseSidePaymentMethod().name();
-        String quoteSidePaymentMethod = model.getSelectedQuoteSidePaymentMethod().name();
+        String baseSidePaymentMethod = model.getSelectedBaseSidePaymentPaymentRail().name();
+        String quoteSidePaymentMethod = model.getSelectedQuoteSidePaymentPaymentRail().name();
         pocProtocolService.takeOffer(model.getSelectedProtocolType(),
                         model.offer,
                         model.baseSideAmount,

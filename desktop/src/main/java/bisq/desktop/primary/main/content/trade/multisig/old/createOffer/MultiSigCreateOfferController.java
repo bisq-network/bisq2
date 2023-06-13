@@ -18,7 +18,8 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
@@ -69,9 +70,9 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
     private final PaymentSelection paymentSelection;
-    private final SetChangeListener<Account<?, ? extends Payment<?>>> selectedBaseSideAccountsListener,
+    private final SetChangeListener<Account<?, ? extends PaymentMethod<?>>> selectedBaseSideAccountsListener,
             selectedQuoteSideAccountsListener;
-    private final SetChangeListener<Payment.Method> selectedBaseSidePaymentMethodsListener,
+    private final SetChangeListener<PaymentRail> selectedBaseSidePaymentMethodsListener,
             selectedQuoteSidePaymentMethodsListener;
     private Subscription selectedMarketSubscription, directionSubscription, protocolSelectionSubscription,
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;
@@ -169,10 +170,15 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
                         model.getBaseSideAmount(),
                         model.getFixPrice(),
                         model.getSelectedProtocolType(),
-                        new ArrayList<>(model.getSelectedBaseSideAccounts()),
+                        // todo changes with generics not applied to poc code
+                      /*  new ArrayList<>(model.getSelectedBaseSideAccounts()),
                         new ArrayList<>(model.getSelectedQuoteSideAccounts()),
-                        new ArrayList<>(model.getSelectedBaseSidePaymentMethods()),
-                        new ArrayList<>(model.getSelectedQuoteSidePaymentMethods()))
+                        new ArrayList<>(model.getSelectedBaseSidePaymentPaymentRails()),
+                        new ArrayList<>(model.getSelectedQuoteSidePaymentPaymentRails()))*/
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>())
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
                         model.getOfferProperty().set(offer);

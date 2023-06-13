@@ -1,6 +1,6 @@
 package bisq.contract.poc;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.contract.Contract;
 import bisq.contract.Party;
 import bisq.contract.Role;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class MultiPartyContract<T extends Offer> extends Contract<T> {
     private final List<Party> parties;
 
-    public MultiPartyContract(T listing, ProtocolType protocolType, List<Party> parties) {
+    public MultiPartyContract(T listing, TradeProtocolType protocolType, List<Party> parties) {
         super(listing, protocolType);
         this.parties = new ArrayList<>(parties);
         this.parties.sort(Comparator.comparingInt(Party::hashCode));
@@ -32,7 +32,7 @@ public class MultiPartyContract<T extends Offer> extends Contract<T> {
 
     public static MultiPartyContract<? extends Offer> fromProto(bisq.contract.protobuf.Contract proto) {
         return new MultiPartyContract<>(Offer.fromProto(proto.getOffer()),
-                ProtocolType.fromProto(proto.getProtocolType()),
+                TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 proto.getMultiPartyContract().getPartiesList().stream().map(Party::fromProto).collect(Collectors.toList()));
     }
 

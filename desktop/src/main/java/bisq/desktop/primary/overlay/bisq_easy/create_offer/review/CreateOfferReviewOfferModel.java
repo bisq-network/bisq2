@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
@@ -46,7 +47,7 @@ class CreateOfferReviewOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
-    private List<String> paymentMethodNames;
+    private List<FiatPaymentMethod> fiatPaymentMethods;
     @Setter
     private String myOfferText;
     @Setter
@@ -67,7 +68,7 @@ class CreateOfferReviewOfferModel implements Model {
         selectedChannel = null;
         direction = null;
         market = null;
-        paymentMethodNames.clear();
+        fiatPaymentMethods.clear();
         myOfferText = null;
         myOfferMessage = null;
         isMinAmountEnabled = false;

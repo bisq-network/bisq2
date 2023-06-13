@@ -1,7 +1,8 @@
 package bisq.offer.bisq_easy;
 
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
@@ -10,8 +11,10 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.offer.payment.PaymentSpec;
-import bisq.offer.payment.PaymentUtil;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,7 +28,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class BisqEasyOffer extends Offer {
+public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
     private final String chatMessageText;
 
     public BisqEasyOffer(NetworkId makerNetworkId,
@@ -33,7 +36,7 @@ public final class BisqEasyOffer extends Offer {
                          Market market,
                          AmountSpec amountSpec,
                          PriceSpec priceSpec,
-                         List<String> paymentMethodNames,
+                         List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
                          long requiredTotalReputationScore,
                          String chatMessageText) {
@@ -44,9 +47,9 @@ public final class BisqEasyOffer extends Offer {
                 market,
                 amountSpec,
                 priceSpec,
-                List.of(ProtocolType.BISQ_EASY),
-                PaymentUtil.createBaseSideSpecsForBitcoinMainChain(),
-                PaymentUtil.createQuoteSideSpecsFromMethodNames(paymentMethodNames),
+                List.of(TradeProtocolType.BISQ_EASY),
+                PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
+                PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
                 chatMessageText
         );
@@ -59,9 +62,9 @@ public final class BisqEasyOffer extends Offer {
                           Market market,
                           AmountSpec amountSpec,
                           PriceSpec priceSpec,
-                          List<ProtocolType> protocolTypes,
-                          List<PaymentSpec> baseSidePaymentSpecs,
-                          List<PaymentSpec> quoteSidePaymentSpecs,
+                          List<TradeProtocolType> protocolTypes,
+                          List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                          List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
                           List<OfferOption> offerOptions,
                           String chatMessageText) {
         super(id,
@@ -72,8 +75,8 @@ public final class BisqEasyOffer extends Offer {
                 amountSpec,
                 priceSpec,
                 protocolTypes,
-                baseSidePaymentSpecs,
-                quoteSidePaymentSpecs,
+                baseSidePaymentMethodSpecs,
+                quoteSidePaymentMethodSpecs,
                 offerOptions);
         this.chatMessageText = chatMessageText;
     }
@@ -87,14 +90,14 @@ public final class BisqEasyOffer extends Offer {
     }
 
     public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) {
-        List<ProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
-                .map(ProtocolType::fromProto)
+        List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
+                .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
-        List<PaymentSpec> baseSidePaymentSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(PaymentSpec::fromProto)
+        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
+                .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
                 .collect(Collectors.toList());
-        List<PaymentSpec> quoteSidePaymentSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentSpec::fromProto)
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
+                .map(PaymentMethodSpec::protoToFiatPaymentMethodSpec)
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
@@ -107,9 +110,10 @@ public final class BisqEasyOffer extends Offer {
                 AmountSpec.fromProto(proto.getAmountSpec()),
                 PriceSpec.fromProto(proto.getPriceSpec()),
                 protocolTypes,
-                baseSidePaymentSpecs,
-                quoteSidePaymentSpecs,
+                baseSidePaymentMethodSpecs,
+                quoteSidePaymentMethodSpecs,
                 offerOptions,
                 proto.getBisqEasyOffer().getChatMessageText());
     }
+
 }

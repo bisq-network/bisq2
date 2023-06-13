@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.xmr_swap;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
 public class XmrSwapView extends ProtocolRoadmapView<XmrSwapModel, XmrSwapController> {
@@ -27,7 +27,7 @@ public class XmrSwapView extends ProtocolRoadmapView<XmrSwapModel, XmrSwapContro
 
     @Override
     protected String getKey() {
-        return ProtocolType.MONERO_SWAP.name();
+        return TradeProtocolType.MONERO_SWAP.name();
     }
 
     @Override

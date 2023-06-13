@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.accounts;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -31,24 +31,24 @@ import java.util.Collection;
 
 @Slf4j
 public class PaymentAccountsModel implements Model {
-    private final ObjectProperty<Account<?, ? extends Payment<?>>> selectedAccount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
     private final StringProperty accountData = new SimpleStringProperty("");
     private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
-    private final ObservableList<Account<?, ? extends Payment<?>>> accounts = FXCollections.observableArrayList();
-    private final SortedList<Account<?, ? extends Payment<?>>> sortedAccounts = new SortedList<>(accounts);
+    private final ObservableList<Account<?, ? extends PaymentMethod<?>>> accounts = FXCollections.observableArrayList();
+    private final SortedList<Account<?, ? extends PaymentMethod<?>>> sortedAccounts = new SortedList<>(accounts);
 
     // selectedAccount
     @Nullable
-    public Account<?, ? extends Payment<?>> getSelectedAccount() {
+    public Account<?, ? extends PaymentMethod<?>> getSelectedAccount() {
         return selectedAccount.get();
     }
 
-    public ObjectProperty<Account<?, ? extends Payment<?>>> selectedAccountProperty() {
+    public ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccountProperty() {
         return selectedAccount;
     }
 
-    public void setSelectedAccount(Account<?, ? extends Payment<?>> selectedAccount) {
+    public void setSelectedAccount(Account<?, ? extends PaymentMethod<?>> selectedAccount) {
         this.selectedAccount.set(selectedAccount);
     }
 
@@ -91,11 +91,11 @@ public class PaymentAccountsModel implements Model {
         this.deleteButtonDisabled.set(deleteButtonDisabled);
     }
 
-    public void setAllAccounts(Collection<Account<?, ? extends Payment<?>>> collection) {
+    public void setAllAccounts(Collection<Account<?, ? extends PaymentMethod<?>>> collection) {
         accounts.setAll(collection);
     }
 
-    public SortedList<Account<?, ? extends Payment<?>>> getSortedAccounts() {
+    public SortedList<Account<?, ? extends PaymentMethod<?>>> getSortedAccounts() {
         return sortedAccounts;
     }
 }

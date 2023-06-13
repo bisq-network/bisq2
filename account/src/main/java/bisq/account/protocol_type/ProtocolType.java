@@ -17,24 +17,26 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 
-// Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
-// if needed.
-public enum ProtocolType implements BaseProtocolType {
-    BISQ_EASY,
-    BISQ_MULTISIG,
-    LIQUID_SWAP,
-    BSQ_SWAP,
-    LIGHTNING_X,
-    MONERO_SWAP;
-
-    @Override
-    public bisq.account.protobuf.ProtocolType toProto() {
-        return bisq.account.protobuf.ProtocolType.valueOf(name());
-    }
-
-    public static ProtocolType fromProto(bisq.account.protobuf.ProtocolType proto) {
-        return ProtobufUtils.enumFromProto(ProtocolType.class, proto.name());
+// TODO does not fit right into the account module. But dependency graph does not provide a lower level module
+// where it would fit in. protocol module is rather high level and we use protocol type in the POC code in 
+// the account, offer and contract modules. So leave it for now here. Maybe we need another low level exchange domain 
+// specific module where it would fit in.
+public interface ProtocolType extends ProtoEnum {
+    static ProtocolType fromProto(bisq.account.protobuf.ProtocolType proto) {
+        switch (proto.getMessageCase()) {
+            case TRADEPROTOCOLTYPE: {
+                return TradeProtocolType.fromProto(proto.getTradeProtocolType());
+            }
+            case LOANPROTOCOLTYPE: {
+                return LoanProtocolType.fromProto(proto.getLoanProtocolType());
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

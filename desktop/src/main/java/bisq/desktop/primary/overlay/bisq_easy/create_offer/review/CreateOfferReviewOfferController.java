@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
@@ -39,8 +40,8 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment.PaymentFormatter;
-import bisq.offer.payment.PaymentUtil;
+import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -112,9 +113,9 @@ public class CreateOfferReviewOfferController implements Controller {
         }
     }
 
-    public void setPaymentMethodNames(List<String> paymentMethodNames) {
-        if (paymentMethodNames != null) {
-            model.setPaymentMethodNames(paymentMethodNames);
+    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+        if (fiatPaymentMethods != null) {
+            model.setFiatPaymentMethods(fiatPaymentMethods);
         }
     }
 
@@ -173,10 +174,11 @@ public class CreateOfferReviewOfferController implements Controller {
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.paymentMethodsToCommaSeparatedString(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 directionString,
                 amountString,
-                PaymentFormatter.asQuoteSidePaymentMethodsString(model.getPaymentMethodNames()),
+                paymentMethodNames,
                 priceInfo);
 
         model.setMyOfferText(chatMessageText);
@@ -187,7 +189,7 @@ public class CreateOfferReviewOfferController implements Controller {
                 model.getMarket(),
                 amountSpec,
                 priceSpec,
-                new ArrayList<>(model.getPaymentMethodNames()),
+                new ArrayList<>(model.getFiatPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get(),
                 chatMessageText);
@@ -223,9 +225,9 @@ public class CreateOfferReviewOfferController implements Controller {
 
     void onTakeOffer(CreateOfferReviewOfferView.ListItem listItem) {
         OverlayController.hide(() -> {
-            TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
-                    Optional.of(model.getAmountSpec()),
-                    model.getPaymentMethodNames());
+                    TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
+                            Optional.of(model.getAmountSpec()),
+                            model.getFiatPaymentMethods());
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, initData);
                     resetHandler.run();
                 }
@@ -297,8 +299,10 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                List<String> paymentMethodNames = PaymentUtil.getQuoteSidePaymentMethodNames(peersOffer);
-                if (PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer).stream().noneMatch(paymentMethodNames::contains)) {
+                List<String> paymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+                //  List<String> paymentMethodNames = PaymentMethodSpecUtil.getQuoteSidePaymentMethodNames(peersOffer);
+                List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+                if (quoteSidePaymentMethodNames.stream().noneMatch(paymentMethodNames::contains)) {
                     return false;
                 }
 

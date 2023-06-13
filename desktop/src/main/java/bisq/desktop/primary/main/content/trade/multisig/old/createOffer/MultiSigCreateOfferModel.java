@@ -18,8 +18,9 @@
 package bisq.desktop.primary.main.content.trade.multisig.old.createOffer;
 
 import bisq.account.accounts.Account;
-import bisq.account.payment.Payment;
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -43,7 +44,7 @@ public class MultiSigCreateOfferModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private ProtocolType selectedProtocolType;
+    private TradeProtocolType selectedProtocolType;
     @Setter
     private Monetary baseSideAmount;
     @Setter
@@ -51,10 +52,10 @@ public class MultiSigCreateOfferModel implements Model {
     @Setter
     private PriceQuote fixPrice;
 
-    private final ObservableSet<Account<?, ? extends Payment<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Account<?, ? extends Payment<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Payment.Method> selectedBaseSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Payment.Method> selectedQuoteSidePaymentMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<?, ? extends PaymentMethod<?>>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<?, ? extends PaymentMethod<?>>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<PaymentRail> selectedBaseSidePaymentPaymentRails = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<PaymentRail> selectedQuoteSidePaymentPaymentRails = FXCollections.observableSet(new HashSet<>());
 
     private final ObjectProperty<PocOffer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
@@ -77,23 +78,23 @@ public class MultiSigCreateOfferModel implements Model {
         return createOfferButtonVisibleProperty;
     }
 
-    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<?, ? extends Payment<?>>> set) {
+    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<?, ? extends PaymentMethod<?>>> set) {
         selectedBaseSideAccounts.clear();
         selectedBaseSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<?, ? extends Payment<?>>> set) {
+    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<?, ? extends PaymentMethod<?>>> set) {
         selectedQuoteSideAccounts.clear();
         selectedQuoteSideAccounts.addAll(set);
     }
 
-    public void setAllSelectedBaseSidePaymentMethods(ObservableSet<Payment.Method> set) {
-        selectedBaseSidePaymentMethods.clear();
-        selectedBaseSidePaymentMethods.addAll(set);
+    public void setAllSelectedBaseSidePaymentMethods(ObservableSet<PaymentRail> set) {
+        selectedBaseSidePaymentPaymentRails.clear();
+        selectedBaseSidePaymentPaymentRails.addAll(set);
     }
 
-    public void setAllSelectedQuoteSidePaymentMethods(ObservableSet<Payment.Method> set) {
-        selectedQuoteSidePaymentMethods.clear();
-        selectedQuoteSidePaymentMethods.addAll(set);
+    public void setAllSelectedQuoteSidePaymentMethods(ObservableSet<PaymentRail> set) {
+        selectedQuoteSidePaymentPaymentRails.clear();
+        selectedQuoteSidePaymentPaymentRails.addAll(set);
     }
 }

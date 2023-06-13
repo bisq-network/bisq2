@@ -19,7 +19,7 @@ package bisq.account.protocol_type;
 
 import bisq.common.util.ProtobufUtils;
 
-public enum LoanProtocolType implements BaseProtocolType {
+public enum LoanProtocolType implements ProtocolType {
     COLLATERALIZED,
     REPUTATION;
 

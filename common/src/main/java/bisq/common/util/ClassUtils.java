@@ -15,18 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment;
+package bisq.common.util;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-public class TakeOfferPaymentModel implements Model {
-    // Method enum name or custom name
-    private final ObservableList<String> offeredMethodNames = FXCollections.observableArrayList();
-    private final StringProperty selectedMethodName = new SimpleStringProperty();
+import java.util.Optional;
+
+@Slf4j
+public class ClassUtils {
+
+    public static <T> Optional<T> safeCast(Object object, Class<T> clazz) {
+        if (clazz.isInstance(object)) {
+            try {
+                //noinspection unchecked
+                T casted = (T) object;
+                return Optional.of(casted);
+            } catch (ClassCastException t) {
+                log.error("Could not cast object {} to class {}", object, clazz);
+                return Optional.empty();
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
 }

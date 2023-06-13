@@ -37,7 +37,7 @@ message Party {
 }
 message Contract {
   offer.Offer offer = 1;
-  account.ProtocolType protocolType = 2;
+  account.TradeProtocolType tradeProtocolType = 2;
   oneof message {
     TwoPartyContract twoPartyContract = 10;
     MultiPartyContract multiPartyContract = 12;

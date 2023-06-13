@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.liquid_swap;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
 public class LiquidSwapView extends ProtocolRoadmapView<LiquidSwapModel, LiquidSwapController> {
@@ -27,7 +27,7 @@ public class LiquidSwapView extends ProtocolRoadmapView<LiquidSwapModel, LiquidS
 
     @Override
     protected String getKey() {
-        return ProtocolType.LIQUID_SWAP.name();
+        return TradeProtocolType.LIQUID_SWAP.name();
     }
 
     @Override

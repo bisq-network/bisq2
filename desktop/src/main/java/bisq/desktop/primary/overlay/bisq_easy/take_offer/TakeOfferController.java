@@ -17,17 +17,18 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountController;
-import bisq.desktop.primary.overlay.bisq_easy.take_offer.payment.TakeOfferPaymentController;
+import bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method.TakeOfferPaymentController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.price.TakeOfferPriceController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakeOfferReviewController;
 import bisq.i18n.Res;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment.PaymentUtil;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -51,16 +52,16 @@ public class TakeOfferController extends NavigationController implements InitWit
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
         private final Optional<AmountSpec> takersAmountSpec;
-        private final List<String> takersPaymentMethodNames;
+        private final List<FiatPaymentMethod> takersPaymentMethods;
 
         public InitData(BisqEasyOffer bisqEasyOffer) {
             this(bisqEasyOffer, Optional.empty(), new ArrayList<>());
         }
 
-        public InitData(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec, List<String> takersPaymentMethodNames) {
+        public InitData(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec, List<FiatPaymentMethod> takersPaymentMethods) {
             this.bisqEasyOffer = bisqEasyOffer;
             this.takersAmountSpec = takersAmountSpec;
-            this.takersPaymentMethodNames = takersPaymentMethodNames;
+            this.takersPaymentMethods = takersPaymentMethods;
         }
     }
 
@@ -99,12 +100,12 @@ public class TakeOfferController extends NavigationController implements InitWit
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
         takeOfferPriceController.init(bisqEasyOffer);
         takeOfferAmountController.init(bisqEasyOffer, initData.getTakersAmountSpec());
-        takeOfferPaymentController.init(bisqEasyOffer, initData.getTakersPaymentMethodNames());
+        takeOfferPaymentController.init(bisqEasyOffer, initData.getTakersPaymentMethods());
         takeOfferReviewController.init(bisqEasyOffer);
 
         model.setPriceVisible(bisqEasyOffer.getDirection().isBuy());
         model.setAmountVisible(bisqEasyOffer.hasAmountRange());
-        model.setPaymentMethodVisible(bisqEasyOffer.getQuoteSidePaymentSpecs().size() > 1);
+        model.setPaymentMethodVisible(bisqEasyOffer.getQuoteSidePaymentMethodSpecs().size() > 1);
 
         model.getChildTargets().clear();
         if (model.isPriceVisible()) {
@@ -116,9 +117,9 @@ public class TakeOfferController extends NavigationController implements InitWit
         if (model.isPaymentMethodVisible()) {
             model.getChildTargets().add(NavigationTarget.TAKE_OFFER_PAYMENT);
         } else {
-            List<String> methodNames = PaymentUtil.getQuoteSidePaymentMethodNames(bisqEasyOffer);
-            checkArgument(methodNames.size() == 1);
-            takeOfferReviewController.setPaymentMethodName(methodNames.get(0));
+            List<FiatPaymentMethod> fiatPaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+            checkArgument(fiatPaymentMethods.size() == 1);
+            takeOfferReviewController.setFiatPaymentMethod(fiatPaymentMethods.get(0));
         }
         model.getChildTargets().add(NavigationTarget.TAKE_OFFER_REVIEW);
     }
@@ -134,9 +135,9 @@ public class TakeOfferController extends NavigationController implements InitWit
                 });
         tradeAmountSpecPin = EasyBind.subscribe(takeOfferAmountController.getTakersAmountSpec(),
                 takeOfferReviewController::setTradeAmountSpec);
-        methodNamePin = EasyBind.subscribe(takeOfferPaymentController.getSelectedMethodName(),
-                methodName -> {
-                    takeOfferReviewController.setPaymentMethodName(methodName);
+        methodNamePin = EasyBind.subscribe(takeOfferPaymentController.getSelectedFiatPaymentMethod(),
+                fiatPaymentMethod -> {
+                    takeOfferReviewController.setFiatPaymentMethod(fiatPaymentMethod);
                     updateNextButtonDisabledState();
                 });
     }
@@ -233,7 +234,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     private void updateNextButtonDisabledState() {
         if (NavigationTarget.TAKE_OFFER_PAYMENT == model.getNavigationTarget()) {
-            model.getNextButtonDisabled().set(takeOfferPaymentController.getSelectedMethodName().get() == null);
+            model.getNextButtonDisabled().set(takeOfferPaymentController.getSelectedFiatPaymentMethod().get() == null);
         } else {
             model.getNextButtonDisabled().set(false);
         }

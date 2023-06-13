@@ -50,14 +50,14 @@ public abstract class AccountPayload implements Proto {
 
     public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         switch (proto.getMessageCase()) {
-            case USERDEFINEDFIATACCOUNTPAYLOAD: {
-                return UserDefinedFiatAccountPayload.fromProto(proto);
+            case COUNTRYBASEDACCOUNTPAYLOAD: {
+                return CountryBasedAccountPayload.fromProto(proto.getCountryBasedAccountPayload());
             }
             case REVOLUTACCOUNTPAYLOAD: {
                 return RevolutAccountPayload.fromProto(proto);
             }
-            case COUNTRYBASEDACCOUNTPAYLOAD: {
-                return CountryBasedAccountPayload.fromProto(proto.getCountryBasedAccountPayload());
+            case USERDEFINEDFIATACCOUNTPAYLOAD: {
+                return UserDefinedFiatAccountPayload.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

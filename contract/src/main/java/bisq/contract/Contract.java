@@ -17,7 +17,7 @@
 
 package bisq.contract;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.poc.MultiPartyContract;
@@ -30,11 +30,11 @@ import lombok.Getter;
 @Getter
 public abstract class Contract<T extends Offer> implements Proto {
     protected final T offer;
-    protected final ProtocolType protocolType;
+    protected final TradeProtocolType protocolType;
 
     protected transient final Party maker;
 
-    public Contract(T offer, ProtocolType protocolType) {
+    public Contract(T offer, TradeProtocolType protocolType) {
         this.offer = offer;
         this.protocolType = protocolType;
         this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
@@ -43,7 +43,7 @@ public abstract class Contract<T extends Offer> implements Proto {
     public bisq.contract.protobuf.Contract.Builder getContractBuilder() {
         return bisq.contract.protobuf.Contract.newBuilder()
                 .setOffer(offer.toProto())
-                .setProtocolType(protocolType.toProto());
+                .setTradeProtocolType(protocolType.toProto());
     }
 
     public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {

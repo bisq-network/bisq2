@@ -67,6 +67,8 @@ public final class Cookie implements Proto {
     public Optional<String> asString(CookieKey key, @Nullable String subKey) {
         return Optional.ofNullable(map.get(key))
                 .map(stringValue -> {
+
+                    var m = map;
                     if (subKey != null && subKey.equals(key.getSubKey())) {
                         stringValue = stringValue.replace(key.getSubKey(), "");
                     }
@@ -99,7 +101,7 @@ public final class Cookie implements Proto {
     }
 
     void putAsString(CookieKey key, String value) {
-        if (key.isUseSubKey()) {
+        if (key.isUseSubKey() && value != null && !value.isEmpty()) {
             value = key.getSubKey() + value;
         }
         map.put(key, value);

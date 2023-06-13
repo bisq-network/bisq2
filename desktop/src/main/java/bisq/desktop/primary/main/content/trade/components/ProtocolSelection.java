@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade.components;
 
-import bisq.account.protocol_type.BaseProtocolType;
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.ProtocolTypeUtil;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -48,7 +48,7 @@ public class ProtocolSelection {
         controller = new Controller();
     }
 
-    public ReadOnlyObjectProperty<ProtocolType> selectedProtocolType() {
+    public ReadOnlyObjectProperty<TradeProtocolType> selectedProtocolType() {
         return controller.model.selectedProtocolType;
     }
 
@@ -72,12 +72,12 @@ public class ProtocolSelection {
 
         private void setSelectedMarket(Market selectedMarket) {
             if (selectedMarket == null) return;
-            model.fillObservableList(BaseProtocolType.getProtocols(selectedMarket));
+            model.fillObservableList(ProtocolTypeUtil.getProtocols(selectedMarket));
             model.selectedProtocolType.set(null);
             model.selectListItem(null);
         }
 
-        private void onSelectProtocol(ProtocolType value) {
+        private void onSelectProtocol(TradeProtocolType value) {
             model.selectedProtocolType.set(value);
             model.selectListItem(value);
         }
@@ -85,7 +85,7 @@ public class ProtocolSelection {
         @Override
         public void onActivate() {
             if (model.selectedMarket != null) {
-                model.fillObservableList(BaseProtocolType.getProtocols(model.selectedMarket));
+                model.fillObservableList(ProtocolTypeUtil.getProtocols(model.selectedMarket));
             }
         }
 
@@ -95,7 +95,7 @@ public class ProtocolSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<ProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
+        private final ObjectProperty<TradeProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
         private final ObservableList<ListItem> observableList = FXCollections.observableArrayList();
         private final SortedList<ListItem> sortedList = new SortedList<>(observableList);
         private final ObjectProperty<ListItem> selectedProtocolItem = new SimpleObjectProperty<>();
@@ -104,11 +104,11 @@ public class ProtocolSelection {
         private Model() {
         }
 
-        private void fillObservableList(List<ProtocolType> protocols) {
+        private void fillObservableList(List<TradeProtocolType> protocols) {
             observableList.setAll(protocols.stream().map(ListItem::new).collect(Collectors.toList()));
         }
 
-        private void selectListItem(ProtocolType value) {
+        private void selectListItem(TradeProtocolType value) {
             observableList.stream().filter(item -> item.protocolType.equals(value)).findAny()
                     .ifPresent(selectedProtocolItem::set);
         }
@@ -116,10 +116,10 @@ public class ProtocolSelection {
 
     @Getter
     private static class ListItem implements TableItem {
-        private final ProtocolType protocolType;
+        private final TradeProtocolType protocolType;
         private final String protocolName;
 
-        private ListItem(ProtocolType protocolType) {
+        private ListItem(TradeProtocolType protocolType) {
             this.protocolType = protocolType;
             protocolName = Res.get(protocolType.name());
         }

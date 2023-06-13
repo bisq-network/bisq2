@@ -17,7 +17,7 @@
 
 package bisq.protocol.poc;
 
-import bisq.account.protocol_type.ProtocolType;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
@@ -133,7 +133,7 @@ public class PocProtocolService implements MessageListener, PersistenceClient<Po
         }
     }
 
-    public CompletableFuture<TakerPocProtocol<TakerPocProtocolModel>> takeOffer(ProtocolType protocolType,
+    public CompletableFuture<TakerPocProtocol<TakerPocProtocolModel>> takeOffer(TradeProtocolType protocolType,
                                                                                 PocOffer offer,
                                                                                 Monetary baseSideAmount,
                                                                                 Monetary quoteSideAmount,
