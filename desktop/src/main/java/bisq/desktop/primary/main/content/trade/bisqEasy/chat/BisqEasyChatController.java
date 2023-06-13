@@ -156,7 +156,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 applyPeersIcon(privateChannel);
 
                 model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
-                        .map(service -> Res.get("chat.bisqEasy.trade.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
+                        .map(service -> Res.get("bisqEasy.topPane.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
                         .orElse(""));
 
                 //TODO

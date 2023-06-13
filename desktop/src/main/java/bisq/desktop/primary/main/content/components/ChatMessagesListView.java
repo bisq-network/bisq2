@@ -278,9 +278,9 @@ public class ChatMessagesListView {
                         if (authorUserIdentity.equals(userIdentityService.getSelectedUserIdentity())) {
                             doDeleteMessage(chatMessage, authorUserIdentity);
                         } else {
-                            new Popup().information(Res.get("chat.deleteMessage.wrongUserProfile.popup"))
-                                    .closeButtonText(Res.get("no"))
-                                    .actionButtonText(Res.get("yes"))
+                            new Popup().information(Res.get("chat.message.delete.differentUserProfile.warn"))
+                                    .closeButtonText(Res.get("confirmation.no"))
+                                    .actionButtonText(Res.get("confirmation.yes"))
                                     .onAction(() -> {
                                         userIdentityService.selectChatUserIdentity(authorUserIdentity);
                                         doDeleteMessage(chatMessage, authorUserIdentity);
@@ -334,14 +334,14 @@ public class ChatMessagesListView {
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
 
             List<BisqPopupMenuItem> items = new ArrayList<>();
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
+            items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.copyMessage"),
                     () -> onCopyMessage(chatMessage)));
             if (!model.isMyMessage(chatMessage)) {
                 if (chatMessage instanceof PublicChatMessage) {
-                    items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
+                    items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.ignoreUser"),
                             () -> onIgnoreUser(chatMessage)));
                 }
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"),
+                items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.reportUser"),
                         () -> onReportUser(chatMessage)));
             }
 
@@ -404,7 +404,7 @@ public class ChatMessagesListView {
         public String getUserName(String userProfileId) {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
-                    .orElse(Res.get("na"));
+                    .orElse(Res.get("data.na"));
         }
     }
 
@@ -442,7 +442,7 @@ public class ChatMessagesListView {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
+        private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
 
@@ -454,7 +454,7 @@ public class ChatMessagesListView {
             listView = new ListView<>(model.getSortedChatMessages());
             listView.getStyleClass().add("chat-messages-list-view");
 
-            Label placeholder = new Label(Res.get("noData"));
+            Label placeholder = new Label(Res.get("data.noDataAvailable"));
             listView.setPlaceholder(placeholder);
             listView.setCellFactory(getCellFactory());
 
@@ -505,10 +505,10 @@ public class ChatMessagesListView {
                             dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
 
                             reputationScoreDisplay = new ReputationScoreDisplay();
-                            takeOfferButton = new Button(Res.get("takeOffer"));
+                            takeOfferButton = new Button(Res.get("offer.takeOffer"));
                             takeOfferButton.getStyleClass().add("default-button");
 
-                            removeOfferButton = new Button(Res.get("deleteOffer"));
+                            removeOfferButton = new Button(Res.get("offer.deleteOffer"));
                             removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
 
                             // quoted message
@@ -532,9 +532,9 @@ public class ChatMessagesListView {
                             editInputField.setManaged(false);
 
                             // edit buttons
-                            saveEditButton = new Button(Res.get("save"));
+                            saveEditButton = new Button(Res.get("action.save"));
                             saveEditButton.setDefaultButton(true);
-                            cancelEditButton = new Button(Res.get("cancel"));
+                            cancelEditButton = new Button(Res.get("action.cancel"));
 
                             editButtonsHBox = new HBox(15, Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editButtonsHBox.setVisible(false);
@@ -667,7 +667,7 @@ public class ChatMessagesListView {
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(430));
                                         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
 
-                                        Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
+                                        Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
                                         reputationLabel.getStyleClass().add("bisq-text-7");
 
                                         reputationScoreDisplay.applyReputationScore(item.getReputationScore());
@@ -912,7 +912,7 @@ public class ChatMessagesListView {
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             citation = chatMessage.getCitation();
-            date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()), DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("at") + " ");
+            date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()), DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("temporal.at") + " ");
 
             nym = senderUserProfile.map(UserProfile::getNym).orElse("");
             nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");

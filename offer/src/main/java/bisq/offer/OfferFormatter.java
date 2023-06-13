@@ -21,10 +21,10 @@ import bisq.i18n.Res;
 
 public class OfferFormatter {
     public static String getMakersDirectionAsDisplayString(Offer offer) {
-        return Res.get(offer.getDirection().name().toLowerCase()).toUpperCase();
+        return Res.get("offer." + offer.getDirection().name().toLowerCase()).toUpperCase();
     }
 
     public static String getTakersDirectionAsDisplayString(Offer offer) {
-        return Res.get(offer.getTakersDirection().name().toLowerCase()).toUpperCase();
+        return Res.get("offer." + offer.getTakersDirection().name().toLowerCase()).toUpperCase();
     }
 }

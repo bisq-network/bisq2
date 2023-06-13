@@ -69,8 +69,8 @@ public class ConnectionListItem implements TableItem {
         address = connection.getPeerAddress().getFullAddress();
 
         direction = connection.isOutboundConnection() ?
-                Res.get("table.connections.value.outbound") :
-                Res.get("table.connections.value.inbound");
+                Res.get("settings.network.connections.value.outbound") :
+                Res.get("settings.network.connections.value.inbound");
 
         updateSent();
         updateReceived();
@@ -100,13 +100,13 @@ public class ConnectionListItem implements TableItem {
     }
 
     private void updateSent() {
-        sent.set(Res.get("table.connections.value.ioData",
+        sent.set(Res.get("settings.network.connections.value.ioData",
                 StringUtils.fromBytes(metrics.getSentBytes().get()),
                 metrics.getNumMessagesSent().get()));
     }
 
     private void updateReceived() {
-        received.set(Res.get("table.connections.value.ioData",
+        received.set(Res.get("settings.network.connections.value.ioData",
                 StringUtils.fromBytes(metrics.getReceivedBytes().get()),
                 metrics.getNumMessagesReceived().get()));
     }

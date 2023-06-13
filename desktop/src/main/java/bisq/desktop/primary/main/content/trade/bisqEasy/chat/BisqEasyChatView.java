@@ -62,7 +62,7 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyChatModel = model;
 
         offersOnlySwitch = new Switch();
-        offersOnlySwitch.setText(Res.get("bisqEasy.filter.offersOnly"));
+        offersOnlySwitch.setText(Res.get("bisqEasy.topPane.filter.offersOnly"));
 
         centerToolbar.getChildren().add(2, offersOnlySwitch);
     }

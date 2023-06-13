@@ -36,7 +36,7 @@ public class SearchBox extends HBox {
 
         ImageView searchIcon = ImageUtil.getImageViewById("search-white");
         searchField = new TextField();
-        searchField.setPromptText(Res.get("search"));
+        searchField.setPromptText(Res.get("action.search"));
         searchField.getStyleClass().add("small-search-text");
 
         HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));

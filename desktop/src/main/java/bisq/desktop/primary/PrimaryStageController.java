@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.settings.DontShowAgainKey.BISQ_2_INTRO;
+import static bisq.settings.DontShowAgainKey.WELCOME;
 
 /**
  * At start-up we first load the persisted data.
@@ -191,8 +191,8 @@ public class PrimaryStageController extends NavigationController {
         boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
 
         if (!hasUserIdentities) {
-            if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
+            if (DontShowAgainService.showAgain(WELCOME)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
             } else {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
             }

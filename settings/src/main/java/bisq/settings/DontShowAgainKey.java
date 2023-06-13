@@ -22,6 +22,6 @@ package bisq.settings;
  * the entries. We do not persist the key, but use the name of the enum as string for the key.
  */
 public enum DontShowAgainKey {
-    BISQ_2_INTRO,
+    WELCOME,
     BISQ_EASY_INTRO
 }

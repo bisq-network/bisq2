@@ -96,11 +96,11 @@ public abstract class PrivateChannelSelectionMenu<
                         .ifPresent(privateChatChannel -> {
                             String dontShowAgainId = "leavePrivateChannel";
                             if (DontShowAgainService.showAgain(dontShowAgainId)) {
-                                new Popup().warning(Res.get("social.privateChannel.leave.warning",
+                                new Popup().warning(Res.get("bisqEasy.channelSelection.private.leave.warn",
                                                 privateChatChannel.getMyUserIdentity().getUserName()))
                                         .dontShowAgainId(dontShowAgainId)
-                                        .closeButtonText(Res.get("cancel"))
-                                        .actionButtonText(Res.get("social.privateChannel.leave"))
+                                        .closeButtonText(Res.get("action.cancel"))
+                                        .actionButtonText(Res.get("bisqEasy.channelSelection.private.leave"))
                                         .onAction(() -> doLeaveChannel(privateChatChannel))
                                         .show();
                             } else {
@@ -121,7 +121,7 @@ public abstract class PrivateChannelSelectionMenu<
 
         @Override
         protected String getHeadlineText() {
-            return Res.get("social.privateChannels");
+            return Res.get("chat.channelSelection.private.headline");
         }
     }
 }

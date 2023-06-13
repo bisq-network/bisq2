@@ -81,7 +81,7 @@ public class CreateOfferPriceController implements Controller {
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
 
         String marketCodes = model.getMarket().getMarketCodes();
-        priceInput.setDescription(Res.get("onboarding.price.sellersPrice", marketCodes));
+        priceInput.setDescription(Res.get("bisqEasy.price.sellersPrice", marketCodes));
 
         applyPriceSpec();
     }
@@ -102,7 +102,7 @@ public class CreateOfferPriceController implements Controller {
                 priceInput.setQuote(priceQuote);
                 applyPriceSpec();
             } catch (NumberFormatException t) {
-                new Popup().warning(Res.get("onboarding.price.warn.invalidPrice")).show();
+                new Popup().warning(Res.get("bisqEasy.price.warn.invalidPrice")).show();
                 onQuoteInput(priceInput.getQuote().get());
             }
         }
@@ -139,7 +139,7 @@ public class CreateOfferPriceController implements Controller {
             applyPercentageFromQuote(priceQuote);
             applyPriceSpec();
         } else {
-            new Popup().warning(Res.get("onboarding.price.warn.invalidPrice")).show();
+            new Popup().warning(Res.get("bisqEasy.price.warn.invalidPrice")).show();
             PriceQuote marketPrice = findMarketPriceQuote();
             priceInput.setQuote(marketPrice);
             applyPercentageFromQuote(marketPrice);

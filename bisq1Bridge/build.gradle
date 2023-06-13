@@ -16,7 +16,6 @@ run {
 }
 
 dependencies {
-    implementation project(':i18n')
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')

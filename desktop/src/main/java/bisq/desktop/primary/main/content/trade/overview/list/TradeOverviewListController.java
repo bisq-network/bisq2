@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.trade.overview.list;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseController;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewController;
 import lombok.Getter;
 
-public class TradeOverviewListController extends TradeOverviewBaseController<TradeOverviewListModel> {
+public class TradeOverviewListController extends TradeOverviewController<TradeOverviewListModel> {
     @Getter
     private final TradeOverviewListView view;
 
@@ -29,9 +29,5 @@ public class TradeOverviewListController extends TradeOverviewBaseController<Tra
         super(new TradeOverviewListModel());
 
         this.view = new TradeOverviewListView(model, this);
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 }

@@ -44,19 +44,19 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headline = new Label(Res.get("user.password.headline.setPassword"));
+        Label headline = new Label(Res.get("onboarding.password.headline.setPassword"));
         headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         Label subtitleLabel = new Label(Res.get("onboarding.password.subTitle"));
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
+        password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"));
         password.setValidator(new PasswordValidator());
 
-        confirmedPassword = new MaterialPasswordField(Res.get("user.password.confirmPassword"));
+        confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
         confirmedPassword.setValidator(confirmedPasswordValidator);
 
-        setPasswordButton = new Button(Res.get("user.password.button.savePassword"));
+        setPasswordButton = new Button(Res.get("onboarding.password.button.savePassword"));
         setPasswordButton.setDefaultButton(true);
 
         skipButton = new Button(Res.get("onboarding.password.button.skip"));

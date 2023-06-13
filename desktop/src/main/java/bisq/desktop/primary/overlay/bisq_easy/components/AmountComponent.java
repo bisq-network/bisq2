@@ -185,12 +185,12 @@ public class AmountComponent {
                 return;
             }
             model.setDirection(direction);
-            model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("buying") : Res.get("selling"));
+            model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
 
             baseSideAmountInput.setShowEstimationPrefix(direction.isBuy());
             baseSideAmountInput.setUseLowPrecision(direction.isBuy());
-            baseSideAmountInput.setTooltip(direction.isBuy() ? Res.get("bisqEasy.components.smallAmountInput.buyer.tooltip") :
-                    Res.get("bisqEasy.components.smallAmountInput.seller.tooltip"));
+            baseSideAmountInput.setTooltip(direction.isBuy() ? Res.get("bisqEasy.component.amount.baseSide.buyer.tooltip") :
+                    Res.get("bisqEasy.component.amount.baseSide.seller.tooltip"));
         }
 
         private void setMarket(Market market) {
@@ -338,7 +338,7 @@ public class AmountComponent {
                         priceQuote.toBaseSideMonetary(minRangeMonetary);
                 model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
                 if (!model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMinRangeValueAsString().set(Res.get("onboarding.amount.minRangeValue",
+                    model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
                             AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin)));
                 }
             }
@@ -348,7 +348,7 @@ public class AmountComponent {
                         priceQuote.toBaseSideMonetary(maxRangeMonetary);
                 model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
                 if (!model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMaxRangeValueAsString().set(Res.get("onboarding.amount.maxRangeValue",
+                    model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
                             AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin)));
                 }
             }
@@ -359,7 +359,7 @@ public class AmountComponent {
                         priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
                 model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
                 if (model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMinRangeValueAsString().set(Res.get("onboarding.amount.minRangeValue",
+                    model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
                             AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat)));
                 }
             }
@@ -370,7 +370,7 @@ public class AmountComponent {
                         priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
                 model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
                 if (model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMaxRangeValueAsString().set(Res.get("onboarding.amount.maxRangeValue",
+                    model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
                             AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat)));
                 }
             }

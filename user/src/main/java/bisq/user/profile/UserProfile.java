@@ -164,7 +164,7 @@ public final class UserProfile implements DistributedData {
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", nickName, getNym(), getId());
+        return Res.get("user.userProfile.tooltip", nickName, getNym(), getId());
     }
 
     public String getUserName() {

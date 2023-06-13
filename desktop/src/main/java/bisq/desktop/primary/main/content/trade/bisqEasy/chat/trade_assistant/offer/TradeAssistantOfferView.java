@@ -80,7 +80,7 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         // todo
         openTradeGuide = new Hyperlink(Res.get("tradeAssistant.openTradeGuide"));
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));

@@ -203,13 +203,13 @@ public class MediationService implements Service, DataService.Listener, MessageL
             networkService.confidentialSend(new MediationResponse(bisqEasyOffer),
                     receiverNetworkId,
                     myNodeIdAndKeyPair);
-            bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.msgToRequester"));
+            bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
 
             receiverNetworkId = mediationRequest.getPeer().getNetworkId();
             networkService.confidentialSend(new MediationResponse(bisqEasyOffer),
                     receiverNetworkId,
                     myNodeIdAndKeyPair);
-            bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.msgToNonRequester"));
+            bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
         });
     }
 
@@ -218,10 +218,10 @@ public class MediationService implements Service, DataService.Listener, MessageL
                 .ifPresent(channel -> {
                     // Requester had it activated at request time
                     if (channel.isInMediation()) {
-                        bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.msgToRequester"));
+                        bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
                     } else {
                         bisqEasyPrivateTradeChatChannelService.setIsInMediation(channel, true);
-                        bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.msgToNonRequester"));
+                        bisqEasyPrivateTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
 
                         //todo
                         // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages

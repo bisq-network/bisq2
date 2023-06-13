@@ -146,13 +146,13 @@ public class NotificationsSidebar {
 
             root.setSpacing(10);
 
-            Label headline = new Label(Res.get("chat.channel.notificationOptions"));
+            Label headline = new Label(Res.get("chat.sideBar.channelInfo.notification.options"));
             headline.setId("chat-sidebar-title");
 
-            globalDefault = new RadioButton(Res.get("social.channel.notifications.globalDefault"));
-            all = new RadioButton(Res.get("social.channel.notifications.all"));
-            mention = new RadioButton(Res.get("social.channel.notifications.mention"));
-            off = new RadioButton(Res.get("social.channel.notifications.off"));
+            globalDefault = new RadioButton(Res.get("chat.sideBar.channelInfo.notifications.globalDefault"));
+            all = new RadioButton(Res.get("chat.sideBar.channelInfo.notifications.all"));
+            mention = new RadioButton(Res.get("chat.sideBar.channelInfo.notifications.mention"));
+            off = new RadioButton(Res.get("chat.sideBar.channelInfo.notifications.off"));
 
             globalDefault.setToggleGroup(toggleGroup);
             all.setToggleGroup(toggleGroup);

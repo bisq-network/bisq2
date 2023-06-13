@@ -93,7 +93,7 @@ public class FilterBox {
 
             textField = new TextField();
             textField.setId("chat-input-field");
-            textField.setPromptText(Res.get("search"));
+            textField.setPromptText(Res.get("action.search"));
             textField.setMinWidth(100);
             HBox.setHgrow(textField, Priority.ALWAYS);
 

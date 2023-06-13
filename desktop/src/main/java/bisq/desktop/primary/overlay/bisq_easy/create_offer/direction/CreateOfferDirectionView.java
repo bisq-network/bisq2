@@ -54,19 +54,19 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("onboarding.direction.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.direction.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.direction.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.direction.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        Pair<VBox, Button> buyPair = getBoxPair(Res.get("onboarding.direction.buy"), Res.get("onboarding.direction.buy.info"));
+        Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"), Res.get("bisqEasy.createOffer.direction.buy.info"));
         VBox buyBox = buyPair.getFirst();
         buyButton = buyPair.getSecond();
 
-        Pair<VBox, Button> sellPair = getBoxPair(Res.get("onboarding.direction.sell"), Res.get("onboarding.direction.sell.info"));
+        Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"), Res.get("bisqEasy.createOffer.direction.sell.info"));
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
@@ -165,25 +165,25 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         // We don't use setManaged as the transition would not work as expected if set to false
         reputationInfo.setVisible(false);
         reputationInfo.setAlignment(Pos.TOP_CENTER);
-        Label headLineLabel = new Label(Res.get("onboarding.direction.feedback.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.direction.feedback.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
         headLineLabel.setTextAlignment(TextAlignment.CENTER);
         headLineLabel.setAlignment(Pos.CENTER);
         headLineLabel.setMaxWidth(width - 60);
 
-        Label subtitleLabel1 = new Label(Res.get("onboarding.direction.feedback.subTitle1"));
+        Label subtitleLabel1 = new Label(Res.get("bisqEasy.createOffer.direction.feedback.subTitle1"));
         subtitleLabel1.setMaxWidth(width - 60);
         subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        gainReputationHyperlink = new Hyperlink(Res.get("onboarding.direction.feedback.gainReputation"));
+        gainReputationHyperlink = new Hyperlink(Res.get("bisqEasy.createOffer.direction.feedback.gainReputation"));
         gainReputationHyperlink.getStyleClass().addAll("bisq-text-21");
 
-        Label subtitleLabel2 = new Label(Res.get("onboarding.direction.feedback.subTitle2"));
+        Label subtitleLabel2 = new Label(Res.get("bisqEasy.createOffer.direction.feedback.subTitle2"));
         subtitleLabel2.setMaxWidth(width - 60);
         subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        withoutReputationButton = new Button(Res.get("onboarding.direction.feedback.tradeWithoutReputation"));
-        backToBuyButton = new Button(Res.get("onboarding.direction.feedback.backToBuy"));
+        withoutReputationButton = new Button(Res.get("bisqEasy.createOffer.direction.feedback.tradeWithoutReputation"));
+        backToBuyButton = new Button(Res.get("bisqEasy.createOffer.direction.feedback.backToBuy"));
 
         HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
         buttons.setAlignment(Pos.CENTER);

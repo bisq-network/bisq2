@@ -71,7 +71,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Label review = getTopPaneLabel(Res.get("bisqEasy.takeOffer.review"));
+        Label review = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.review"));
         navigationProgressLabelList.add(review);
 
         progressBox = new HBox(10);
@@ -94,13 +94,13 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
                 Spacer.fillHBox(),
                 closeButton);
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         takeOfferButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOffer"));
         takeOfferButton.setDefaultButton(true);
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
         HBox buttons = new HBox(10, backButton, nextButton, takeOfferButton);
         buttons.setAlignment(Pos.CENTER);
 
@@ -139,19 +139,19 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     @Override
     protected void onViewAttached() {
         if (model.isPaymentMethodVisible()) {
-            Label paymentMethod = getTopPaneLabel(Res.get("bisqEasy.takeOffer.method"));
+            Label paymentMethod = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.method"));
             navigationProgressLabelList.add(0, paymentMethod);
             progressBox.getChildren().add(0, getSeparator());
             progressBox.getChildren().add(0, paymentMethod);
         }
         if (model.isAmountVisible()) {
-            Label amount = getTopPaneLabel(Res.get("bisqEasy.takeOffer.amount"));
+            Label amount = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.amount"));
             navigationProgressLabelList.add(0, amount);
             progressBox.getChildren().add(0, getSeparator());
             progressBox.getChildren().add(0, amount);
         }
         if (model.isPriceVisible()) {
-            Label price = getTopPaneLabel(Res.get("bisqEasy.takeOffer.price"));
+            Label price = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.price"));
             navigationProgressLabelList.add(0, price);
             progressBox.getChildren().add(0, getSeparator());
             progressBox.getChildren().add(0, price);

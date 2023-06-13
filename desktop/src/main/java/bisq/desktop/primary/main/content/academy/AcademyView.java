@@ -36,7 +36,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         super(new VBox(10), model, controller);
 
         String key = getKey();
-        headline = new MultiLineLabel(Res.get("academy." + key));
+        headline = new MultiLineLabel(Res.get("academy.overview." + key));
         headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
         headline.getStyleClass().addAll("font-size-20", "font-light");
         headline.setGraphicTextGap(10);
@@ -62,7 +62,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         content.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         content.setWrapText(true);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));

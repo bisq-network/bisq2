@@ -54,12 +54,12 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
                 getField("ageScore"),
                 getField("totalScore"));
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
@@ -84,11 +84,11 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
     }
 
     private MaterialTextField getField(String key) {
-        return getField(key, Res.get("reputation.burnedBsq." + key));
+        return getField(key, Res.get("user.reputation.burnedBsq." + key));
     }
 
     private MaterialTextField getField(String key, String value) {
-        MaterialTextField field = new MaterialTextField(Res.get("reputation." + key));
+        MaterialTextField field = new MaterialTextField(Res.get("user.reputation." + key));
         field.setEditable(false);
         field.setText(value);
         field.setMaxWidth(400);

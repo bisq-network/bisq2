@@ -48,7 +48,7 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        String role = Res.get("roles.type." + model.getRoleType().name() + ".inline");
+        String role = Res.get("user.roles.type." + model.getRoleType().name() + ".inline");
         info = new MultiLineLabel(Res.get("user.roles.registration.info", role, role));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
@@ -66,7 +66,7 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         copyButton = new Button(Res.get("user.roles.registration.copyPubKey"));
         copyButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, removeRegistrationButton, copyButton);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

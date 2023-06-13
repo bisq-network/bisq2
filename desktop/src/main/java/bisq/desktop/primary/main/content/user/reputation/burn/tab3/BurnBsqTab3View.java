@@ -60,14 +60,14 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         pubKeyHash = new MaterialTextField(Res.get("user.reputation.pubKeyHash"), "");
         pubKeyHash.setEditable(false);
         pubKeyHash.setIcon(AwesomeIcon.COPY);
-        pubKeyHash.setIconTooltip(Res.get("copyToClipboard"));
+        pubKeyHash.setIconTooltip(Res.get("action.copyToClipboard"));
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
 
-        closeButton = new Button(Res.get("close"));
+        closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

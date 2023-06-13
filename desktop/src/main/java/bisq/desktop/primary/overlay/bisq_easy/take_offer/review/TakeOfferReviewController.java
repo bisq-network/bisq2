@@ -102,7 +102,7 @@ public class TakeOfferReviewController implements Controller {
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
                     .map(PriceFormatter::formatWithCode)
-                    .orElse(Res.get("na")));
+                    .orElse(Res.get("data.na")));
             applySellersPriceDetails();
         }
     }
@@ -117,7 +117,7 @@ public class TakeOfferReviewController implements Controller {
             sellersQuote.ifPresent(priceInput::setQuote);
             model.getSellersPrice().set(sellersQuote
                     .map(PriceFormatter::formatWithCode)
-                    .orElse(Res.get("na")));
+                    .orElse(Res.get("data.na")));
             applySellersPriceDetails();
         }
     }
@@ -132,7 +132,7 @@ public class TakeOfferReviewController implements Controller {
         if (fiatPaymentMethod != null) {
             model.getFiatPaymentMethodDisplayString().set(fiatPaymentMethod.getDisplayString());
 
-            String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("buying").toUpperCase() : Res.get("selling").toUpperCase();
+            String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("offer.buying").toUpperCase() : Res.get("offer.selling").toUpperCase();
             model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getFiatPaymentMethodDisplayString().get().toUpperCase()));
             model.getMethod().set(model.getFiatPaymentMethodDisplayString().get());
         }
@@ -165,10 +165,10 @@ public class TakeOfferReviewController implements Controller {
         Market market = model.getBisqEasyOffer().getMarket();
 
         Optional<Monetary> quoteAmount = AmountUtil.findQuoteSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
-        String formattedQuoteAmount = quoteAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
+        String formattedQuoteAmount = quoteAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("data.na"));
 
         Optional<Monetary> baseAmount = AmountUtil.findBaseSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
-        String formattedBaseAmount = baseAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("na"));
+        String formattedBaseAmount = baseAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("data.na"));
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 
         Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
@@ -186,7 +186,7 @@ public class TakeOfferReviewController implements Controller {
             sellersPremium = AmountFormatter.formatAmountWithCode(quoteSidePremiumAsMonetary) + " / " +
                     AmountFormatter.formatAmountWithCode(baseSidePremiumAsMonetary, false);
         } else {
-            sellersPremium = Res.get("na");
+            sellersPremium = Res.get("data.na");
         }
         model.getSellersPremium().set(sellersPremium);
     }
@@ -212,7 +212,7 @@ public class TakeOfferReviewController implements Controller {
                 .map(MarketPrice::getPriceQuote);
         String marketPrice = marketPriceQuote
                 .map(PriceFormatter::formatWithCode)
-                .orElse(Res.get("na"));
+                .orElse(Res.get("data.na"));
         Optional<Double> percentFromMarketPrice;
         percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, model.getSellersPriceSpec(), market);
         double percent = percentFromMarketPrice.orElse(0d);
@@ -221,10 +221,10 @@ public class TakeOfferReviewController implements Controller {
             details = Res.get("bisqEasy.takeOffer.review.sellersPrice.marketPrice", marketPrice);
         } else {
             String aboveOrBelow = percent > 0 ?
-                    Res.get("above") :
-                    Res.get("below");
+                    Res.get("offer.price.above") :
+                    Res.get("offer.price.below");
             String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
-                    .orElse(Res.get("na"));
+                    .orElse(Res.get("data.na"));
             details = Res.get("bisqEasy.takeOffer.review.sellersPrice.aboveOrBelowMarketPrice",
                     percentAsString, aboveOrBelow, marketPrice);
         }

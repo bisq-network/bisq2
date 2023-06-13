@@ -180,7 +180,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
         @Override
         protected String getHeadlineText() {
-            return Res.get("chat.privateTradeChannels");
+            return Res.get("bisqEasy.channelSelection.private.headline");
         }
 
         protected ListCell<ChannelItem> getListCell() {
@@ -297,7 +297,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                                     UserProfile mediator = privateChatChannel.getMediator().get();
                                     secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
                                     tooltip.setText(peer.getTooltipString() + "\n\n" +
-                                            Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                                            Res.get("bisqEasy.mediator") + ":\n" + mediator.getTooltipString());
                                 }
                                 hBox.getChildren().add(secondaryRoboIcon);
                                 icons.add(secondaryRoboIcon);

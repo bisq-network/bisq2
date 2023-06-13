@@ -21,19 +21,30 @@ import bisq.common.application.DevMode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.util.*;
 
 @Slf4j
 public class Res {
     private static ResourceBundle defaultBundle;
+    private static final List<ResourceBundle> bundles = new ArrayList<>();
 
     public static void setLocale(Locale locale) {
         if ("en".equalsIgnoreCase(locale.getLanguage())) {
             locale = Locale.ROOT;
         }
         defaultBundle = ResourceBundle.getBundle("default", locale);
+        bundles.addAll(List.of(defaultBundle,
+                ResourceBundle.getBundle("application", locale),
+                ResourceBundle.getBundle("payment_method", locale),
+                ResourceBundle.getBundle("wallet", locale),
+                ResourceBundle.getBundle("chat", locale),
+                ResourceBundle.getBundle("trade_apps", locale),
+                ResourceBundle.getBundle("bisq_easy", locale),
+                ResourceBundle.getBundle("academy", locale),
+                ResourceBundle.getBundle("user", locale),
+                ResourceBundle.getBundle("settings", locale),
+                ResourceBundle.getBundle("temp_poc", locale)    // used by poc code, will get removed at some point
+        ));
     }
 
     public static String get(String key, Object... arguments) {
@@ -42,17 +53,21 @@ public class Res {
 
     public static String get(String key) {
         try {
-            if (defaultBundle.containsKey(key)) {
-                return defaultBundle.getString(key);
-            } else if (DevMode.isDevMode()) {
-                log.error("Missing resource for key: {}", key);
-                return "MISSING: " + key;
-            } else {
-                return "[" + key + "]";
-            }
+            return bundles.stream()
+                    .filter(bundle -> bundle.containsKey(key))
+                    .map(bundle -> bundle.getString(key))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        if (DevMode.isDevMode()) {
+                            log.error("Missing resource for key: {}", key);
+                            return "MISSING: " + key;
+                        } else {
+                            return "[" + key + "!]";
+                        }
+                    });
         } catch (MissingResourceException e) {
             log.warn("Missing resource for key: " + key, e);
-            return key;
+            return "[" + key + "!!!]";
         }
     }
 

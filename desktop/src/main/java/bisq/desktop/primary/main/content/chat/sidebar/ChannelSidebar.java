@@ -256,7 +256,7 @@ public class ChannelSidebar {
             descriptionText = new Text();
             descriptionText.setId("chat-sidebar-text");
 
-            Label participantsLabel = new Label(Res.get("social.channel.settings.participants"));
+            Label participantsLabel = new Label(Res.get("chat.sideBar.channelInfo.participants"));
             participantsLabel.setId("chat-sidebar-title");
 
             participants = new ListView<>(model.getSortedListParticipantList());
@@ -299,7 +299,7 @@ public class ChannelSidebar {
                     return new ListCell<>() {
                         Pane chatUser;
                         private ImageView roboIcon;
-                        final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("social.undoIgnore"));
+                        final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
                         final HBox hBox = new HBox();
 
                         {

@@ -56,7 +56,7 @@ public class ChatNotification<T extends ChatMessage> implements Comparable<ChatN
         }
         message = chatMessage.getText();
 
-        userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("na"));
+        userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
     }
 
     @Override

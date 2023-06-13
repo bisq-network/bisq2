@@ -46,12 +46,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Notifications
-        Label notificationsHeadline = new Label(Res.get("chat.channel.notificationOptions"));
+        Label notificationsHeadline = new Label(Res.get("settings.preferences.notificationOptions"));
         notificationsHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
-        all = new RadioButton(Res.get("social.channel.notifications.all"));
-        mention = new RadioButton(Res.get("social.channel.notifications.mention"));
-        off = new RadioButton(Res.get("social.channel.notifications.off"));
+        all = new RadioButton(Res.get("settings.preferences.notifications.all"));
+        mention = new RadioButton(Res.get("settings.preferences.notifications.mention"));
+        off = new RadioButton(Res.get("settings.preferences.notifications.off"));
 
         all.setToggleGroup(notificationsToggleGroup);
         mention.setToggleGroup(notificationsToggleGroup);

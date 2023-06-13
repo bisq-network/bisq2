@@ -21,8 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.user.user_profile.create.step1.GenerateNewProfileStep1Controller;
-import bisq.desktop.primary.main.content.user.user_profile.create.step2.GenerateNewProfileStep2Controller;
+import bisq.desktop.primary.main.content.user.user_profile.create.step1.CreateNewProfileStep1Controller;
+import bisq.desktop.primary.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -62,10 +62,10 @@ public class CreateUserProfileController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CREATE_PROFILE_STEP1: {
-                return Optional.of(new GenerateNewProfileStep1Controller(applicationService));
+                return Optional.of(new CreateNewProfileStep1Controller(applicationService));
             }
             case CREATE_PROFILE_STEP2: {
-                return Optional.of(new GenerateNewProfileStep2Controller(applicationService));
+                return Optional.of(new CreateNewProfileStep2Controller(applicationService));
             }
             default: {
                 return Optional.empty();

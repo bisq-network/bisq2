@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade.overview.list;
 
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseModel;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewModel;
 
-public class TradeOverviewListModel extends TradeOverviewBaseModel {
+public class TradeOverviewListModel extends TradeOverviewModel {
 
 }

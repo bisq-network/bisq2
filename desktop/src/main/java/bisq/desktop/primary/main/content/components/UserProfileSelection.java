@@ -131,7 +131,7 @@ public class UserProfileSelection {
         private View(Model model, Controller controller) {
             super(new Pane(), model, controller);
 
-            comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
+            comboBox = new UserProfileComboBox(model.userProfiles, Res.get("user.userProfile.comboBox.description"));
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
             root.getChildren().setAll(comboBox);
         }
@@ -173,7 +173,7 @@ public class UserProfileSelection {
 
         @Override
         public String toString() {
-            return userIdentity.getUserName();
+            return userIdentity != null ? userIdentity.getUserName() : "";
         }
     }
 

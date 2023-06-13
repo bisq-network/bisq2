@@ -31,7 +31,7 @@ public class OfferPriceFormatter {
     }
 
     public static String formatQuote(MarketPriceService marketPriceService, Offer offer, boolean showCode) {
-        return PriceUtil.findQuote(marketPriceService, offer).map(getFormatFunction(showCode)).orElse(Res.get("na"));
+        return PriceUtil.findQuote(marketPriceService, offer).map(getFormatFunction(showCode)).orElse(Res.get("data.na"));
     }
 
     private static Function<PriceQuote, String> getFormatFunction(boolean showCode) {

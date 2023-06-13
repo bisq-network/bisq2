@@ -51,9 +51,9 @@ public class TradeAssistantNegotiationView extends View<VBox, TradeAssistantNego
         content = new Text(Res.get("tradeAssistant.negotiation.content"));
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("action.back"));
         HBox buttons = new HBox(10, backButton, nextButton);
 
         openTradeGuide = new Hyperlink(Res.get("tradeAssistant.openTradeGuide"));

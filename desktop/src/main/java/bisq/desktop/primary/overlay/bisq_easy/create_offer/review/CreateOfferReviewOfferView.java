@@ -107,7 +107,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
         createOfferText.setWrapText(true);
         createOfferText.setId("chat-messages-message");
 
-        createOfferButton = new Button(Res.get("createOffer"));
+        createOfferButton = new Button(Res.get("offer.createOffer"));
         createOfferButton.setDefaultButton(true);
         createOfferButton.setMinWidth(BUTTON_WIDTH);
         createOfferButton.setMaxWidth(BUTTON_WIDTH);
@@ -120,7 +120,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
         // margin is set in onViewAttached
         content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, createOfferLabel, createOfferHBox, Spacer.fillVBox());
 
-        viewOfferButton = new Button(Res.get("onboarding.completed.createOfferSuccess.viewOffer"));
+        viewOfferButton = new Button(Res.get("bisqEasy.createOffer.review.createOfferSuccess.viewOffer"));
         createOfferSuccess = new VBox(20);
         configCreateOfferSuccess();
 
@@ -137,8 +137,8 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
 
         createOfferText.setText(model.getMyOfferText());
         subtitleLabel.setText(model.isShowMatchingOffers() ?
-                Res.get("onboarding.completed.noMatchingOffers") :
-                Res.get("onboarding.completed.createOfferMode")
+                Res.get("bisqEasy.createOffer.review.noMatchingOffers") :
+                Res.get("bisqEasy.createOffer.review.createOfferMode")
         );
 
         matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersVisible(), matchingOffersVisible -> {
@@ -155,8 +155,8 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 maybeConfigTableView();
                 createOfferHBox.setMinWidth(tableView.getMaxWidth());
                 createOfferHBox.setMaxWidth(tableView.getMaxWidth());
-                headLineLabel.setText(Res.get("onboarding.completed.headline.takeOffer"));
-                createOfferLabel.setText(Res.get("onboarding.completed.headLine2.createOffer"));
+                headLineLabel.setText(Res.get("bisqEasy.createOffer.review.headline.takeOffer"));
+                createOfferLabel.setText(Res.get("bisqEasy.createOffer.review.headLine2.createOffer"));
 
                 int numMatchingOffers = model.getMatchingOffers().size();
                 if (numMatchingOffers > 0) {
@@ -188,7 +188,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 createOfferButton.getStyleClass().remove("outlined-button");
                 createOfferHBox.setMinWidth(OFFER_BOX_WIDTH);
                 createOfferHBox.setMaxWidth(createOfferHBox.getMinWidth());
-                headLineLabel.setText(Res.get("createOffer"));
+                headLineLabel.setText(Res.get("offer.createOffer"));
 
                 VBox.setMargin(headLineLabel, new Insets(-100, 0, 0, 0));
                 VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
@@ -219,8 +219,8 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
             return;
         }
         String peer = model.getDirection() == Direction.BUY ?
-                Res.get("seller") :
-                Res.get("buyer");
+                Res.get("offer.seller") :
+                Res.get("offer.buyer");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(peer)
                 .isFirst()
@@ -257,21 +257,21 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("onboarding.completed.table.amount", model.getMarket().getQuoteCurrencyCode()))
+                .title(Res.get("bisqEasy.createOffer.review.table.amount", model.getMarket().getQuoteCurrencyCode()))
                 .minWidth(160)
                 .valueSupplier(ListItem::getAmountDisplayString)
                 .comparator(Comparator.comparing(ListItem::getAmountAsLong))
                 .build());
         if (model.getDirection().isBuy()) {
             tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                    .title(Res.get("onboarding.completed.table.price", model.getMarket().getMarketCodes()))
+                    .title(Res.get("bisqEasy.createOffer.review.table.price", model.getMarket().getMarketCodes()))
                     .minWidth(160)
                     .valueSupplier(ListItem::getPriceDisplayString)
                     .comparator(Comparator.comparing(ListItem::getPriceAsLong))
                     .build());
         }
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("reputation"))
+                .title(Res.get("bisqEasy.createOffer.review.table.reputation"))
                 .minWidth(120)
                 .setCellFactory(new Callback<>() {
                     @Override
@@ -296,7 +296,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 .build());
         BisqTableColumn<ListItem> takeOffer = new BisqTableColumn.Builder<ListItem>()
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
-                .value(Res.get("takeOffer"))
+                .value(Res.get("offer.takeOffer"))
                 .minWidth(150)
                 .actionHandler(controller::onTakeOffer)
                 .updateItemWithButtonHandler((item, button) -> {
@@ -316,10 +316,10 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
         createOfferSuccess.setVisible(false);
         createOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.review.createOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.review.createOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
         viewOfferButton.setDefaultButton(true);

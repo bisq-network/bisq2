@@ -17,20 +17,10 @@
 
 package bisq.user.reputation;
 
-import bisq.i18n.Res;
-import lombok.Getter;
-
 public enum ReputationSource {
-    BURNED_BSQ(Res.get("user.reputation.source.BURNED_BSQ")),
-    BSQ_BOND(Res.get("user.reputation.source.BSQ_BOND")),
-    PROFILE_AGE(Res.get("user.reputation.source.PROFILE_AGE")),
-    BISQ1_ACCOUNT_AGE(Res.get("user.reputation.source.BISQ1_ACCOUNT_AGE")),
-    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS(Res.get("user.reputation.source.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS"));
-
-    @Getter
-    private final String displayString;
-
-    ReputationSource(String displayString) {
-        this.displayString = displayString;
-    }
+    BURNED_BSQ,
+    BSQ_BOND,
+    PROFILE_AGE,
+    BISQ1_ACCOUNT_AGE,
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS
 }

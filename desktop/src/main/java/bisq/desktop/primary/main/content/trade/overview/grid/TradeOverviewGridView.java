@@ -22,7 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewView;
 import bisq.i18n.Res;
 import bisq.protocol.TradeProtocolDescription;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -38,7 +38,7 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
+public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
     private static final int VERTICAL_MARGIN = 30;
 
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
@@ -92,7 +92,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         gridPane.add(headlineLabel, 0, rowIndex, 2, 1);
 
         if (protocol.getSwapProtocolType() != TradeProtocolDescription.Type.BISQ_EASY) {
-            Label label = new Label(Res.get("trade.protocols.comingSoon"));
+            Label label = new Label(Res.get("tradeApps.comingSoon"));
             label.setOpacity(0.1);
             GridPane.setHalignment(label, HPos.RIGHT);
             GridPane.setMargin(label, new Insets(-14, 0, 0, 0));
@@ -111,26 +111,26 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         GridPane.setMargin(separator, new Insets(5, 0, 15, 0));
         gridPane.add(separator, 0, ++rowIndex, 3, 1);
 
-        VBox markets = getParameterPane(Res.get("markets"), protocol.getMarkets());
+        VBox markets = getParameterPane(Res.get("tradeApps.markets"), protocol.getMarkets());
         gridPane.add(markets, 0, ++rowIndex);
 
         if (!protocol.getReleaseDate().isEmpty()) {
-            VBox release = getParameterPane(Res.get("trade.protocols.table.header.release"), protocol.getReleaseDate());
+            VBox release = getParameterPane(Res.get("tradeApps.release"), protocol.getReleaseDate());
             gridPane.add(release, 1, rowIndex);
         }
 
-        VBox security = getParameterPane(Res.get("trade.protocols.table.header.security"),
+        VBox security = getParameterPane(Res.get("tradeApps.security"),
                 protocol.getSwapProtocolType().getSecurity().ordinal(), protocol.getSecurityInfo()
         );
         gridPane.add(security, 0, ++rowIndex);
 
-        VBox privacy = getParameterPane(Res.get("trade.protocols.table.header.privacy"),
+        VBox privacy = getParameterPane(Res.get("tradeApps.privacy"),
                 protocol.getSwapProtocolType().getPrivacy().ordinal(),
                 protocol.getPrivacyInfo()
         );
         gridPane.add(privacy, 1, rowIndex);
 
-        VBox convenience = getParameterPane(Res.get("trade.protocols.table.header.convenience"),
+        VBox convenience = getParameterPane(Res.get("tradeApps.convenience"),
                 protocol.getSwapProtocolType().getConvenience().ordinal(),
                 protocol.getConvenienceInfo()
         );
@@ -141,10 +141,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         button.getStyleClass().add("medium-large-button");
         button.setOnAction(e -> controller.onSelect(protocol));
         if (protocol.getSwapProtocolType() == TradeProtocolDescription.Type.BISQ_EASY) {
-            button.setText(Res.get("select"));
+            button.setText(Res.get("tradeApps.select"));
             button.setDefaultButton(true);
         } else {
-            button.setText(Res.get("learnMore"));
+            button.setText(Res.get("action.learnMore"));
             button.getStyleClass().addAll("outlined-button", "grey-outlined-button");
         }
         GridPane.setMargin(button, new Insets(20, 0, 5, 0));

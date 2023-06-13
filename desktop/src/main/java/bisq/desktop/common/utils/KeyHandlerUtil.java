@@ -50,7 +50,7 @@ public class KeyHandlerUtil {
     public static void handleDevModeKeyEvent(KeyEvent keyEvent) {
         if (DevMode.isDevMode()) {
             if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT0, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
