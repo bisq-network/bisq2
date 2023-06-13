@@ -1,0 +1,244 @@
+/*******************************************************************************
+ *                                                                             *
+ * Trade state phase                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-easy-trade-state-headline {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.8em;
+}
+
+.bisq-easy-trade-state-sub-headline {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 1.5em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-info-text {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 1.1em;
+}
+
+.bisq-easy-trade-state-box {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4 4 0 0;
+}
+
+.bisq-easy-trade-state {
+    -fx-font-size: 0.93em;
+}
+
+.bisq-easy-trade-state-inactive {
+    -fx-text-fill: -bisq-grey-22;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-active {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+
+/*******************************************************************************
+ * Trade state phase index badge                                                                 *
+ ******************************************************************************/
+
+.bisq-easy-trade-state-badge {
+    -fx-padding: 0 0 0 0;
+}
+
+.bisq-easy-trade-state-badge .badge-pane {
+    -fx-background-radius: 25;
+    -fx-pref-width: 25;
+    -fx-pref-height: 25;
+}
+
+.bisq-easy-trade-state-badge .badge-pane .label {
+    -fx-font-size: 0.93em;
+    -fx-text-fill: -bisq-white !important;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+
+.bisq-easy-trade-state-badge-inactive .badge-pane {
+    -fx-background-color: -bisq-grey-disabled;
+}
+
+.bisq-easy-trade-state-badge-active .badge-pane {
+    -fx-background-color: -bisq-green;
+}
+
+
+/*******************************************************************************
+ * Bisq domain specific                                                   *
+ ******************************************************************************/
+
+/*******************************************************************************
+ *                                                                             *
+ * Create offer                                                         *
+ *                                                                             *
+ ******************************************************************************/
+
+.table-view.offer-review .column-header {
+    -fx-pref-height: 40px;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-weight: normal;
+}
+
+.table-view.offer-review .table-row-cell {
+    -fx-pref-height: 55px;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 1.1em;
+}
+
+.table-view.create-offer-table-view .column-header {
+    -fx-pref-height: 40px;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-weight: normal;
+}
+
+.table-view.create-offer-table-view .table-row-cell {
+    -fx-pref-height: 50px;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 1.1em;
+}
+
+.table-view.create-offer-table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-darker-grey;
+    -fx-border-color: transparent;
+}
+
+.table-view.create-offer-table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-green;
+    -fx-border-color: transparent;
+}
+
+
+/* the text property from list view need to set to apply the color to the button label */
+.onboarding-market-table-toggle-button .text {
+    -fx-fill: -fx-light-text-color !important;
+}
+
+.onboarding-market-table-toggle-button:hover .text {
+    -fx-fill: -bisq-black !important;
+}
+
+.onboarding-market-table-toggle-button:selected:hover .text {
+    -fx-fill: -fx-light-text-color !important;
+}
+
+.small-search-text {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+    -fx-font-size: 1em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.small-search-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Trade domain                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-amount-input-code-label {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.table-view.trade-overview-table-view .column-header {
+    -fx-pref-height: 68px;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-color: -bisq-dark-grey;
+}
+
+.table-view.trade-overview-table-view .column-header .label {
+    -fx-font-weight: normal;
+}
+
+.table-view.trade-overview-table-view .table-row-cell {
+    -fx-pref-height: 68px;
+    -fx-border-width: 0 0 0 0;
+    -fx-font-size: 1.1em;
+}
+
+.table-view.trade-overview-table-view .table-row-cell .table-cell {
+    -fx-background-color: -bisq-content-bg-grey;
+}
+
+.table-view.trade-overview-table-view .button {
+    -fx-padding: 6 20 6 20;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * PaymentMethod domain                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.payment-methods-icon-button-bg {
+    -fx-background-color: #eee;
+    -fx-background-radius: 7;
+}
+
+.payment-methods-label {
+    -fx-text-fill: #222;
+    -fx-padding: 5 4 5 10
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Misc                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+
+#bisq-easy-onboarding-headline-label {
+    -fx-font-size: 2.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
+#bisq-easy-onboarding-label {
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+
+#bisq-easy-next-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 4;
+    -fx-border-color: -bisq-grey-22;
+    -fx-border-width: 0.75;
+    -fx-border-radius: 2.5;
+    -fx-text-fill: -bisq-white;
+}
+
+#bisq-easy-skip-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+#bisq-easy-trade-info-headline-label {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+#bisq-easy-trade-info-content-label {
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -fx-light-text-color;
+}

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.details;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
@@ -37,44 +37,46 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 
 @Slf4j
-public class TradeAssistantOfferController implements Controller {
+public class TradeDetailsController implements Controller {
     @Getter
-    private final TradeAssistantOfferView view;
-    private final TradeAssistantOfferModel model;
+    private final TradeDetailsView view;
+    private final TradeDetailsModel model;
     private final KeyPairService keyPairService;
     private final Consumer<UserProfile> openUserProfileSidebarHandler;
     private final MarketPriceService marketPriceService;
 
-    public TradeAssistantOfferController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
+    public TradeDetailsController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         keyPairService = applicationService.getSecurityService().getKeyPairService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
 
-        model = new TradeAssistantOfferModel();
-        view = new TradeAssistantOfferView(model, this);
+        model = new TradeDetailsModel();
+        view = new TradeDetailsView(model, this);
     }
 
-    public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
-        BisqEasyOffer bisqEasyOffer = privateChannel.getBisqEasyOffer();
+    public void selectChannel(BisqEasyPrivateTradeChatChannel channel) {
+        BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         model.setBisqEasyOffer(bisqEasyOffer);
+
+        UserProfile peersUserProfile = channel.getPeer();
+        model.setPeersUserProfile(peersUserProfile);
+
         String makersDirection = OfferFormatter.getMakersDirectionAsDisplayString(bisqEasyOffer);
         String takersDirection = OfferFormatter.getTakersDirectionAsDisplayString(bisqEasyOffer);
 
-        UserProfile peersUserProfile = privateChannel.getPeer();
-        model.setPeersUserProfile(peersUserProfile);
         String peersUserName = peersUserProfile.getUserName();
         if (isMyOffer(bisqEasyOffer)) {
-            model.getHeadline().set(Res.get("tradeAssistant.offer.maker.headline", makersDirection, peersUserName));
-            model.getOfferTitle().set(Res.get("tradeAssistant.offer.maker.offerTitle"));
+            model.getHeadline().set(Res.get("bisqEasy.assistant.tradeDetails.maker.headline", makersDirection, peersUserName));
+            model.getOfferTitle().set(Res.get("bisqEasy.assistant.tradeDetails.maker.offerTitle"));
         } else {
-            model.getHeadline().set(Res.get("tradeAssistant.offer.taker.headline", peersUserName, takersDirection));
-            model.getOfferTitle().set(Res.get("tradeAssistant.offer.taker.offerTitle", peersUserName));
+            model.getHeadline().set(Res.get("bisqEasy.assistant.tradeDetails.taker.headline", peersUserName, takersDirection));
+            model.getOfferTitle().set(Res.get("bisqEasy.assistant.tradeDetails.taker.offerTitle", peersUserName));
         }
 
         model.getAmount().set(OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer));
         model.getPaymentMethods().set(PaymentMethodSpecFormatter.paymentMethodSpecsToCommaSeparatedString(bisqEasyOffer.getQuoteSidePaymentMethodSpecs()));
 
-        model.getOpenUserProfileButtonLabel().set(Res.get("tradeAssistant.offer.peer.openUserProfile", peersUserName));
+        model.getOpenUserProfileButtonLabel().set(Res.get("bisqEasy.assistant.tradeDetails.peer.openUserProfile", peersUserName));
     }
 
     @Override
@@ -85,8 +87,8 @@ public class TradeAssistantOfferController implements Controller {
     public void onDeactivate() {
     }
 
-    void onNext() {
-        Navigation.navigateTo(NavigationTarget.TRADE_ASSISTANT_NEGOTIATION);
+    void onBack() {
+        Navigation.navigateTo(NavigationTarget.TRADE_STATE);
     }
 
     void onOpenOfferDetails() {

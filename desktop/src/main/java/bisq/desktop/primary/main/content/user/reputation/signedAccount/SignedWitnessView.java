@@ -50,7 +50,7 @@ public class SignedWitnessView extends TabView<SignedWitnessModel, SignedWitness
 
         VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
 
-        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
+        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("user.reputation.signedWitness.tab1"),
                 NavigationTarget.SIGNED_WITNESS_TAB_1,
                 styles);

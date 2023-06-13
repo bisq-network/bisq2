@@ -15,48 +15,69 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.trade;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.state;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
-import javafx.application.Platform;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeAssistantTradeController implements Controller {
+public class TradeStateController implements Controller {
     @Getter
-    private final TradeAssistantTradeView view;
-    private final TradeAssistantTradeModel model;
-    private final DefaultApplicationService applicationService;
+    private final TradeStateView view;
+    private final TradeStateModel model;
+    private final UserIdentityService userIdentityService;
 
-    public TradeAssistantTradeController(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
-        model = new TradeAssistantTradeModel();
-        view = new TradeAssistantTradeView(model, this);
+    public TradeStateController(DefaultApplicationService applicationService) {
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
+
+        model = new TradeStateModel();
+        view = new TradeStateView(model, this);
     }
 
-    public void setBisqEasyPrivateTradeChatChannel(BisqEasyPrivateTradeChatChannel privateChannel) {
+    public void selectChannel(BisqEasyPrivateTradeChatChannel channel) {
+        BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
+        model.setBisqEasyOffer(bisqEasyOffer);
+
+        boolean isBuyer = bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds()) ?
+                bisqEasyOffer.getMakersDirection().isBuy() :
+                bisqEasyOffer.getTakersDirection().isBuy();
+
+        model.getPhase2().set(isBuyer ? Res.get("bisqEasy.assistant.tradeState.phase.buyer.phase2").toUpperCase() :
+                Res.get("bisqEasy.assistant.tradeState.phase.seller.phase2").toUpperCase());
+        model.getPhase3().set(isBuyer ? Res.get("bisqEasy.assistant.tradeState.phase.buyer.phase3").toUpperCase() :
+                Res.get("bisqEasy.assistant.tradeState.phase.seller.phase3").toUpperCase());
+
+        model.getActionButtonVisible().set(true);
+        model.getOpenDisputeButtonVisible().set(true);
+        model.getActionButtonText().set(isBuyer ?
+                Res.get("bisqEasy.assistant.tradeState.actionButton.sendBitcoinAddress") :
+                Res.get("bisqEasy.assistant.tradeState.actionButton.sendFiatAccountData")
+        );
+        model.getActivePhaseIndex().set(2);
     }
 
     @Override
     public void onActivate() {
+
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    void onBack() {
-        Navigation.navigateTo(NavigationTarget.TRADE_ASSISTANT_NEGOTIATION);
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.TRADE_DETAILS);
     }
 
-    void onConfirm() {
+    void onAction() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             model.getCurrentIndex().set(nextIndex);
@@ -65,6 +86,10 @@ public class TradeAssistantTradeController implements Controller {
             Navigation.navigateTo(nextTarget);
             updateConfirmButtonText();
         }
+    }
+
+    void onOpenTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
     }
 
     void onOpenDispute() {
@@ -78,27 +103,6 @@ public class TradeAssistantTradeController implements Controller {
         }
     }
 
-    void onClose() {
-        Navigation.navigateTo(NavigationTarget.MAIN);
-        OverlayController.hide();
-        reset();
-    }
-
-    void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
-    }
-
-    private void reset() {
-     /*   resetSelectedChildTarget();
-
-        directionController.reset();
-        marketController.reset();
-        amountController.reset();
-        paymentMethodController.reset();
-        reviewOfferController.reset();
-
-        model.reset();*/
-    }
 
     private void updateConfirmButtonText() {
 
@@ -110,7 +114,7 @@ public class TradeAssistantTradeController implements Controller {
 
         //model.getBisqEasyTrade().getBaseSideAmount()
         String text = Res.get("tradeAssistant.phase.negotiation.confirmed");
-        model.getConfirmButtonText().set(text);
+        model.getActionButtonText().set(text);
                 
        /* if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
@@ -121,13 +125,5 @@ public class TradeAssistantTradeController implements Controller {
         }*/
     }
 
-    private void setButtonsVisible(boolean value) {
-       /* model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
-        model.getCloseButtonVisible().set(value);*/
-    }
 
-    void onOpenTradeGuide() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
-    }
 }

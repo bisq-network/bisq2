@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.details;
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class TradeAssistantOfferModel implements Model {
+public class TradeDetailsModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
     @Setter

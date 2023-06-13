@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.offer;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.trade_assistant.details;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoSizeButton;
@@ -34,17 +34,17 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel, TradeAssistantOfferController> {
-    private final Button nextButton, openOfferDetailsButton, openUserProfileButton;
+public class TradeDetailsView extends View<VBox, TradeDetailsModel, TradeDetailsController> {
+    private final Button backButton, openOfferDetailsButton, openUserProfileButton;
     private final Hyperlink openTradeGuide;
     private final MaterialTextField amount, paymentMethods;
     private final Label headline;
-    private final VBox offerInfoHBox;
+    private final VBox vBox;
     private final Text offerTitle;
     private Subscription widthPin;
 
-    public TradeAssistantOfferView(TradeAssistantOfferModel model,
-                                   TradeAssistantOfferController controller) {
+    public TradeDetailsView(TradeDetailsModel model,
+                            TradeDetailsController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
@@ -57,10 +57,10 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         offerTitle = new Text();
         offerTitle.getStyleClass().addAll("bisq-text-9");
 
-        amount = getField(Res.get("tradeAssistant.offer.amount"));
-        paymentMethods = getField(Res.get("tradeAssistant.offer.paymentMethods"));
+        amount = getField(Res.get("bisqEasy.assistant.tradeDetails.amount"));
+        paymentMethods = getField(Res.get("bisqEasy.assistant.tradeDetails.paymentMethods"));
 
-        openOfferDetailsButton = new AutoSizeButton(Res.get("tradeAssistant.offer.openDetails"));
+        openOfferDetailsButton = new AutoSizeButton(Res.get("bisqEasy.assistant.tradeDetails.openDetails"));
         openOfferDetailsButton.getStyleClass().add("outlined-button");
 
         openUserProfileButton = new AutoSizeButton();
@@ -71,21 +71,21 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
 
         VBox.setMargin(offerTitle, new Insets(0, 0, 5, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        offerInfoHBox = new VBox(10, offerTitle, amount, paymentMethods, buttons);
-        offerInfoHBox.getStyleClass().add("bisq-content-bg");
+        vBox = new VBox(10, offerTitle, amount, paymentMethods, buttons);
+        vBox.getStyleClass().add("bisq-content-bg");
 
-        offerInfoHBox.setAlignment(Pos.CENTER_LEFT);
-        offerInfoHBox.setPadding(new Insets(20));
+        vBox.setAlignment(Pos.CENTER_LEFT);
+        vBox.setPadding(new Insets(20));
 
         // todo
-        openTradeGuide = new Hyperlink(Res.get("tradeAssistant.openTradeGuide"));
+        openTradeGuide = new Hyperlink(Res.get("bisqEasy.assistant.header.openTradeGuide"));
 
-        nextButton = new Button(Res.get("action.next"));
-        nextButton.setDefaultButton(true);
+        backButton = new Button(Res.get("action.back"));
+        backButton.setDefaultButton(true);
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(offerInfoHBox, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, offerInfoHBox, nextButton);
+        VBox.setMargin(vBox, new Insets(0, 0, 10, 0));
+        root.getChildren().addAll(headline, vBox, backButton);
     }
 
     @Override
@@ -97,9 +97,9 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         openUserProfileButton.textProperty().bind(model.getOpenUserProfileButtonLabel());
         openUserProfileButton.setOnAction(e -> controller.onOpenUserProfile());
         openOfferDetailsButton.setOnAction(e -> controller.onOpenOfferDetails());
-        nextButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(e -> controller.onBack());
         openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
-        widthPin = EasyBind.subscribe(offerInfoHBox.widthProperty(), w -> {
+        widthPin = EasyBind.subscribe(vBox.widthProperty(), w -> {
             if (w.doubleValue() > 0) {
                 amount.setPrefWidth(w.doubleValue() - 30);
                 paymentMethods.setPrefWidth(w.doubleValue() - 30);
@@ -116,7 +116,7 @@ public class TradeAssistantOfferView extends View<VBox, TradeAssistantOfferModel
         openUserProfileButton.textProperty().unbind();
         openUserProfileButton.setOnAction(null);
         openOfferDetailsButton.setOnAction(null);
-        nextButton.setOnAction(null);
+        backButton.setOnAction(null);
         openTradeGuide.setOnAction(null);
         widthPin.unsubscribe();
     }

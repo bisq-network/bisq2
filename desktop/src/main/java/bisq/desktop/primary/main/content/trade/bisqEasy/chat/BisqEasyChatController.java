@@ -152,8 +152,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 bisqEasyPublicChannelSelectionMenu.deSelectChannel();
                 twoPartyPrivateChannelSelectionMenu.deSelectChannel();
 
-                BisqEasyPrivateTradeChatChannel privateChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                applyPeersIcon(privateChannel);
+                BisqEasyPrivateTradeChatChannel channel = (BisqEasyPrivateTradeChatChannel) chatChannel;
+                applyPeersIcon(channel);
 
                 model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
                         .map(service -> Res.get("bisqEasy.topPane.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
@@ -164,7 +164,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
                 }*/
 
-                tradeAssistantController.setBisqEasyPrivateTradeChatChannel(privateChannel);
+                tradeAssistantController.selectChannel(channel);
             } else if (isTwoPartyPrivateChatChannel) {
                 bisqEasyPublicChannelSelectionMenu.deSelectChannel();
                 bisqEasyPrivateChannelSelectionMenu.deSelectChannel();

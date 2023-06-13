@@ -36,7 +36,7 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
 
         VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
 
-        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
+        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("user.roles.type.MEDIATOR"),
                 NavigationTarget.REGISTER_MEDIATOR,
                 styles);

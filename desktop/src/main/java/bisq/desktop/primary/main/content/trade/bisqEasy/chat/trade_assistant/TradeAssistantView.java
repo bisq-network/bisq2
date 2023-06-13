@@ -47,16 +47,17 @@ public class TradeAssistantView extends TabView<TradeAssistantModel, TradeAssist
         root.setPadding(new Insets(15, 30, 30, 30));
         VBox.setMargin(contentPane, new Insets(10, 0, 0, 0));
 
-        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
-        addTab(Res.get("tradeAssistant.offer"),
-                NavigationTarget.TRADE_ASSISTANT_OFFER,
+        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
+        addTab(Res.get("bisqEasy.assistant.tradeState"),
+                NavigationTarget.TRADE_STATE,
                 styles);
-        addTab(Res.get("tradeAssistant.negotiation"),
+        addTab(Res.get("bisqEasy.assistant.tradeDetails"),
+                NavigationTarget.TRADE_DETAILS,
+                styles);
+       /* addTab(Res.get("tradeAssistant.negotiation"),
                 NavigationTarget.TRADE_ASSISTANT_NEGOTIATION,
-                styles);
-        addTab(Res.get("tradeAssistant.trade"),
-                NavigationTarget.TRADE_ASSISTANT_TRADE,
-                styles);
+                styles);*/
+
     }
 
     @Override
@@ -101,7 +102,7 @@ public class TradeAssistantView extends TabView<TradeAssistantModel, TradeAssist
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("tradeAssistant.headline"));
+        headLine.setText(Res.get("bisqEasy.assistant.headline"));
         headLine.getStyleClass().addAll("font-size-18", "font-light");
 
         collapseButton = BisqIconButton.createIconButton("collapse");
@@ -112,7 +113,7 @@ public class TradeAssistantView extends TabView<TradeAssistantModel, TradeAssist
         HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
         headerHBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
         headerHBox.setCursor(Cursor.HAND);
-        Tooltip tooltip = new Tooltip(Res.get("tradeAssistant.header.tooltip"));
+        Tooltip tooltip = new Tooltip(Res.get("bisqEasy.assistant.header.expandCollapse.tooltip"));
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 

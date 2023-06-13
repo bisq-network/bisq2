@@ -1,0 +1,708 @@
+/*******************************************************************************
+ * Controls                                          *
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Button                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
+}
+
+.button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 1), 20, 0.5, 0, 4);
+}
+
+.button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.button:default,
+.default-button {
+    -fx-background-color: -bisq-green;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.button:default:hover {
+    -fx-background-color: -bisq-green-lighter;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
+}
+
+.button:default:pressed {
+    -fx-background-color: -bisq-green-darker;
+    fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);
+}
+
+.button:default:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.red-button {
+    -fx-background-color: -bisq-red;
+}
+
+.red-button:hover {
+    -fx-background-color: derive(-bisq-red, 10%);
+}
+
+.red-button:pressed {
+    -fx-background-color: derive(-bisq-red, -10%);
+}
+
+.button.icon-button {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Outlined-Button                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.outlined-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-green;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-text-fill: -bisq-green;
+    -fx-font-size: 1em;
+    -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
+}
+
+.outlined-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-effect: none;
+}
+
+
+.outlined-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.025);
+    -fx-border-color: -bisq-green-darker;
+    -fx-text-fill: -bisq-green-darker;
+    -fx-effect: none;
+}
+
+.outlined-button:disabled {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.grey-outlined-button {
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-text-fill: rgba(255, 255, 255, 0.3);
+}
+
+.grey-outlined-button:hover {
+    -fx-border-color: rgba(255, 255, 255, 0.33);
+    -fx-text-fill: rgba(255, 255, 255, 0.33);
+}
+
+.grey-outlined-button:pressed {
+    -fx-border-color: rgba(255, 255, 255, 0.27);
+    -fx-text-fill: rgba(255, 255, 255, 0.27);
+}
+
+.grey-outlined-button:disabled {
+    -fx-border-color: rgba(255, 255, 255, 0.15);
+    -fx-text-fill: rgba(255, 255, 255, 0.15);
+}
+
+.grey-transparent-outlined-button {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-text-fill: rgba(255, 255, 255, 0.3);
+}
+
+.grey-transparent-outlined-button:hover {
+    -fx-border-color: rgba(255, 255, 255, 0.33);
+    -fx-text-fill: rgba(255, 255, 255, 0.33);
+}
+
+.grey-transparent-outlined-button:pressed {
+    -fx-border-color: rgba(255, 255, 255, 0.27);
+    -fx-text-fill: rgba(255, 255, 255, 0.27);
+}
+
+.grey-transparent-outlined-button:disabled {
+    -fx-border-color: rgba(255, 255, 255, 0.15);
+    -fx-text-fill: rgba(255, 255, 255, 0.15);
+}
+
+.red-outlined-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-red;
+    -fx-text-fill: -bisq-red;
+}
+
+.red-outlined-button:hover {
+    -fx-border-color: derive(-bisq-red, 10%);
+    -fx-text-fill: derive(-bisq-red, 10%);
+}
+
+.red-outlined-button:pressed {
+    -fx-border-color: derive(-bisq-red, -10%);
+    -fx-text-fill: derive(-bisq-red, -10%);
+}
+
+
+.red-small-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-red;
+    -fx-border-width: 1;
+    -fx-border-radius: 2;
+    -fx-text-fill: -bisq-red;
+    -fx-font-size: 0.8em;
+    -fx-padding: 2.5 16 2.5 16;
+}
+
+.red-small-button:hover {
+    -fx-border-color: derive(-bisq-red, 10%);
+    -fx-text-fill: derive(-bisq-red, 10%);
+}
+
+.red-small-button:pressed {
+    -fx-border-color: derive(-bisq-red, -10%);
+    -fx-text-fill: derive(-bisq-red, -10%);
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Text-Button                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-button {
+    -fx-background-color: transparent;
+    -fx-border-width: 0px;
+    -fx-text-fill: -bisq-green;
+    -fx-font-size: 1em;
+    -fx-padding: 5 16 5 16;
+    -fx-cursor: hand;
+}
+
+.text-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: none;
+}
+
+.text-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-effect: none;
+    -fx-text-fill: -bisq-green-darker;
+}
+
+.text-button:disabled {
+    -fx-background-color: transparent;
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.no-background {
+    -fx-background-color: transparent;
+}
+
+.no-background:hover {
+    -fx-background-color: transparent;
+}
+
+.no-background:pressed {
+    -fx-background-color: transparent;
+}
+
+.no-background:disabled {
+    -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ChipButton                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.chips-button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 32;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-padding: 5 10 5 6;
+}
+
+.chips-button-hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+}
+
+.chips-button-pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.chips-button-selected {
+    -fx-background-color: -bisq-green;
+}
+
+.chips-button-selected-pressed {
+    -fx-background-color: -bisq-green-darker;
+}
+
+.chips-button-selected-hover {
+    -fx-background-color: -bisq-green-lighter;
+}
+
+.chips-button > .toggle-button,
+.chips-button > .toggle-button:hover,
+.chips-button > .toggle-button:armed,
+.chips-button > .toggle-button:selected,
+.chips-button > .toggle-button:selected:hover,
+.chips-button > .toggle-button:disabled,
+.chips-button > .toggle-button:disabled:hover {
+    -fx-background-color: transparent;
+    -fx-padding: 0 20 0 10;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Large Buttons                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.super-large-button {
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+    -fx-font-size: 1.7em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+.large-button {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 15;
+    -fx-font-size: 1.54em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+.medium-large-button {
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 10;
+    -fx-font-size: 1.25em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ToggleButton                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+
+.toggle-button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
+}
+
+.toggle-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    /*-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);*/
+}
+
+.toggle-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    /*  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 1), 20, 0.5, 0, 4);*/
+}
+
+.toggle-button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.toggle-button:selected {
+    -fx-background-color: -bisq-green;
+}
+
+.toggle-button:selected:hover {
+    -fx-background-color: -bisq-green-lighter;
+    /* -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);*/
+}
+
+.toggle-button:selected:pressed {
+    -fx-background-color: -bisq-green-darker;
+    /* fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);*/
+}
+
+.toggle-button:selected:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.toggle-button.icon-button {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * BisqToggleButton                                                            *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-toggle-button,
+.bisq-toggle-button:armed,
+.bisq-toggle-button:hover,
+.bisq-toggle-button:focused,
+.bisq-toggle-button:selected,
+.bisq-toggle-button:focused:selected {
+    -fx-background-color: transparent;
+    -fx-background-radius: 4px;
+    -fx-background-insets: 0px;
+    -fx-padding: 2px;
+    -bisq-toggle-color: -bisq-green;
+    -bisq-un-toggle-color: -bisq-white;
+    -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
+    -bisq-un-toggle-line-color: -bisq-grey-dimmed;
+    -bisq-size: 8;
+}
+
+.bisq-toggle-button {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.9em;
+}
+
+.bisq-toggle-button:selected {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+}
+
+.bisq-toggle-button:selected:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+}
+
+.bisq-toggle-button:hover {
+    -fx-background-color: transparent !important;
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.bisq-toggle-button Line {
+    -fx-stroke: -bisq-un-toggle-line-color;
+}
+
+.bisq-toggle-button:selected Line {
+    -fx-stroke: -bisq-toggle-line-color;
+}
+
+.bisq-toggle-button Circle {
+    -fx-fill: -bisq-un-toggle-color;
+}
+
+.bisq-toggle-button:selected Circle {
+    -fx-fill: -bisq-toggle-color;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Card button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.card-toggle-button {
+    -fx-font-size: 1.46em;
+    -fx-background-color: -bisq-grey-3;
+    -fx-background-radius: 4;
+    -fx-text-fill: -bisq-white;
+    -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.card-toggle-button:hover {
+    -fx-background-color: -bisq-grey-18;
+}
+
+.card-toggle-button:default {
+    -fx-background-color: -bisq-green;
+}
+
+.card-toggle-button:default:hover {
+    -fx-background-color: -bisq-green-lighter;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Card button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.grey-card-button {
+    -fx-font-size: 1.46em;
+    -fx-background-color: -bisq-grey-3;
+    -fx-background-radius: 4;
+    -fx-text-fill: -bisq-white;
+    -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.grey-card-button:hover {
+    -fx-background-color: -bisq-grey-18;
+}
+
+.green-card-button {
+    -fx-font-size: 1.46em;
+    -fx-background-color: -bisq-green;
+    -fx-background-radius: 4;
+    -fx-text-fill: -bisq-white;
+    -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.green-card-button:hover {
+    -fx-background-color: -bisq-green-lighter;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * CheckBox                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.check-box {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    /* -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;*/
+}
+
+/*
+
+.check-box > .box {
+    -fx-background-color: -bisq-grey-17, -bisq-grey-17, -bisq-grey-17, -fx-body-color;
+    -fx-background-radius: 0;
+}
+
+.check-box:hover > .box {
+    -fx-color: derive(-bisq-grey-17, 10%);
+}
+
+.check-box > .box > .mark {
+    -fx-background-color: null;
+    -fx-padding: 0.416667em 0.416667em 0.5em 0.5em;
+    -fx-shape: "M384 690l452-452 60 60-512 512-238-238 60-60z";
+}
+
+.check-box:selected > .box,
+.check-box:indeterminate > .box {
+    -fx-background-color: -bisq-green;
+    -fx-background-insets: 1 0 -1 0, 0;
+}
+
+.check-box:selected > .box > .mark,
+.check-box:indeterminate > .box > .mark {
+    -fx-background-color: -bisq-green;
+    -fx-background-insets: 1 0 -1 0, 0;
+}
+*/
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ComboBox                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background-color: -bisq-grey-16;
+    -fx-background: transparent;
+}
+
+.combo-box-base,
+.combo-box-base:editable > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box-base:editable > .arrow {
+    -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ToolTip                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.tooltip {
+    /* -fx-show-delay does not work from css, so we use BisqTooltip to set it by code */
+    -fx-show-delay: 100ms;
+    -fx-hide-delay: 100ms;
+    -fx-show-duration: 20000ms;
+    -fx-background: -bisq-grey-11;
+    -fx-text-fill: -bisq-black;
+    -fx-background-color: -bisq-grey-11;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
+    -fx-font-size: 1em;
+}
+
+.tooltip.dark-tooltip {
+    -fx-text-fill: -bisq-grey-11;
+    -fx-background-color: -bisq-grey-2;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * ProgressBar                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.progress-bar {
+    -fx-indeterminate-bar-animation-time: 1;
+}
+
+.progress-bar > .track {
+    -fx-background-color: -bisq-grey-21;
+}
+
+.progress-bar > .bar,
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: -bisq-green;
+    -fx-padding: 1.5;
+}
+
+.progress-bar > .track,
+.progress-bar > .bar {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Badge                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-badge {
+    -fx-padding: 0 0 0 0;
+}
+
+.bisq-badge .badge-pane {
+    -fx-background-color: -bisq-red;
+    -fx-background-radius: 15;
+    /*   -fx-pref-width: 15;*/
+    -fx-pref-height: 15;
+}
+
+.bisq-badge .badge-pane .label {
+    -fx-font-size: 0.85em;
+    -fx-text-fill: -bisq-white !important;
+    -fx-font-family: "IBM Plex Sans SemiBold";
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Slider                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.slider .track {
+    -fx-background-color: -bisq-grey-21;
+    -fx-pref-height: 2px;
+}
+
+.slider .thumb {
+    -fx-background-color: -bisq-green;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Radio button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.radio-button {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.radio-button:selected {
+    -fx-text-fill: -bisq-white;
+}
+
+.radio-button .radio {
+    -fx-background-color: -bisq-grey-5;
+    -fx-padding: 1px;
+    -fx-border-radius: 15px;
+    -fx-border-width: 2px;
+    -fx-border-color: transparent;
+}
+
+.radio-button:armed .radio {
+    -fx-border-color: -bisq-green;
+}
+
+.radio-button:selected .radio {
+    -fx-border-color: -bisq-green;
+}
+
+.radio-button .radio .dot {
+    -fx-background-color: -bisq-grey-5;
+    -fx-background-insets: 0;
+    -fx-padding: 5px
+}
+
+.radio-button:armed .radio {
+    -fx-background-color: -bisq-grey-16;
+}
+
+.radio-button:armed .radio .dot,
+.radio-button:hover .radio .dot {
+    -fx-background-color: -bisq-grey-16;
+}
+
+.radio-button:selected .radio .dot {
+    -fx-background-color: -bisq-white;
+}
