@@ -174,7 +174,7 @@ public class CreateOfferReviewOfferController implements Controller {
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
-        String paymentMethodNames = PaymentMethodSpecFormatter.paymentMethodsToCommaSeparatedString(model.getFiatPaymentMethods(), true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethod(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
                 amountString,
@@ -207,7 +207,8 @@ public class CreateOfferReviewOfferController implements Controller {
         model.setMyOfferMessage(myOfferMessage);
 
         model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().orElseThrow(),
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
                         userProfileService,
                         reputationService,
                         marketPriceService))

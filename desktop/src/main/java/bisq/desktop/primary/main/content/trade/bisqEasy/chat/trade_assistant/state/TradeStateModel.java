@@ -33,6 +33,7 @@ import java.util.List;
 public class TradeStateModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
+    private final StringProperty tradeInfo = new SimpleStringProperty();
     private final StringProperty phase2 = new SimpleStringProperty();
     private final StringProperty phase3 = new SimpleStringProperty();
     private final StringProperty actionButtonText = new SimpleStringProperty();

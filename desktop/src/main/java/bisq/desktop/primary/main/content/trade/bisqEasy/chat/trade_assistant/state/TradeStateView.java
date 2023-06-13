@@ -42,13 +42,11 @@ import java.util.List;
 
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
-    private static final double TOP_PANE_HEIGHT = 55;
-    private static final double OPACITY = 0.35;
-
     private final List<Triple<HBox, Label, Badge>> phaseItems;
     private final Button nextButton, actionButton, openDisputeButton;
     private final Hyperlink openTradeGuide;
     private final Label phaseInfo, phase2Label, phase3Label;
+    private final Label tradeInfo;
     private Subscription activePhaseIndexPin, widthPin;
     private Subscription topPaneBoxVisibleSubscription;
     private final ChangeListener<Number> currentIndexListener;
@@ -60,14 +58,12 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        //Label headline = new Label(Res.get("bisqEasy.assistant.tradeState.headline"));
-        // headline.getStyleClass().add("bisq-easy-trade-state-headline");
-
+        tradeInfo = new Label();
+        tradeInfo.getStyleClass().add("bisq-easy-trade-state-headline");
 
         openTradeGuide = new Hyperlink(Res.get("bisqEasy.assistant.header.openTradeGuide"));
 
         nextButton = new Button(Res.get("action.next"));
-        // nextButton.getStyleClass().add("outlined-button");
         nextButton.setDefaultButton(true);
 
         Label phaseHeadline = new Label(Res.get("bisqEasy.assistant.tradeState.phase.headline"));
@@ -91,18 +87,24 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         openDisputeButton.getStyleClass().add("grey-transparent-outlined-button");
 
         VBox.setMargin(phaseHeadline, new Insets(0, 0, 20, 0));
-        VBox.setMargin(openDisputeButton, new Insets(30, 0, 0, 0));
+        VBox.setMargin(openDisputeButton, new Insets(20, 0, 0, 0));
+        Separator hLine = getHLine();
+        VBox.setMargin(hLine, new Insets(40, 0, 0, 0));
         VBox phaseBox = new VBox(
                 phaseHeadline,
                 phase1HBox,
-                getSeparator(),
+                getVLine(),
                 phase2HBox,
-                getSeparator(),
+                getVLine(),
                 phase3HBox,
-                getSeparator(),
+                getVLine(),
                 phase4HBox,
                 Spacer.fillVBox(),
-                openDisputeButton);
+                hLine,
+                openDisputeButton
+        );
+        phaseBox.setMinWidth(300);
+        phaseBox.setMaxWidth(phaseBox.getMinWidth());
 
         Label phaseInfoHeadline = new Label(Res.get("bisqEasy.assistant.tradeState.phaseInfo.headline"));
         phaseInfoHeadline.getStyleClass().add("bisq-easy-trade-state-sub-headline");
@@ -113,25 +115,37 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         actionButton = new Button();
         actionButton.getStyleClass().add("outlined-button");
-        //actionButton.setDefaultButton(true);
 
-        //  HBox actionButtonBox = new HBox(20, Spacer.fillHBox(), actionButton);
-        VBox infoBox = new VBox(20, phaseInfoHeadline, phaseInfo, Spacer.fillVBox(), actionButton);
+        Separator separator1 = getHLine();
+        separator1.setOpacity(0.5);
+        separator1.setPadding(new Insets(0, 0, -10, 0));
+
+        Separator separator2 = getHLine();
+        separator2.setOpacity(0.5);
+        separator2.setPadding(new Insets(0, 0, -10, 0));
+
+        VBox infoBox = new VBox(20, phaseInfoHeadline, phaseInfo, Spacer.fillVBox(), getHLine(), actionButton);
 
         HBox.setHgrow(infoBox, Priority.ALWAYS);
-        HBox phaseAndInfoBox = new HBox(100, phaseBox, infoBox);
+        HBox phaseAndInfoBox = new HBox(0, phaseBox, infoBox);
         phaseAndInfoBox.setPadding(new Insets(20));
         phaseAndInfoBox.getStyleClass().add("bisq-content-bg");
 
-        // VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(phaseAndInfoBox, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(/*headline, */phaseAndInfoBox, nextButton);
+        VBox.setMargin(tradeInfo, new Insets(10, 0, 0, 0));
+        root.getChildren().addAll(tradeInfo, phaseAndInfoBox, nextButton);
 
         currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
     }
 
+    private Separator getHLine() {
+        Separator separator = new Separator();
+        separator.setOpacity(0.4);
+        return separator;
+    }
+
     @Override
     protected void onViewAttached() {
+        tradeInfo.textProperty().bind(model.getTradeInfo());
         phase2Label.textProperty().bind(model.getPhase2());
         phase3Label.textProperty().bind(model.getPhase3());
         actionButton.textProperty().bind(model.getActionButtonText());
@@ -161,6 +175,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                         Badge badge = phaseItems.get(i).getThird();
                         Label label = phaseItems.get(i).getSecond();
                         if (activePhaseIndex.intValue() == i) {
+                            //  badge.setText("✔"); //✓ ✔
                             badge.getStyleClass().remove("bisq-easy-trade-state-badge-inactive");
                             badge.getStyleClass().add("bisq-easy-trade-state-badge-active");
                             label.getStyleClass().remove("bisq-easy-trade-state-inactive");
@@ -199,10 +214,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         // widthPin.unsubscribe();
     }
 
-    private Separator getSeparator() {
+    private Separator getVLine() {
         Separator separator = new Separator(Orientation.VERTICAL);
         separator.setMinHeight(30);
-        separator.setPadding(new Insets(7.5, 0, 7.5, 17.5));
+        separator.setPadding(new Insets(7.5, 0, 7.5, 17));
         return separator;
     }
 
@@ -218,7 +233,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         badge.getStyleClass().add("bisq-easy-trade-state-badge");
         badge.setText(String.valueOf(index));
         badge.setPrefSize(30, 30);
-        HBox hBox = new HBox(5, badge, label);
+        HBox hBox = new HBox(7.5, badge, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
         return new Triple<>(hBox, label, badge);
     }

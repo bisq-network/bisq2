@@ -23,7 +23,12 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +39,11 @@ public class TradeStateController implements Controller {
     private final TradeStateView view;
     private final TradeStateModel model;
     private final UserIdentityService userIdentityService;
+    private final MarketPriceService marketPriceService;
 
     public TradeStateController(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
 
         model = new TradeStateModel();
         view = new TradeStateView(model, this);
@@ -55,6 +62,9 @@ public class TradeStateController implements Controller {
         model.getPhase3().set(isBuyer ? Res.get("bisqEasy.assistant.tradeState.phase.buyer.phase3").toUpperCase() :
                 Res.get("bisqEasy.assistant.tradeState.phase.seller.phase3").toUpperCase());
 
+        //todo
+
+
         model.getActionButtonVisible().set(true);
         model.getOpenDisputeButtonVisible().set(true);
         model.getActionButtonText().set(isBuyer ?
@@ -62,6 +72,23 @@ public class TradeStateController implements Controller {
                 Res.get("bisqEasy.assistant.tradeState.actionButton.sendFiatAccountData")
         );
         model.getActivePhaseIndex().set(2);
+
+
+        String directionString = isBuyer ?
+                Res.get("offer.buying").toUpperCase() :
+                Res.get("offer.selling").toUpperCase();
+        AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
+        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+        String amountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
+        // String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), hasAmountRange, true);
+        FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
+        String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
+        String tradeInfo = Res.get("bisqEasy.assistant.tradeState.headline",
+                directionString,
+                amountString,
+                paymentMethodName);
+
+        model.getTradeInfo().set(tradeInfo);
     }
 
     @Override

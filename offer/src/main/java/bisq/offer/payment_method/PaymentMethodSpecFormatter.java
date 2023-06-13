@@ -26,22 +26,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PaymentMethodSpecFormatter {
-    public static String paymentMethodSpecsToCommaSeparatedString(List<? extends PaymentMethodSpec<?>> paymentMethodSpecs) {
-        return paymentMethodSpecsToCommaSeparatedString(paymentMethodSpecs, true);
+    public static String fromPaymentMethodSpecs(List<? extends PaymentMethodSpec<?>> paymentMethodSpecs) {
+        return fromPaymentMethodSpecs(paymentMethodSpecs, true);
     }
 
-    public static String paymentMethodSpecsToCommaSeparatedString(List<? extends PaymentMethodSpec<?>> paymentMethodSpecs, boolean useShortDisplayString) {
+    public static String fromPaymentMethodSpecs(List<? extends PaymentMethodSpec<?>> paymentMethodSpecs, boolean useShortDisplayString) {
         return toCommaSeparatedString(paymentMethodSpecs.stream()
                 .map(PaymentMethodSpec::getPaymentMethod)
                 .map(method -> useShortDisplayString ? method.getShortDisplayString() : method.getDisplayString())
                 .collect(Collectors.toList()));
     }
 
-    public static String paymentMethodsToCommaSeparatedString(List<? extends PaymentMethod<?>> paymentMethods) {
-        return paymentMethodsToCommaSeparatedString(paymentMethods, true);
+    public static String fromPaymentMethod(List<? extends PaymentMethod<?>> paymentMethods) {
+        return fromPaymentMethod(paymentMethods, true);
     }
 
-    public static String paymentMethodsToCommaSeparatedString(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
+    public static String fromPaymentMethod(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
         return toCommaSeparatedString(paymentMethods.stream()
                 .map(method -> useShortDisplayString ? method.getShortDisplayString() : method.getDisplayString())
                 .collect(Collectors.toList()));
