@@ -28,17 +28,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class DirectoryAuthorityKeyGenerationTests {
     @Test
-    public void generateKeys(@TempDir Path tempDir) throws IOException, InterruptedException {
-        var torDAKeyGenProcess = new DirectoryIdentityKeyGenProcess(tempDir, "127.0.0.1:8080");
-        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator(torDAKeyGenProcess);
+    public void generateKeys(@TempDir Path dataDir) throws IOException, InterruptedException {
+        Path keysPath = dataDir.resolve("keys");
+        assertThat(keysPath.toFile().mkdirs())
+                .isTrue();
+
+        var torDAKeyGenProcess = new DirectoryIdentityKeyGenProcess(keysPath, "127.0.0.1:8080");
+
+        var directoryAuthority = DirectoryAuthority.builder()
+                .nickname("Nick")
+                .dataDir(dataDir)
+                .controlPort(1)
+                .orPort(2)
+                .dirPort(3)
+                .build();
+        RelayKeyGenProcess relayKeyGenProcess = new RelayKeyGenProcess(directoryAuthority);
+
+        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator(torDAKeyGenProcess, relayKeyGenProcess);
         directoryAuthorityKeyGenerator.generate("my_passphrase");
 
-        File tempDirFile = tempDir.toFile();
-        assertThat(new File(tempDirFile, "authority_certificate"))
+        File dataDirFile = dataDir.toFile();
+        assertThat(new File(dataDirFile, "fingerprint"))
                 .exists();
-        assertThat(new File(tempDirFile, "authority_identity_key"))
+        assertThat(new File(dataDirFile, "fingerprint-ed25519"))
                 .exists();
-        assertThat(new File(tempDirFile, "authority_signing_key"))
+        assertThat(new File(dataDirFile, "lock"))
+                .exists();
+
+        File keysDirFile = keysPath.toFile();
+        assertThat(new File(keysDirFile, "authority_certificate"))
+                .exists();
+        assertThat(new File(keysDirFile, "authority_identity_key"))
+                .exists();
+        assertThat(new File(keysDirFile, "authority_signing_key"))
+                .exists();
+
+        assertThat(new File(keysDirFile, "ed25519_master_id_public_key"))
+                .exists();
+        assertThat(new File(keysDirFile, "ed25519_master_id_secret_key"))
+                .exists();
+        assertThat(new File(keysDirFile, "ed25519_signing_secret_key"))
+                .exists();
+
+        assertThat(new File(keysDirFile, "secret_id_key"))
+                .exists();
+        assertThat(new File(keysDirFile, "secret_onion_key"))
+                .exists();
+        assertThat(new File(keysDirFile, "secret_onion_key_ntor"))
                 .exists();
     }
 }

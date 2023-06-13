@@ -29,16 +29,24 @@ public class DirectoryAuthorityKeyGenerator {
     private static final String PEM_PASSPHRASE_PROMPT = "Enter PEM pass phrase:";
     private static final String PEM_VERIFY_PASSPHRASE_PROMPT = "\nVerifying - Enter PEM pass phrase:";
 
-    private final DirectoryIdentityKeyGenProcess keyGenProcess;
+    private final DirectoryIdentityKeyGenProcess identityKeyGenProcess;
+    private final RelayKeyGenProcess relayKeyGenProcess;
 
-    public DirectoryAuthorityKeyGenerator(DirectoryIdentityKeyGenProcess keyGenProcess) {
-        this.keyGenProcess = keyGenProcess;
+    public DirectoryAuthorityKeyGenerator(DirectoryIdentityKeyGenProcess identityKeyGenProcess,
+                                          RelayKeyGenProcess relayKeyGenProcess) {
+        this.identityKeyGenProcess = identityKeyGenProcess;
+        this.relayKeyGenProcess = relayKeyGenProcess;
     }
 
     public void generate(String passphrase) throws IOException, InterruptedException {
-        keyGenProcess.start();
+        String identityKeyFingerprint = generateIdentityKeys(passphrase);
+        relayKeyGenProcess.generateKeys(identityKeyFingerprint);
+    }
 
-        InputStream inputStream = keyGenProcess.getInputStream().orElseThrow();
+    private String generateIdentityKeys(String passphrase) throws IOException, InterruptedException {
+        identityKeyGenProcess.start();
+
+        InputStream inputStream = identityKeyGenProcess.getInputStream().orElseThrow();
         var inputStreamWaiter = new InputStreamWaiter(inputStream);
 
         inputStreamWaiter.waitForString(PEM_PASSPHRASE_PROMPT);
@@ -47,11 +55,11 @@ public class DirectoryAuthorityKeyGenerator {
         inputStreamWaiter.waitForString(PEM_VERIFY_PASSPHRASE_PROMPT);
         enterPassphrase(passphrase);
 
-        keyGenProcess.waitUntilGenerated();
+        return identityKeyGenProcess.waitUntilGenerated();
     }
 
     private void enterPassphrase(String passphrase) throws IOException {
-        OutputStream outputStream = keyGenProcess.getOutputStream().orElseThrow();
+        OutputStream outputStream = identityKeyGenProcess.getOutputStream().orElseThrow();
         String passphraseWithNewLine = passphrase + "\n";
         outputStream.write(passphraseWithNewLine.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
