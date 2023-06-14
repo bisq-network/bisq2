@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 
-public abstract class ProtocolModel<T extends Offer> implements Proto {
+public abstract class ProtocolModel<T extends Offer<?, ?>> implements Proto {
     public enum State {
         IDLE,
         PENDING,

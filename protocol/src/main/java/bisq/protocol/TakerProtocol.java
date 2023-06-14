@@ -23,7 +23,7 @@ import bisq.network.NetworkService;
 import bisq.offer.Offer;
 import bisq.persistence.PersistenceClient;
 
-public abstract class TakerProtocol<T extends Offer, M extends ProtocolModel<T>> extends Protocol<T, M> {
+public abstract class TakerProtocol<T extends Offer<?, ?>, M extends ProtocolModel<T>> extends Protocol<T, M> {
     public TakerProtocol(NetworkService networkService,
                          PersistenceClient<ProtocolStore> persistenceClient,
                          M protocolModel,
