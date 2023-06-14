@@ -139,6 +139,7 @@ public abstract class ApplicationService {
         // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
+        DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedRoleRegistrationData", AuthorizedRoleRegistrationData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedDaoBridgeServiceProvider", AuthorizedDaoBridgeServiceProvider.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
@@ -146,7 +147,6 @@ public abstract class ApplicationService {
         DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
-        DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage",

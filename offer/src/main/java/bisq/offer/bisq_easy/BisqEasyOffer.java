@@ -29,9 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
-    //todo remove and use chat message text instead
-    private final String chatMessageText;
-
     public BisqEasyOffer(NetworkId makerNetworkId,
                          Direction direction,
                          Market market,
@@ -39,8 +36,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          PriceSpec priceSpec,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
-                         long requiredTotalReputationScore,
-                         String chatMessageText) {
+                         long requiredTotalReputationScore) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -51,8 +47,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 List.of(TradeProtocolType.BISQ_EASY),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
-                chatMessageText
+                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore)
         );
     }
 
@@ -66,8 +61,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                           List<TradeProtocolType> protocolTypes,
                           List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                           List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                          List<OfferOption> offerOptions,
-                          String chatMessageText) {
+                          List<OfferOption> offerOptions) {
         super(id,
                 date,
                 makerNetworkId,
@@ -79,14 +73,12 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
-        this.chatMessageText = chatMessageText;
     }
 
     @Override
     public bisq.offer.protobuf.Offer toProto() {
         return getOfferBuilder().setBisqEasyOffer(
-                        bisq.offer.protobuf.BisqEasyOffer.newBuilder()
-                                .setChatMessageText(chatMessageText))
+                        bisq.offer.protobuf.BisqEasyOffer.newBuilder())
                 .build();
     }
 
@@ -113,8 +105,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions,
-                proto.getBisqEasyOffer().getChatMessageText());
+                offerOptions);
     }
 
 }

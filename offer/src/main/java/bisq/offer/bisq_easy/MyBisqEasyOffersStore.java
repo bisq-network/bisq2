@@ -19,12 +19,14 @@ package bisq.offer.bisq_easy;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public final class MyBisqEasyOffersStore implements PersistableStore<MyBisqEasyOffersStore> {
@@ -51,8 +53,25 @@ public final class MyBisqEasyOffersStore implements PersistableStore<MyBisqEasyO
     }
 
     @Override
+    public bisq.offer.protobuf.MyBisqEasyOffersStore toProto() {
+        return bisq.offer.protobuf.MyBisqEasyOffersStore.newBuilder()
+                .addAllOffers(offers.stream().map(BisqEasyOffer::toProto).collect(Collectors.toList()))
+                .build();
+    }
+
+    public static MyBisqEasyOffersStore fromProto(bisq.offer.protobuf.MyBisqEasyOffersStore proto) {
+        return new MyBisqEasyOffersStore(proto.getOffersList().stream().map(BisqEasyOffer::fromProto).collect(Collectors.toSet()));
+    }
+
+    @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
-        return null;
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.offer.protobuf.MyBisqEasyOffersStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     public void add(BisqEasyOffer offer) {
@@ -61,10 +80,5 @@ public final class MyBisqEasyOffersStore implements PersistableStore<MyBisqEasyO
 
     public void remove(BisqEasyOffer offer) {
         offers.remove(offer);
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
     }
 }

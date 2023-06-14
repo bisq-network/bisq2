@@ -138,8 +138,8 @@ message OfferMessage {
 
 // BisqEasyOffer
 message BisqEasyOffer {
-  string chatMessageText = 1;
 }
 
-
-
+message MyBisqEasyOffersStore {
+  repeated Offer offers = 1;
+}

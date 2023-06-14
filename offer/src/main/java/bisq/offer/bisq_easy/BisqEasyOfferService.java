@@ -29,6 +29,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -102,6 +103,10 @@ public class BisqEasyOfferService implements Service {
         return offerMessageService.remove(offer);
     }
 
+    public Optional<BisqEasyOffer> findOffer(String offerId) {
+        return offers.stream().filter(offer -> offer.getId().equals(offerId)).findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -124,5 +129,4 @@ public class BisqEasyOfferService implements Service {
                         .map(offerMessageService::remove))
                 .thenApply(resultList -> true);
     }
-
 }

@@ -24,7 +24,6 @@ import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,11 +36,11 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
-    private final Optional<BisqEasyOffer> bisqEasyOffer;
+    private final Optional<String> bisqEasyOfferId;
 
     public BisqEasyPublicChatMessage(String channelId,
                                      String authorUserProfileId,
-                                     Optional<BisqEasyOffer> bisqEasyOffer,
+                                     Optional<String> bisqEasyOfferId,
                                      Optional<String> text,
                                      Optional<Citation> citation,
                                      long date,
@@ -50,7 +49,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 ChatChannelDomain.BISQ_EASY,
                 channelId,
                 authorUserProfileId,
-                bisqEasyOffer,
+                bisqEasyOfferId,
                 text,
                 citation,
                 date,
@@ -63,7 +62,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                                       ChatChannelDomain chatChannelDomain,
                                       String channelId,
                                       String authorUserProfileId,
-                                      Optional<BisqEasyOffer> bisqEasyOffer,
+                                      Optional<String> bisqEasyOfferId,
                                       Optional<String> text,
                                       Optional<Citation> citation,
                                       long date,
@@ -80,12 +79,12 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 wasEdited,
                 chatMessageType,
                 metaData);
-        this.bisqEasyOffer = bisqEasyOffer;
+        this.bisqEasyOfferId = bisqEasyOfferId;
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {
         bisq.chat.protobuf.BisqEasyPublicChatMessage.Builder builder = bisq.chat.protobuf.BisqEasyPublicChatMessage.newBuilder();
-        bisqEasyOffer.ifPresent(bisqEasyOffer -> builder.setBisqEasyOffer(bisqEasyOffer.toProto()));
+        bisqEasyOfferId.ifPresent(builder::setBisqEasyOfferId);
         return getChatMessageBuilder().setPublicBisqEasyOfferChatMessage(builder).build();
     }
 
@@ -96,15 +95,15 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPublicBisqEasyOfferChatMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicBisqEasyOfferChatMessage().getBisqEasyOffer())) :
+        Optional<String> bisqEasyOfferId = baseProto.getPublicBisqEasyOfferChatMessage().hasBisqEasyOfferId() ?
+                Optional.of(baseProto.getPublicBisqEasyOfferChatMessage().getBisqEasyOfferId()) :
                 Optional.empty();
         return new BisqEasyPublicChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
                 baseProto.getAuthorUserProfileId(),
-                bisqEasyOffer,
+                bisqEasyOfferId,
                 text,
                 citation,
                 baseProto.getDate(),
@@ -112,11 +111,11 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
-
+/*
     @Override
     public String getText() {
         return bisqEasyOffer.map(BisqEasyOffer::getChatMessageText).orElse(super.getText());
-    }
+    }*/
 
     @Override
     public MetaData getMetaData() {
@@ -125,6 +124,6 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
 
     @Override
     public boolean hasBisqEasyOffer() {
-        return bisqEasyOffer.isPresent();
+        return bisqEasyOfferId.isPresent();
     }
 }

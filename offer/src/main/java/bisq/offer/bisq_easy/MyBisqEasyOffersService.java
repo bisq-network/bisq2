@@ -62,11 +62,13 @@ public class MyBisqEasyOffersService implements PersistenceClient<MyBisqEasyOffe
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void add(BisqEasyOffer offer) {
+        log.error("Add offer {}", offer);
         persistableStore.add(offer);
         persist();
     }
 
     public void remove(BisqEasyOffer offer) {
+        log.error("remove offer {}", offer);
         persistableStore.remove(offer);
         persist();
     }

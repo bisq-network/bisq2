@@ -104,10 +104,12 @@ public class OfferMessageService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean processAddedOfferMessage(OfferMessage offerMessage) {
+        log.error("processAddedOfferMessage offer {}", offerMessage);
         return offers.add(offerMessage.getOffer());
     }
 
     private boolean processRemovedOfferMessage(OfferMessage offerMessage) {
+        log.error("processRemovedOfferMessage offer {}", offerMessage);
         return offers.remove(offerMessage.getOffer());
     }
 

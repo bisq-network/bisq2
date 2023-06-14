@@ -40,6 +40,7 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.bisq_easy.BisqEasyOfferService;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -82,11 +83,13 @@ public class CreateOfferReviewOfferController implements Controller {
     private final MediationService mediationService;
     private final ChatService chatService;
     private final MarketPriceService marketPriceService;
+    private final BisqEasyOfferService bisqEasyOfferService;
 
     public CreateOfferReviewOfferController(DefaultApplicationService applicationService,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
                                             Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+        bisqEasyOfferService = applicationService.getOfferService().getBisqEasyOfferService();
         chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
@@ -191,27 +194,34 @@ public class CreateOfferReviewOfferController implements Controller {
                 priceSpec,
                 new ArrayList<>(model.getFiatPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getRequiredTotalReputationScore().get(),
-                chatMessageText);
+                settingsService.getRequiredTotalReputationScore().get());
+        model.setBisqEasyOffer(bisqEasyOffer);
 
-        bisqEasyPublicChatChannelService.joinChannel(channel);
-        bisqEasyChatChannelSelectionService.selectChannel(channel);
+        //  bisqEasyPublicChatChannelService.joinChannel(channel);
+        //  bisqEasyChatChannelSelectionService.selectChannel(channel);
 
         BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
                 userIdentity.getUserProfile().getId(),
-                Optional.of(bisqEasyOffer),
-                Optional.empty(),
+                Optional.of(bisqEasyOffer.getId()),
+                Optional.of(chatMessageText),
                 Optional.empty(),
                 new Date().getTime(),
                 false);
+
         model.setMyOfferMessage(myOfferMessage);
 
         model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
-                        userProfileService,
-                        reputationService,
-                        marketPriceService))
+                .filter(chatMessage -> chatMessage.getBisqEasyOfferId().isPresent())
+                .map(chatMessage -> {
+                    String offerId = chatMessage.getBisqEasyOfferId().get();
+                    return bisqEasyOfferService.findOffer(offerId)
+                            .map(offer -> new CreateOfferReviewOfferView.ListItem(offer,
+                                    userProfileService,
+                                    reputationService,
+                                    marketPriceService))
+                            .orElse(null);
+                })
+                .filter(Objects::nonNull)
                 .filter(getTakeOfferPredicate())
                 .sorted(Comparator.comparing(CreateOfferReviewOfferView.ListItem::getReputationScore))
                 .limit(3)
@@ -235,7 +245,9 @@ public class CreateOfferReviewOfferController implements Controller {
         );
     }
 
-    void onCreateOffer() {
+    void onPublishOffer() {
+        bisqEasyOfferService.publish(model.getBisqEasyOffer());
+
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
@@ -274,11 +286,16 @@ public class CreateOfferReviewOfferController implements Controller {
                 if (model.getMyOfferMessage() == null) {
                     return false;
                 }
-                if (model.getMyOfferMessage().getBisqEasyOffer().isEmpty()) {
+                if (model.getMyOfferMessage().getBisqEasyOfferId().isEmpty()) {
                     return false;
                 }
 
-                BisqEasyOffer bisqEasyOffer = model.getMyOfferMessage().getBisqEasyOffer().get();
+                String offerId = model.getMyOfferMessage().getBisqEasyOfferId().get();
+                Optional<BisqEasyOffer> optionalBisqEasyOffer = bisqEasyOfferService.findOffer(offerId);
+                if (optionalBisqEasyOffer.isEmpty()) {
+                    return false;
+                }
+                BisqEasyOffer bisqEasyOffer = optionalBisqEasyOffer.get();
                 BisqEasyOffer peersOffer = item.getBisqEasyOffer();
 
                 if (peersOffer.getDirection().equals(bisqEasyOffer.getDirection())) {

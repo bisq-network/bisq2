@@ -129,7 +129,7 @@ message BisqEasyPrivateTradeChatChannelStore {
 }
 
 message BisqEasyPublicChatMessage {
-  optional offer.Offer bisqEasyOffer = 1;
+  optional string bisqEasyOfferId = 1;
 }
 message BisqEasyPublicChatChannel {
   common.Market market = 1;
