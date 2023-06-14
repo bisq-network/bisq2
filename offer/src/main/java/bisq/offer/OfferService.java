@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol;
+package bisq.offer;
 
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.offer.OfferService;
+import bisq.offer.bisq_easy.BisqEasyOfferService;
 import bisq.persistence.PersistenceService;
-import bisq.protocol.bisq_easy.BisqEasyProtocolService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,15 +29,13 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class ProtocolService implements Service {
-    private final BisqEasyProtocolService bisqEasyProtocolService;
+public class OfferService implements Service {
+    private final BisqEasyOfferService bisqEasyOfferService;
+    private final OfferMessageService offerMessageService;
 
-    public ProtocolService(NetworkService networkService,
-                           IdentityService identityService,
-                           PersistenceService persistenceService,
-                           OfferService offerService) {
-
-        bisqEasyProtocolService = new BisqEasyProtocolService(networkService, identityService, persistenceService, offerService);
+    public OfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
+        offerMessageService = new OfferMessageService(networkService, identityService);
+        bisqEasyOfferService = new BisqEasyOfferService(persistenceService, offerMessageService);
     }
 
 
@@ -48,12 +45,13 @@ public class ProtocolService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return bisqEasyProtocolService.initialize();
-
+        return offerMessageService.initialize()
+                .thenCompose(result -> bisqEasyOfferService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return bisqEasyProtocolService.shutdown();
+        return bisqEasyOfferService.shutdown()
+                .thenCompose(result -> offerMessageService.shutdown());
     }
 }

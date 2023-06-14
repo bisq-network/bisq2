@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+    //todo remove and use chat message text instead
     private final String chatMessageText;
 
     public BisqEasyOffer(NetworkId makerNetworkId,

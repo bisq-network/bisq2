@@ -60,7 +60,7 @@ public class OpenOffersController implements Controller {
         model = new OpenOffersModel(applicationService);
         view = new OpenOffersView(model, this);
 
-        openOfferService = applicationService.getOfferService().getOpenOfferService();
+        openOfferService = null;//applicationService.getOfferService().getBisqEasyOfferService();
     }
 
     @Override

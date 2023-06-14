@@ -29,6 +29,7 @@ import bisq.common.util.OsUtils;
 import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.offer.OfferMessage;
 import bisq.oracle.daobridge.model.*;
 import bisq.oracle.timestamp.AuthorizeTimestampRequest;
 import bisq.oracle.timestamp.AuthorizedTimestampData;
@@ -145,6 +146,7 @@ public abstract class ApplicationService {
         DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
+        DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage",

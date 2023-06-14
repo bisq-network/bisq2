@@ -56,8 +56,8 @@ public class OfferbookController implements Controller {
     private Subscription selectedMarketSubscription, directionSubscription;
 
     public OfferbookController(DefaultApplicationService applicationService) {
-        offerBookService = applicationService.getOfferService().getOfferBookService();
-        openOfferService = applicationService.getOfferService().getOpenOfferService();
+        offerBookService = null;// applicationService.getOfferService().getOfferMessageService();
+        openOfferService = null;//applicationService.getOfferService().getBisqEasyOfferService();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         directionSelection = new DirectionSelection();

@@ -74,7 +74,8 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;
 
     public MultiSigCreateOfferController(DefaultApplicationService applicationService) {
-        openOfferService = applicationService.getOfferService().getOpenOfferService();
+        openOfferService = null; /*applicationService.getOfferService().getBisqEasyOfferService()*/
+        ;
         model = new MultiSigCreateOfferModel();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());

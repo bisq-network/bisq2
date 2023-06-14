@@ -70,8 +70,8 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         pocProtocolService = new PocProtocolService(applicationService.getNetworkService(),
                 applicationService.getIdentityService(),
-                applicationService.getPersistenceService(),
-                applicationService.getOfferService().getOpenOfferService());
+                applicationService.getPersistenceService(), null
+                /*applicationService.getOfferService().getBisqEasyOfferService()*/);
         model = new TakeOfferModel();
 
         // will prob use custom design/component not reuse DirectionSelection

@@ -131,9 +131,15 @@ message Offer {
   }
 }
 
+message OfferMessage {
+  Offer offer = 1;
+  network.MetaData metaData = 2;
+}
+
 // BisqEasyOffer
 message BisqEasyOffer {
   string chatMessageText = 1;
 }
+
 
 

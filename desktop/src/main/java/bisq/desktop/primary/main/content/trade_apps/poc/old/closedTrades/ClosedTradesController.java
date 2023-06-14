@@ -42,8 +42,8 @@ public class ClosedTradesController implements Controller {
         view = new ClosedTradesView(model, this);
         pocProtocolService = new PocProtocolService(applicationService.getNetworkService(),
                 applicationService.getIdentityService(),
-                applicationService.getPersistenceService(),
-                applicationService.getOfferService().getOpenOfferService());
+                applicationService.getPersistenceService(), null
+                /*applicationService.getOfferService().getBisqEasyOfferService()*/);
         model.filteredItems.setPredicate(e -> e.getProtocol().isCompleted());
     }
 
