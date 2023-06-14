@@ -23,6 +23,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.ChipToggleButton;
 import bisq.i18n.Res;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -68,14 +69,15 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
     @Override
     protected void onViewAttached() {
         flowPane.getChildren().clear();
-        for (FiatPaymentMethod fiatPaymentMethod : model.getSortedOfferedFiatPaymentMethods()) {
-            ChipToggleButton chipToggleButton = new ChipToggleButton(fiatPaymentMethod.getShortDisplayString(), toggleGroup);
-            if (!fiatPaymentMethod.isCustomPaymentMethod()) {
-                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
+        for (FiatPaymentMethodSpec spec : model.getSortedSpecs()) {
+            FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
+            ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), toggleGroup);
+            if (!paymentMethod.isCustomPaymentMethod()) {
+                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
                 chipToggleButton.setLeftIcon(icon);
             }
-            chipToggleButton.setOnAction(() -> controller.onTogglePaymentMethod(fiatPaymentMethod, chipToggleButton.isSelected()));
-            chipToggleButton.setSelected(fiatPaymentMethod.equals(model.getSelectedFiatPaymentMethod().get()));
+            chipToggleButton.setOnAction(() -> controller.onTogglePaymentMethod(spec, chipToggleButton.isSelected()));
+            chipToggleButton.setSelected(spec.equals(model.getSelectedSpec().get()));
             flowPane.getChildren().add(chipToggleButton);
         }
     }

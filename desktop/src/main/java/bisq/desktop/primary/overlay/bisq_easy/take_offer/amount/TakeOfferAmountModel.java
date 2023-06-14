@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
 
+import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -29,5 +29,6 @@ import lombok.Setter;
 public class TakeOfferAmountModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
-    private final ObjectProperty<AmountSpec> takersAmountSpec = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> takersQuoteSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> takersBaseSideAmount = new SimpleObjectProperty<>();
 }

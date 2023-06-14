@@ -111,11 +111,6 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
-/*
-    @Override
-    public String getText() {
-        return bisqEasyOffer.map(BisqEasyOffer::getChatMessageText).orElse(super.getText());
-    }*/
 
     @Override
     public MetaData getMetaData() {

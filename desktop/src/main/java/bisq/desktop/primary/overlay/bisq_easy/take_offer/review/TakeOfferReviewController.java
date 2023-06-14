@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
-import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -29,19 +28,24 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
+import bisq.contract.ContractService;
+import bisq.contract.ContractSignatureData;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
+import bisq.identity.IdentityService;
 import bisq.offer.Direction;
 import bisq.offer.amount.AmountUtil;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPrice;
@@ -50,12 +54,17 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.MediationService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakeOfferReviewController implements Controller {
@@ -68,10 +77,16 @@ public class TakeOfferReviewController implements Controller {
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
+    private final ContractService contractService;
+    private final IdentityService identityService;
+    private final UserIdentityService userIdentityService;
 
     public TakeOfferReviewController(DefaultApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
-        chatService = applicationService.getChatService();
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+        contractService = applicationService.getContractService();
+        identityService = applicationService.getIdentityService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
+        chatService = applicationService.getChatService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
@@ -91,7 +106,10 @@ public class TakeOfferReviewController implements Controller {
         priceInput.setDescription(Res.get("bisqEasy.takeOffer.review.price.sellersPrice", marketCodes));
 
         if (bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec) {
-            model.setTradeAmountSpec(bisqEasyOffer.getAmountSpec());
+            AmountUtil.findBaseSideFixedAmount(marketPriceService, bisqEasyOffer)
+                    .ifPresent(model::setTakersBaseSideAmount);
+            AmountUtil.findQuoteSideFixedAmount(marketPriceService, bisqEasyOffer)
+                    .ifPresent(model::setTakersQuoteSideAmount);
         }
 
         if (bisqEasyOffer.getTakersDirection().isBuy()) {
@@ -122,15 +140,22 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void setTradeAmountSpec(AmountSpec amountSpec) {
-        if (amountSpec != null) {
-            model.setTradeAmountSpec(amountSpec);
+    public void setTakersBaseSideAmount(Monetary amount) {
+        if (amount != null) {
+            model.setTakersBaseSideAmount(amount);
         }
     }
 
-    public void setFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
-        if (fiatPaymentMethod != null) {
-            model.getFiatPaymentMethodDisplayString().set(fiatPaymentMethod.getDisplayString());
+    public void setTakersQuoteSideAmount(Monetary amount) {
+        if (amount != null) {
+            model.setTakersQuoteSideAmount(amount);
+        }
+    }
+
+    public void setFiatPaymentMethodSpec(FiatPaymentMethodSpec spec) {
+        if (spec != null) {
+            model.setFiatPaymentMethodSpec(spec);
+            model.getFiatPaymentMethodDisplayString().set(spec.getDisplayString());
 
             String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("offer.buying").toUpperCase() : Res.get("offer.selling").toUpperCase();
             model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getFiatPaymentMethodDisplayString().get().toUpperCase()));
@@ -140,8 +165,22 @@ public class TakeOfferReviewController implements Controller {
 
     public void doTakeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        
+        UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
+                myUserIdentity.getIdentity().getNetworkId(),
+                model.getTakersBaseSideAmount().getValue(),
+                model.getTakersQuoteSideAmount().getValue(),
+                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                model.getFiatPaymentMethodSpec());
+        try {
+            ContractSignatureData contractSignatureData = contractService.signContract(bisqEasyContract, myUserIdentity.getIdentity().getKeyPair());
 
+        } catch (GeneralSecurityException e) {
+            new Popup().error(e).show();
+            return;
+        }
+
+        //todo
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
         bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, mediator)
                 .thenAccept(result -> UIThread.run(() -> {
@@ -162,15 +201,13 @@ public class TakeOfferReviewController implements Controller {
 
     @Override
     public void onActivate() {
-        AmountSpec takersAmountSpec = model.getTradeAmountSpec();
         PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         Market market = model.getBisqEasyOffer().getMarket();
 
-        Optional<Monetary> quoteAmount = AmountUtil.findQuoteSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
-        String formattedQuoteAmount = quoteAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("data.na"));
-
-        Optional<Monetary> baseAmount = AmountUtil.findBaseSideFixedAmount(marketPriceService, takersAmountSpec, sellersPriceSpec, market);
-        String formattedBaseAmount = baseAmount.map(AmountFormatter::formatAmountWithCode).orElse(Res.get("data.na"));
+        Monetary baseAmount = model.getTakersBaseSideAmount();
+        Monetary quoteAmount = model.getTakersQuoteSideAmount();
+        String formattedBaseAmount = AmountFormatter.formatAmountWithCode(baseAmount);
+        String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(quoteAmount);
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 
         Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
@@ -179,12 +216,12 @@ public class TakeOfferReviewController implements Controller {
 
         Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, sellersPriceSpec, market);
         String sellersPremium;
-        if (quoteAmount.isPresent() && baseAmount.isPresent() && percentFromMarketPrice.isPresent()) {
+        if (percentFromMarketPrice.isPresent()) {
             double percentage = percentFromMarketPrice.get();
-            long quoteSidePremium = MathUtils.roundDoubleToLong(quoteAmount.get().getValue() * percentage);
-            Monetary quoteSidePremiumAsMonetary = Fiat.fromValue(quoteSidePremium, quoteAmount.get().getCode());
-            long baseSidePremium = MathUtils.roundDoubleToLong(baseAmount.get().getValue() * percentage);
-            Monetary baseSidePremiumAsMonetary = Coin.fromValue(baseSidePremium, baseAmount.get().getCode());
+            long quoteSidePremium = MathUtils.roundDoubleToLong(quoteAmount.getValue() * percentage);
+            Monetary quoteSidePremiumAsMonetary = Fiat.fromValue(quoteSidePremium, quoteAmount.getCode());
+            long baseSidePremium = MathUtils.roundDoubleToLong(baseAmount.getValue() * percentage);
+            Monetary baseSidePremiumAsMonetary = Coin.fromValue(baseSidePremium, baseAmount.getCode());
             sellersPremium = AmountFormatter.formatAmountWithCode(quoteSidePremiumAsMonetary) + " / " +
                     AmountFormatter.formatAmountWithCode(baseSidePremiumAsMonetary, false);
         } else {

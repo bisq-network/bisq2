@@ -18,12 +18,11 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,41 +45,39 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer, List<FiatPaymentMethod> takersPaymentMethods) {
-        List<FiatPaymentMethod> fiatPaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        model.getOfferedFiatPaymentMethods().setAll(fiatPaymentMethods);
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        model.getOfferedSpecs().setAll(quoteSidePaymentMethodSpecs);
         Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(takersPaymentMethods);
-        List<FiatPaymentMethod> matchingPaymentMethods = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
-                .map(PaymentMethodSpec::getPaymentMethod)
-                .filter(takersPaymentMethodSet::contains)
+        List<FiatPaymentMethodSpec> matchingPaymentMethodSpecs = quoteSidePaymentMethodSpecs.stream()
+                .filter(e -> takersPaymentMethodSet.contains(e.getPaymentMethod()))
                 .collect(Collectors.toList());
         // We only preselect if there is exactly one match
-        if (matchingPaymentMethods.size() == 1) {
-            model.getSelectedFiatPaymentMethod().set(matchingPaymentMethods.get(0));
+        if (matchingPaymentMethodSpecs.size() == 1) {
+            model.getSelectedSpec().set(matchingPaymentMethodSpecs.get(0));
         }
     }
-
 
     /**
      * @return Enum name of FiatPayment.Method or custom name
      */
-    public ReadOnlyObjectProperty<FiatPaymentMethod> getSelectedFiatPaymentMethod() {
-        return model.getSelectedFiatPaymentMethod();
+    public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {
+        return model.getSelectedSpec();
     }
 
     @Override
     public void onActivate() {
-        model.getSortedOfferedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
+        model.getSortedSpecs().setComparator(Comparator.comparing(PaymentMethodSpec::getShortDisplayString));
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onTogglePaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean selected) {
-        if (selected && fiatPaymentMethod != null) {
-            model.getSelectedFiatPaymentMethod().set(fiatPaymentMethod);
+    public void onTogglePaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
+        if (selected && spec != null) {
+            model.getSelectedSpec().set(spec);
         } else {
-            model.getSelectedFiatPaymentMethod().set(null);
+            model.getSelectedSpec().set(null);
         }
     }
 }

@@ -22,6 +22,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -74,6 +75,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final OracleService oracleService;
     private final AccountService accountService;
     private final OfferService offerService;
+    private final ContractService contractService;
     private final UserService userService;
     private final ChatService chatService;
     private final SettingsService settingsService;
@@ -116,6 +118,8 @@ public class DefaultApplicationService extends ApplicationService {
         accountService = new AccountService(networkService, persistenceService, identityService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
+
+        contractService = new ContractService(securityService);
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
@@ -174,6 +178,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> offerService.initialize())
+                .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> notificationsService.initialize())
@@ -206,6 +211,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> notificationsService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
+                .thenCompose(result -> contractService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> accountService.shutdown())
                 .thenCompose(result -> oracleService.shutdown())

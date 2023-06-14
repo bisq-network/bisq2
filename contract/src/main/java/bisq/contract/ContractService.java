@@ -61,7 +61,7 @@ public class ContractService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public <T extends Offer<?, ?>> ContractSignatureData getContractSignatureData(Contract<T> contract, KeyPair keyPair)
+    public <T extends Offer<?, ?>> ContractSignatureData signContract(Contract<T> contract, KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] contractHash = getContractHash(contract);
         byte[] signature = SignatureUtil.sign(contractHash, keyPair.getPrivate());

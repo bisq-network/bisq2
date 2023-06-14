@@ -19,13 +19,13 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
@@ -45,7 +45,7 @@ public class TakeOfferAmountController implements Controller {
     private final TakeOfferAmountView view;
     private final AmountComponent amountComponent;
     private final MarketPriceService marketPriceService;
-    private Subscription quoteSideAmountPin;
+    private Subscription baseSideAmountPin, quoteSideAmountPin;
 
     public TakeOfferAmountController(DefaultApplicationService applicationService) {
         model = new TakeOfferAmountModel();
@@ -93,18 +93,25 @@ public class TakeOfferAmountController implements Controller {
         }
     }
 
-    public ReadOnlyObjectProperty<AmountSpec> getTakersAmountSpec() {
-        return model.getTakersAmountSpec();
+    public ReadOnlyObjectProperty<Monetary> getTakersQuoteSideAmount() {
+        return model.getTakersQuoteSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getTakersBaseSideAmount() {
+        return model.getTakersBaseSideAmount();
     }
 
     @Override
     public void onActivate() {
+        baseSideAmountPin = EasyBind.subscribe(amountComponent.getBaseSideAmount(),
+                amount -> model.getTakersBaseSideAmount().set(amount));
         quoteSideAmountPin = EasyBind.subscribe(amountComponent.getQuoteSideAmount(),
-                quoteSideAmount -> model.getTakersAmountSpec().set(new QuoteSideFixedAmountSpec(quoteSideAmount.getValue())));
+                amount -> model.getTakersQuoteSideAmount().set(amount));
     }
 
     @Override
     public void onDeactivate() {
+        baseSideAmountPin.unsubscribe();
         quoteSideAmountPin.unsubscribe();
     }
 }

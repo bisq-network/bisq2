@@ -92,4 +92,12 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     public String getPaymentMethodName() {
         return paymentMethod.getName();
     }
+
+    public String getShortDisplayString() {
+        return paymentMethod.getShortDisplayString();
+    }
+
+    public String getDisplayString() {
+        return paymentMethod.getDisplayString();
+    }
 }

@@ -41,7 +41,7 @@ public class AmountUtil {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Fixed
-    public static Optional<Monetary> findBaseSideFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findBaseSideFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findBaseSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -57,7 +57,7 @@ public class AmountUtil {
     }
 
     // Min
-    public static Optional<Monetary> findBaseSideMinAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findBaseSideMinAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findBaseSideMinAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -73,7 +73,7 @@ public class AmountUtil {
     }
 
     // Max
-    public static Optional<Monetary> findBaseSideMaxAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findBaseSideMaxAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findBaseSideMaxAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -89,7 +89,7 @@ public class AmountUtil {
     }
 
     // Combinations
-    public static Optional<Monetary> findBaseSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findBaseSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findBaseSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -104,7 +104,7 @@ public class AmountUtil {
                         ));
     }
 
-    public static Optional<Monetary> findBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findBaseSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -125,7 +125,7 @@ public class AmountUtil {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Fixed
-    public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuoteSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -141,7 +141,7 @@ public class AmountUtil {
     }
 
     // Min
-    public static Optional<Monetary> findQuoteSideMinAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findQuoteSideMinAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuoteSideMinAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -157,7 +157,7 @@ public class AmountUtil {
     }
 
     // Max
-    public static Optional<Monetary> findQuoteSideMaxAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findQuoteSideMaxAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuoteSideMaxAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -173,7 +173,7 @@ public class AmountUtil {
     }
 
     // Combinations
-    public static Optional<Monetary> findQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuoteSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -188,7 +188,7 @@ public class AmountUtil {
                         ));
     }
 
-    public static Optional<Monetary> findQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuoteSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
