@@ -21,7 +21,7 @@ import bisq.common.data.Pair;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.protocol.TradeProtocolDescription;
+import bisq.protocol.TradeProtocolAttributes;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public class ProtocolListItem implements TableItem {
 
-    private final TradeProtocolDescription.Type swapProtocolType;
+    private final TradeProtocolAttributes.Type swapProtocolType;
     private final NavigationTarget navigationTarget;
     private final String basicInfo;
     private final String markets;
@@ -46,7 +46,7 @@ public class ProtocolListItem implements TableItem {
     private final String protocolsName;
     private final String iconId;
 
-    ProtocolListItem(TradeProtocolDescription.Type swapProtocolType,
+    ProtocolListItem(TradeProtocolAttributes.Type swapProtocolType,
                      NavigationTarget navigationTarget,
                      String basicInfo,
                      String markets,

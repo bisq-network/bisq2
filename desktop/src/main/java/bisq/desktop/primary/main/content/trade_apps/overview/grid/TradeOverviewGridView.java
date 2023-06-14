@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.primary.main.content.trade_apps.overview.ProtocolListItem;
 import bisq.desktop.primary.main.content.trade_apps.overview.TradeOverviewView;
 import bisq.i18n.Res;
-import bisq.protocol.TradeProtocolDescription;
+import bisq.protocol.TradeProtocolAttributes;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -91,7 +91,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
         GridPane.setMargin(headlineLabel, new Insets(-5, 0, 0, 0));
         gridPane.add(headlineLabel, 0, rowIndex, 2, 1);
 
-        if (protocol.getSwapProtocolType() != TradeProtocolDescription.Type.BISQ_EASY) {
+        if (protocol.getSwapProtocolType() != TradeProtocolAttributes.Type.BISQ_EASY) {
             Label label = new Label(Res.get("tradeApps.comingSoon"));
             label.setOpacity(0.1);
             GridPane.setHalignment(label, HPos.RIGHT);
@@ -140,7 +140,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
         button.setMaxWidth(Double.MAX_VALUE);
         button.getStyleClass().add("medium-large-button");
         button.setOnAction(e -> controller.onSelect(protocol));
-        if (protocol.getSwapProtocolType() == TradeProtocolDescription.Type.BISQ_EASY) {
+        if (protocol.getSwapProtocolType() == TradeProtocolAttributes.Type.BISQ_EASY) {
             button.setText(Res.get("tradeApps.select"));
             button.setDefaultButton(true);
         } else {

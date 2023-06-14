@@ -19,7 +19,7 @@ package bisq.protocol;
 
 import lombok.Getter;
 
-public class TradeProtocolDescription {
+public class TradeProtocolAttributes {
     @Getter
     public enum Type {
         BISQ_EASY(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),
