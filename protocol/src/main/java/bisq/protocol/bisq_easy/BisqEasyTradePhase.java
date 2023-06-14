@@ -15,24 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.bisq_easy;
+package bisq.protocol.bisq_easy;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
-
-public enum BisqEasyTradePhase implements ProtoEnum {
+public enum BisqEasyTradePhase /*implements ProtoEnum */{
     NEGOTIATION,
     FIAT_TRANSFER,
     BTC_TRANSFER,
     COMPLETED;
 
-    @Override
+   /* @Override
     public bisq.protocol.protobuf.BisqEasyTradePhase toProto() {
         return bisq.protocol.protobuf.BisqEasyTradePhase.valueOf(name());
     }
 
     public static BisqEasyTradePhase fromProto(bisq.protocol.protobuf.BisqEasyTradePhase proto) {
         return ProtobufUtils.enumFromProto(BisqEasyTradePhase.class, proto.name());
-    }
+    }*/
 }
 

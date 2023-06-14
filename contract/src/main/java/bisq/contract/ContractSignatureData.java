@@ -15,22 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.poc;
+package bisq.contract;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.DeterministicProto;
 import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-@EqualsAndHashCode
+import java.security.PublicKey;
+
 @Getter
-public final class PocOpenOffer implements Proto {
-    private final PocOffer offer;
+@EqualsAndHashCode
+public class ContractSignatureData implements DeterministicProto {
+    private final byte[] contractHash;
+    private final byte[] signature;
+    private final PublicKey publicKey;
 
-    public PocOpenOffer(PocOffer offer) {
-        this.offer = offer;
+    public ContractSignatureData(byte[] contractHash, byte[] signature, PublicKey publicKey) {
+        this.contractHash = contractHash;
+        this.signature = signature;
+        this.publicKey = publicKey;
     }
-
 
     @Override
     public Message toProto() {

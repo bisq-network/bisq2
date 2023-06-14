@@ -1,10 +1,8 @@
-package bisq.contract.poc;
+package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.contract.Contract;
-import bisq.contract.Party;
-import bisq.contract.Role;
 import bisq.offer.Offer;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -13,11 +11,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class MultiPartyContract<T extends Offer> extends Contract<T> {
+@EqualsAndHashCode(callSuper = true)
+public class MultiPartyContract<T extends Offer<?, ?>> extends TwoPartyContract<T> {
+    private static Party extractTaker(List<Party> parties) {
+        return parties.stream().filter(e -> e.getRole() == Role.TAKER).findAny().orElseThrow();
+    }
+
     private final List<Party> parties;
 
     public MultiPartyContract(T listing, TradeProtocolType protocolType, List<Party> parties) {
-        super(listing, protocolType);
+        super(listing, protocolType, extractTaker(parties));
         this.parties = new ArrayList<>(parties);
         this.parties.sort(Comparator.comparingInt(Party::hashCode));
     }
@@ -30,14 +33,9 @@ public class MultiPartyContract<T extends Offer> extends Contract<T> {
                 .build();
     }
 
-    public static MultiPartyContract<? extends Offer> fromProto(bisq.contract.protobuf.Contract proto) {
+    public static MultiPartyContract<? extends Offer<?, ?>> fromProto(bisq.contract.protobuf.Contract proto) {
         return new MultiPartyContract<>(Offer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 proto.getMultiPartyContract().getPartiesList().stream().map(Party::fromProto).collect(Collectors.toList()));
-    }
-
-    @Override
-    public Party getTaker() {
-        return parties.stream().filter(e -> e.getRole() == Role.TAKER).findAny().orElseThrow();
     }
 }

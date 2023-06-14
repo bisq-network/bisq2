@@ -15,25 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.poc;
+package bisq.contract.bisq_easy;
 
-import bisq.common.proto.Proto;
-import com.google.protobuf.Message;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.contract.ContractSignatureData;
+import bisq.contract.SignedTwoPartyContract;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 
-@EqualsAndHashCode
-@Getter
-public final class PocOpenOffer implements Proto {
-    private final PocOffer offer;
-
-    public PocOpenOffer(PocOffer offer) {
-        this.offer = offer;
-    }
-
-
-    @Override
-    public Message toProto() {
-        return null;
+public class SignedBisqEasyContract extends SignedTwoPartyContract<BisqEasyOffer> {
+    public SignedBisqEasyContract(BisqEasyContract contract,
+                                  ContractSignatureData makerSignatureData,
+                                  ContractSignatureData takerSignatureData) {
+        super(contract, makerSignatureData, takerSignatureData);
     }
 }

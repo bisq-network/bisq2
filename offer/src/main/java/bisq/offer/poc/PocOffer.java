@@ -21,8 +21,6 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -30,13 +28,12 @@ import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -141,59 +137,7 @@ public final class PocOffer implements DistributedData {
         return false;
     }
 
-    public bisq.offer.protobuf.PocOffer toProto() {
-        return bisq.offer.protobuf.PocOffer.newBuilder()
-                .setId(id)
-                .setDate(date)
-                .setMakerNetworkId(makerNetworkId.toProto())
-                .setMarket(market.toProto())
-                .setDirection(direction.toProto())
-                .setBaseAmount(baseAmount)
-                .setPriceSpec(priceSpec.toProto())
-                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProto).collect(Collectors.toList()))
-                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
-                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
-                .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()))
-                .setMetaData(metaData.toProto())
-                .build();
-    }
 
-    public static PocOffer fromProto(bisq.offer.protobuf.PocOffer proto) {
-        List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
-                .map(TradeProtocolType::fromProto)
-                .collect(Collectors.toList());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
-                .collect(Collectors.toList());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToFiatPaymentMethodSpec)
-                .collect(Collectors.toList());
-        List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
-                .map(OfferOption::fromProto)
-                .collect(Collectors.toList());
-        return new PocOffer(proto.getId(),
-                proto.getDate(),
-                NetworkId.fromProto(proto.getMakerNetworkId()),
-                Market.fromProto(proto.getMarket()),
-                Direction.fromProto(proto.getDirection()),
-                proto.getBaseAmount(),
-                PriceSpec.fromProto(proto.getPriceSpec()),
-                protocolTypes,
-                baseSidePaymentMethodSpecs,
-                quoteSidePaymentMethodSpecs,
-                offerOptions,
-                MetaData.fromProto(proto.getMetaData()));
-    }
-
-    public static ProtoResolver<DistributedData> getResolver() {
-        return any -> {
-            try {
-                return fromProto(any.unpack(bisq.offer.protobuf.PocOffer.class));
-            } catch (InvalidProtocolBufferException e) {
-                throw new UnresolvableProtobufMessageException(e);
-            }
-        };
-    }
 
     public Optional<TradeProtocolType> findProtocolType() {
         if (protocolTypes.isEmpty()) {
@@ -234,5 +178,10 @@ public final class PocOffer implements DistributedData {
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
         }
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

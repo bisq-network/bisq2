@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.bisq_easy;
+package bisq.protocol.bisq_easy;
 
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
@@ -34,15 +34,18 @@ public class BisqEasyProtocolModel implements Proto {
 
     @Override
     public bisq.protocol.protobuf.BisqEasyProtocolModel toProto() {
+        return null;
+        /*
         return bisq.protocol.protobuf.BisqEasyProtocolModel.newBuilder()
                 .setTrade(trade.toProto())
                 .setPhase(phase.toProto())
-                .build();
+                .build();*/
     }
 
     public static BisqEasyProtocolModel fromProto(bisq.protocol.protobuf.BisqEasyProtocolModel proto) {
-        return new BisqEasyProtocolModel(BisqEasyTrade.fromProto(proto.getTrade()),
-                BisqEasyTradePhase.fromProto(proto.getPhase()));
+        return null;
+        /*return new BisqEasyProtocolModel(BisqEasyTrade.fromProto(proto.getTrade()),
+                BisqEasyTradePhase.fromProto(proto.getPhase()));*/
     }
 
     public String getId() {

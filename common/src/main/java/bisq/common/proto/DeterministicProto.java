@@ -15,25 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.poc;
+package bisq.common.proto;
 
-import bisq.common.proto.Proto;
-import com.google.protobuf.Message;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
-@EqualsAndHashCode
-@Getter
-public final class PocOpenOffer implements Proto {
-    private final PocOffer offer;
-
-    public PocOpenOffer(PocOffer offer) {
-        this.offer = offer;
-    }
-
-
-    @Override
-    public Message toProto() {
-        return null;
-    }
+/**
+ * Marker interface for classes which require a deterministic serialisation (e.g. used for hashes).
+ * All containing fields and child objects need to ensure to have Collections deterministically sorted.
+ * Maps are not allowed as they do not guarantee that (even if Java have deterministic implementation for it as 
+ * in HashMap - there is no guarantee that all JVms will support that and non-Java implementations need to be able 
+ * to deal with it as well. Rust for instance randomize the key set in maps by default for security reasons).
+ */
+public interface DeterministicProto extends Proto {
 }

@@ -46,9 +46,18 @@ message Contract {
 
 message TwoPartyContract {
   Party taker = 1;
+  oneof message {
+    BisqEasyContract bisqEasyContract = 10;
+  }
 }
 
 message MultiPartyContract {
   repeated Party parties = 1;
 }
-    
+
+message BisqEasyContract {
+  uint64 baseSideAmount = 1;
+  uint64 quoteSideAmount = 2;
+  offer.BitcoinPaymentMethodSpec baseSidePaymentMethodSpecs = 3;
+  offer.FiatPaymentMethodSpec quoteSidePaymentMethodSpec = 4;
+}

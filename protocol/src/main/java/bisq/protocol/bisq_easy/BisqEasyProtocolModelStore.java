@@ -15,17 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.poc.bisq_easy;
+package bisq.protocol.bisq_easy;
 
 import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import lombok.Getter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Getter
 public class BisqEasyProtocolModelStore implements PersistableStore<BisqEasyProtocolModelStore> {
@@ -39,7 +37,7 @@ public class BisqEasyProtocolModelStore implements PersistableStore<BisqEasyProt
         setAll(protocolModelById);
     }
 
-    @Override
+/*    @Override
     public bisq.protocol.protobuf.BisqEasyProtocolModelStore toProto() {
         bisq.protocol.protobuf.BisqEasyProtocolModelStore.Builder builder = bisq.protocol.protobuf.BisqEasyProtocolModelStore.newBuilder()
                 .putAllProtocolModelById(protocolModelById.entrySet().stream()
@@ -52,9 +50,9 @@ public class BisqEasyProtocolModelStore implements PersistableStore<BisqEasyProt
         return new BisqEasyProtocolModelStore(proto.getProtocolModelByIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> BisqEasyProtocolModel.fromProto(entry.getValue()))));
-    }
+    }*/
 
-    @Override
+  /*  @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
@@ -63,11 +61,16 @@ public class BisqEasyProtocolModelStore implements PersistableStore<BisqEasyProt
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
-    }
+    }*/
 
     @Override
     public void applyPersisted(BisqEasyProtocolModelStore chatStore) {
         setAll(chatStore.getProtocolModelById());
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return null;
     }
 
     @Override
@@ -82,5 +85,10 @@ public class BisqEasyProtocolModelStore implements PersistableStore<BisqEasyProt
 
     Map<String, BisqEasyProtocolModel> getProtocolModelById() {
         return protocolModelById;
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }
