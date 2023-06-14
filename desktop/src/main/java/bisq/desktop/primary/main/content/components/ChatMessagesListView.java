@@ -299,6 +299,7 @@ public class ChatMessagesListView {
             checkArgument(chatMessage instanceof PublicChatMessage);
 
             if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
+                bisqEasyPublicChatMessage.getBisqEasyOfferId().ifPresent(bisqEasyOfferService::removeOffer);
                 chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity)
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {

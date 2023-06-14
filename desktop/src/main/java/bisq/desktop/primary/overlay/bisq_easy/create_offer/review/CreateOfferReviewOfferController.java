@@ -197,9 +197,6 @@ public class CreateOfferReviewOfferController implements Controller {
                 settingsService.getRequiredTotalReputationScore().get());
         model.setBisqEasyOffer(bisqEasyOffer);
 
-        //  bisqEasyPublicChatChannelService.joinChannel(channel);
-        //  bisqEasyChatChannelSelectionService.selectChannel(channel);
-
         BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
                 userIdentity.getUserProfile().getId(),
                 Optional.of(bisqEasyOffer.getId()),
@@ -246,7 +243,7 @@ public class CreateOfferReviewOfferController implements Controller {
     }
 
     void onPublishOffer() {
-        bisqEasyOfferService.publish(model.getBisqEasyOffer());
+        bisqEasyOfferService.publishOffer(model.getBisqEasyOffer());
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)

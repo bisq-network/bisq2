@@ -86,13 +86,13 @@ public class OfferMessageService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> publish(Offer<?, ?> offer) {
+    public CompletableFuture<DataService.BroadCastDataResult> addToNetwork(Offer<?, ?> offer) {
         return identityService.findActiveIdentityByNodeId(offer.getMakerNetworkId().getNodeId())
                 .map(identity -> networkService.publishAuthenticatedData(new OfferMessage(offer), identity.getNodeIdAndKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> remove(Offer<?, ?> offer) {
+    public CompletableFuture<DataService.BroadCastDataResult> removeFromNetwork(Offer<?, ?> offer) {
         return findIdentity(offer)
                 .map(identity -> networkService.removeAuthenticatedData(new OfferMessage(offer), identity.getNodeIdAndKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));
@@ -104,12 +104,10 @@ public class OfferMessageService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean processAddedOfferMessage(OfferMessage offerMessage) {
-        log.error("processAddedOfferMessage offer {}", offerMessage);
         return offers.add(offerMessage.getOffer());
     }
 
     private boolean processRemovedOfferMessage(OfferMessage offerMessage) {
-        log.error("processRemovedOfferMessage offer {}", offerMessage);
         return offers.remove(offerMessage.getOffer());
     }
 

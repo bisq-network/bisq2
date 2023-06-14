@@ -93,14 +93,26 @@ public class BisqEasyOfferService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> publish(BisqEasyOffer offer) {
-        myBisqEasyOffersService.add(offer);
-        return offerMessageService.publish(offer);
+    public CompletableFuture<DataService.BroadCastDataResult> publishOffer(String offerId) {
+        return findOffer(offerId)
+                .map(this::publishOffer)
+                .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> remove(BisqEasyOffer offer) {
+    public CompletableFuture<DataService.BroadCastDataResult> publishOffer(BisqEasyOffer offer) {
+        myBisqEasyOffersService.add(offer);
+        return offerMessageService.addToNetwork(offer);
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> removeOffer(String offerId) {
+        return findOffer(offerId)
+                .map(this::removeOffer)
+                .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> removeOffer(BisqEasyOffer offer) {
         myBisqEasyOffersService.remove(offer);
-        return offerMessageService.remove(offer);
+        return offerMessageService.removeFromNetwork(offer);
     }
 
     public Optional<BisqEasyOffer> findOffer(String offerId) {
@@ -121,12 +133,12 @@ public class BisqEasyOfferService implements Service {
     }
 
     private void republishMyOffers() {
-        getOffers().forEach(offerMessageService::remove);
+        getOffers().forEach(offerMessageService::removeFromNetwork);
     }
 
     private CompletableFuture<Boolean> removeAllOfferFromNetwork() {
         return CompletableFutureUtils.allOf(getOffers().stream()
-                        .map(offerMessageService::remove))
+                        .map(offerMessageService::removeFromNetwork))
                 .thenApply(resultList -> true);
     }
 }
