@@ -24,9 +24,11 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.concurrent.TimeUnit;
 
+@ToString
 @Getter
 @EqualsAndHashCode
 public class OfferMessage implements DistributedData {

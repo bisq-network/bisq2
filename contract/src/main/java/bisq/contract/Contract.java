@@ -23,10 +23,12 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */
+@ToString
 @Getter
 @EqualsAndHashCode
 public abstract class Contract<T extends Offer<?, ?>> implements DeterministicProto {

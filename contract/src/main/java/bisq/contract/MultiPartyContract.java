@@ -5,12 +5,14 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoPartyContract<T> {

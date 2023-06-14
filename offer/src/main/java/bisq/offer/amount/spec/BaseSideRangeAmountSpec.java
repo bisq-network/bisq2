@@ -22,7 +22,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements BaseSideAmountSpec {
     public BaseSideRangeAmountSpec(long minAmount, long maxAmount) {

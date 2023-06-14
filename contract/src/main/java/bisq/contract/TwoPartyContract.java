@@ -22,7 +22,9 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.Offer;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString(callSuper = true)
 @Getter
 public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T> {
     protected final Party taker;

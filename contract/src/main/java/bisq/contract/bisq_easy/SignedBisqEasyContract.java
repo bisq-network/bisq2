@@ -21,7 +21,9 @@ import bisq.contract.ContractSignatureData;
 import bisq.contract.SignedTwoPartyContract;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class SignedBisqEasyContract extends SignedTwoPartyContract<BisqEasyOffer> {
     public SignedBisqEasyContract(BisqEasyContract contract,

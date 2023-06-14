@@ -25,7 +25,7 @@ import lombok.ToString;
 import java.util.Optional;
 
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMethod> {
     public FiatPaymentMethodSpec(FiatPaymentMethod paymentMethod) {

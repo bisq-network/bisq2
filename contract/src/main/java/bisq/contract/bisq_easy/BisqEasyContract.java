@@ -28,7 +28,9 @@ import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {

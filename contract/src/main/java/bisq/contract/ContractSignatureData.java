@@ -17,6 +17,7 @@
 
 package bisq.contract;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.DeterministicProto;
 import bisq.security.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -60,5 +61,14 @@ public class ContractSignatureData implements DeterministicProto {
             log.error("Could not generate key from protobuf ContractSignatureData.publicKeyBytes", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ContractSignatureData{" +
+                "\r\n     contractHash=" + Hex.encode(contractHash) +
+                ",\r\n     signature=" + Hex.encode(signature) +
+                ",\r\n     publicKey=" + publicKey +
+                "\r\n}";
     }
 }

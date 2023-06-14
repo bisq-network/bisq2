@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -34,8 +35,10 @@ import java.util.List;
  * a paymentRail not existing at another peer the peer with the older version would consider it as a custom
  * payment method and would still be able to deal with it.
  */
-@Getter
+
+@ToString
 @EqualsAndHashCode
+@Getter
 public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, Proto {
     protected final String name;
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
