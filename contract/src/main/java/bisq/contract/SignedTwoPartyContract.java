@@ -17,13 +17,14 @@
 
 package bisq.contract;
 
+import bisq.common.proto.DeterministicProto;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class SignedTwoPartyContract<T extends Offer<?, ?>> {
+public class SignedTwoPartyContract<T extends Offer<?, ?>> implements DeterministicProto {
     private final TwoPartyContract<T> contract;
     private final ContractSignatureData makerSignatureData;
     private final ContractSignatureData takerSignatureData;
@@ -32,5 +33,20 @@ public class SignedTwoPartyContract<T extends Offer<?, ?>> {
         this.contract = contract;
         this.makerSignatureData = makerSignatureData;
         this.takerSignatureData = takerSignatureData;
+    }
+
+    @Override
+    public bisq.contract.protobuf.SignedTwoPartyContract toProto() {
+        return bisq.contract.protobuf.SignedTwoPartyContract.newBuilder()
+                .setContract(contract.toProto())
+                .setMakerSignatureData(makerSignatureData.toProto())
+                .setTakerSignatureData(takerSignatureData.toProto())
+                .build();
+    }
+
+    public static SignedTwoPartyContract<?> fromProto(bisq.contract.protobuf.SignedTwoPartyContract proto) {
+        return new SignedTwoPartyContract<>(TwoPartyContract.fromProto(proto.getContract()),
+                ContractSignatureData.fromProto(proto.getMakerSignatureData()),
+                ContractSignatureData.fromProto(proto.getTakerSignatureData()));
     }
 }

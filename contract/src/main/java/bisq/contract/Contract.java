@@ -41,7 +41,10 @@ public abstract class Contract<T extends Offer<?, ?>> implements DeterministicPr
         this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
     }
 
-    public bisq.contract.protobuf.Contract.Builder getContractBuilder() {
+    @Override
+    public abstract bisq.contract.protobuf.Contract toProto();
+
+    protected bisq.contract.protobuf.Contract.Builder getContractBuilder() {
         return bisq.contract.protobuf.Contract.newBuilder()
                 .setOffer(offer.toProto())
                 .setTradeProtocolType(protocolType.toProto());
@@ -49,12 +52,12 @@ public abstract class Contract<T extends Offer<?, ?>> implements DeterministicPr
 
     public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {
         switch (proto.getMessageCase()) {
-           /* case TWOPARTYCONTRACT: {
-                return TwoPartyContractImpl.fromProto(proto);
+            case TWOPARTYCONTRACT: {
+                return TwoPartyContract.fromProto(proto);
             }
             case MULTIPARTYCONTRACT: {
                 return MultiPartyContract.fromProto(proto);
-            }*/
+            }
 
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

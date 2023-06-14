@@ -20,7 +20,9 @@ package bisq.contract.bisq_easy;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.SignedTwoPartyContract;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public class SignedBisqEasyContract extends SignedTwoPartyContract<BisqEasyOffer> {
     public SignedBisqEasyContract(BisqEasyContract contract,
                                   ContractSignatureData makerSignatureData,

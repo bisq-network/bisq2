@@ -18,12 +18,16 @@
 package bisq.contract;
 
 import bisq.common.proto.DeterministicProto;
-import com.google.protobuf.Message;
+import bisq.security.KeyGeneration;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public class ContractSignatureData implements DeterministicProto {
@@ -38,7 +42,23 @@ public class ContractSignatureData implements DeterministicProto {
     }
 
     @Override
-    public Message toProto() {
-        return null;
+    public bisq.contract.protobuf.ContractSignatureData toProto() {
+        return bisq.contract.protobuf.ContractSignatureData.newBuilder()
+                .setContractHash(ByteString.copyFrom(contractHash))
+                .setSignature(ByteString.copyFrom(signature))
+                .setPublicKeyBytes(ByteString.copyFrom(publicKey.getEncoded()))
+                .build();
+    }
+
+    public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto) {
+        try {
+            PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKeyBytes().toByteArray());
+            return new ContractSignatureData(proto.getContractHash().toByteArray(),
+                    proto.getSignature().toByteArray(),
+                    publicKey);
+        } catch (GeneralSecurityException e) {
+            log.error("Could not generate key from protobuf ContractSignatureData.publicKeyBytes", e);
+            throw new RuntimeException(e);
+        }
     }
 }
