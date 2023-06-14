@@ -29,17 +29,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController<TradeModel> {
+public class TradeAppsController extends TabController<TradeAppsModel> {
     private final DefaultApplicationService applicationService;
     @Getter
-    private final TradeView view;
+    private final TradeAppsView view;
 
-    public TradeController(DefaultApplicationService applicationService) {
-        super(new TradeModel(), NavigationTarget.TRADE_OVERVIEW);
+    public TradeAppsController(DefaultApplicationService applicationService) {
+        super(new TradeAppsModel(), NavigationTarget.TRADE_OVERVIEW);
 
         this.applicationService = applicationService;
 
-        view = new TradeView(model, this);
+        view = new TradeAppsView(model, this);
     }
 
     @Override

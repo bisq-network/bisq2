@@ -23,9 +23,9 @@ import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeView extends TabView<TradeModel, TradeController> {
+public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> {
 
-    public TradeView(TradeModel model, TradeController controller) {
+    public TradeAppsView(TradeAppsModel model, TradeAppsController controller) {
         super(model, controller);
 
         headLine.setText(Res.get("tradeApps.headline"));

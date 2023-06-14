@@ -22,7 +22,7 @@ import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 
 @Getter
-public class TradeModel extends TabModel {
+public class TradeAppsModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TRADE_OVERVIEW_GRID;
