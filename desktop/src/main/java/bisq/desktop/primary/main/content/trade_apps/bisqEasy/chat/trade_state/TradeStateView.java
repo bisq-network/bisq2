@@ -42,60 +42,67 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
-    private final Label tradeInfo, phase1Label, phase2Label, phase3Label, phase4Label, phase5Label;
+    private final Label headline, phase1Label, phase2Label, phase3Label, phase4Label, phase5Label;
     private final HBox headerHBox;
-    private final Button openTradeGuideButton, collapseButton, expandButton, actionButton, openDisputeButton;
+    private final Button openTradeGuideButton, collapseButton, expandButton, infoActionButton, openDisputeButton;
     private final Hyperlink openTradeGuide;
     private final List<Triple<HBox, Label, Badge>> phaseItems;
-    private final HBox phaseAndInfoBox;
-    private final VBox firstTimeUserBox;
-    private final VBox contextSpecificFields;
-    private final BisqText instructionHeadline;
+    private final HBox phaseAndInfoHBox;
+    private final VBox firstTimeUserVBox;
+    private final VBox infoFields;
+    private final BisqText infoHeadline;
     private Subscription isCollapsedPin, phaseIndexPin, isBuyerPhase2FieldsVisiblePin;
     private final AutoCompleteComboBox<Account<?, ?>> paymentAccountsComboBox;
+    private MaterialTextField btcAddress, txId, buyersBtcBalance;
 
     public TradeStateView(TradeStateModel model,
                           TradeStateController controller) {
         super(new VBox(0), model, controller);
 
-        root.getStyleClass().addAll("bisq-box-2");
-        root.setPadding(new Insets(15, 30, 30, 30));
+        root.getStyleClass().addAll("bisq-easy-trade-state-bg");
+        root.setPadding(new Insets(15, 30, 20, 30));
 
-        // Welcome for first time trader
-        Label firstTimeHeadline = new Label(Res.get("bisqEasy.trade.state.phaseInfo.phase1.firstTime.headline"));
-        firstTimeHeadline.getStyleClass().add("bisq-easy-trade-state-welcome-headline");
 
-        Label firstTimeInfo = new Label(Res.get("bisqEasy.trade.state.phaseInfo.phase1.firstTime.info"));
-        firstTimeInfo.getStyleClass().add("bisq-easy-trade-state-welcome-sub-headline");
+        // Welcome
+        Label welcomeHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.headline"));
+        welcomeHeadline.getStyleClass().add("bisq-easy-trade-state-welcome-headline");
 
-        openTradeGuideButton = new Button(Res.get("bisqEasy.trade.state.phaseInfo.phase1.firstTime.openTradeGuide"));
+        Label welcomeInfo = new Label(Res.get("bisqEasy.tradeState.welcome.info"));
+        welcomeInfo.getStyleClass().add("bisq-easy-trade-state-welcome-sub-headline");
+
+        openTradeGuideButton = new Button(Res.get("bisqEasy.tradeState.openTradeGuide"));
         openTradeGuideButton.setDefaultButton(true);
 
+        VBox.setMargin(welcomeHeadline, new Insets(20, 0, 10, 0));
+        VBox.setMargin(openTradeGuideButton, new Insets(20, 0, 20, 0));
+        firstTimeUserVBox = new VBox(Layout.hLine(), welcomeHeadline, welcomeInfo, openTradeGuideButton);
+
+
         // Header
-        tradeInfo = new Label();
-        tradeInfo.getStyleClass().add("bisq-easy-trade-state-headline");
+        headline = new Label();
+        headline.getStyleClass().add("bisq-easy-trade-state-headline");
 
         collapseButton = BisqIconButton.createIconButton("collapse");
         expandButton = BisqIconButton.createIconButton("expand");
 
         HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
         HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
-        HBox.setMargin(tradeInfo, new Insets(0, 0, 0, -2));
-        headerHBox = new HBox(tradeInfo, Spacer.fillHBox(), collapseButton, expandButton);
+        HBox.setMargin(headline, new Insets(0, 0, 0, -2));
+        headerHBox = new HBox(headline, Spacer.fillHBox(), collapseButton, expandButton);
         headerHBox.setCursor(Cursor.HAND);
 
-        Tooltip tooltip = new Tooltip(Res.get("bisqEasy.trade.header.expandCollapse.tooltip"));
+        Tooltip tooltip = new Tooltip(Res.get("bisqEasy.tradeState.header.expandCollapse.tooltip"));
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 
-        // Phase progress
-        Label phaseHeadline = new Label(Res.get("bisqEasy.trade.state.phase.headline"));
-        phaseHeadline.getStyleClass().add("bisq-easy-trade-state-sub-headline");
+
+        // Phase (left side)
+        Label phaseHeadline = new Label(Res.get("bisqEasy.tradeState.phase.headline"));
+        phaseHeadline.getStyleClass().add("bisq-easy-trade-state-phase-headline");
 
         Triple<HBox, Label, Badge> phaseItem1 = getPhaseItem(1);
         Triple<HBox, Label, Badge> phaseItem2 = getPhaseItem(2);
@@ -117,16 +124,17 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4, phaseItem5);
 
-        openTradeGuide = new Hyperlink(Res.get("bisqEasy.trade.header.openTradeGuide"));
+        openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeState.openTradeGuide"));
 
-        openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
+        openDisputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
         openDisputeButton.getStyleClass().add("outlined-button");
 
         Region separator = Layout.hLine();
 
         VBox.setMargin(phaseHeadline, new Insets(20, 0, 20, 0));
-        VBox.setMargin(openTradeGuide, new Insets(30, 0, 10, 2));
-        VBox phaseBox = new VBox(
+        VBox.setMargin(openDisputeButton, new Insets(10, 0, 0, 0));
+        VBox.setMargin(openTradeGuide, new Insets(30, 0, 0, 2));
+        VBox phaseVBox = new VBox(
                 separator,
                 phaseHeadline,
                 phase1HBox,
@@ -142,32 +150,30 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                 openTradeGuide,
                 openDisputeButton
         );
-        phaseBox.setMinWidth(300);
-        phaseBox.setMaxWidth(phaseBox.getMinWidth());
+        phaseVBox.setMinWidth(300);
+        phaseVBox.setMaxWidth(phaseVBox.getMinWidth());
 
+        // Info
+        infoHeadline = new BisqText();
+        infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
+        infoFields = new VBox(10);
 
-        actionButton = new Button();
-        actionButton.setDefaultButton(true);
+        infoActionButton = new Button();
+        infoActionButton.setDefaultButton(true);
+        // infoActionButton gets added to contextSpecificFields at phase handler
+        VBox.setMargin(infoActionButton, new Insets(5, 0, 0, 0));
 
-        VBox.setMargin(actionButton, new Insets(5, 0, 0, 0));
+        VBox.setMargin(infoHeadline, new Insets(12.5, 0, 0, 0));
+        VBox.setVgrow(infoFields, Priority.ALWAYS);
+        VBox infoVBox = new VBox(10, Layout.hLine(), infoHeadline, infoFields);
 
-        VBox.setMargin(firstTimeHeadline, new Insets(20, 0, 10, 0));
-        VBox.setMargin(openTradeGuideButton, new Insets(20, 0, 20, 0));
-        firstTimeUserBox = new VBox(Layout.hLine(), firstTimeHeadline, firstTimeInfo, openTradeGuideButton);
-
-        instructionHeadline = new BisqText();
-        instructionHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
-        contextSpecificFields = new VBox(10);
-
-        VBox.setMargin(instructionHeadline, new Insets(12.5, 0, 0, 0));
-        VBox instructionsBox = new VBox(10, Layout.hLine(), instructionHeadline, contextSpecificFields);
-
-        HBox.setHgrow(instructionsBox, Priority.ALWAYS);
-        HBox.setHgrow(firstTimeUserBox, Priority.ALWAYS);
-        phaseAndInfoBox = new HBox(phaseBox, instructionsBox);
+        HBox.setHgrow(infoVBox, Priority.ALWAYS);
+        HBox.setHgrow(phaseVBox, Priority.ALWAYS);
+        phaseAndInfoHBox = new HBox(phaseVBox, infoVBox);
 
         VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
-        root.getChildren().addAll(headerHBox, firstTimeUserBox, phaseAndInfoBox);
+        VBox.setVgrow(firstTimeUserVBox, Priority.ALWAYS);
+        root.getChildren().addAll(headerHBox, firstTimeUserVBox, phaseAndInfoHBox);
 
         //todo
         paymentAccountsComboBox = new AutoCompleteComboBox<>(model.getPaymentAccounts());
@@ -186,61 +192,33 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewAttached() {
-        firstTimeUserBox.visibleProperty().bind(model.getFirstTimeItemsVisible());
-        firstTimeUserBox.managedProperty().bind(model.getFirstTimeItemsVisible());
-        phaseAndInfoBox.visibleProperty().bind(model.getPhaseAndInfoBoxVisible());
-        phaseAndInfoBox.managedProperty().bind(model.getPhaseAndInfoBoxVisible());
-        tradeInfo.textProperty().bind(model.getTradeInfo());
-        instructionHeadline.textProperty().bind(model.getPhaseInfo());
+        firstTimeUserVBox.visibleProperty().bind(model.getFirstTimeItemsVisible());
+        firstTimeUserVBox.managedProperty().bind(model.getFirstTimeItemsVisible());
+        phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoBoxVisible());
+        phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoBoxVisible());
+        headline.textProperty().bind(model.getTradeInfo());
+        infoHeadline.textProperty().bind(model.getPhaseInfo());
         phase1Label.textProperty().bind(model.getPhase1Info());
         phase2Label.textProperty().bind(model.getPhase2Info());
         phase3Label.textProperty().bind(model.getPhase3Info());
         phase4Label.textProperty().bind(model.getPhase4Info());
         phase5Label.textProperty().bind(model.getPhase5Info());
-        actionButton.textProperty().bind(model.getActionButtonText());
-        actionButton.visibleProperty().bind(model.getActionButtonVisible());
-        actionButton.managedProperty().bind(model.getActionButtonVisible());
+        infoActionButton.textProperty().bind(model.getActionButtonText());
+        infoActionButton.visibleProperty().bind(model.getActionButtonVisible());
+        infoActionButton.managedProperty().bind(model.getActionButtonVisible());
         openDisputeButton.visibleProperty().bind(model.getOpenDisputeButtonVisible());
         openDisputeButton.managedProperty().bind(model.getOpenDisputeButtonVisible());
 
         collapseButton.setOnAction(e -> controller.onCollapse());
         expandButton.setOnAction(e -> controller.onExpand());
         headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
-        actionButton.setOnAction(e -> controller.onAction());
+        infoActionButton.setOnAction(e -> controller.onAction());
         openDisputeButton.setOnAction(e -> controller.onOpenDispute());
         openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
         openTradeGuideButton.setOnAction(e -> controller.onOpenTradeGuide());
 
-        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
-            collapseButton.setManaged(!isCollapsed);
-            collapseButton.setVisible(!isCollapsed);
-            expandButton.setManaged(isCollapsed);
-            expandButton.setVisible(isCollapsed);
-
-            if (isCollapsed) {
-                VBox.setMargin(headerHBox, new Insets(0, 0, -17, 0));
-            } else {
-                VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
-            }
-        });
-
-        phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(),
-                phaseIndex -> {
-                    for (int i = 0; i < phaseItems.size(); i++) {
-                        Badge badge = phaseItems.get(i).getThird();
-                        Label label = phaseItems.get(i).getSecond();
-                        badge.getStyleClass().clear();
-                        label.getStyleClass().clear();
-                        badge.getStyleClass().add("bisq-easy-trade-state-badge");
-                        if (i <= phaseIndex.intValue()) {
-                            badge.getStyleClass().add("bisq-easy-trade-state-badge-active");
-                            label.getStyleClass().add("bisq-easy-trade-state-active");
-                        } else {
-                            badge.getStyleClass().add("bisq-easy-trade-state-badge-inactive");
-                            label.getStyleClass().add("bisq-easy-trade-state-inactive");
-                        }
-                    }
-                });
+        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> isCollapsedChanged(isCollapsed));
+        phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), phaseIndex -> phaseIndexChanged(phaseIndex));
 
         isBuyerPhase2FieldsVisiblePin = EasyBind.subscribe(model.getPhase(), this::applyPhaseChange);
 
@@ -253,29 +231,40 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         });
     }
 
+
     @Override
     protected void onViewDetached() {
-        firstTimeUserBox.visibleProperty().unbind();
-        firstTimeUserBox.managedProperty().unbind();
-        phaseAndInfoBox.visibleProperty().unbind();
-        phaseAndInfoBox.managedProperty().unbind();
-        tradeInfo.textProperty().unbind();
-        instructionHeadline.textProperty().unbind();
+        firstTimeUserVBox.visibleProperty().unbind();
+        firstTimeUserVBox.managedProperty().unbind();
+        phaseAndInfoHBox.visibleProperty().unbind();
+        phaseAndInfoHBox.managedProperty().unbind();
+        headline.textProperty().unbind();
+        infoHeadline.textProperty().unbind();
         phase1Label.textProperty().unbind();
         phase2Label.textProperty().unbind();
         phase3Label.textProperty().unbind();
         phase4Label.textProperty().unbind();
         phase5Label.textProperty().unbind();
-        actionButton.textProperty().unbind();
-        actionButton.visibleProperty().unbind();
-        actionButton.managedProperty().unbind();
+        infoActionButton.textProperty().unbind();
+        infoActionButton.disableProperty().unbind();
+        infoActionButton.visibleProperty().unbind();
+        infoActionButton.managedProperty().unbind();
         openDisputeButton.visibleProperty().unbind();
         openDisputeButton.managedProperty().unbind();
+        if (buyersBtcBalance != null) {
+            buyersBtcBalance.textProperty().unbind();
+            buyersBtcBalance = null;
+        }
+        if (txId != null) {
+            txId.textProperty().unbindBidirectional(model.getTxId());
+            txId = null;
+        }
+
 
         collapseButton.setOnAction(null);
         expandButton.setOnAction(null);
         headerHBox.setOnMouseClicked(null);
-        actionButton.setOnAction(null);
+        infoActionButton.setOnAction(null);
         openDisputeButton.setOnAction(null);
         openTradeGuide.setOnAction(null);
         openTradeGuideButton.setOnAction(null);
@@ -286,88 +275,152 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         paymentAccountsComboBox.setOnChangeConfirmed(null);
     }
 
+    private void isCollapsedChanged(Boolean isCollapsed) {
+        collapseButton.setManaged(!isCollapsed);
+        collapseButton.setVisible(!isCollapsed);
+        expandButton.setManaged(isCollapsed);
+        expandButton.setVisible(isCollapsed);
+
+        if (isCollapsed) {
+            VBox.setMargin(headerHBox, new Insets(0, 0, -17, 0));
+        } else {
+            VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
+        }
+    }
+
+    private void phaseIndexChanged(Number phaseIndex) {
+        for (int i = 0; i < phaseItems.size(); i++) {
+            Badge badge = phaseItems.get(i).getThird();
+            Label label = phaseItems.get(i).getSecond();
+            badge.getStyleClass().clear();
+            label.getStyleClass().clear();
+            badge.getStyleClass().add("bisq-easy-trade-state-phase-badge");
+            if (i <= phaseIndex.intValue()) {
+                badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-active");
+                label.getStyleClass().add("bisq-easy-trade-state-phase-active");
+            } else {
+                badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-inactive");
+                label.getStyleClass().add("bisq-easy-trade-state-phase-inactive");
+            }
+        }
+    }
+
     private void applyPhaseChange(TradeStateModel.Phase phase) {
-        contextSpecificFields.getChildren().clear();
+
         if (phase == null) {
             return;
         }
+        infoFields.getChildren().clear();
+        if (buyersBtcBalance != null) {
+            buyersBtcBalance.textProperty().unbind();
+            buyersBtcBalance = null;
+        }
+        if (txId != null) {
+            txId.textProperty().unbindBidirectional(model.getTxId());
+            txId = null;
+        }
+        infoActionButton.disableProperty().unbind();
+
         switch (phase) {
             case BUYER_PHASE_1:
-                contextSpecificFields.getChildren().addAll(
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase1.info"))
+                infoFields.getChildren().addAll(
+                        getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase1.info"))
                 );
                 break;
             case BUYER_PHASE_2:
-                MaterialTextField btcAddress = getTextField(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.btcAddress"), model.getBuyersBtcAddress().get(), true);
-                btcAddress.setPromptText(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.btcAddress.prompt"));
-                MaterialTextArea account = addTextArea(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.sellersAccount"), model.getSellersPaymentAccountData().get(), false);
-                account.setText("IBAN: 123123123\nBIC:123123:\nName: Ben Toshi");
-                contextSpecificFields.getChildren().addAll(
-                        getTextField(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.quoteAmount"), model.getQuoteAmount().get(), false),
+                btcAddress = getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress"), "", true);
+                btcAddress.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.prompt"));
+                infoActionButton.disableProperty().bind(btcAddress.textProperty().isEmpty());
+                btcAddress.textProperty().bindBidirectional(model.getBuyersBtcAddress());
+                MaterialTextArea account = addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2.sellersAccount"), model.getSellersPaymentAccountData().get(), false);
+                account.textProperty().bind(model.getSellersPaymentAccountData());
+
+                infoFields.getChildren().addAll(
+                        getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2.quoteAmount"), model.getFormattedQuoteAmount().get(), false),
                         account,
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.btcAddress.headline", model.getQuoteAmount().get())),
+                        getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.headline", model.getFormattedQuoteAmount().get())),
                         btcAddress,
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.confirm", model.getQuoteAmount().get()))
+                        getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase2.confirm", model.getFormattedQuoteAmount().get())),
+                        infoActionButton
                 );
-                contextSpecificFields.getChildren().add(actionButton);
                 break;
             case BUYER_PHASE_3:
-                contextSpecificFields.getChildren().addAll(
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase3.info"))
+                infoFields.getChildren().addAll(
+                        getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase3.info", model.getQuoteCode().get()))
                 );
                 break;
             case BUYER_PHASE_4:
-                contextSpecificFields.getChildren().addAll(
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase4.info"))
+                buyersBtcBalance = getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase4.balance"), model.getBuyersBtcAddress().get(), false);
+                buyersBtcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help"));
+                buyersBtcBalance.textProperty().bind(model.getBuyersBtcBalance());
+                infoActionButton.disableProperty().bind(model.getActionButtonDisabled());
+                infoFields.getChildren().addAll(
+                        getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase4.info")),
+                        buyersBtcBalance,
+                        infoActionButton
                 );
-                contextSpecificFields.getChildren().add(actionButton);
                 break;
             case BUYER_PHASE_5:
-                contextSpecificFields.getChildren().addAll(
-                        getTextField(Res.get("bisqEasy.trade.state.phase.buyer.phase5.quoteAmount"), model.getQuoteAmount().get(), false),
-                        getTextField(Res.get("bisqEasy.trade.state.phase.buyer.phase5.baseAmount"), model.getBaseAmount().get(), false)
+                infoFields.getChildren().addAll(
+                        getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase5.quoteAmount"), model.getFormattedQuoteAmount().get(), false),
+                        getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase5.baseAmount"), model.getFormattedBaseAmount().get(), false),
+                        infoActionButton
                 );
-                contextSpecificFields.getChildren().add(actionButton);
                 break;
 
             // Seller
             case SELLER_PHASE_1:
-                MaterialTextArea accountData = addTextArea(Res.get("bisqEasy.trade.state.phase.seller.phase2.accountData"), model.getSellersPaymentAccountData().get(), true);
-                accountData.setPromptText("Fill in your payment account data. E.g. IBAN, BIC and account owner name");
-                contextSpecificFields.getChildren().addAll(
-                        accountData
+                MaterialTextArea accountData = addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase2.accountData"), model.getSellersPaymentAccountData().get(), true);
+                accountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase2.accountData.prompt"));
+                infoActionButton.disableProperty().bind(accountData.textProperty().isEmpty());
+                infoFields.getChildren().addAll(
+                        accountData,
+                        infoActionButton,
+                        Spacer.fillVBox(),
+                        getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.info"))
                 );
-                contextSpecificFields.getChildren().add(actionButton);
                 break;
             case SELLER_PHASE_2:
-                contextSpecificFields.getChildren().addAll(
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase2.info"))
+                infoFields.getChildren().addAll(
+                        getLabel(Res.get("bisqEasy.tradeState.info.seller.phase2.info", model.getQuoteCode().get()))
                 );
                 break;
             case SELLER_PHASE_3:
-                contextSpecificFields.getChildren().addAll(
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.sendBtc", model.getQuoteCode().get(), model.getBaseAmount().get())),
-                        getTextField(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.baseAmount"), model.getBaseAmount().get(), false),
-                        getTextField(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.btcAddress"), model.getBuyersBtcAddress().get(), false)
+                txId = getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.txId"), "", true);
+                txId.textProperty().bindBidirectional(model.getTxId());
+                txId.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3.txId.prompt"));
+                infoActionButton.disableProperty().bind(txId.textProperty().isEmpty());
+                infoFields.getChildren().addAll(
+                        getLabel(Res.get("bisqEasy.tradeState.info.seller.phase3.sendBtc", model.getQuoteCode().get(), model.getFormattedBaseAmount().get())),
+                        getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.baseAmount"), model.getFormattedBaseAmount().get(), false),
+                        getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.btcAddress"), model.getBuyersBtcAddress().get(), false),
+                        txId,
+                        infoActionButton
                 );
-                contextSpecificFields.getChildren().add(actionButton);
                 break;
             case SELLER_PHASE_4:
-                contextSpecificFields.getChildren().addAll(
-                        getLabel(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase4.info"))
+                buyersBtcBalance = getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.balance"), model.getBuyersBtcAddress().get(), false);
+                buyersBtcBalance.textProperty().bind(model.getBuyersBtcBalance());
+                buyersBtcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help"));
+                infoActionButton.disableProperty().bind(model.getActionButtonDisabled());
+                infoFields.getChildren().addAll(
+                        getLabel(Res.get("bisqEasy.tradeState.info.seller.phase4.info")),
+                        buyersBtcBalance,
+                        infoActionButton
                 );
                 break;
             case SELLER_PHASE_5:
-                contextSpecificFields.getChildren().addAll(
-                        getTextField(Res.get("bisqEasy.trade.state.phase.seller.phase5.quoteAmount"), model.getQuoteAmount().get(), false),
-                        getTextField(Res.get("bisqEasy.trade.state.phase.seller.phase5.baseAmount"), model.getBaseAmount().get(), false)
+                infoFields.getChildren().addAll(
+                        getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.quoteAmount"), model.getFormattedQuoteAmount().get(), false),
+                        getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.baseAmount"), model.getFormattedBaseAmount().get(), false),
+                        infoActionButton
                 );
-                contextSpecificFields.getChildren().add(actionButton);
                 break;
         }
     }
 
-    private Label getLabel(String text) {
+    // Utils
+    private static Label getLabel(String text) {
         Label label = new Label(text);
         label.getStyleClass().add("bisq-easy-trade-state-info-text");
         label.setWrapText(true);
@@ -375,7 +428,15 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         return label;
     }
 
-    private MaterialTextField getTextField(String description, String value, boolean isEditable) {
+    private static Label getHelpLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("bisq-easy-trade-state-info-help-text");
+        label.setWrapText(true);
+        VBox.setMargin(label, new Insets(10, 0, 0, 0));
+        return label;
+    }
+
+    private static MaterialTextField getTextField(String description, String value, boolean isEditable) {
         MaterialTextField field = new MaterialTextField(description, null);
         field.setText(value);
         field.showCopyIcon();
@@ -387,7 +448,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         return field;
     }
 
-    private MaterialTextArea addTextArea(String description, String value, boolean isEditable) {
+    private static MaterialTextArea addTextArea(String description, String value, boolean isEditable) {
         MaterialTextArea field = new MaterialTextArea(description, null);
         field.setText(value);
         field.showCopyIcon();
@@ -400,7 +461,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         return field;
     }
 
-    private Region getVLine() {
+    private static Region getVLine() {
         Region separator = Layout.vLine();
         separator.setMinHeight(10);
         separator.setMaxHeight(separator.getMinHeight());
@@ -408,13 +469,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         return separator;
     }
 
-    private Triple<HBox, Label, Badge> getPhaseItem(int index) {
-        return getPhaseItem(index, null);
-    }
 
-    private Triple<HBox, Label, Badge> getPhaseItem(int index, @Nullable String text) {
-        Label label = text != null ? new Label(text.toUpperCase()) : new Label();
-        label.getStyleClass().add("bisq-easy-trade-state");
+    private static Triple<HBox, Label, Badge> getPhaseItem(int index) {
+        Label label = new Label();
+        label.getStyleClass().add("bisq-easy-trade-state-phase");
         Badge badge = new Badge();
         badge.setText(String.valueOf(index));
         badge.setPrefSize(20, 20);

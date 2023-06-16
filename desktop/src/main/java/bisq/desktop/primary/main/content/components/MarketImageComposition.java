@@ -58,13 +58,13 @@ public class MarketImageComposition {
                     label.getStyleClass().setAll("market-fiat-label");
                     // When used in a list, the list style overwrites icon label style, so we need to 
                     // use !important. Using style class or id did not work ;-(
-                    label.setStyle("-fx-text-fill: -bisq-black !important;");
+                    label.setStyle("-fx-text-fill: -fx-dark-text-color !important;");
                 } else {
                     imageView.setId("market-crypto");
                     label.setPadding(new Insets(0, 0, 0, 2));
                     label.getStyleClass().setAll("market-crypto-label");
                     // list style overwrites icon label style, so we need to use !important
-                    label.setStyle("-fx-text-fill: -bisq-white !important;");
+                    label.setStyle("-fx-text-fill: -fx-light-text-color !important;");
                 }
                 if (code.length() > 3) {
                     label.setStyle("-fx-font-size: 6");

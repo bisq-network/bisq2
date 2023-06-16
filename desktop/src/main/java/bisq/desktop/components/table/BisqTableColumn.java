@@ -52,7 +52,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
-    private final Optional<Comparator<S>> comparator = Optional.empty();
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
     };

@@ -20,12 +20,12 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -37,7 +37,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.CookieKey;
-import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentityService;
@@ -82,6 +81,7 @@ public class TradeStateController implements Controller {
     }
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
+        model.setAppliedPhaseIndex(-1);
         model.setSelectedChannel(channel);
         model.setBisqEasyOffer(channel.getBisqEasyOffer());
         applyData();
@@ -90,6 +90,7 @@ public class TradeStateController implements Controller {
 
     @Override
     public void onActivate() {
+        model.setAppliedPhaseIndex(-1);
         view.getRoot().getScene().setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.A) {
                 model.getPhaseIndex().set(Math.min(4, model.getPhaseIndex().get() + 1));
@@ -122,25 +123,6 @@ public class TradeStateController implements Controller {
             tradeRulesConfirmedPin.unbind();
         }
         isCollapsedPin.unsubscribe();
-    }
-
-    void onAction() {
-        boolean isBuyer = isBuyer();
-        boolean isSeller = !isBuyer;
-        int index = model.getPhaseIndex().get();
-        if (index == 0 && isSeller) {
-            onSendPaymentAccount();
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
-        } else if (index == 1 && isBuyer) {
-            sendMessage("Please send BTC to: 2MwMapa5GYoWbXLhAui55ifCq3B9k1dyNAx");
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
-        } else if (index == 2 && isSeller) {
-            sendMessage("I have received the EUR payment and initiated the BTC transfer.");
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
-        } else if (index == 3 && isBuyer) {
-            sendMessage("I confirm that I have received the BTC payment.");
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
-        }
     }
 
     void onExpand() {
@@ -184,54 +166,64 @@ public class TradeStateController implements Controller {
         }
     }
 
-    void sendMessage(String message) {
+    void onAction() {
+        boolean isBuyer = isBuyer();
+        boolean isSeller = !isBuyer;
+        int index = model.getPhaseIndex().get();
+        if (index == 0 && isSeller) {
+            onSendPaymentAccount();
+            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+        } else if (index == 1 && isBuyer) {
+            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
+            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+        } else if (index == 2 && isSeller) {
+            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3.chatBotMessage", model.getTxId().get()));
+            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+        } else if (index == 3) {
+            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+        }
+    }
+
+    void sendChatBotMessage(String message) {
         chatService.getBisqEasyPrivateTradeChatChannelService()
                 .sendTextMessage(message, model.getSelectedChannel());
     }
 
-    void onSendBtcAddress() {
-        sendMessage(Res.get("bisqEasy.sendBtcAddress.message", "2MwMapa5GYoWbXLhAui55ifCq3B9k1dyNAx"));
-        
-       /* checkArgument(walletService.isPresent());
-        walletService.get().getUnusedAddress().
-                thenAccept(receiveAddress -> UIThread.run(() -> {
-                            if (receiveAddress == null) {
-                                log.warn("receiveAddress from the wallet is null.");
-                                return;
-                            }
-                            String message = Res.get("bisqEasy.sendBtcAddress.message", receiveAddress);
-                            chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
-                                    Optional.empty(),
-                                    model.getSelectedChannel());
-                        }
-                ));*/
-    }
-
     void onSendPaymentAccount() {
-        if (accountService.getAccounts().size() > 1) {
+        String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getSellersPaymentAccountData().get());
+        chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
+                Optional.empty(),
+                model.getSelectedChannel());
+        
+       /* if (accountService.getAccounts().size() > 1) {
             //todo
             new Popup().information("TODO").show();
         } else {
+           
+            
             Account<?, ? extends PaymentMethod<?>> selectedAccount = accountService.getSelectedAccount();
             if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
-                UserDefinedFiatAccountPayload accountPayload = ((UserDefinedFiatAccount) selectedAccount).getAccountPayload();
-                String message = Res.get("bisqEasy.sendPaymentAccount.message", accountPayload.getAccountData());
-                chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
-                        Optional.empty(),
-                        model.getSelectedChannel());
             } else {
                 if (!accountService.hasAccounts()) {
-                    new Popup().information(Res.get("bisqEasy.sendPaymentAccount.noAccount.popup")).show();
+                    new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.noAccount")).show();
                 } else if (accountService.getAccountByNameMap().size() > 1) {
                     String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
                     if (DontShowAgainService.showAgain(key)) {
-                        new Popup().information(Res.get("bisqEasy.sendPaymentAccount.multipleAccounts.popup"))
+                        new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.multipleAccounts"))
                                 .dontShowAgainId(key)
                                 .show();
                     }
                 }
             }
-        }
+        }*/
+    }
+
+    private Optional<String> findUsersAccountData() {
+        return Optional.ofNullable(accountService.getSelectedAccount()).stream()
+                .filter(account -> account instanceof UserDefinedFiatAccount)
+                .map(account -> (UserDefinedFiatAccount) account)
+                .map(account -> account.getAccountPayload().getAccountData())
+                .findFirst();
     }
 
     void onPaymentAccountSelected(@Nullable Account<?, ? extends PaymentMethod<?>> account) {
@@ -244,15 +236,15 @@ public class TradeStateController implements Controller {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         boolean isBuyer = isBuyer();
 
-        model.getPhase1Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase1").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase1").toUpperCase());
-        model.getPhase2Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase2").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase2").toUpperCase());
-        model.getPhase3Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase3").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase3").toUpperCase());
-        model.getPhase4Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase4").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase4").toUpperCase());
-        model.getPhase5Info().set(Res.get("bisqEasy.trade.state.phase.phase5").toUpperCase());
+        model.getPhase1Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase1").toUpperCase() :
+                Res.get("bisqEasy.tradeState.phase.seller.phase1").toUpperCase());
+        model.getPhase2Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase2").toUpperCase() :
+                Res.get("bisqEasy.tradeState.phase.seller.phase2").toUpperCase());
+        model.getPhase3Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase3").toUpperCase() :
+                Res.get("bisqEasy.tradeState.phase.seller.phase3").toUpperCase());
+        model.getPhase4Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase4").toUpperCase() :
+                Res.get("bisqEasy.tradeState.phase.seller.phase4").toUpperCase());
+        model.getPhase5Info().set(Res.get("bisqEasy.tradeState.phase.phase5").toUpperCase());
 
         String directionString = isBuyer ?
                 Res.get("offer.buying").toUpperCase() :
@@ -260,27 +252,21 @@ public class TradeStateController implements Controller {
         AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
         String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
         model.getQuoteCode().set(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
-        model.getBaseAmount().set(baseAmountString);
+        model.getFormattedBaseAmount().set(baseAmountString);
         String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-        model.getQuoteAmount().set(quoteAmountString);
+        model.getFormattedQuoteAmount().set(quoteAmountString);
         FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
         String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
-        String tradeInfo = Res.get("bisqEasy.trade.state.headline",
+        String tradeInfo = Res.get("bisqEasy.tradeState.header.headline",
                 directionString,
                 baseAmountString,
                 quoteAmountString,
                 paymentMethodName);
 
         model.getTradeInfo().set(tradeInfo);
-
-        accountService.getAccounts().stream()
-                .filter(account -> account instanceof UserDefinedFiatAccount)
-                .map(account -> (UserDefinedFiatAccount) account)
-                .map(account -> account.getAccountPayload().getAccountData())
-                .findFirst()
-                .ifPresent(accountData -> model.getSellersPaymentAccountData().set(accountData));
-
-        model.getBuyersBtcAddress().set("2MwMapa5GYoWbXLhAui55ifCq3B9k1dyNAx");
+        if (!isBuyer) {
+            findUsersAccountData().ifPresent(accountData -> model.getSellersPaymentAccountData().set(accountData));
+        }
     }
 
     private void phaseIndexChanged(int phaseIndex) {
@@ -288,6 +274,10 @@ public class TradeStateController implements Controller {
         if (bisqEasyOffer == null) {
             return;
         }
+        if (model.getAppliedPhaseIndex() == phaseIndex) {
+            return;
+        }
+        model.setAppliedPhaseIndex(phaseIndex);
         boolean tradeRulesConfirmed = getTradeRulesConfirmed();
         boolean showFirstTimeItems = phaseIndex == 0 && !tradeRulesConfirmed;
         applyFirstTimeItemsVisible();
@@ -301,20 +291,19 @@ public class TradeStateController implements Controller {
         String fiatCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
 
         if (phaseIndex == 0) {
-
             // seller: send fiat account
             model.getActionButtonVisible().set(isSeller);
             model.getOpenDisputeButtonVisible().set(false);
             if (isSeller) {
                 model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_1);
-                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase1.buttonText"));
+                model.getActionButtonText().set(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
             } else {
                 model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_1);
             }
             // todo seller: show text field for payment account with button below
             model.getPhaseInfo().set(isBuyer ?
-                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase1.headline", fiatCode) :
-                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase1.headline")
+                    Res.get("bisqEasy.tradeState.info.buyer.phase1.headline", fiatCode) :
+                    Res.get("bisqEasy.tradeState.info.seller.phase1.headline")
             );
         } else if (phaseIndex == 1) {
             // buyer: send btc address, fiat sent
@@ -322,52 +311,72 @@ public class TradeStateController implements Controller {
             model.getOpenDisputeButtonVisible().set(false);
 
             if (isBuyer) {
-                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.buttonText"));
+                model.getActionButtonText().set(Res.get("bisqEasy.tradeState.info.buyer.phase2.buttonText"));
+                model.getSellersPaymentAccountData().set("IBAN: 122312\n" +
+                        "BIC: 32432131\n" +
+                        "Name: Hal Finney"); //todo
                 model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_2);
             } else {
                 model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_2);
             }
             // todo buyer show text field with sellers account data and the fiat amount to send w button below
             model.getPhaseInfo().set(isBuyer ?
-                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.headline", model.getQuoteAmount().get()) :
-                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase2.headline", fiatCode)
+                    Res.get("bisqEasy.tradeState.info.buyer.phase2.headline", model.getFormattedQuoteAmount().get()) :
+                    Res.get("bisqEasy.tradeState.info.seller.phase2.headline", fiatCode)
             );
         } else if (phaseIndex == 2) {
             // seller: confirm fiat receipt and sent BTC
             model.getActionButtonVisible().set(isSeller);
             model.getOpenDisputeButtonVisible().set(true);
             if (isSeller) {
-                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.buttonText"));
+                model.getBuyersBtcAddress().set("2MwMapa5GYoWbXLhAui55ifCq3B9k1dyNAx");
+                model.getActionButtonText().set(Res.get("bisqEasy.tradeState.info.seller.phase3.buttonText"));
                 model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_3);
             } else {
                 model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_3);
             }
             // todo seller: 
             model.getPhaseInfo().set(isBuyer ?
-                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase3.headline", fiatCode) :
-                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.headline", model.getQuoteAmount().get())
+                    Res.get("bisqEasy.tradeState.info.buyer.phase3.headline", fiatCode) :
+                    Res.get("bisqEasy.tradeState.info.seller.phase3.headline", model.getFormattedQuoteAmount().get())
             );
         } else if (phaseIndex == 3) {
             // buyer: confirm BTC received
-            model.getActionButtonVisible().set(isBuyer);
+            model.getActionButtonVisible().set(true);
             model.getOpenDisputeButtonVisible().set(true);
+            model.getActionButtonText().set(Res.get("bisqEasy.tradeState.info.phase4.buttonText"));
             if (isBuyer) {
-                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase4.buttonText"));
                 model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_4);
             } else {
                 model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_4);
             }
             model.getPhaseInfo().set(isBuyer ?
-                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase4.headline") :
-                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase4.headline")
+                    Res.get("bisqEasy.tradeState.info.buyer.phase4.headline") :
+                    Res.get("bisqEasy.tradeState.info.seller.phase4.headline")
             );
+
+            model.getActionButtonDisabled().set(true);
+            model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value.notInMempoolYet"));
+            UIScheduler.run(() ->
+                            model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
+                                    model.getFormattedBaseAmount().get(), "0"))).
+                    after(2000);
+            UIScheduler.run(() -> {
+                                model.getActionButtonDisabled().set(false);
+                                sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
+                                        model.getFormattedBaseAmount().get(), model.getBuyersBtcAddress().get()));
+                                model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
+                                        model.getFormattedBaseAmount().get(), "1"));
+                            }
+                    ).
+                    after(4000);
         } else if (phaseIndex == 4) {
             // btc received
             model.getActionButtonVisible().set(false);
             model.getOpenDisputeButtonVisible().set(false);
             model.getPhaseInfo().set(isBuyer ?
-                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase5.headline") :
-                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase5.headline")
+                    Res.get("bisqEasy.tradeState.info.buyer.phase5.headline") :
+                    Res.get("bisqEasy.tradeState.info.seller.phase5.headline")
             );
             model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_5);
             model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_5);

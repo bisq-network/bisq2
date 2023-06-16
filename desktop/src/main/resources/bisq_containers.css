@@ -44,7 +44,7 @@
 }
 
 .list-view .list-cell:selected .label {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 
@@ -177,7 +177,8 @@ tree-table-view:focused {
 
 .table-view .column-header .label {
     -fx-alignment: center;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 0.9em;
     -fx-label-padding: 0 10 0 10;
@@ -219,7 +220,8 @@ tree-table-view:focused {
 }
 
 .table-view .table-row-cell .table-cell .text {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 /* empty */
@@ -247,13 +249,15 @@ tree-table-view:focused {
 
 /* disabled */
 .table-view .table-row-cell:disabled .table-cell .text {
+    -fx-text-fill: -bisq-grey-20;
     -fx-fill: -bisq-grey-20;
 }
 
 
 /* selected */
 .table-row-cell:selected {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .table-view .table-row-cell:hover .table-cell,
@@ -264,26 +268,31 @@ tree-table-view:focused {
 
 /* button */
 .table-view .table-row-cell:selected .button .text {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 /* copy-icon */
 .table-view .table-row-cell .copy-icon .text,
 .table-view .table-row-cell .copy-icon .text:hover {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text:hover {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 /* hyperlink */
 .table-view .table-row-cell:selected .hyperlink .text {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -295,7 +304,8 @@ tree-table-view:focused {
 
 .table-view .table-row-cell .hyperlink .text:hover,
 .table-view .table-row-cell:selected .hyperlink .text:hover {
-    -fx-fill: -bisq-white;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -326,7 +336,7 @@ tree-table-view:focused {
 
 .titled-pane {
     -fx-background-color: null;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-label-padding: -30 0 0 0;
 }
 
@@ -394,7 +404,7 @@ tree-table-view:focused {
 }
 
 .accordion > .titled-pane {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 
@@ -566,7 +576,7 @@ tree-table-view:focused {
 }
 
 .popover > .content .default-text {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .popover > .content > .title > .text {
@@ -603,7 +613,7 @@ tree-table-view:focused {
 
 .overlay-headline {
     -fx-font-size: 1.5em;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .overlay-headline-information {

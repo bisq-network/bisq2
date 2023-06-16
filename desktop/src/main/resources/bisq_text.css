@@ -47,7 +47,7 @@
     -fx-background-color: -bisq-grey-12;
     -fx-background-radius: 4;
     -fx-border-style: none;;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -88,39 +88,39 @@
  ******************************************************************************/
 
 .bisq-text-headline-1 {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 4.1em;
 }
 
 .bisq-text-headline-2 {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.7em;
     /*-fx-line-spacing: -0.16em;*/
 }
 
 .bisq-text-headline-3 {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Thin";
     -fx-font-size: 3.4em;
 }
 
 .bisq-text-headline-4 {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 3.15em;
 }
 
 .bisq-text-headline-5 {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.5em;
     /* -fx-line-spacing: -0.16em;*/
 }
 
 .bisq-text-1 {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.25em;
 }
 
@@ -131,26 +131,26 @@
 }
 
 .bisq-text-3 {
-    -fx-fill: -bisq-grey-dimmed;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.1em;
     /* -fx-line-spacing: -0.12em;*/
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-4 {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.8em;
 }
 
 .bisq-text-5 {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
 .bisq-text-6 {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.1em;
 }
 
@@ -162,43 +162,43 @@
 .bisq-text-8 {
     -fx-font-size: 0.92em;
     -fx-font-family: "IBM Plex Sans Medium";
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .bisq-text-9 {
-    -fx-fill: -bisq-white;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-10 {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-11 {
-    -fx-text-fill: -bisq-white;
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 4.1em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
 .bisq-text-12 {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 2.0em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
 .bisq-text-13 {
-    -fx-fill: -bisq-white;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.1em;
 }
 
 .bisq-text-14 {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -210,8 +210,8 @@
 }
 
 .bisq-text-16 {
-    -fx-fill: -bisq-grey-dimmed;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -219,73 +219,73 @@
 .bisq-text-17 {
     -fx-font-size: 2.15em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .bisq-text-18 {
     -fx-font-size: 0.9em;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-19 {
     -fx-font-size: 0.9em;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 #bisq-text-20 {
     -fx-font-size: 0.9em;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-21 {
-    -fx-fill: -bisq-white;
-    -fx-text-fill: -bisq-white !Important;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color !Important;
     -fx-font-size: 1.1em !Important;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 
 .take-offer-review-description {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .take-offer-review-grid-headline {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.8em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .take-offer-review-value {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .take-offer-review-value-details {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .take-offer-review-headline {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 2.5em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .take-offer-review-subtitle {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.05em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .take-offer-review-subtitle-value {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.7em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -294,7 +294,7 @@
 
 /* colors */
 .text-fill-white {
-    -fx-text-fill: -bisq-white !Important;
+    -fx-text-fill: -fx-light-text-color !Important;
 }
 
 .text-fill-light-dimmed {
@@ -302,7 +302,7 @@
 }
 
 .text-fill-grey-dimmed {
-    -fx-text-fill: -bisq-grey-dimmed !Important;
+    -fx-text-fill: -fx-mid-text-color !Important;
 }
 
 .text-fill-green {
@@ -439,7 +439,7 @@
 #base-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-highlight-fill: -bisq-green;
     -fx-font-size: 5.2em;
     -fx-font-family: "IBM Plex Sans Thin";
@@ -448,7 +448,7 @@
 #base-amount-text-field-small {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-highlight-fill: -bisq-green;
     -fx-font-size: 3em;
     -fx-font-family: "IBM Plex Sans Thin";
@@ -470,20 +470,20 @@
  ******************************************************************************/
 
 .bisq-big-light-headline-label {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.51em;
 }
 
 .bisq-sub-title-label {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.44em;
 }
 
 .bisq-large-profile-id-label {
     -fx-background-color: -bisq-grey-6;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
 }
 
@@ -529,7 +529,7 @@
 }
 
 .bisq-small-dimmed-label {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.73em;
 }
 
@@ -538,7 +538,7 @@
 }
 
 .bisq-text-white {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .bisq-text-green {
@@ -546,7 +546,7 @@
 }
 
 .bisq-text-grey-9 {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .bisq-text-grey-10 {
@@ -579,7 +579,7 @@
 .material-text-field {
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-prompt-text-fill: -bisq-grey-disabled;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
@@ -611,20 +611,20 @@
 }
 
 .material-text-field-description-deselected {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .material-text-field-description-read-only {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .material-text-field-read-only {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .material-text-field-help {
     -fx-font-size: 0.95em;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -641,7 +641,7 @@
  ******************************************************************************/
 
 .hyperlink {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .hyperlink:hover {
@@ -649,11 +649,11 @@
 }
 
 .hyperlink:visited {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .hyperlink:hover:visited {
-    -fx-text-fill: derive(-bisq-grey-dimmed, 20%);
+    -fx-text-fill: derive(-fx-mid-text-color, 20%);
 }
 
 .hyperlink,
@@ -668,7 +668,7 @@
 }
 
 .hyperlink.no-underline {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .hyperlink.highlight,
@@ -695,7 +695,7 @@
 }
 
 .bisq-input-box-description-label {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -703,7 +703,7 @@
 .bisq-input-box-text-input {
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-prompt-text-fill: -bisq-grey-14;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";

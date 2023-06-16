@@ -20,13 +20,13 @@
 
 .market-fiat-label {
     -fx-font-size: 7;
-    -fx-text-fill: -bisq-black;
+    -fx-text-fill: -fx-dark-text-color;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .market-crypto-label {
     -fx-font-size: 7;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -54,8 +54,8 @@
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-faint-focus-color: transparent;
-    -fx-text-fill: -bisq-white;
-    -fx-prompt-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-prompt-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.38em;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
@@ -65,7 +65,7 @@
 
 #chat-messages-edit-text-area.text-area {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.3em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -84,37 +84,37 @@
 }
 
 #chat-messages-headline {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.53em;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
 #chat-messages-date {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.92em;
 }
 
 #chat-messages-message {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.33em;
     -fx-font-family: "IBM Plex Sans";
 }
 
 #chat-sidebar-headline {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.78em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 #chat-sidebar-title {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 #chat-sidebar-text {
-    -fx-text-fill: -bisq-white;
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.05em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -145,19 +145,19 @@
 
 #buy-button {
     -fx-background-color: -bisq-buy;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-background-insets: 0 0 0 0;
 }
 
 #sell-button {
     -fx-background-color: -bisq-sell;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-background-insets: 0 0 0 0;
 }
 
 #button-inactive {
     -fx-background-color: -bisq-grey-5;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-background-insets: 0 0 0 0;
 }
 
@@ -176,7 +176,7 @@
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0 0 1 0;
     -fx-pref-height: 40px;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 
@@ -186,7 +186,7 @@
 
 
 #chat-user-name {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 0.92em;
     -fx-font-family: "IBM Plex Sans Medium";
     -fx-cursor: hand;
@@ -199,7 +199,7 @@
 
 #proof-of-burn-tooltip {
     -fx-background: -bisq-grey-5;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
@@ -220,7 +220,7 @@
 }
 
 #user-name-label {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -250,12 +250,12 @@
 
 .list-view.channel-selection-list-view .list-cell:selected {
     -fx-background-color: -bisq-grey-4;
-    -fx-fill: -bisq-black;
-    -fx-text-fill: -bisq-black;
+    -fx-fill: -fx-dark-text-color;
+    -fx-text-fill: -fx-dark-text-color;
 }
 
 .list-view.channel-selection-list-view .list-cell:hover .label {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .list-view.channel-selection-list-view .list-cell:selected .label {

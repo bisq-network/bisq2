@@ -111,7 +111,7 @@ public class MaterialTextField extends Pane {
         helpLabel = new Label();
         helpLabel.setLayoutX(16);
         helpLabel.getStyleClass().add("material-text-field-help");
-        // helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -bisq-grey-dimmed; -fx-font-family: \"IBM Plex Sans Light\";");
+        // helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\";");
         helpLabel.setMouseTransparent(true);
         if (StringUtils.isNotEmpty(help)) {
             helpLabel.setText(help);
@@ -439,17 +439,10 @@ public class MaterialTextField extends Pane {
     }
 
     protected boolean showInputTextField() {
-
-        boolean b = StringUtils.isNotEmpty(promptTextProperty().get()) ||
+        return StringUtils.isNotEmpty(promptTextProperty().get()) ||
                 StringUtils.isNotEmpty(textInputControl.getText()) ||
                 textInputControl.isFocused();
-        log.error("showInputTextField promptProperty.get() {}", promptTextProperty().get());
-        log.error("showInputTextField field.getText()  {}", textInputControl.getText());
-        log.error("showInputTextField    field.isFocused() {}", textInputControl.isFocused());
-        log.error("showInputTextField {} {}", b, descriptionLabel);
-        return b;
     }
-
 
     protected double getBgHeight() {
         return 56;

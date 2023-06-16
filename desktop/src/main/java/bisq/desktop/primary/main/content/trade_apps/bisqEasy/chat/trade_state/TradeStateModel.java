@@ -49,9 +49,11 @@ public class TradeStateModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
     private final StringProperty quoteCode = new SimpleStringProperty();
-    private final StringProperty quoteAmount = new SimpleStringProperty();
-    private final StringProperty baseAmount = new SimpleStringProperty();
+    private final StringProperty formattedQuoteAmount = new SimpleStringProperty();
+    private final StringProperty formattedBaseAmount = new SimpleStringProperty();
     private final StringProperty buyersBtcAddress = new SimpleStringProperty();
+    private final StringProperty buyersBtcBalance = new SimpleStringProperty();
+    private final StringProperty txId = new SimpleStringProperty();
     private final StringProperty sellersPaymentAccountData = new SimpleStringProperty();
     private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
     private final StringProperty tradeInfo = new SimpleStringProperty();
@@ -63,10 +65,13 @@ public class TradeStateModel implements Model {
     private final StringProperty phase5Info = new SimpleStringProperty();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty firstTimeItemsVisible = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoBoxVisible = new SimpleBooleanProperty();
     private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
     private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
+    @Setter
+    private int appliedPhaseIndex = -1;
     private final ObservableList<Account<?, ?>> paymentAccounts = FXCollections.observableArrayList();
     private final ObjectProperty<Account<?, ?>> selectedAccount = new SimpleObjectProperty<>();
     private final ObjectProperty<Phase> phase = new SimpleObjectProperty<>();
