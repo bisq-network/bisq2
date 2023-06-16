@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -47,7 +48,11 @@ public class TradeStateModel implements Model {
     @Setter
     private BisqEasyPrivateTradeChatChannel selectedChannel;
     @Setter
+    private BisqEasyProtocolModel protocolModel;
+    @Setter
     private BisqEasyOffer bisqEasyOffer;
+
+
     private final StringProperty quoteCode = new SimpleStringProperty();
     private final StringProperty formattedQuoteAmount = new SimpleStringProperty();
     private final StringProperty formattedBaseAmount = new SimpleStringProperty();

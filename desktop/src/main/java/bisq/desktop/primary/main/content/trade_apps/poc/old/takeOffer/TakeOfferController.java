@@ -29,7 +29,7 @@ import bisq.desktop.primary.main.content.trade_apps.poc.old.takeOffer.components
 import bisq.offer.Direction;
 import bisq.offer.poc.PocOffer;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.protocol.poc.PocProtocolService;
+import bisq.protocol.bisq_easy.poc.poc.PocProtocolService;
 import javafx.beans.property.BooleanProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

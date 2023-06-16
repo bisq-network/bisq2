@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.protocol.bisq_easy.poc.poc.*;
 import bisq.protocol.poc.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

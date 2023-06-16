@@ -24,28 +24,7 @@ option java_multiple_files = true;
 import "offer.proto";
 import "network.proto";
 
-message Trade {
-  offer.Offer offer = 1;
-  network.NetworkId takerNetworkId = 2;
-  sint64 baseSideAmount = 3;
-  sint64 quoteSideAmount = 4;
-  string protocolTypeName = 5;
-  offer.PaymentMethodSpec baseSidePaymentMethodSpec = 6;
-  offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 7;
-  oneof message {
-    BisqEasyTrade bisqEasyTrade = 20;
-  }
-}
-message ProtocolModel {
-  Trade trade = 1;
-  string phaseName = 2;
-  oneof message {
-    BisqEasyProtocolModel bisqEasyProtocolModel = 20;
-  }
-}
-message ProtocolStore {
-  map<string, ProtocolModel> modelByOfferId = 1;
-}
+
 
 // BisqEasy
 message BisqEasyTrade {
@@ -54,8 +33,8 @@ message BisqEasyTrade {
 message BisqEasyProtocolModel {
 }
 
-message BisqEasyProtocolStore {
-  map<string, BisqEasyProtocolModel> modelById = 1;
+message BisqEasyTradeStore {
+  map<string, BisqEasyTrade> tradeById = 1;
 }
 
 // BisqEasy messages

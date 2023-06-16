@@ -17,13 +17,15 @@
 
 package bisq.protocol.bisq_easy;
 
+import bisq.common.observable.Observable;
 import bisq.common.proto.Proto;
-import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.identity.Identity;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.protocol.bisq_easy.states.BisqEasyState;
+import bisq.protocol.fsm.State;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,25 +34,20 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @Getter
 public class BisqEasyProtocolModel implements Proto {
-    private final BisqEasyContract bisqEasyContract;
-    private final ContractSignatureData contractSignatureData;
-    private final ProtocolParty taker;
-    private final ProtocolParty maker;
-
-    public BisqEasyProtocolModel(Identity takerIdentity, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
-        this.taker = new ProtocolParty(takerIdentity.getNetworkId());
-        this.bisqEasyContract = bisqEasyContract;
-        this.contractSignatureData = contractSignatureData;
-
-        this.maker = new ProtocolParty(getOffer().getMakerNetworkId());
+    public static String createProtocolId(String offerId, String takerNodeId) {
+        return offerId + "." + takerNodeId;
     }
 
-    //todo
+    @Setter
+    private BisqEasyContract bisqEasyContract;
+
+    @Setter
+    private ProtocolParty taker;
+    @Setter
+    private ProtocolParty maker;
+    private final Observable<State> fsmState = new Observable<>(BisqEasyState.INIT);
+
     public BisqEasyProtocolModel() {
-        taker = null;
-        bisqEasyContract = null;
-        contractSignatureData = null;
-        maker = null;
     }
 
     @Override
@@ -64,11 +61,14 @@ public class BisqEasyProtocolModel implements Proto {
     }
 
     public String getProtocolId() {
-        return getOffer().getId() + "." + taker.getNetworkId().getNodeId();
+        return createProtocolId(getOffer().getId(), taker.getNetworkId().getNodeId());
     }
 
     public BisqEasyOffer getOffer() {
         return bisqEasyContract.getOffer();
     }
 
+    public void sendPaymentAccount() {
+
+    }
 }

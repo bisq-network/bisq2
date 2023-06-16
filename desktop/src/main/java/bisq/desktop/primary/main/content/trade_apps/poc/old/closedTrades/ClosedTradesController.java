@@ -21,9 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.protocol.poc.PocProtocol;
-import bisq.protocol.poc.PocProtocolModel;
-import bisq.protocol.poc.PocProtocolService;
+import bisq.protocol.bisq_easy.poc.poc.PocProtocol;
+import bisq.protocol.bisq_easy.poc.poc.PocProtocolModel;
+import bisq.protocol.bisq_easy.poc.poc.PocProtocolService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

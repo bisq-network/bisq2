@@ -26,8 +26,6 @@ import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.poc.PocOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.protocol.poc.PocProtocol;
-import bisq.protocol.poc.PocProtocolModel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,11 +45,9 @@ public class PendingTradeListItem implements TableItem {
     private final String quoteAmount;
     private final String paymentMethod;
     private final String options;
-    private final PocProtocol<? extends PocProtocolModel> protocol;
 
-    public PendingTradeListItem(PocProtocol<? extends PocProtocolModel> protocol) {
-        this.protocol = protocol;
-        PocContract contract = protocol.getContract();
+    public PendingTradeListItem(Object protocol) {
+        PocContract contract = null;
         offer = contract.getOffer();
         id = offer.getId();
 

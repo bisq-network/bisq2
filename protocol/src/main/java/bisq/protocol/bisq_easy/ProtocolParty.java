@@ -17,9 +17,11 @@
 
 package bisq.protocol.bisq_easy;
 
+import bisq.contract.ContractSignatureData;
 import bisq.network.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class ProtocolParty {
     private final NetworkId networkId;
+    @Setter
+    private ContractSignatureData contractSignatureData;
 
     public ProtocolParty(NetworkId networkId) {
         this.networkId = networkId;

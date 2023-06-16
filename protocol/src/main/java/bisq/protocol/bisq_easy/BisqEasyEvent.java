@@ -14,25 +14,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.protocol.fsm;
 
-import lombok.EqualsAndHashCode;
+package bisq.protocol.bisq_easy;
+
+import bisq.protocol.fsm.Event;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @ToString
 @Getter
-@Setter
-@EqualsAndHashCode
-public class Transition {
-    private State from;
-    private State to;
-    private Event event;
-    private Class<?> handler;
-
-    public Transition() {
-    }
+public enum BisqEasyEvent implements Event {
+    TAKE_OFFER,
+    RECEIVED_TAKE_OFFER_REQUEST,
 }

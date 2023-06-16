@@ -20,8 +20,6 @@ package bisq.protocol.bisq_easy;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.contract.ContractService;
-import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -34,27 +32,40 @@ import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.protocol.bisq_easy.buyer_as_maker.BisqEasyBuyerAsMakerProtocol;
+import bisq.protocol.bisq_easy.buyer_as_maker.BisqEasyBuyerAsMakerTrade;
+import bisq.protocol.bisq_easy.buyer_as_taker.BisqEasyBuyerAsTakerProtocol;
+import bisq.protocol.bisq_easy.buyer_as_taker.BisqEasyBuyerAsTakerTrade;
+import bisq.protocol.bisq_easy.maker.BisqEasyMakerProtocol;
 import bisq.protocol.bisq_easy.messages.BisqEasyProtocolMessage;
+import bisq.protocol.bisq_easy.seller_as_maker.BisqEasySellerAsMakerProtocol;
+import bisq.protocol.bisq_easy.seller_as_maker.BisqEasySellerAsMakerTrade;
+import bisq.protocol.bisq_easy.seller_as_taker.BisqEasySellerAsTakerProtocol;
+import bisq.protocol.bisq_easy.seller_as_taker.BisqEasySellerAsTakerTrade;
+import bisq.protocol.bisq_easy.taker.BisqEasyTakerProtocol;
+import bisq.protocol.bisq_easy.taker.BisqEasyTakerTrade;
+import bisq.protocol.bisq_easy.taker.messages.BisqEasyTakeOfferRequest;
 import bisq.support.MediationService;
 import bisq.support.SupportService;
-import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class BisqEasyProtocolService implements PersistenceClient<BisqEasyProtocolStore>, Service, MessageListener {
+public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeStore>, Service, MessageListener {
     @Getter
-    private final BisqEasyProtocolStore persistableStore = new BisqEasyProtocolStore();
+    private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
     @Getter
-    private final Persistence<BisqEasyProtocolStore> persistence;
+    private final Persistence<BisqEasyTradeStore> persistence;
+    private final IdentityService identityService;
+    private final OfferService offerService;
     private final ContractService contractService;
     private final MediationService mediationService;
     private final NetworkService networkService;
+    private final ServiceProvider serviceProvider;
 
     public BisqEasyProtocolService(NetworkService networkService,
                                    IdentityService identityService,
@@ -63,8 +74,16 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyProtoc
                                    ContractService contractService,
                                    SupportService supportService) {
         this.networkService = networkService;
+        this.identityService = identityService;
+        this.offerService = offerService;
         this.contractService = contractService;
         this.mediationService = supportService.getMediationService();
+        serviceProvider = new ServiceProvider(networkService,
+                identityService,
+                persistenceService,
+                offerService,
+                contractService,
+                supportService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -80,8 +99,10 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyProtoc
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        networkService.removeMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
@@ -95,50 +116,84 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyProtoc
     }
 
     private void processMessage(BisqEasyProtocolMessage message) {
+        if (message instanceof BisqEasyTakeOfferRequest) {
+            onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) message);
+        }
+    }
 
+    private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
+        BisqEasyOffer bisqEasyOffer = message.getBisqEasyContract().getOffer();
+        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
+        BisqEasyProtocol<?> bisqEasyProtocol = createProtocol(isBuyer, false);
+        BisqEasyTrade<?, ?> bisqEasyTrade = createTrade(bisqEasyProtocol);
+        persistableStore.add(bisqEasyTrade);
+        persist();
+        BisqEasyMakerProtocol<?> bisqEasyTakerProtocol = (BisqEasyMakerProtocol<?>) bisqEasyProtocol;
+        bisqEasyTakerProtocol.handleTakeOfferRequest(serviceProvider, message);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void takeOffer(Identity takerIdentity,
-                          BisqEasyOffer bisqEasyOffer,
-                          Monetary baseSideAmount,
-                          Monetary quoteSideAmount,
-                          BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                          FiatPaymentMethodSpec fiatPaymentMethodSpec)
-            throws GeneralSecurityException {
-        Optional<UserProfile> mediator = mediationService.takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
-        BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
-                takerIdentity.getNetworkId(),
-                baseSideAmount.getValue(),
-                quoteSideAmount.getValue(),
+    public BisqEasyTakerTrade<?, ?> takeOffer(Identity takerIdentity,
+                                              BisqEasyOffer bisqEasyOffer,
+                                              Monetary baseSideAmount,
+                                              Monetary quoteSideAmount,
+                                              BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                              FiatPaymentMethodSpec fiatPaymentMethodSpec) {
+        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
+        BisqEasyProtocol<?> bisqEasyProtocol = createProtocol(isBuyer, true);
+        BisqEasyTrade<?, ?> bisqEasyTrade = createTrade(bisqEasyProtocol);
+        persistableStore.add(bisqEasyTrade);
+        persist();
+        BisqEasyTakerProtocol<?> bisqEasyTakerProtocol = (BisqEasyTakerProtocol<?>) bisqEasyProtocol;
+        bisqEasyTakerProtocol.takeOffer(serviceProvider,
+                takerIdentity,
+                bisqEasyOffer,
+                baseSideAmount,
+                quoteSideAmount,
                 bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec,
-                mediator);
-
-        ContractSignatureData contractSignatureData = contractService.signContract(bisqEasyContract, takerIdentity.getKeyPair());
-        BisqEasyProtocolModel model = new BisqEasyProtocolModel(takerIdentity, bisqEasyContract, contractSignatureData);
-        persistableStore.add(model);
-        BisqEasyTakerProtocol protocol = (BisqEasyTakerProtocol) createProtocol(model, true);
-        protocol.takeOffer();
+                fiatPaymentMethodSpec);
+        return (BisqEasyTakerTrade<?, ?>) bisqEasyTrade;
     }
 
-    private BisqEasyProtocol createProtocol(BisqEasyProtocolModel model, boolean isTaker) {
-        BisqEasyOffer offer = model.getOffer();
+    public Optional<BisqEasyTrade<?, ?>> findBisqEasyTrade(String tradeId) {
+        return persistableStore.findBisqEasyTrade(tradeId);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Factory methods
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static BisqEasyProtocol<?> createProtocol(boolean isBuyer, boolean isTaker) {
         if (isTaker) {
-            if (offer.getTakersDirection().isBuy()) {
-                return new BisqEasyTakerAsBuyerProtocol(model);
+            if (isBuyer) {
+                return new BisqEasyBuyerAsTakerProtocol(new BisqEasyProtocolModel());
             } else {
-                return new BisqEasyTakerAsSellerProtocol(model);
+                return new BisqEasySellerAsTakerProtocol(new BisqEasyProtocolModel());
             }
         } else {
-            if (offer.getMakersDirection().isBuy()) {
-                return new BisqEasyMakerAsBuyerProtocol(model);
+            if (isBuyer) {
+                return new BisqEasyBuyerAsMakerProtocol(new BisqEasyProtocolModel());
             } else {
-                return new BisqEasyMakerAsSellerProtocol(model);
+                return new BisqEasySellerAsMakerProtocol(new BisqEasyProtocolModel());
             }
+        }
+    }
+
+    private static BisqEasyTrade<?, ?> createTrade(BisqEasyProtocol<?> protocol) {
+        if (protocol instanceof BisqEasyBuyerAsTakerProtocol) {
+            return new BisqEasyBuyerAsTakerTrade((BisqEasyBuyerAsTakerProtocol) protocol);
+        } else if (protocol instanceof BisqEasyBuyerAsMakerProtocol) {
+            return new BisqEasyBuyerAsMakerTrade((BisqEasyBuyerAsMakerProtocol) protocol);
+        } else if (protocol instanceof BisqEasySellerAsTakerProtocol) {
+            return new BisqEasySellerAsTakerTrade((BisqEasySellerAsTakerProtocol) protocol);
+        } else if (protocol instanceof BisqEasySellerAsMakerProtocol) {
+            return new BisqEasySellerAsMakerTrade((BisqEasySellerAsMakerProtocol) protocol);
+        } else {
+            throw new RuntimeException("Not handled protocol type. Protocol=" + protocol);
         }
     }
 }

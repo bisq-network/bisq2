@@ -20,9 +20,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,12 +28,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class FiniteStateMachine {
     private final Config config = new Config(this);
     private final List<Transition> transitions = new ArrayList<>();
-    private final Map<Class<?>, Transition> transitionsByEventType = new HashMap<>();
 
     @Setter
     private State currentState;
 
-    public void handleEvent(Event event) {
+    public void onEvent(Event event, EventHandler eventHandler) {
         checkNotNull(event);
 
         if (currentState.isFinalState()) {
@@ -44,14 +41,8 @@ public final class FiniteStateMachine {
 
         for (Transition transition : transitions) {
             if (currentState.equals(transition.getFrom()) &&
-                    transition.getEventType().equals(event.getEventType())) {
-                //  try {
-                // EventHandler handler = (EventHandler) transition.getHandler().getDeclaredConstructor(Event.class).newInstance(event);
-                event.getHandler().handle(event);
-              /*  } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                         NoSuchMethodException e) {
-                    throw new RuntimeException(e);
-                }*/
+                    transition.getEvent().equals(event)) {
+                eventHandler.handle();
                 currentState = transition.getTo();
                 return;
             }
@@ -82,8 +73,8 @@ public final class FiniteStateMachine {
             return this;
         }
 
-        public Config on(EventType eventType) {
-            transition.setEventType(eventType);
+        public Config on(Event event) {
+            transition.setEvent(event);
             return this;
         }
 

@@ -17,7 +17,4 @@
 package bisq.protocol.fsm;
 
 public interface Event {
-    EventType getEventType();
-
-    EventHandler getHandler();
 }

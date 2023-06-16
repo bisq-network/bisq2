@@ -14,25 +14,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.protocol.fsm;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+package bisq.protocol.bisq_easy.seller_as_taker;
 
-@Slf4j
-@ToString
-@Getter
-@Setter
-@EqualsAndHashCode
-public class Transition {
-    private State from;
-    private State to;
-    private Event event;
-    private Class<?> handler;
+import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
+import bisq.protocol.bisq_easy.seller.BisqEasySellerProtocol;
+import bisq.protocol.bisq_easy.taker.BisqEasyTakerProtocol;
 
-    public Transition() {
+public class BisqEasySellerAsTakerProtocol extends BisqEasySellerProtocol<BisqEasyProtocolModel> implements BisqEasyTakerProtocol<BisqEasyProtocolModel> {
+    public BisqEasySellerAsTakerProtocol(BisqEasyProtocolModel model) {
+        super(model);
+    }
+
+    @Override
+    public void configStateMachine() {
+        BisqEasyTakerProtocol.super.configStateMachine();
     }
 }

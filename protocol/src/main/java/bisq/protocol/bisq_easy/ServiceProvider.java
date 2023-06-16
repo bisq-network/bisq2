@@ -15,54 +15,37 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol;
+package bisq.protocol.bisq_easy;
 
-import bisq.common.application.Service;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.protocol.bisq_easy.BisqEasyProtocolService;
+import bisq.support.MediationService;
 import bisq.support.SupportService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
-
 @Slf4j
 @Getter
-public class ProtocolService implements Service {
-    private final BisqEasyProtocolService bisqEasyProtocolService;
+public class ServiceProvider {
+    private final IdentityService identityService;
+    private final OfferService offerService;
+    private final ContractService contractService;
+    private final MediationService mediationService;
+    private final NetworkService networkService;
 
-    public ProtocolService(NetworkService networkService,
+    public ServiceProvider(NetworkService networkService,
                            IdentityService identityService,
                            PersistenceService persistenceService,
                            OfferService offerService,
                            ContractService contractService,
                            SupportService supportService) {
-
-        bisqEasyProtocolService = new BisqEasyProtocolService(networkService,
-                identityService,
-                persistenceService,
-                offerService,
-                contractService,
-                supportService);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        return bisqEasyProtocolService.initialize();
-
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        return bisqEasyProtocolService.shutdown();
+        this.networkService = networkService;
+        this.identityService = identityService;
+        this.offerService = offerService;
+        this.contractService = contractService;
+        this.mediationService = supportService.getMediationService();
     }
 }

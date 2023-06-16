@@ -174,7 +174,6 @@ public class TakeOfferReviewController implements Controller {
                     model.getTakersQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
                     model.getFiatPaymentMethodSpec());
-
         } catch (GeneralSecurityException e) {
             new Popup().error(e).show();
             return;

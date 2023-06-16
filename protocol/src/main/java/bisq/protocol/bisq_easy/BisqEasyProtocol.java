@@ -18,14 +18,21 @@
 package bisq.protocol.bisq_easy;
 
 import bisq.protocol.fsm.FiniteStateMachine;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-public abstract class BisqEasyProtocol {
-    protected final BisqEasyProtocolModel model;
-    protected final FiniteStateMachine stateMachine = new FiniteStateMachine();
+@Slf4j
+@ToString
+@Getter
+public abstract class BisqEasyProtocol<M extends BisqEasyProtocolModel> {
+    protected final M model;
+    protected final transient FiniteStateMachine fsm = new FiniteStateMachine();
 
-    public BisqEasyProtocol(BisqEasyProtocolModel model) {
+    public BisqEasyProtocol(M model) {
         this.model = model;
         configStateMachine();
+        fsm.setCurrentState(model.getFsmState().get());
     }
 
     protected abstract void configStateMachine();
