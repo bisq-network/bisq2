@@ -26,7 +26,7 @@ import bisq.protocol.bisq_easy.BisqEasyEvent;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ServiceProvider;
 import bisq.protocol.bisq_easy.states.BisqEasyState;
-import bisq.protocol.bisq_easy.taker.handlers.TakeOfferHandler;
+import bisq.protocol.bisq_easy.taker.tasks.SendBisqEasyTakeOfferRequest;
 import bisq.protocol.fsm.FiniteStateMachine;
 
 public interface BisqEasyTakerProtocol<M extends BisqEasyProtocolModel> {
@@ -53,7 +53,7 @@ public interface BisqEasyTakerProtocol<M extends BisqEasyProtocolModel> {
                            Monetary quoteSideAmount,
                            BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                            FiatPaymentMethodSpec fiatPaymentMethodSpec) {
-        TakeOfferHandler handler = new TakeOfferHandler(serviceProvider,
+        SendBisqEasyTakeOfferRequest handler = new SendBisqEasyTakeOfferRequest(serviceProvider,
                 getModel(),
                 takerIdentity,
                 bisqEasyOffer,

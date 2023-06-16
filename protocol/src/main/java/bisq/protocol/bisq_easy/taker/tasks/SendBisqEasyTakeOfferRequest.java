@@ -15,29 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy.taker.handlers;
+package bisq.protocol.bisq_easy.taker.tasks;
 
 import bisq.common.monetary.Monetary;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ProtocolParty;
 import bisq.protocol.bisq_easy.ServiceProvider;
-import bisq.protocol.bisq_easy.taker.messages.BisqEasyTakeOfferRequest;
-import bisq.protocol.fsm.EventHandler;
+import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
+import bisq.protocol.bisq_easy.tasks.SendBisqEasyMessageTask;
 import bisq.user.profile.UserProfile;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
 
-public class TakeOfferHandler implements EventHandler {
-    private final ServiceProvider serviceProvider;
-    private final BisqEasyProtocolModel model;
+public class SendBisqEasyTakeOfferRequest extends SendBisqEasyMessageTask {
     private final Identity takerIdentity;
     private final BisqEasyOffer bisqEasyOffer;
     private final Monetary baseSideAmount;
@@ -45,16 +42,15 @@ public class TakeOfferHandler implements EventHandler {
     private final BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec;
     private final FiatPaymentMethodSpec fiatPaymentMethodSpec;
 
-    public TakeOfferHandler(ServiceProvider serviceProvider,
-                            BisqEasyProtocolModel model,
-                            Identity takerIdentity,
-                            BisqEasyOffer bisqEasyOffer,
-                            Monetary baseSideAmount,
-                            Monetary quoteSideAmount,
-                            BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                            FiatPaymentMethodSpec fiatPaymentMethodSpec) {
-        this.serviceProvider = serviceProvider;
-        this.model = model;
+    public SendBisqEasyTakeOfferRequest(ServiceProvider serviceProvider,
+                                        BisqEasyProtocolModel model,
+                                        Identity takerIdentity,
+                                        BisqEasyOffer bisqEasyOffer,
+                                        Monetary baseSideAmount,
+                                        Monetary quoteSideAmount,
+                                        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                        FiatPaymentMethodSpec fiatPaymentMethodSpec) {
+        super(serviceProvider, model);
         this.takerIdentity = takerIdentity;
         this.bisqEasyOffer = bisqEasyOffer;
         this.baseSideAmount = baseSideAmount;
@@ -64,7 +60,7 @@ public class TakeOfferHandler implements EventHandler {
     }
 
     @Override
-    public void handle() {
+    public void run() {
         Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
         BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
                 takerIdentity.getNetworkId(),
@@ -79,11 +75,8 @@ public class TakeOfferHandler implements EventHandler {
             taker.setContractSignatureData(contractSignatureData);
             ProtocolParty maker = new ProtocolParty(bisqEasyOffer.getMakerNetworkId());
 
-            NetworkMessage networkMessage = new BisqEasyTakeOfferRequest(bisqEasyContract, contractSignatureData);
-            serviceProvider.getNetworkService().confidentialSend(networkMessage, maker.getNetworkId(), takerIdentity.getNodeIdAndKeyPair())
-                    .whenComplete((result, throwable) -> {
-                        //todo
-                    });
+            BisqEasyTakeOfferRequest message = new BisqEasyTakeOfferRequest(bisqEasyContract, contractSignatureData);
+            sendMessage(message, maker.getNetworkId(), takerIdentity.getNodeIdAndKeyPair());
 
             model.setBisqEasyContract(bisqEasyContract);
             model.setTaker(taker);

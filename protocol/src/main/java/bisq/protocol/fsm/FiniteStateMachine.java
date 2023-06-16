@@ -32,7 +32,7 @@ public final class FiniteStateMachine {
     @Setter
     private State currentState;
 
-    public void onEvent(Event event, EventHandler eventHandler) {
+    public void onEvent(Event event, Task task) {
         checkNotNull(event);
 
         if (currentState.isFinalState()) {
@@ -42,7 +42,7 @@ public final class FiniteStateMachine {
         for (Transition transition : transitions) {
             if (currentState.equals(transition.getFrom()) &&
                     transition.getEvent().equals(event)) {
-                eventHandler.handle();
+                task.run();
                 currentState = transition.getTo();
                 return;
             }

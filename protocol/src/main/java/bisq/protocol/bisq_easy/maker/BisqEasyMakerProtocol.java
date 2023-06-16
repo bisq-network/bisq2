@@ -20,14 +20,14 @@ package bisq.protocol.bisq_easy.maker;
 import bisq.protocol.bisq_easy.BisqEasyEvent;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ServiceProvider;
-import bisq.protocol.bisq_easy.maker.handlers.ProcessTakeOfferRequestHandler;
+import bisq.protocol.bisq_easy.maker.tasks.ProcessBisqEasyTakeOfferRequest;
+import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.protocol.bisq_easy.states.BisqEasyState;
-import bisq.protocol.bisq_easy.taker.messages.BisqEasyTakeOfferRequest;
 import bisq.protocol.fsm.FiniteStateMachine;
 
 public interface BisqEasyMakerProtocol<M extends BisqEasyProtocolModel> {
     default void handleTakeOfferRequest(ServiceProvider serviceProvider, BisqEasyTakeOfferRequest message) {
-        ProcessTakeOfferRequestHandler handler = new ProcessTakeOfferRequestHandler(serviceProvider, getModel(), message);
+        ProcessBisqEasyTakeOfferRequest handler = new ProcessBisqEasyTakeOfferRequest(serviceProvider, getModel(), message);
         getFsm().onEvent(BisqEasyEvent.RECEIVED_TAKE_OFFER_REQUEST, handler);
     }
 

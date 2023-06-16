@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy.maker.handlers;
+package bisq.protocol.bisq_easy.maker.tasks;
 
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -24,28 +24,27 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ProtocolParty;
 import bisq.protocol.bisq_easy.ServiceProvider;
-import bisq.protocol.bisq_easy.taker.messages.BisqEasyTakeOfferRequest;
-import bisq.protocol.fsm.EventHandler;
+import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
+import bisq.protocol.bisq_easy.tasks.ProcessBisqEasyMessageTask;
 import bisq.user.profile.UserProfile;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
 
-public class ProcessTakeOfferRequestHandler implements EventHandler {
-    private final ServiceProvider serviceProvider;
-    private final BisqEasyProtocolModel model;
+public class ProcessBisqEasyTakeOfferRequest extends ProcessBisqEasyMessageTask<BisqEasyTakeOfferRequest> {
     private final BisqEasyTakeOfferRequest message;
 
-    public ProcessTakeOfferRequestHandler(ServiceProvider serviceProvider,
-                                          BisqEasyProtocolModel model,
-                                          BisqEasyTakeOfferRequest message) {
-        this.serviceProvider = serviceProvider;
-        this.model = model;
+    public ProcessBisqEasyTakeOfferRequest(ServiceProvider serviceProvider,
+                                           BisqEasyProtocolModel model,
+                                           BisqEasyTakeOfferRequest message) {
+        super(serviceProvider, model);
         this.message = message;
     }
 
     @Override
-    public void handle() {
+    public void run() {
+        verifyMessage(message);
+
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
@@ -68,5 +67,10 @@ public class ProcessTakeOfferRequestHandler implements EventHandler {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected void verifyMessage(BisqEasyTakeOfferRequest message) {
+
     }
 }

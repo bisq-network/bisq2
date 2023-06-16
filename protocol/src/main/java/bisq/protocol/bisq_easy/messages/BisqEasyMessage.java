@@ -15,13 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy.taker.messages;
+package bisq.protocol.bisq_easy.messages;
 
-import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.NetworkMessage;
-import bisq.protocol.bisq_easy.messages.BisqEasyProtocolMessage;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,25 +27,16 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@ToString(callSuper = true)
+@ToString
 @Getter
-@EqualsAndHashCode(callSuper = true)
-public class BisqEasyTakeOfferRequest extends BisqEasyProtocolMessage {
+@EqualsAndHashCode
+public abstract class BisqEasyMessage implements MailboxMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
-    private final BisqEasyContract bisqEasyContract;
-    private final ContractSignatureData contractSignatureData;
 
+    protected final MetaData metaData;
 
-    public BisqEasyTakeOfferRequest(BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
-        super(new MetaData(TTL, 100000, BisqEasyTakeOfferRequest.class.getSimpleName()));
-
-        this.bisqEasyContract = bisqEasyContract;
-        this.contractSignatureData = contractSignatureData;
-    }
-
-    @Override
-    public NetworkMessage toProto() {
-        return null;
+    protected BisqEasyMessage(MetaData metaData) {
+        this.metaData = metaData;
     }
 /*
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {

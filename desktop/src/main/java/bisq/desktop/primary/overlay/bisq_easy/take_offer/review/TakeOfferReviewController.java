@@ -34,7 +34,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
@@ -59,7 +58,6 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -167,17 +165,12 @@ public class TakeOfferReviewController implements Controller {
     public void doTakeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        try {
-            bisqEasyProtocolService.takeOffer(myUserIdentity.getIdentity(),
-                    bisqEasyOffer,
-                    model.getTakersBaseSideAmount(),
-                    model.getTakersQuoteSideAmount(),
-                    bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    model.getFiatPaymentMethodSpec());
-        } catch (GeneralSecurityException e) {
-            new Popup().error(e).show();
-            return;
-        }
+        bisqEasyProtocolService.takeOffer(myUserIdentity.getIdentity(),
+                bisqEasyOffer,
+                model.getTakersBaseSideAmount(),
+                model.getTakersQuoteSideAmount(),
+                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                model.getFiatPaymentMethodSpec());
 
         //todo
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());

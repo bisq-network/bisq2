@@ -17,8 +17,10 @@
 
 package bisq.protocol.bisq_easy.messages;
 
+import bisq.contract.ContractSignatureData;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.NetworkMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,16 +29,25 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@ToString
+@ToString(callSuper = true)
 @Getter
-@EqualsAndHashCode
-public abstract class BisqEasyProtocolMessage implements MailboxMessage {
+@EqualsAndHashCode(callSuper = true)
+public class BisqEasyTakeOfferRequest extends BisqEasyMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
+    private final BisqEasyContract bisqEasyContract;
+    private final ContractSignatureData contractSignatureData;
 
-    protected final MetaData metaData;
 
-    protected BisqEasyProtocolMessage(MetaData metaData) {
-        this.metaData = metaData;
+    public BisqEasyTakeOfferRequest(BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
+        super(new MetaData(TTL, 100000, BisqEasyTakeOfferRequest.class.getSimpleName()));
+
+        this.bisqEasyContract = bisqEasyContract;
+        this.contractSignatureData = contractSignatureData;
+    }
+
+    @Override
+    public NetworkMessage toProto() {
+        return null;
     }
 /*
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {

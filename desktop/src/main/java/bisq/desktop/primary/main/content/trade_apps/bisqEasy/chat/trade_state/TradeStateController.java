@@ -90,9 +90,9 @@ public class TradeStateController implements Controller {
         log.error("setSelectedChannel id={} NetworkId().getNodeId(){}", channel.getPeer().getId(), channel.getPeer().getNetworkId().getNodeId());
         String protocolId = BisqEasyProtocolModel.createProtocolId(channel.getBisqEasyOffer().getId(), channel.getPeer().getNetworkId().getNodeId());
         bisqEasyProtocolService.findBisqEasyTrade(protocolId)
-                .ifPresent(protocolModel -> {
-                    model.setProtocolModel(protocolModel);
-                    BisqEasyOffer bisqEasyOffer = protocolModel.getOffer();
+                .ifPresent(bisqEasyTrade -> {
+                    model.setBisqEasyTrade(bisqEasyTrade);
+                    BisqEasyOffer bisqEasyOffer = bisqEasyTrade.getOffer();
                     boolean isMaker = isMaker(bisqEasyOffer);
                     boolean isBuyer = isBuyer(bisqEasyOffer);
 
@@ -202,7 +202,7 @@ public class TradeStateController implements Controller {
         if (index == 0 && isSeller) {
             sendPaymentAccount();
             model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
-            model.getProtocolModel().sendPaymentAccount();
+            //model.getBisqEasyTrade().sendPaymentAccount();
         } else if (index == 1 && isBuyer) {
             sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
             model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);

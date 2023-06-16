@@ -37,14 +37,14 @@ import bisq.protocol.bisq_easy.buyer_as_maker.BisqEasyBuyerAsMakerTrade;
 import bisq.protocol.bisq_easy.buyer_as_taker.BisqEasyBuyerAsTakerProtocol;
 import bisq.protocol.bisq_easy.buyer_as_taker.BisqEasyBuyerAsTakerTrade;
 import bisq.protocol.bisq_easy.maker.BisqEasyMakerProtocol;
-import bisq.protocol.bisq_easy.messages.BisqEasyProtocolMessage;
+import bisq.protocol.bisq_easy.messages.BisqEasyMessage;
+import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.protocol.bisq_easy.seller_as_maker.BisqEasySellerAsMakerProtocol;
 import bisq.protocol.bisq_easy.seller_as_maker.BisqEasySellerAsMakerTrade;
 import bisq.protocol.bisq_easy.seller_as_taker.BisqEasySellerAsTakerProtocol;
 import bisq.protocol.bisq_easy.seller_as_taker.BisqEasySellerAsTakerTrade;
 import bisq.protocol.bisq_easy.taker.BisqEasyTakerProtocol;
 import bisq.protocol.bisq_easy.taker.BisqEasyTakerTrade;
-import bisq.protocol.bisq_easy.taker.messages.BisqEasyTakeOfferRequest;
 import bisq.support.MediationService;
 import bisq.support.SupportService;
 import lombok.Getter;
@@ -110,12 +110,12 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeS
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof BisqEasyProtocolMessage) {
-            processMessage((BisqEasyProtocolMessage) networkMessage);
+        if (networkMessage instanceof BisqEasyMessage) {
+            processMessage((BisqEasyMessage) networkMessage);
         }
     }
 
-    private void processMessage(BisqEasyProtocolMessage message) {
+    private void processMessage(BisqEasyMessage message) {
         if (message instanceof BisqEasyTakeOfferRequest) {
             onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) message);
         }
@@ -131,6 +131,7 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeS
         BisqEasyMakerProtocol<?> bisqEasyTakerProtocol = (BisqEasyMakerProtocol<?>) bisqEasyProtocol;
         bisqEasyTakerProtocol.handleTakeOfferRequest(serviceProvider, message);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API

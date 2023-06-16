@@ -16,6 +16,5 @@
  */
 package bisq.protocol.fsm;
 
-public interface EventHandler {
-    void handle();
+public interface Task extends Runnable {
 }
