@@ -73,6 +73,8 @@ distZip.enabled = false
 distTar.enabled = false
 shadowDistZip.enabled = false
 shadowDistTar.enabled = false
+shadowJar.enabled = false
+shadowJar.enabled = false
 
 tasks.jpackage {
     dependsOn tasks.clean // Ensure fresh buildDir for every jpackager binary build

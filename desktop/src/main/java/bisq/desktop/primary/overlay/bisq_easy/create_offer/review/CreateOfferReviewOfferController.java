@@ -287,12 +287,7 @@ public class CreateOfferReviewOfferController implements Controller {
                     return false;
                 }
 
-                String offerId = model.getMyOfferMessage().getBisqEasyOfferId().get();
-                Optional<BisqEasyOffer> optionalBisqEasyOffer = bisqEasyOfferService.findOffer(offerId);
-                if (optionalBisqEasyOffer.isEmpty()) {
-                    return false;
-                }
-                BisqEasyOffer bisqEasyOffer = optionalBisqEasyOffer.get();
+                BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
                 BisqEasyOffer peersOffer = item.getBisqEasyOffer();
 
                 if (peersOffer.getDirection().equals(bisqEasyOffer.getDirection())) {

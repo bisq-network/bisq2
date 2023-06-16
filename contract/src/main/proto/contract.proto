@@ -24,6 +24,7 @@ option java_multiple_files = true;
 import "network.proto";
 import "account.proto";
 import "offer.proto";
+import "user.proto";
 
 enum Role {
   MAKER = 0;
@@ -60,6 +61,7 @@ message BisqEasyContract {
   uint64 quoteSideAmount = 2;
   offer.PaymentMethodSpec baseSidePaymentMethodSpecs = 3;
   offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
+  optional user.UserProfile mediator = 12;
 }
 
 message ContractSignatureData {

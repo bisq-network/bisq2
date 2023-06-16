@@ -40,11 +40,11 @@ import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.TradeStateController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferController;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -163,11 +163,15 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 BisqEasyPrivateTradeChatChannel channel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 applyPeersIcon(channel);
 
-                model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
-                        .map(service -> Res.get("bisqEasy.topPane.channelTitle", service.getChannelTitle(Objects.requireNonNull(chatChannel))))
-                        .orElse(""));
+                BisqEasyOffer offer = channel.getBisqEasyOffer();
+                boolean isMaker = isMaker(offer);
+                String peer = ((BisqEasyPrivateTradeChatChannel) chatChannel).getPeer().getUserName();
+                String title = isMaker ?
+                        Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peer, offer.getShortId()) :
+                        Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peer, offer.getShortId());
+                model.getChannelTitle().set(title);
 
-                tradeStateController.selectChannel(channel);
+                tradeStateController.setSelectedChannel(channel);
             } else if (isTwoPartyPrivateChatChannel) {
                 bisqEasyPublicChannelSelectionMenu.deSelectChannel();
                 bisqEasyPrivateChannelSelectionMenu.deSelectChannel();
@@ -176,6 +180,10 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 applyPeersIcon(privateChannel);
             }
         });
+    }
+
+    private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
+        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
     }
 
     void onCreateOffer() {

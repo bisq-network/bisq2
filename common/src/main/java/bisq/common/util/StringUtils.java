@@ -109,4 +109,8 @@ public class StringUtils {
         }
         return message;
     }
+
+    public static boolean isNotEmpty(String value) {
+        return value != null && !value.isEmpty();
+    }
 }

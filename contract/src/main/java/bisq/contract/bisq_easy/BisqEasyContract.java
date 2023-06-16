@@ -26,9 +26,12 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Optional;
 
 @ToString(callSuper = true)
 @Getter
@@ -38,20 +41,23 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     private final long quoteSideAmount;
     protected final BitcoinPaymentMethodSpec baseSidePaymentMethodSpecs;
     protected final FiatPaymentMethodSpec quoteSidePaymentMethodSpec;
+    private final Optional<UserProfile> mediator;
 
     public BisqEasyContract(BisqEasyOffer offer,
                             NetworkId takerNetworkId,
                             long baseSideAmount,
                             long quoteSideAmount,
                             BitcoinPaymentMethodSpec baseSidePaymentMethodSpecs,
-                            FiatPaymentMethodSpec quoteSidePaymentMethodSpec) {
+                            FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                            Optional<UserProfile> mediator) {
         this(offer,
                 TradeProtocolType.BISQ_EASY,
                 new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
                 quoteSideAmount,
                 baseSidePaymentMethodSpecs,
-                quoteSidePaymentMethodSpec);
+                quoteSidePaymentMethodSpec,
+                mediator);
     }
 
     private BisqEasyContract(BisqEasyOffer offer,
@@ -60,12 +66,14 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                              long baseSideAmount,
                              long quoteSideAmount,
                              BitcoinPaymentMethodSpec baseSidePaymentMethodSpecs,
-                             FiatPaymentMethodSpec quoteSidePaymentMethodSpec) {
+                             FiatPaymentMethodSpec quoteSidePaymentMethodSpec,
+                             Optional<UserProfile> mediator) {
         super(offer, protocolType, taker);
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
         this.baseSidePaymentMethodSpecs = baseSidePaymentMethodSpecs;
         this.quoteSidePaymentMethodSpec = quoteSidePaymentMethodSpec;
+        this.mediator = mediator;
     }
 
     @Override
@@ -75,6 +83,7 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                 .setQuoteSideAmount(quoteSideAmount)
                 .setBaseSidePaymentMethodSpecs(baseSidePaymentMethodSpecs.toProto())
                 .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto());
+        mediator.ifPresent(mediator -> bisqEasyContract.setMediator(mediator.toProto()));
         var twoPartyContract = getTwoPartyContractBuilder().setBisqEasyContract(bisqEasyContract);
         return getContractBuilder().setTwoPartyContract(twoPartyContract).build();
     }
@@ -88,6 +97,9 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                 bisqEasyContractProto.getBaseSideAmount(),
                 bisqEasyContractProto.getQuoteSideAmount(),
                 PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(bisqEasyContractProto.getBaseSidePaymentMethodSpecs()),
-                PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContractProto.getQuoteSidePaymentMethodSpec()));
+                PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContractProto.getQuoteSidePaymentMethodSpec()),
+                bisqEasyContractProto.hasMediator() ?
+                        Optional.of(UserProfile.fromProto(bisqEasyContractProto.getMediator())) :
+                        Optional.empty());
     }
 }

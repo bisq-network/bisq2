@@ -223,7 +223,7 @@ public class PriceInput {
         protected void onViewAttached() {
             textInput.descriptionProperty().bind(model.description);
             textInput.textProperty().bindBidirectional(model.priceString);
-            focusedPin = EasyBind.subscribe(textInput.inputTextFieldFocusedProperty(), controller::onFocusedChanged);
+            focusedPin = EasyBind.subscribe(textInput.textInputFocusedProperty(), controller::onFocusedChanged);
             textInput.setMouseTransparent(!model.isEditable);
         }
 

@@ -200,7 +200,7 @@ public class AmountInput {
         protected void onViewAttached() {
             if (model.isCreateOffer) {
                 materialTextField.textProperty().addListener(textInputListener);
-                materialTextField.inputTextFieldFocusedProperty().addListener(focusListener);
+                materialTextField.textInputFocusedProperty().addListener(focusListener);
             } else {
                 // editable/disable changes style. setMouseTransparent is just for prototyping now
                 materialTextField.setMouseTransparent(true);
@@ -216,7 +216,7 @@ public class AmountInput {
         protected void onViewDetached() {
             if (model.isCreateOffer) {
                 materialTextField.textProperty().removeListener(textInputListener);
-                materialTextField.inputTextFieldFocusedProperty().removeListener(focusListener);
+                materialTextField.textInputFocusedProperty().removeListener(focusListener);
             }
             materialTextField.promptTextProperty().unbind();
             materialTextField.descriptionProperty().unbind();

@@ -622,6 +622,11 @@
     -fx-text-fill: -bisq-white;
 }
 
+.material-text-field-help {
+    -fx-font-size: 0.95em;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /* Used for textarea*/
 .material-text-field:focused .content {

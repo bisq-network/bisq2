@@ -23,7 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
 import bisq.offer.Offer;
 import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.protocol.bisq_easy.BisqEasyTrade;
+import bisq.protocol.bisq_easy.poc.BisqEasyTrade;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

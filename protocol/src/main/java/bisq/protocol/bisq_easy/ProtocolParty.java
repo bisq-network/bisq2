@@ -17,19 +17,20 @@
 
 package bisq.protocol.bisq_easy;
 
-import bisq.contract.Contract;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.protocol.TakerProtocolModel;
+import bisq.network.NetworkId;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@ToString
+@EqualsAndHashCode
 @Getter
-public class BisqEasyTakerProtocolModel extends TakerProtocolModel<BisqEasyOffer> {
+public class ProtocolParty {
+    private final NetworkId networkId;
 
-    public BisqEasyTakerProtocolModel(Contract<BisqEasyOffer> contract) {
-        super(contract);
-    }
-
-    public BisqEasyTakerProtocolModel getClone() {
-        return new BisqEasyTakerProtocolModel(contract);
+    public ProtocolParty(NetworkId networkId) {
+        this.networkId = networkId;
     }
 }

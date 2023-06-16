@@ -18,11 +18,13 @@
 package bisq.protocol;
 
 import bisq.common.application.Service;
+import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.protocol.bisq_easy.BisqEasyProtocolService;
+import bisq.support.SupportService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,9 +38,11 @@ public class ProtocolService implements Service {
     public ProtocolService(NetworkService networkService,
                            IdentityService identityService,
                            PersistenceService persistenceService,
-                           OfferService offerService) {
+                           OfferService offerService,
+                           ContractService contractService,
+                           SupportService supportService) {
 
-        bisqEasyProtocolService = new BisqEasyProtocolService(networkService, identityService, persistenceService, offerService);
+        bisqEasyProtocolService = new BisqEasyProtocolService(networkService, identityService, persistenceService, offerService, contractService, supportService);
     }
 
 

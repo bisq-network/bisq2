@@ -29,8 +29,6 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.contract.ContractService;
-import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -53,6 +51,7 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.protocol.bisq_easy.BisqEasyProtocolService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -80,6 +79,7 @@ public class TakeOfferReviewController implements Controller {
     private final ContractService contractService;
     private final IdentityService identityService;
     private final UserIdentityService userIdentityService;
+    private final BisqEasyProtocolService bisqEasyProtocolService;
 
     public TakeOfferReviewController(DefaultApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
@@ -90,6 +90,7 @@ public class TakeOfferReviewController implements Controller {
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
+        bisqEasyProtocolService = applicationService.getProtocolService().getBisqEasyProtocolService();
 
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
 
@@ -166,14 +167,13 @@ public class TakeOfferReviewController implements Controller {
     public void doTakeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
-                myUserIdentity.getIdentity().getNetworkId(),
-                model.getTakersBaseSideAmount().getValue(),
-                model.getTakersQuoteSideAmount().getValue(),
-                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                model.getFiatPaymentMethodSpec());
         try {
-            ContractSignatureData contractSignatureData = contractService.signContract(bisqEasyContract, myUserIdentity.getIdentity().getKeyPair());
+            bisqEasyProtocolService.takeOffer(myUserIdentity.getIdentity(),
+                    bisqEasyOffer,
+                    model.getTakersBaseSideAmount(),
+                    model.getTakersQuoteSideAmount(),
+                    bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                    model.getFiatPaymentMethodSpec());
 
         } catch (GeneralSecurityException e) {
             new Popup().error(e).show();

@@ -46,7 +46,6 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.bisq_easy.BisqEasyOfferService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
@@ -272,8 +271,10 @@ public class ChatMessagesListView {
         private void onTakeOffer(BisqEasyPublicChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
             checkArgument(chatMessage.getBisqEasyOfferId().isPresent(), "message must contain offer");
-            BisqEasyOffer bisqEasyOffer = bisqEasyOfferService.findOffer(chatMessage.getBisqEasyOfferId().orElseThrow()).orElseThrow();
-            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+            chatMessage.getBisqEasyOfferId()
+                    .flatMap(bisqEasyOfferService::findOffer)
+                    .ifPresent(bisqEasyOffer ->
+                            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer)));
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {

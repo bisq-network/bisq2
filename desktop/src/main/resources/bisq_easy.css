@@ -10,7 +10,25 @@
     -fx-font-size: 1.5em;
 }
 
+.bisq-easy-trade-state-welcome-headline {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2em;
+}
+
+.bisq-easy-trade-state-welcome-sub-headline {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.25em;
+}
+
 .bisq-easy-trade-state-sub-headline {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 1.5em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-info-headline {
     -fx-fill: -bisq-white;
     -fx-font-size: 1.5em;
     -fx-font-family: "IBM Plex Sans Light";
@@ -19,6 +37,7 @@
 .bisq-easy-trade-state-info-text {
     -fx-fill: -bisq-white;
     -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-easy-trade-state-box {

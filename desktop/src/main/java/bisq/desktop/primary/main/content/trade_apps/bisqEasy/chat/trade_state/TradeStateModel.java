@@ -33,14 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class TradeStateModel implements Model {
     public enum Phase {
         BUYER_PHASE_1,
-        SELLER_PHASE_1,
         BUYER_PHASE_2,
-        SELLER_PHASE_2,
         BUYER_PHASE_3,
-        SELLER_PHASE_3,
         BUYER_PHASE_4,
-        SELLER_PHASE_4,
         BUYER_PHASE_5,
+        SELLER_PHASE_1,
+        SELLER_PHASE_2,
+        SELLER_PHASE_3,
+        SELLER_PHASE_4,
         SELLER_PHASE_5
     }
 
@@ -63,6 +63,8 @@ public class TradeStateModel implements Model {
     private final StringProperty phase5Info = new SimpleStringProperty();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty firstTimeItemsVisible = new SimpleBooleanProperty();
+    private final BooleanProperty phaseAndInfoBoxVisible = new SimpleBooleanProperty();
     private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
     private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
     private final ObservableList<Account<?, ?>> paymentAccounts = FXCollections.observableArrayList();

@@ -7,9 +7,11 @@ dependencies {
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')
+    implementation project(':user')
     implementation project(':account')
     implementation project(':offer')
     implementation project(':contract')
+    implementation project(':support')
     implementation project(':oracle')
 
     implementation("network:network")

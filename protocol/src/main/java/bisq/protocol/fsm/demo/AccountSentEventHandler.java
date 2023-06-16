@@ -15,22 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy;
+package bisq.protocol.fsm.demo;
 
-import bisq.contract.Contract;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.protocol.MakerProtocolModel;
-import lombok.Getter;
+import bisq.protocol.fsm.Event;
+import bisq.protocol.fsm.EventHandler;
 
-@Getter
-public class BisqEasyMakerProtocolModel extends MakerProtocolModel<BisqEasyOffer> {
-
-    public BisqEasyMakerProtocolModel(Contract<BisqEasyOffer> contract) {
-        super(contract);
+public class AccountSentEventHandler implements EventHandler {
+    @Override
+    public void handle(Event event) {
     }
-
-    public BisqEasyMakerProtocolModel getClone() {
-        return new BisqEasyMakerProtocolModel(contract);
-    }
-
 }

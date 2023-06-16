@@ -14,22 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+package bisq.protocol.fsm;
 
-package bisq.protocol.bisq_easy;
-
-public enum BisqEasyTradePhase /*implements ProtoEnum */{
-    NEGOTIATION,
-    FIAT_TRANSFER,
-    BTC_TRANSFER,
-    COMPLETED;
-
-   /* @Override
-    public bisq.protocol.protobuf.BisqEasyTradePhase toProto() {
-        return bisq.protocol.protobuf.BisqEasyTradePhase.valueOf(name());
-    }
-
-    public static BisqEasyTradePhase fromProto(bisq.protocol.protobuf.BisqEasyTradePhase proto) {
-        return ProtobufUtils.enumFromProto(BisqEasyTradePhase.class, proto.name());
-    }*/
+public interface EventHandler {
+    void handle(Event event);
 }
-

@@ -20,9 +20,7 @@ package bisq.common.currency;
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
-@ToString
 @Getter
 @EqualsAndHashCode
 public final class Market implements Proto {

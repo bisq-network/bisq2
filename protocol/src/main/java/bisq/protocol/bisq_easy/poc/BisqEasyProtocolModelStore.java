@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy;
+package bisq.protocol.bisq_easy.poc;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.persistence.PersistableStore;

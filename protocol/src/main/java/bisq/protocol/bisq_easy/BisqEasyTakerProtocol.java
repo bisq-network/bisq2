@@ -17,133 +17,29 @@
 
 package bisq.protocol.bisq_easy;
 
-import bisq.network.NetworkIdWithKeyPair;
-import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.persistence.PersistenceClient;
-import bisq.protocol.ProtocolModel;
-import bisq.protocol.ProtocolStore;
-import bisq.protocol.TakerProtocol;
-import bisq.protocol.poc.liquid_swap.messages.LiquidSwapFinalizeTxRequest;
-import bisq.protocol.poc.liquid_swap.messages.LiquidSwapTakeOfferResponse;
-import bisq.protocol.poc.messages.ProtocolMessage;
-import lombok.extern.slf4j.Slf4j;
+import bisq.protocol.bisq_easy.states.BisqEasyTakerState;
+import bisq.protocol.fsm.demo.TakeOfferEvent;
 
-import static com.google.common.base.Preconditions.checkArgument;
+public abstract class BisqEasyTakerProtocol extends BisqEasyProtocol {
 
-@Slf4j
-public abstract class BisqEasyTakerProtocol extends TakerProtocol<BisqEasyOffer, BisqEasyTakerProtocolModel> {
-
-
-    public static BisqEasyTakerProtocol getProtocol(NetworkService networkService,
-                                                    PersistenceClient<ProtocolStore> persistenceClient,
-                                                    BisqEasyTakerProtocolModel protocolModel,
-                                                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
-        return protocolModel.getContract().getOffer().getDirection().isSell() ?
-                new BisqEasyTakerAsBuyerProtocol(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair) :
-                new BisqEasyTakerAsSellerProtocol(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
+    public BisqEasyTakerProtocol(BisqEasyProtocolModel model) {
+        super(model);
     }
-
-
-    protected BisqEasyTakerProtocol(NetworkService networkService,
-                                    PersistenceClient<ProtocolStore> persistenceClient,
-                                    BisqEasyTakerProtocolModel protocolModel,
-                                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
-        super(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof ProtocolMessage) {
-            if (((ProtocolMessage) networkMessage).getOfferId().equals(getId())) {
-                if (networkMessage instanceof LiquidSwapTakeOfferResponse) {
-                    onTakeOfferResponse((LiquidSwapTakeOfferResponse) networkMessage);
-                }
-            }
-        }
+    protected void configStateMachine() {
+        stateMachine.transition()
+                .from(BisqEasyTakerState.INIT)
+                .on(TakeOfferEvent.TYPE)
+                .to(BisqEasyTakerState.OFFER_TAKEN);
+
+        stateMachine.transition()
+                .from(BisqEasyTakerState.OFFER_TAKEN)
+                .on(TakeOfferEvent.TYPE)
+                .to(BisqEasyTakerState.COMPLETE);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Protocol
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
     public void takeOffer() {
-        try {
-            verifyPeer();
-            createInputsAndChange();
-            sendLiquidSwapTakeOfferRequest();
-            setState(ProtocolModel.State.PENDING);
-        } catch (Throwable t) {
-            handleError(t);
-        }
-    }
 
-    private void onTakeOfferResponse(LiquidSwapTakeOfferResponse response) {
-        verifyPeer();
-        verifyLiquidSwapTakeOfferResponse(response);
-        processLiquidSwapTakeOfferResponse(response);
-        createAndSignFinalizedTx();
-        publishTx();
-        publishTradeStatistics();
-        sendLiquidSwapFinalizeTxRequest();
-        onProtocolCompleted();
-    }
-
-    @Override
-    protected void onContinue() {
-        checkArgument(getState() == ProtocolModel.State.PENDING);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Tasks - takeOffer
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void createInputsAndChange() {
-        log.info("createInputsAndChange");
-    }
-
-    private void sendLiquidSwapTakeOfferRequest() {
-        log.info("sendLiquidSwapTakeOfferRequest");
-        setExpectedNextMessageClass(LiquidSwapTakeOfferResponse.class);
-        // sendMessage(new LiquidSwapTakeOfferRequest(getContract()));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Tasks - onTakeOfferResponse
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void verifyLiquidSwapTakeOfferResponse(LiquidSwapTakeOfferResponse response) {
-        //   verifyExpectedMessage(response);
-        log.info("verifyLiquidSwapTakeOfferResponse");
-    }
-
-    private void processLiquidSwapTakeOfferResponse(LiquidSwapTakeOfferResponse response) {
-        log.info("processLiquidSwapTakeOfferResponse");
-    }
-
-    private void createAndSignFinalizedTx() {
-        log.info("createAndSignFinalizedTx");
-    }
-
-    private void publishTx() {
-        log.info("publishTx");
-    }
-
-    private void publishTradeStatistics() {
-        log.info("publishTradeStatistics");
-    }
-
-    private void sendLiquidSwapFinalizeTxRequest() {
-        log.info("sendLiquidSwapFinalizeTxRequest");
-        sendMessage(new LiquidSwapFinalizeTxRequest(getId()));
     }
 }

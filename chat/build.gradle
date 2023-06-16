@@ -15,7 +15,6 @@ dependencies {
     implementation project(':identity')
     implementation project(':user')
     implementation project(':offer')
-    implementation project(':protocol')
     implementation project(':settings')
     implementation project(':presentation')
 

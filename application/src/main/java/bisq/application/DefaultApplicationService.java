@@ -142,7 +142,7 @@ public class DefaultApplicationService extends ApplicationService {
 
         supportService = new SupportService(networkService, chatService, userService);
 
-        protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService);
+        protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService, contractService, supportService);
     }
 
     @Override

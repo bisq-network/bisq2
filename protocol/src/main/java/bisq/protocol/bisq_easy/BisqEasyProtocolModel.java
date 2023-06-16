@@ -18,37 +18,57 @@
 package bisq.protocol.bisq_easy;
 
 import bisq.common.proto.Proto;
+import bisq.contract.ContractSignatureData;
+import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.identity.Identity;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
+@ToString
+@Slf4j
 @EqualsAndHashCode
+@Getter
 public class BisqEasyProtocolModel implements Proto {
-    private final BisqEasyTrade trade;
-    private final BisqEasyTradePhase phase;
+    private final BisqEasyContract bisqEasyContract;
+    private final ContractSignatureData contractSignatureData;
+    private final ProtocolParty taker;
+    private final ProtocolParty maker;
 
-    public BisqEasyProtocolModel(BisqEasyTrade trade, BisqEasyTradePhase phase) {
-        this.trade = trade;
-        this.phase = phase;
+    public BisqEasyProtocolModel(Identity takerIdentity, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
+        this.taker = new ProtocolParty(takerIdentity.getNetworkId());
+        this.bisqEasyContract = bisqEasyContract;
+        this.contractSignatureData = contractSignatureData;
+
+        this.maker = new ProtocolParty(getOffer().getMakerNetworkId());
+    }
+
+    //todo
+    public BisqEasyProtocolModel() {
+        taker = null;
+        bisqEasyContract = null;
+        contractSignatureData = null;
+        maker = null;
     }
 
     @Override
     public bisq.protocol.protobuf.BisqEasyProtocolModel toProto() {
-        return null;
-        /*
         return bisq.protocol.protobuf.BisqEasyProtocolModel.newBuilder()
-                .setTrade(trade.toProto())
-                .setPhase(phase.toProto())
-                .build();*/
+                .build();
     }
 
     public static BisqEasyProtocolModel fromProto(bisq.protocol.protobuf.BisqEasyProtocolModel proto) {
-        return null;
-        /*return new BisqEasyProtocolModel(BisqEasyTrade.fromProto(proto.getTrade()),
-                BisqEasyTradePhase.fromProto(proto.getPhase()));*/
+        return new BisqEasyProtocolModel();
     }
 
-    public String getId() {
-        return trade.getId();
+    public String getProtocolId() {
+        return getOffer().getId() + "." + taker.getNetworkId().getNodeId();
     }
+
+    public BisqEasyOffer getOffer() {
+        return bisqEasyContract.getOffer();
+    }
+
 }

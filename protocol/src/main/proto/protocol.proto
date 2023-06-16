@@ -53,3 +53,23 @@ message BisqEasyTrade {
 
 message BisqEasyProtocolModel {
 }
+
+message BisqEasyProtocolStore {
+  map<string, BisqEasyProtocolModel> modelById = 1;
+}
+
+// BisqEasy messages
+message BisqEasyProtocolMessage {
+  network.MetaData metaData = 1;
+  oneof message {
+    BisqEasyTakeOfferMessage takeOfferMessage = 10;
+    BisqEasyTakersPaymentAccountDataMessage takersPaymentAccountDataMessage = 11;
+  }
+}
+message BisqEasyTakeOfferMessage {
+  string offerId = 1;
+
+}
+message BisqEasyTakersPaymentAccountDataMessage {
+  string paymentAccountData = 1;
+}

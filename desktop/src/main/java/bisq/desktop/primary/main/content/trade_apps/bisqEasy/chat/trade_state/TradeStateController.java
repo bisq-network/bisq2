@@ -25,6 +25,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -46,6 +47,7 @@ import javafx.scene.input.KeyCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -63,6 +65,8 @@ public class TradeStateController implements Controller {
     private final ChatService chatService;
     private final MediationService mediationService;
     private final SettingsService settingsService;
+    private Pin tradeRulesConfirmedPin;
+    private Subscription phaseIndexPin, isCollapsedPin;
 
     public TradeStateController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         chatService = applicationService.getChatService();
@@ -77,128 +81,11 @@ public class TradeStateController implements Controller {
         view = new TradeStateView(model, this);
     }
 
-    public void selectChannel(BisqEasyPrivateTradeChatChannel channel) {
+    public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         model.setSelectedChannel(channel);
-        BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
-        model.setBisqEasyOffer(bisqEasyOffer);
-
-        boolean isBuyer = isBuyer();
-        boolean isSeller = !isBuyer;
-
-        model.getPhase1Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase1").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase1").toUpperCase());
-        model.getPhase2Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase2").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase2").toUpperCase());
-        model.getPhase3Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase3").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase3").toUpperCase());
-        model.getPhase4Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase4").toUpperCase() :
-                Res.get("bisqEasy.trade.state.phase.seller.phase4").toUpperCase());
-        model.getPhase5Info().set(Res.get("bisqEasy.trade.state.phase.phase5").toUpperCase());
-
-
-        String directionString = isBuyer ?
-                Res.get("offer.buying").toUpperCase() :
-                Res.get("offer.selling").toUpperCase();
-        AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
-        String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-        model.getQuoteCode().set(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
-        model.getBaseAmount().set(baseAmountString);
-        String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-        model.getQuoteAmount().set(quoteAmountString);
-        FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
-        String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
-        String tradeInfo = Res.get("bisqEasy.trade.state.headline",
-                directionString,
-                baseAmountString,
-                quoteAmountString,
-                paymentMethodName);
-
-
-        model.getTradeInfo().set(tradeInfo);
-
-        //todo
-        model.getSellersPaymentAccountData().set("IBAN: 123213123123\nBIC: 2112312\n Holdername: Bruno Ganz");
-        model.getBuyersBtcAddress().set("2MwMapa5GYoWbXLhAui55ifCq3B9k1dyNAx");
-
-
-        String fiatCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
-
-        EasyBind.subscribe(model.getPhaseIndex(), index -> {
-            int phaseIndex = index.intValue();
-
-
-            if (phaseIndex == 0) {
-                // seller: send fiat account
-                model.getActionButtonVisible().set(isSeller);
-                model.getOpenDisputeButtonVisible().set(false);
-                if (isSeller) {
-                    model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_1);
-                    model.getActionButtonText().set(Res.get("bisqEasy.trade.state.actionButton.seller.phase1"));
-                } else {
-                    model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_1);
-                }
-                // todo seller: show text field for payment account with button below
-                model.getPhaseInfo().set(isBuyer ?
-                        Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase1", fiatCode) :
-                        Res.get("bisqEasy.trade.state.phaseInfo.seller.phase1", fiatCode)
-                );
-            } else if (phaseIndex == 1) {
-                // buyer: send btc address, fiat sent
-                model.getActionButtonVisible().set(isBuyer);
-                model.getOpenDisputeButtonVisible().set(false);
-
-                if (isBuyer) {
-                    model.getActionButtonText().set(Res.get("bisqEasy.trade.state.actionButton.buyer.phase2"));
-                    model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_2);
-                } else {
-                    model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_2);
-                }
-                // todo buyer show text field with sellers account data and the fiat amount to send w button below
-                model.getPhaseInfo().set(isBuyer ?
-                        Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.btcAddress", fiatCode) :
-                        Res.get("bisqEasy.trade.state.phaseInfo.seller.phase2", fiatCode)
-                );
-            } else if (phaseIndex == 2) {
-                // seller: confirm fiat receipt and sent BTC
-                model.getActionButtonVisible().set(isSeller);
-                model.getOpenDisputeButtonVisible().set(true);
-                if (isSeller) {
-                    model.getActionButtonText().set(Res.get("bisqEasy.trade.state.actionButton.seller.phase3", fiatCode));
-                    model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_3);
-                } else {
-                    model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_3);
-                }
-                // todo seller: 
-                model.getPhaseInfo().set(isBuyer ?
-                        Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase3", fiatCode) :
-                        Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.confirmFiatReceipt", quoteAmountString)
-                );
-            } else if (phaseIndex == 3) {
-                // buyer: confirm BTC received
-                model.getActionButtonVisible().set(isBuyer);
-                model.getOpenDisputeButtonVisible().set(true);
-                if (isBuyer) {
-                    model.getActionButtonText().set(Res.get("bisqEasy.trade.state.actionButton.buyer.phase4"));
-                    model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_4);
-                } else {
-                    model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_4);
-                }
-                model.getPhaseInfo().set(isBuyer ?
-                        Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase4", fiatCode) :
-                        Res.get("bisqEasy.trade.state.phaseInfo.seller.phase4")
-                );
-            } else if (phaseIndex == 4) {
-                // btc received
-                model.getActionButtonVisible().set(false);
-                model.getOpenDisputeButtonVisible().set(false);
-                model.getPhaseInfo().set(isBuyer ?
-                        Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase5") :
-                        Res.get("bisqEasy.trade.state.phaseInfo.seller.phase5")
-                );
-                model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_5);
-                model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_5);
-            }
-        });
+        model.setBisqEasyOffer(channel.getBisqEasyOffer());
+        applyData();
+        phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), index -> phaseIndexChanged(index.intValue()));
     }
 
     @Override
@@ -212,7 +99,29 @@ public class TradeStateController implements Controller {
             }
         });
 
+        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(tradeRulesConfirmed -> {
+            int phaseIndex = model.getPhaseIndex().get();
+            if (phaseIndex == 0 && tradeRulesConfirmed) {
+                phaseIndexChanged(phaseIndex);
+            }
+        });
+        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
+            applyFirstTimeItemsVisible();
+            applyPhaseAndInfoBoxVisible();
+        });
         model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_ASSISTANT_COLLAPSED).orElse(false));
+        applyPhaseAndInfoBoxVisible();
+    }
+
+    @Override
+    public void onDeactivate() {
+        if (phaseIndexPin != null) {
+            phaseIndexPin.unsubscribe();
+        }
+        if (tradeRulesConfirmedPin != null) {
+            tradeRulesConfirmedPin.unbind();
+        }
+        isCollapsedPin.unsubscribe();
     }
 
     void onAction() {
@@ -232,11 +141,6 @@ public class TradeStateController implements Controller {
             sendMessage("I confirm that I have received the BTC payment.");
             model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         }
-    }
-
-
-    @Override
-    public void onDeactivate() {
     }
 
     void onExpand() {
@@ -336,6 +240,140 @@ public class TradeStateController implements Controller {
         }
     }
 
+    private void applyData() {
+        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+        boolean isBuyer = isBuyer();
+
+        model.getPhase1Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase1").toUpperCase() :
+                Res.get("bisqEasy.trade.state.phase.seller.phase1").toUpperCase());
+        model.getPhase2Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase2").toUpperCase() :
+                Res.get("bisqEasy.trade.state.phase.seller.phase2").toUpperCase());
+        model.getPhase3Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase3").toUpperCase() :
+                Res.get("bisqEasy.trade.state.phase.seller.phase3").toUpperCase());
+        model.getPhase4Info().set(isBuyer ? Res.get("bisqEasy.trade.state.phase.buyer.phase4").toUpperCase() :
+                Res.get("bisqEasy.trade.state.phase.seller.phase4").toUpperCase());
+        model.getPhase5Info().set(Res.get("bisqEasy.trade.state.phase.phase5").toUpperCase());
+
+        String directionString = isBuyer ?
+                Res.get("offer.buying").toUpperCase() :
+                Res.get("offer.selling").toUpperCase();
+        AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
+        String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
+        model.getQuoteCode().set(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
+        model.getBaseAmount().set(baseAmountString);
+        String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
+        model.getQuoteAmount().set(quoteAmountString);
+        FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
+        String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
+        String tradeInfo = Res.get("bisqEasy.trade.state.headline",
+                directionString,
+                baseAmountString,
+                quoteAmountString,
+                paymentMethodName);
+
+        model.getTradeInfo().set(tradeInfo);
+
+        accountService.getAccounts().stream()
+                .filter(account -> account instanceof UserDefinedFiatAccount)
+                .map(account -> (UserDefinedFiatAccount) account)
+                .map(account -> account.getAccountPayload().getAccountData())
+                .findFirst()
+                .ifPresent(accountData -> model.getSellersPaymentAccountData().set(accountData));
+
+        model.getBuyersBtcAddress().set("2MwMapa5GYoWbXLhAui55ifCq3B9k1dyNAx");
+    }
+
+    private void phaseIndexChanged(int phaseIndex) {
+        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+        if (bisqEasyOffer == null) {
+            return;
+        }
+        boolean tradeRulesConfirmed = getTradeRulesConfirmed();
+        boolean showFirstTimeItems = phaseIndex == 0 && !tradeRulesConfirmed;
+        applyFirstTimeItemsVisible();
+        applyPhaseAndInfoBoxVisible();
+        if (showFirstTimeItems) {
+            return;
+        }
+
+        boolean isBuyer = isBuyer();
+        boolean isSeller = !isBuyer;
+        String fiatCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+
+        if (phaseIndex == 0) {
+
+            // seller: send fiat account
+            model.getActionButtonVisible().set(isSeller);
+            model.getOpenDisputeButtonVisible().set(false);
+            if (isSeller) {
+                model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_1);
+                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase1.buttonText"));
+            } else {
+                model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_1);
+            }
+            // todo seller: show text field for payment account with button below
+            model.getPhaseInfo().set(isBuyer ?
+                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase1.headline", fiatCode) :
+                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase1.headline")
+            );
+        } else if (phaseIndex == 1) {
+            // buyer: send btc address, fiat sent
+            model.getActionButtonVisible().set(isBuyer);
+            model.getOpenDisputeButtonVisible().set(false);
+
+            if (isBuyer) {
+                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.buttonText"));
+                model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_2);
+            } else {
+                model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_2);
+            }
+            // todo buyer show text field with sellers account data and the fiat amount to send w button below
+            model.getPhaseInfo().set(isBuyer ?
+                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase2.headline", model.getQuoteAmount().get()) :
+                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase2.headline", fiatCode)
+            );
+        } else if (phaseIndex == 2) {
+            // seller: confirm fiat receipt and sent BTC
+            model.getActionButtonVisible().set(isSeller);
+            model.getOpenDisputeButtonVisible().set(true);
+            if (isSeller) {
+                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.buttonText"));
+                model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_3);
+            } else {
+                model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_3);
+            }
+            // todo seller: 
+            model.getPhaseInfo().set(isBuyer ?
+                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase3.headline", fiatCode) :
+                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase3.headline", model.getQuoteAmount().get())
+            );
+        } else if (phaseIndex == 3) {
+            // buyer: confirm BTC received
+            model.getActionButtonVisible().set(isBuyer);
+            model.getOpenDisputeButtonVisible().set(true);
+            if (isBuyer) {
+                model.getActionButtonText().set(Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase4.buttonText"));
+                model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_4);
+            } else {
+                model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_4);
+            }
+            model.getPhaseInfo().set(isBuyer ?
+                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase4.headline") :
+                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase4.headline")
+            );
+        } else if (phaseIndex == 4) {
+            // btc received
+            model.getActionButtonVisible().set(false);
+            model.getOpenDisputeButtonVisible().set(false);
+            model.getPhaseInfo().set(isBuyer ?
+                    Res.get("bisqEasy.trade.state.phaseInfo.buyer.phase5.headline") :
+                    Res.get("bisqEasy.trade.state.phaseInfo.seller.phase5.headline")
+            );
+            model.getPhase().set(TradeStateModel.Phase.BUYER_PHASE_5);
+            model.getPhase().set(TradeStateModel.Phase.SELLER_PHASE_5);
+        }
+    }
+
     private boolean isBuyer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds()) ?
@@ -343,4 +381,15 @@ public class TradeStateController implements Controller {
                 bisqEasyOffer.getTakersDirection().isBuy();
     }
 
+    private void applyFirstTimeItemsVisible() {
+        model.getFirstTimeItemsVisible().set(!model.getIsCollapsed().get() && model.getPhaseIndex().get() == 0 && !getTradeRulesConfirmed());
+    }
+
+    private void applyPhaseAndInfoBoxVisible() {
+        model.getPhaseAndInfoBoxVisible().set(!model.getIsCollapsed().get() && !model.getFirstTimeItemsVisible().get());
+    }
+
+    private Boolean getTradeRulesConfirmed() {
+        return settingsService.getTradeRulesConfirmed().get();
+    }
 }

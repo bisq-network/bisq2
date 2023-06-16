@@ -25,7 +25,6 @@ import "network.proto";
 import "security.proto";
 import "offer.proto";
 import "user.proto";
-import "protocol.proto";
 
 enum ChatMessageType {
   TEXT = 0;

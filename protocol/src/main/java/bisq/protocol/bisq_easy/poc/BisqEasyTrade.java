@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bisq_easy;
+package bisq.protocol.bisq_easy.poc;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.util.ProtobufUtils;
