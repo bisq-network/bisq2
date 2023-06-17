@@ -22,15 +22,16 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
-import bisq.protocol.bisq_easy.ProtocolParty;
 import bisq.protocol.bisq_easy.ServiceProvider;
 import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.protocol.bisq_easy.tasks.ProcessBisqEasyMessageTask;
 import bisq.user.profile.UserProfile;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
 
+@Slf4j
 public class ProcessBisqEasyTakeOfferRequest extends ProcessBisqEasyMessageTask<BisqEasyTakeOfferRequest> {
     private final BisqEasyTakeOfferRequest message;
 
@@ -39,6 +40,7 @@ public class ProcessBisqEasyTakeOfferRequest extends ProcessBisqEasyMessageTask<
                                            BisqEasyTakeOfferRequest message) {
         super(serviceProvider, model);
         this.message = message;
+        log.error("message={}", message);
     }
 
     @Override
@@ -53,17 +55,11 @@ public class ProcessBisqEasyTakeOfferRequest extends ProcessBisqEasyMessageTask<
         Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
 
         try {
-            ProtocolParty taker = new ProtocolParty(bisqEasyContract.getTaker().getNetworkId());
-            taker.setContractSignatureData(takersContractSignatureData);
+            model.getTaker().setContractSignatureData(takersContractSignatureData);
 
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
-            ProtocolParty maker = new ProtocolParty(bisqEasyOffer.getMakerNetworkId());
-            maker.setContractSignatureData(contractSignatureData);
+            model.getMaker().setContractSignatureData(contractSignatureData);
 
-
-            model.setBisqEasyContract(bisqEasyContract);
-            model.setTaker(taker);
-            model.setMaker(maker);
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

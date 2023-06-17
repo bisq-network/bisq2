@@ -34,6 +34,7 @@ import bisq.oracle.daobridge.model.*;
 import bisq.oracle.timestamp.AuthorizeTimestampRequest;
 import bisq.oracle.timestamp.AuthorizedTimestampData;
 import bisq.persistence.PersistenceService;
+import bisq.protocol.bisq_easy.messages.BisqEasyTradeMessage;
 import bisq.support.MediationRequest;
 import bisq.support.MediationResponse;
 import bisq.user.profile.UserProfile;
@@ -161,6 +162,8 @@ public abstract class ApplicationService {
                 MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationResponse",
                 MediationResponse.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("protocol.BisqEasyTradeMessage",
+                BisqEasyTradeMessage.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }

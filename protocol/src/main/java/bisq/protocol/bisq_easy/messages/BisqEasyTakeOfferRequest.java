@@ -19,8 +19,8 @@ package bisq.protocol.bisq_easy.messages;
 
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.NetworkMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,86 +32,40 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyTakeOfferRequest extends BisqEasyMessage {
+public class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
     private final BisqEasyContract bisqEasyContract;
     private final ContractSignatureData contractSignatureData;
 
+    public BisqEasyTakeOfferRequest(NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
+        this(sender,
+                bisqEasyContract,
+                contractSignatureData,
+                new MetaData(TTL, 100000, BisqEasyTakeOfferRequest.class.getSimpleName()));
+    }
 
-    public BisqEasyTakeOfferRequest(BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
-        super(new MetaData(TTL, 100000, BisqEasyTakeOfferRequest.class.getSimpleName()));
+    private BisqEasyTakeOfferRequest(NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData, MetaData metaData) {
+        super(sender, metaData);
 
         this.bisqEasyContract = bisqEasyContract;
         this.contractSignatureData = contractSignatureData;
     }
 
     @Override
-    public NetworkMessage toProto() {
-        return null;
-    }
-/*
-    public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
-        bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
-                .setId(id)
-                .setChatChannelDomain(chatChannelDomain.toProto())
-                .setChannelId(channelId)
-                .setAuthorUserProfileId(authorUserProfileId)
-                .setDate(date)
-                .setWasEdited(wasEdited)
-                .setChatMessageType(chatMessageType.toProto())
-                .setMetaData(metaData.toProto());
-        citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
-        optionalText.ifPresent(builder::setText);
-        return builder;
+    protected bisq.protocol.protobuf.BisqEasyTradeMessage toBisqEasyTradeMessageProto() {
+        return getBisqEasyTradeMessageBuilder().setBisqEasyTakeOfferRequest(
+                        bisq.protocol.protobuf.BisqEasyTakeOfferRequest.newBuilder()
+                                .setBisqEasyContract(bisqEasyContract.toProto())
+                                .setContractSignatureData(contractSignatureData.toProto()))
+                .build();
     }
 
-    public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
+    public static BisqEasyTakeOfferRequest fromProto(bisq.protocol.protobuf.BisqEasyTradeMessage proto) {
+        bisq.protocol.protobuf.BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = proto.getBisqEasyTakeOfferRequest();
+        return new BisqEasyTakeOfferRequest(
+                NetworkId.fromProto(proto.getSender()),
+                BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),
+                ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()),
+                MetaData.fromProto(proto.getMetaData()));
     }
-
-    public static ProtoResolver<DistributedData> getDistributedDataResolver() {
-        return any -> {
-            try {
-                bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
-                switch (proto.getMessageCase()) {
-                    case PUBLICBISQEASYOFFERCHATMESSAGE: {
-                        return BisqEasyPublicChatMessage.fromProto(proto);
-                    }
-                    case COMMONPUBLICCHATMESSAGE: {
-                        return CommonPublicChatMessage.fromProto(proto);
-                    }
-                    case MESSAGE_NOT_SET: {
-                        throw new UnresolvableProtobufMessageException(proto);
-                    }
-                }
-                throw new UnresolvableProtobufMessageException(proto);
-            } catch (InvalidProtocolBufferException e) {
-                throw new UnresolvableProtobufMessageException(e);
-            }
-        };
-    }
-
-    public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
-        return any -> {
-            try {
-                bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
-                switch (proto.getMessageCase()) {
-                    case TWOPARTYPRIVATECHATMESSAGE: {
-                        return TwoPartyPrivateChatMessage.fromProto(proto);
-                    }
-
-                    case PRIVATEBISQEASYTRADECHATMESSAGE: {
-                        return BisqEasyPrivateTradeChatMessage.fromProto(proto);
-                    }
-
-                    case MESSAGE_NOT_SET: {
-                        throw new UnresolvableProtobufMessageException(proto);
-                    }
-                }
-                throw new UnresolvableProtobufMessageException(proto);
-            } catch (InvalidProtocolBufferException e) {
-                throw new UnresolvableProtobufMessageException(e);
-            }
-        };
-    }*/
-
 }

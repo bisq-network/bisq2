@@ -21,8 +21,10 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ServiceProvider;
-import bisq.protocol.bisq_easy.messages.BisqEasyMessage;
+import bisq.protocol.bisq_easy.messages.BisqEasyTradeMessage;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class SendBisqEasyMessageTask extends BisqEasyTask {
 
     protected SendBisqEasyMessageTask(ServiceProvider serviceProvider,
@@ -30,10 +32,9 @@ public abstract class SendBisqEasyMessageTask extends BisqEasyTask {
         super(serviceProvider, model);
     }
 
-    protected void sendMessage(BisqEasyMessage message, NetworkId receiverNetworkId, NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
+    protected void sendMessage(BisqEasyTradeMessage message, NetworkId receiverNetworkId, NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
         serviceProvider.getNetworkService().confidentialSend(message, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((result, throwable) -> {
-                    //todo
                 });
     }
 }

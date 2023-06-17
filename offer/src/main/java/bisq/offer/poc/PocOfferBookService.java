@@ -58,7 +58,7 @@ public class PocOfferBookService {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        offers.addAll(dataService.getAuthenticatedPayloadByStoreName("Offer")
+        offers.addAll(dataService.getAuthenticatedPayloadStreamByStoreName("Offer")
                 .filter(payload -> payload.getDistributedData() instanceof PocOffer)
                 .map(payload -> (PocOffer) payload.getDistributedData())
                 .collect(Collectors.toList()));

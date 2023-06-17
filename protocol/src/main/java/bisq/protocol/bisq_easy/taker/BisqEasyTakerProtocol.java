@@ -17,11 +17,8 @@
 
 package bisq.protocol.bisq_easy.taker;
 
-import bisq.common.monetary.Monetary;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.protocol.bisq_easy.BisqEasyEvent;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ServiceProvider;
@@ -39,28 +36,13 @@ public interface BisqEasyTakerProtocol<M extends BisqEasyProtocolModel> {
                 .from(BisqEasyState.INIT)
                 .on(BisqEasyEvent.TAKE_OFFER)
                 .to(BisqEasyState.TAKE_OFFER_REQUEST_SENT);
-
-      /*  getFsm().transition()
-                .from(BisqEasyTakerState.TAKER_TAKE_OFFER_REQUEST_SENT)
-                .on(BisqEasyEventType.TAKER_TAKE_OFFER)
-                .to(BisqEasyTakerState.COMPLETE);*/
     }
 
-    default void takeOffer(ServiceProvider serviceProvider,
-                           Identity takerIdentity,
-                           BisqEasyOffer bisqEasyOffer,
-                           Monetary baseSideAmount,
-                           Monetary quoteSideAmount,
-                           BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                           FiatPaymentMethodSpec fiatPaymentMethodSpec) {
+    default void takeOffer(ServiceProvider serviceProvider, Identity takerIdentity, BisqEasyContract bisqEasyContract) {
         SendBisqEasyTakeOfferRequest handler = new SendBisqEasyTakeOfferRequest(serviceProvider,
                 getModel(),
                 takerIdentity,
-                bisqEasyOffer,
-                baseSideAmount,
-                quoteSideAmount,
-                bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec);
+                bisqEasyContract);
         getFsm().onEvent(BisqEasyEvent.TAKE_OFFER, handler);
     }
 }

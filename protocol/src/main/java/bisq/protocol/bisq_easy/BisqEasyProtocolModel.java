@@ -20,12 +20,12 @@ package bisq.protocol.bisq_easy;
 import bisq.common.observable.Observable;
 import bisq.common.proto.Proto;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.protocol.bisq_easy.states.BisqEasyState;
 import bisq.protocol.fsm.State;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,16 +38,16 @@ public class BisqEasyProtocolModel implements Proto {
         return offerId + "." + takerNodeId;
     }
 
-    @Setter
-    private BisqEasyContract bisqEasyContract;
+    private final BisqEasyContract bisqEasyContract;
 
-    @Setter
-    private ProtocolParty taker;
-    @Setter
-    private ProtocolParty maker;
+    private final ProtocolParty taker;
+    private final ProtocolParty maker;
     private final Observable<State> fsmState = new Observable<>(BisqEasyState.INIT);
 
-    public BisqEasyProtocolModel() {
+    public BisqEasyProtocolModel(BisqEasyContract bisqEasyContract, NetworkId takerNetworkId) {
+        this.bisqEasyContract = bisqEasyContract;
+        taker = new ProtocolParty(takerNetworkId);
+        maker = new ProtocolParty(bisqEasyContract.getOffer().getMakerNetworkId());
     }
 
     @Override
@@ -57,7 +57,7 @@ public class BisqEasyProtocolModel implements Proto {
     }
 
     public static BisqEasyProtocolModel fromProto(bisq.protocol.protobuf.BisqEasyProtocolModel proto) {
-        return new BisqEasyProtocolModel();
+        return new BisqEasyProtocolModel(null, null);
     }
 
     public String getProtocolId() {

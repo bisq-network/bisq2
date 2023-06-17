@@ -20,8 +20,10 @@ package bisq.protocol.bisq_easy;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.contract.ContractService;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -37,8 +39,8 @@ import bisq.protocol.bisq_easy.buyer_as_maker.BisqEasyBuyerAsMakerTrade;
 import bisq.protocol.bisq_easy.buyer_as_taker.BisqEasyBuyerAsTakerProtocol;
 import bisq.protocol.bisq_easy.buyer_as_taker.BisqEasyBuyerAsTakerTrade;
 import bisq.protocol.bisq_easy.maker.BisqEasyMakerProtocol;
-import bisq.protocol.bisq_easy.messages.BisqEasyMessage;
 import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
+import bisq.protocol.bisq_easy.messages.BisqEasyTradeMessage;
 import bisq.protocol.bisq_easy.seller_as_maker.BisqEasySellerAsMakerProtocol;
 import bisq.protocol.bisq_easy.seller_as_maker.BisqEasySellerAsMakerTrade;
 import bisq.protocol.bisq_easy.seller_as_taker.BisqEasySellerAsTakerProtocol;
@@ -47,6 +49,7 @@ import bisq.protocol.bisq_easy.taker.BisqEasyTakerProtocol;
 import bisq.protocol.bisq_easy.taker.BisqEasyTakerTrade;
 import bisq.support.MediationService;
 import bisq.support.SupportService;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,12 +113,12 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeS
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof BisqEasyMessage) {
-            processMessage((BisqEasyMessage) networkMessage);
+        if (networkMessage instanceof BisqEasyTradeMessage) {
+            processMessage((BisqEasyTradeMessage) networkMessage);
         }
     }
 
-    private void processMessage(BisqEasyMessage message) {
+    private void processMessage(BisqEasyTradeMessage message) {
         if (message instanceof BisqEasyTakeOfferRequest) {
             onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) message);
         }
@@ -123,8 +126,8 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeS
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyOffer bisqEasyOffer = message.getBisqEasyContract().getOffer();
-        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
-        BisqEasyProtocol<?> bisqEasyProtocol = createProtocol(isBuyer, false);
+        NetworkId takerNetworkId = message.getSender();
+        BisqEasyProtocol<?> bisqEasyProtocol = createProtocol(takerNetworkId, message.getBisqEasyContract(), false);
         BisqEasyTrade<?, ?> bisqEasyTrade = createTrade(bisqEasyProtocol);
         persistableStore.add(bisqEasyTrade);
         persist();
@@ -143,19 +146,21 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeS
                                               Monetary quoteSideAmount,
                                               BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                               FiatPaymentMethodSpec fiatPaymentMethodSpec) {
-        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
-        BisqEasyProtocol<?> bisqEasyProtocol = createProtocol(isBuyer, true);
+        Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
+        NetworkId takerNetworkId = takerIdentity.getNetworkId();
+        BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
+                takerNetworkId,
+                baseSideAmount.getValue(),
+                quoteSideAmount.getValue(),
+                bitcoinPaymentMethodSpec,
+                fiatPaymentMethodSpec,
+                mediator);
+        BisqEasyProtocol<?> bisqEasyProtocol = createProtocol(takerNetworkId, bisqEasyContract, true);
         BisqEasyTrade<?, ?> bisqEasyTrade = createTrade(bisqEasyProtocol);
         persistableStore.add(bisqEasyTrade);
         persist();
         BisqEasyTakerProtocol<?> bisqEasyTakerProtocol = (BisqEasyTakerProtocol<?>) bisqEasyProtocol;
-        bisqEasyTakerProtocol.takeOffer(serviceProvider,
-                takerIdentity,
-                bisqEasyOffer,
-                baseSideAmount,
-                quoteSideAmount,
-                bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec);
+        bisqEasyTakerProtocol.takeOffer(serviceProvider, takerIdentity, bisqEasyContract);
         return (BisqEasyTakerTrade<?, ?>) bisqEasyTrade;
     }
 
@@ -168,18 +173,20 @@ public class BisqEasyProtocolService implements PersistenceClient<BisqEasyTradeS
     // Factory methods
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static BisqEasyProtocol<?> createProtocol(boolean isBuyer, boolean isTaker) {
+    private static BisqEasyProtocol<?> createProtocol(NetworkId takerNetworkId, BisqEasyContract bisqEasyContract, boolean isTaker) {
         if (isTaker) {
+            boolean isBuyer = bisqEasyContract.getOffer().getTakersDirection().isBuy();
             if (isBuyer) {
-                return new BisqEasyBuyerAsTakerProtocol(new BisqEasyProtocolModel());
+                return new BisqEasyBuyerAsTakerProtocol(new BisqEasyProtocolModel(bisqEasyContract, takerNetworkId));
             } else {
-                return new BisqEasySellerAsTakerProtocol(new BisqEasyProtocolModel());
+                return new BisqEasySellerAsTakerProtocol(new BisqEasyProtocolModel(bisqEasyContract, takerNetworkId));
             }
         } else {
+            boolean isBuyer = bisqEasyContract.getOffer().getMakersDirection().isBuy();
             if (isBuyer) {
-                return new BisqEasyBuyerAsMakerProtocol(new BisqEasyProtocolModel());
+                return new BisqEasyBuyerAsMakerProtocol(new BisqEasyProtocolModel(bisqEasyContract, takerNetworkId));
             } else {
-                return new BisqEasySellerAsMakerProtocol(new BisqEasyProtocolModel());
+                return new BisqEasySellerAsMakerProtocol(new BisqEasyProtocolModel(bisqEasyContract, takerNetworkId));
             }
         }
     }

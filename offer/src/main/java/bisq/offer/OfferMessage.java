@@ -41,11 +41,12 @@ public class OfferMessage implements DistributedData {
         this(offer, new MetaData(OfferMessage.TTL, 100000, OfferMessage.class.getSimpleName()));
     }
 
-    public OfferMessage(Offer<?, ?> offer, MetaData metaData) {
+    private OfferMessage(Offer<?, ?> offer, MetaData metaData) {
         this.offer = offer;
         this.metaData = metaData;
     }
 
+    @Override
     public bisq.offer.protobuf.OfferMessage toProto() {
         return bisq.offer.protobuf.OfferMessage.newBuilder()
                 .setOffer(offer.toProto())

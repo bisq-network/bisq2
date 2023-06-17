@@ -19,9 +19,9 @@ package bisq.protocol.bisq_easy.tasks;
 
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
 import bisq.protocol.bisq_easy.ServiceProvider;
-import bisq.protocol.bisq_easy.messages.BisqEasyMessage;
+import bisq.protocol.bisq_easy.messages.BisqEasyTradeMessage;
 
-public abstract class ProcessBisqEasyMessageTask<M extends BisqEasyMessage> extends BisqEasyTask {
+public abstract class ProcessBisqEasyMessageTask<M extends BisqEasyTradeMessage> extends BisqEasyTask {
     protected ProcessBisqEasyMessageTask(ServiceProvider serviceProvider,
                                          BisqEasyProtocolModel model) {
         super(serviceProvider, model);

@@ -17,70 +17,38 @@
 
 package bisq.protocol.bisq_easy.taker.tasks;
 
-import bisq.common.monetary.Monetary;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.protocol.bisq_easy.BisqEasyProtocolModel;
-import bisq.protocol.bisq_easy.ProtocolParty;
 import bisq.protocol.bisq_easy.ServiceProvider;
 import bisq.protocol.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.protocol.bisq_easy.tasks.SendBisqEasyMessageTask;
-import bisq.user.profile.UserProfile;
 
 import java.security.GeneralSecurityException;
-import java.util.Optional;
 
 public class SendBisqEasyTakeOfferRequest extends SendBisqEasyMessageTask {
     private final Identity takerIdentity;
-    private final BisqEasyOffer bisqEasyOffer;
-    private final Monetary baseSideAmount;
-    private final Monetary quoteSideAmount;
-    private final BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec;
-    private final FiatPaymentMethodSpec fiatPaymentMethodSpec;
+    private final BisqEasyContract bisqEasyContract;
 
     public SendBisqEasyTakeOfferRequest(ServiceProvider serviceProvider,
                                         BisqEasyProtocolModel model,
                                         Identity takerIdentity,
-                                        BisqEasyOffer bisqEasyOffer,
-                                        Monetary baseSideAmount,
-                                        Monetary quoteSideAmount,
-                                        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                        FiatPaymentMethodSpec fiatPaymentMethodSpec) {
+                                        BisqEasyContract bisqEasyContract) {
         super(serviceProvider, model);
         this.takerIdentity = takerIdentity;
-        this.bisqEasyOffer = bisqEasyOffer;
-        this.baseSideAmount = baseSideAmount;
-        this.quoteSideAmount = quoteSideAmount;
-        this.bitcoinPaymentMethodSpec = bitcoinPaymentMethodSpec;
-        this.fiatPaymentMethodSpec = fiatPaymentMethodSpec;
+        this.bisqEasyContract = bisqEasyContract;
     }
 
     @Override
     public void run() {
-        Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
-        BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
-                takerIdentity.getNetworkId(),
-                baseSideAmount.getValue(),
-                quoteSideAmount.getValue(),
-                bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec,
-                mediator);
         try {
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, takerIdentity.getKeyPair());
-            ProtocolParty taker = new ProtocolParty(takerIdentity.getNetworkId());
-            taker.setContractSignatureData(contractSignatureData);
-            ProtocolParty maker = new ProtocolParty(bisqEasyOffer.getMakerNetworkId());
+            model.getTaker().setContractSignatureData(contractSignatureData);
 
-            BisqEasyTakeOfferRequest message = new BisqEasyTakeOfferRequest(bisqEasyContract, contractSignatureData);
-            sendMessage(message, maker.getNetworkId(), takerIdentity.getNodeIdAndKeyPair());
+            BisqEasyTakeOfferRequest message = new BisqEasyTakeOfferRequest(takerIdentity.getNetworkId(), bisqEasyContract, contractSignatureData);
+            sendMessage(message, model.getMaker().getNetworkId(), takerIdentity.getNodeIdAndKeyPair());
 
-            model.setBisqEasyContract(bisqEasyContract);
-            model.setTaker(taker);
-            model.setMaker(maker);
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

@@ -169,7 +169,7 @@ public class DataService implements DataNetworkService.Listener {
         return storageService.getAllAuthenticatedPayload();
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedPayloadByStoreName(String storeName) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadStreamByStoreName(String storeName) {
         return storageService.getAuthenticatedPayloadStream(storeName);
     }
 
