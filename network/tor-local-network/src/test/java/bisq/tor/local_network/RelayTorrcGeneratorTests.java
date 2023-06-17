@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network;
 
-import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
+import bisq.tor.local_network.torrc.RelayTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,7 +28,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DirectoryAuthorityTorrcGeneratorTests {
+public class RelayTorrcGeneratorTests {
     @Test
     void basicTest(@TempDir Path tempDir) throws IOException {
         Path daAPath = tempDir.resolve("DA_A");
@@ -58,10 +58,10 @@ public class DirectoryAuthorityTorrcGeneratorTests {
                 .torKeyFingerprint("BBBB_fp")
                 .build();
 
-        var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(firstDirAuth);
+        var relayTorrcGenerator = new RelayTorrcGenerator(firstDirAuth);
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
 
-        var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDirAuthorities);
+        var torrcFileGenerator = new TorrcFileGenerator(relayTorrcGenerator, allDirAuthorities);
         torrcFileGenerator.generate();
 
         assertThat(firstDirAuth.getTorrcPath())
