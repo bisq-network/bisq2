@@ -51,10 +51,10 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.protocol.TradeProtocolException;
-import bisq.protocol.bisq_easy.BisqEasyProtocolService;
-import bisq.protocol.bisq_easy.BisqEasyTrade;
 import bisq.support.MediationService;
+import bisq.trade.TradeException;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -79,7 +79,7 @@ public class TakeOfferReviewController implements Controller {
     private final ContractService contractService;
     private final IdentityService identityService;
     private final UserIdentityService userIdentityService;
-    private final BisqEasyProtocolService bisqEasyProtocolService;
+    private final BisqEasyTradeService bisqEasyTradeService;
 
     public TakeOfferReviewController(DefaultApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
@@ -90,7 +90,7 @@ public class TakeOfferReviewController implements Controller {
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        bisqEasyProtocolService = applicationService.getTradeProtocolService().getBisqEasyProtocolService();
+        bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
 
@@ -168,7 +168,7 @@ public class TakeOfferReviewController implements Controller {
         try {
             BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
             UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-            BisqEasyTrade tradeModel = bisqEasyProtocolService.onTakeOffer(myUserIdentity.getIdentity(),
+            BisqEasyTrade tradeModel = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
                     bisqEasyOffer,
                     model.getTakersBaseSideAmount(),
                     model.getTakersQuoteSideAmount(),
@@ -184,7 +184,7 @@ public class TakeOfferReviewController implements Controller {
                         model.getShowTakeOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);
                     }));
-        } catch (TradeProtocolException e) {
+        } catch (TradeException e) {
             new Popup().error(e).show();
         }
     }

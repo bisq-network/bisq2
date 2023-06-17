@@ -24,9 +24,9 @@ import bisq.offer.OfferMessage;
 import bisq.oracle.daobridge.model.*;
 import bisq.oracle.timestamp.AuthorizeTimestampRequest;
 import bisq.oracle.timestamp.AuthorizedTimestampData;
-import bisq.protocol.TradeProtocolMessage;
 import bisq.support.MediationRequest;
 import bisq.support.MediationResponse;
+import bisq.trade.TradeMessage;
 import bisq.user.profile.UserProfile;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 
@@ -58,6 +58,6 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MediationResponse",
                 MediationResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("protocol.TradeProtocolMessage",
-                TradeProtocolMessage.getNetworkMessageResolver());
+                TradeMessage.getNetworkMessageResolver());
     }
 }

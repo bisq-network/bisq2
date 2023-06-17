@@ -28,7 +28,7 @@ dependencies {
     implementation project(':account')
     implementation project(':offer')
     implementation project(':contract')
-    implementation project(':protocol')
+    implementation project(':trade')
     implementation project(':oracle')
     implementation project(':settings')
     implementation project(':user')

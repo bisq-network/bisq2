@@ -36,11 +36,11 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.protocol.Trade;
-import bisq.protocol.bisq_easy.BisqEasyProtocolService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
+import bisq.trade.Trade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.wallets.core.WalletService;
@@ -66,7 +66,7 @@ public class TradeStateController implements Controller {
     private final ChatService chatService;
     private final MediationService mediationService;
     private final SettingsService settingsService;
-    private final BisqEasyProtocolService bisqEasyProtocolService;
+    private final BisqEasyTradeService bisqEasyTradeService;
     private Pin tradeRulesConfirmedPin;
     private Subscription phaseIndexPin, isCollapsedPin;
 
@@ -78,7 +78,7 @@ public class TradeStateController implements Controller {
         accountService = applicationService.getAccountService();
         settingsService = applicationService.getSettingsService();
         mediationService = applicationService.getSupportService().getMediationService();
-        bisqEasyProtocolService = applicationService.getTradeProtocolService().getBisqEasyProtocolService();
+        bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
         model = new TradeStateModel();
         view = new TradeStateView(model, this);
@@ -87,9 +87,8 @@ public class TradeStateController implements Controller {
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         model.setAppliedPhaseIndex(-1);
         model.setSelectedChannel(channel);
-        log.error("setSelectedChannel id={} NetworkId().getNodeId()={}", channel.getPeer().getId(), channel.getPeer().getNetworkId().getNodeId());
-        String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getNetworkId().getNodeId());
-        bisqEasyProtocolService.findBisqEasyTrade(tradeId)
+        String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getId());
+        bisqEasyTradeService.findBisqEasyTrade(tradeId)
                 .ifPresent(bisqEasyTradeModel -> {
                     model.setBisqEasyTradeModel(bisqEasyTradeModel);
                     BisqEasyOffer bisqEasyOffer = bisqEasyTradeModel.getOffer();

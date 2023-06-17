@@ -1,0 +1,65 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package trade;
+option java_package = "bisq.trade.protobuf";
+option java_multiple_files = true;
+
+import "offer.proto";
+import "network.proto";
+import "contract.proto";
+
+message TradeParty {
+  network.NetworkId networkId = 1;
+  optional contract.ContractSignatureData contractSignatureData = 2;
+}
+
+message Trade {
+  string id = 1;
+  contract.Contract contract = 2;
+  TradeParty taker = 3;
+  TradeParty maker = 4;
+  string state = 5;
+
+  oneof message {
+    BisqEasyTrade bisqEasyTrade = 20;
+  }
+}
+
+// BisqEasy
+message BisqEasyTrade {
+}
+
+message BisqEasyTradeStore {
+  map<string, Trade> tradeById = 1;
+}
+
+// BisqEasy messages
+message TradeMessage {
+  network.NetworkId sender = 1;
+  network.MetaData metaData = 2;
+  oneof message {
+    BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = 10;
+  }
+}
+message BisqEasyTakeOfferRequest {
+  contract.Contract bisqEasyContract = 1;
+  contract.ContractSignatureData contractSignatureData = 2;
+
+}
