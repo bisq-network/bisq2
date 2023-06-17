@@ -18,8 +18,10 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.utils.validation.InputValidator;
+import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -158,6 +160,12 @@ public class MaterialTextField extends Pane {
     public void hideIcon() {
         iconButton.setManaged(false);
         iconButton.setVisible(false);
+    }
+
+    public void showCopyIcon() {
+        setIcon(AwesomeIcon.COPY);
+        setIconTooltip(Res.get("action.copyToClipboard"));
+        iconButton.setOnAction(e -> ClipboardUtil.copyToClipboard(getText()));
     }
 
     public void showIcon() {

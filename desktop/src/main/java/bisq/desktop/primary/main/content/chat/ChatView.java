@@ -45,6 +45,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
 
     protected final VBox centerVBox;
     private final SearchBox searchBox;
+    protected final Region topSeparator;
     private Pane chatUserOverviewRoot;
     private Subscription chatUserOverviewRootSubscription;
     private Subscription channelIconPin;
@@ -68,7 +69,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         // Left
         left = new VBox(
                 publicChannelSelection,
-                Layout.separator(),
+                Layout.hLine(),
                 twoPartyPrivateChatChannelSelection,
                 Spacer.fillVBox());
         left.getStyleClass().add("bisq-grey-2-bg");
@@ -105,7 +106,8 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         sideBar.setFillWidth(true);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox = new VBox(centerToolbar, Layout.separator(), chatMessagesComponent);
+        topSeparator = Layout.hLine();
+        centerVBox = new VBox(centerToolbar, topSeparator, chatMessagesComponent);
         chatMessagesComponent.setMinWidth(700);
         HBox.setHgrow(left, Priority.NEVER);
         HBox.setHgrow(centerVBox, Priority.ALWAYS);

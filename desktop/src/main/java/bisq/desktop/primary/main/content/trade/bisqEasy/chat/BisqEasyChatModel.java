@@ -29,9 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
+    private final BooleanProperty topSeparatorVisible = new SimpleBooleanProperty();
+    private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty offerOnlyVisible = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty isBisqEasyPrivateTradeChatChannel = new SimpleBooleanProperty();
+
     public BisqEasyChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

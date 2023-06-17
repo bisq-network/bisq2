@@ -72,7 +72,7 @@ public class Res {
     }
 
     public static boolean has(String key) {
-        return defaultBundle.containsKey(key);
+        return bundles.stream().anyMatch(bundle -> bundle.containsKey(key));
     }
 }
 

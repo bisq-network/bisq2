@@ -107,7 +107,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
         GridPane.setMargin(subTitleLabel, new Insets(-5, 0, 0, 0));
         gridPane.add(subTitleLabel, 0, ++rowIndex, 3, 1);
 
-        Region separator = Layout.separator();
+        Region separator = Layout.hLine();
         GridPane.setMargin(separator, new Insets(5, 0, 15, 0));
         gridPane.add(separator, 0, ++rowIndex, 3, 1);
 

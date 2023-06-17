@@ -175,6 +175,10 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }*/
 
+    public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text, BisqEasyPrivateTradeChatChannel channel) {
+        return sendTextMessage(text, Optional.empty(), channel);
+    }
+
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Citation> citation,
                                                                                BisqEasyPrivateTradeChatChannel channel) {

@@ -140,6 +140,7 @@ public class TakeOfferReviewController implements Controller {
 
     public void doTakeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+
         Optional<UserProfile> mediator = mediationService.takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
         bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, mediator)
                 .thenAccept(result -> UIThread.run(() -> {

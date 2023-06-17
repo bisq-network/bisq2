@@ -166,7 +166,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             numVisibleChannelsPin.unbind();
         }
 
-        public void onJoinChannel(View.MarketListItem marketListItem) {
+        void onJoinChannel(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.marketsList.remove(marketListItem);
                 chatChannelService.findChannel(marketListItem.getMarket())
@@ -177,7 +177,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             }
         }
 
-        public void onLeaveChannel(BisqEasyPublicChatChannel channel) {
+        void onLeaveChannel(BisqEasyPublicChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
                     .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
                     .filter(publicTradeChatMessage -> publicTradeChatMessage.isMyMessage(userIdentityService))

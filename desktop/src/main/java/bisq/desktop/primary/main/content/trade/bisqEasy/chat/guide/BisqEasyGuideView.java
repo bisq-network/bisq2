@@ -42,7 +42,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         root.setPadding(new Insets(15, 30, 30, 30));
         VBox.setMargin(contentPane, new Insets(10, 0, 0, 0));
 
-        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
+        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("tradeGuide.welcome"),
                 NavigationTarget.BISQ_EASY_GUIDE_WELCOME,
                 styles);

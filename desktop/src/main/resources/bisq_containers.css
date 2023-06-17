@@ -1,0 +1,642 @@
+/*******************************************************************************
+ *                                                                             *
+ * Popup                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-popup {
+    -fx-background-color: -bisq-grey-2;
+}
+
+
+/*******************************************************************************
+ * List based                                                                  *
+ ******************************************************************************/
+
+/*******************************************************************************
+ *                                                                             *
+ * ListView                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.list-view {
+    -fx-background: transparent;
+    -fx-background-color: -bisq-dark-grey;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+}
+
+.list-view .list-cell {
+    -fx-background-color: -bisq-dark-grey;
+    -fx-font-size: 1.05em;
+    -fx-padding: 0 0 0 22;
+    -fx-background-insets: 0;
+}
+
+.list-view .list-cell:selected {
+    -fx-background-color: -bisq-darker-grey;
+}
+
+.list-view .list-cell .label {
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.list-view .list-cell:selected .label {
+    -fx-text-fill: -bisq-white;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Lines                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.h-line {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 1 0 0 0;
+}
+
+.v-line {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0 1 0 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Separator                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.separator:horizontal .line {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0.5;
+}
+
+.separator:vertical .line {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0.5;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Backgrounds                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.bg-grey-5 {
+    -fx-background-color: -bisq-grey-5;
+}
+
+.popup-bg {
+    -fx-background-color: -bisq-grey-4;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ScrollBar                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .thumb {
+    -fx-background-color: -bisq-grey-14;
+}
+
+.scroll-bar > .increment-button,
+.scroll-bar > .decrement-button {
+    -fx-background-color: -bisq-grey-14;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Misc list based                                                             *
+ *                                                                             *
+ ******************************************************************************/
+
+.list-view:focused,
+.tree-view:focused,
+.table-view:focused,
+.tree-table-view:focused,
+.table-view:focused,
+tree-table-view:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: -bisq-dark-grey;
+}
+
+/* Selected rows */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * TableView                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-font-size: 1em;
+}
+
+/* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
+.table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+
+.table-view .filler {
+    -fx-opacity: 0;
+}
+
+/* column-header */
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-pref-height: 34px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-alignment: center;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 0.9em;
+    -fx-label-padding: 0 10 0 10;
+}
+
+/* first */
+.table-view .column-header.first .label {
+    -fx-alignment: center-left;
+}
+
+.table-view .table-cell.first {
+    -fx-alignment: center-left;
+}
+
+/* last */
+.table-view .column-header.last .label {
+    -fx-alignment: center-right;
+}
+
+.table-view .table-cell.last {
+    -fx-alignment: center-right;
+}
+
+/* table-cell */
+.table-view .table-cell {
+    -fx-alignment: center;
+    -fx-padding: 0 10 0 10;
+}
+
+/* row-cell */
+.table-row-cell {
+    -fx-border-width: 1 0 0 0;
+    -fx-pref-height: 54px;
+    -fx-border-color: -bisq-dark-grey;
+}
+
+.table-view .table-row-cell .table-cell {
+    -fx-border-color: transparent;
+}
+
+.table-view .table-row-cell .table-cell .text {
+    -fx-fill: -bisq-white;
+}
+
+/* empty */
+.table-row-cell:empty {
+    -fx-border-width: 0;
+}
+
+/* even */
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
+/* odd */
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
+.table-view .table-row-cell:empty .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
+.table-view .table-row-cell:empty:hover .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
+/* disabled */
+.table-view .table-row-cell:disabled .table-cell .text {
+    -fx-fill: -bisq-grey-20;
+}
+
+
+/* selected */
+.table-row-cell:selected {
+    -fx-fill: -bisq-white;
+}
+
+.table-view .table-row-cell:hover .table-cell,
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-darker-grey;
+    -fx-border-color: transparent;
+}
+
+/* button */
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: -bisq-white;
+}
+
+/* copy-icon */
+.table-view .table-row-cell .copy-icon .text,
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: -bisq-white;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: -bisq-white;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: -bisq-white;
+}
+
+/* hyperlink */
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: -bisq-white;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover,
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: -bisq-white;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:hover,
+.table-view .table-row-cell .hyperlink:visited,
+.table-view .table-row-cell .hyperlink:hover:visited {
+    -fx-underline: false;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+
+/*******************************************************************************
+ * Containers                                            *
+ ******************************************************************************/
+
+/*******************************************************************************
+ *                                                                             *
+ * TitledPane                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.titled-pane {
+    -fx-background-color: null;
+    -fx-text-fill: -bisq-white;
+    -fx-label-padding: -30 0 0 0;
+}
+
+.titled-pane:focused {
+}
+
+.titled-pane > .title {
+    -fx-background-color: null;
+    -fx-border-color: null;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-pref-height: 50;
+}
+
+.titled-pane:focused > .title > .arrow-button > .arrow {
+}
+
+.titled-pane > .title > .arrow-button {
+    -fx-background-color: null;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0.0em 0.583em 0.0em 0.0em; /* 0 7 0 0 */
+}
+
+.titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 1 0 -1 0, 0;
+    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+}
+
+.titled-pane > .title:hover {
+    -fx-color: -fx-hover-base;
+}
+
+.titled-pane > *.content {
+    -fx-padding: 0 0 -10 0;
+}
+
+.titled-pane > .content > .scroll-pane > .scroll-bar {
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Accordion                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.accordion > .titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: -bisq-grey-dimmed;
+    -fx-background-insets: -1, 0;
+}
+
+
+.accordion > .titled-pane > .title {
+    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 3 3 0 0, 2 2 0 0, 1 1 0 0;
+    -fx-padding: 0.3333em 0.75em 0.3333em 0.75em; /* 4 9 4 9 */
+}
+
+.accordion > .titled-pane > .title {
+    -fx-font-size: 1em;
+}
+
+.accordion > .titled-pane {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * SplitPane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0 0.15em 0 0.15em; /* 0 3 0 3 */
+}
+
+/* horizontal the two nodes are placed to the left/right of each other. */
+.split-pane:horizontal > .split-pane-divider {
+    -fx-padding: 0;
+    -fx-background-insets: -5; /* Trick to give larger width for the handle but not showing it visually*/
+}
+
+/* vertical the two nodes are placed on top of each other. */
+.split-pane:vertical > .split-pane-divider {
+    -fx-background-color: -fx-box-border, -fx-inner-border;
+    -fx-background-insets: 0, 1 0 1 0;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * ScrollPane                                                             *
+ *                                                                             *
+ ******************************************************************************/
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bisq-grey-5;
+}
+
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bisq-grey-5;
+}
+
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Grid pane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+.grid-pane {
+    -fx-background-color: transparent;
+    -fx-background-radius: 5;
+    -fx-effect: null;
+    -fx-background-insets: 10;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Custom Container based                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-box-1 {
+    -fx-background-color: -bisq-dark-grey;
+    -fx-background-radius: 8;
+}
+
+.bisq-box-2 {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-dual-amount-bg {
+    -fx-background-color: -bisq-grey-17;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.bisq-dark-bg {
+    -fx-background-color: -bisq-dark-grey;
+}
+
+.bisq-grey-2-bg {
+    -fx-background-color: -bisq-grey-2;
+}
+
+.bisq-mid-grey {
+    -fx-background-color: -bisq-grey-20;
+}
+
+.bisq-green-line {
+    -fx-background-color: -bisq-green;
+}
+
+.bisq-white-bg {
+    -fx-background-color: -bisq-white;
+}
+
+.bisq-content-bg {
+    -fx-background-color: -bisq-content-bg-grey;
+}
+
+#chat-message-quote-box-peer-msg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 0 8 8 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-color: -bisq-grey-dimmed;
+    -fx-padding: 10 10 10 15;
+}
+
+#chat-message-quote-box-my-msg {
+    -fx-background-color: -bisq-grey-5;
+    -fx-background-radius: 0 8 8 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-color: -bisq-grey-dimmed;
+    -fx-padding: 10 10 10 15;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Controlsfx Popover                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+
+.popover {
+    -fx-background-color: transparent;
+}
+
+.popover > .border {
+    -fx-stroke: linear-gradient(to bottom, rgba(0, 0, 0, .3), rgba(0, 0, 0, .7));
+    -fx-stroke-width: 0.5;
+    -fx-fill: rgba(255.0, 255.0, 255.0, .95);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, .2), 10.0, 0.5, 2.0, 2.0);
+}
+
+.popover > .content {
+    -fx-padding: 10;
+}
+
+.popover > .detached {
+}
+
+.popover > .content .default-text {
+    -fx-text-fill: -bisq-white;
+}
+
+.popover > .content > .title > .text {
+    -fx-padding: 6.0 6.0 0.0 6.0;
+    -fx-text-fill: rgba(120, 120, 120, .8);
+    -fx-font-weight: bold;
+}
+
+.popover > .content > .title > .icon {
+    -fx-padding: 6.0 0.0 0.0 10.0;
+}
+
+.popover > .content > .title > .icon > .graphics > .circle {
+    -fx-fill: gray;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, .2), 3, 0.5, 1.0, 1.0);
+}
+
+.popover > .content > .title > .icon > .graphics > .line {
+    -fx-stroke: -bisq-white;
+    -fx-stroke-width: 2;
+}
+
+.popover > .border {
+    /* -fx-stroke: linear-gradient(to bottom, -bisq-white-transparent, -bisq-white-transparent-dark) !important;*/
+    -fx-fill: transparent;
+}
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Overlay                                                                                                           *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.overlay-headline {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-white;
+}
+
+.overlay-headline-information {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-green;
+}
+
+.overlay-headline-warning {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-warning;
+}
+
+.overlay-headline-error {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-red;
+}
+
+.overlay-icon-information {
+    -fx-text-fill: -bisq-green;
+}
+
+.overlay-icon-warning {
+    -fx-text-fill: -bisq-warning;
+}
+
+.overlay-icon-error {
+    -fx-text-fill: -bisq-red;
+}
+
+.overlay-bg {
+    -fx-background-color: -bisq-popup-bg-grey;
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -bisq-grey-11;
+    -fx-background-insets: 25;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.75), 40, 0.5, 0, 0);
+}

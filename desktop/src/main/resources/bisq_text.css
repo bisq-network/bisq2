@@ -1,0 +1,710 @@
+/*******************************************************************************
+ *                                                                             *
+ * Font sizes                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+/* TODO collect and unify sizes */
+.very-small-text {
+    -fx-font-size: 0.692em;
+}
+
+.small-text {
+    -fx-font-size: 0.769em;
+}
+
+.normal-text {
+    -fx-font-size: 1em;
+}
+
+.large-text {
+    -fx-font-size: 1.78em;
+}
+
+.very-large-text {
+    -fx-font-size: 2em;
+}
+
+.super-large-text {
+    -fx-font-size: 4.1em !important;
+}
+
+
+/*******************************************************************************
+ * Text based                                            *
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ *                                                                             *
+ * TextArea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-area {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: -bisq-grey-12;
+    -fx-background-radius: 4;
+    -fx-border-style: none;;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.text-area > .scroll-pane {
+    -fx-background-color: null;
+}
+
+.text-area > .scroll-pane > .scroll-bar:horizontal {
+    -fx-background-radius: 0 0 2 2;
+}
+
+.text-area > .scroll-pane > .scroll-bar:vertical {
+    -fx-background-radius: 0 2 2 0;
+}
+
+.text-area > .scroll-pane > .corner {
+    -fx-background-radius: 0 0 2 0;
+}
+
+.text-area .content {
+    /* is 1px less top and bottom than TextInput because of scrollPane border */
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em; /* 3 7 3 7 */
+    -fx-cursor: text;
+    -fx-background-color: transparent;
+    -fx-background-radius: 2;
+}
+
+.text-area:focused .content {
+    -fx-background-color: -bisq-content-bg-grey;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Custom Text based                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-text-headline-1 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 4.1em;
+}
+
+.bisq-text-headline-2 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+    /*-fx-line-spacing: -0.16em;*/
+}
+
+.bisq-text-headline-3 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-font-size: 3.4em;
+}
+
+.bisq-text-headline-4 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 3.15em;
+}
+
+.bisq-text-headline-5 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.5em;
+    /* -fx-line-spacing: -0.16em;*/
+}
+
+.bisq-text-1 {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 1.25em;
+}
+
+.bisq-text-2 {
+    -fx-text-fill: -bisq-grey-13;
+    -fx-font-size: 1.2em;
+    /*-fx-line-spacing: .2em;*/
+}
+
+.bisq-text-3 {
+    -fx-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.1em;
+    /* -fx-line-spacing: -0.12em;*/
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-4 {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.8em;
+}
+
+.bisq-text-5 {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.bisq-text-6 {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.1em;
+}
+
+.bisq-text-7 {
+    -fx-font-size: 0.92em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-8 {
+    -fx-font-size: 0.92em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.bisq-text-9 {
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.54em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-10 {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-11 {
+    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white;
+    -fx-font-size: 4.1em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.bisq-text-12 {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 2.0em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.bisq-text-13 {
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.1em;
+}
+
+.bisq-text-14 {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-15 {
+    -fx-font-size: 2.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
+.bisq-text-16 {
+    -fx-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-17 {
+    -fx-font-size: 2.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-white;
+}
+
+.bisq-text-18 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-19 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#bisq-text-20 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-21 {
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white !Important;
+    -fx-font-size: 1.1em !Important;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+.take-offer-review-description {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-grid-headline {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.8em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-value {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-value-details {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-headline {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 2.5em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-subtitle {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.05em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.take-offer-review-subtitle-value {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+/* Generic Label properties */
+
+/* colors */
+.text-fill-white {
+    -fx-text-fill: -bisq-white !Important;
+}
+
+.text-fill-light-dimmed {
+    -fx-text-fill: -bisq-grey-11 !Important;
+}
+
+.text-fill-grey-dimmed {
+    -fx-text-fill: -bisq-grey-dimmed !Important;
+}
+
+.text-fill-green {
+    -fx-text-fill: -bisq-green !Important;
+}
+
+/* sizes */
+.font-size-40 {
+    -fx-font-size: 4em !Important;
+}
+
+.font-size-36 {
+    -fx-font-size: 3.6em !Important;
+}
+
+.font-size-32 {
+    -fx-font-size: 3.2em !Important;
+}
+
+.font-size-28 {
+    -fx-font-size: 2.8em !Important;
+}
+
+.font-size-24 {
+    -fx-font-size: 2.4em !Important;
+}
+
+.font-size-22 {
+    -fx-font-size: 2.2em !Important;
+}
+
+.font-size-20 {
+    -fx-font-size: 2em !Important;
+}
+
+.font-size-18 {
+    -fx-font-size: 1.8em !Important;
+}
+
+.font-size-17 {
+    -fx-font-size: 1.7em !Important;
+}
+
+.font-size-16 {
+    -fx-font-size: 1.6em !Important;
+}
+
+.font-size-15 {
+    -fx-font-size: 1.5em !Important;
+}
+
+.font-size-14 {
+    -fx-font-size: 1.4em !Important;
+}
+
+.font-size-13 {
+    -fx-font-size: 1.3em !Important;
+}
+
+.font-size-12 {
+    -fx-font-size: 1.2em !Important;
+}
+
+.font-size-11 {
+    -fx-font-size: 1.1em !Important;
+}
+
+.font-size-10 {
+    -fx-font-size: 1em !Important;
+}
+
+.font-size-09 {
+    -fx-font-size: 0.9em !Important;
+}
+
+.font-size-08 {
+    -fx-font-size: 0.8em !Important;
+}
+
+.font-size-07 {
+    -fx-font-size: 0.7em !Important;
+}
+
+/* fonts */
+.font-light {
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+}
+
+.font-default {
+    -fx-font-family: "IBM Plex Sans" !Important;
+}
+
+.font-medium {
+    -fx-font-family: "IBM Plex Sans Medium" !Important;
+}
+
+.bisq-line-spacing-01 {
+    -fx-line-spacing: .1em;
+}
+
+.bisq-line-spacing-015 {
+    -fx-line-spacing: .15em;
+}
+
+.bisq-line-spacing-02 {
+    -fx-line-spacing: .2em;
+}
+
+.bisq-line-spacing-03 {
+    -fx-line-spacing: .3em;
+}
+
+.bisq-line-spacing-04 {
+    -fx-line-spacing: .4em;
+}
+
+.wrap-text {
+    -fx-wrap-text: true;
+}
+
+.text-underline {
+    -fx-underline: true;
+}
+
+
+.text-input {
+    -fx-highlight-fill: -bisq-green;
+}
+
+.text-input:focused {
+    -fx-highlight-fill: -bisq-green;
+}
+
+#base-amount-text-field {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -bisq-white;
+    -fx-highlight-fill: -bisq-green;
+    -fx-font-size: 5.2em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+#base-amount-text-field-small {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -bisq-white;
+    -fx-highlight-fill: -bisq-green;
+    -fx-font-size: 3em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+#quote-amount-text-field {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -bisq-grey-10;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Custom Label based                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-big-light-headline-label {
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.51em;
+}
+
+.bisq-sub-title-label {
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.44em;
+}
+
+.bisq-large-profile-id-label {
+    -fx-background-color: -bisq-grey-6;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1em;
+}
+
+.bisq-small-light-label {
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.bisq-small-light-label-dimmed {
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-grey-13;
+}
+
+.bisq-content-headline-label {
+    -fx-font-size: 1.78em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.bisq-popup-headline-label {
+    -fx-font-size: 1.35em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
+.bisq-popup-green-headline-label {
+    -fx-font-size: 2.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
+.bisq-tab-button-label {
+    -fx-font-size: 0.93em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-graphic-text-gap: 8;
+}
+
+.bisq-smaller-label {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 0.73em;
+}
+
+.bisq-small-dimmed-label {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.73em;
+}
+
+.bisq-grey-dimmed {
+    -fx-text-fill: -bisq-grey-13;
+}
+
+.bisq-text-white {
+    -fx-text-fill: -bisq-white;
+}
+
+.bisq-text-green {
+    -fx-text-fill: -bisq-green;
+}
+
+.bisq-text-grey-9 {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.bisq-text-grey-10 {
+    -fx-text-fill: -bisq-grey-10;
+}
+
+.font-medium {
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.font-semi-bold {
+    -fx-font-family: "IBM Plex Sans SemiBold";
+}
+
+.font-light {
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-125 {
+    -fx-font-size: 1.25em;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * MaterialTextField                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.material-text-field {
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-prompt-text-fill: -bisq-grey-disabled;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.material-text-field-bg {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4 4 0 0;
+}
+
+.material-text-field-bg-hover {
+    -fx-background-color: rgba(255, 255, 255, 0.075);
+}
+
+.material-text-field-bg-selected {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+.material-text-field-description-small {
+    -fx-font-size: 0.95em;
+}
+
+.material-text-field-description-big {
+    -fx-font-size: 1.25em;
+}
+
+.material-text-field-description-selected {
+    -fx-text-fill: -bisq-green;
+}
+
+.material-text-field-description-deselected {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.material-text-field-description-read-only {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.material-text-field-read-only {
+    -fx-text-fill: -bisq-white;
+}
+
+
+/* Used for textarea*/
+.material-text-field:focused .content {
+    -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Hyperlink                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.hyperlink {
+    -fx-text-fill: -bisq-white;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -bisq-green;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.hyperlink:hover:visited {
+    -fx-text-fill: derive(-bisq-grey-dimmed, 20%);
+}
+
+.hyperlink,
+.hyperlink.force-underline .text,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    -fx-underline: true;
+}
+
+.hyperlink.no-underline {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.hyperlink.highlight,
+.hyperlink.highlight .text.hyperlink.no-underline {
+    -fx-text-fill: -bisq-green;
+    -fx-fill: -bisq-green;
+}
+
+.hyperlink.error {
+    -fx-text-fill: -bisq-red;
+    -fx-fill: -bisq-red;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Custom TextInputBox based                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-input-box-top-pane {
+    -fx-background-color: -bisq-grey-12;
+    -fx-background-radius: 4 4 0 0;
+}
+
+.bisq-input-box-description-label {
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-input-box-text-input {
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-prompt-text-fill: -bisq-grey-14;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-input-box-text-input:focused .content {
+    -fx-background-color: transparent;
+}
+

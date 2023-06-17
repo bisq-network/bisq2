@@ -98,7 +98,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                 })
                 .orElse(Res.get("data.na")));
         model.getPriceDescription().set(Res.get("bisqEasy.offerDetails.price", bisqEasyOffer.getMarket().getMarketCodes()));
-        model.getPaymentMethods().set(PaymentMethodSpecFormatter.paymentMethodSpecsToCommaSeparatedString(bisqEasyOffer.getQuoteSidePaymentMethodSpecs()));
+        model.getPaymentMethods().set(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs()));
 
         model.getId().set(bisqEasyOffer.getId());
         model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));

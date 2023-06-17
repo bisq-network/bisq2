@@ -159,14 +159,14 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void addTab(String text, NavigationTarget navigationTarget) {
         addTab(text,
                 navigationTarget,
-                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9"),
+                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9"),
                 null);
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
         addTab(text,
                 navigationTarget,
-                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9"),
+                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9"),
                 icon);
     }
 
