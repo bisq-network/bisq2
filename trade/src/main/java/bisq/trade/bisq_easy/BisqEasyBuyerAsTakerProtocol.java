@@ -17,8 +17,6 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.trade.BuyerProtocol;
-import bisq.trade.TakerProtocol;
 import bisq.trade.bisq_easy.events.*;
 import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessageHandler;
@@ -27,7 +25,7 @@ import bisq.trade.bisq_easy.messages.BisqEasyConfirmBtcSentMessageHandler;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeState.*;
 
-public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol implements BuyerProtocol, TakerProtocol {
+public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
 
     public BisqEasyBuyerAsTakerProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

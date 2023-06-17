@@ -17,15 +17,13 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.trade.SellerProtocol;
-import bisq.trade.TakerProtocol;
 import bisq.trade.bisq_easy.events.*;
 import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessageHandler;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeState.*;
 
-public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol implements SellerProtocol, TakerProtocol {
+public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
 
     public BisqEasySellerAsTakerProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

@@ -17,14 +17,12 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.trade.BuyerProtocol;
-import bisq.trade.MakerProtocol;
 import bisq.trade.bisq_easy.events.*;
 import bisq.trade.bisq_easy.messages.*;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeState.*;
 
-public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol implements BuyerProtocol, MakerProtocol {
+public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
     public BisqEasyBuyerAsMakerProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

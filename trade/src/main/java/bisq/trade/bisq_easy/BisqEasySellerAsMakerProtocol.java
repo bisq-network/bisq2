@@ -17,8 +17,6 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.trade.MakerProtocol;
-import bisq.trade.SellerProtocol;
 import bisq.trade.bisq_easy.events.*;
 import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessageHandler;
@@ -27,7 +25,7 @@ import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequestHandler;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeState.*;
 
-public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol implements SellerProtocol, MakerProtocol {
+public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
 
     public BisqEasySellerAsMakerProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
