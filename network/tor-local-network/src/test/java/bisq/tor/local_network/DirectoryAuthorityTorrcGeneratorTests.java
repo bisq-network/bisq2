@@ -17,6 +17,7 @@
 
 package bisq.tor.local_network;
 
+import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

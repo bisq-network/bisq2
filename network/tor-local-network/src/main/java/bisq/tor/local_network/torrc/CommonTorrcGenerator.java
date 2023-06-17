@@ -15,28 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network;
+package bisq.tor.local_network.torrc;
+
+import bisq.tor.local_network.DirectoryAuthority;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Set;
 
 /**
- * The configuration settings are from the Chutney (<a href="https://gitweb.torproject.org/chutney.git/">project</a>) and
- * Antitree's private-tor-network (<a href="https://github.com/antitree/private-tor-network">project</a>).
+ * The configuration settings are from the Chutney (<a href="https://gitweb.torproject.org/chutney.git/">project</a>).
  */
-public class DirectoryAuthorityTorrcGenerator {
-    private final DirectoryAuthority thisDirectoryAuthority;
-    private final Set<DirectoryAuthority> allDirAuthorities;
+public abstract class CommonTorrcGenerator {
+    protected final DirectoryAuthority thisDirectoryAuthority;
+    protected final StringBuilder torrcStringBuilder = new StringBuilder();
 
-    public DirectoryAuthorityTorrcGenerator(DirectoryAuthority thisDirectoryAuthority, Set<DirectoryAuthority> allDirAuthorities) {
+    public CommonTorrcGenerator(DirectoryAuthority thisDirectoryAuthority) {
         this.thisDirectoryAuthority = thisDirectoryAuthority;
-        this.allDirAuthorities = allDirAuthorities;
     }
 
     public void generate() throws IOException {
-        var stringBuilder = new StringBuilder();
-        stringBuilder.append("TestingTorNetwork 1\n")
+        torrcStringBuilder.append("TestingTorNetwork 1\n")
 
                 .append("PathsNeededToBuildCircuits 0.67\n")
                 .append("TestingDirAuthVoteExit *\n")
@@ -68,33 +65,6 @@ public class DirectoryAuthorityTorrcGenerator {
                 .append("ServerDNSDetectHijacking 0\n")
                 .append("ServerDNSTestAddresses\n")
 
-                .append("DirPort ").append(thisDirectoryAuthority.getDirPort()).append("\n")
-
-                .append("AuthoritativeDirectory 1\n")
-                .append("V3AuthoritativeDirectory 1\n")
-                .append("ContactInfo auth-").append(thisDirectoryAuthority.getNickname()).append("@test.test\n")
-
-                .append("AssumeReachable 1\n")
-
-                .append("TestingV3AuthInitialVotingInterval 20\n")
-                .append("TestingV3AuthInitialVoteDelay 4\n")
-                .append("TestingV3AuthInitialDistDelay 4\n")
-
-                .append("V3AuthVotingInterval 20\n")
-                .append("V3AuthVoteDelay 4\n")
-                .append("V3AuthDistDelay 4\n")
-
-                .append(thisDirectoryAuthority.getExitPolicy()).append("\n");
-
-        allDirAuthorities.forEach(dirAuthority ->
-                stringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
-                        .append(" orport=").append(dirAuthority.getOrPort())
-                        .append(" v3ident=").append(dirAuthority.getV3LongTermSigningKeyFingerprint())
-                        .append(" 127.0.0.1:").append(dirAuthority.getDirPort())
-                        .append(" ").append(dirAuthority.getTorKeyFingerprint())
-                        .append("\n"));
-
-
-        Files.writeString(thisDirectoryAuthority.getTorrcPath(), stringBuilder.toString());
+                .append("DirPort ").append(thisDirectoryAuthority.getDirPort()).append("\n");
     }
 }
