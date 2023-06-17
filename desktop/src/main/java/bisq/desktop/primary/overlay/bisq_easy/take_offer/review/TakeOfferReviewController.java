@@ -30,11 +30,11 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
@@ -51,9 +51,10 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.protocol.TradeProtocolException;
+import bisq.protocol.bisq_easy.BisqEasyProtocolService;
+import bisq.protocol.bisq_easy.BisqEasyTrade;
 import bisq.support.MediationService;
-import bisq.trade_protocol.bisq_easy.BisqEasyProtocolService;
-import bisq.trade_protocol.bisq_easy.BisqEasyTradeModel;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -164,33 +165,29 @@ public class TakeOfferReviewController implements Controller {
     }
 
     public void doTakeOffer() {
-        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        try {
+            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+            UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+            BisqEasyTrade tradeModel = bisqEasyProtocolService.onTakeOffer(myUserIdentity.getIdentity(),
+                    bisqEasyOffer,
+                    model.getTakersBaseSideAmount(),
+                    model.getTakersQuoteSideAmount(),
+                    bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                    model.getFiatPaymentMethodSpec());
 
-        BisqEasyTradeModel tradeModel = bisqEasyProtocolService.onTakeOffer(myUserIdentity.getIdentity(),
-                bisqEasyOffer,
-                model.getTakersBaseSideAmount(),
-                model.getTakersQuoteSideAmount(),
-                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                model.getFiatPaymentMethodSpec());
-        BisqEasyContract contract = tradeModel.getContract();
-
-        bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
-                .thenAccept(result -> UIThread.run(() -> {
-                    ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
-                    bisqEasyPrivateTradeChatChannelService.findChannel(bisqEasyOffer)
-                            .ifPresent(chatChannelSelectionService::selectChannel);
-
-                    model.getShowTakeOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
-                }));
-
-        UIScheduler.run(() -> {
-            model.getShowTakeOfferSuccess().set(true);
-            mainButtonsVisibleHandler.accept(false);
-        }).after(1000);
+            BisqEasyContract contract = tradeModel.getContract();
+            bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
+                    .thenAccept(result -> UIThread.run(() -> {
+                        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
+                        bisqEasyPrivateTradeChatChannelService.findChannel(bisqEasyOffer)
+                                .ifPresent(chatChannelSelectionService::selectChannel);
+                        model.getShowTakeOfferSuccess().set(true);
+                        mainButtonsVisibleHandler.accept(false);
+                    }));
+        } catch (TradeProtocolException e) {
+            new Popup().error(e).show();
+        }
     }
-
 
     @Override
     public void onActivate() {

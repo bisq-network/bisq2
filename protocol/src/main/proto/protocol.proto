@@ -30,7 +30,7 @@ message TradeProtocolParty {
   optional contract.ContractSignatureData contractSignatureData = 2;
 }
 
-message TradeModel {
+message Trade {
   string id = 1;
   contract.Contract contract = 2;
   TradeProtocolParty taker = 3;
@@ -38,16 +38,16 @@ message TradeModel {
   string state = 5;
 
   oneof message {
-    BisqEasyTradeModel bisqEasyTradeModel = 20;
+    BisqEasyTrade bisqEasyTrade = 20;
   }
 }
 
 // BisqEasy
-message BisqEasyTradeModel {
+message BisqEasyTrade {
 }
 
 message BisqEasyTradeStore {
-  map<string, TradeModel> tradeModelById = 1;
+  map<string, Trade> tradeById = 1;
 }
 
 // BisqEasy messages
