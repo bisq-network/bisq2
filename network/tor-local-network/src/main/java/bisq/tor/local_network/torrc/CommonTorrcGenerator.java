@@ -18,12 +18,12 @@
 package bisq.tor.local_network.torrc;
 
 import bisq.tor.local_network.DirectoryAuthority;
-
-import java.io.IOException;
+import lombok.Getter;
 
 /**
  * The configuration settings are from the Chutney (<a href="https://gitweb.torproject.org/chutney.git/">project</a>).
  */
+@Getter
 public abstract class CommonTorrcGenerator {
     protected final DirectoryAuthority thisDirectoryAuthority;
     protected final StringBuilder torrcStringBuilder = new StringBuilder();
@@ -32,7 +32,7 @@ public abstract class CommonTorrcGenerator {
         this.thisDirectoryAuthority = thisDirectoryAuthority;
     }
 
-    public void generate() throws IOException {
+    public void generate() {
         torrcStringBuilder.append("TestingTorNetwork 1\n")
 
                 .append("PathsNeededToBuildCircuits 0.67\n")

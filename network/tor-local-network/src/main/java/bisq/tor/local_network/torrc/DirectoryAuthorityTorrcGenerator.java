@@ -19,21 +19,13 @@ package bisq.tor.local_network.torrc;
 
 import bisq.tor.local_network.DirectoryAuthority;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Set;
-
 public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
-    private final Set<DirectoryAuthority> allDirAuthorities;
-
-    public DirectoryAuthorityTorrcGenerator(DirectoryAuthority thisDirectoryAuthority,
-                                            Set<DirectoryAuthority> allDirAuthorities) {
+    public DirectoryAuthorityTorrcGenerator(DirectoryAuthority thisDirectoryAuthority) {
         super(thisDirectoryAuthority);
-        this.allDirAuthorities = allDirAuthorities;
     }
 
     @Override
-    public void generate() throws IOException {
+    public void generate() {
         super.generate();
 
         torrcStringBuilder
@@ -52,15 +44,5 @@ public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
                 .append("V3AuthDistDelay 4\n")
 
                 .append(thisDirectoryAuthority.getExitPolicy()).append("\n");
-
-        allDirAuthorities.forEach(dirAuthority ->
-                torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
-                        .append(" orport=").append(dirAuthority.getOrPort())
-                        .append(" v3ident=").append(dirAuthority.getV3LongTermSigningKeyFingerprint())
-                        .append(" 127.0.0.1:").append(dirAuthority.getDirPort())
-                        .append(" ").append(dirAuthority.getTorKeyFingerprint())
-                        .append("\n"));
-
-        Files.writeString(thisDirectoryAuthority.getTorrcPath(), torrcStringBuilder.toString());
     }
 }
