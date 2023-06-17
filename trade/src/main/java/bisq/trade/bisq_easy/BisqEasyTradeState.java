@@ -25,8 +25,10 @@ import lombok.ToString;
 @Getter
 public enum BisqEasyTradeState implements State {
     INIT(true, false),
-    TAKE_OFFER_REQUEST_SENT,
-    TAKE_OFFER_REQUEST_ACCEPTED;
+    TAKER_TAKE_OFFER_REQUEST_SENT,
+    MAKER_TAKE_OFFER_REQUEST_ACCEPTED,
+    SELLER_ACCOUNT_DATA_SENT,
+    BUYER_ACCOUNT_DATA_RECEIVED;
 
     private final boolean isInitialState;
     private final boolean isFinalState;

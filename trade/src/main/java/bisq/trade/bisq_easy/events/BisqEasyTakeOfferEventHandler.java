@@ -30,8 +30,7 @@ import java.security.GeneralSecurityException;
 
 public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 
-    public BisqEasyTakeOfferEventHandler(ServiceProvider serviceProvider,
-                                         BisqEasyTrade model) {
+    public BisqEasyTakeOfferEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
@@ -44,7 +43,7 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, takerIdentity.getKeyPair());
             model.getTaker().setContractSignatureData(contractSignatureData);
 
-            BisqEasyTakeOfferRequest message = new BisqEasyTakeOfferRequest(takerIdentity.getNetworkId(), bisqEasyContract, contractSignatureData);
+            BisqEasyTakeOfferRequest message = new BisqEasyTakeOfferRequest(model.getId(), takerIdentity.getNetworkId(), bisqEasyContract, contractSignatureData);
             sendMessage(message, model.getMaker().getNetworkId(), takerIdentity.getNodeIdAndKeyPair());
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);

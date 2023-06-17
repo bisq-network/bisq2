@@ -19,11 +19,12 @@ package bisq.trade.bisq_easy;
 
 import bisq.trade.BuyerProtocol;
 import bisq.trade.MakerProtocol;
+import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessageHandler;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequestHandler;
 
-import static bisq.trade.bisq_easy.BisqEasyTradeState.INIT;
-import static bisq.trade.bisq_easy.BisqEasyTradeState.TAKE_OFFER_REQUEST_ACCEPTED;
+import static bisq.trade.bisq_easy.BisqEasyTradeState.*;
 
 public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol implements BuyerProtocol, MakerProtocol {
 
@@ -37,6 +38,12 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol implements Bu
                 .from(INIT)
                 .on(BisqEasyTakeOfferRequest.class)
                 .run(BisqEasyTakeOfferRequestHandler.class)
-                .to(TAKE_OFFER_REQUEST_ACCEPTED);
+                .to(MAKER_TAKE_OFFER_REQUEST_ACCEPTED);
+
+        buildTransition()
+                .from(MAKER_TAKE_OFFER_REQUEST_ACCEPTED)
+                .on(BisqEasyAccountDataMessage.class)
+                .run(BisqEasyAccountDataMessageHandler.class)
+                .to(BUYER_ACCOUNT_DATA_RECEIVED);
     }
 }

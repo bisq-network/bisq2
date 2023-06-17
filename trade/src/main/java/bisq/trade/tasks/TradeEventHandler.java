@@ -21,7 +21,7 @@ import bisq.common.fsm.EventHandler;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.ServiceProvider;
 
-public abstract class TradeEventHandler<M extends Trade<?, ?>> implements EventHandler {
+public abstract class TradeEventHandler<M extends Trade<?, ?, ?>> implements EventHandler {
     protected final ServiceProvider serviceProvider;
     protected final M model;
 

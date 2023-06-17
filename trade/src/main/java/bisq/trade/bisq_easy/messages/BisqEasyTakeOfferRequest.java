@@ -39,15 +39,16 @@ public class BisqEasyTakeOfferRequest extends TradeMessage {
     private final BisqEasyContract bisqEasyContract;
     private final ContractSignatureData contractSignatureData;
 
-    public BisqEasyTakeOfferRequest(NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
-        this(sender,
+    public BisqEasyTakeOfferRequest(String tradeId, NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
+        this(tradeId,
+                sender,
                 bisqEasyContract,
                 contractSignatureData,
                 new MetaData(TTL, 100000, BisqEasyTakeOfferRequest.class.getSimpleName()));
     }
 
-    private BisqEasyTakeOfferRequest(NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData, MetaData metaData) {
-        super(sender, metaData);
+    private BisqEasyTakeOfferRequest(String tradeId, NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData, MetaData metaData) {
+        super(tradeId, sender, metaData);
 
         this.bisqEasyContract = bisqEasyContract;
         this.contractSignatureData = contractSignatureData;
@@ -65,6 +66,7 @@ public class BisqEasyTakeOfferRequest extends TradeMessage {
     public static BisqEasyTakeOfferRequest fromProto(bisq.trade.protobuf.TradeMessage proto) {
         bisq.trade.protobuf.BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = proto.getBisqEasyTakeOfferRequest();
         return new BisqEasyTakeOfferRequest(
+                proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
                 BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),
                 ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()),

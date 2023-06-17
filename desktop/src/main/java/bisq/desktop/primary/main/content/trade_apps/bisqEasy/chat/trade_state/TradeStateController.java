@@ -40,11 +40,11 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.trade.Trade;
+import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.wallets.core.WalletService;
-import javafx.scene.input.KeyCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -69,6 +69,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private Pin tradeRulesConfirmedPin;
     private Subscription phaseIndexPin, isCollapsedPin;
+    private Pin bisqEasyTradeStatePin;
 
     public TradeStateController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         chatService = applicationService.getChatService();
@@ -86,12 +87,23 @@ public class TradeStateController implements Controller {
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         model.setAppliedPhaseIndex(-1);
+        bisqEasyTradeStatePin.unbind();
         model.setSelectedChannel(channel);
         String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getId());
         bisqEasyTradeService.findBisqEasyTrade(tradeId)
                 .ifPresent(bisqEasyTradeModel -> {
                     model.setBisqEasyTradeModel(bisqEasyTradeModel);
-                    BisqEasyOffer bisqEasyOffer = bisqEasyTradeModel.getOffer();
+                    bisqEasyTradeStatePin = bisqEasyTradeModel.getBisqEasyTradeState().addObserver(state -> {
+                        switch (state) {
+                            case INIT:
+                                break;
+                            case TAKER_TAKE_OFFER_REQUEST_SENT:
+                                break;
+                            case MAKER_TAKE_OFFER_REQUEST_ACCEPTED:
+                                break;
+                        }
+                    });
+                 /*   BisqEasyOffer bisqEasyOffer = bisqEasyTradeModel.getOffer();
                     boolean isMaker = isMaker(bisqEasyOffer);
                     boolean isBuyer = isBuyer(bisqEasyOffer);
 
@@ -107,7 +119,7 @@ public class TradeStateController implements Controller {
                         } else {
 
                         }
-                    }
+                    }*/
 
                 });
 
@@ -119,14 +131,14 @@ public class TradeStateController implements Controller {
     @Override
     public void onActivate() {
         model.setAppliedPhaseIndex(-1);
-        view.getRoot().getScene().setOnKeyPressed(keyEvent -> {
+       /* view.getRoot().getScene().setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.A) {
                 model.getPhaseIndex().set(Math.min(4, model.getPhaseIndex().get() + 1));
             }
             if (keyEvent.getCode() == KeyCode.S) {
                 model.getPhaseIndex().set(Math.max(0, model.getPhaseIndex().get() - 1));
             }
-        });
+        });*/
 
         tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(tradeRulesConfirmed -> {
             int phaseIndex = model.getPhaseIndex().get();
@@ -199,17 +211,17 @@ public class TradeStateController implements Controller {
         boolean isSeller = !isBuyer;
         int index = model.getPhaseIndex().get();
         if (index == 0 && isSeller) {
-            sendPaymentAccount();
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            sellerSendsPaymentAccount();
+            // model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
             //model.getBisqEasyTrade().sendPaymentAccount();
         } else if (index == 1 && isBuyer) {
             sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            //model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         } else if (index == 2 && isSeller) {
             sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3.chatBotMessage", model.getTxId().get()));
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            // model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         } else if (index == 3) {
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            //  model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         }
     }
 
@@ -218,11 +230,17 @@ public class TradeStateController implements Controller {
                 .sendTextMessage(message, model.getSelectedChannel());
     }
 
-    void sendPaymentAccount() {
+    void sellerSendsPaymentAccount() {
         String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getSellersPaymentAccountData().get());
         chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                 Optional.empty(),
                 model.getSelectedChannel());
+
+        try {
+            bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTradeModel(), model.getSellersPaymentAccountData().get());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
         
        /* if (accountService.getAccounts().size() > 1) {
             //todo

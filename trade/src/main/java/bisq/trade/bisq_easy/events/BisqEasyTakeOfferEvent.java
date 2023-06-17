@@ -20,15 +20,18 @@ package bisq.trade.bisq_easy.events;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.trade.TradeEvent;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString(callSuper = true)
 @Getter
+@EqualsAndHashCode(callSuper = true)
 public class BisqEasyTakeOfferEvent extends TradeEvent {
     private final Identity takerIdentity;
     private final BisqEasyContract bisqEasyContract;
 
     public BisqEasyTakeOfferEvent(Identity takerIdentity, BisqEasyContract bisqEasyContract) {
-        super();
         this.takerIdentity = takerIdentity;
         this.bisqEasyContract = bisqEasyContract;
     }

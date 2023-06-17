@@ -21,7 +21,7 @@ import bisq.common.fsm.Model;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
-import bisq.network.NetworkId;
+import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import lombok.EqualsAndHashCode;
@@ -36,27 +36,39 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public abstract class Trade<
-        O extends Offer<?, ?>,
-        C extends Contract<O>>
+        T extends Offer<?, ?>,
+        C extends Contract<T>,
+        P extends TradeParty>
         extends Model implements Proto {
+
     public static String createId(String offerId, String takerNodeId) {
         return offerId + "." + takerNodeId;
     }
 
     private final String id;
+    private final boolean isBuyer;
+    private final boolean isTaker;
+    private final Identity myIdentity;
     private final C contract;
-    private final TradeParty taker;
-    private final TradeParty maker;
+    private final P taker;
+    private final P maker;
 
-    public Trade(C contract, NetworkId takerNetworkId) {
-        this(createId(contract.getOffer().getId(), takerNetworkId.getId()),
+    public Trade(boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+        this(createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
+                isBuyer,
+                isTaker,
+                myIdentity,
                 contract,
-                new TradeParty(takerNetworkId),
-                new TradeParty(contract.getOffer().getMakerNetworkId()));
+                taker,
+                maker);
+
     }
 
-    protected Trade(String id, C contract, TradeParty taker, TradeParty maker) {
+    protected Trade(String id, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
         this.id = id;
+        this.isBuyer = isBuyer;
+        this.isTaker = isTaker;
+        this.myIdentity = myIdentity;
         this.contract = contract;
         this.taker = taker;
         this.maker = maker;
@@ -65,6 +77,9 @@ public abstract class Trade<
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
         return bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
+                .setIsBuyer(isBuyer)
+                .setIsTaker(isTaker)
+                .setMyIdentity(myIdentity.toProto())
                 .setContract(contract.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
@@ -84,7 +99,15 @@ public abstract class Trade<
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public O getOffer() {
+    public T getOffer() {
         return contract.getOffer();
+    }
+
+    public TradeParty getPeer() {
+        return isTaker ? maker : taker;
+    }
+
+    public TradeParty getMyself() {
+        return isTaker ? taker : maker;
     }
 }

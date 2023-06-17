@@ -18,8 +18,10 @@
 package bisq.trade;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.NetworkId;
+import bisq.trade.bisq_easy.BisqEasyTradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,6 +40,9 @@ public class TradeParty implements Proto {
     @Setter
     @Nullable
     private ContractSignatureData contractSignatureData;
+    @Setter
+    @Nullable
+    private String paymentAccountData;
 
     public TradeParty(NetworkId networkId) {
         this.networkId = networkId;
@@ -51,11 +56,16 @@ public class TradeParty implements Proto {
         return builder.build();
     }
 
-    public static TradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
-        TradeParty tradeParty = new TradeParty(NetworkId.fromProto(proto.getNetworkId()));
-        if (proto.hasContractSignatureData()) {
-            tradeParty.setContractSignatureData(ContractSignatureData.fromProto(proto.getContractSignatureData()));
+    public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto) {
+        switch (proto.getMessageCase()) {
+            case BISQEASYTRADEPARTY: {
+                return BisqEasyTradeParty.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
         }
-        return tradeParty;
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

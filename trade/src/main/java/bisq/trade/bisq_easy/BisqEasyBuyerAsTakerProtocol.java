@@ -21,9 +21,10 @@ import bisq.trade.BuyerProtocol;
 import bisq.trade.TakerProtocol;
 import bisq.trade.bisq_easy.events.BisqEasyTakeOfferEvent;
 import bisq.trade.bisq_easy.events.BisqEasyTakeOfferEventHandler;
+import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessageHandler;
 
-import static bisq.trade.bisq_easy.BisqEasyTradeState.INIT;
-import static bisq.trade.bisq_easy.BisqEasyTradeState.TAKE_OFFER_REQUEST_SENT;
+import static bisq.trade.bisq_easy.BisqEasyTradeState.*;
 
 public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol implements BuyerProtocol, TakerProtocol {
 
@@ -37,6 +38,12 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol implements Bu
                 .from(INIT)
                 .on(BisqEasyTakeOfferEvent.class)
                 .run(BisqEasyTakeOfferEventHandler.class)
-                .to(TAKE_OFFER_REQUEST_SENT);
+                .to(TAKER_TAKE_OFFER_REQUEST_SENT);
+
+        buildTransition()
+                .from(TAKER_TAKE_OFFER_REQUEST_SENT)
+                .on(BisqEasyAccountDataMessage.class)
+                .run(BisqEasyAccountDataMessageHandler.class)
+                .to(BUYER_ACCOUNT_DATA_RECEIVED);
     }
 }

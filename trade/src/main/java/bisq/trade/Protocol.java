@@ -28,9 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class Protocol
-        <M extends Trade<?, ?>>
-        extends Fsm {
+public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm {
 
     protected final ServiceProvider serviceProvider;
     protected final M model;

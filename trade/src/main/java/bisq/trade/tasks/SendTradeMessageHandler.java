@@ -25,7 +25,7 @@ import bisq.trade.bisq_easy.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?>> extends TradeEventHandler<M> {
+public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> {
 
     protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
         super(serviceProvider, model);

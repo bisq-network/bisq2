@@ -25,6 +25,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -42,16 +43,19 @@ import java.util.concurrent.TimeUnit;
 public abstract class TradeMessage implements MailboxMessage, Event {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
+    private final String tradeId;
     private final NetworkId sender;
     protected final MetaData metaData;
 
-    protected TradeMessage(NetworkId sender, MetaData metaData) {
+    protected TradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
+        this.tradeId = tradeId;
         this.sender = sender;
         this.metaData = metaData;
     }
 
     public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {
         return bisq.trade.protobuf.TradeMessage.newBuilder()
+                .setTradeId(tradeId)
                 .setSender(sender.toProto())
                 .setMetaData(metaData.toProto());
     }
@@ -86,6 +90,9 @@ public abstract class TradeMessage implements MailboxMessage, Event {
                 switch (proto.getMessageCase()) {
                     case BISQEASYTAKEOFFERREQUEST: {
                         return BisqEasyTakeOfferRequest.fromProto(proto);
+                    }
+                    case BISQEASYACCOUNTDATAMESSAGE: {
+                        return BisqEasyAccountDataMessage.fromProto(proto);
                     }
 
                     case MESSAGE_NOT_SET: {

@@ -15,17 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.tasks;
+package bisq.trade.bisq_easy.events;
 
-import bisq.trade.Trade;
-import bisq.trade.TradeMessage;
-import bisq.trade.bisq_easy.ServiceProvider;
+import bisq.trade.TradeEvent;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends TradeMessage> extends TradeEventHandler<M> {
+@ToString(callSuper = true)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+public class BisqEasyAccountDataEvent extends TradeEvent {
+    private final String paymentAccountData;
 
-    protected TradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
+    public BisqEasyAccountDataEvent(String paymentAccountData) {
+        this.paymentAccountData = paymentAccountData;
     }
-
-    protected abstract void verifyMessage(S message);
 }

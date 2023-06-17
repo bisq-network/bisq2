@@ -38,7 +38,9 @@ import bisq.support.MediationService;
 import bisq.support.SupportService;
 import bisq.trade.Protocol;
 import bisq.trade.TradeException;
+import bisq.trade.bisq_easy.events.BisqEasyAccountDataEvent;
 import bisq.trade.bisq_easy.events.BisqEasyTakeOfferEvent;
+import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -110,6 +112,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof BisqEasyTakeOfferRequest) {
             onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) networkMessage);
+        } else if (networkMessage instanceof BisqEasyAccountDataMessage) {
+            onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
         }
     }
 
@@ -119,18 +123,30 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
-        NetworkId takerNetworkId = message.getSender();
+        NetworkId sender = message.getSender();
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyTrade tradeModel = new BisqEasyTrade(bisqEasyContract, takerNetworkId);
+        boolean isBuyer = bisqEasyContract.getOffer().getMakersDirection().isBuy();
+        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyContract.getOffer().getMakerNetworkId().getNodeId()).orElseThrow();
+        BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
         persistableStore.add(tradeModel);
         persist();
 
-        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel, false);
+        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel);
         try {
             protocol.handle(message);
         } catch (TradeException e) {
             log.error("Error at processing message " + message, e);
         }
+    }
+
+    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
+        findProtocol(message.getTradeId()).ifPresent(protocol -> {
+            try {
+                protocol.handle(message);
+            } catch (TradeException e) {
+                log.error("Error at processing message " + message, e);
+            }
+        });
     }
 
 
@@ -153,16 +169,21 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator);
-        BisqEasyTrade tradeModel = new BisqEasyTrade(bisqEasyContract, takerNetworkId);
-        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel, true);
+        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
+        BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, true, takerIdentity, bisqEasyContract, takerNetworkId);
+        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel);
         persistableStore.add(tradeModel);
-        persist();
 
         protocol.handle(new BisqEasyTakeOfferEvent(takerIdentity, bisqEasyContract));
-
+        persist();
         return tradeModel;
     }
 
+    public void sellerSendsPaymentAccount(BisqEasyTrade tradeModel, String paymentAccountData) throws TradeException {
+        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel);
+        protocol.handle(new BisqEasyAccountDataEvent(paymentAccountData));
+        persist();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -177,29 +198,33 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // TradeProtocol factory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqEasyProtocol findOrCreateTradeProtocol(BisqEasyTrade model, boolean isTaker) {
+    public BisqEasyProtocol findOrCreateTradeProtocol(BisqEasyTrade model) {
         String id = model.getId();
-        if (tradeProtocolById.containsKey(id)) {
-            return tradeProtocolById.get(id);
+        Optional<BisqEasyProtocol> existingProtocol = findProtocol(id);
+        if (existingProtocol.isPresent()) {
+            return existingProtocol.get();
         }
 
         BisqEasyProtocol tradeProtocol;
-        if (isTaker) {
-            boolean isBuyer = model.getOffer().getTakersDirection().isBuy();
+        boolean isBuyer = model.isBuyer();
+        if (model.isTaker()) {
             if (isBuyer) {
                 tradeProtocol = new BisqEasyBuyerAsTakerProtocol(serviceProvider, model);
             } else {
                 tradeProtocol = new BisqEasySellerAsTakerProtocol(serviceProvider, model);
             }
         } else {
-            boolean isBuyer = model.getOffer().getMakersDirection().isBuy();
             if (isBuyer) {
                 tradeProtocol = new BisqEasyBuyerAsMakerProtocol(serviceProvider, model);
             } else {
                 tradeProtocol = new BisqEasySellerAsMakerProtocol(serviceProvider, model);
             }
         }
-        tradeProtocolById.putIfAbsent(id, tradeProtocol);
+        tradeProtocolById.put(id, tradeProtocol);
         return tradeProtocol;
+    }
+
+    public Optional<BisqEasyProtocol> findProtocol(String id) {
+        return Optional.ofNullable(tradeProtocolById.get(id));
     }
 }

@@ -18,6 +18,8 @@
 package bisq.trade;
 
 import bisq.common.fsm.Event;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode
 public abstract class TradeEvent implements Event {
 }
