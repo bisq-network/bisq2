@@ -15,23 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.tasks;
+package bisq.trade.bisq_easy.events;
 
-import bisq.trade.Trade;
-import bisq.trade.TradeMessage;
+import bisq.common.fsm.Event;
+import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.ServiceProvider;
-import lombok.extern.slf4j.Slf4j;
+import bisq.trade.tasks.TradeEventHandler;
 
-@Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> {
+public class BisqEasyTradeCompletedEventHandler extends TradeEventHandler<BisqEasyTrade> {
 
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
+    public BisqEasyTradeCompletedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
-    protected void sendMessage(TradeMessage message) {
-        serviceProvider.getNetworkService().confidentialSend(message, model.getMaker().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
-                .whenComplete((result, throwable) -> {
-                });
+    @Override
+    public void handle(Event event) {
     }
 }

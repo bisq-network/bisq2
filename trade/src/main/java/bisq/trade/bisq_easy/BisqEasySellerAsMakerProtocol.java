@@ -19,8 +19,9 @@ package bisq.trade.bisq_easy;
 
 import bisq.trade.MakerProtocol;
 import bisq.trade.SellerProtocol;
-import bisq.trade.bisq_easy.events.BisqEasyAccountDataEvent;
-import bisq.trade.bisq_easy.events.BisqEasyAccountDataEventHandler;
+import bisq.trade.bisq_easy.events.*;
+import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessageHandler;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequestHandler;
 
@@ -33,16 +34,40 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol implements S
     }
 
     public void configTransitions() {
-        buildTransition()
+        addTransition()
                 .from(INIT)
                 .on(BisqEasyTakeOfferRequest.class)
                 .run(BisqEasyTakeOfferRequestHandler.class)
-                .to(MAKER_TAKE_OFFER_REQUEST_ACCEPTED);
+                .to(MAKER_RECEIVED_TAKE_OFFER_REQUEST);
 
-        buildTransition()
-                .from(MAKER_TAKE_OFFER_REQUEST_ACCEPTED)
+        addTransition()
+                .from(MAKER_RECEIVED_TAKE_OFFER_REQUEST)
                 .on(BisqEasyAccountDataEvent.class)
                 .run(BisqEasyAccountDataEventHandler.class)
-                .to(SELLER_ACCOUNT_DATA_SENT);
+                .to(SELLER_SENT_ACCOUNT_DATA);
+
+        addTransition()
+                .from(SELLER_SENT_ACCOUNT_DATA)
+                .on(BisqEasyConfirmFiatSentMessage.class)
+                .run(BisqEasyConfirmFiatSentMessageHandler.class)
+                .to(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION);
+
+        addTransition()
+                .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
+                .on(BisqEasyConfirmBtcSentEvent.class)
+                .run(BisqEasyConfirmBtcSentEventHandler.class)
+                .to(SELLER_SENT_BTC_SENT_CONFIRMATION);
+
+        addTransition()
+                .from(SELLER_SENT_BTC_SENT_CONFIRMATION)
+                .on(BisqEasyBtcConfirmedEvent.class)
+                .run(BisqEasyBtcConfirmedEventHandler.class)
+                .to(BTC_CONFIRMED);
+
+        addTransition()
+                .from(BTC_CONFIRMED)
+                .on(BisqEasyTradeCompletedEvent.class)
+                .run(BisqEasyTradeCompletedEventHandler.class)
+                .to(COMPLETED);
     }
 }

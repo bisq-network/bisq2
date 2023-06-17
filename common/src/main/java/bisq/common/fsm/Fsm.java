@@ -79,7 +79,7 @@ public abstract class Fsm {
         transitionMap.put(pair, transition);
     }
 
-    public TransitionBuilder buildTransition() {
+    public TransitionBuilder addTransition() {
         return transitionBuilder;
     }
 

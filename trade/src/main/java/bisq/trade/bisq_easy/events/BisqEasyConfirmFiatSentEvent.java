@@ -15,36 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade;
+package bisq.trade.bisq_easy.events;
 
-import bisq.common.fsm.Event;
-import bisq.common.fsm.Fsm;
-import bisq.common.fsm.FsmException;
-import bisq.trade.bisq_easy.ServiceProvider;
+import bisq.trade.TradeEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.ToString;
 
-@Slf4j
+@ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm {
+public class BisqEasyConfirmFiatSentEvent extends TradeEvent {
+    private final String buyersBtcAddress;
 
-    protected final ServiceProvider serviceProvider;
-    protected final M model;
-
-    public Protocol(ServiceProvider serviceProvider, M model) {
-        super(model);
-        this.serviceProvider = serviceProvider;
-        this.model = model;
-    }
-
-    public void handle(Event event) throws TradeException {
-        try {
-            log.error("event={}", event);
-            super.handle(event);
-        } catch (FsmException e) {
-            throw new TradeException(e);
-        }
+    public BisqEasyConfirmFiatSentEvent(String buyersBtcAddress) {
+        this.buyersBtcAddress = buyersBtcAddress;
     }
 }

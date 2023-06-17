@@ -20,20 +20,20 @@ package bisq.trade.bisq_easy.events;
 import bisq.common.fsm.Event;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.ServiceProvider;
-import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyConfirmBtcSentMessage;
 import bisq.trade.tasks.SendTradeMessageHandler;
 
-public class BisqEasyAccountDataEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 
-    public BisqEasyAccountDataEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+    public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void handle(Event event) {
-        BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
-        String paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
-        model.getMyself().getPaymentAccountData().set(paymentAccountData);
-        sendMessage(new BisqEasyAccountDataMessage(model.getId(), model.getMyIdentity().getNetworkId(), paymentAccountData));
+        BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
+        String txId = bisqEasyConfirmBtcSentEvent.getTxId();
+        model.getMyself().getTxId().set(txId);
+        sendMessage(new BisqEasyConfirmBtcSentMessage(model.getId(), model.getMyIdentity().getNetworkId(), txId));
     }
 }

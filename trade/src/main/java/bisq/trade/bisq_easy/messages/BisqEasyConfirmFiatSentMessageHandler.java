@@ -27,24 +27,24 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
+public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
 
-    public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider,
-                                             BisqEasyTrade model) {
+    public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider,
+                                                 BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void handle(Event event) {
-        BisqEasyAccountDataMessage message = (BisqEasyAccountDataMessage) event;
+        BisqEasyConfirmFiatSentMessage message = (BisqEasyConfirmFiatSentMessage) event;
         verifyMessage(message);
 
-        String paymentAccountData = message.getPaymentAccountData();
-        model.getPeer().getPaymentAccountData().set(paymentAccountData);
+        String buyersBtcAddress = message.getBuyersBtcAddress();
+        model.getPeer().getBuyersBtcAddress().set(buyersBtcAddress);
     }
 
     @Override
-    protected void verifyMessage(BisqEasyAccountDataMessage message) {
-        checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()));
+    protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
+        checkArgument(StringUtils.isNotEmpty(message.getBuyersBtcAddress()));
     }
 }

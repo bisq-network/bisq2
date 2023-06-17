@@ -52,10 +52,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
 
         try {
-            model.getTaker().setContractSignatureData(takersContractSignatureData);
+            model.getPeer().getContractSignatureData().set(takersContractSignatureData);
 
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
-            model.getMaker().setContractSignatureData(contractSignatureData);
+            model.getMyself().getContractSignatureData().set(contractSignatureData);
 
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);

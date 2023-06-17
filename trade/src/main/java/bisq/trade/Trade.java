@@ -103,11 +103,11 @@ public abstract class Trade<
         return contract.getOffer();
     }
 
-    public TradeParty getPeer() {
+    public P getPeer() {
         return isTaker ? maker : taker;
     }
 
-    public TradeParty getMyself() {
+    public P getMyself() {
         return isTaker ? taker : maker;
     }
 }

@@ -168,14 +168,16 @@ public class TakeOfferReviewController implements Controller {
         try {
             BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
             UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-            BisqEasyTrade tradeModel = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
+            BisqEasyTrade bisqEasyTradeModel = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
                     bisqEasyOffer,
                     model.getTakersBaseSideAmount(),
                     model.getTakersQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
                     model.getFiatPaymentMethodSpec());
 
-            BisqEasyContract contract = tradeModel.getContract();
+            model.setBisqEasyTradeModel(bisqEasyTradeModel);
+
+            BisqEasyContract contract = bisqEasyTradeModel.getContract();
             bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
                     .thenAccept(result -> UIThread.run(() -> {
                         ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);

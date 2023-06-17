@@ -52,6 +52,9 @@ message Trade {
 // BisqEasy
 message BisqEasyTradeParty {
   optional string paymentAccountData = 1;
+  optional string buyersBtcAddress = 2;
+  optional string txId = 3;
+
 }
 
 message BisqEasyTrade {
@@ -69,6 +72,8 @@ message TradeMessage {
   oneof message {
     BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = 20;
     BisqEasyAccountDataMessage bisqEasyAccountDataMessage = 21;
+    BisqEasyConfirmFiatSentMessage bisqEasyConfirmFiatSentMessage = 22;
+    BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 23;
   }
 }
 message BisqEasyTakeOfferRequest {
@@ -77,5 +82,11 @@ message BisqEasyTakeOfferRequest {
 }
 message BisqEasyAccountDataMessage {
   string paymentAccountData = 1;
+}
+message BisqEasyConfirmFiatSentMessage {
+  string buyersBtcAddress = 1;
+}
+message BisqEasyConfirmBtcSentMessage {
+  string txId = 1;
 }
     

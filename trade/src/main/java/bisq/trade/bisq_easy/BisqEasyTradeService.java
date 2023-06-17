@@ -38,9 +38,10 @@ import bisq.support.MediationService;
 import bisq.support.SupportService;
 import bisq.trade.Protocol;
 import bisq.trade.TradeException;
-import bisq.trade.bisq_easy.events.BisqEasyAccountDataEvent;
-import bisq.trade.bisq_easy.events.BisqEasyTakeOfferEvent;
+import bisq.trade.bisq_easy.events.*;
 import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyConfirmBtcSentMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -114,6 +115,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) networkMessage);
         } else if (networkMessage instanceof BisqEasyAccountDataMessage) {
             onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
+        } else if (networkMessage instanceof BisqEasyConfirmFiatSentMessage) {
+            onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) networkMessage);
+        } else if (networkMessage instanceof BisqEasyConfirmBtcSentMessage) {
+            onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) networkMessage);
         }
     }
 
@@ -140,6 +145,26 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
+        findProtocol(message.getTradeId()).ifPresent(protocol -> {
+            try {
+                protocol.handle(message);
+            } catch (TradeException e) {
+                log.error("Error at processing message " + message, e);
+            }
+        });
+    }
+
+    private void onBisqEasyConfirmFiatSentMessage(BisqEasyConfirmFiatSentMessage message) {
+        findProtocol(message.getTradeId()).ifPresent(protocol -> {
+            try {
+                protocol.handle(message);
+            } catch (TradeException e) {
+                log.error("Error at processing message " + message, e);
+            }
+        });
+    }
+
+    private void onBisqEasyConfirmBtcSentMessage(BisqEasyConfirmBtcSentMessage message) {
         findProtocol(message.getTradeId()).ifPresent(protocol -> {
             try {
                 protocol.handle(message);
@@ -180,10 +205,35 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     public void sellerSendsPaymentAccount(BisqEasyTrade tradeModel, String paymentAccountData) throws TradeException {
-        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel);
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
         protocol.handle(new BisqEasyAccountDataEvent(paymentAccountData));
         persist();
     }
+
+    public void buyerConfirmFiatSent(BisqEasyTrade tradeModel, String buyersBtcAddress) throws TradeException {
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
+        protocol.handle(new BisqEasyConfirmFiatSentEvent(buyersBtcAddress));
+        persist();
+    }
+
+    public void sellerConfirmBtcSent(BisqEasyTrade tradeModel, String txId) throws TradeException {
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
+        protocol.handle(new BisqEasyConfirmFiatSentEvent(txId));
+        persist();
+    }
+
+    public void btcConfirmed(BisqEasyTrade tradeModel) throws TradeException {
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
+        protocol.handle(new BisqEasyBtcConfirmedEvent());
+        persist();
+    }
+
+    public void tradeCompleted(BisqEasyTrade tradeModel) throws TradeException {
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
+        protocol.handle(new BisqEasyTradeCompletedEvent());
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils

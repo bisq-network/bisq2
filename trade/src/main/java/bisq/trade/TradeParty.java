@@ -17,6 +17,7 @@
 
 package bisq.trade;
 
+import bisq.common.observable.Observable;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
@@ -24,11 +25,9 @@ import bisq.network.NetworkId;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
@@ -37,12 +36,7 @@ import java.util.Optional;
 @Getter
 public class TradeParty implements Proto {
     private final NetworkId networkId;
-    @Setter
-    @Nullable
-    private ContractSignatureData contractSignatureData;
-    @Setter
-    @Nullable
-    private String paymentAccountData;
+    private final Observable<ContractSignatureData> contractSignatureData = new Observable<>();
 
     public TradeParty(NetworkId networkId) {
         this.networkId = networkId;
@@ -52,7 +46,7 @@ public class TradeParty implements Proto {
     public bisq.trade.protobuf.TradeParty toProto() {
         bisq.trade.protobuf.TradeParty.Builder builder = bisq.trade.protobuf.TradeParty.newBuilder()
                 .setNetworkId(networkId.toProto());
-        Optional.ofNullable(contractSignatureData).ifPresent(ContractSignatureData::toProto);
+        Optional.ofNullable(contractSignatureData.get()).ifPresent(ContractSignatureData::toProto);
         return builder.build();
     }
 

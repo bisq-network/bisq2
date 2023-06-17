@@ -87,7 +87,9 @@ public class TradeStateController implements Controller {
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         model.setAppliedPhaseIndex(-1);
-        bisqEasyTradeStatePin.unbind();
+        if (bisqEasyTradeStatePin != null) {
+            bisqEasyTradeStatePin.unbind();
+        }
         model.setSelectedChannel(channel);
         String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getId());
         bisqEasyTradeService.findBisqEasyTrade(tradeId)
@@ -97,9 +99,9 @@ public class TradeStateController implements Controller {
                         switch (state) {
                             case INIT:
                                 break;
-                            case TAKER_TAKE_OFFER_REQUEST_SENT:
+                            case TAKER_SEND_TAKE_OFFER_REQUEST:
                                 break;
-                            case MAKER_TAKE_OFFER_REQUEST_ACCEPTED:
+                            case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
                                 break;
                         }
                     });
@@ -215,12 +217,15 @@ public class TradeStateController implements Controller {
             // model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
             //model.getBisqEasyTrade().sendPaymentAccount();
         } else if (index == 1 && isBuyer) {
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
+            buyerConfirmFiatSent();
             //model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         } else if (index == 2 && isSeller) {
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3.chatBotMessage", model.getTxId().get()));
+            sellerConfirmBtcSent();
             // model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         } else if (index == 3) {
+            //  model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+        } else if (index == 4) {
+            tradeCompleted();
             //  model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         }
     }
@@ -229,6 +234,7 @@ public class TradeStateController implements Controller {
         chatService.getBisqEasyPrivateTradeChatChannelService()
                 .sendTextMessage(message, model.getSelectedChannel());
     }
+
 
     void sellerSendsPaymentAccount() {
         String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getSellersPaymentAccountData().get());
@@ -241,30 +247,64 @@ public class TradeStateController implements Controller {
         } catch (TradeException e) {
             new Popup().error(e).show();
         }
-        
-       /* if (accountService.getAccounts().size() > 1) {
-            //todo
-            new Popup().information("TODO").show();
-        } else {
-           
-            
-            Account<?, ? extends PaymentMethod<?>> selectedAccount = accountService.getSelectedAccount();
-            if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
-            } else {
-                if (!accountService.hasAccounts()) {
-                    new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.noAccount")).show();
-                } else if (accountService.getAccountByNameMap().size() > 1) {
-                    String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
-                    if (DontShowAgainService.showAgain(key)) {
-                        new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.multipleAccounts"))
-                                .dontShowAgainId(key)
-                                .show();
-                    }
-                }
-            }
-        }*/
     }
 
+    void buyerConfirmFiatSent() {
+        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
+
+        try {
+            bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTradeModel(), model.getBuyersBtcAddress().get());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    void sellerConfirmBtcSent() {
+        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3.chatBotMessage", model.getTxId().get()));
+        try {
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTradeModel(), model.getTxId().get());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    void btcConfirmed() {
+        try {
+            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTradeModel());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    void tradeCompleted() {
+        try {
+            bisqEasyTradeService.tradeCompleted(model.getBisqEasyTradeModel());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    /* if (accountService.getAccounts().size() > 1) {
+         //todo
+         new Popup().information("TODO").show();
+     } else {
+        
+         
+         Account<?, ? extends PaymentMethod<?>> selectedAccount = accountService.getSelectedAccount();
+         if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
+         } else {
+             if (!accountService.hasAccounts()) {
+                 new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.noAccount")).show();
+             } else if (accountService.getAccountByNameMap().size() > 1) {
+                 String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
+                 if (DontShowAgainService.showAgain(key)) {
+                     new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.multipleAccounts"))
+                             .dontShowAgainId(key)
+                             .show();
+                 }
+             }
+         }
+     }*/
     private Optional<String> findUsersAccountData() {
         return Optional.ofNullable(accountService.getSelectedAccount()).stream()
                 .filter(account -> account instanceof UserDefinedFiatAccount)
@@ -412,8 +452,9 @@ public class TradeStateController implements Controller {
                                 model.getActionButtonDisabled().set(false);
                                 sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
                                         model.getFormattedBaseAmount().get(), model.getBuyersBtcAddress().get()));
-                                model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
-                                        model.getFormattedBaseAmount().get(), "1"));
+                        model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
+                                model.getFormattedBaseAmount().get(), "1"));
+                        btcConfirmed();
                             }
                     ).
                     after(4000);

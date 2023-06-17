@@ -15,25 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.events;
+package bisq.trade.bisq_easy.messages;
 
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.ServiceProvider;
-import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
-import bisq.trade.tasks.SendTradeMessageHandler;
+import bisq.trade.tasks.TradeMessageHandler;
+import lombok.extern.slf4j.Slf4j;
 
-public class BisqEasyAccountDataEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+import static com.google.common.base.Preconditions.checkArgument;
 
-    public BisqEasyAccountDataEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+@Slf4j
+public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmBtcSentMessage> {
+
+    public BisqEasyConfirmBtcSentMessageHandler(ServiceProvider serviceProvider,
+                                                BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void handle(Event event) {
-        BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
-        String paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
-        model.getMyself().getPaymentAccountData().set(paymentAccountData);
-        sendMessage(new BisqEasyAccountDataMessage(model.getId(), model.getMyIdentity().getNetworkId(), paymentAccountData));
+        BisqEasyConfirmBtcSentMessage message = (BisqEasyConfirmBtcSentMessage) event;
+        verifyMessage(message);
+
+        String txId = message.getTxId();
+        model.getPeer().getTxId().set(txId);
+    }
+
+    @Override
+    protected void verifyMessage(BisqEasyConfirmBtcSentMessage message) {
+        checkArgument(StringUtils.isNotEmpty(message.getTxId()));
     }
 }

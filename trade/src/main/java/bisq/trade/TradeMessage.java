@@ -26,6 +26,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessage;
 import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -93,6 +94,9 @@ public abstract class TradeMessage implements MailboxMessage, Event {
                     }
                     case BISQEASYACCOUNTDATAMESSAGE: {
                         return BisqEasyAccountDataMessage.fromProto(proto);
+                    }
+                    case BISQEASYCONFIRMFIATSENTMESSAGE: {
+                        return BisqEasyConfirmFiatSentMessage.fromProto(proto);
                     }
 
                     case MESSAGE_NOT_SET: {
