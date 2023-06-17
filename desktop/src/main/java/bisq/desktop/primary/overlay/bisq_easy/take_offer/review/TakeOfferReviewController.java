@@ -29,6 +29,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.contract.ContractService;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -50,11 +51,11 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.protocol.bisq_easy.BisqEasyProtocolService;
 import bisq.support.MediationService;
+import bisq.trade_protocol.bisq_easy.BisqEasyProtocolService;
+import bisq.trade_protocol.bisq_easy.BisqEasyTradeModel;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,7 +89,7 @@ public class TakeOfferReviewController implements Controller {
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        bisqEasyProtocolService = applicationService.getProtocolService().getBisqEasyProtocolService();
+        bisqEasyProtocolService = applicationService.getTradeProtocolService().getBisqEasyProtocolService();
 
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
 
@@ -165,16 +166,16 @@ public class TakeOfferReviewController implements Controller {
     public void doTakeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        bisqEasyProtocolService.takeOffer(myUserIdentity.getIdentity(),
+
+        BisqEasyTradeModel tradeModel = bisqEasyProtocolService.onTakeOffer(myUserIdentity.getIdentity(),
                 bisqEasyOffer,
                 model.getTakersBaseSideAmount(),
                 model.getTakersQuoteSideAmount(),
                 bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
                 model.getFiatPaymentMethodSpec());
+        BisqEasyContract contract = tradeModel.getContract();
 
-        //todo
-        Optional<UserProfile> mediator = mediationService.takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
-        bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, mediator)
+        bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
                     ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
                     bisqEasyPrivateTradeChatChannelService.findChannel(bisqEasyOffer)

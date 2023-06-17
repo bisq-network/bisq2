@@ -25,20 +25,33 @@ import "offer.proto";
 import "network.proto";
 import "contract.proto";
 
-
-// BisqEasy
-message BisqEasyTrade {
+message TradeProtocolParty {
+  network.NetworkId networkId = 1;
+  optional contract.ContractSignatureData contractSignatureData = 2;
 }
 
-message BisqEasyProtocolModel {
+message TradeModel {
+  string id = 1;
+  contract.Contract contract = 2;
+  TradeProtocolParty taker = 3;
+  TradeProtocolParty maker = 4;
+  string state = 5;
+
+  oneof message {
+    BisqEasyTradeModel bisqEasyTradeModel = 20;
+  }
+}
+
+// BisqEasy
+message BisqEasyTradeModel {
 }
 
 message BisqEasyTradeStore {
-  map<string, BisqEasyTrade> tradeById = 1;
+  map<string, TradeModel> tradeModelById = 1;
 }
 
 // BisqEasy messages
-message BisqEasyTradeMessage {
+message TradeProtocolMessage {
   network.NetworkId sender = 1;
   network.MetaData metaData = 2;
   oneof message {

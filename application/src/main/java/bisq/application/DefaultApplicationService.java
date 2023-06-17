@@ -29,11 +29,11 @@ import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.oracle.OracleService;
 import bisq.presentation.notifications.NotificationsService;
-import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
+import bisq.trade_protocol.TradeProtocolService;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.WalletService;
@@ -81,7 +81,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final SettingsService settingsService;
     private final SupportService supportService;
     private final NotificationsService notificationsService;
-    private final ProtocolService protocolService;
+    private final TradeProtocolService tradeProtocolService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -142,7 +142,7 @@ public class DefaultApplicationService extends ApplicationService {
 
         supportService = new SupportService(networkService, chatService, userService);
 
-        protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService, contractService, supportService);
+        tradeProtocolService = new TradeProtocolService(networkService, identityService, persistenceService, offerService, contractService, supportService);
     }
 
     @Override
@@ -184,7 +184,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> notificationsService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
-                .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> tradeProtocolService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -205,7 +205,7 @@ public class DefaultApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> protocolService.shutdown()
+        return supplyAsync(() -> tradeProtocolService.shutdown()
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> notificationsService.shutdown())
