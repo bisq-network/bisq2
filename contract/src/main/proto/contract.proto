@@ -24,6 +24,7 @@ option java_multiple_files = true;
 import "network.proto";
 import "account.proto";
 import "offer.proto";
+import "user.proto";
 
 enum Role {
   MAKER = 0;
@@ -46,9 +47,35 @@ message Contract {
 
 message TwoPartyContract {
   Party taker = 1;
+  oneof message {
+    BisqEasyContract bisqEasyContract = 10;
+  }
 }
 
 message MultiPartyContract {
   repeated Party parties = 1;
 }
-    
+
+message BisqEasyContract {
+  uint64 baseSideAmount = 1;
+  uint64 quoteSideAmount = 2;
+  offer.PaymentMethodSpec baseSidePaymentMethodSpecs = 3;
+  offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
+  optional user.UserProfile mediator = 12;
+}
+
+message ContractSignatureData {
+  bytes contractHash = 1;
+  bytes signature = 2;
+  bytes publicKeyBytes = 3;
+}
+message SignedTwoPartyContract {
+  Contract contract = 1;
+  ContractSignatureData makerSignatureData = 2;
+  ContractSignatureData takerSignatureData = 3;
+  oneof message {
+    SignedBisqEasyContract signedBisqEasyContract = 10;
+  }
+}
+message SignedBisqEasyContract {
+}

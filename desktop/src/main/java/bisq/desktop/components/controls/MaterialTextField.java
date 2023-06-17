@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.Transitions;
@@ -24,9 +25,9 @@ import bisq.desktop.common.utils.validation.InputValidator;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -45,10 +46,8 @@ import java.lang.ref.WeakReference;
 public class MaterialTextField extends Pane {
     protected final Region bg, line, selectionLine;
     protected final Label descriptionLabel;
-    protected final TextInputControl field;
+    protected final TextInputControl textInputControl;
     protected final Label helpLabel;
-    protected final StringProperty promptProperty = new SimpleStringProperty();
-    protected final StringProperty helpProperty = new SimpleStringProperty();
     @Getter
     private final BisqIconButton iconButton;
     private ChangeListener<Number> iconButtonHeightListener;
@@ -66,14 +65,14 @@ public class MaterialTextField extends Pane {
     }
 
     public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help) {
-        promptProperty.set(prompt);
-        helpProperty.set(help);
+        this(description, prompt, help, null);
+    }
 
+    public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help, @Nullable String value) {
         bg = new Region();
         bg.getStyleClass().add("material-text-field-bg");
 
         line = new Region();
-
         line.setPrefHeight(1);
         line.setStyle("-fx-background-color: -bisq-grey-dimmed");
         line.setMouseTransparent(true);
@@ -88,8 +87,18 @@ public class MaterialTextField extends Pane {
         descriptionLabel.setLayoutX(16);
         descriptionLabel.setMouseTransparent(true);
         descriptionLabel.setStyle("-fx-font-family: \"IBM Plex Sans Light\";");
-        if (description != null) {
+        if (StringUtils.isNotEmpty(description)) {
             descriptionLabel.setText(description);
+        }
+
+        textInputControl = createTextInputControl();
+        if (StringUtils.isNotEmpty(value)) {
+            textInputControl.setText(value);
+        }
+        textInputControl.setLayoutX(6.5);
+        textInputControl.getStyleClass().add("material-text-field");
+        if (StringUtils.isNotEmpty(prompt)) {
+            textInputControl.setPromptText(prompt);
         }
 
         iconButton = new BisqIconButton();
@@ -99,80 +108,141 @@ public class MaterialTextField extends Pane {
         iconButton.setManaged(false);
         iconButton.setVisible(false);
 
-        field = createTextInputControl();
-        field.setLayoutX(6.5);
-        field.getStyleClass().add("material-text-field");
-        if (prompt != null) {
-            field.setPromptText(prompt);
-        }
-
         helpLabel = new Label();
         helpLabel.setLayoutX(16);
-        helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -bisq-grey-dimmed; -fx-font-family: \"IBM Plex Sans Light\";");
+        helpLabel.getStyleClass().add("material-text-field-help");
+        // helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\";");
         helpLabel.setMouseTransparent(true);
-        if (help != null) {
+        if (StringUtils.isNotEmpty(help)) {
             helpLabel.setText(help);
         }
 
-        getChildren().addAll(bg, line, selectionLine, descriptionLabel, field, iconButton, helpLabel);
+        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel);
 
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                 onWidthChanged((double) newValue)).get());
 
-        field.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
+        textInputControl.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 onInputTextFieldFocus(newValue)).get());
         descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
 
-        promptProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+        promptTextProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
-        helpProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+        helpHelpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
-        field.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
+        textInputControl.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                 layoutIconButton()).get());
-        field.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+        textInputControl.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
 
-        bg.setOnMousePressed(e -> field.requestFocus());
+        bg.setOnMousePressed(e -> textInputControl.requestFocus());
         bg.setOnMouseEntered(e -> onMouseEntered());
         bg.setOnMouseExited(e -> onMouseExited());
-        field.setOnMouseEntered(e -> onMouseEntered());
-        field.setOnMouseExited(e -> onMouseExited());
+        textInputControl.setOnMouseEntered(e -> onMouseEntered());
+        textInputControl.setOnMouseExited(e -> onMouseExited());
 
         doLayout();
         update();
     }
 
-    public void requestFocus() {
-        field.requestFocus();
-        field.deselect();
-        field.selectHome();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Description
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getDescription() {
+        return descriptionLabel.getText();
     }
 
-    public void deselect() {
-        field.deselect();
+    public void setDescription(String description) {
+        descriptionLabel.setText(description);
     }
 
-    public void hideIcon() {
-        iconButton.setManaged(false);
-        iconButton.setVisible(false);
+    public final StringProperty descriptionProperty() {
+        return descriptionLabel.textProperty();
     }
 
-    public void showCopyIcon() {
-        setIcon(AwesomeIcon.COPY);
-        setIconTooltip(Res.get("action.copyToClipboard"));
-        iconButton.setOnAction(e -> ClipboardUtil.copyToClipboard(getText()));
+    public Label getDescriptionLabel() {
+        return descriptionLabel;
     }
 
-    public void showIcon() {
-        iconButton.setManaged(true);
-        iconButton.setVisible(true);
-        layoutIconButton();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Text
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getText() {
+        return textInputControl.getText();
     }
+
+    public void setText(String value) {
+        textInputControl.setText(value);
+        update();
+    }
+
+    public final StringProperty textProperty() {
+        return textInputControl.textProperty();
+    }
+
+    protected TextInputControl createTextInputControl() {
+        return new TextField();
+    }
+
+    public TextInputControl getTextInputControl() {
+        return textInputControl;
+    }
+
+    public void setEditable(boolean value) {
+        textInputControl.setEditable(value);
+        update();
+    }
+
+    public void setValidator(InputValidator validator) {
+        //todo
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PromptText
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public String getPromptText() {
+        return textInputControl.getPromptText();
+    }
+
+    public void setPromptText(String value) {
+        textInputControl.setPromptText(value);
+    }
+
+    public final StringProperty promptTextProperty() {
+        return textInputControl.promptTextProperty();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Help
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getHelpText() {
+        return helpLabel.getText();
+    }
+
+    public void setHelpText(String value) {
+        helpLabel.setText(value);
+    }
+
+    public final StringProperty helpHelpProperty() {
+        return helpLabel.textProperty();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Icon
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void setIcon(AwesomeIcon icon) {
         iconButton.setIcon(icon);
@@ -189,60 +259,56 @@ public class MaterialTextField extends Pane {
         showIcon();
     }
 
+    public void showIcon() {
+        iconButton.setManaged(true);
+        iconButton.setVisible(true);
+        layoutIconButton();
+    }
+
+    public void hideIcon() {
+        iconButton.setManaged(false);
+        iconButton.setVisible(false);
+    }
+
+    public void showCopyIcon() {
+        setIcon(AwesomeIcon.COPY);
+        setIconTooltip(Res.get("action.copyToClipboard"));
+        iconButton.setOnAction(new WeakReference<EventHandler<ActionEvent>>(e ->
+                ClipboardUtil.copyToClipboard(getText())).get());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Focus
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public ReadOnlyBooleanProperty textInputFocusedProperty() {
+        return textInputControl.focusedProperty();
+    }
+
+    public void requestFocus() {
+        textInputControl.requestFocus();
+        textInputControl.deselect();
+        textInputControl.selectHome();
+    }
+
+    public void deselect() {
+        textInputControl.deselect();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Event handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
         setOnMousePressed(handler);
-        field.setOnMousePressed(handler);
-    }
-
-    public final StringProperty promptTextProperty() {
-        return field.promptTextProperty();
-    }
-
-    public final StringProperty descriptionProperty() {
-        return descriptionLabel.textProperty();
-    }
-
-    public final StringProperty textProperty() {
-        return field.textProperty();
-    }
-
-    public ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
-        return field.focusedProperty();
-    }
-
-    public String getText() {
-        return field.getText();
-    }
-
-    public void setText(String value) {
-        field.setText(value);
-        update();
-    }
-
-    public void setValidator(InputValidator validator) {
-        //todo
-    }
-
-    public void setDescription(String description) {
-        descriptionLabel.setText(description);
-    }
-
-    public void setEditable(boolean value) {
-        field.setEditable(value);
-        update();
-    }
-
-    public TextInputControl getField() {
-        return field;
-    }
-
-    Label getDescriptionLabel() {
-        return descriptionLabel;
+        textInputControl.setOnMousePressed(handler);
     }
 
     protected void onMouseEntered() {
         removeBgStyles();
-        if (field.isFocused() && field.isEditable()) {
+        if (textInputControl.isFocused() && textInputControl.isEditable()) {
             bg.getStyleClass().add("material-text-field-bg-selected");
         } else {
             bg.getStyleClass().add("material-text-field-bg-hover");
@@ -251,7 +317,7 @@ public class MaterialTextField extends Pane {
 
     protected void onMouseExited() {
         removeBgStyles();
-        if (field.isFocused() && field.isEditable()) {
+        if (textInputControl.isFocused() && textInputControl.isEditable()) {
             bg.getStyleClass().add("material-text-field-bg-selected");
         } else {
             bg.getStyleClass().add("material-text-field-bg");
@@ -259,7 +325,7 @@ public class MaterialTextField extends Pane {
     }
 
     protected void onInputTextFieldFocus(boolean focus) {
-        if (focus && field.isEditable()) {
+        if (focus && textInputControl.isEditable()) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, getWidth());
@@ -274,19 +340,24 @@ public class MaterialTextField extends Pane {
         if (width > 0) {
             bg.setPrefWidth(width);
             line.setPrefWidth(width);
-            selectionLine.setPrefWidth(field.isFocused() && field.isEditable() ? width : 0);
+            selectionLine.setPrefWidth(textInputControl.isFocused() && textInputControl.isEditable() ? width : 0);
             descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
-            field.setPrefWidth(width - 2 * field.getLayoutX());
+            textInputControl.setPrefWidth(width - 2 * textInputControl.getLayoutX());
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Layout
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doLayout() {
         bg.setMinHeight(getBgHeight());
         bg.setMaxHeight(getBgHeight());
         line.setLayoutY(getBgHeight() - 1);
         selectionLine.setLayoutY(getBgHeight() - 2);
-        field.setLayoutY(getFieldLayoutY());
+        textInputControl.setLayoutY(getFieldLayoutY());
         helpLabel.setLayoutY(getBgHeight() + 3.5);
     }
 
@@ -314,18 +385,18 @@ public class MaterialTextField extends Pane {
     }
 
     void update() {
-        if (descriptionLabel.getText() != null) {
+        if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
             if (showInputTextField()) {
                 Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
             } else {
                 Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
             }
         }
-        helpLabel.setVisible(helpProperty.get() != null);
-        helpLabel.setManaged(helpProperty.get() != null);
+        helpLabel.setVisible(StringUtils.isNotEmpty(helpHelpProperty().get()));
+        helpLabel.setManaged(StringUtils.isNotEmpty(helpHelpProperty().get()));
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
-        field.getStyleClass().remove("material-text-field-read-only");
+        textInputControl.getStyleClass().remove("material-text-field-read-only");
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-small");
         descriptionLabel.getStyleClass().remove("material-text-field-description-big");
@@ -338,26 +409,26 @@ public class MaterialTextField extends Pane {
         } else {
             descriptionLabel.getStyleClass().add("material-text-field-description-big");
         }
-        if (field.isFocused()) {
+        if (textInputControl.isFocused()) {
             descriptionLabel.getStyleClass().add("material-text-field-description-selected");
         } else {
             descriptionLabel.getStyleClass().add("material-text-field-description-deselected");
         }
 
-        if (field.isEditable()) {
+        if (textInputControl.isEditable()) {
             bg.setMouseTransparent(false);
             bg.setOpacity(1);
             line.setOpacity(1);
-            field.getStyleClass().remove("material-text-field-read-only");
+            textInputControl.getStyleClass().remove("material-text-field-read-only");
         } else {
             bg.setMouseTransparent(true);
             bg.setOpacity(0.4);
             line.setOpacity(0.25);
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
             descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
-            field.getStyleClass().add("material-text-field-read-only");
+            textInputControl.getStyleClass().add("material-text-field-read-only");
         }
-        setOpacity(field.isDisabled() ? 0.35 : 1);
+        setOpacity(textInputControl.isDisabled() ? 0.35 : 1);
         UIThread.runOnNextRenderFrame(this::layoutIconButton);
     }
 
@@ -368,13 +439,9 @@ public class MaterialTextField extends Pane {
     }
 
     protected boolean showInputTextField() {
-        return promptProperty.get() != null || ((field.getText() != null &&
-                !field.getText().isEmpty()) ||
-                field.isFocused());
-    }
-
-    protected TextInputControl createTextInputControl() {
-        return new TextField();
+        return StringUtils.isNotEmpty(promptTextProperty().get()) ||
+                StringUtils.isNotEmpty(textInputControl.getText()) ||
+                textInputControl.isFocused();
     }
 
     protected double getBgHeight() {

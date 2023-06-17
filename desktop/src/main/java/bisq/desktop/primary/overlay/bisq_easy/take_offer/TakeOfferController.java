@@ -28,7 +28,7 @@ import bisq.desktop.primary.overlay.bisq_easy.take_offer.review.TakeOfferReviewC
 import bisq.i18n.Res;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,7 +74,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferAmountController takeOfferAmountController;
     private final TakeOfferPaymentController takeOfferPaymentController;
     private final TakeOfferReviewController takeOfferReviewController;
-    private Subscription tradePriceSpecPin, tradeAmountSpecPin, methodNamePin;
+    private Subscription tradePriceSpecPin, takersBaseSideAmountPin, takersQuoteSideAmountPin, methodNamePin;
 
     public TakeOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.TAKE_OFFER);
@@ -105,7 +105,8 @@ public class TakeOfferController extends NavigationController implements InitWit
 
         model.setPriceVisible(bisqEasyOffer.getDirection().isBuy());
         model.setAmountVisible(bisqEasyOffer.hasAmountRange());
-        model.setPaymentMethodVisible(bisqEasyOffer.getQuoteSidePaymentMethodSpecs().size() > 1);
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        model.setPaymentMethodVisible(quoteSidePaymentMethodSpecs.size() > 1);
 
         model.getChildTargets().clear();
         if (model.isPriceVisible()) {
@@ -117,9 +118,8 @@ public class TakeOfferController extends NavigationController implements InitWit
         if (model.isPaymentMethodVisible()) {
             model.getChildTargets().add(NavigationTarget.TAKE_OFFER_PAYMENT);
         } else {
-            List<FiatPaymentMethod> fiatPaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-            checkArgument(fiatPaymentMethods.size() == 1);
-            takeOfferReviewController.setFiatPaymentMethod(fiatPaymentMethods.get(0));
+            checkArgument(quoteSidePaymentMethodSpecs.size() == 1);
+            takeOfferReviewController.setFiatPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
         }
         model.getChildTargets().add(NavigationTarget.TAKE_OFFER_REVIEW);
     }
@@ -133,11 +133,13 @@ public class TakeOfferController extends NavigationController implements InitWit
                     takeOfferAmountController.setTradePriceSpec(priceSpec);
                     takeOfferReviewController.setTradePriceSpec(priceSpec);
                 });
-        tradeAmountSpecPin = EasyBind.subscribe(takeOfferAmountController.getTakersAmountSpec(),
-                takeOfferReviewController::setTradeAmountSpec);
-        methodNamePin = EasyBind.subscribe(takeOfferPaymentController.getSelectedFiatPaymentMethod(),
-                fiatPaymentMethod -> {
-                    takeOfferReviewController.setFiatPaymentMethod(fiatPaymentMethod);
+        takersBaseSideAmountPin = EasyBind.subscribe(takeOfferAmountController.getTakersBaseSideAmount(),
+                takeOfferReviewController::setTakersBaseSideAmount);
+        takersQuoteSideAmountPin = EasyBind.subscribe(takeOfferAmountController.getTakersQuoteSideAmount(),
+                takeOfferReviewController::setTakersQuoteSideAmount);
+        methodNamePin = EasyBind.subscribe(takeOfferPaymentController.getSelectedFiatPaymentMethodSpec(),
+                spec -> {
+                    takeOfferReviewController.setFiatPaymentMethodSpec(spec);
                     updateNextButtonDisabledState();
                 });
     }
@@ -145,7 +147,8 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void onDeactivate() {
         tradePriceSpecPin.unsubscribe();
-        tradeAmountSpecPin.unsubscribe();
+        takersQuoteSideAmountPin.unsubscribe();
+        takersBaseSideAmountPin.unsubscribe();
         methodNamePin.unsubscribe();
     }
 
@@ -234,7 +237,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     private void updateNextButtonDisabledState() {
         if (NavigationTarget.TAKE_OFFER_PAYMENT == model.getNavigationTarget()) {
-            model.getNextButtonDisabled().set(takeOfferPaymentController.getSelectedFiatPaymentMethod().get() == null);
+            model.getNextButtonDisabled().set(takeOfferPaymentController.getSelectedFiatPaymentMethodSpec().get() == null);
         } else {
             model.getNextButtonDisabled().set(false);
         }

@@ -180,7 +180,7 @@ public class SmallAmountInput {
             root.setSpacing(3);
 
             // textInput would be black without setting a style on root. Not clear why...
-            root.setStyle("-fx-fill: -bisq-white;");
+            root.setStyle("-fx-fill: -fx-light-text-color;");
 
             textInput = new TextField();
             textInput.setPrefWidth(100);

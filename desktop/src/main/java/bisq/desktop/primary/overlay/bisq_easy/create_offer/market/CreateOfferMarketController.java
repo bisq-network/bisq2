@@ -86,7 +86,7 @@ public class CreateOfferMarketController implements Controller {
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .collect(Collectors.toSet());
                     int numOffersInChannel = (int) allMessages.stream()
-                            .filter(message -> message.getBisqEasyOffer().isPresent())
+                            .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
                             .distinct()
                             .count();
                     int numUsersInChannel = (int) allMessages.stream()

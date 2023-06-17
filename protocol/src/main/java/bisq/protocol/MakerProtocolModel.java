@@ -22,7 +22,7 @@ import bisq.offer.Offer;
 import lombok.Getter;
 
 @Getter
-public class MakerProtocolModel<T extends Offer> extends ProtocolModel<T> {
+public class MakerProtocolModel<T extends Offer<?, ?>> extends ProtocolModel<T> {
 
     public MakerProtocolModel(Contract<T> contract) {
         super(contract);

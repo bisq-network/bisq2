@@ -42,8 +42,8 @@ public class MaterialTextArea extends MaterialTextField {
     public MaterialTextArea(@Nullable String description, @Nullable String prompt, @Nullable String help) {
         super(description, prompt, help);
 
-        field.setMinHeight(height);
-        field.setMaxHeight(height);
+        textInputControl.setMinHeight(height);
+        textInputControl.setMaxHeight(height);
     }
 
     @Override
@@ -63,8 +63,8 @@ public class MaterialTextArea extends MaterialTextField {
 
     public void setFixedHeight(double height) {
         this.height = height;
-        field.setMinHeight(height - 32);
-        field.setMaxHeight(height - 32);
+        textInputControl.setMinHeight(height - 32);
+        textInputControl.setMaxHeight(height - 32);
         doLayout();
     }
 }

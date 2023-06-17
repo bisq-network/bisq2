@@ -32,13 +32,13 @@ import bisq.desktop.primary.main.content.academy.wallets.WalletsAcademyControlle
 import bisq.desktop.primary.main.content.common_chat.CommonChatController;
 import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
-import bisq.desktop.primary.main.content.trade.TradeController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.BisqEasyController;
-import bisq.desktop.primary.main.content.trade.bsq_swap.BsqSwapController;
-import bisq.desktop.primary.main.content.trade.lightning.LightningController;
-import bisq.desktop.primary.main.content.trade.liquid_swap.LiquidSwapController;
-import bisq.desktop.primary.main.content.trade.multisig.MultiSigController;
-import bisq.desktop.primary.main.content.trade.xmr_swap.XmrSwapController;
+import bisq.desktop.primary.main.content.trade_apps.TradeAppsController;
+import bisq.desktop.primary.main.content.trade_apps.bisqEasy.BisqEasyController;
+import bisq.desktop.primary.main.content.trade_apps.bsq_swap.BsqSwapController;
+import bisq.desktop.primary.main.content.trade_apps.lightning.LightningController;
+import bisq.desktop.primary.main.content.trade_apps.liquid_swap.LiquidSwapController;
+import bisq.desktop.primary.main.content.trade_apps.multisig.MultiSigController;
+import bisq.desktop.primary.main.content.trade_apps.xmr_swap.XmrSwapController;
 import bisq.desktop.primary.main.content.user.UserController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
@@ -110,7 +110,7 @@ public class ContentController extends NavigationController {
                 return Optional.of(new CommonChatController(applicationService, ChatChannelDomain.SUPPORT));
             }
             case TRADE_OVERVIEW: {
-                return Optional.of(new TradeController(applicationService));
+                return Optional.of(new TradeAppsController(applicationService));
             }
             case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(applicationService));

@@ -24,6 +24,7 @@ import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
@@ -52,6 +53,8 @@ class CreateOfferReviewOfferModel implements Model {
     private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;
+    @Setter
+    private BisqEasyOffer bisqEasyOffer;
     @Setter
     private boolean isMinAmountEnabled;
     @Setter

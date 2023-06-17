@@ -18,9 +18,10 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
@@ -58,7 +59,11 @@ class TakeOfferReviewModel implements Model {
     private final StringProperty sellersPremium = new SimpleStringProperty();
 
     @Setter
-    private AmountSpec tradeAmountSpec;
+    private FiatPaymentMethodSpec fiatPaymentMethodSpec;
+    @Setter
+    private Monetary takersBaseSideAmount;
+    @Setter
+    private Monetary takersQuoteSideAmount;
     @Setter
     private PriceSpec sellersPriceSpec;
 }

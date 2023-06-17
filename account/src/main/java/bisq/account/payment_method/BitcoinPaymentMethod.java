@@ -21,9 +21,11 @@ import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.List;
 
+@ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {

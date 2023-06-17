@@ -22,7 +22,7 @@ import bisq.offer.Offer;
 import lombok.Getter;
 
 @Getter
-public class TakerProtocolModel<T extends Offer> extends ProtocolModel<T> {
+public class TakerProtocolModel<T extends Offer<?, ?>> extends ProtocolModel<T> {
 
     public TakerProtocolModel(Contract<T> contract) {
         super(contract);

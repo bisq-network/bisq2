@@ -25,7 +25,7 @@ import lombok.ToString;
  * No min. amount supported
  */
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BaseSideFixedAmountSpec extends FixedAmountSpec implements BaseSideAmountSpec {
     public BaseSideFixedAmountSpec(long amount) {

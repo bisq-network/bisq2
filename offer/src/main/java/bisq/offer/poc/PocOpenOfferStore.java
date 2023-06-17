@@ -19,14 +19,12 @@ package bisq.offer.poc;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferStore> {
@@ -40,27 +38,8 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
         this.openOffers.addAll(openOffers);
     }
 
-    @Override
-    public bisq.offer.protobuf.OpenOfferStore toProto() {
-        return bisq.offer.protobuf.OpenOfferStore.newBuilder()
-                .addAllOpenOffers(openOffers.stream().map(PocOpenOffer::toProto).collect(Collectors.toSet()))
-                .build();
-    }
 
-    public static PocOpenOfferStore fromProto(bisq.offer.protobuf.OpenOfferStore proto) {
-        return new PocOpenOfferStore(proto.getOpenOffersList().stream().map(PocOpenOffer::fromProto).collect(Collectors.toSet()));
-    }
-
-    @Override
-    public ProtoResolver<PersistableStore<?>> getResolver() {
-        return any -> {
-            try {
-                return fromProto(any.unpack(bisq.offer.protobuf.OpenOfferStore.class));
-            } catch (InvalidProtocolBufferException e) {
-                throw new UnresolvableProtobufMessageException(e);
-            }
-        };
-    }
+ 
 
     @Override
     public PocOpenOfferStore getClone() {
@@ -73,11 +52,21 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
         openOffers.addAll(persisted.getOpenOffers());
     }
 
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return null;
+    }
+
     public void add(PocOpenOffer openOffer) {
         openOffers.add(openOffer);
     }
 
     public void remove(PocOpenOffer openOffer) {
         openOffers.remove(openOffer);
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

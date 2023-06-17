@@ -84,7 +84,7 @@ public class TakeOfferPriceView extends View<VBox, TakeOfferPriceModel, TakeOffe
     protected void onViewAttached() {
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
 
-        percentageFocussedPin = EasyBind.subscribe(percentage.inputTextFieldFocusedProperty(), controller::onPercentageFocussed);
+        percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
         useFixPriceToggle.setSelected(model.getUseFixPrice().get());
         useFixPriceToggle.setOnAction(e -> controller.onToggleUseFixPrice());
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice -> {

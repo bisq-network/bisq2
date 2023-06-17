@@ -46,6 +46,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOfferService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
@@ -135,6 +136,7 @@ public class ChatMessagesListView {
         @Getter
         private final View view;
         private final ChatNotificationService chatNotificationService;
+        private final BisqEasyOfferService bisqEasyOfferService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
@@ -144,6 +146,7 @@ public class ChatMessagesListView {
                            Consumer<ChatMessage> replyHandler,
                            ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
+            bisqEasyOfferService = applicationService.getOfferService().getBisqEasyOfferService();
             chatNotificationService = chatService.getChatNotificationService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
@@ -267,8 +270,11 @@ public class ChatMessagesListView {
 
         private void onTakeOffer(BisqEasyPublicChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
-            checkArgument(chatMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
-            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(chatMessage.getBisqEasyOffer().orElseThrow()));
+            checkArgument(chatMessage.getBisqEasyOfferId().isPresent(), "message must contain offer");
+            chatMessage.getBisqEasyOfferId()
+                    .flatMap(bisqEasyOfferService::findOffer)
+                    .ifPresent(bisqEasyOffer ->
+                            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer)));
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {
@@ -294,6 +300,7 @@ public class ChatMessagesListView {
             checkArgument(chatMessage instanceof PublicChatMessage);
 
             if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
+                bisqEasyPublicChatMessage.getBisqEasyOfferId().ifPresent(bisqEasyOfferService::removeOffer);
                 chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity)
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
@@ -826,7 +833,7 @@ public class ChatMessagesListView {
                                     quotedMessageVBox.setVisible(true);
                                     quotedMessageVBox.setManaged(true);
                                     quotedMessageField.setText(citation.getText());
-                                    quotedMessageField.setStyle("-fx-fill: -bisq-grey-dimmed");
+                                    quotedMessageField.setStyle("-fx-fill: -fx-mid-text-color");
                                     Label userName = new Label(controller.getUserName(citation.getAuthorUserProfileId()));
                                     userName.getStyleClass().add("font-medium");
                                     userName.setStyle("-fx-text-fill: -bisq-grey-10");

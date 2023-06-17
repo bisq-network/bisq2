@@ -18,17 +18,20 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.common.proto.Proto;
+import bisq.common.proto.DeterministicProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.contract.poc.MultiPartyContract;
 import bisq.offer.Offer;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */
+@ToString
 @Getter
-public abstract class Contract<T extends Offer> implements Proto {
+@EqualsAndHashCode
+public abstract class Contract<T extends Offer<?, ?>> implements DeterministicProto {
     protected final T offer;
     protected final TradeProtocolType protocolType;
 
@@ -40,7 +43,10 @@ public abstract class Contract<T extends Offer> implements Proto {
         this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
     }
 
-    public bisq.contract.protobuf.Contract.Builder getContractBuilder() {
+    @Override
+    public abstract bisq.contract.protobuf.Contract toProto();
+
+    protected bisq.contract.protobuf.Contract.Builder getContractBuilder() {
         return bisq.contract.protobuf.Contract.newBuilder()
                 .setOffer(offer.toProto())
                 .setTradeProtocolType(protocolType.toProto());
@@ -63,4 +69,16 @@ public abstract class Contract<T extends Offer> implements Proto {
     }
 
     public abstract Party getTaker();
+
+    /**
+     * We need to provide a deterministic serialisation of our data (including all child objects).
+     * Any collection must be deterministically sorted.
+     * To use protobuf serialisation comes with some risks, but it can be assumed that version updates will
+     * not break byte representation even protobuf does not provide such guarantees. Worst case, we need to stick with
+     * the version before a breaking change happens or implement our own serialisation format (which comes with
+     * considerable effort as it need to cover all the object path downwards).
+     */
+    public byte[] getHashForSignature() {
+        return toProto().toByteArray();
+    }
 }

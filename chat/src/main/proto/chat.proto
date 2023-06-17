@@ -25,7 +25,6 @@ import "network.proto";
 import "security.proto";
 import "offer.proto";
 import "user.proto";
-import "protocol.proto";
 
 enum ChatMessageType {
   TEXT = 0;
@@ -129,7 +128,7 @@ message BisqEasyPrivateTradeChatChannelStore {
 }
 
 message BisqEasyPublicChatMessage {
-  optional offer.Offer bisqEasyOffer = 1;
+  optional string bisqEasyOfferId = 1;
 }
 message BisqEasyPublicChatChannel {
   common.Market market = 1;

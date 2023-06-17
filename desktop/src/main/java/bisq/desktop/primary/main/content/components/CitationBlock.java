@@ -163,7 +163,7 @@ public class CitationBlock {
             HBox userBox = new HBox(15, roboIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             citation = new Text();
-            citation.setStyle("-fx-fill: -bisq-grey-dimmed");
+            citation.setStyle("-fx-fill: -fx-mid-text-color");
             VBox.setMargin(citation, new Insets(0, 0, 15, 0));
             root.getChildren().addAll(topBox, userBox, citation);
         }

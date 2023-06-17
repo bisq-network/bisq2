@@ -18,6 +18,7 @@
 package bisq.offer.poc;
 
 import bisq.common.proto.Proto;
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -30,13 +31,9 @@ public final class PocOpenOffer implements Proto {
         this.offer = offer;
     }
 
-    public bisq.offer.protobuf.OpenOffer toProto() {
-        return bisq.offer.protobuf.OpenOffer.newBuilder()
-                .setOffer(offer.toProto())
-                .build();
-    }
 
-    public static PocOpenOffer fromProto(bisq.offer.protobuf.OpenOffer proto) {
-        return new PocOpenOffer(PocOffer.fromProto(proto.getOffer()));
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

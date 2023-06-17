@@ -30,7 +30,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class Protocol<T extends Offer, M extends ProtocolModel<T>> implements MessageListener, Proto {
+public abstract class Protocol<T extends Offer<?, ?>, M extends ProtocolModel<T>> implements MessageListener, Proto {
     protected final NetworkService networkService;
     private final PersistenceClient<ProtocolStore> persistenceClient;
     protected final NetworkIdWithKeyPair myNodeIdAndKeyPair;

@@ -400,23 +400,23 @@
 }
 
 .bisq-toggle-button {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.9em;
 }
 
 .bisq-toggle-button:selected {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .bisq-toggle-button:selected:hover {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .bisq-toggle-button:hover {
     -fx-background-color: transparent !important;
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .bisq-toggle-button Line {
@@ -446,7 +446,7 @@
     -fx-font-size: 1.46em;
     -fx-background-color: -bisq-grey-3;
     -fx-background-radius: 4;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-cursor: hand;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -474,7 +474,7 @@
     -fx-font-size: 1.46em;
     -fx-background-color: -bisq-grey-3;
     -fx-background-radius: 4;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-cursor: hand;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -487,7 +487,7 @@
     -fx-font-size: 1.46em;
     -fx-background-color: -bisq-green;
     -fx-background-radius: 4;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
     -fx-cursor: hand;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -578,7 +578,7 @@
     -fx-hide-delay: 100ms;
     -fx-show-duration: 20000ms;
     -fx-background: -bisq-grey-11;
-    -fx-text-fill: -bisq-black;
+    -fx-text-fill: -fx-dark-text-color;
     -fx-background-color: -bisq-grey-11;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
@@ -638,7 +638,7 @@
 
 .bisq-badge .badge-pane .label {
     -fx-font-size: 0.85em;
-    -fx-text-fill: -bisq-white !important;
+    -fx-text-fill: -fx-light-text-color !important;
     -fx-font-family: "IBM Plex Sans SemiBold";
 }
 
@@ -665,11 +665,11 @@
  ******************************************************************************/
 
 .radio-button {
-    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .radio-button:selected {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .radio-button .radio {

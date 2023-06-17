@@ -70,8 +70,8 @@ message PaymentMethodSpec {
   account.PaymentMethod paymentMethod = 1;
   optional string saltedMakerAccountId = 2;
   oneof message {
-    FiatPaymentMethodSpec fiatPaymentMethodSpec = 10;
-    BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 11;
+    BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = 10;
+    FiatPaymentMethodSpec fiatPaymentMethodSpec = 11;
   }
 }
 
@@ -131,32 +131,15 @@ message Offer {
   }
 }
 
-// BisqEasy
+message OfferMessage {
+  Offer offer = 1;
+  network.MetaData metaData = 2;
+}
+
+// BisqEasyOffer
 message BisqEasyOffer {
-  string chatMessageText = 1;
 }
 
-
-// proof of concept stuff
-message PocOffer {
-  string id = 1;
-  sint64 date = 2;
-  network.NetworkId makerNetworkId = 3;
-  common.Market market = 4;
-  Direction direction = 5;
-  sint64 baseAmount = 6;
-  PriceSpec priceSpec = 7;
-  repeated account.TradeProtocolType protocolTypes = 8;
-  repeated PaymentMethodSpec baseSidePaymentSpecs = 9;
-  repeated PaymentMethodSpec quoteSidePaymentSpecs = 10;
-  repeated OfferOption offerOptions = 11;
-  network.MetaData metaData = 12;
+message MyBisqEasyOffersStore {
+  repeated Offer offers = 1;
 }
-
-message OpenOffer {
-  PocOffer offer = 1;
-}
-message OpenOfferStore {
-  repeated OpenOffer openOffers = 1;
-}
-    

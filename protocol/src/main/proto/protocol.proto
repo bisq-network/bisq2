@@ -22,34 +22,54 @@ option java_package = "bisq.protocol.protobuf";
 option java_multiple_files = true;
 
 import "offer.proto";
+import "network.proto";
 
-message ProtocolModel {
+message Trade {
+  offer.Offer offer = 1;
+  network.NetworkId takerNetworkId = 2;
+  sint64 baseSideAmount = 3;
+  sint64 quoteSideAmount = 4;
+  string protocolTypeName = 5;
+  offer.PaymentMethodSpec baseSidePaymentMethodSpec = 6;
+  offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 7;
+  oneof message {
+    BisqEasyTrade bisqEasyTrade = 20;
+  }
 }
-
+message ProtocolModel {
+  Trade trade = 1;
+  string phaseName = 2;
+  oneof message {
+    BisqEasyProtocolModel bisqEasyProtocolModel = 20;
+  }
+}
 message ProtocolStore {
   map<string, ProtocolModel> modelByOfferId = 1;
 }
 
 // BisqEasy
-enum BisqEasyTradePhase {
-  NEGOTIATION = 0;
-  FIAT_TRANSFER = 1;
-  BTC_TRANSFER = 2;
-  COMPLETED = 3;
-}
-
 message BisqEasyTrade {
-  offer.Offer offer = 1;
-  sint64 baseSideAmount = 2;
-  sint64 quoteSideAmount = 3;
-  double premium = 4;
 }
 
 message BisqEasyProtocolModel {
-  BisqEasyTrade trade = 1;
-  BisqEasyTradePhase phase = 2;
 }
 
-message BisqEasyProtocolModelStore {
-  map<string, BisqEasyProtocolModel> protocolModelById = 1;
+message BisqEasyProtocolStore {
+  map<string, BisqEasyProtocolModel> modelById = 1;
+}
+
+// BisqEasy messages
+message BisqEasyProtocolMessage {
+  network.MetaData metaData = 1;
+  oneof message {
+    BisqEasyTakeOfferMessage takeOfferMessage = 10;
+    BisqEasyTakersPaymentAccountDataMessage takersPaymentAccountDataMessage = 11;
+  }
+}
+message BisqEasyTakeOfferMessage {
+  string offerId = 1;
+
+}
+message BisqEasyTakersPaymentAccountDataMessage {
+  string paymentAccountData = 1;
 }

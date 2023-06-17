@@ -25,7 +25,7 @@ import lombok.ToString;
 import java.util.Optional;
 
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPaymentMethod> {
     public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod) {

@@ -131,7 +131,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected javafx.scene.control.Skin<?> createDefaultSkin() {
         if (skin == null) {
             skin = new Skin<>(this, description, prompt);
-            editor = skin.getMaterialTextField().getField();
+            editor = skin.getMaterialTextField().getTextInputControl();
         }
         return skin;
     }

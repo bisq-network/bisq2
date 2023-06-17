@@ -18,11 +18,15 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.Offer;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString(callSuper = true)
 @Getter
-public class TwoPartyContract<T extends Offer> extends Contract<T> {
+public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T> {
     protected final Party taker;
 
     public TwoPartyContract(T swapOffer, TradeProtocolType protocolType, Party taker) {
@@ -30,17 +34,20 @@ public class TwoPartyContract<T extends Offer> extends Contract<T> {
         this.taker = taker;
     }
 
-    @Override
-    public bisq.contract.protobuf.Contract toProto() {
-        return getContractBuilder().setTwoPartyContract(
-                        bisq.contract.protobuf.TwoPartyContract.newBuilder()
-                                .setTaker(taker.toProto()))
-                .build();
+    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder() {
+        return bisq.contract.protobuf.TwoPartyContract.newBuilder().setTaker(taker.toProto());
     }
 
-    public static TwoPartyContract<? extends Offer> fromProto(bisq.contract.protobuf.Contract proto) {
-        return new TwoPartyContract<>(Offer.fromProto(proto.getOffer()),
-                TradeProtocolType.fromProto(proto.getTradeProtocolType()),
-                Party.fromProto(proto.getTwoPartyContract().getTaker()));
+    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
+        switch (proto.getTwoPartyContract().getMessageCase()) {
+            case BISQEASYCONTRACT: {
+                return BisqEasyContract.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

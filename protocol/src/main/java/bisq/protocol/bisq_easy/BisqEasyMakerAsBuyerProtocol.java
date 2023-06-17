@@ -17,28 +17,8 @@
 
 package bisq.protocol.bisq_easy;
 
-import bisq.network.NetworkIdWithKeyPair;
-import bisq.network.NetworkService;
-import bisq.persistence.PersistenceClient;
-import bisq.protocol.BuyerProtocol;
-import bisq.protocol.ProtocolStore;
-import com.google.protobuf.Message;
-
-public class BisqEasyMakerAsBuyerProtocol extends BisqEasyMakerProtocol implements BuyerProtocol {
-
-    public BisqEasyMakerAsBuyerProtocol(NetworkService networkService,
-                                        PersistenceClient<ProtocolStore> persistenceClient,
-                                        BisqEasyMakerProtocolModel protocolModel,
-                                        NetworkIdWithKeyPair myNodeIdAndKeyPair) {
-        super(networkService,
-                persistenceClient,
-                protocolModel,
-                myNodeIdAndKeyPair);
-    }
-
-    @Override
-    public Message toProto() {
-        //todo
-        return null;
+public class BisqEasyMakerAsBuyerProtocol extends BisqEasyMakerProtocol {
+    public BisqEasyMakerAsBuyerProtocol(BisqEasyProtocolModel model) {
+        super(model);
     }
 }

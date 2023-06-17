@@ -151,7 +151,7 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
 
                     Tooltip tooltip = new BisqTooltip(item.getMarketName());
                     // Force font color as color from css gets shadowed by parent
-                    tooltip.setStyle("-fx-text-fill: -bisq-black;");
+                    tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
                     label.setTooltip(tooltip);
 
