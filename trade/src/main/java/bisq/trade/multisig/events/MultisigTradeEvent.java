@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.submarine.events;
+package bisq.trade.multisig.events;
 
 import bisq.trade.protocol.events.TradeEvent;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public abstract class SubmarineEvent extends TradeEvent {
+public abstract class MultisigTradeEvent extends TradeEvent {
 }

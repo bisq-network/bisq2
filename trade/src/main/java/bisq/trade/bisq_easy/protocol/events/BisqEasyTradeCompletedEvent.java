@@ -24,7 +24,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyTradeCompletedEvent extends BisqEasyEvent {
+public class BisqEasyTradeCompletedEvent extends BisqEasyTradeEvent {
 
     public BisqEasyTradeCompletedEvent() {
     }

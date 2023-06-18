@@ -15,19 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.protocol.events;
+package bisq.trade.multisig.protocol;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import bisq.trade.ServiceProvider;
+import bisq.trade.multisig.MultisigTrade;
 
-@ToString(callSuper = true)
-@Getter
-@EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmBtcSentEvent extends BisqEasyTradeEvent {
-    private final String txId;
+public class MultisigBuyerAsTakerProtocol extends MultisigProtocol {
 
-    public BisqEasyConfirmBtcSentEvent(String txId) {
-        this.txId = txId;
+    public MultisigBuyerAsTakerProtocol(ServiceProvider serviceProvider, MultisigTrade model) {
+        super(serviceProvider, model);
+    }
+
+    @Override
+    public void configTransitions() {
     }
 }

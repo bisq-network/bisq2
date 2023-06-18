@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.NetworkId;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
+import bisq.trade.multisig.MultisigTradeParty;
 import bisq.trade.submarine.SubmarineTradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,6 +56,19 @@ public class TradeParty implements Proto {
         switch (proto.getMessageCase()) {
             case BISQEASYTRADEPARTY: {
                 return BisqEasyTradeParty.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static MultisigTradeParty protoToMultisigTradeParty(bisq.trade.protobuf.TradeParty proto) {
+        switch (proto.getMessageCase()) {
+            case MULTISIGTRADEPARTY: {
+                return MultisigTradeParty.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {

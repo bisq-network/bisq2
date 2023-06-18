@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.submarine.messages;
+package bisq.trade.multisig.messages;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
@@ -32,14 +32,14 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class SubmarineTradeMessage extends TradeMessage {
+public abstract class MultisigTradeMessage extends TradeMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
-    protected SubmarineTradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
+    protected MultisigTradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
         super(tradeId, sender, metaData);
     }
 
-    public static SubmarineTradeMessage fromProto(bisq.trade.protobuf.SubmarineTradeMessage proto) {
+    public static MultisigTradeMessage fromProto(bisq.trade.protobuf.MultisigTradeMessage proto) {
        /* switch (proto.getMessageCase()) {
 
             case MESSAGE_NOT_SET: {

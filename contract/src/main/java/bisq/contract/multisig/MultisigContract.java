@@ -22,7 +22,7 @@ import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkId;
-import bisq.offer.submarine.SubmarineOffer;
+import bisq.offer.multisig.MultisigOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,16 +30,16 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MultisigContract extends TwoPartyContract<SubmarineOffer> {
+public class MultisigContract extends TwoPartyContract<MultisigOffer> {
 
-    public MultisigContract(SubmarineOffer offer,
+    public MultisigContract(MultisigOffer offer,
                             NetworkId takerNetworkId) {
         this(offer,
                 TradeProtocolType.MULTISIG,
                 new Party(Role.TAKER, takerNetworkId));
     }
 
-    private MultisigContract(SubmarineOffer offer,
+    private MultisigContract(MultisigOffer offer,
                              TradeProtocolType protocolType,
                              Party taker) {
         super(offer, protocolType, taker);
@@ -55,7 +55,7 @@ public class MultisigContract extends TwoPartyContract<SubmarineOffer> {
     public static MultisigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
         bisq.contract.protobuf.MultisigContract bisqEasyContractProto = twoPartyContractProto.getMultisigContract();
-        return new MultisigContract(SubmarineOffer.fromProto(proto.getOffer()),
+        return new MultisigContract(MultisigOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()));
     }

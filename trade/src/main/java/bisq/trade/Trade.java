@@ -25,7 +25,7 @@ import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protobuf.MultisigTrade;
+import bisq.trade.multisig.MultisigTrade;
 import bisq.trade.submarine.SubmarineTrade;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -138,9 +138,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     public static MultisigTrade protoToMultisigTrade(bisq.trade.protobuf.Trade proto) {
         switch (proto.getMessageCase()) {
-            /*case MULTISIGTRADE: {
+            case MULTISIGTRADE: {
                 return MultisigTrade.fromProto(proto);
-            }*/
+            }
 
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

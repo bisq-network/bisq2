@@ -59,6 +59,7 @@ message TradeMessage {
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
     SubmarineTradeMessage submarineTradeMessage = 21;
+    MultisigTradeMessage multisigTradeMessage = 23;
   }
 }
 
@@ -101,6 +102,8 @@ message BisqEasyConfirmBtcSentMessage {
 }
 
 // MultiSig
+message MultisigTradeMessage{
+}
 message MultisigTradeParty {
 }
 
@@ -113,7 +116,7 @@ message MultisigTradeStore {
 
 
 // Submarine
-message SubmarineTradeMessage{
+message SubmarineTradeMessage {
 }
 message SubmarineTradeParty {
 }

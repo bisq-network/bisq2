@@ -15,19 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.protocol.events;
+package bisq.trade.multisig.protocol;
 
-import lombok.EqualsAndHashCode;
+import bisq.common.fsm.State;
 import lombok.Getter;
 import lombok.ToString;
 
-@ToString(callSuper = true)
+@ToString
 @Getter
-@EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmBtcSentEvent extends BisqEasyTradeEvent {
-    private final String txId;
+public enum MultisigTradeState implements State {
+    INIT,
 
-    public BisqEasyConfirmBtcSentEvent(String txId) {
-        this.txId = txId;
+    STATE1,
+    STATE2,
+
+    COMPLETED(true);
+
+    private final boolean isFinalState;
+
+    MultisigTradeState() {
+        this.isFinalState = false;
+    }
+
+    MultisigTradeState(boolean isFinalState) {
+        this.isFinalState = isFinalState;
     }
 }

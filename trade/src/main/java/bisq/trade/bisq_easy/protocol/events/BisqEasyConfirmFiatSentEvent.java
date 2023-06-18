@@ -24,7 +24,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmFiatSentEvent extends BisqEasyEvent {
+public class BisqEasyConfirmFiatSentEvent extends BisqEasyTradeEvent {
     private final String btcAddress;
 
     public BisqEasyConfirmFiatSentEvent(String btcAddress) {
