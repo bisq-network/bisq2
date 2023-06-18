@@ -17,7 +17,7 @@
 
 package bisq.trade;
 
-import bisq.common.fsm.Model;
+import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends Model implements Proto {
+public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements Proto {
     @Getter
     public enum Role {
         BUYER_AS_TAKER(true, true),

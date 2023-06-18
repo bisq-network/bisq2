@@ -33,7 +33,11 @@ public class BisqEasyConfirmFiatSentEventHandler extends SendTradeMessageHandler
     public void handle(Event event) {
         BisqEasyConfirmFiatSentEvent bisqEasyConfirmFiatSentEvent = (BisqEasyConfirmFiatSentEvent) event;
         String btcAddress = bisqEasyConfirmFiatSentEvent.getBtcAddress();
-        model.getMyself().getBtcAddress().set(btcAddress);
+        commitToModel(btcAddress);
         sendMessage(new BisqEasyConfirmFiatSentMessage(model.getId(), model.getMyIdentity().getNetworkId(), btcAddress));
+    }
+
+    private void commitToModel(String btcAddress) {
+        model.getMyself().getBtcAddress().set(btcAddress);
     }
 }

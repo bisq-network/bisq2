@@ -33,7 +33,11 @@ public class BisqEasyAccountDataEventHandler extends SendTradeMessageHandler<Bis
     public void handle(Event event) {
         BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
         String paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
-        model.getMyself().getPaymentAccountData().set(paymentAccountData);
+        commitToModel(paymentAccountData);
         sendMessage(new BisqEasyAccountDataMessage(model.getId(), model.getMyIdentity().getNetworkId(), paymentAccountData));
+    }
+
+    private void commitToModel(String paymentAccountData) {
+        model.getMyself().getPaymentAccountData().set(paymentAccountData);
     }
 }

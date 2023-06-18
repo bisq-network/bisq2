@@ -17,10 +17,13 @@
 
 package bisq.trade.protocol.events;
 
+import bisq.network.NetworkService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> {
@@ -29,9 +32,10 @@ public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends 
         super(serviceProvider, model);
     }
 
-    protected void sendMessage(BisqEasyTradeMessage message) {
-        serviceProvider.getNetworkService().confidentialSend(message, model.getMaker().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
+    protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
+        return serviceProvider.getNetworkService().confidentialSend(message, model.getMaker().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
+                    //todo store info if message arrive or stored in mailbox
                 });
     }
 }

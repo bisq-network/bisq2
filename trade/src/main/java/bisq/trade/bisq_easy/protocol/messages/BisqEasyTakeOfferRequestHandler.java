@@ -47,13 +47,11 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
-
         Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyOffer.getMakerNetworkId().getNodeId()).orElseThrow();
-
-        model.getPeer().getContractSignatureData().set(takersContractSignatureData);
         try {
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
-            model.getMyself().getContractSignatureData().set(contractSignatureData);
+            ContractSignatureData makersContractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
+            commitToModel(takersContractSignatureData, makersContractSignatureData);
+            //todo sent my sig to peer
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -65,5 +63,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
         Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
         //todo
+    }
+
+    private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
+        model.getPeer().getContractSignatureData().set(takersContractSignatureData);
+        model.getMyself().getContractSignatureData().set(makersContractSignatureData);
     }
 }

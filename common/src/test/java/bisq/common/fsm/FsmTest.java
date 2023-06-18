@@ -315,7 +315,7 @@ public class FsmTest {
         }
     }
 
-    public static class MockModel extends Model {
+    public static class MockModel extends FsmModel {
         public MockModel(MockState state) {
             super(state);
         }

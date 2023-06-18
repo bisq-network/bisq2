@@ -31,4 +31,7 @@ public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasy
     @Override
     public void handle(Event event) {
     }
+
+    private void commitToModel() {
+    }
 }

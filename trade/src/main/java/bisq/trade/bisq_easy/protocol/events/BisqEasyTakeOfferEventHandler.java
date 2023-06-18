@@ -20,7 +20,6 @@ package bisq.trade.bisq_easy.protocol.events;
 import bisq.common.fsm.Event;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.identity.Identity;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
@@ -38,14 +37,16 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
     public void handle(Event event) {
         BisqEasyTakeOfferEvent bisqEasyTakeOfferEvent = (BisqEasyTakeOfferEvent) event;
         BisqEasyContract bisqEasyContract = bisqEasyTakeOfferEvent.getBisqEasyContract();
-        Identity takerIdentity = bisqEasyTakeOfferEvent.getTakerIdentity();
         try {
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, takerIdentity.getKeyPair());
-            model.getMyself().getContractSignatureData().set(contractSignatureData);
-
-            sendMessage(new BisqEasyTakeOfferRequest(model.getId(), takerIdentity.getNetworkId(), bisqEasyContract, contractSignatureData));
+            ContractSignatureData myContractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, model.getMyIdentity().getKeyPair());
+            commitToModel(myContractSignatureData);
+            sendMessage(new BisqEasyTakeOfferRequest(model.getId(), model.getMyIdentity().getNetworkId(), bisqEasyContract, myContractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void commitToModel(ContractSignatureData takersContractSignatureData) {
+        model.getMyself().getContractSignatureData().set(takersContractSignatureData);
     }
 }

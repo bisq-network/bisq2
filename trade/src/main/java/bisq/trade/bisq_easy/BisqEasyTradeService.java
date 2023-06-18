@@ -215,7 +215,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         persistableStore.add(tradeModel);
 
         Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
-        protocol.handle(new BisqEasyTakeOfferEvent(takerIdentity, contract));
+        protocol.handle(new BisqEasyTakeOfferEvent(contract));
         persist();
         return tradeModel;
     }

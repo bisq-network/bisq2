@@ -35,13 +35,13 @@ public class Fsm {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
     private final Object lock = new Object();
     @Getter
-    private final Model model;
+    private final FsmModel model;
 
     public Fsm(State initialState) {
-        this(new Model(initialState));
+        this(new FsmModel(initialState));
     }
 
-    public Fsm(Model model) {
+    public Fsm(FsmModel model) {
         this.model = model;
         configTransitions();
     }

@@ -26,10 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public class Model {
+public class FsmModel {
     private final Observable<State> state = new Observable<>();
 
-    public Model(State initialState) {
+    public FsmModel(State initialState) {
         if (initialState == null) {
             throw new FsmException("InitialState must not be null at Model constructor");
         }

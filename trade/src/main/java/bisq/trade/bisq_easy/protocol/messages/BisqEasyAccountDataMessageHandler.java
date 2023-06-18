@@ -34,16 +34,21 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
         super(serviceProvider, model);
     }
 
+
     @Override
     public void handle(Event event) {
         BisqEasyAccountDataMessage message = (BisqEasyAccountDataMessage) event;
         verifyMessage(message);
-
-        model.getPeer().getPaymentAccountData().set(message.getPaymentAccountData());
+        commitToModel(message.getPaymentAccountData());
     }
 
     @Override
     protected void verifyMessage(BisqEasyAccountDataMessage message) {
+        //todo
         checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()));
+    }
+
+    private void commitToModel(String paymentAccountData) {
+        model.getPeer().getPaymentAccountData().set(paymentAccountData);
     }
 }
