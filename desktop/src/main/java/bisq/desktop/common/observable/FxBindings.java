@@ -19,6 +19,7 @@ package bisq.desktop.common.observable;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.threading.UIThread;
@@ -109,6 +110,10 @@ public class FxBindings {
         public Pin to(Observable<S> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
+
+        public Pin to(ReadOnlyObservable<S> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
     }
 
 
@@ -122,6 +127,10 @@ public class FxBindings {
         public Pin to(Observable<Long> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
+
+        public Pin to(ReadOnlyObservable<Long> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
     }
 
 
@@ -133,6 +142,10 @@ public class FxBindings {
         }
 
         public Pin to(Observable<Double> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+
+        public Pin to(ReadOnlyObservable<Double> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
@@ -149,6 +162,9 @@ public class FxBindings {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
 
+        public Pin to(ReadOnlyObservable<Integer> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
     }
 
 
@@ -160,6 +176,26 @@ public class FxBindings {
         }
 
         public Pin to(Observable<Boolean> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+
+        public Pin to(ReadOnlyObservable<Boolean> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public static final class StringPropertyBindings {
+        private final StringProperty observer;
+
+        public StringPropertyBindings(StringProperty observer) {
+            this.observer = observer;
+        }
+
+        public Pin to(Observable<String> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+
+        public Pin to(ReadOnlyObservable<String> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
@@ -201,19 +237,6 @@ public class FxBindings {
                 observer.removeListener(listener);
                 pin.unbind();
             };
-        }
-    }
-
-
-    public static final class StringPropertyBindings {
-        private final StringProperty observer;
-
-        public StringPropertyBindings(StringProperty observer) {
-            this.observer = observer;
-        }
-
-        public Pin to(Observable<String> observable) {
-            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
 }

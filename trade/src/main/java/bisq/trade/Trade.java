@@ -60,8 +60,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         }
     }
 
-    public static String createId(String offerId, String takerNodeId) {
-        return offerId + "." + takerNodeId;
+    public static String createId(String offerId, String takerPubKeyHash) {
+        return offerId + "." + takerPubKeyHash;
     }
 
     @Getter

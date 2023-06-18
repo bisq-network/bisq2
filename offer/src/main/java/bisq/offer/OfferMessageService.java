@@ -109,7 +109,6 @@ public class OfferMessageService implements Service, DataService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean processAddedMessage(OfferMessage offerMessage) {
-        log.error("Add offer {}", offerMessage.getOffer().getId());
         return offers.add(offerMessage.getOffer());
     }
 

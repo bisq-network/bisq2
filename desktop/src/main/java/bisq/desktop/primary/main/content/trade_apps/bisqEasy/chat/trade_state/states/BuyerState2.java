@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -31,16 +31,15 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState1 extends BaseState {
+public class BuyerState2 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
+    public BuyerState2(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
         controller = new Controller(applicationService, bisqEasyOffer, myUserIdentity);
     }
 
@@ -66,7 +65,6 @@ public class SellerState1 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-            findUsersAccountData().ifPresent(accountData -> model.getPaymentAccountData().set(accountData));
         }
 
         @Override
@@ -74,11 +72,10 @@ public class SellerState1 extends BaseState {
             super.onDeactivate();
         }
 
-        private void onSendPaymentData() {
-            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getPaymentAccountData().get());
-            sendChatBotMessage(message);
+        private void onFiatSent() {
+            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode(), model.getBtcAddress().get()));
             try {
-                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTradeModel(), model.getPaymentAccountData().get());
+                bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTradeModel(), model.getBtcAddress().get());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
@@ -87,43 +84,48 @@ public class SellerState1 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        private final StringProperty paymentAccountData = new SimpleStringProperty();
+        private final StringProperty btcAddress = new SimpleStringProperty();
     }
 
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
-        private final MaterialTextArea paymentAccountData;
+        private final MaterialTextField btcAddress;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.seller.phase1.headline"));
+            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase2.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
-            paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), model.getPaymentAccountData().get(), true);
-            paymentAccountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
 
-            button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
+            button = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1.buttonText"));
             button.setDefaultButton(true);
 
-            Label helpLabel = FormUtils.getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.note"));
+            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress"), "", true);
+            btcAddress.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.prompt"));
+
+            MaterialTextArea account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2.sellersAccount"),
+                    model.getBisqEasyTradeModel().getSeller().getPaymentAccountData().get(), false);
 
             VBox.setMargin(button, new Insets(5, 0, 0, 0));
             root.getChildren().addAll(Layout.hLine(),
                     infoHeadline,
-                    paymentAccountData,
-                    button,
-                    Spacer.fillVBox(),
-                    helpLabel);
+                    FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2.quoteAmount"), model.getFormattedQuoteAmount(), false),
+                    account,
+                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.headline", model.getFormattedQuoteAmount())),
+                    btcAddress,
+                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase2.confirm", model.getFormattedQuoteAmount())),
+                    button);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            paymentAccountData.textProperty().bindBidirectional(model.getPaymentAccountData());
-            button.disableProperty().bind(paymentAccountData.textProperty().isEmpty());
-            button.setOnAction(e -> controller.onSendPaymentData());
+            btcAddress.textProperty().bindBidirectional(model.getBtcAddress());
+
+            button.disableProperty().bind(btcAddress.textProperty().isEmpty());
+            button.setOnAction(e -> controller.onFiatSent());
         }
 
         @Override

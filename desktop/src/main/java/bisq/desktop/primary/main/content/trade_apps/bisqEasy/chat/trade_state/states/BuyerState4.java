@@ -18,29 +18,31 @@
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqText;
-import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
 import bisq.user.identity.UserIdentity;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState1 extends BaseState {
+public class BuyerState4 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
+    public BuyerState4(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
         controller = new Controller(applicationService, bisqEasyOffer, myUserIdentity);
     }
 
@@ -66,7 +68,22 @@ public class SellerState1 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-            findUsersAccountData().ifPresent(accountData -> model.getPaymentAccountData().set(accountData));
+
+            model.getButtonDisabled().set(true);
+            model.getBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value.notInMempoolYet"));
+            UIScheduler.run(() ->
+                            model.getBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
+                                    model.getFormattedBaseAmount(), "0")))
+                    .after(2000);
+            UIScheduler.run(() -> {
+                        model.getButtonDisabled().set(false);
+                        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
+                                model.getFormattedBaseAmount(), model.getBtcAddress()));
+                        model.getBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
+                                model.getFormattedBaseAmount(), "1"));
+                        //onBtcConfirmed();
+                    })
+                    .after(4000);
         }
 
         @Override
@@ -74,56 +91,63 @@ public class SellerState1 extends BaseState {
             super.onDeactivate();
         }
 
-        private void onSendPaymentData() {
-            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getPaymentAccountData().get());
-            sendChatBotMessage(message);
+        private void onComplete() {
             try {
-                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTradeModel(), model.getPaymentAccountData().get());
+                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTradeModel());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
         }
+
+     /*   private void onBtcConfirmed() {
+            try {
+                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTradeModel());
+            } catch (TradeException e) {
+                new Popup().error(e).show();
+            }
+        }*/
     }
 
     @Getter
     private static class Model extends BaseState.Model {
-        private final StringProperty paymentAccountData = new SimpleStringProperty();
+        @Setter
+        protected String btcAddress;
+        private final StringProperty btcBalance = new SimpleStringProperty();
+        private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
     }
 
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
-        private final MaterialTextArea paymentAccountData;
+        private final MaterialTextField btcBalance;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.seller.phase1.headline"));
+            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase4.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
-            paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), model.getPaymentAccountData().get(), true);
-            paymentAccountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
+            btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase4.balance"), "", false);
+            btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help"));
 
-            button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
+            button = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase4.buttonText"));
             button.setDefaultButton(true);
-
-            Label helpLabel = FormUtils.getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.note"));
 
             VBox.setMargin(button, new Insets(5, 0, 0, 0));
             root.getChildren().addAll(Layout.hLine(),
                     infoHeadline,
-                    paymentAccountData,
-                    button,
-                    Spacer.fillVBox(),
-                    helpLabel);
+                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase4.info")),
+                    btcBalance,
+                    button);
+
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            paymentAccountData.textProperty().bindBidirectional(model.getPaymentAccountData());
-            button.disableProperty().bind(paymentAccountData.textProperty().isEmpty());
-            button.setOnAction(e -> controller.onSendPaymentData());
+            btcBalance.textProperty().bind(model.getBtcBalance());
+            button.disableProperty().bind(model.getButtonDisabled());
+            button.setOnAction(e -> controller.onComplete());
         }
 
         @Override

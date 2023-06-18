@@ -19,28 +19,18 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqText;
-import bisq.desktop.components.controls.MaterialTextArea;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.trade.TradeException;
 import bisq.user.identity.UserIdentity;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerState1 extends BaseState {
+public class BuyerState3 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
+    public BuyerState3(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
         controller = new Controller(applicationService, bisqEasyOffer, myUserIdentity);
     }
 
@@ -66,71 +56,39 @@ public class SellerState1 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-            findUsersAccountData().ifPresent(accountData -> model.getPaymentAccountData().set(accountData));
         }
 
         @Override
         public void onDeactivate() {
             super.onDeactivate();
         }
-
-        private void onSendPaymentData() {
-            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getPaymentAccountData().get());
-            sendChatBotMessage(message);
-            try {
-                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTradeModel(), model.getPaymentAccountData().get());
-            } catch (TradeException e) {
-                new Popup().error(e).show();
-            }
-        }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
-        private final StringProperty paymentAccountData = new SimpleStringProperty();
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final Button button;
-        private final MaterialTextArea paymentAccountData;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.seller.phase1.headline"));
+            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase3.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
-            paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), model.getPaymentAccountData().get(), true);
-            paymentAccountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
-
-            button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
-            button.setDefaultButton(true);
-
-            Label helpLabel = FormUtils.getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.note"));
-
-            VBox.setMargin(button, new Insets(5, 0, 0, 0));
             root.getChildren().addAll(Layout.hLine(),
                     infoHeadline,
-                    paymentAccountData,
-                    button,
-                    Spacer.fillVBox(),
-                    helpLabel);
+                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase3.info", model.getQuoteCode())));
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
-
-            paymentAccountData.textProperty().bindBidirectional(model.getPaymentAccountData());
-            button.disableProperty().bind(paymentAccountData.textProperty().isEmpty());
-            button.setOnAction(e -> controller.onSendPaymentData());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
-
-            button.disableProperty().unbind();
         }
     }
 }
