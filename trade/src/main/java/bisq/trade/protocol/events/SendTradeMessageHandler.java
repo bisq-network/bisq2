@@ -33,7 +33,8 @@ public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends 
     }
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
-        return serviceProvider.getNetworkService().confidentialSend(message, model.getMaker().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
+        log.error("send {} to {} (sender={})", message.getClass().getSimpleName(), model.getPeer().getNetworkId(), model.getMyIdentity().getNetworkId());
+        return serviceProvider.getNetworkService().confidentialSend(message, model.getPeer().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
                     log.error("result={}", result);
                     //todo store info if message arrive or stored in mailbox

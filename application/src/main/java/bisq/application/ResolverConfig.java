@@ -26,7 +26,7 @@ import bisq.oracle.timestamp.AuthorizeTimestampRequest;
 import bisq.oracle.timestamp.AuthorizedTimestampData;
 import bisq.support.MediationRequest;
 import bisq.support.MediationResponse;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.profile.UserProfile;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 
@@ -57,7 +57,7 @@ public class ResolverConfig {
                 MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationResponse",
                 MediationResponse.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("protocol.TradeProtocolMessage",
-                BisqEasyTradeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("trade.TradeMessage",
+                TradeMessage.getNetworkMessageResolver());
     }
 }

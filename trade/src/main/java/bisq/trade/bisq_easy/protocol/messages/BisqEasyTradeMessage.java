@@ -39,8 +39,8 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
         super(tradeId, sender, metaData);
     }
 
-    public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.BisqEasyTradeMessage proto) {
-        switch (proto.getMessageCase()) {
+    public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
             case BISQEASYTAKEOFFERREQUEST: {
                 return BisqEasyTakeOfferRequest.fromProto(proto);
             }
