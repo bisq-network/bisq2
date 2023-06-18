@@ -209,7 +209,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
         BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
 
-        checkArgument(findProtocol(tradeModel.getId()).isPresent(),
+        checkArgument(findProtocol(tradeModel.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
         persistableStore.add(tradeModel);
