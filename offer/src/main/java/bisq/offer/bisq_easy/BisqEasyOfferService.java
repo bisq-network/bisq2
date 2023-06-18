@@ -18,6 +18,7 @@
 package bisq.offer.bisq_easy;
 
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
@@ -40,12 +41,14 @@ public class BisqEasyOfferService implements Service {
     private final OfferMessageService offerMessageService;
     @Getter
     private final ObservableSet<BisqEasyOffer> offers = new ObservableSet<>();
+    private final CollectionObserver<Offer<?, ?>> offersObserver;
+    private Pin offersObserverPin;
 
     public BisqEasyOfferService(PersistenceService persistenceService,
                                 OfferMessageService offerMessageService) {
         this.offerMessageService = offerMessageService;
         myBisqEasyOffersService = new MyBisqEasyOffersService(persistenceService);
-        offerMessageService.getOffers().addListener(new CollectionObserver<>() {
+        offersObserver = new CollectionObserver<>() {
             @Override
             public void add(Offer<?, ?> element) {
                 if (element instanceof BisqEasyOffer) {
@@ -64,7 +67,8 @@ public class BisqEasyOfferService implements Service {
             public void clear() {
 
             }
-        });
+        };
+
     }
 
 
@@ -74,6 +78,7 @@ public class BisqEasyOfferService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        offersObserverPin = offerMessageService.getOffers().addListener(offersObserver);
 
         republishMyOffers();
         // Do again once we assume we better connected
@@ -85,6 +90,7 @@ public class BisqEasyOfferService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        offersObserverPin.unbind();
         return removeAllOfferFromNetwork().thenCompose(e -> myBisqEasyOffersService.shutdown());
     }
 

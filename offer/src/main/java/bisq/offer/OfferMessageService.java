@@ -39,6 +39,7 @@ public class OfferMessageService implements Service {
     private final DataService dataService;
     private final NetworkService networkService;
     private final IdentityService identityService;
+    private final DataService.Listener authenticatedDataListener;
 
     public OfferMessageService(NetworkService networkService, IdentityService identityService) {
         this.networkService = networkService;
@@ -46,7 +47,7 @@ public class OfferMessageService implements Service {
         checkArgument(networkService.getDataService().isPresent(),
                 "networkService.getDataService() is expected to be present if OfferBookService is used");
         dataService = networkService.getDataService().get();
-        dataService.addListener(new DataService.Listener() {
+        authenticatedDataListener = new DataService.Listener() {
             @Override
             public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
                 if (authenticatedData.getDistributedData() instanceof OfferMessage) {
@@ -60,7 +61,8 @@ public class OfferMessageService implements Service {
                     processRemovedOfferMessage((OfferMessage) authenticatedData.getDistributedData());
                 }
             }
-        });
+        };
+
     }
 
 
@@ -70,7 +72,8 @@ public class OfferMessageService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        dataService.getAuthenticatedPayloadByStoreName("OfferMessage")
+        dataService.addListener(authenticatedDataListener);
+        dataService.getAuthenticatedPayloadStreamByStoreName("OfferMessage")
                 .filter(authenticatedData -> authenticatedData.getDistributedData() instanceof OfferMessage)
                 .forEach(authenticatedData -> processAddedOfferMessage((OfferMessage) authenticatedData.getDistributedData()));
         return CompletableFuture.completedFuture(true);
@@ -78,6 +81,7 @@ public class OfferMessageService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        dataService.removeListener(authenticatedDataListener);
         return CompletableFuture.completedFuture(true);
     }
 

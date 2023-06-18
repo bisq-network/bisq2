@@ -23,6 +23,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.ref.WeakReference;
+
 @Slf4j
 public class BisqText extends Text {
     private ChangeListener<Parent> parentListener;
@@ -43,10 +45,7 @@ public class BisqText extends Text {
 
     public void init() {
         parentListener = (observable, oldValue, newValue) -> {
-            log.error("Parent " + newValue);
             if (newValue instanceof Region) {
-                //parentProperty().removeListener(parentListener);
-                //  parentListener = null;
                 onParentAsRegionAvailable((Region) newValue);
             }
         };
@@ -57,7 +56,7 @@ public class BisqText extends Text {
         ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
             setWrappingWidth(newValue.doubleValue() - 30);
         };
-        // region.widthProperty().addListener(new WeakReference<>(widthListener).get());
-        region.widthProperty().addListener(widthListener);
+        region.widthProperty().addListener(new WeakReference<>(widthListener).get());
+        // region.widthProperty().addListener(widthListener);
     }
 }

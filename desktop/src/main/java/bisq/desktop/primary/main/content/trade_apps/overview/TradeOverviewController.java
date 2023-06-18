@@ -22,7 +22,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.protocol.TradeProtocolAttributes;
 import lombok.Getter;
 
 public abstract class TradeOverviewController<M extends TradeOverviewModel> implements Controller {
@@ -32,7 +31,7 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
     public TradeOverviewController(M model) {
         this.model = model;
 
-        ProtocolListItem bisqEasy = new ProtocolListItem(TradeProtocolAttributes.Type.BISQ_EASY,
+        ProtocolListItem bisqEasy = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_EASY,
                 NavigationTarget.BISQ_EASY,
                 Res.get("tradeApps.basic.info.bisqEasy"),
                 Res.get("tradeApps.markets.bisqEasy"),
@@ -46,7 +45,7 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 "",
                 "protocol-satoshi-square"
         );
-        ProtocolListItem bisqMultisig = new ProtocolListItem(TradeProtocolAttributes.Type.BISQ_MULTISIG,
+        ProtocolListItem bisqMultisig = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_MULTISIG,
                 NavigationTarget.BISQ_MULTISIG,
                 Res.get("tradeApps.basic.info.bisqMultisig"),
                 Res.get("tradeApps.markets.bisqMultisig"),
@@ -60,7 +59,7 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 "Q4/23",
                 "protocol-bisq"
         );
-        ProtocolListItem liquidSwap = new ProtocolListItem(TradeProtocolAttributes.Type.LIQUID_SWAP,
+        ProtocolListItem liquidSwap = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_SWAP,
                 NavigationTarget.LIQUID_SWAP,
                 Res.get("tradeApps.basic.info.liquidSwap"),
                 Res.get("tradeApps.markets.liquidSwap"),
@@ -74,7 +73,7 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 "Q1/24",
                 "protocol-liquid"
         );
-        ProtocolListItem moneroSwap = new ProtocolListItem(TradeProtocolAttributes.Type.MONERO_SWAP,
+        ProtocolListItem moneroSwap = new ProtocolListItem(TradeAppsAttributes.Type.MONERO_SWAP,
                 NavigationTarget.MONERO_SWAP,
                 Res.get("tradeApps.basic.info.moneroSwap"),
                 Res.get("tradeApps.markets.moneroSwap"),
@@ -88,7 +87,7 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 "Q1/23",
                 "protocol-monero"
         );
-        ProtocolListItem lightning = new ProtocolListItem(TradeProtocolAttributes.Type.LIGHTNING_X,
+        ProtocolListItem lightning = new ProtocolListItem(TradeAppsAttributes.Type.LIGHTNING_X,
                 NavigationTarget.LIGHTNING_X,
                 Res.get("tradeApps.basic.info.lightning"),
                 Res.get("tradeApps.markets.lightning"),
@@ -102,7 +101,7 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 "Q2/23",
                 "protocol-lightning"
         );
-        ProtocolListItem bsqSwap = new ProtocolListItem(TradeProtocolAttributes.Type.BSQ_SWAP,
+        ProtocolListItem bsqSwap = new ProtocolListItem(TradeAppsAttributes.Type.BSQ_SWAP,
                 NavigationTarget.BSQ_SWAP,
                 Res.get("tradeApps.basic.info.bsqSwap"),
                 Res.get("tradeApps.markets.bsqSwap"),

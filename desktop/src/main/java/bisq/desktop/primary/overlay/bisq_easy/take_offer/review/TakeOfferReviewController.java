@@ -29,7 +29,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.contract.ContractService;
-import bisq.desktop.common.threading.UIScheduler;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -51,15 +51,15 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.protocol.bisq_easy.BisqEasyProtocolService;
 import bisq.support.MediationService;
+import bisq.trade.TradeException;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -79,7 +79,7 @@ public class TakeOfferReviewController implements Controller {
     private final ContractService contractService;
     private final IdentityService identityService;
     private final UserIdentityService userIdentityService;
-    private final BisqEasyProtocolService bisqEasyProtocolService;
+    private final BisqEasyTradeService bisqEasyTradeService;
 
     public TakeOfferReviewController(DefaultApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
@@ -90,7 +90,7 @@ public class TakeOfferReviewController implements Controller {
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        bisqEasyProtocolService = applicationService.getProtocolService().getBisqEasyProtocolService();
+        bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
         priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
 
@@ -165,39 +165,29 @@ public class TakeOfferReviewController implements Controller {
     }
 
     public void doTakeOffer() {
-        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         try {
-            bisqEasyProtocolService.takeOffer(myUserIdentity.getIdentity(),
+            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+            UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+            BisqEasyTrade tradeModel = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
                     bisqEasyOffer,
                     model.getTakersBaseSideAmount(),
                     model.getTakersQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
                     model.getFiatPaymentMethodSpec());
 
-        } catch (GeneralSecurityException e) {
+            BisqEasyContract contract = tradeModel.getContract();
+            bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
+                    .thenAccept(result -> UIThread.run(() -> {
+                        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
+                        bisqEasyPrivateTradeChatChannelService.findChannel(bisqEasyOffer)
+                                .ifPresent(chatChannelSelectionService::selectChannel);
+                        model.getShowTakeOfferSuccess().set(true);
+                        mainButtonsVisibleHandler.accept(false);
+                    }));
+        } catch (TradeException e) {
             new Popup().error(e).show();
-            return;
         }
-
-        //todo
-        Optional<UserProfile> mediator = mediationService.takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
-        bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, mediator)
-                .thenAccept(result -> UIThread.run(() -> {
-                    ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
-                    bisqEasyPrivateTradeChatChannelService.findChannel(bisqEasyOffer)
-                            .ifPresent(chatChannelSelectionService::selectChannel);
-
-                    model.getShowTakeOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
-                }));
-
-        UIScheduler.run(() -> {
-            model.getShowTakeOfferSuccess().set(true);
-            mainButtonsVisibleHandler.accept(false);
-        }).after(1000);
     }
-
 
     @Override
     public void onActivate() {

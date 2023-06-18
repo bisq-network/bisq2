@@ -20,7 +20,6 @@ package bisq.chat.message;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
-import bisq.network.protobuf.NetworkMessage;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
@@ -74,7 +73,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     @Override
-    public NetworkMessage toProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
                 .build();

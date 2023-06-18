@@ -42,8 +42,7 @@ public class Res {
                 ResourceBundle.getBundle("bisq_easy", locale),
                 ResourceBundle.getBundle("academy", locale),
                 ResourceBundle.getBundle("user", locale),
-                ResourceBundle.getBundle("settings", locale),
-                ResourceBundle.getBundle("temp_poc", locale)    // used by poc code, will get removed at some point
+                ResourceBundle.getBundle("settings", locale)
         ));
     }
 

@@ -39,6 +39,8 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
+import bisq.trade.Trade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.wallets.core.WalletService;
@@ -64,6 +66,7 @@ public class TradeStateController implements Controller {
     private final ChatService chatService;
     private final MediationService mediationService;
     private final SettingsService settingsService;
+    private final BisqEasyTradeService bisqEasyTradeService;
     private Pin tradeRulesConfirmedPin;
     private Subscription phaseIndexPin, isCollapsedPin;
 
@@ -75,6 +78,7 @@ public class TradeStateController implements Controller {
         accountService = applicationService.getAccountService();
         settingsService = applicationService.getSettingsService();
         mediationService = applicationService.getSupportService().getMediationService();
+        bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
         model = new TradeStateModel();
         view = new TradeStateView(model, this);
@@ -83,6 +87,30 @@ public class TradeStateController implements Controller {
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         model.setAppliedPhaseIndex(-1);
         model.setSelectedChannel(channel);
+        String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getId());
+        bisqEasyTradeService.findBisqEasyTrade(tradeId)
+                .ifPresent(bisqEasyTradeModel -> {
+                    model.setBisqEasyTradeModel(bisqEasyTradeModel);
+                    BisqEasyOffer bisqEasyOffer = bisqEasyTradeModel.getOffer();
+                    boolean isMaker = isMaker(bisqEasyOffer);
+                    boolean isBuyer = isBuyer(bisqEasyOffer);
+
+                    if (isBuyer) {
+                        if (isMaker) {
+
+                        } else {
+
+                        }
+                    } else {
+                        if (isMaker) {
+
+                        } else {
+
+                        }
+                    }
+
+                });
+
         model.setBisqEasyOffer(channel.getBisqEasyOffer());
         applyData();
         phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), index -> phaseIndexChanged(index.intValue()));
@@ -171,8 +199,9 @@ public class TradeStateController implements Controller {
         boolean isSeller = !isBuyer;
         int index = model.getPhaseIndex().get();
         if (index == 0 && isSeller) {
-            onSendPaymentAccount();
+            sendPaymentAccount();
             model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            //model.getBisqEasyTrade().sendPaymentAccount();
         } else if (index == 1 && isBuyer) {
             sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
             model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
@@ -189,7 +218,7 @@ public class TradeStateController implements Controller {
                 .sendTextMessage(message, model.getSelectedChannel());
     }
 
-    void onSendPaymentAccount() {
+    void sendPaymentAccount() {
         String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getSellersPaymentAccountData().get());
         chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                 Optional.empty(),
@@ -384,10 +413,17 @@ public class TradeStateController implements Controller {
     }
 
     private boolean isBuyer() {
-        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds()) ?
+        return isBuyer(model.getBisqEasyOffer());
+    }
+
+    private boolean isBuyer(BisqEasyOffer bisqEasyOffer) {
+        return isMaker(bisqEasyOffer) ?
                 bisqEasyOffer.getMakersDirection().isBuy() :
                 bisqEasyOffer.getTakersDirection().isBuy();
+    }
+
+    private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
+        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
     }
 
     private void applyFirstTimeItemsVisible() {

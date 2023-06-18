@@ -44,12 +44,14 @@ import java.lang.ref.WeakReference;
 
 @Slf4j
 public class MaterialTextField extends Pane {
-    protected final Region bg, line, selectionLine;
-    protected final Label descriptionLabel;
+    protected final Region bg = new Region();
+    protected final Region line = new Region();
+    protected final Region selectionLine = new Region();
+    protected final Label descriptionLabel = new Label();
     protected final TextInputControl textInputControl;
-    protected final Label helpLabel;
+    protected final Label helpLabel = new Label();
     @Getter
-    private final BisqIconButton iconButton;
+    private final BisqIconButton iconButton = new BisqIconButton();
     private ChangeListener<Number> iconButtonHeightListener;
 
     public MaterialTextField() {
@@ -69,21 +71,17 @@ public class MaterialTextField extends Pane {
     }
 
     public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help, @Nullable String value) {
-        bg = new Region();
         bg.getStyleClass().add("material-text-field-bg");
 
-        line = new Region();
         line.setPrefHeight(1);
         line.setStyle("-fx-background-color: -bisq-grey-dimmed");
         line.setMouseTransparent(true);
 
-        selectionLine = new Region();
         selectionLine.setPrefWidth(0);
         selectionLine.setPrefHeight(2);
         selectionLine.getStyleClass().add("bisq-green-line");
         selectionLine.setMouseTransparent(true);
 
-        descriptionLabel = new Label();
         descriptionLabel.setLayoutX(16);
         descriptionLabel.setMouseTransparent(true);
         descriptionLabel.setStyle("-fx-font-family: \"IBM Plex Sans Light\";");
@@ -101,14 +99,12 @@ public class MaterialTextField extends Pane {
             textInputControl.setPromptText(prompt);
         }
 
-        iconButton = new BisqIconButton();
         iconButton.setAlignment(Pos.TOP_RIGHT);
         iconButton.setIcon("info");
         iconButton.setOpacity(0.6);
         iconButton.setManaged(false);
         iconButton.setVisible(false);
 
-        helpLabel = new Label();
         helpLabel.setLayoutX(16);
         helpLabel.getStyleClass().add("material-text-field-help");
         // helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\";");

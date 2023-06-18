@@ -17,7 +17,6 @@
 
 package bisq.application;
 
-import bisq.chat.message.ChatMessage;
 import bisq.common.application.DevMode;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.CountryRepository;
@@ -27,17 +26,7 @@ import bisq.common.logging.LogSetup;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.i18n.Res;
-import bisq.network.p2p.message.NetworkMessageResolver;
-import bisq.network.p2p.services.data.storage.DistributedDataResolver;
-import bisq.offer.OfferMessage;
-import bisq.oracle.daobridge.model.*;
-import bisq.oracle.timestamp.AuthorizeTimestampRequest;
-import bisq.oracle.timestamp.AuthorizedTimestampData;
 import bisq.persistence.PersistenceService;
-import bisq.support.MediationRequest;
-import bisq.support.MediationResponse;
-import bisq.user.profile.UserProfile;
-import bisq.user.role.AuthorizedRoleRegistrationData;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
@@ -135,32 +124,7 @@ public abstract class ApplicationService {
         LanguageRepository.setLocale(locale);
         FiatCurrencyRepository.setLocale(locale);
         Res.setLocale(locale);
-
-        // Register resolvers for distributedData 
-        DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
-        DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
-        DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
-        DistributedDataResolver.addResolver("user.AuthorizedRoleRegistrationData", AuthorizedRoleRegistrationData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedDaoBridgeServiceProvider", AuthorizedDaoBridgeServiceProvider.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
-
-        // Register resolvers for networkMessages 
-        NetworkMessageResolver.addResolver("chat.ChatMessage",
-                ChatMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AuthorizeAccountAgeRequest",
-                AuthorizeAccountAgeRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AuthorizeSignedWitnessRequest",
-                AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AuthorizeTimestampRequest",
-                AuthorizeTimestampRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MediationRequest",
-                MediationRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MediationResponse",
-                MediationResponse.getNetworkMessageResolver());
+        ResolverConfig.config();
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }
