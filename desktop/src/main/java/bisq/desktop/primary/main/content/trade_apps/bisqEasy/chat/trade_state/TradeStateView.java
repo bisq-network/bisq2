@@ -55,13 +55,16 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private final VBox firstTimeUserVBox;
     private final VBox infoFields;
     private final BisqText infoHeadline;
+    private final VBox sellerState1VBox;
     private Subscription isCollapsedPin, phaseIndexPin, isBuyerPhase2FieldsVisiblePin;
     private final AutoCompleteComboBox<Account<?, ?>> paymentAccountsComboBox;
     private MaterialTextField btcAddress, txId, buyersBtcBalance;
 
     public TradeStateView(TradeStateModel model,
-                          TradeStateController controller) {
+                          TradeStateController controller,
+                          VBox sellerState1VBox) {
         super(new VBox(0), model, controller);
+        this.sellerState1VBox = sellerState1VBox;
 
         root.getStyleClass().addAll("bisq-easy-trade-state-bg");
         root.setPadding(new Insets(15, 30, 20, 30));
@@ -163,13 +166,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         // infoActionButton gets added to contextSpecificFields at phase handler
         VBox.setMargin(infoActionButton, new Insets(5, 0, 0, 0));
 
-        VBox.setMargin(infoHeadline, new Insets(12.5, 0, 0, 0));
-        VBox.setVgrow(infoFields, Priority.ALWAYS);
-        VBox infoVBox = new VBox(10, Layout.hLine(), infoHeadline, infoFields);
+        // VBox.setMargin(infoHeadline, new Insets(12.5, 0, 0, 0));
+        // VBox.setVgrow(infoFields, Priority.ALWAYS);
+        // VBox infoVBox = new VBox(10, Layout.hLine(), infoHeadline, infoFields);
 
-        HBox.setHgrow(infoVBox, Priority.ALWAYS);
+        HBox.setHgrow(sellerState1VBox, Priority.ALWAYS);
         HBox.setHgrow(phaseVBox, Priority.ALWAYS);
-        phaseAndInfoHBox = new HBox(phaseVBox, infoVBox);
+        phaseAndInfoHBox = new HBox(phaseVBox, sellerState1VBox);
 
         VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
         VBox.setVgrow(firstTimeUserVBox, Priority.ALWAYS);
@@ -370,14 +373,14 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
             // Seller
             case SELLER_PHASE_1:
-                MaterialTextArea accountData = addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase2.accountData"), model.getSellersPaymentAccountData().get(), true);
-                accountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase2.accountData.prompt"));
+                MaterialTextArea accountData = addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), model.getSellersPaymentAccountData().get(), true);
+                accountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
                 infoActionButton.disableProperty().bind(accountData.textProperty().isEmpty());
                 infoFields.getChildren().addAll(
                         accountData,
                         infoActionButton,
                         Spacer.fillVBox(),
-                        getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.info"))
+                        getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.note"))
                 );
                 break;
             case SELLER_PHASE_2:

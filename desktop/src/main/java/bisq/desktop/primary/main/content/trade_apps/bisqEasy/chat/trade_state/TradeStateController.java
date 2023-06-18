@@ -30,6 +30,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states.SellerState1;
 import bisq.i18n.Res;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
@@ -67,6 +68,7 @@ public class TradeStateController implements Controller {
     private final MediationService mediationService;
     private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
+    private final SellerState1 sellerState1;
     private Pin tradeRulesConfirmedPin;
     private Subscription phaseIndexPin, isCollapsedPin;
     private Pin bisqEasyTradeStatePin;
@@ -81,11 +83,15 @@ public class TradeStateController implements Controller {
         mediationService = applicationService.getSupportService().getMediationService();
         bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
+        sellerState1 = new SellerState1(applicationService);
+
         model = new TradeStateModel();
-        view = new TradeStateView(model, this);
+        view = new TradeStateView(model, this, sellerState1.getView().getRoot());
     }
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
+        sellerState1.setSelectedChannel(channel);
+
         model.setAppliedPhaseIndex(-1);
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();

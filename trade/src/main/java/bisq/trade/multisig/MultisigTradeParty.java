@@ -32,8 +32,13 @@ public class MultisigTradeParty extends TradeParty {
         super(networkId);
     }
 
+    @Override
+    public bisq.trade.protobuf.TradeParty toProto() {
+        bisq.trade.protobuf.MultisigTradeParty.Builder builder = bisq.trade.protobuf.MultisigTradeParty.newBuilder();
+        return getTradePartyBuilder().setMultisigTradeParty(builder).build();
+    }
+
     public static MultisigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
-        MultisigTradeParty tradeParty = new MultisigTradeParty(NetworkId.fromProto(proto.getNetworkId()));
-        return tradeParty;
+        return new MultisigTradeParty(NetworkId.fromProto(proto.getNetworkId()));
     }
 }
