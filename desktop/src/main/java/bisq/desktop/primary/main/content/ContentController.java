@@ -118,7 +118,7 @@ public class ContentController extends NavigationController {
             case LIQUID_SWAP: {
                 return Optional.of(new LiquidSwapController(applicationService));
             }
-            case BISQ_MULTISIG: {
+            case MULTISIG: {
                 return Optional.of(new MultiSigController(applicationService));
             }
             case MONERO_SWAP: {

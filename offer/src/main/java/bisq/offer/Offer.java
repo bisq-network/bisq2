@@ -25,9 +25,11 @@ import bisq.network.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.multisig.MultisigOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.submarine.SubmarineOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -109,6 +111,12 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         switch (proto.getMessageCase()) {
             case BISQEASYOFFER: {
                 return BisqEasyOffer.fromProto(proto);
+            }
+            case MULTISIGOFFER: {
+                return MultisigOffer.fromProto(proto);
+            }
+            case SUBMARINEOFFER: {
+                return SubmarineOffer.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

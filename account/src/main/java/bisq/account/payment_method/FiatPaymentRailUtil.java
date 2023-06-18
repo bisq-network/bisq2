@@ -35,7 +35,7 @@ public class FiatPaymentRailUtil {
     public static List<FiatPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
-            case BISQ_MULTISIG:
+            case MULTISIG:
             case LIGHTNING_X:
                 return getPaymentRails();
             case MONERO_SWAP:

@@ -43,7 +43,7 @@ public class ProtocolTypeUtil {
             result.add(TradeProtocolType.LIGHTNING_X);
         }
         if (isMultiSigSupported(market)) {
-            result.add(TradeProtocolType.BISQ_MULTISIG);
+            result.add(TradeProtocolType.MULTISIG);
         }
 
         result.sort(Comparator.comparingInt(TradeProtocolType::ordinal));

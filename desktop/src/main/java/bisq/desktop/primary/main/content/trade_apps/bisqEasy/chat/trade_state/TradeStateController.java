@@ -92,7 +92,7 @@ public class TradeStateController implements Controller {
         }
         model.setSelectedChannel(channel);
         String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getId());
-        bisqEasyTradeService.findBisqEasyTrade(tradeId)
+        bisqEasyTradeService.findTrade(tradeId)
                 .ifPresent(bisqEasyTradeModel -> {
                     model.setBisqEasyTradeModel(bisqEasyTradeModel);
                     bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {

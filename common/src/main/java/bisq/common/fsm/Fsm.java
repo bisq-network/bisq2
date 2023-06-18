@@ -46,11 +46,8 @@ public class Fsm {
         configTransitions();
     }
 
-    public void configTransitions() {
-    }
-
-    public void setInitialState(State state) {
-        model.setNewState(state);
+    protected void configTransitions() {
+        // Subclasses might use that for transition config
     }
 
     public void handle(Event event) throws FsmException {
@@ -71,7 +68,7 @@ public class Fsm {
                         EventHandler eventHandlerFromClass = newEventHandlerFromClass(eventHandlerClass.get());
                         eventHandlerFromClass.handle(event);
                     }
-                    setInitialState(transition.getTargetState());
+                    model.setNewState(transition.getTargetState());
                 }
             }
         } catch (Exception e) {

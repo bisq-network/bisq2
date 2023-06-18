@@ -26,6 +26,7 @@ import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                          Identity myIdentity,
                          BisqEasyContract contract,
                          NetworkId takerNetworkId) {
-        super(isBuyer,
+        super(BisqEasyTradeState.INIT,
+                isBuyer,
                 isTaker,
                 myIdentity,
                 contract,
@@ -60,7 +62,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker) {
         super(state, id, isBuyer, isTaker, myIdentity, contract, taker, maker);
-        
+
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
 

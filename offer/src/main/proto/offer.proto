@@ -128,6 +128,8 @@ message Offer {
   repeated OfferOption offerOptions = 11;
   oneof message {
     BisqEasyOffer bisqEasyOffer = 30;
+    MultisigOffer multisigOffer = 31;
+    SubmarineOffer submarineOffer = 32;
   }
 }
 
@@ -136,10 +138,19 @@ message OfferMessage {
   network.MetaData metaData = 2;
 }
 
-// BisqEasyOffer
+// BisqEasy
 message BisqEasyOffer {
 }
 
 message MyBisqEasyOffersStore {
   repeated Offer offers = 1;
+}
+
+// MultiSig
+message MultisigOffer {
+}
+
+
+// Submarine
+message SubmarineOffer {
 }

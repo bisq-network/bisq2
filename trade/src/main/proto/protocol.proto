@@ -31,6 +31,8 @@ message TradeParty {
   optional contract.ContractSignatureData contractSignatureData = 2;
   oneof message {
     BisqEasyTradeParty bisqEasyTradeParty = 20;
+    MultisigTradeParty multisigTradeParty = 21;
+    SubmarineTradeParty submarineTradeParty = 22;
   }
 }
 
@@ -46,6 +48,17 @@ message Trade {
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 20;
+    MultisigTrade multisigTrade = 21;
+    SubmarineTrade submarineTrade = 22;
+  }
+}
+message TradeMessage {
+  string tradeId = 1;
+  network.NetworkId sender = 2;
+  network.MetaData metaData = 3;
+  oneof message {
+    BisqEasyTradeMessage bisqEasyTradeMessage = 20;
+    SubmarineTradeMessage submarineTradeMessage = 21;
   }
 }
 
@@ -63,11 +76,9 @@ message BisqEasyTradeStore {
   map<string, Trade> tradeById = 1;
 }
 
+
 // BisqEasy messages
-message TradeMessage {
-  string tradeId = 1;
-  network.NetworkId sender = 2;
-  network.MetaData metaData = 3;
+message BisqEasyTradeMessage {
   oneof message {
     BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = 20;
     BisqEasyAccountDataMessage bisqEasyAccountDataMessage = 21;
@@ -88,4 +99,28 @@ message BisqEasyConfirmFiatSentMessage {
 message BisqEasyConfirmBtcSentMessage {
   string txId = 1;
 }
-    
+
+// MultiSig
+message MultisigTradeParty {
+}
+
+message MultisigTrade {
+}
+
+message MultisigTradeStore {
+  map<string, Trade> tradeById = 1;
+}
+
+
+// Submarine
+message SubmarineTradeMessage{
+}
+message SubmarineTradeParty {
+}
+
+message SubmarineTrade {
+}
+
+message SubmarineTradeStore {
+  map<string, Trade> tradeById = 1;
+}

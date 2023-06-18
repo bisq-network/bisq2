@@ -45,8 +45,8 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 "",
                 "protocol-satoshi-square"
         );
-        ProtocolListItem bisqMultisig = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_MULTISIG,
-                NavigationTarget.BISQ_MULTISIG,
+        ProtocolListItem bisqMultisig = new ProtocolListItem(TradeAppsAttributes.Type.MULTISIG,
+                NavigationTarget.MULTISIG,
                 Res.get("tradeApps.basic.info.bisqMultisig"),
                 Res.get("tradeApps.markets.bisqMultisig"),
                 Res.get("tradeApps.markets.info.bisqMultisig"),

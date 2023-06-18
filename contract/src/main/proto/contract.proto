@@ -49,19 +49,13 @@ message TwoPartyContract {
   Party taker = 1;
   oneof message {
     BisqEasyContract bisqEasyContract = 10;
+    MultisigContract multisigContract = 11;
+    SubmarineContract submarineContract = 12;
   }
 }
 
 message MultiPartyContract {
   repeated Party parties = 1;
-}
-
-message BisqEasyContract {
-  uint64 baseSideAmount = 1;
-  uint64 quoteSideAmount = 2;
-  offer.PaymentMethodSpec baseSidePaymentMethodSpecs = 3;
-  offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
-  optional user.UserProfile mediator = 12;
 }
 
 message ContractSignatureData {
@@ -78,4 +72,23 @@ message SignedTwoPartyContract {
   }
 }
 message SignedBisqEasyContract {
+}
+
+// BisqEasy
+message BisqEasyContract {
+  uint64 baseSideAmount = 1;
+  uint64 quoteSideAmount = 2;
+  offer.PaymentMethodSpec baseSidePaymentMethodSpecs = 3;
+  offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
+  optional user.UserProfile mediator = 12;
+}
+
+
+// MultiSig
+message MultisigContract {
+}
+
+
+// Submarine
+message SubmarineContract {
 }

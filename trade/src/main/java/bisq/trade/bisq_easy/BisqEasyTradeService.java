@@ -36,13 +36,15 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.support.MediationService;
 import bisq.support.SupportService;
-import bisq.trade.Protocol;
+import bisq.trade.ServiceProvider;
 import bisq.trade.TradeException;
-import bisq.trade.bisq_easy.events.*;
-import bisq.trade.bisq_easy.messages.BisqEasyAccountDataMessage;
-import bisq.trade.bisq_easy.messages.BisqEasyConfirmBtcSentMessage;
-import bisq.trade.bisq_easy.messages.BisqEasyConfirmFiatSentMessage;
-import bisq.trade.bisq_easy.messages.BisqEasyTakeOfferRequest;
+import bisq.trade.bisq_easy.protocol.*;
+import bisq.trade.bisq_easy.protocol.events.*;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
+import bisq.trade.protocol.Protocol;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +53,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -96,6 +100,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
+
+        persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -133,10 +140,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         boolean isBuyer = bisqEasyContract.getOffer().getMakersDirection().isBuy();
         Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyContract.getOffer().getMakerNetworkId().getNodeId()).orElseThrow();
         BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
+
+        if (findProtocol(tradeModel.getId()).isPresent()) {
+            log.error("We received the BisqEasyTakeOfferRequest for an already existing protocol");
+            return;
+        }
         persistableStore.add(tradeModel);
         persist();
 
-        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel);
+        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
         try {
             protocol.handle(message);
         } catch (TradeException e) {
@@ -176,7 +188,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // UI events
+    // Events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public BisqEasyTrade onTakeOffer(Identity takerIdentity,
@@ -187,7 +199,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                      FiatPaymentMethodSpec fiatPaymentMethodSpec) throws TradeException {
         Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
-        BisqEasyContract bisqEasyContract = new BisqEasyContract(bisqEasyOffer,
+        BisqEasyContract contract = new BisqEasyContract(bisqEasyOffer,
                 takerNetworkId,
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
@@ -195,11 +207,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 fiatPaymentMethodSpec,
                 mediator);
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
-        BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, true, takerIdentity, bisqEasyContract, takerNetworkId);
-        Protocol<BisqEasyTrade> protocol = findOrCreateTradeProtocol(tradeModel);
+        BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
+
+        checkArgument(findProtocol(tradeModel.getId()).isPresent(),
+                "We received the BisqEasyTakeOfferRequest for an already existing protocol");
+
         persistableStore.add(tradeModel);
 
-        protocol.handle(new BisqEasyTakeOfferEvent(takerIdentity, bisqEasyContract));
+        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
+        protocol.handle(new BisqEasyTakeOfferEvent(takerIdentity, contract));
         persist();
         return tradeModel;
     }
@@ -236,11 +252,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // Misc API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<BisqEasyTrade> findBisqEasyTrade(String tradeId) {
-        return persistableStore.findBisqEasyTrade(tradeId);
+    public Optional<BisqEasyProtocol> findProtocol(String id) {
+        return Optional.ofNullable(tradeProtocolById.get(id));
+    }
+
+    public Optional<BisqEasyTrade> findTrade(String tradeId) {
+        return persistableStore.findTrade(tradeId);
     }
 
 
@@ -248,13 +268,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // TradeProtocol factory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqEasyProtocol findOrCreateTradeProtocol(BisqEasyTrade model) {
+    private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade model) {
         String id = model.getId();
-        Optional<BisqEasyProtocol> existingProtocol = findProtocol(id);
-        if (existingProtocol.isPresent()) {
-            return existingProtocol.get();
-        }
-
         BisqEasyProtocol tradeProtocol;
         boolean isBuyer = model.isBuyer();
         if (model.isTaker()) {
@@ -272,9 +287,5 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         }
         tradeProtocolById.put(id, tradeProtocol);
         return tradeProtocol;
-    }
-
-    public Optional<BisqEasyProtocol> findProtocol(String id) {
-        return Optional.ofNullable(tradeProtocolById.get(id));
     }
 }

@@ -29,11 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 public class Model {
     private final Observable<State> state = new Observable<>();
 
-    public Model(State state) {
-        if (state == null) {
-            throw new FsmException("State must not be null at Model constructor");
+    public Model(State initialState) {
+        if (initialState == null) {
+            throw new FsmException("InitialState must not be null at Model constructor");
         }
-        this.state.set(state);
+        state.set(initialState);
     }
 
     public ReadOnlyObservable<State> stateObservable() {
@@ -46,6 +46,6 @@ public class Model {
 
     // Only called from FSM
     void setNewState(State newState) {
-        this.state.set(newState);
+        state.set(newState);
     }
 }

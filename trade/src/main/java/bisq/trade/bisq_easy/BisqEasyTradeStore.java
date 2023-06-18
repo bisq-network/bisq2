@@ -87,7 +87,7 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         }
     }
 
-    public Optional<BisqEasyTrade> findBisqEasyTrade(String tradeId) {
+    public Optional<BisqEasyTrade> findTrade(String tradeId) {
         return Optional.ofNullable(tradeById.get(tradeId));
     }
 }
