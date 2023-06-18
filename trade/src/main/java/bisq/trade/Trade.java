@@ -37,6 +37,29 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends Model implements Proto {
+    @Getter
+    public enum Role {
+        BUYER_AS_TAKER(true, true),
+        BUYER_AS_MAKER(true, false),
+        SELLER_AS_TAKER(false, true),
+        SELLER_AS_MAKER(false, false);
+
+        private final boolean isBuyer;
+        private final boolean isTaker;
+
+        Role(boolean isBuyer, boolean isTaker) {
+            this.isBuyer = isBuyer;
+            this.isTaker = isTaker;
+        }
+
+        public boolean isMaker() {
+            return !isTaker;
+        }
+
+        public boolean isSeller() {
+            return !isBuyer;
+        }
+    }
 
     public static String createId(String offerId, String takerNodeId) {
         return offerId + "." + takerNodeId;
@@ -49,6 +72,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final C contract;
     private final P taker;
     private final P maker;
+    private transient final Role role;
 
     public Trade(boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
         this(BisqEasyTradeState.INIT,
@@ -72,6 +96,14 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.contract = contract;
         this.taker = taker;
         this.maker = maker;
+
+        role = isBuyer ?
+                (isTaker ?
+                        Role.BUYER_AS_TAKER :
+                        Role.BUYER_AS_MAKER) :
+                (isTaker ?
+                        Role.SELLER_AS_TAKER :
+                        Role.SELLER_AS_MAKER);
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
@@ -109,5 +141,13 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     public P getMyself() {
         return isTaker ? taker : maker;
+    }
+
+    public P getBuyer() {
+        return role.isTaker() ? taker : maker;
+    }
+
+    public P getSeller() {
+        return role.isTaker() ? taker : maker;
     }
 }
