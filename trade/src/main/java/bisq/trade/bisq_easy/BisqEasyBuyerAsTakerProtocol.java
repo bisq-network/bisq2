@@ -66,7 +66,6 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
         addTransition()
                 .from(BTC_CONFIRMED)
                 .on(BisqEasyTradeCompletedEvent.class)
-                .run(BisqEasyTradeCompletedEventHandler.class)
                 .to(COMPLETED);
     }
 }
