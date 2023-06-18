@@ -107,5 +107,4 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
     }
-
 }

@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
-public class Observable<S> {
+public class Observable<S> implements ReadOnlyObservable<S> {
     private S value;
     // todo as observers is transient we get null after reading persisted data
     // we will likely not persist it when we impl protobuf serialisation, so the Observable can be considered 

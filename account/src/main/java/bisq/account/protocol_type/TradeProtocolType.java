@@ -21,7 +21,9 @@ import bisq.common.util.ProtobufUtils;
 
 public enum TradeProtocolType implements ProtocolType {
     BISQ_EASY,
-    BISQ_MULTISIG,
+    MULTISIG,
+    SUBMARINE,
+    MULTISIG_LIQUID,
     LIQUID_SWAP,
     BSQ_SWAP,
     LIGHTNING_X,

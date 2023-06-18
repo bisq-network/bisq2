@@ -40,11 +40,11 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import bisq.trade.Trade;
+import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.wallets.core.WalletService;
-import javafx.scene.input.KeyCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -69,6 +69,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private Pin tradeRulesConfirmedPin;
     private Subscription phaseIndexPin, isCollapsedPin;
+    private Pin bisqEasyTradeStatePin;
 
     public TradeStateController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         chatService = applicationService.getChatService();
@@ -86,12 +87,25 @@ public class TradeStateController implements Controller {
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         model.setAppliedPhaseIndex(-1);
+        if (bisqEasyTradeStatePin != null) {
+            bisqEasyTradeStatePin.unbind();
+        }
         model.setSelectedChannel(channel);
         String tradeId = Trade.createId(channel.getBisqEasyOffer().getId(), channel.getPeer().getId());
-        bisqEasyTradeService.findBisqEasyTrade(tradeId)
+        bisqEasyTradeService.findTrade(tradeId)
                 .ifPresent(bisqEasyTradeModel -> {
                     model.setBisqEasyTradeModel(bisqEasyTradeModel);
-                    BisqEasyOffer bisqEasyOffer = bisqEasyTradeModel.getOffer();
+                    bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {
+                        switch (state) {
+                            case INIT:
+                                break;
+                            case TAKER_SEND_TAKE_OFFER_REQUEST:
+                                break;
+                            case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
+                                break;
+                        }
+                    });
+                 /*   BisqEasyOffer bisqEasyOffer = bisqEasyTradeModel.getOffer();
                     boolean isMaker = isMaker(bisqEasyOffer);
                     boolean isBuyer = isBuyer(bisqEasyOffer);
 
@@ -107,7 +121,7 @@ public class TradeStateController implements Controller {
                         } else {
 
                         }
-                    }
+                    }*/
 
                 });
 
@@ -119,14 +133,14 @@ public class TradeStateController implements Controller {
     @Override
     public void onActivate() {
         model.setAppliedPhaseIndex(-1);
-        view.getRoot().getScene().setOnKeyPressed(keyEvent -> {
+       /* view.getRoot().getScene().setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.A) {
                 model.getPhaseIndex().set(Math.min(4, model.getPhaseIndex().get() + 1));
             }
             if (keyEvent.getCode() == KeyCode.S) {
                 model.getPhaseIndex().set(Math.max(0, model.getPhaseIndex().get() - 1));
             }
-        });
+        });*/
 
         tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(tradeRulesConfirmed -> {
             int phaseIndex = model.getPhaseIndex().get();
@@ -199,17 +213,20 @@ public class TradeStateController implements Controller {
         boolean isSeller = !isBuyer;
         int index = model.getPhaseIndex().get();
         if (index == 0 && isSeller) {
-            sendPaymentAccount();
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            sellerSendsPaymentAccount();
+            // model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
             //model.getBisqEasyTrade().sendPaymentAccount();
         } else if (index == 1 && isBuyer) {
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            buyerConfirmFiatSent();
+            //model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         } else if (index == 2 && isSeller) {
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3.chatBotMessage", model.getTxId().get()));
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            sellerConfirmBtcSent();
+            // model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         } else if (index == 3) {
-            model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+            //  model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
+        } else if (index == 4) {
+            tradeCompleted();
+            //  model.getPhaseIndex().set(model.getPhaseIndex().get() + 1);
         }
     }
 
@@ -218,35 +235,76 @@ public class TradeStateController implements Controller {
                 .sendTextMessage(message, model.getSelectedChannel());
     }
 
-    void sendPaymentAccount() {
+
+    void sellerSendsPaymentAccount() {
         String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getSellersPaymentAccountData().get());
         chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                 Optional.empty(),
                 model.getSelectedChannel());
-        
-       /* if (accountService.getAccounts().size() > 1) {
-            //todo
-            new Popup().information("TODO").show();
-        } else {
-           
-            
-            Account<?, ? extends PaymentMethod<?>> selectedAccount = accountService.getSelectedAccount();
-            if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
-            } else {
-                if (!accountService.hasAccounts()) {
-                    new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.noAccount")).show();
-                } else if (accountService.getAccountByNameMap().size() > 1) {
-                    String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
-                    if (DontShowAgainService.showAgain(key)) {
-                        new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.multipleAccounts"))
-                                .dontShowAgainId(key)
-                                .show();
-                    }
-                }
-            }
-        }*/
+
+        try {
+            bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTradeModel(), model.getSellersPaymentAccountData().get());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
     }
 
+    void buyerConfirmFiatSent() {
+        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode().get(), model.getBuyersBtcAddress().get()));
+
+        try {
+            bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTradeModel(), model.getBuyersBtcAddress().get());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    void sellerConfirmBtcSent() {
+        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3.chatBotMessage", model.getTxId().get()));
+        try {
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTradeModel(), model.getTxId().get());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    void btcConfirmed() {
+        try {
+            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTradeModel());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    void tradeCompleted() {
+        try {
+            bisqEasyTradeService.tradeCompleted(model.getBisqEasyTradeModel());
+        } catch (TradeException e) {
+            new Popup().error(e).show();
+        }
+    }
+
+    /* if (accountService.getAccounts().size() > 1) {
+         //todo
+         new Popup().information("TODO").show();
+     } else {
+        
+         
+         Account<?, ? extends PaymentMethod<?>> selectedAccount = accountService.getSelectedAccount();
+         if (accountService.hasAccounts() && selectedAccount instanceof UserDefinedFiatAccount) {
+         } else {
+             if (!accountService.hasAccounts()) {
+                 new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.noAccount")).show();
+             } else if (accountService.getAccountByNameMap().size() > 1) {
+                 String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
+                 if (DontShowAgainService.showAgain(key)) {
+                     new Popup().information(Res.get("bisqEasy.tradeState.info.seller.phase1.popup.multipleAccounts"))
+                             .dontShowAgainId(key)
+                             .show();
+                 }
+             }
+         }
+     }*/
     private Optional<String> findUsersAccountData() {
         return Optional.ofNullable(accountService.getSelectedAccount()).stream()
                 .filter(account -> account instanceof UserDefinedFiatAccount)
@@ -394,8 +452,9 @@ public class TradeStateController implements Controller {
                                 model.getActionButtonDisabled().set(false);
                                 sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
                                         model.getFormattedBaseAmount().get(), model.getBuyersBtcAddress().get()));
-                                model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
-                                        model.getFormattedBaseAmount().get(), "1"));
+                        model.getBuyersBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
+                                model.getFormattedBaseAmount().get(), "1"));
+                        btcConfirmed();
                             }
                     ).
                     after(4000);

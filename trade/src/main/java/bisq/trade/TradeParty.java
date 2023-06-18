@@ -17,16 +17,19 @@
 
 package bisq.trade;
 
+import bisq.common.observable.Observable;
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.NetworkId;
+import bisq.trade.bisq_easy.BisqEasyTradeParty;
+import bisq.trade.multisig.MultisigTradeParty;
+import bisq.trade.submarine.SubmarineTradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
@@ -35,9 +38,7 @@ import java.util.Optional;
 @Getter
 public class TradeParty implements Proto {
     private final NetworkId networkId;
-    @Setter
-    @Nullable
-    private ContractSignatureData contractSignatureData;
+    private final Observable<ContractSignatureData> contractSignatureData = new Observable<>();
 
     public TradeParty(NetworkId networkId) {
         this.networkId = networkId;
@@ -47,15 +48,46 @@ public class TradeParty implements Proto {
     public bisq.trade.protobuf.TradeParty toProto() {
         bisq.trade.protobuf.TradeParty.Builder builder = bisq.trade.protobuf.TradeParty.newBuilder()
                 .setNetworkId(networkId.toProto());
-        Optional.ofNullable(contractSignatureData).ifPresent(ContractSignatureData::toProto);
+        Optional.ofNullable(contractSignatureData.get()).ifPresent(ContractSignatureData::toProto);
         return builder.build();
     }
 
-    public static TradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
-        TradeParty tradeParty = new TradeParty(NetworkId.fromProto(proto.getNetworkId()));
-        if (proto.hasContractSignatureData()) {
-            tradeParty.setContractSignatureData(ContractSignatureData.fromProto(proto.getContractSignatureData()));
+    public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto) {
+        switch (proto.getMessageCase()) {
+            case BISQEASYTRADEPARTY: {
+                return BisqEasyTradeParty.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
         }
-        return tradeParty;
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static MultisigTradeParty protoToMultisigTradeParty(bisq.trade.protobuf.TradeParty proto) {
+        switch (proto.getMessageCase()) {
+            case MULTISIGTRADEPARTY: {
+                return MultisigTradeParty.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static SubmarineTradeParty protoToSubmarineTradeParty(bisq.trade.protobuf.TradeParty proto) {
+        switch (proto.getMessageCase()) {
+            case SUBMARINETRADEPARTY: {
+                return SubmarineTradeParty.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

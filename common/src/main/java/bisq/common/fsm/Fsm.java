@@ -17,36 +17,44 @@
 package bisq.common.fsm;
 
 import bisq.common.data.Pair;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class Fsm {
+
+public class Fsm {
     private final TransitionBuilder transitionBuilder = new TransitionBuilder(this);
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
-    private final Object currentStateLock = new Object();
-    private final Model model;
+    private final Object lock = new Object();
+    @Getter
+    private final FsmModel model;
 
-    public Fsm() {
-        this(new Model());
+    public Fsm(State initialState) {
+        this(new FsmModel(initialState));
     }
 
-    public Fsm(Model model) {
+    public Fsm(FsmModel model) {
         this.model = model;
         configTransitions();
+    }
+
+    protected void configTransitions() {
+        // Subclasses might use that for transition config
     }
 
     public void handle(Event event) throws FsmException {
         try {
             checkNotNull(event, "event must not be null");
-            synchronized (currentStateLock) {
-                State currentState = model.getCurrentState().get();
+            synchronized (lock) {
+                State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
                     log.warn("We have reached the final state and do not allow further state transition");
@@ -55,9 +63,12 @@ public abstract class Fsm {
                 Pair<State, Class<? extends Event>> validTransitionKey = new Pair<>(currentState, event.getClass());
                 Transition transition = transitionMap.get(validTransitionKey);
                 if (transition != null) {
-                    EventHandler eventHandlerFromClass = newEventHandlerFromClass(transition.getEventHandlerClass());
-                    eventHandlerFromClass.handle(event);
-                    model.getCurrentState().set(transition.getTo());
+                    Optional<Class<? extends EventHandler>> eventHandlerClass = transition.getEventHandlerClass();
+                    if (eventHandlerClass.isPresent()) {
+                        EventHandler eventHandlerFromClass = newEventHandlerFromClass(eventHandlerClass.get());
+                        eventHandlerFromClass.handle(event);
+                    }
+                    model.setNewState(transition.getTargetState());
                 }
             }
         } catch (Exception e) {
@@ -71,19 +82,24 @@ public abstract class Fsm {
         return handlerClass.getDeclaredConstructor().newInstance();
     }
 
-    private void addTransition(Transition transition) {
-        checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
-        Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getFrom(), transition.getEventClass());
-        checkArgument(!transitionMap.containsKey(pair),
-                "A transition exists already with the state/event pair. pair=%s", pair);
-        transitionMap.put(pair, transition);
+    private void addTransition(Transition transition) throws FsmException {
+        try {
+            checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
+            Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
+            log.error("pair {}", pair);
+            checkArgument(!transitionMap.containsKey(pair),
+                    "A transition exists already with the state/event pair. pair=%s", pair);
+            synchronized (lock) {
+                transitionMap.put(pair, transition);
+            }
+        } catch (Exception e) {
+            throw new FsmException(e);
+        }
     }
 
-    public TransitionBuilder buildTransition() {
+    public TransitionBuilder addTransition() {
         return transitionBuilder;
     }
-
-    public abstract void configTransitions();
 
     public static class TransitionBuilder {
         private final Transition transition;
@@ -94,8 +110,8 @@ public abstract class Fsm {
             transition = new Transition();
         }
 
-        public TransitionBuilder from(State from) {
-            transition.setFrom(from);
+        public TransitionBuilder from(State sourceState) {
+            transition.setSourceState(sourceState);
             return this;
         }
 
@@ -105,12 +121,16 @@ public abstract class Fsm {
         }
 
         public TransitionBuilder run(Class<? extends EventHandler> eventHandlerClass) {
-            transition.setEventHandlerClass(eventHandlerClass);
+            try {
+                transition.setEventHandlerClass(Optional.of(eventHandlerClass));
+            } catch (Exception e) {
+                throw new FsmException(e);
+            }
             return this;
         }
 
-        public void to(State to) {
-            transition.setTo(to);
+        public void to(State targetState) {
+            transition.setTargetState(targetState);
             fsm.addTransition(transition);
         }
     }

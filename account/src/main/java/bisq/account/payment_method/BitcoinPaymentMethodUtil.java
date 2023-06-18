@@ -42,7 +42,7 @@ public class BitcoinPaymentMethodUtil {
         switch (protocolType) {
             case BISQ_EASY:
                 return getPaymentRails();               // Support any BTC rail 
-            case BISQ_MULTISIG:
+            case MULTISIG:
             case MONERO_SWAP:
             case BSQ_SWAP:
                 return List.of(BitcoinPaymentRail.MAIN_CHAIN);    // Require BTC main chain

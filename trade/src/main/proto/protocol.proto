@@ -24,25 +24,52 @@ option java_multiple_files = true;
 import "offer.proto";
 import "network.proto";
 import "contract.proto";
+import "identity.proto";
 
 message TradeParty {
   network.NetworkId networkId = 1;
   optional contract.ContractSignatureData contractSignatureData = 2;
+  oneof message {
+    BisqEasyTradeParty bisqEasyTradeParty = 20;
+    MultisigTradeParty multisigTradeParty = 21;
+    SubmarineTradeParty submarineTradeParty = 22;
+  }
 }
 
 message Trade {
   string id = 1;
-  contract.Contract contract = 2;
-  TradeParty taker = 3;
-  TradeParty maker = 4;
-  string state = 5;
+  bool isBuyer = 2;
+  bool isTaker = 3;
+  identity.Identity myIdentity = 4;
+  contract.Contract contract = 5;
+  TradeParty taker = 6;
+  TradeParty maker = 7;
+  string state = 8;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 20;
+    MultisigTrade multisigTrade = 21;
+    SubmarineTrade submarineTrade = 22;
+  }
+}
+message TradeMessage {
+  string tradeId = 1;
+  network.NetworkId sender = 2;
+  network.MetaData metaData = 3;
+  oneof message {
+    BisqEasyTradeMessage bisqEasyTradeMessage = 20;
+    SubmarineTradeMessage submarineTradeMessage = 21;
+    MultisigTradeMessage multisigTradeMessage = 23;
   }
 }
 
 // BisqEasy
+message BisqEasyTradeParty {
+  optional string paymentAccountData = 1;
+  optional string buyersBtcAddress = 2;
+  optional string txId = 3;
+}
+
 message BisqEasyTrade {
 }
 
@@ -50,16 +77,53 @@ message BisqEasyTradeStore {
   map<string, Trade> tradeById = 1;
 }
 
+
 // BisqEasy messages
-message TradeMessage {
-  network.NetworkId sender = 1;
-  network.MetaData metaData = 2;
+message BisqEasyTradeMessage {
   oneof message {
-    BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = 10;
+    BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = 20;
+    BisqEasyAccountDataMessage bisqEasyAccountDataMessage = 21;
+    BisqEasyConfirmFiatSentMessage bisqEasyConfirmFiatSentMessage = 22;
+    BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 23;
   }
 }
 message BisqEasyTakeOfferRequest {
   contract.Contract bisqEasyContract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
+}
+message BisqEasyAccountDataMessage {
+  string paymentAccountData = 1;
+}
+message BisqEasyConfirmFiatSentMessage {
+  string btcAddress = 1;
+}
+message BisqEasyConfirmBtcSentMessage {
+  string txId = 1;
+}
 
+// MultiSig
+message MultisigTradeMessage{
+}
+message MultisigTradeParty {
+}
+
+message MultisigTrade {
+}
+
+message MultisigTradeStore {
+  map<string, Trade> tradeById = 1;
+}
+
+
+// Submarine
+message SubmarineTradeMessage {
+}
+message SubmarineTradeParty {
+}
+
+message SubmarineTrade {
+}
+
+message SubmarineTradeStore {
+  map<string, Trade> tradeById = 1;
 }

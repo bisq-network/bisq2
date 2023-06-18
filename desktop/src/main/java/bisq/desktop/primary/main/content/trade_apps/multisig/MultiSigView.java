@@ -27,7 +27,7 @@ public class MultiSigView extends ProtocolRoadmapView<MultiSigModel, MultiSigCon
 
     @Override
     protected String getKey() {
-        return TradeProtocolType.BISQ_MULTISIG.name();
+        return TradeProtocolType.MULTISIG.name();
     }
 
     @Override

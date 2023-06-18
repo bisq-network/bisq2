@@ -22,6 +22,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 @ToString
 
@@ -29,16 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @EqualsAndHashCode
 public class Transition {
-    private State from;
-    private State to;
+    private State sourceState;
+    private State targetState;
     private Class<? extends Event> eventClass;
-    private Class<? extends EventHandler> eventHandlerClass;
+    private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
 
     public boolean isValid() {
-        return from != null &&
-                to != null &&
+        return sourceState != null &&
+                targetState != null &&
                 eventClass != null &&
-                eventHandlerClass != null &&
-                !from.equals(to);
+                !sourceState.equals(targetState);
     }
 }

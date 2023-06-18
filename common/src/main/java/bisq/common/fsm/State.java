@@ -18,7 +18,10 @@
 package bisq.common.fsm;
 
 public interface State {
-    boolean isInitialState();
+
+    static State getInitialState() {
+        return null;
+    }
 
     boolean isFinalState();
 

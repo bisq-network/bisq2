@@ -92,7 +92,7 @@ public class LeftNavController implements Controller {
                 break;
             case BISQ_EASY:
             case LIQUID_SWAP:
-            case BISQ_MULTISIG:
+            case MULTISIG:
             case MONERO_SWAP:
             case BSQ_SWAP:
             case LIGHTNING_X:

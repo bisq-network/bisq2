@@ -17,58 +17,110 @@
 
 package bisq.trade;
 
-import bisq.common.fsm.Model;
+import bisq.common.fsm.FsmModel;
+import bisq.common.fsm.State;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
-import bisq.network.NetworkId;
+import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.multisig.MultisigTrade;
+import bisq.trade.submarine.SubmarineTrade;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-;
-
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@Getter
-public abstract class Trade<
-        O extends Offer<?, ?>,
-        C extends Contract<O>>
-        extends Model implements Proto {
+public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements Proto {
+    @Getter
+    public enum Role {
+        BUYER_AS_TAKER(true, true),
+        BUYER_AS_MAKER(true, false),
+        SELLER_AS_TAKER(false, true),
+        SELLER_AS_MAKER(false, false);
+
+        private final boolean isBuyer;
+        private final boolean isTaker;
+
+        Role(boolean isBuyer, boolean isTaker) {
+            this.isBuyer = isBuyer;
+            this.isTaker = isTaker;
+        }
+
+        public boolean isMaker() {
+            return !isTaker;
+        }
+
+        public boolean isSeller() {
+            return !isBuyer;
+        }
+    }
+
     public static String createId(String offerId, String takerNodeId) {
         return offerId + "." + takerNodeId;
     }
 
+    @Getter
     private final String id;
+    private final boolean isBuyer;
+    private final boolean isTaker;
+    @Getter
+    private final Identity myIdentity;
+    @Getter
     private final C contract;
-    private final TradeParty taker;
-    private final TradeParty maker;
+    @Getter
+    private final P taker;
+    @Getter
+    private final P maker;
+    @Getter
+    private transient final Role role;
 
-    public Trade(C contract, NetworkId takerNetworkId) {
-        this(createId(contract.getOffer().getId(), takerNetworkId.getId()),
+    public Trade(State state, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+        this(state,
+                createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
+                isBuyer,
+                isTaker,
+                myIdentity,
                 contract,
-                new TradeParty(takerNetworkId),
-                new TradeParty(contract.getOffer().getMakerNetworkId()));
+                taker,
+                maker);
+
     }
 
-    protected Trade(String id, C contract, TradeParty taker, TradeParty maker) {
+    protected Trade(State state, String id, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+        super(state);
+
         this.id = id;
+        this.isBuyer = isBuyer;
+        this.isTaker = isTaker;
+        this.myIdentity = myIdentity;
         this.contract = contract;
         this.taker = taker;
         this.maker = maker;
+
+        role = isBuyer ?
+                (isTaker ?
+                        Role.BUYER_AS_TAKER :
+                        Role.BUYER_AS_MAKER) :
+                (isTaker ?
+                        Role.SELLER_AS_TAKER :
+                        Role.SELLER_AS_MAKER);
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
         return bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
+                .setIsBuyer(isBuyer)
+                .setIsTaker(isTaker)
+                .setMyIdentity(myIdentity.toProto())
                 .setContract(contract.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
-                .setState(currentState.get().name());
+                .setState(getState().name());
     }
 
     public static BisqEasyTrade protoToBisqEasyTrade(bisq.trade.protobuf.Trade proto) {
@@ -84,7 +136,69 @@ public abstract class Trade<
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public O getOffer() {
+    public static MultisigTrade protoToMultisigTrade(bisq.trade.protobuf.Trade proto) {
+        switch (proto.getMessageCase()) {
+            case MULTISIGTRADE: {
+                return MultisigTrade.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static SubmarineTrade protoToSubmarineTrade(bisq.trade.protobuf.Trade proto) {
+        switch (proto.getMessageCase()) {
+            case SUBMARINETRADE: {
+                return SubmarineTrade.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Convenience Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public T getOffer() {
         return contract.getOffer();
+    }
+
+    public boolean isBuyer() {
+        return isBuyer;
+    }
+
+    public boolean isSeller() {
+        return !isBuyer;
+    }
+
+    public boolean isTaker() {
+        return isTaker;
+    }
+
+    public boolean isMaker() {
+        return !isTaker;
+    }
+
+    public P getPeer() {
+        return isTaker ? maker : taker;
+    }
+
+    public P getMyself() {
+        return isTaker ? taker : maker;
+    }
+
+    public P getBuyer() {
+        return role.isTaker() ? taker : maker;
+    }
+
+    public P getSeller() {
+        return role.isTaker() ? taker : maker;
     }
 }
