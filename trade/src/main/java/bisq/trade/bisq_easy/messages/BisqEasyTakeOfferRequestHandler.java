@@ -49,14 +49,11 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
 
         Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyOffer.getMakerNetworkId().getNodeId()).orElseThrow();
-        Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
 
+        model.getPeer().getContractSignatureData().set(takersContractSignatureData);
         try {
-            model.getPeer().getContractSignatureData().set(takersContractSignatureData);
-
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
             model.getMyself().getContractSignatureData().set(contractSignatureData);
-
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -64,6 +61,9 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
     @Override
     protected void verifyMessage(BisqEasyTakeOfferRequest message) {
-
+        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
+        BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
+        Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
+        //todo
     }
 }

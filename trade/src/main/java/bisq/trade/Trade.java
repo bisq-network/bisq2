@@ -35,11 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class Trade<
-        T extends Offer<?, ?>,
-        C extends Contract<T>,
-        P extends TradeParty>
-        extends Model implements Proto {
+public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends Model implements Proto {
 
     public static String createId(String offerId, String takerNodeId) {
         return offerId + "." + takerNodeId;

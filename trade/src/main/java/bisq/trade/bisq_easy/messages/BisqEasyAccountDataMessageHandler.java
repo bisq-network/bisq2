@@ -39,8 +39,7 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
         BisqEasyAccountDataMessage message = (BisqEasyAccountDataMessage) event;
         verifyMessage(message);
 
-        String paymentAccountData = message.getPaymentAccountData();
-        model.getPeer().getPaymentAccountData().set(paymentAccountData);
+        model.getPeer().getPaymentAccountData().set(message.getPaymentAccountData());
     }
 
     @Override

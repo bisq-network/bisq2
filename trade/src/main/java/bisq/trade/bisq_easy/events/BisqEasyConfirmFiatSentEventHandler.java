@@ -32,8 +32,8 @@ public class BisqEasyConfirmFiatSentEventHandler extends SendTradeMessageHandler
     @Override
     public void handle(Event event) {
         BisqEasyConfirmFiatSentEvent bisqEasyConfirmFiatSentEvent = (BisqEasyConfirmFiatSentEvent) event;
-        String buyersBtcAddress = bisqEasyConfirmFiatSentEvent.getBuyersBtcAddress();
-        model.getMyself().getBuyersBtcAddress().set(buyersBtcAddress);
-        sendMessage(new BisqEasyConfirmFiatSentMessage(model.getId(), model.getMyIdentity().getNetworkId(), buyersBtcAddress));
+        String btcAddress = bisqEasyConfirmFiatSentEvent.getBtcAddress();
+        model.getMyself().getBtcAddress().set(btcAddress);
+        sendMessage(new BisqEasyConfirmFiatSentMessage(model.getId(), model.getMyIdentity().getNetworkId(), btcAddress));
     }
 }

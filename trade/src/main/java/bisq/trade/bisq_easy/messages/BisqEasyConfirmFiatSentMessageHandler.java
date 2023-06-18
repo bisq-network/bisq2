@@ -39,12 +39,11 @@ public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<B
         BisqEasyConfirmFiatSentMessage message = (BisqEasyConfirmFiatSentMessage) event;
         verifyMessage(message);
 
-        String buyersBtcAddress = message.getBuyersBtcAddress();
-        model.getPeer().getBuyersBtcAddress().set(buyersBtcAddress);
+        model.getPeer().getBtcAddress().set(message.getBtcAddress());
     }
 
     @Override
     protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
-        checkArgument(StringUtils.isNotEmpty(message.getBuyersBtcAddress()));
+        checkArgument(StringUtils.isNotEmpty(message.getBtcAddress()));
     }
 }

@@ -34,26 +34,26 @@ import java.util.concurrent.TimeUnit;
 public class BisqEasyConfirmFiatSentMessage extends TradeMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
-    private final String buyersBtcAddress;
+    private final String btcAddress;
 
-    public BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender, String buyersBtcAddress) {
+    public BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender, String btcAddress) {
         this(tradeId,
                 sender,
-                buyersBtcAddress,
+                btcAddress,
                 new MetaData(TTL, 100000, BisqEasyConfirmFiatSentMessage.class.getSimpleName()));
     }
 
-    private BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender, String buyersBtcAddress, MetaData metaData) {
+    private BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender, String btcAddress, MetaData metaData) {
         super(tradeId, sender, metaData);
 
-        this.buyersBtcAddress = buyersBtcAddress;
+        this.btcAddress = btcAddress;
     }
 
     @Override
     protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
         return getTradeMessageBuilder().setBisqEasyConfirmFiatSentMessage(
                         bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.newBuilder()
-                                .setBuyersBtcAddress(buyersBtcAddress))
+                                .setBtcAddress(btcAddress))
                 .build();
     }
 
@@ -62,7 +62,7 @@ public class BisqEasyConfirmFiatSentMessage extends TradeMessage {
         return new BisqEasyConfirmFiatSentMessage(
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
-                bisqEasyTakeOfferRequest.getBuyersBtcAddress(),
+                bisqEasyTakeOfferRequest.getBtcAddress(),
                 MetaData.fromProto(proto.getMetaData()));
     }
 }

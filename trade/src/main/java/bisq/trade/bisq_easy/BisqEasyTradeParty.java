@@ -30,7 +30,7 @@ import lombok.ToString;
 @Getter
 public class BisqEasyTradeParty extends TradeParty {
     private final Observable<String> paymentAccountData = new Observable<>();
-    private final Observable<String> buyersBtcAddress = new Observable<>();
+    private final Observable<String> btcAddress = new Observable<>();
     private final Observable<String> txId = new Observable<>();
 
     public BisqEasyTradeParty(NetworkId networkId) {
@@ -47,7 +47,7 @@ public class BisqEasyTradeParty extends TradeParty {
             tradeParty.getPaymentAccountData().set(bisqEasyTradePartyProto.getPaymentAccountData());
         }
         if (bisqEasyTradePartyProto.hasBuyersBtcAddress()) {
-            tradeParty.getBuyersBtcAddress().set(bisqEasyTradePartyProto.getBuyersBtcAddress());
+            tradeParty.getBtcAddress().set(bisqEasyTradePartyProto.getBuyersBtcAddress());
         }
         return tradeParty;
     }

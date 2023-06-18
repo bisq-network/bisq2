@@ -54,7 +54,6 @@ message BisqEasyTradeParty {
   optional string paymentAccountData = 1;
   optional string buyersBtcAddress = 2;
   optional string txId = 3;
-
 }
 
 message BisqEasyTrade {
@@ -84,7 +83,7 @@ message BisqEasyAccountDataMessage {
   string paymentAccountData = 1;
 }
 message BisqEasyConfirmFiatSentMessage {
-  string buyersBtcAddress = 1;
+  string btcAddress = 1;
 }
 message BisqEasyConfirmBtcSentMessage {
   string txId = 1;
