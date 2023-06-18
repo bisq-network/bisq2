@@ -24,6 +24,7 @@ import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -50,7 +51,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final P maker;
 
     public Trade(boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
-        this(createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
+        this(BisqEasyTradeState.INIT,
+                createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
                 isBuyer,
                 isTaker,
                 myIdentity,
@@ -60,7 +62,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     }
 
-    protected Trade(String id, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+    protected Trade(BisqEasyTradeState state, String id, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+        super(state);
+
         this.id = id;
         this.isBuyer = isBuyer;
         this.isTaker = isTaker;
@@ -79,7 +83,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setContract(contract.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
-                .setState(currentState.get().name());
+                .setState(getState().name());
     }
 
     public static BisqEasyTrade protoToBisqEasyTrade(bisq.trade.protobuf.Trade proto) {

@@ -95,7 +95,7 @@ public class TradeStateController implements Controller {
         bisqEasyTradeService.findBisqEasyTrade(tradeId)
                 .ifPresent(bisqEasyTradeModel -> {
                     model.setBisqEasyTradeModel(bisqEasyTradeModel);
-                    bisqEasyTradeStatePin = bisqEasyTradeModel.getBisqEasyTradeState().addObserver(state -> {
+                    bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {
                         switch (state) {
                             case INIT:
                                 break;

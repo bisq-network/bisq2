@@ -15,25 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.fsm;
+package bisq.common.observable;
 
-public class FsmException extends RuntimeException {
-    public FsmException() {
-    }
+import java.util.function.Consumer;
 
-    public FsmException(String message) {
-        super(message);
-    }
+public interface ReadOnlyObservable<S> {
+    S get();
 
-    public FsmException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public FsmException(Throwable cause) {
-        super(cause);
-    }
-
-    public FsmException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
+    Pin addObserver(Consumer<S> observer);
 }

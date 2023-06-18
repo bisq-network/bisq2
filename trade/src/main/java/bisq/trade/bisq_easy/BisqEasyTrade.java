@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy;
 
 import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.ProtobufUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -26,16 +27,14 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@Getter
 public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, BisqEasyTradeParty> {
-    private final Observable<BisqEasyTradeState> bisqEasyTradeState = new Observable<>();
+    private final Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
     public BisqEasyTrade(boolean isBuyer,
                          boolean isTaker,
@@ -49,18 +48,20 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 new BisqEasyTradeParty(takerNetworkId),
                 new BisqEasyTradeParty(contract.getMaker().getNetworkId()));
 
-        currentState.set(BisqEasyTradeState.INIT);
-        currentState.addObserver(s -> bisqEasyTradeState.set((BisqEasyTradeState) s));
+        stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
 
-    private BisqEasyTrade(String id,
+    private BisqEasyTrade(BisqEasyTradeState state,
+                          String id,
                           boolean isBuyer,
                           boolean isTaker,
                           Identity myIdentity,
                           BisqEasyContract contract,
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker) {
-        super(id, isBuyer, isTaker, myIdentity, contract, taker, maker);
+        super(state, id, isBuyer, isTaker, myIdentity, contract, taker, maker);
+        
+        stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
 
     @Override
@@ -70,14 +71,21 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(proto.getId(),
+        return new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
+                proto.getId(),
                 proto.getIsBuyer(),
                 proto.getIsTaker(),
                 Identity.fromProto(proto.getMyIdentity()),
                 BisqEasyContract.fromProto(proto.getContract()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
-        bisqEasyTrade.getCurrentState().set(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()));
-        return bisqEasyTrade;
+    }
+
+    public BisqEasyTradeState getTradeState() {
+        return tradeState.get();
+    }
+
+    public ReadOnlyObservable<BisqEasyTradeState> tradeStateObservable() {
+        return tradeState;
     }
 }

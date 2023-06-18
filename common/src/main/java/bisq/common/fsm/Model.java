@@ -18,15 +18,34 @@
 package bisq.common.fsm;
 
 import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode
-@Getter
 public class Model {
-    protected final Observable<State> currentState = new Observable<>();
+    private final Observable<State> state = new Observable<>();
+
+    public Model(State state) {
+        if (state == null) {
+            throw new FsmException("State must not be null at Model constructor");
+        }
+        this.state.set(state);
+    }
+
+    public ReadOnlyObservable<State> stateObservable() {
+        return state;
+    }
+
+    public State getState() {
+        return state.get();
+    }
+
+    // Only called from FSM
+    void setNewState(State newState) {
+        this.state.set(newState);
+    }
 }
