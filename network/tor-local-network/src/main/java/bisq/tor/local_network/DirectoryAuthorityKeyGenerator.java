@@ -17,12 +17,14 @@
 
 package bisq.tor.local_network;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Slf4j
 public class DirectoryAuthorityKeyGenerator {
@@ -32,6 +34,11 @@ public class DirectoryAuthorityKeyGenerator {
     private final DirectoryIdentityKeyGenProcess identityKeyGenProcess;
     private final RelayKeyGenProcess relayKeyGenProcess;
 
+    @Getter
+    private Optional<String> identityKeyFingerprint = Optional.empty();
+    @Getter
+    private Optional<String> relayKeyFingerprint = Optional.empty();
+
     public DirectoryAuthorityKeyGenerator(DirectoryIdentityKeyGenProcess identityKeyGenProcess,
                                           RelayKeyGenProcess relayKeyGenProcess) {
         this.identityKeyGenProcess = identityKeyGenProcess;
@@ -40,7 +47,10 @@ public class DirectoryAuthorityKeyGenerator {
 
     public void generate(String passphrase) throws IOException, InterruptedException {
         String identityKeyFingerprint = generateIdentityKeys(passphrase);
-        relayKeyGenProcess.generateKeys(identityKeyFingerprint);
+        this.identityKeyFingerprint = Optional.of(identityKeyFingerprint);
+
+        String relayKeyFingerprint = relayKeyGenProcess.generateKeys(identityKeyFingerprint);
+        this.relayKeyFingerprint = Optional.of(relayKeyFingerprint);
     }
 
     private String generateIdentityKeys(String passphrase) throws IOException, InterruptedException {

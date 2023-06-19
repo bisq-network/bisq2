@@ -19,10 +19,11 @@ package bisq.tor.local_network;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
-@Builder
 @Getter
 public class DirectoryAuthority {
     private final String nickname;
@@ -33,10 +34,21 @@ public class DirectoryAuthority {
     private final int orPort;
     private final int dirPort;
 
-    private final String v3LongTermSigningKeyFingerprint;
-    private final String torKeyFingerprint;
-
     private final String exitPolicy = "ExitPolicy accept *:*";
+
+    @Setter
+    private Optional<String> identityKeyFingerprint = Optional.empty();
+    @Setter
+    private Optional<String> relayKeyFingerprint = Optional.empty();
+
+    @Builder
+    public DirectoryAuthority(String nickname, Path dataDir, int controlPort, int orPort, int dirPort) {
+        this.nickname = nickname;
+        this.dataDir = dataDir;
+        this.controlPort = controlPort;
+        this.orPort = orPort;
+        this.dirPort = dirPort;
+    }
 
     public Path getTorrcPath() {
         return dataDir.resolve("torrc");
