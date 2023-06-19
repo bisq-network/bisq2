@@ -62,18 +62,16 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
         HBox buttons = new HBox(20, backButton, closeButton);
         VBox.setVgrow(content, Priority.ALWAYS);
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(confirmCheckBox, new Insets(10, 0, 0, 0));
+        VBox.setMargin(confirmCheckBox, new Insets(0, 0, 5, 0));
         root.getChildren().addAll(headline, content, learnMore, confirmCheckBox, buttons);
     }
 
     @Override
     protected void onViewAttached() {
         confirmCheckBox.setSelected(model.getTradeRulesConfirmed().get());
-        confirmCheckBox.setOnAction(e -> controller.onConfirm(confirmCheckBox.isSelected()));
 
-        closeButton.setOnAction(e -> controller.onClose());
-        backButton.setOnAction(e -> controller.onBack());
-        learnMore.setOnAction(e -> controller.onLearnMore());
+        confirmCheckBox.visibleProperty().bind(model.getTradeRulesConfirmed().not());
+        confirmCheckBox.managedProperty().bind(model.getTradeRulesConfirmed().not());
 
         tradeRulesConfirmedPin = EasyBind.subscribe(model.getTradeRulesConfirmed(), tradeRulesConfirmed -> {
             closeButton.setDefaultButton(tradeRulesConfirmed);
@@ -86,15 +84,24 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
 
         widthPin = EasyBind.subscribe(root.widthProperty(),
                 w -> content.setWrappingWidth(w.doubleValue() - 30));
+
+        confirmCheckBox.setOnAction(e -> controller.onConfirm(confirmCheckBox.isSelected()));
+        closeButton.setOnAction(e -> controller.onClose());
+        backButton.setOnAction(e -> controller.onBack());
+        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
+        confirmCheckBox.visibleProperty().unbind();
+        confirmCheckBox.managedProperty().unbind();
+
+        tradeRulesConfirmedPin.unsubscribe();
+        widthPin.unsubscribe();
+
+        confirmCheckBox.setOnAction(null);
         closeButton.setOnAction(null);
         backButton.setOnAction(null);
         learnMore.setOnAction(null);
-        confirmCheckBox.setOnAction(null);
-        tradeRulesConfirmedPin.unsubscribe();
-        widthPin.unsubscribe();
     }
 }

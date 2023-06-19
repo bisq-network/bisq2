@@ -241,7 +241,7 @@ class TradePhaseBox {
             disputeButton.getStyleClass().add("outlined-button");
 
             VBox.setMargin(phaseHeadline, new Insets(20, 0, 20, 0));
-            VBox.setMargin(disputeButton, new Insets(10, 0, 0, 0));
+            VBox.setMargin(disputeButton, new Insets(15, 0, 0, 0));
             VBox.setMargin(openTradeGuide, new Insets(30, 0, 0, 2));
 
             root.getChildren().addAll(
