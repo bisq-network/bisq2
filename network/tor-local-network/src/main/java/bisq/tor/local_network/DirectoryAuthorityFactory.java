@@ -17,13 +17,21 @@
 
 package bisq.tor.local_network;
 
+import lombok.Getter;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DirectoryAuthorityFactory {
-    public static void createDirectoryAuthority(DirectoryAuthority directoryAuthority,
-                                                String passphrase) throws IOException, InterruptedException {
+
+    @Getter
+    private final Set<DirectoryAuthority> allDirectoryAuthorities = new HashSet<>();
+
+    public void createDirectoryAuthority(DirectoryAuthority directoryAuthority,
+                                         String passphrase) throws IOException, InterruptedException {
         Path dataDir = directoryAuthority.getDataDir();
         createDataDirIfNotPresent(dataDir);
 
@@ -46,9 +54,11 @@ public class DirectoryAuthorityFactory {
         directoryAuthority.setRelayKeyFingerprint(
                 directoryAuthorityKeyGenerator.getRelayKeyFingerprint()
         );
+
+        allDirectoryAuthorities.add(directoryAuthority);
     }
 
-    private static void createDataDirIfNotPresent(Path dataDir) {
+    private void createDataDirIfNotPresent(Path dataDir) {
         File dataDirFile = dataDir.toFile();
         if (!dataDirFile.exists()) {
             boolean isSuccess = dataDir.toFile().mkdir();

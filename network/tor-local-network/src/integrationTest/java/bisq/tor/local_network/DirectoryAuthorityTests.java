@@ -30,6 +30,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DirectoryAuthorityTests {
+    private static final String PASSPHRASE = "my_passphrase";
 
     @Test
     public void createOneDA(@TempDir Path tempDir) throws IOException, InterruptedException {
@@ -40,7 +41,7 @@ public class DirectoryAuthorityTests {
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
-        DirectoryAuthorityFactory.createDirectoryAuthority(firstDirectoryAuthority, "my_passphrase");
+        new DirectoryAuthorityFactory().createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
         assertThat(tempDir).isNotEmptyDirectory();
         assertThat(tempDir.resolve("keys")).isNotEmptyDirectory();
@@ -48,6 +49,8 @@ public class DirectoryAuthorityTests {
 
     @Test
     public void createThreeDA(@TempDir Path tempDir) throws IOException, InterruptedException {
+        var dirAuthFactory = new DirectoryAuthorityFactory();
+
         Path firstDaDataDir = tempDir.resolve("da_1");
         var firstDirectoryAuthority = DirectoryAuthority.builder()
                 .nickname("DA_1")
@@ -56,6 +59,7 @@ public class DirectoryAuthorityTests {
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
+        dirAuthFactory.createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
         Path secondDaDataDir = tempDir.resolve("da_2");
         var secondDirectoryAuthority = DirectoryAuthority.builder()
@@ -65,6 +69,7 @@ public class DirectoryAuthorityTests {
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
+        dirAuthFactory.createDirectoryAuthority(secondDirectoryAuthority, PASSPHRASE);
 
         Path thirdDaDataDir = tempDir.resolve("da_3");
         var thirdDirectoryAuthority = DirectoryAuthority.builder()
@@ -74,18 +79,9 @@ public class DirectoryAuthorityTests {
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
+        dirAuthFactory.createDirectoryAuthority(thirdDirectoryAuthority, PASSPHRASE);
 
-        Set<DirectoryAuthority> allDAs = Set.of(
-                firstDirectoryAuthority,
-                secondDirectoryAuthority,
-                thirdDirectoryAuthority);
-
-        // Generate all keys to have fingerprints
-        for (DirectoryAuthority da : allDAs) {
-            DirectoryAuthorityFactory.createDirectoryAuthority(da, "my_passphrase");
-        }
-
-        // Fingerprints are now available
+        Set<DirectoryAuthority> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (DirectoryAuthority da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
             var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDAs);
