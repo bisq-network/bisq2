@@ -57,7 +57,6 @@ public class TradeStateController implements Controller {
     private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final DefaultApplicationService applicationService;
-    private final TradeWelcome tradeWelcome;
     private final TradePhaseBox tradePhaseBox;
     private Subscription isCollapsedPin;
     private Pin tradeRulesConfirmedPin, bisqEasyTradeStatePin;
@@ -69,7 +68,7 @@ public class TradeStateController implements Controller {
         settingsService = applicationService.getSettingsService();
         bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
-        tradeWelcome = new TradeWelcome();
+        TradeWelcome tradeWelcome = new TradeWelcome();
         tradePhaseBox = new TradePhaseBox(applicationService);
 
         model = new TradeStateModel();
@@ -77,8 +76,6 @@ public class TradeStateController implements Controller {
     }
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
-
-
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(bisqEasyOffer);
@@ -158,18 +155,6 @@ public class TradeStateController implements Controller {
                 baseAmountString,
                 quoteAmountString,
                 paymentMethodName));
-
-       /* if (model.getAppliedPhaseIndex() == phaseIndex) {
-            return;
-        }
-        model.setAppliedPhaseIndex(phaseIndex);
-        boolean tradeRulesConfirmed = getTradeRulesConfirmed();
-        boolean showFirstTimeItems = phaseIndex == 0 && !tradeRulesConfirmed;
-        applyFirstTimeItemsVisible();
-        applyPhaseAndInfoBoxVisible();
-        if (showFirstTimeItems) {
-            return;
-        }*/
     }
 
     @Override
@@ -214,17 +199,5 @@ public class TradeStateController implements Controller {
         boolean isExpanded = !model.getIsCollapsed().get();
         model.getTradeWelcomeVisible().set(isExpanded && !tradeRulesConfirmed);
         model.getPhaseAndInfoBoxVisible().set(isExpanded && tradeRulesConfirmed);
-    }
-
-    private void applyFirstTimeItemsVisible() {
-        // model.getFirstTimeItemsVisible().set(!model.getIsCollapsed().get() && model.getPhaseIndex().get() == 0 && !getTradeRulesConfirmed());
-    }
-
-    private void applyPhaseAndInfoBoxVisible() {
-        model.getPhaseAndInfoBoxVisible().set(!model.getIsCollapsed().get() && !model.getTradeWelcomeVisible().get());
-    }
-
-    private Boolean getTradeRulesConfirmed() {
-        return settingsService.getTradeRulesConfirmed().get();
     }
 }

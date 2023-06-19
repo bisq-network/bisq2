@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
@@ -70,23 +69,6 @@ public class BuyerState4 extends BaseState {
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
             model.getBtcBalance().set("");
             model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.notInMempoolYet"));
-            UIScheduler.run(() -> {
-                        model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmation", 0));
-                        model.getBtcBalance().set(model.getFormattedBaseAmount());
-                    })
-                    .after(2000);
-            UIScheduler.run(() -> {
-                        model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmation", 1));
-                        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
-                                model.getFormattedBaseAmount(), model.getBtcAddress()));
-                    })
-                    .after(4000);
-            UIScheduler.run(() -> {
-                        model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmation.plural", 2));
-                        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
-                                model.getFormattedBaseAmount(), model.getBtcAddress()));
-                    })
-                    .after(6000);
         }
 
         @Override
@@ -101,14 +83,6 @@ public class BuyerState4 extends BaseState {
                 new Popup().error(e).show();
             }
         }
-
-     /*   private void onBtcConfirmed() {
-            try {
-                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
-            } catch (TradeException e) {
-                new Popup().error(e).show();
-            }
-        }*/
     }
 
     @Getter
