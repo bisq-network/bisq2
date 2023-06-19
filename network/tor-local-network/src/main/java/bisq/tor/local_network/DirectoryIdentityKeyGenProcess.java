@@ -20,10 +20,15 @@ package bisq.tor.local_network;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 @Slf4j
 public class DirectoryIdentityKeyGenProcess {
@@ -54,7 +59,7 @@ public class DirectoryIdentityKeyGenProcess {
         outputStream = Optional.of(process.getOutputStream());
     }
 
-    public String waitUntilGenerated() throws InterruptedException, IOException {
+    public String getKeyFingerprint() throws InterruptedException, IOException {
         Process process = this.process.orElseThrow();
         process.waitFor(1, TimeUnit.MINUTES);
         return readKeyFingerprint();
@@ -62,28 +67,11 @@ public class DirectoryIdentityKeyGenProcess {
 
     private String readKeyFingerprint() throws IOException {
         File certificateFile = new File(torKeyDirPath.toFile(), "authority_certificate");
-        try (var reader = new BufferedReader(new FileReader(certificateFile))) {
-            String line = reader.readLine();
-            while (line != null) {
 
-                if (isFingerprintLine(line)) {
-                    return extractFingerprint(line);
-                }
+        Predicate<String> lineMatcher = s -> s.startsWith("fingerprint ");
+        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
 
-                line = reader.readLine();
-            }
-        }
-
-        throw new IllegalStateException("Authority certificate was never created.");
-    }
-
-    private boolean isFingerprintLine(String line) {
-        // fingerprint A547708A712364A3782FB49E8207AF3FA2BC9713
-        return line.startsWith("fingerprint ");
-    }
-
-    private String extractFingerprint(String line) {
-        // fingerprint A547708A712364A3782FB49E8207AF3FA2BC9713
-        return line.split(" ")[1].strip();
+        var keyFingerprintReader = new KeyFingerprintReader(certificateFile, lineMatcher, dataExtractor);
+        return keyFingerprintReader.read();
     }
 }

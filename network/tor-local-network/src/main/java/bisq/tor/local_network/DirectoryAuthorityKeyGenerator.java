@@ -55,7 +55,7 @@ public class DirectoryAuthorityKeyGenerator {
         inputStreamWaiter.waitForString(PEM_VERIFY_PASSPHRASE_PROMPT);
         enterPassphrase(passphrase);
 
-        return identityKeyGenProcess.waitUntilGenerated();
+        return identityKeyGenProcess.getKeyFingerprint();
     }
 
     private void enterPassphrase(String passphrase) throws IOException {
