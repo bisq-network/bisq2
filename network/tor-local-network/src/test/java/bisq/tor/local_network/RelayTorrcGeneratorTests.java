@@ -24,6 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,9 +43,10 @@ public class RelayTorrcGeneratorTests {
                 .orPort(2)
                 .dirPort(3)
 
-                .v3LongTermSigningKeyFingerprint("AAAA_v3")
-                .torKeyFingerprint("AAAA_fp")
                 .build();
+
+        firstDirAuth.setIdentityKeyFingerprint(Optional.of("AAAA_fp"));
+        firstDirAuth.setRelayKeyFingerprint(Optional.of("AAAA_v3"));
 
         DirectoryAuthority secondDirAuth = DirectoryAuthority.builder()
                 .nickname("B")
@@ -54,9 +56,10 @@ public class RelayTorrcGeneratorTests {
                 .orPort(2)
                 .dirPort(3)
 
-                .v3LongTermSigningKeyFingerprint("BBBB_v3")
-                .torKeyFingerprint("BBBB_fp")
                 .build();
+
+        secondDirAuth.setIdentityKeyFingerprint(Optional.of("BBBB_fp"));
+        secondDirAuth.setRelayKeyFingerprint(Optional.of("BBBB_v3"));
 
         var relayTorrcGenerator = new RelayTorrcGenerator(firstDirAuth);
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
