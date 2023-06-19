@@ -17,8 +17,11 @@
 
 package bisq.tor.local_network;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public class RelayKeyGenProcess {
     private final DirectoryAuthority directoryAuthority;
@@ -27,7 +30,7 @@ public class RelayKeyGenProcess {
         this.directoryAuthority = directoryAuthority;
     }
 
-    public void generateKeys(String identityKeyFingerprint) throws IOException, InterruptedException {
+    public String generateKeys(String identityKeyFingerprint) throws IOException, InterruptedException {
         var processBuilder = new ProcessBuilder(
                 "tor", "--list-fingerprint",
                 "--DataDirectory", directoryAuthority.getDataDir().toAbsolutePath().toString(),
@@ -46,5 +49,18 @@ public class RelayKeyGenProcess {
 
         Process process = processBuilder.start();
         process.waitFor(45, TimeUnit.SECONDS);
+
+        return readKeyFingerprint();
+    }
+
+    private String readKeyFingerprint() throws IOException {
+        File dataDirFile = directoryAuthority.getDataDir().toFile();
+        File fingerprintFile = new File(dataDirFile, "fingerprint");
+
+        Predicate<String> lineMatcher = s -> s.startsWith("Unnamed ");
+        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
+
+        var keyFingerprintReader = new KeyFingerprintReader(fingerprintFile, lineMatcher, dataExtractor);
+        return keyFingerprintReader.read();
     }
 }
