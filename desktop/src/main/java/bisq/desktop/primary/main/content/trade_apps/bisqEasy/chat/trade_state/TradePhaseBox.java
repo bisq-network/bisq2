@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -93,8 +94,9 @@ public class TradePhaseBox {
             model.setSelectedChannel(channel);
             BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
             UserIdentity myUserIdentity = channel.getMyUserIdentity();
-            NetworkId takerNetworkId = isMaker(bisqEasyOffer) ?
-                    bisqEasyOffer.getMakerNetworkId() :
+            boolean maker = isMaker(bisqEasyOffer);
+            NetworkId takerNetworkId = maker ?
+                    channel.getPeer().getNetworkId() :
                     myUserIdentity.getUserProfile().getNetworkId();
             String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
             if (bisqEasyTradeService.findTrade(tradeId).isEmpty()) {
@@ -104,44 +106,81 @@ public class TradePhaseBox {
             BisqEasyTrade bisqEasyTradeModel = bisqEasyTradeService.findTrade(tradeId).orElseThrow();
             model.setBisqEasyTradeModel(bisqEasyTradeModel);
 
+            boolean isBuyer = bisqEasyTradeModel.isBuyer();
+
+            model.getPhase1Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase1").toUpperCase() :
+                    Res.get("bisqEasy.tradeState.phase.seller.phase1").toUpperCase());
+            model.getPhase2Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase2").toUpperCase() :
+                    Res.get("bisqEasy.tradeState.phase.seller.phase2").toUpperCase());
+            model.getPhase3Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase3").toUpperCase() :
+                    Res.get("bisqEasy.tradeState.phase.seller.phase3").toUpperCase());
+            model.getPhase4Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase4").toUpperCase() :
+                    Res.get("bisqEasy.tradeState.phase.seller.phase4").toUpperCase());
+            model.getPhase5Info().set(Res.get("bisqEasy.tradeState.phase.phase5").toUpperCase());
+
+           /* String directionString = isBuyer ?
+                    Res.get("offer.buying").toUpperCase() :
+                    Res.get("offer.selling").toUpperCase();
+            AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
+            String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
+            model.getQuoteCode().set(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
+            model.getFormattedBaseAmount().set(baseAmountString);
+            String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
+            model.getFormattedQuoteAmount().set(quoteAmountString);
+            FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
+            String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
+            String tradeInfo = Res.get("bisqEasy.tradeState.header.headline",
+                    directionString,
+                    baseAmountString,
+                    quoteAmountString,
+                    paymentMethodName);
+
+            model.getTradeInfo().set(tradeInfo);
+            if (!isBuyer) {
+                findUsersAccountData().ifPresent(accountData -> model.getSellersPaymentAccountData().set(accountData));
+            }*/
+
+
             if (bisqEasyTradeStatePin != null) {
                 bisqEasyTradeStatePin.unbind();
             }
             bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {
-                switch (state) {
-                    case INIT:
-                        break;
-                    case TAKER_SEND_TAKE_OFFER_REQUEST:
-                    case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
-                        model.getPhaseIndex().set(0);
-                        break;
-                    case SELLER_SENT_ACCOUNT_DATA:
-                        model.getPhaseIndex().set(1);
-                        break;
-                    case BUYER_RECEIVED_ACCOUNT_DATA:
-                        model.getPhaseIndex().set(1);
-                        break;
-                    case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                        model.getPhaseIndex().set(2);
-                        break;
-                    case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                        model.getPhaseIndex().set(2);
-                        break;
-                    case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                        model.getPhaseIndex().set(3);
-                        break;
-                    case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                        model.getPhaseIndex().set(3);
-                        break;
-                    case BTC_CONFIRMED:
-                        model.getPhaseIndex().set(4);
-                        break;
-                    case COMPLETED:
-                        //todo
-                        break;
-                }
-                int phaseIndex = model.getPhaseIndex().get();
-                model.getOpenDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
+                UIThread.run(() -> {
+                    switch (state) {
+                        case INIT:
+                            break;
+                        case TAKER_SEND_TAKE_OFFER_REQUEST:
+                        case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
+                            model.getPhaseIndex().set(0);
+                            break;
+                        case SELLER_SENT_ACCOUNT_DATA:
+                            model.getPhaseIndex().set(1);
+                            break;
+                        case BUYER_RECEIVED_ACCOUNT_DATA:
+                            model.getPhaseIndex().set(1);
+                            break;
+                        case BUYER_SENT_FIAT_SENT_CONFIRMATION:
+                            model.getPhaseIndex().set(2);
+                            break;
+                        case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
+                            model.getPhaseIndex().set(2);
+                            break;
+                        case SELLER_SENT_BTC_SENT_CONFIRMATION:
+                            model.getPhaseIndex().set(3);
+                            break;
+                        case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
+                            model.getPhaseIndex().set(3);
+                            break;
+                        case BTC_CONFIRMED:
+                            model.getPhaseIndex().set(4);
+                            break;
+                        case COMPLETED:
+                            //todo
+                            break;
+                    }
+                    int phaseIndex = model.getPhaseIndex().get();
+                    model.getOpenDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
+                });
             });
         }
 
@@ -311,7 +350,7 @@ public class TradePhaseBox {
             Region separator = Layout.vLine();
             separator.setMinHeight(10);
             separator.setMaxHeight(separator.getMinHeight());
-            VBox.setMargin(separator, new Insets(5, 0, 5, 17));
+            VBox.setMargin(separator, new Insets(5, 0, 5, 10));
             return separator;
         }
 

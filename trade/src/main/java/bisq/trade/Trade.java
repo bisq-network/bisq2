@@ -195,10 +195,28 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     }
 
     public P getBuyer() {
-        return role.isTaker() ? taker : maker;
+        if (role == Role.BUYER_AS_TAKER) {
+            return taker;
+        } else if (role == Role.BUYER_AS_MAKER) {
+            return maker;
+        } else if (role == Role.SELLER_AS_TAKER) {
+            return maker;
+        } else {
+            // role == Role.SELLER_AS_MAKER
+            return taker;
+        }
     }
 
     public P getSeller() {
-        return role.isTaker() ? taker : maker;
+        if (role == Role.BUYER_AS_TAKER) {
+            return maker;
+        } else if (role == Role.BUYER_AS_MAKER) {
+            return taker;
+        } else if (role == Role.SELLER_AS_TAKER) {
+            return taker;
+        } else {
+            // role == Role.SELLER_AS_MAKER
+            return maker;
+        }
     }
 }

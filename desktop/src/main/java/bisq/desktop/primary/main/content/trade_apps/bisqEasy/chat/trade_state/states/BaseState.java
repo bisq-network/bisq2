@@ -30,7 +30,6 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -51,7 +50,7 @@ public abstract class BaseState {
         protected final UserIdentityService userIdentityService;
         private final MarketPriceService marketPriceService;
 
-        protected Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
+        protected Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
             chatService = applicationService.getChatService();
             bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
             accountService = applicationService.getAccountService();
@@ -59,8 +58,20 @@ public abstract class BaseState {
             marketPriceService = applicationService.getOracleService().getMarketPriceService();
 
             model = createModel();
-            view = createView();
+            model.setSelectedChannel(channel);
+            model.setBisqEasyOffer(bisqEasyOffer);
+            model.setTakerNetworkId(takerNetworkId);
 
+            view = createView();
+        }
+
+        protected abstract V createView();
+
+        protected abstract M createModel();
+
+        @Override
+        public void onActivate() {
+            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
             model.setQuoteCode(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
 
             AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
@@ -72,20 +83,9 @@ public abstract class BaseState {
                     bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
             model.setFormattedQuoteAmount(quoteAmountString);
 
-            NetworkId takerNetworkId = isMaker(bisqEasyOffer) ?
-                    bisqEasyOffer.getMakerNetworkId() :
-                    myUserIdentity.getUserProfile().getNetworkId();
-            String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
+            String tradeId = Trade.createId(bisqEasyOffer.getId(), model.getTakerNetworkId().getId());
             bisqEasyTradeService.findTrade(tradeId)
                     .ifPresent(model::setBisqEasyTradeModel);
-        }
-
-        protected abstract V createView();
-
-        protected abstract M createModel();
-
-        @Override
-        public void onActivate() {
         }
 
         @Override
@@ -100,10 +100,6 @@ public abstract class BaseState {
                     .findFirst();
         }
 
-        protected boolean isMaker(BisqEasyOffer bisqEasyOffer) {
-            return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
-        }
-
         protected void sendChatBotMessage(String message) {
             chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                     Optional.empty(),
@@ -116,7 +112,11 @@ public abstract class BaseState {
         @Setter
         protected BisqEasyPrivateTradeChatChannel selectedChannel;
         @Setter
+        protected BisqEasyOffer bisqEasyOffer;
+        @Setter
         protected BisqEasyTrade bisqEasyTradeModel;
+        @Setter
+        protected NetworkId takerNetworkId;
         @Setter
         protected String quoteCode;
         @Setter

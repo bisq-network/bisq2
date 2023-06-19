@@ -18,13 +18,15 @@
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqText;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
-import bisq.user.identity.UserIdentity;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SellerState5 extends BaseState {
     private final Controller controller;
 
-    public SellerState5(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
-        controller = new Controller(applicationService, bisqEasyOffer, myUserIdentity);
+    public SellerState5(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
     }
 
     public View getView() {
@@ -48,8 +50,8 @@ public class SellerState5 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
-            super(applicationService, bisqEasyOffer, myUserIdentity);
+        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
         }
 
         @Override
@@ -89,6 +91,8 @@ public class SellerState5 extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
+        private final MaterialTextField quoteAmount;
+        private final MaterialTextField baseAmount;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -96,20 +100,24 @@ public class SellerState5 extends BaseState {
             BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.seller.phase5.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
-            button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase5.buttonText"));
+            button = new Button(Res.get("bisqEasy.tradeState.info.phase5.buttonText"));
             button.setDefaultButton(true);
-
+            quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.quoteAmount"), "", false);
+            baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.baseAmount"), "", false);
             VBox.setMargin(button, new Insets(5, 0, 0, 0));
             root.getChildren().addAll(Layout.hLine(),
                     infoHeadline,
-                    FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.quoteAmount"), model.getFormattedQuoteAmount(), false),
-                    FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.baseAmount"), model.getFormattedBaseAmount(), false),
+                    quoteAmount,
+                    baseAmount,
                     button);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
+
+            quoteAmount.setText(model.getFormattedQuoteAmount());
+            baseAmount.setText(model.getFormattedBaseAmount());
 
             button.disableProperty().bind(model.getButtonDisabled());
             button.setOnAction(e -> controller.onTradeCompleted());
@@ -120,6 +128,7 @@ public class SellerState5 extends BaseState {
             super.onViewDetached();
 
             button.disableProperty().unbind();
+            button.setOnAction(null);
         }
     }
 }

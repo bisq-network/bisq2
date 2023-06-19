@@ -18,15 +18,16 @@
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
-import bisq.user.identity.UserIdentity;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -40,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SellerState1 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
-        controller = new Controller(applicationService, bisqEasyOffer, myUserIdentity);
+    public SellerState1(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
     }
 
     public View getView() {
@@ -49,8 +50,8 @@ public class SellerState1 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, UserIdentity myUserIdentity) {
-            super(applicationService, bisqEasyOffer, myUserIdentity);
+        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
         }
 
         @Override
@@ -100,7 +101,7 @@ public class SellerState1 extends BaseState {
             BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.seller.phase1.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
-            paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), model.getPaymentAccountData().get(), true);
+            paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), "", true);
             paymentAccountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
 
             button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
@@ -129,8 +130,10 @@ public class SellerState1 extends BaseState {
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
-
+            
+            paymentAccountData.textProperty().unbindBidirectional(model.getPaymentAccountData());
             button.disableProperty().unbind();
+            button.setOnAction(null);
         }
     }
 }

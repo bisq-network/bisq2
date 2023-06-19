@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -75,10 +76,12 @@ public class TradeStateController implements Controller {
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         tradePhaseBox.setSelectedChannel(channel);
+
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        NetworkId takerNetworkId = isMaker(bisqEasyOffer) ?
-                bisqEasyOffer.getMakerNetworkId() :
+        boolean maker = isMaker(bisqEasyOffer);
+        NetworkId takerNetworkId = maker ?
+                channel.getPeer().getNetworkId() :
                 myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         if (bisqEasyTradeService.findTrade(tradeId).isEmpty()) {
@@ -93,43 +96,47 @@ public class TradeStateController implements Controller {
             bisqEasyTradeStatePin.unbind();
         }
         bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {
-            switch (state) {
-                case INIT:
-                    break;
-                case TAKER_SEND_TAKE_OFFER_REQUEST:
-                case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
-                    if (isSeller) {
-                        model.getStateInfoVBox().set(new SellerState1(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    } else {
-                        model.getStateInfoVBox().set(new BuyerState1(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    }
-                    break;
-                case SELLER_SENT_ACCOUNT_DATA:
-                    model.getStateInfoVBox().set(new SellerState2(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case BUYER_RECEIVED_ACCOUNT_DATA:
-                    model.getStateInfoVBox().set(new BuyerState2(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                    model.getStateInfoVBox().set(new BuyerState3(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                    model.getStateInfoVBox().set(new SellerState3(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                    model.getStateInfoVBox().set(new SellerState4(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                    model.getStateInfoVBox().set(new BuyerState4(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case BTC_CONFIRMED:
-                    model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyOffer, myUserIdentity).getView().getRoot());
-                    break;
-                case COMPLETED:
-                    //todo
-                    break;
-            }
+            UIThread.run(() -> {
+                switch (state) {
+                    case INIT:
+                        break;
+                    case TAKER_SEND_TAKE_OFFER_REQUEST:
+                    case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
+                        if (isSeller) {
+                            model.getStateInfoVBox().set(new SellerState1(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        } else {
+                            model.getStateInfoVBox().set(new BuyerState1(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        }
+                        break;
+                    case SELLER_SENT_ACCOUNT_DATA:
+                        model.getStateInfoVBox().set(new SellerState2(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case BUYER_RECEIVED_ACCOUNT_DATA:
+                        model.getStateInfoVBox().set(new BuyerState2(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case BUYER_SENT_FIAT_SENT_CONFIRMATION:
+                        model.getStateInfoVBox().set(new BuyerState3(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
+                        model.getStateInfoVBox().set(new SellerState3(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case SELLER_SENT_BTC_SENT_CONFIRMATION:
+                        model.getStateInfoVBox().set(new SellerState4(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
+                        model.getStateInfoVBox().set(new BuyerState4(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case BTC_CONFIRMED:
+                        model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        break;
+                    case COMPLETED:
+                        //todo
+                        break;
+                    default:
+                        log.error(state.name());
+                }
+            });
         });
 
         String directionString = isSeller ?
