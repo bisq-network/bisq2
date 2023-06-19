@@ -29,6 +29,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,36 +39,22 @@ import org.fxmisc.easybind.Subscription;
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final Label headline;
     private final HBox headerHBox;
-    private final Button openTradeGuideButton, collapseButton, expandButton;
+    private final Button collapseButton, expandButton;
     private final HBox phaseAndInfoHBox;
-    private final VBox firstTimeUserVBox;
+    private final VBox tradeWelcome;
+    private final Region hLine;
     private Subscription isCollapsedPin, stateInfoVBoxPin;
 
     public TradeStateView(TradeStateModel model,
                           TradeStateController controller,
+                          VBox tradeWelcome,
                           VBox tradePhaseBox) {
         super(new VBox(0), model, controller);
+        this.tradeWelcome = tradeWelcome;
 
         this.root.getStyleClass().addAll("bisq-easy-trade-state-bg");
         this.root.setPadding(new Insets(15, 30, 20, 30));
 
-
-        // Welcome
-        Label welcomeHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.headline"));
-        welcomeHeadline.getStyleClass().add("bisq-easy-trade-state-welcome-headline");
-
-        Label welcomeInfo = new Label(Res.get("bisqEasy.tradeState.welcome.info"));
-        welcomeInfo.getStyleClass().add("bisq-easy-trade-state-welcome-sub-headline");
-
-        openTradeGuideButton = new Button(Res.get("bisqEasy.tradeState.openTradeGuide"));
-        openTradeGuideButton.setDefaultButton(true);
-
-        VBox.setMargin(welcomeHeadline, new Insets(20, 0, 10, 0));
-        VBox.setMargin(openTradeGuideButton, new Insets(20, 0, 20, 0));
-        firstTimeUserVBox = new VBox(Layout.hLine(), welcomeHeadline, welcomeInfo, openTradeGuideButton);
-
-
-        // Header
         headline = new Label();
         headline.getStyleClass().add("bisq-easy-trade-state-headline");
 
@@ -76,7 +63,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
         HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
-        HBox.setMargin(headline, new Insets(0, 0, 0, -2));
+        HBox.setMargin(headline, new Insets(2.5, 0, 0, -2));
         headerHBox = new HBox(headline, Spacer.fillHBox(), collapseButton, expandButton);
         headerHBox.setCursor(Cursor.HAND);
 
@@ -84,29 +71,36 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 
-
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
-        VBox.setVgrow(firstTimeUserVBox, Priority.ALWAYS);
-        this.root.getChildren().addAll(headerHBox, firstTimeUserVBox, phaseAndInfoHBox);
+        VBox.setVgrow(tradeWelcome, Priority.ALWAYS);
+        hLine = Layout.hLine();
+        root.getChildren().addAll(headerHBox, hLine, tradeWelcome, phaseAndInfoHBox);
     }
 
     @Override
     protected void onViewAttached() {
-        firstTimeUserVBox.visibleProperty().bind(model.getFirstTimeItemsVisible());
-        firstTimeUserVBox.managedProperty().bind(model.getFirstTimeItemsVisible());
+        hLine.visibleProperty().bind(model.getIsCollapsed().not());
+        hLine.managedProperty().bind(model.getIsCollapsed().not());
+        collapseButton.visibleProperty().bind(model.getIsCollapsed().not());
+        collapseButton.managedProperty().bind(model.getIsCollapsed().not());
+        expandButton.visibleProperty().bind(model.getIsCollapsed());
+        expandButton.managedProperty().bind(model.getIsCollapsed());
+        tradeWelcome.visibleProperty().bind(model.getTradeWelcomeVisible());
+        tradeWelcome.managedProperty().bind(model.getTradeWelcomeVisible());
         phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoBoxVisible());
         phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoBoxVisible());
         headline.textProperty().bind(model.getHeadline());
 
+
         collapseButton.setOnAction(e -> controller.onCollapse());
         expandButton.setOnAction(e -> controller.onExpand());
         headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
-        openTradeGuideButton.setOnAction(e -> controller.onOpenTradeGuide());
 
-        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), this::isCollapsedChanged);
+        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(),
+                isCollapsed -> VBox.setMargin(headerHBox, new Insets(0, 0, isCollapsed ? -5 : 17.5, 0)));
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
                 stateInfoVBox -> {
@@ -115,6 +109,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                     }
                     if (stateInfoVBox != null) {
                         HBox.setHgrow(stateInfoVBox, Priority.ALWAYS);
+                        HBox.setMargin(stateInfoVBox, new Insets(20, 0, 0, 0));
                         phaseAndInfoHBox.getChildren().add(stateInfoVBox);
                     }
                 });
@@ -122,8 +117,14 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewDetached() {
-        firstTimeUserVBox.visibleProperty().unbind();
-        firstTimeUserVBox.managedProperty().unbind();
+        hLine.visibleProperty().unbind();
+        hLine.managedProperty().unbind();
+        collapseButton.visibleProperty().unbind();
+        collapseButton.managedProperty().unbind();
+        expandButton.visibleProperty().unbind();
+        expandButton.managedProperty().unbind();
+        tradeWelcome.visibleProperty().unbind();
+        tradeWelcome.managedProperty().unbind();
         phaseAndInfoHBox.visibleProperty().unbind();
         phaseAndInfoHBox.managedProperty().unbind();
         headline.textProperty().unbind();
@@ -131,22 +132,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         collapseButton.setOnAction(null);
         expandButton.setOnAction(null);
         headerHBox.setOnMouseClicked(null);
-        openTradeGuideButton.setOnAction(null);
 
         isCollapsedPin.unsubscribe();
         stateInfoVBoxPin.unsubscribe();
-    }
-
-    private void isCollapsedChanged(Boolean isCollapsed) {
-        collapseButton.setManaged(!isCollapsed);
-        collapseButton.setVisible(!isCollapsed);
-        expandButton.setManaged(isCollapsed);
-        expandButton.setVisible(isCollapsed);
-
-        if (isCollapsed) {
-            VBox.setMargin(headerHBox, new Insets(0, 0, -17, 0));
-        } else {
-            VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
-        }
     }
 }

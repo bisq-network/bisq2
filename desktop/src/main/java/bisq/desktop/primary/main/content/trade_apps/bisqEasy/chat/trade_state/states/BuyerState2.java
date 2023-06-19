@@ -19,15 +19,15 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.network.NetworkId;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -41,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BuyerState2 extends BaseState {
     private final Controller controller;
 
-    public BuyerState2(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
+    public BuyerState2(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -50,13 +50,13 @@ public class BuyerState2 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
+        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyTrade, channel);
         }
 
         @Override
-        protected Model createModel() {
-            return new Model();
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            return new Model(bisqEasyTrade, channel);
         }
 
         @Override
@@ -66,18 +66,20 @@ public class BuyerState2 extends BaseState {
 
         @Override
         public void onActivate() {
+            model.getButtonDisabled().bind(model.getBtcAddress().isEmpty());
             super.onActivate();
         }
 
         @Override
         public void onDeactivate() {
             super.onDeactivate();
+            model.getButtonDisabled().unbind();
         }
 
         private void onFiatSent() {
             sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2.chatBotMessage", model.getQuoteCode(), model.getBtcAddress().get()));
             try {
-                bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTradeModel(), model.getBtcAddress().get());
+                bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTrade(), model.getBtcAddress().get());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
@@ -87,6 +89,11 @@ public class BuyerState2 extends BaseState {
     @Getter
     private static class Model extends BaseState.Model {
         private final StringProperty btcAddress = new SimpleStringProperty();
+        private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
+
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(bisqEasyTrade, channel);
+        }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
@@ -111,8 +118,8 @@ public class BuyerState2 extends BaseState {
 
             account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2.sellersAccount"),
                     "", false);
-            VBox.setMargin(button, new Insets(5, 0, 0, 0));
-            root.getChildren().addAll(Layout.hLine(),
+            VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            root.getChildren().addAll(
                     infoHeadline,
                     quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2.quoteAmount"), "", false),
                     account,
@@ -126,14 +133,14 @@ public class BuyerState2 extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            infoHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.headline", model.getQuoteCode()));
+            infoHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.headline", model.getFormattedQuoteAmount()));
             quoteAmount.setText(model.getFormattedQuoteAmount());
             btcAddressHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.headline", model.getFormattedQuoteAmount()));
-            confirmText.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.confirm", model.getFormattedQuoteAmount()));
-            account.setText(model.getBisqEasyTradeModel().getSeller().getPaymentAccountData().get());
+            confirmText.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.confirm", model.getQuoteCode()));
+            account.setText(model.getBisqEasyTrade().getPaymentAccountData().get());
 
             btcAddress.textProperty().bindBidirectional(model.getBtcAddress());
-            button.disableProperty().bind(btcAddress.textProperty().isEmpty());
+            button.disableProperty().bind(model.getButtonDisabled());
             button.setOnAction(e -> controller.onFiatSent());
         }
 

@@ -28,14 +28,25 @@ import bisq.trade.Trade;
 import bisq.trade.TradeParty;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, BisqEasyTradeParty> {
-    private final Observable<BisqEasyTradeState> tradeState = new Observable<>();
+
+    @Getter
+    private final Observable<String> paymentAccountData = new Observable<>();
+    @Getter
+    private final Observable<String> btcAddress = new Observable<>();
+    @Getter
+    private final Observable<String> txId = new Observable<>();
+
+    private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
     public BisqEasyTrade(boolean isBuyer,
                          boolean isTaker,
@@ -68,12 +79,16 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     @Override
     public bisq.trade.protobuf.Trade toProto() {
-        return getTradeBuilder().setBisqEasyTrade(bisq.trade.protobuf.BisqEasyTrade.newBuilder())
+        bisq.trade.protobuf.BisqEasyTrade.Builder builder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
+        Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
+        Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
+        Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
+        return getTradeBuilder().setBisqEasyTrade(builder)
                 .build();
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        return new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
                 proto.getId(),
                 proto.getIsBuyer(),
                 proto.getIsTaker(),
@@ -81,6 +96,17 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 BisqEasyContract.fromProto(proto.getContract()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
+        bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
+        if (bisqEasyTradeProto.hasPaymentAccountData()) {
+            bisqEasyTrade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());
+        }
+        if (bisqEasyTradeProto.hasBtcAddress()) {
+            bisqEasyTrade.getBtcAddress().set(bisqEasyTradeProto.getBtcAddress());
+        }
+        if (bisqEasyTradeProto.hasTxId()) {
+            bisqEasyTrade.getTxId().set(bisqEasyTradeProto.getTxId());
+        }
+        return bisqEasyTrade;
     }
 
     public BisqEasyTradeState getTradeState() {

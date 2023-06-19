@@ -29,14 +29,8 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.network.NetworkId;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.support.MediationService;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -57,19 +51,23 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class TradePhaseBox {
+class TradePhaseBox {
     private final Controller controller;
 
-    public TradePhaseBox(DefaultApplicationService applicationService) {
+    TradePhaseBox(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
-    public View getView() {
+    View getView() {
         return controller.getView();
     }
 
-    public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
+    void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
         controller.setSelectedChannel(channel);
+    }
+
+    void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
+        controller.setBisqEasyTrade(bisqEasyTrade);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -77,74 +75,42 @@ public class TradePhaseBox {
         @Getter
         private final View view;
         private final MediationService mediationService;
-        private final UserIdentityService userIdentityService;
-        private final BisqEasyTradeService bisqEasyTradeService;
         private Pin bisqEasyTradeStatePin;
 
         private Controller(DefaultApplicationService applicationService) {
             mediationService = applicationService.getSupportService().getMediationService();
-            userIdentityService = applicationService.getUserService().getUserIdentityService();
-            bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
             model = new Model();
             view = new View(model, this);
         }
 
-        public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
+        private void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
             model.setSelectedChannel(channel);
-            BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
-            UserIdentity myUserIdentity = channel.getMyUserIdentity();
-            boolean maker = isMaker(bisqEasyOffer);
-            NetworkId takerNetworkId = maker ?
-                    channel.getPeer().getNetworkId() :
-                    myUserIdentity.getUserProfile().getNetworkId();
-            String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-            if (bisqEasyTradeService.findTrade(tradeId).isEmpty()) {
-                log.error("###");
-                return;
-            }
-            BisqEasyTrade bisqEasyTradeModel = bisqEasyTradeService.findTrade(tradeId).orElseThrow();
-            model.setBisqEasyTradeModel(bisqEasyTradeModel);
+        }
 
-            boolean isBuyer = bisqEasyTradeModel.isBuyer();
+        private void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
+            model.setBisqEasyTrade(bisqEasyTrade);
 
-            model.getPhase1Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase1").toUpperCase() :
+            boolean isBuyer = bisqEasyTrade.isBuyer();
+
+            model.getPhase1Info().set(isBuyer ?
+                    Res.get("bisqEasy.tradeState.phase.buyer.phase1").toUpperCase() :
                     Res.get("bisqEasy.tradeState.phase.seller.phase1").toUpperCase());
-            model.getPhase2Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase2").toUpperCase() :
+            model.getPhase2Info().set(isBuyer ?
+                    Res.get("bisqEasy.tradeState.phase.buyer.phase2").toUpperCase() :
                     Res.get("bisqEasy.tradeState.phase.seller.phase2").toUpperCase());
-            model.getPhase3Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase3").toUpperCase() :
+            model.getPhase3Info().set(isBuyer ?
+                    Res.get("bisqEasy.tradeState.phase.buyer.phase3").toUpperCase() :
                     Res.get("bisqEasy.tradeState.phase.seller.phase3").toUpperCase());
-            model.getPhase4Info().set(isBuyer ? Res.get("bisqEasy.tradeState.phase.buyer.phase4").toUpperCase() :
+            model.getPhase4Info().set(isBuyer ?
+                    Res.get("bisqEasy.tradeState.phase.buyer.phase4").toUpperCase() :
                     Res.get("bisqEasy.tradeState.phase.seller.phase4").toUpperCase());
             model.getPhase5Info().set(Res.get("bisqEasy.tradeState.phase.phase5").toUpperCase());
-
-           /* String directionString = isBuyer ?
-                    Res.get("offer.buying").toUpperCase() :
-                    Res.get("offer.selling").toUpperCase();
-            AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
-            String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-            model.getQuoteCode().set(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
-            model.getFormattedBaseAmount().set(baseAmountString);
-            String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-            model.getFormattedQuoteAmount().set(quoteAmountString);
-            FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
-            String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
-            String tradeInfo = Res.get("bisqEasy.tradeState.header.headline",
-                    directionString,
-                    baseAmountString,
-                    quoteAmountString,
-                    paymentMethodName);
-
-            model.getTradeInfo().set(tradeInfo);
-            if (!isBuyer) {
-                findUsersAccountData().ifPresent(accountData -> model.getSellersPaymentAccountData().set(accountData));
-            }*/
-
 
             if (bisqEasyTradeStatePin != null) {
                 bisqEasyTradeStatePin.unbind();
             }
-            bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {
+            bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> {
                 UIThread.run(() -> {
                     switch (state) {
                         case INIT:
@@ -179,7 +145,7 @@ public class TradePhaseBox {
                             break;
                     }
                     int phaseIndex = model.getPhaseIndex().get();
-                    model.getOpenDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
+                    model.getDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
                 });
             });
         }
@@ -215,10 +181,6 @@ public class TradePhaseBox {
                 new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
             }
         }
-
-        private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
-            return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
-        }
     }
 
     @Getter
@@ -226,20 +188,20 @@ public class TradePhaseBox {
         @Setter
         private BisqEasyPrivateTradeChatChannel selectedChannel;
         @Setter
-        private BisqEasyTrade bisqEasyTradeModel;
+        private BisqEasyTrade bisqEasyTrade;
 
+        private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
         private final StringProperty phase1Info = new SimpleStringProperty();
         private final StringProperty phase2Info = new SimpleStringProperty();
         private final StringProperty phase3Info = new SimpleStringProperty();
         private final StringProperty phase4Info = new SimpleStringProperty();
         private final StringProperty phase5Info = new SimpleStringProperty();
-        private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
-        private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
+        private final BooleanProperty disputeButtonVisible = new SimpleBooleanProperty();
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label phase1Label, phase2Label, phase3Label, phase4Label, phase5Label;
-        private final Button openDisputeButton;
+        private final Button disputeButton;
         private final Hyperlink openTradeGuide;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
         private Subscription phaseIndexPin;
@@ -275,16 +237,14 @@ public class TradePhaseBox {
 
             openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeState.openTradeGuide"));
 
-            openDisputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
-            openDisputeButton.getStyleClass().add("outlined-button");
-
-            Region separator = Layout.hLine();
+            disputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
+            disputeButton.getStyleClass().add("outlined-button");
 
             VBox.setMargin(phaseHeadline, new Insets(20, 0, 20, 0));
-            VBox.setMargin(openDisputeButton, new Insets(10, 0, 0, 0));
+            VBox.setMargin(disputeButton, new Insets(10, 0, 0, 0));
             VBox.setMargin(openTradeGuide, new Insets(30, 0, 0, 2));
 
-            root.getChildren().addAll(separator,
+            root.getChildren().addAll(
                     phaseHeadline,
                     phase1HBox,
                     getVLine(),
@@ -297,7 +257,7 @@ public class TradePhaseBox {
                     phase5HBox,
                     Spacer.fillVBox(),
                     openTradeGuide,
-                    openDisputeButton);
+                    disputeButton);
         }
 
         @Override
@@ -307,10 +267,10 @@ public class TradePhaseBox {
             phase3Label.textProperty().bind(model.getPhase3Info());
             phase4Label.textProperty().bind(model.getPhase4Info());
             phase5Label.textProperty().bind(model.getPhase5Info());
-            openDisputeButton.visibleProperty().bind(model.getOpenDisputeButtonVisible());
-            openDisputeButton.managedProperty().bind(model.getOpenDisputeButtonVisible());
+            disputeButton.visibleProperty().bind(model.getDisputeButtonVisible());
+            disputeButton.managedProperty().bind(model.getDisputeButtonVisible());
 
-            openDisputeButton.setOnAction(e -> controller.onOpenDispute());
+            disputeButton.setOnAction(e -> controller.onOpenDispute());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
         }
@@ -322,9 +282,10 @@ public class TradePhaseBox {
             phase3Label.textProperty().unbind();
             phase4Label.textProperty().unbind();
             phase5Label.textProperty().unbind();
-            openDisputeButton.visibleProperty().unbind();
-            openDisputeButton.managedProperty().unbind();
-            openDisputeButton.setOnAction(null);
+            disputeButton.visibleProperty().unbind();
+            disputeButton.managedProperty().unbind();
+
+            disputeButton.setOnAction(null);
             openTradeGuide.setOnAction(null);
             phaseIndexPin.unsubscribe();
         }
@@ -350,7 +311,7 @@ public class TradePhaseBox {
             Region separator = Layout.vLine();
             separator.setMinHeight(10);
             separator.setMaxHeight(separator.getMinHeight());
-            VBox.setMargin(separator, new Insets(5, 0, 5, 10));
+            VBox.setMargin(separator, new Insets(5, 0, 5, 12));
             return separator;
         }
 

@@ -19,15 +19,15 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.network.NetworkId;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -41,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SellerState1 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
+    public SellerState1(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -50,13 +50,13 @@ public class SellerState1 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
+        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyTrade, channel);
         }
 
         @Override
-        protected Model createModel() {
-            return new Model();
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            return new Model(bisqEasyTrade, channel);
         }
 
         @Override
@@ -67,19 +67,21 @@ public class SellerState1 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+            model.getButtonDisabled().bind(model.getPaymentAccountData().isEmpty());
             findUsersAccountData().ifPresent(accountData -> model.getPaymentAccountData().set(accountData));
         }
 
         @Override
         public void onDeactivate() {
             super.onDeactivate();
+            model.getButtonDisabled().unbind();
         }
 
         private void onSendPaymentData() {
             String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getPaymentAccountData().get());
             sendChatBotMessage(message);
             try {
-                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTradeModel(), model.getPaymentAccountData().get());
+                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), model.getPaymentAccountData().get());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
@@ -89,6 +91,11 @@ public class SellerState1 extends BaseState {
     @Getter
     private static class Model extends BaseState.Model {
         private final StringProperty paymentAccountData = new SimpleStringProperty();
+        private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
+
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(bisqEasyTrade, channel);
+        }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
@@ -109,8 +116,8 @@ public class SellerState1 extends BaseState {
 
             Label helpLabel = FormUtils.getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.note"));
 
-            VBox.setMargin(button, new Insets(5, 0, 0, 0));
-            root.getChildren().addAll(Layout.hLine(),
+            VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            root.getChildren().addAll(
                     infoHeadline,
                     paymentAccountData,
                     button,
@@ -123,14 +130,14 @@ public class SellerState1 extends BaseState {
             super.onViewAttached();
 
             paymentAccountData.textProperty().bindBidirectional(model.getPaymentAccountData());
-            button.disableProperty().bind(paymentAccountData.textProperty().isEmpty());
+            button.disableProperty().bind(model.getButtonDisabled());
             button.setOnAction(e -> controller.onSendPaymentData());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
-            
+
             paymentAccountData.textProperty().unbindBidirectional(model.getPaymentAccountData());
             button.disableProperty().unbind();
             button.setOnAction(null);

@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 import bisq.common.data.Triple;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
@@ -32,7 +33,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -61,7 +61,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private final HBox progressItemsBox;
     private Scene rootScene;
     private Label priceProgressItemLabel;
-    private Separator priceProgressItemSeparator;
+    private Region priceProgressItemLine;
     private Subscription priceProgressItemVisiblePin;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
@@ -134,11 +134,12 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         });
         priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
             if (isVisible) {
-                progressItemsBox.getChildren().add(5, priceProgressItemSeparator);
+                HBox.setMargin(priceProgressItemLine, new Insets(28, 0, 0, 0));
+                progressItemsBox.getChildren().add(5, priceProgressItemLine);
                 progressItemsBox.getChildren().add(5, priceProgressItemLabel);
                 progressLabelList.add(2, priceProgressItemLabel);
             } else {
-                progressItemsBox.getChildren().remove(priceProgressItemSeparator);
+                progressItemsBox.getChildren().remove(priceProgressItemLine);
                 progressItemsBox.getChildren().remove(priceProgressItemLabel);
                 progressLabelList.remove(priceProgressItemLabel);
             }
@@ -177,7 +178,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         Label direction = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.direction"));
         Label market = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.market"));
         priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.price"));
-        priceProgressItemSeparator = createAndGetSeparator();
+        priceProgressItemLine = getHLine();
         Label amount = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.amount"));
         Label method = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.method"));
         Label complete = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
@@ -192,21 +193,21 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         hBox.setPadding(new Insets(0, 20, 0, 50));
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 direction,
-                createAndGetSeparator(),
+                getHLine(),
                 market,
-                createAndGetSeparator(),
+                getHLine(),
                 amount,
-                createAndGetSeparator(),
+                getHLine(),
                 method,
-                createAndGetSeparator(),
+                getHLine(),
                 complete,
                 Spacer.fillHBox(), closeButton);
 
         return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, method, complete)));
     }
 
-    private Separator createAndGetSeparator() {
-        Separator line = new Separator();
+    private Region getHLine() {
+        Region line = Layout.hLine();
         line.setPrefWidth(30);
         return line;
     }

@@ -22,8 +22,7 @@ import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
@@ -45,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -57,6 +57,7 @@ public class TradeStateController implements Controller {
     private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final DefaultApplicationService applicationService;
+    private final TradeWelcome tradeWelcome;
     private final TradePhaseBox tradePhaseBox;
     private Subscription isCollapsedPin;
     private Pin tradeRulesConfirmedPin, bisqEasyTradeStatePin;
@@ -68,34 +69,39 @@ public class TradeStateController implements Controller {
         settingsService = applicationService.getSettingsService();
         bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
 
+        tradeWelcome = new TradeWelcome();
         tradePhaseBox = new TradePhaseBox(applicationService);
 
         model = new TradeStateModel();
-        view = new TradeStateView(model, this, tradePhaseBox.getView().getRoot());
+        view = new TradeStateView(model, this, tradeWelcome.getView().getRoot(), tradePhaseBox.getView().getRoot());
     }
 
     public void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
-        tradePhaseBox.setSelectedChannel(channel);
 
-        BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
+
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
+        BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(bisqEasyOffer);
         NetworkId takerNetworkId = maker ?
                 channel.getPeer().getNetworkId() :
                 myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-        if (bisqEasyTradeService.findTrade(tradeId).isEmpty()) {
-            log.error("###");
+        Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(tradeId);
+        if (optionalBisqEasyTrade.isEmpty()) {
+            new Popup().warning(Res.get("bisqEasy.tradeState.warn.noTradeFound")).show();
             return;
         }
-        BisqEasyTrade bisqEasyTradeModel = bisqEasyTradeService.findTrade(tradeId).orElseThrow();
-        model.setBisqEasyTradeModel(bisqEasyTradeModel);
+        BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.orElseThrow();
 
-        boolean isSeller = bisqEasyTradeModel.isSeller();
+        tradePhaseBox.setSelectedChannel(channel);
+        tradePhaseBox.setBisqEasyTrade(bisqEasyTrade);
+        model.setBisqEasyTrade(bisqEasyTrade);
+
+        boolean isSeller = bisqEasyTrade.isSeller();
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
         }
-        bisqEasyTradeStatePin = bisqEasyTradeModel.tradeStateObservable().addObserver(state -> {
+        bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> {
             UIThread.run(() -> {
                 switch (state) {
                     case INIT:
@@ -103,32 +109,32 @@ public class TradeStateController implements Controller {
                     case TAKER_SEND_TAKE_OFFER_REQUEST:
                     case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
                         if (isSeller) {
-                            model.getStateInfoVBox().set(new SellerState1(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                            model.getStateInfoVBox().set(new SellerState1(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         } else {
-                            model.getStateInfoVBox().set(new BuyerState1(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                            model.getStateInfoVBox().set(new BuyerState1(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         }
                         break;
                     case SELLER_SENT_ACCOUNT_DATA:
-                        model.getStateInfoVBox().set(new SellerState2(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState2(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BUYER_RECEIVED_ACCOUNT_DATA:
-                        model.getStateInfoVBox().set(new BuyerState2(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState2(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new BuyerState3(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState3(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new SellerState3(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState3(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new SellerState4(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState4(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new BuyerState4(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState4(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BTC_CONFIRMED:
-                        model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
-                        model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyOffer, takerNetworkId, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case COMPLETED:
                         //todo
@@ -168,29 +174,18 @@ public class TradeStateController implements Controller {
 
     @Override
     public void onActivate() {
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(tradeRulesConfirmed -> {
-            /*int phaseIndex = model.getPhaseIndex().get();
-            if (phaseIndex == 0 && tradeRulesConfirmed) {
-                // phaseIndexChanged(phaseIndex);
-            }*/
-        });
-        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
-            applyFirstTimeItemsVisible();
-            applyPhaseAndInfoBoxVisible();
-        });
         model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_ASSISTANT_COLLAPSED).orElse(false));
-        applyPhaseAndInfoBoxVisible();
+        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> applyVisibility());
+        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> applyVisibility());
     }
 
     @Override
     public void onDeactivate() {
-        if (tradeRulesConfirmedPin != null) {
-            tradeRulesConfirmedPin.unbind();
-        }
+        tradeRulesConfirmedPin.unbind();
+        isCollapsedPin.unsubscribe();
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
         }
-        isCollapsedPin.unsubscribe();
     }
 
     void onExpand() {
@@ -210,23 +205,15 @@ public class TradeStateController implements Controller {
         settingsService.setCookie(CookieKey.TRADE_ASSISTANT_COLLAPSED, value);
     }
 
-    void onOpenTradeGuide() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
-    }
-
-
-    private boolean isBuyer() {
-        return isBuyer(model.getBisqEasyTradeModel().getOffer());
-    }
-
-    private boolean isBuyer(BisqEasyOffer bisqEasyOffer) {
-        return isMaker(bisqEasyOffer) ?
-                bisqEasyOffer.getMakersDirection().isBuy() :
-                bisqEasyOffer.getTakersDirection().isBuy();
-    }
-
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+    }
+
+    private void applyVisibility() {
+        boolean tradeRulesConfirmed = settingsService.getTradeRulesConfirmed().get();
+        boolean isExpanded = !model.getIsCollapsed().get();
+        model.getTradeWelcomeVisible().set(isExpanded && !tradeRulesConfirmed);
+        model.getPhaseAndInfoBoxVisible().set(isExpanded && tradeRulesConfirmed);
     }
 
     private void applyFirstTimeItemsVisible() {
@@ -234,7 +221,7 @@ public class TradeStateController implements Controller {
     }
 
     private void applyPhaseAndInfoBoxVisible() {
-        model.getPhaseAndInfoBoxVisible().set(!model.getIsCollapsed().get() && !model.getFirstTimeItemsVisible().get());
+        model.getPhaseAndInfoBoxVisible().set(!model.getIsCollapsed().get() && !model.getTradeWelcomeVisible().get());
     }
 
     private Boolean getTradeRulesConfirmed() {

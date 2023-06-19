@@ -49,6 +49,6 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
     }
 
     private void commitToModel(String txId) {
-        model.getPeer().getTxId().set(txId);
+        model.getTxId().set(txId);
     }
 }

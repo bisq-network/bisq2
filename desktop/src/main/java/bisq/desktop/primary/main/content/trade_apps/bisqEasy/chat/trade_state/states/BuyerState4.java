@@ -20,16 +20,12 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.network.NetworkId;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -43,8 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BuyerState4 extends BaseState {
     private final Controller controller;
 
-    public BuyerState4(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
+    public BuyerState4(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -52,13 +48,13 @@ public class BuyerState4 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
+        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyTrade, channel);
         }
 
         @Override
-        protected Model createModel() {
-            return new Model();
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            return new Model(bisqEasyTrade, channel);
         }
 
         @Override
@@ -70,22 +66,27 @@ public class BuyerState4 extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.getButtonDisabled().set(true);
-            model.setBtcAddress(model.getBisqEasyTradeModel().getBuyer().getBtcAddress().get());
-            model.getBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value.notInMempoolYet"));
-            UIScheduler.run(() ->
-                            model.getBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
-                                    model.getFormattedBaseAmount(), "0")))
+            model.setTxId(model.getBisqEasyTrade().getTxId().get());
+            model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
+            model.getBtcBalance().set("");
+            model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.notInMempoolYet"));
+            UIScheduler.run(() -> {
+                        model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmation", 0));
+                        model.getBtcBalance().set(model.getFormattedBaseAmount());
+                    })
                     .after(2000);
             UIScheduler.run(() -> {
-                        model.getButtonDisabled().set(false);
+                        model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmation", 1));
                         sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
                                 model.getFormattedBaseAmount(), model.getBtcAddress()));
-                        model.getBtcBalance().set(Res.get("bisqEasy.tradeState.info.phase4.balance.value",
-                                model.getFormattedBaseAmount(), "1"));
-                        //onBtcConfirmed();
                     })
                     .after(4000);
+            UIScheduler.run(() -> {
+                        model.getConfirmations().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmation.plural", 2));
+                        sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage",
+                                model.getFormattedBaseAmount(), model.getBtcAddress()));
+                    })
+                    .after(6000);
         }
 
         @Override
@@ -95,7 +96,7 @@ public class BuyerState4 extends BaseState {
 
         private void onComplete() {
             try {
-                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTradeModel());
+                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
@@ -103,7 +104,7 @@ public class BuyerState4 extends BaseState {
 
      /*   private void onBtcConfirmed() {
             try {
-                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTradeModel());
+                bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
@@ -114,13 +115,19 @@ public class BuyerState4 extends BaseState {
     private static class Model extends BaseState.Model {
         @Setter
         protected String btcAddress;
+        @Setter
+        protected String txId;
         private final StringProperty btcBalance = new SimpleStringProperty();
-        private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
+        private final StringProperty confirmations = new SimpleStringProperty();
+
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(bisqEasyTrade, channel);
+        }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
-        private final MaterialTextField btcBalance;
+        private final MaterialTextField txId, btcBalance;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -128,27 +135,29 @@ public class BuyerState4 extends BaseState {
             BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase4.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
+            txId = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase4.txId"), "", false);
             btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase4.balance"), "", false);
-            btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help"));
+            btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help.notInMempoolYet"));
 
             button = new Button(Res.get("bisqEasy.tradeState.info.phase4.buttonText"));
             button.setDefaultButton(true);
 
-            VBox.setMargin(button, new Insets(5, 0, 0, 0));
-            root.getChildren().addAll(Layout.hLine(),
+            VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            root.getChildren().addAll(
                     infoHeadline,
                     FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase4.info")),
+                    txId,
                     btcBalance,
                     button);
-
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
+            txId.setText(model.getTxId());
             btcBalance.textProperty().bind(model.getBtcBalance());
-            button.disableProperty().bind(model.getButtonDisabled());
+            btcBalance.helpHelpProperty().bind(model.getConfirmations());
             button.setOnAction(e -> controller.onComplete());
         }
 
@@ -157,7 +166,7 @@ public class BuyerState4 extends BaseState {
             super.onViewDetached();
 
             btcBalance.textProperty().unbind();
-            button.disableProperty().unbind();
+            btcBalance.helpHelpProperty().unbind();
             button.setOnAction(null);
         }
     }

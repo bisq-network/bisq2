@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.common.observable.Observable;
 import bisq.contract.ContractSignatureData;
 import bisq.network.NetworkId;
 import bisq.trade.TradeParty;
@@ -25,15 +24,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Optional;
-
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public class BisqEasyTradeParty extends TradeParty {
-    private final Observable<String> paymentAccountData = new Observable<>();
-    private final Observable<String> btcAddress = new Observable<>();
-    private final Observable<String> txId = new Observable<>();
 
     public BisqEasyTradeParty(NetworkId networkId) {
         super(networkId);
@@ -42,9 +36,6 @@ public class BisqEasyTradeParty extends TradeParty {
     @Override
     public bisq.trade.protobuf.TradeParty toProto() {
         bisq.trade.protobuf.BisqEasyTradeParty.Builder builder = bisq.trade.protobuf.BisqEasyTradeParty.newBuilder();
-        Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
-        Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
-        Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
         return getTradePartyBuilder().setBisqEasyTradeParty(builder).build();
     }
 
@@ -52,13 +43,6 @@ public class BisqEasyTradeParty extends TradeParty {
         BisqEasyTradeParty tradeParty = new BisqEasyTradeParty(NetworkId.fromProto(proto.getNetworkId()));
         if (proto.hasContractSignatureData()) {
             tradeParty.getContractSignatureData().set(ContractSignatureData.fromProto(proto.getContractSignatureData()));
-        }
-        bisq.trade.protobuf.BisqEasyTradeParty bisqEasyTradePartyProto = proto.getBisqEasyTradeParty();
-        if (bisqEasyTradePartyProto.hasPaymentAccountData()) {
-            tradeParty.getPaymentAccountData().set(bisqEasyTradePartyProto.getPaymentAccountData());
-        }
-        if (bisqEasyTradePartyProto.hasBtcAddress()) {
-            tradeParty.getBtcAddress().set(bisqEasyTradePartyProto.getBtcAddress());
         }
         return tradeParty;
     }

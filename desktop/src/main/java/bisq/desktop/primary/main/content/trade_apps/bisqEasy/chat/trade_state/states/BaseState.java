@@ -22,12 +22,10 @@ import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.network.NetworkId;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
@@ -50,24 +48,20 @@ public abstract class BaseState {
         protected final UserIdentityService userIdentityService;
         private final MarketPriceService marketPriceService;
 
-        protected Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
+        protected Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             chatService = applicationService.getChatService();
             bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
             accountService = applicationService.getAccountService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             marketPriceService = applicationService.getOracleService().getMarketPriceService();
 
-            model = createModel();
-            model.setSelectedChannel(channel);
-            model.setBisqEasyOffer(bisqEasyOffer);
-            model.setTakerNetworkId(takerNetworkId);
-
+            model = createModel(bisqEasyTrade, channel);
             view = createView();
         }
 
         protected abstract V createView();
 
-        protected abstract M createModel();
+        protected abstract M createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel);
 
         @Override
         public void onActivate() {
@@ -82,10 +76,6 @@ public abstract class BaseState {
             String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec,
                     bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
             model.setFormattedQuoteAmount(quoteAmountString);
-
-            String tradeId = Trade.createId(bisqEasyOffer.getId(), model.getTakerNetworkId().getId());
-            bisqEasyTradeService.findTrade(tradeId)
-                    .ifPresent(model::setBisqEasyTradeModel);
         }
 
         @Override
@@ -103,26 +93,29 @@ public abstract class BaseState {
         protected void sendChatBotMessage(String message) {
             chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                     Optional.empty(),
-                    model.getSelectedChannel());
+                    model.getChannel());
         }
     }
 
     @Getter
     protected static class Model implements bisq.desktop.common.view.Model {
-        @Setter
-        protected BisqEasyPrivateTradeChatChannel selectedChannel;
-        @Setter
-        protected BisqEasyOffer bisqEasyOffer;
-        @Setter
-        protected BisqEasyTrade bisqEasyTradeModel;
-        @Setter
-        protected NetworkId takerNetworkId;
+        protected final BisqEasyTrade bisqEasyTrade;
+        protected final BisqEasyPrivateTradeChatChannel channel;
         @Setter
         protected String quoteCode;
         @Setter
         protected String formattedBaseAmount;
         @Setter
         protected String formattedQuoteAmount;
+
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            this.bisqEasyTrade = bisqEasyTrade;
+            this.channel = channel;
+        }
+
+        protected BisqEasyOffer getBisqEasyOffer() {
+            return bisqEasyTrade.getOffer();
+        }
     }
 
     public static class View<M extends BaseState.Model, C extends BaseState.Controller<?, ?>>

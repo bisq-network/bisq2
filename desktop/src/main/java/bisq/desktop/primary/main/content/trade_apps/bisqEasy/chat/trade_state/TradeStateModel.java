@@ -29,10 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class TradeStateModel implements Model {
     @Setter
-    private BisqEasyTrade bisqEasyTradeModel;
+    private BisqEasyTrade bisqEasyTrade;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();
-    private final BooleanProperty firstTimeItemsVisible = new SimpleBooleanProperty();
+    private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoBoxVisible = new SimpleBooleanProperty();
 }

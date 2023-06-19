@@ -19,18 +19,12 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.network.NetworkId;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.TradeException;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
@@ -41,8 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SellerState5 extends BaseState {
     private final Controller controller;
 
-    public SellerState5(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
+    public SellerState5(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -50,13 +44,13 @@ public class SellerState5 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
+        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyTrade, channel);
         }
 
         @Override
-        protected Model createModel() {
-            return new Model();
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            return new Model(bisqEasyTrade, channel);
         }
 
         @Override
@@ -76,7 +70,7 @@ public class SellerState5 extends BaseState {
 
         private void onTradeCompleted() {
             try {
-                bisqEasyTradeService.tradeCompleted(model.getBisqEasyTradeModel());
+                bisqEasyTradeService.tradeCompleted(model.getBisqEasyTrade());
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }
@@ -85,14 +79,14 @@ public class SellerState5 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        private final StringProperty btcBalance = new SimpleStringProperty();
-        private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(bisqEasyTrade, channel);
+        }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
-        private final MaterialTextField quoteAmount;
-        private final MaterialTextField baseAmount;
+        private final MaterialTextField quoteAmount, baseAmount;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -104,8 +98,8 @@ public class SellerState5 extends BaseState {
             button.setDefaultButton(true);
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.quoteAmount"), "", false);
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase5.baseAmount"), "", false);
-            VBox.setMargin(button, new Insets(5, 0, 0, 0));
-            root.getChildren().addAll(Layout.hLine(),
+            VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            root.getChildren().addAll(
                     infoHeadline,
                     quoteAmount,
                     baseAmount,
@@ -119,7 +113,6 @@ public class SellerState5 extends BaseState {
             quoteAmount.setText(model.getFormattedQuoteAmount());
             baseAmount.setText(model.getFormattedBaseAmount());
 
-            button.disableProperty().bind(model.getButtonDisabled());
             button.setOnAction(e -> controller.onTradeCompleted());
         }
 
@@ -127,7 +120,6 @@ public class SellerState5 extends BaseState {
         protected void onViewDetached() {
             super.onViewDetached();
 
-            button.disableProperty().unbind();
             button.setOnAction(null);
         }
     }

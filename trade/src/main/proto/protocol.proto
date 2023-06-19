@@ -65,18 +65,17 @@ message TradeMessage {
 
 // BisqEasy
 message BisqEasyTradeParty {
+}
+
+message BisqEasyTrade {
   optional string paymentAccountData = 1;
   optional string btcAddress = 2;
   optional string txId = 3;
 }
 
-message BisqEasyTrade {
-}
-
 message BisqEasyTradeStore {
   map<string, Trade> tradeById = 1;
 }
-
 
 // BisqEasy messages
 message BisqEasyTradeMessage {

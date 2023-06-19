@@ -19,11 +19,9 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.BisqText;
 import bisq.i18n.Res;
-import bisq.network.NetworkId;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.scene.control.Label;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SellerState2 extends BaseState {
     private final Controller controller;
 
-    public SellerState2(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyOffer, takerNetworkId, channel);
+    public SellerState2(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -41,13 +39,13 @@ public class SellerState2 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyOffer, takerNetworkId, channel);
+        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(applicationService, bisqEasyTrade, channel);
         }
 
         @Override
-        protected Model createModel() {
-            return new Model();
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            return new Model(bisqEasyTrade, channel);
         }
 
         @Override
@@ -68,6 +66,9 @@ public class SellerState2 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(bisqEasyTrade, channel);
+        }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
@@ -81,7 +82,7 @@ public class SellerState2 extends BaseState {
             infoHeadline = new BisqText("");
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
             infoLabel = FormUtils.getLabel("");
-            root.getChildren().addAll(Layout.hLine(),
+            root.getChildren().addAll(
                     infoHeadline,
                     infoLabel
             );
@@ -92,7 +93,7 @@ public class SellerState2 extends BaseState {
             super.onViewAttached();
 
             infoHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.headline", model.getQuoteCode()));
-            infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.info", model.getQuoteCode()));
+            infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.info", model.getFormattedQuoteAmount()));
         }
 
         @Override
