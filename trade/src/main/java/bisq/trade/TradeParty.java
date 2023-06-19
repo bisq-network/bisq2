@@ -36,20 +36,21 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 @Getter
-public class TradeParty implements Proto {
+public abstract class TradeParty implements Proto {
     private final NetworkId networkId;
     private final Observable<ContractSignatureData> contractSignatureData = new Observable<>();
 
-    public TradeParty(NetworkId networkId) {
+    protected TradeParty(NetworkId networkId) {
         this.networkId = networkId;
     }
 
-    @Override
-    public bisq.trade.protobuf.TradeParty toProto() {
+    public abstract bisq.trade.protobuf.TradeParty toProto();
+
+    public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder() {
         bisq.trade.protobuf.TradeParty.Builder builder = bisq.trade.protobuf.TradeParty.newBuilder()
                 .setNetworkId(networkId.toProto());
         Optional.ofNullable(contractSignatureData.get()).ifPresent(ContractSignatureData::toProto);
-        return builder.build();
+        return builder;
     }
 
     public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto) {
@@ -57,7 +58,6 @@ public class TradeParty implements Proto {
             case BISQEASYTRADEPARTY: {
                 return BisqEasyTradeParty.fromProto(proto);
             }
-
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

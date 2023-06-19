@@ -31,7 +31,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -76,8 +79,6 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Set<UserProfile> traders;
     @Getter
     private final Optional<UserProfile> mediator;
-    @Getter
-    private final transient Set<String> userProfileIdsOfSendingLeaveMessage = new HashSet<>();
 
     // Called from trader
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
@@ -200,6 +201,8 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         boolean changed = super.addChatMessage(chatMessage);
         if (changed) {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+
+            // todo we get called from inside constructor at fromProto. should be redesigned
             // If we received a leave message the user got removed from userProfileIdsOfParticipants
             // In that case we remove them from userProfileIdsOfSendingLeaveMessage as well to avoid sending a 
             // leave message.

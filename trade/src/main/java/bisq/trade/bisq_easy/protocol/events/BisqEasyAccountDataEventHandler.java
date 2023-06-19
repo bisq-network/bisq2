@@ -38,6 +38,6 @@ public class BisqEasyAccountDataEventHandler extends SendTradeMessageHandler<Bis
     }
 
     private void commitToModel(String paymentAccountData) {
-        model.getMyself().getPaymentAccountData().set(paymentAccountData);
+        model.getPaymentAccountData().set(paymentAccountData);
     }
 }

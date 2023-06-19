@@ -117,8 +117,6 @@ public class DefaultApplicationService extends ApplicationService {
 
         accountService = new AccountService(networkService, persistenceService, identityService);
 
-        offerService = new OfferService(networkService, identityService, persistenceService);
-
         contractService = new ContractService(securityService);
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
@@ -131,6 +129,8 @@ public class DefaultApplicationService extends ApplicationService {
         settingsService = new SettingsService(persistenceService);
 
         notificationsService = new NotificationsService(persistenceService);
+
+        offerService = new OfferService(networkService, identityService, persistenceService);
 
         chatService = new ChatService(persistenceService,
                 securityService.getProofOfWorkService(),
@@ -177,11 +177,11 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
-                .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> notificationsService.initialize())
+                .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
@@ -208,11 +208,11 @@ public class DefaultApplicationService extends ApplicationService {
         return supplyAsync(() -> tradeService.shutdown()
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
+                .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> notificationsService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
-                .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> accountService.shutdown())
                 .thenCompose(result -> oracleService.shutdown())
                 .thenCompose(result -> identityService.shutdown())

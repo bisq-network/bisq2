@@ -22,6 +22,7 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -34,10 +35,11 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, BisqEasyGuideRulesController> {
-    private final Button backButton, closeButton, confirmButton;
+    private final Button backButton, closeButton;
     private final Hyperlink learnMore;
     private final Text content;
-    private Subscription widthPin;
+    private final CheckBox confirmCheckBox;
+    private Subscription tradeRulesConfirmedPin, widthPin;
 
     public BisqEasyGuideRulesView(BisqEasyGuideRulesModel model, BisqEasyGuideRulesController controller) {
         super(new VBox(), model, controller);
@@ -55,38 +57,51 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
 
         backButton = new Button(Res.get("action.back"));
         closeButton = new Button(Res.get("action.close"));
-        closeButton.setDefaultButton(true);
-        confirmButton = new Button(Res.get("tradeGuide.rules.confirm"));
-        confirmButton.setDefaultButton(true);
-        HBox buttons = new HBox(20, backButton, closeButton, confirmButton);
+        confirmCheckBox = new CheckBox(Res.get("tradeGuide.rules.confirm"));
+
+        HBox buttons = new HBox(20, backButton, closeButton);
         VBox.setVgrow(content, Priority.ALWAYS);
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, content, learnMore, buttons);
+        VBox.setMargin(confirmCheckBox, new Insets(0, 0, 5, 0));
+        root.getChildren().addAll(headline, content, learnMore, confirmCheckBox, buttons);
     }
 
     @Override
     protected void onViewAttached() {
-        closeButton.setManaged(model.getTradeRulesConfirmed().get());
-        closeButton.setVisible(model.getTradeRulesConfirmed().get());
-        confirmButton.setManaged(!model.getTradeRulesConfirmed().get());
-        confirmButton.setVisible(!model.getTradeRulesConfirmed().get());
+        confirmCheckBox.setSelected(model.getTradeRulesConfirmed().get());
 
-        closeButton.setOnAction(e -> controller.onClose());
-        confirmButton.setOnAction(e -> controller.onConfirm());
-        backButton.setOnAction(e -> controller.onBack());
-        learnMore.setOnAction(e -> controller.onLearnMore());
+        confirmCheckBox.visibleProperty().bind(model.getTradeRulesConfirmed().not());
+        confirmCheckBox.managedProperty().bind(model.getTradeRulesConfirmed().not());
+
+        tradeRulesConfirmedPin = EasyBind.subscribe(model.getTradeRulesConfirmed(), tradeRulesConfirmed -> {
+            closeButton.setDefaultButton(tradeRulesConfirmed);
+            if (tradeRulesConfirmed) {
+                closeButton.getStyleClass().remove("outlined-button");
+            } else {
+                closeButton.getStyleClass().add("outlined-button");
+            }
+        });
 
         widthPin = EasyBind.subscribe(root.widthProperty(),
                 w -> content.setWrappingWidth(w.doubleValue() - 30));
+
+        confirmCheckBox.setOnAction(e -> controller.onConfirm(confirmCheckBox.isSelected()));
+        closeButton.setOnAction(e -> controller.onClose());
+        backButton.setOnAction(e -> controller.onBack());
+        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
+        confirmCheckBox.visibleProperty().unbind();
+        confirmCheckBox.managedProperty().unbind();
+
+        tradeRulesConfirmedPin.unsubscribe();
+        widthPin.unsubscribe();
+
+        confirmCheckBox.setOnAction(null);
         closeButton.setOnAction(null);
-        confirmButton.setOnAction(null);
         backButton.setOnAction(null);
         learnMore.setOnAction(null);
-
-        widthPin.unsubscribe();
     }
 }

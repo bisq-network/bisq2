@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -35,7 +36,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -141,19 +141,19 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         if (model.isPaymentMethodVisible()) {
             Label paymentMethod = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.method"));
             navigationProgressLabelList.add(0, paymentMethod);
-            progressBox.getChildren().add(0, getSeparator());
+            progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, paymentMethod);
         }
         if (model.isAmountVisible()) {
             Label amount = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.amount"));
             navigationProgressLabelList.add(0, amount);
-            progressBox.getChildren().add(0, getSeparator());
+            progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, amount);
         }
         if (model.isPriceVisible()) {
             Label price = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.price"));
             navigationProgressLabelList.add(0, price);
-            progressBox.getChildren().add(0, getSeparator());
+            progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, price);
         }
 
@@ -239,8 +239,8 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         rootScene.setOnKeyReleased(null);
     }
 
-    private Separator getSeparator() {
-        Separator line = new Separator();
+    private Region getHLine() {
+        Region line = Layout.hLine();
         line.setPrefWidth(30);
         return line;
     }

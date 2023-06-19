@@ -146,11 +146,11 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             return;
         }
         persistableStore.add(tradeModel);
-        persist();
 
         Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
         try {
             protocol.handle(message);
+            persist();
         } catch (TradeException e) {
             log.error("Error at processing message " + message, e);
         }
@@ -160,6 +160,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         findProtocol(message.getTradeId()).ifPresent(protocol -> {
             try {
                 protocol.handle(message);
+                persist();
             } catch (TradeException e) {
                 log.error("Error at processing message " + message, e);
             }
@@ -170,6 +171,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         findProtocol(message.getTradeId()).ifPresent(protocol -> {
             try {
                 protocol.handle(message);
+                persist();
             } catch (TradeException e) {
                 log.error("Error at processing message " + message, e);
             }
@@ -180,6 +182,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         findProtocol(message.getTradeId()).ifPresent(protocol -> {
             try {
                 protocol.handle(message);
+                persist();
             } catch (TradeException e) {
                 log.error("Error at processing message " + message, e);
             }
@@ -234,7 +237,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     public void sellerConfirmBtcSent(BisqEasyTrade tradeModel, String txId) throws TradeException {
         BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyConfirmFiatSentEvent(txId));
+        protocol.handle(new BisqEasyConfirmBtcSentEvent(txId));
         persist();
     }
 

@@ -506,22 +506,22 @@
 .check-box {
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-    /* -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;*/
+    -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;
 }
 
-/*
-
 .check-box > .box {
-    -fx-background-color: -bisq-grey-17, -bisq-grey-17, -bisq-grey-17, -fx-body-color;
+    -fx-background-color: transparent;
     -fx-background-radius: 0;
+    -fx-border-color: -bisq-grey-dimmed;
+    -fx-border-width: 1;
 }
 
 .check-box:hover > .box {
-    -fx-color: derive(-bisq-grey-17, 10%);
+    -fx-border-color: derive(-bisq-grey-dimmed, 20%);
 }
 
 .check-box > .box > .mark {
-    -fx-background-color: null;
+    -fx-background-color: transparent;
     -fx-padding: 0.416667em 0.416667em 0.5em 0.5em;
     -fx-shape: "M384 690l452-452 60 60-512 512-238-238 60-60z";
 }
@@ -530,14 +530,22 @@
 .check-box:indeterminate > .box {
     -fx-background-color: -bisq-green;
     -fx-background-insets: 1 0 -1 0, 0;
+    -fx-border-color: transparent;
+}
+
+.check-box:selected:hover > .box,
+.check-box:indeterminate:hover > .box {
+    -fx-background-color: derive(-bisq-green, -10%);
+    -fx-background-insets: 1 0 -1 0, 0;
+    -fx-border-color: transparent;
 }
 
 .check-box:selected > .box > .mark,
 .check-box:indeterminate > .box > .mark {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq-white;
     -fx-background-insets: 1 0 -1 0, 0;
+    -fx-border-color: transparent;
 }
-*/
 
 
 /*******************************************************************************

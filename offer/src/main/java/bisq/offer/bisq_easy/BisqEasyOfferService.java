@@ -65,10 +65,8 @@ public class BisqEasyOfferService implements Service {
 
             @Override
             public void clear() {
-
             }
         };
-
     }
 
 

@@ -49,6 +49,6 @@ public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<B
     }
 
     private void commitToModel(String btcAddress) {
-        model.getPeer().getBtcAddress().set(btcAddress);
+        model.getBtcAddress().set(btcAddress);
     }
 }

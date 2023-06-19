@@ -31,9 +31,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ToString
@@ -47,6 +45,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     @Getter
     protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
     protected final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
+    @Getter
+    protected final transient Set<String> userProfileIdsOfSendingLeaveMessage = new HashSet<>();
 
     public ChatChannel(String id,
                        ChatChannelDomain chatChannelDomain,

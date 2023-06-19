@@ -17,14 +17,10 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state;
 
-import bisq.account.accounts.Account;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.common.view.Model;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,52 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeStateModel implements Model {
-    public enum Phase {
-        BUYER_PHASE_1,
-        BUYER_PHASE_2,
-        BUYER_PHASE_3,
-        BUYER_PHASE_4,
-        BUYER_PHASE_5,
-        SELLER_PHASE_1,
-        SELLER_PHASE_2,
-        SELLER_PHASE_3,
-        SELLER_PHASE_4,
-        SELLER_PHASE_5
-    }
-
     @Setter
-    private BisqEasyPrivateTradeChatChannel selectedChannel;
-    @Setter
-    private BisqEasyTrade bisqEasyTradeModel;
-    @Setter
-    private BisqEasyOffer bisqEasyOffer;
-
-
-    private final StringProperty quoteCode = new SimpleStringProperty();
-    private final StringProperty formattedQuoteAmount = new SimpleStringProperty();
-    private final StringProperty formattedBaseAmount = new SimpleStringProperty();
-    private final StringProperty buyersBtcAddress = new SimpleStringProperty();
-    private final StringProperty buyersBtcBalance = new SimpleStringProperty();
-    private final StringProperty txId = new SimpleStringProperty();
-    private final StringProperty sellersPaymentAccountData = new SimpleStringProperty();
+    private BisqEasyTrade bisqEasyTrade;
+    private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
-    private final StringProperty tradeInfo = new SimpleStringProperty();
-    private final StringProperty phaseInfo = new SimpleStringProperty();
-    private final StringProperty phase1Info = new SimpleStringProperty();
-    private final StringProperty phase2Info = new SimpleStringProperty();
-    private final StringProperty phase3Info = new SimpleStringProperty();
-    private final StringProperty phase4Info = new SimpleStringProperty();
-    private final StringProperty phase5Info = new SimpleStringProperty();
-    private final StringProperty actionButtonText = new SimpleStringProperty();
-    private final BooleanProperty actionButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty firstTimeItemsVisible = new SimpleBooleanProperty();
+    private final StringProperty headline = new SimpleStringProperty();
+    private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoBoxVisible = new SimpleBooleanProperty();
-    private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
-    private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
-    @Setter
-    private int appliedPhaseIndex = -1;
-    private final ObservableList<Account<?, ?>> paymentAccounts = FXCollections.observableArrayList();
-    private final ObjectProperty<Account<?, ?>> selectedAccount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Phase> phase = new SimpleObjectProperty<>();
 }

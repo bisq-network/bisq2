@@ -32,8 +32,13 @@ public class SubmarineTradeParty extends TradeParty {
         super(networkId);
     }
 
+    @Override
+    public bisq.trade.protobuf.TradeParty toProto() {
+        bisq.trade.protobuf.SubmarineTradeParty.Builder builder = bisq.trade.protobuf.SubmarineTradeParty.newBuilder();
+        return getTradePartyBuilder().setSubmarineTradeParty(builder).build();
+    }
+
     public static SubmarineTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
-        SubmarineTradeParty tradeParty = new SubmarineTradeParty(NetworkId.fromProto(proto.getNetworkId()));
-        return tradeParty;
+        return new SubmarineTradeParty(NetworkId.fromProto(proto.getNetworkId()));
     }
 }

@@ -23,6 +23,7 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,36 +34,17 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class OfferMessageService implements Service {
+public class OfferMessageService implements Service, DataService.Listener {
     @Getter
     private final ObservableSet<Offer<?, ?>> offers = new ObservableSet<>();
-    private final DataService dataService;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final DataService.Listener authenticatedDataListener;
 
     public OfferMessageService(NetworkService networkService, IdentityService identityService) {
         this.networkService = networkService;
         this.identityService = identityService;
         checkArgument(networkService.getDataService().isPresent(),
                 "networkService.getDataService() is expected to be present if OfferBookService is used");
-        dataService = networkService.getDataService().get();
-        authenticatedDataListener = new DataService.Listener() {
-            @Override
-            public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-                if (authenticatedData.getDistributedData() instanceof OfferMessage) {
-                    processAddedOfferMessage((OfferMessage) authenticatedData.getDistributedData());
-                }
-            }
-
-            @Override
-            public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-                if (authenticatedData.getDistributedData() instanceof OfferMessage) {
-                    processRemovedOfferMessage((OfferMessage) authenticatedData.getDistributedData());
-                }
-            }
-        };
-
     }
 
 
@@ -72,19 +54,38 @@ public class OfferMessageService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        dataService.addListener(authenticatedDataListener);
-        dataService.getAuthenticatedPayloadStreamByStoreName("OfferMessage")
-                .filter(authenticatedData -> authenticatedData.getDistributedData() instanceof OfferMessage)
-                .forEach(authenticatedData -> processAddedOfferMessage((OfferMessage) authenticatedData.getDistributedData()));
+        networkService.addDataServiceListener(this);
+        networkService.getDataService().ifPresent(dataService ->
+                dataService.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        dataService.removeListener(authenticatedDataListener);
+        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
+    
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof OfferMessage) {
+            processAddedMessage((OfferMessage) distributedData);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof OfferMessage) {
+            processRemovedMessage((OfferMessage) distributedData);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -107,11 +108,11 @@ public class OfferMessageService implements Service {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean processAddedOfferMessage(OfferMessage offerMessage) {
+    private boolean processAddedMessage(OfferMessage offerMessage) {
         return offers.add(offerMessage.getOffer());
     }
 
-    private boolean processRemovedOfferMessage(OfferMessage offerMessage) {
+    private boolean processRemovedMessage(OfferMessage offerMessage) {
         return offers.remove(offerMessage.getOffer());
     }
 

@@ -38,6 +38,6 @@ public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<
     }
 
     private void commitToModel(String txId) {
-        model.getMyself().getTxId().set(txId);
+        model.getTxId().set(txId);
     }
 }

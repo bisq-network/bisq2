@@ -92,6 +92,8 @@ public class StorageService {
             String directory = subPath + File.separator + authStoreName;
             if (new File(directory).exists()) {
                 FileUtils.listFilesInDirectory(directory, 1)
+                        .stream()
+                        .filter(fileName -> !fileName.startsWith(".")) // on OSX a .DS_Store might be in the directory
                         .forEach(fileName -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, fileName);
                             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {

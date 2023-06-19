@@ -51,7 +51,7 @@ public class Layout {
 
     public static Region hLine() {
         Region separator = new Region();
-        separator.setMinHeight(1);
+        separator.setMaxHeight(1);
         separator.getStyleClass().add("h-line");
         return separator;
     }

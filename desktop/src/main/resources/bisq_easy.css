@@ -18,25 +18,6 @@
 
 
 /*******************************************************************************
- * Trade state welcome                                                              *
- ******************************************************************************/
-
-.bisq-easy-trade-state-welcome-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2em;
-}
-
-.bisq-easy-trade-state-welcome-sub-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.25em;
-}
-
-
-/*******************************************************************************
  * Trade state phase (left side box)                                                                  *
  ******************************************************************************/
 

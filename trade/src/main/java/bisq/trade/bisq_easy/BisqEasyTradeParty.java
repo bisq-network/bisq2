@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.common.observable.Observable;
 import bisq.contract.ContractSignatureData;
 import bisq.network.NetworkId;
 import bisq.trade.TradeParty;
@@ -29,25 +28,21 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public class BisqEasyTradeParty extends TradeParty {
-    private final Observable<String> paymentAccountData = new Observable<>();
-    private final Observable<String> btcAddress = new Observable<>();
-    private final Observable<String> txId = new Observable<>();
 
     public BisqEasyTradeParty(NetworkId networkId) {
         super(networkId);
+    }
+
+    @Override
+    public bisq.trade.protobuf.TradeParty toProto() {
+        bisq.trade.protobuf.BisqEasyTradeParty.Builder builder = bisq.trade.protobuf.BisqEasyTradeParty.newBuilder();
+        return getTradePartyBuilder().setBisqEasyTradeParty(builder).build();
     }
 
     public static BisqEasyTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
         BisqEasyTradeParty tradeParty = new BisqEasyTradeParty(NetworkId.fromProto(proto.getNetworkId()));
         if (proto.hasContractSignatureData()) {
             tradeParty.getContractSignatureData().set(ContractSignatureData.fromProto(proto.getContractSignatureData()));
-        }
-        bisq.trade.protobuf.BisqEasyTradeParty bisqEasyTradePartyProto = proto.getBisqEasyTradeParty();
-        if (bisqEasyTradePartyProto.hasPaymentAccountData()) {
-            tradeParty.getPaymentAccountData().set(bisqEasyTradePartyProto.getPaymentAccountData());
-        }
-        if (bisqEasyTradePartyProto.hasBuyersBtcAddress()) {
-            tradeParty.getBtcAddress().set(bisqEasyTradePartyProto.getBuyersBtcAddress());
         }
         return tradeParty;
     }
