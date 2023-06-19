@@ -31,7 +31,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 
 public class Fsm {
-    private final TransitionBuilder transitionBuilder = new TransitionBuilder(this);
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
     private final Object lock = new Object();
     @Getter
@@ -86,7 +85,6 @@ public class Fsm {
         try {
             checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
             Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
-            log.error("pair {}", pair);
             checkArgument(!transitionMap.containsKey(pair),
                     "A transition exists already with the state/event pair. pair=%s", pair);
             synchronized (lock) {
@@ -98,7 +96,7 @@ public class Fsm {
     }
 
     public TransitionBuilder addTransition() {
-        return transitionBuilder;
+        return new TransitionBuilder(this);
     }
 
     public static class TransitionBuilder {
