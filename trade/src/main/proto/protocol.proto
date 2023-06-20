@@ -36,15 +36,20 @@ message TradeParty {
   }
 }
 
+enum TradeRole{
+  BUYER_AS_TAKER = 0;
+  BUYER_AS_MAKER = 1;
+  SELLER_AS_TAKER = 2;
+  SELLER_AS_MAKER = 3;
+}
 message Trade {
-  string id = 1;
-  bool isBuyer = 2;
-  bool isTaker = 3;
+  string state = 1;
+  string id = 2;
+  TradeRole tradeRole = 3;
   identity.Identity myIdentity = 4;
   contract.Contract contract = 5;
   TradeParty taker = 6;
   TradeParty maker = 7;
-  string state = 8;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 20;

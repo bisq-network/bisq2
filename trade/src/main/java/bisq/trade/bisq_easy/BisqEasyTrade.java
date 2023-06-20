@@ -26,6 +26,7 @@ import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
+import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -66,13 +67,12 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     private BisqEasyTrade(BisqEasyTradeState state,
                           String id,
-                          boolean isBuyer,
-                          boolean isTaker,
+                          TradeRole tradeRole,
                           Identity myIdentity,
                           BisqEasyContract contract,
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker) {
-        super(state, id, isBuyer, isTaker, myIdentity, contract, taker, maker);
+        super(state, id, tradeRole, myIdentity, contract, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -90,8 +90,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
                 proto.getId(),
-                proto.getIsBuyer(),
-                proto.getIsTaker(),
+                TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 BisqEasyContract.fromProto(proto.getContract()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
