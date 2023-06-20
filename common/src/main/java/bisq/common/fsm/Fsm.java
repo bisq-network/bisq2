@@ -30,16 +30,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 
-public class Fsm {
+public class Fsm<M extends FsmModel> {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
     @Getter
-    private final FsmModel model;
+    protected final M model;
 
-    public Fsm(State initialState) {
-        this(new FsmModel(initialState));
-    }
-
-    public Fsm(FsmModel model) {
+    public Fsm(M model) {
         this.model = model;
         configTransitions();
     }
@@ -92,30 +88,30 @@ public class Fsm {
         }
     }
 
-    public TransitionBuilder addTransition() {
-        return new TransitionBuilder(this);
+    public TransitionBuilder<M> addTransition() {
+        return new TransitionBuilder<>(this);
     }
 
-    public static class TransitionBuilder {
+    public static class TransitionBuilder<M extends FsmModel> {
         private final Transition transition;
-        private final Fsm fsm;
+        private final Fsm<M> fsm;
 
-        private TransitionBuilder(Fsm fsm) {
+        private TransitionBuilder(Fsm<M> fsm) {
             this.fsm = fsm;
             transition = new Transition();
         }
 
-        public TransitionBuilder from(State sourceState) {
+        public TransitionBuilder<M> from(State sourceState) {
             transition.setSourceState(sourceState);
             return this;
         }
 
-        public TransitionBuilder on(Class<? extends Event> eventClass) {
+        public TransitionBuilder<M> on(Class<? extends Event> eventClass) {
             transition.setEventClass(eventClass);
             return this;
         }
 
-        public TransitionBuilder run(Class<? extends EventHandler> eventHandlerClass) {
+        public TransitionBuilder<M> run(Class<? extends EventHandler> eventHandlerClass) {
             try {
                 transition.setEventHandlerClass(Optional.of(eventHandlerClass));
             } catch (Exception e) {
