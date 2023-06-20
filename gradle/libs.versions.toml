@@ -33,7 +33,6 @@ google-guava-lib = { strictly = '31.1-jre' }
 
 i2p-lib = { strictly = '1.8.0' }
 jackson-lib = { strictly = '2.13.3' }
-jeasy-easy-states-lib = { strictly = '2.0.0' }
 jeromq-lib = { strictly = '0.5.2' }
 jpackage-plugin = { strictly = '1.3.1' }
 junit-jupiter-lib = { strictly = '5.8.2' }
@@ -100,7 +99,6 @@ jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref
 jackson-annotations = { module = 'com.fasterxml.jackson.core:jackson-annotations', version.ref = 'jackson-lib' }
 jackson-databind = { module = 'com.fasterxml.jackson.core:jackson-databind', version.ref = 'jackson-lib' }
 
-jeasy-easy-states = { module = 'org.jeasy:easy-states', version.ref = 'jeasy-easy-states-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
 
