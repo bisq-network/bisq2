@@ -77,7 +77,6 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
         this.mediationService = supportService.getMediationService();
         serviceProvider = new ServiceProvider(networkService,
                 identityService,
-                persistenceService,
                 offerService,
                 contractService,
                 supportService);

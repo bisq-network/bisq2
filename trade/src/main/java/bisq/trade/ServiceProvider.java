@@ -21,7 +21,6 @@ import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
-import bisq.persistence.PersistenceService;
 import bisq.support.MediationService;
 import bisq.support.SupportService;
 import lombok.Getter;
@@ -38,7 +37,6 @@ public class ServiceProvider {
 
     public ServiceProvider(NetworkService networkService,
                            IdentityService identityService,
-                           PersistenceService persistenceService,
                            OfferService offerService,
                            ContractService contractService,
                            SupportService supportService) {
