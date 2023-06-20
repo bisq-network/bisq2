@@ -32,7 +32,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Fsm {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
-    private final Object lock = new Object();
     @Getter
     private final FsmModel model;
 
@@ -52,7 +51,7 @@ public class Fsm {
     public void handle(Event event) throws FsmException {
         try {
             checkNotNull(event, "event must not be null");
-            synchronized (lock) {
+            synchronized (this) {
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
@@ -87,9 +86,7 @@ public class Fsm {
             Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
             checkArgument(!transitionMap.containsKey(pair),
                     "A transition exists already with the state/event pair. pair=%s", pair);
-            synchronized (lock) {
-                transitionMap.put(pair, transition);
-            }
+            transitionMap.put(pair, transition);
         } catch (Exception e) {
             throw new FsmException(e);
         }
