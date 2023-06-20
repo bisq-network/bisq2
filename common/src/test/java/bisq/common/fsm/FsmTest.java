@@ -26,6 +26,58 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class FsmTest {
     @Test
+    void testOutOfOrderEvents() throws FsmException {
+        MockModel model = new MockModel(MockState.INIT);
+        Fsm<MockModel> fsm = new Fsm<>(model);
+
+        // No change in data as no handler was defined
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent3.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S3);
+        fsm.addTransition()
+                .from(MockState.S3)
+                .on(MockEvent4.class)
+                .run(MockEventHandler.class)
+                .to(MockState.COMPLETED);
+
+        fsm.handle(new MockEvent3(model, "test3"));
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        assertNull((fsm.getModel()).data);
+        assertEquals(1, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+
+        fsm.handle(new MockEvent2(model, "test2"));
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        assertNull((fsm.getModel()).data);
+        assertEquals(2, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S3, fsm.getModel().getState());
+        assertEquals("test3", ((MockModel) fsm.getModel()).data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(3, model.processedEvents.size());
+
+        fsm.handle(new MockEvent4(model, "test_comp"));
+        assertEquals(MockState.COMPLETED, fsm.getModel().getState());
+        assertEquals("test_comp", ((MockModel) fsm.getModel()).data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+    }
+
+    @Test
     void testValidStateTransitions() throws FsmException {
         MockModel model = new MockModel(MockState.INIT);
         Fsm<MockModel> fsm = new Fsm<>(model);
@@ -332,6 +384,18 @@ public class FsmTest {
 
     public static class MockEvent2 extends MockEvent1 {
         public MockEvent2(MockModel model, String data) {
+            super(model, data);
+        }
+    }
+
+    public static class MockEvent3 extends MockEvent1 {
+        public MockEvent3(MockModel model, String data) {
+            super(model, data);
+        }
+    }
+
+    public static class MockEvent4 extends MockEvent1 {
+        public MockEvent4(MockModel model, String data) {
             super(model, data);
         }
     }

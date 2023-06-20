@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,18 +55,36 @@ public class Fsm<M extends FsmModel> {
                     log.warn("We have reached the final state and do not allow further state transition");
                     return;
                 }
-                Pair<State, Class<? extends Event>> validTransitionKey = new Pair<>(currentState, event.getClass());
-                Transition transition = transitionMap.get(validTransitionKey);
+                Class<? extends Event> eventClass = event.getClass();
+                Pair<State, Class<? extends Event>> transitionKey = new Pair<>(currentState, eventClass);
+                Transition transition = transitionMap.get(transitionKey);
                 if (transition != null) {
                     Optional<Class<? extends EventHandler>> eventHandlerClass = transition.getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
                         EventHandler eventHandlerFromClass = newEventHandlerFromClass(eventHandlerClass.get());
                         eventHandlerFromClass.handle(event);
                     }
-                    model.setNewState(transition.getTargetState());
+                    State targetState = transition.getTargetState();
+                    model.setNewState(targetState);
+                    model.eventQueue.remove(event);
+                    if (targetState.isFinalState()) {
+                        model.processedEvents.clear();
+                        model.eventQueue.clear();
+                    } else {
+                        model.processedEvents.add(eventClass);
+                        // Clone set to avoid ConcurrentModificationException
+                        new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                    }
+                } else {
+                    transitionMap.keySet().stream()
+                            .filter(key -> key.getSecond().equals(eventClass) &&
+                                    !model.processedEvents.contains(eventClass))
+                            .forEach(e -> model.eventQueue.add(event));
                 }
             }
         } catch (Exception e) {
+            // If a queued event caused an exception we prefer to remove it.
+            model.eventQueue.remove(event);
             log.error("Error at handling event.", e);
             throw new FsmException(e);
         }

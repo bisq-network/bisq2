@@ -23,17 +23,34 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 @ToString
 @EqualsAndHashCode
 public class FsmModel {
     private final Observable<State> state = new Observable<>();
 
+    // Package visibility for access from Fsm mutating the collections 
+    final Set<Event> eventQueue = new HashSet<>();
+    final Set<Class<? extends Event>> processedEvents = new HashSet<>();
+
     public FsmModel(State initialState) {
         if (initialState == null) {
             throw new FsmException("InitialState must not be null at Model constructor");
         }
         state.set(initialState);
+    }
+
+    public FsmModel(State initialState, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
+        if (initialState == null) {
+            throw new FsmException("InitialState must not be null at Model constructor");
+        }
+        state.set(initialState);
+        this.eventQueue.addAll(eventQueue);
+        this.processedEvents.addAll(processedEvents);
     }
 
     public ReadOnlyObservable<State> stateObservable() {
@@ -47,5 +64,13 @@ public class FsmModel {
     // Only called from FSM
     void setNewState(State newState) {
         state.set(newState);
+    }
+
+    public Set<Event> getEventQueue() {
+        return Collections.unmodifiableSet(eventQueue);
+    }
+
+    public Set<Class<? extends Event>> getProcessedEvents() {
+        return Collections.unmodifiableSet(processedEvents);
     }
 }
