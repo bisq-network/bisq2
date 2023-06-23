@@ -67,8 +67,12 @@ public class TacController implements InitWithDataController<TacController.InitD
         applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
+    public void onConfirm(boolean selected) {
+        model.getTacConfirmed().set(selected);
+        settingsService.setTacAccepted(selected);
+    }
+
     void onAccept() {
-        settingsService.setTacAccepted(true);
         OverlayController.hide(() -> {
             if (completeHandler != null) {
                 completeHandler.run();

@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.tac;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.primary.PrimaryStageModel;
 import bisq.desktop.primary.overlay.OverlayController;
@@ -27,39 +26,33 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TacView extends View<AnchorPane, TacModel, TacController> {
-    private static final double SPACING = 20;
+public class TacView extends View<VBox, TacModel, TacController> {
     private static final double PADDING = 30;
-    private static final double HEADLINE_HEIGHT = 30;
-    private static final double BUTTONS_HEIGHT = 31;
-    private final Label headline;
-    private final HBox buttons;
     private Scene rootScene;
-    private final TextArea tac;
     private final Button acceptButton, rejectButton;
+    private final CheckBox confirmCheckBox;
     private Subscription widthPin, heightPin;
+    private Subscription tacConfirmedPin;
 
     public TacView(TacModel model, TacController controller) {
-        super(new AnchorPane(), model, controller);
-
-        root.setPrefWidth(PrimaryStageModel.MIN_WIDTH - 4 * PADDING);
-        root.setPrefHeight(PrimaryStageModel.MIN_HEIGHT - 4 * PADDING);
+        super(new VBox(20), model, controller);
 
         root.setPadding(new Insets(PADDING));
 
-        headline = new Label(Res.get("tac.headline"));
-        headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
-        Layout.pinToAnchorPane(headline, PADDING, PADDING, null, PADDING);
+        Label headline = new Label(Res.get("tac.headline"));
+        headline.getStyleClass().addAll("tac-headline", "wrap-text");
 
         String text = "1. In no event, unless for damages caused by acts of intent and gross negligence, damages resulting from personal injury, " +
                 "or damages ensuing from other instances where liability is required by applicable law or agreed to in writing, will any " +
@@ -90,18 +83,22 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
                 "      get banned on Bisq 1. If the seller has used 'bonded BSQ' as reputation source the mediator will report the incident to the DAO and\n" +
                 "      make a proposal for confiscating their bonded BSQ.\n";
 
-        tac = new TextArea(text);
-        Layout.pinToAnchorPane(tac, PADDING + SPACING + HEADLINE_HEIGHT, PADDING,
-                PADDING + 2 * SPACING + BUTTONS_HEIGHT, PADDING);
+        TextArea tac = new TextArea(text);
+        tac.getStyleClass().add("tac-text");
+
         tac.setWrapText(true);
         tac.setEditable(false);
 
+        confirmCheckBox = new CheckBox(Res.get("tac.confirm"));
+
         acceptButton = new Button(Res.get("tac.accept"));
-        acceptButton.setDefaultButton(true);
         rejectButton = new Button(Res.get("tac.reject"));
-        buttons = new HBox(20, acceptButton, rejectButton);
-        Layout.pinToAnchorPane(buttons, null, PADDING, PADDING, PADDING);
-        root.getChildren().setAll(headline, tac, buttons);
+        rejectButton.getStyleClass().add("outlined-button");
+
+        HBox buttons = new HBox(20, acceptButton, rejectButton);
+        VBox.setVgrow(tac, Priority.ALWAYS);
+        VBox.setMargin(confirmCheckBox, new Insets(10, 0, 0, 10));
+        root.getChildren().addAll(headline, tac, confirmCheckBox, buttons);
     }
 
     @Override
@@ -117,6 +114,15 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
             updateHeight();
         });
 
+        confirmCheckBox.setSelected(model.getTacConfirmed().get());
+
+        tacConfirmedPin = EasyBind.subscribe(model.getTacConfirmed(), confirmed -> {
+            acceptButton.setDisable(!confirmed);
+            acceptButton.setDefaultButton(confirmed);
+        });
+
+        confirmCheckBox.setOnAction(e -> controller.onConfirm(confirmCheckBox.isSelected()));
+
         acceptButton.setOnAction(e -> controller.onAccept());
         rejectButton.setOnAction(e -> controller.onReject());
 
@@ -127,10 +133,22 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
         });
     }
 
+    @Override
+    protected void onViewDetached() {
+        widthPin.unsubscribe();
+        heightPin.unsubscribe();
+        tacConfirmedPin.unsubscribe();
+        acceptButton.setOnAction(null);
+        rejectButton.setOnAction(null);
+        rootScene.setOnKeyReleased(null);
+    }
+
     private void updateHeight() {
         double height = OverlayController.getInstance().getApplicationRoot().getHeight();
         if (height > 0) {
-            double paddedHeight = height - 4 * PADDING;
+            double scale = (height - PrimaryStageModel.MIN_HEIGHT) / (PrimaryStageModel.PREF_HEIGHT - PrimaryStageModel.MIN_HEIGHT);
+            double boundedScale = Math.max(0.25, Math.min(1, scale));
+            double paddedHeight = height - 6 * PADDING * boundedScale;
             rootScene.getWindow().setHeight(paddedHeight);
             root.setPrefHeight(paddedHeight);
         }
@@ -141,19 +159,10 @@ public class TacView extends View<AnchorPane, TacModel, TacController> {
         if (width > 0) {
             double scale = (width - PrimaryStageModel.MIN_WIDTH) / (PrimaryStageModel.PREF_WIDTH - PrimaryStageModel.MIN_WIDTH);
             double boundedScale = Math.max(0.25, Math.min(1, scale));
-            double padding = 4 * PADDING * boundedScale;
+            double padding = 6 * PADDING * boundedScale;
             double paddedWidth = width - padding;
             rootScene.getWindow().setWidth(paddedWidth);
             root.setPrefWidth(paddedWidth);
         }
-    }
-
-    @Override
-    protected void onViewDetached() {
-        widthPin.unsubscribe();
-        heightPin.unsubscribe();
-        acceptButton.setOnAction(null);
-        rejectButton.setOnAction(null);
-        rootScene.setOnKeyReleased(null);
     }
 }

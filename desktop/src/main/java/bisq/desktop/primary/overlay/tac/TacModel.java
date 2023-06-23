@@ -18,8 +18,11 @@
 package bisq.desktop.primary.overlay.tac;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
 public class TacModel implements Model {
+    private final BooleanProperty tacConfirmed = new SimpleBooleanProperty();
 }
