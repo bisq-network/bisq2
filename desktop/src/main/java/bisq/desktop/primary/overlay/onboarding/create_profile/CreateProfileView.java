@@ -63,7 +63,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         nickname = new MaterialTextField(Res.get("onboarding.createProfile.nickName"), Res.get("onboarding.createProfile.nickName.prompt"));
-        nickname.setMaxWidth(250);
+        nickname.setMaxWidth(315);
 
         roboIconView = new ImageView();
         roboIconView.setCursor(Cursor.HAND);
