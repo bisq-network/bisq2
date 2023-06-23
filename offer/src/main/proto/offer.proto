@@ -142,14 +142,12 @@ message OfferMessage {
 message BisqEasyOffer {
 }
 
-message MyBisqEasyOffersStore {
-  repeated Offer offers = 1;
-}
-
 // MultiSig
 message MultisigOffer {
 }
-
+message MyMultisigOffersStore {
+  repeated Offer offers = 1;
+}
 
 // Submarine
 message SubmarineOffer {

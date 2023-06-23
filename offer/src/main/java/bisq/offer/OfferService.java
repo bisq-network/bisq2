@@ -20,22 +20,22 @@ package bisq.offer;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.offer.bisq_easy.BisqEasyOfferService;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Not used for BisqEasy as we keep the offer in the chat message.
+ */
 @Slf4j
 @Getter
 public class OfferService implements Service {
-    private final BisqEasyOfferService bisqEasyOfferService;
-    private final OfferMessageService offerMessageService;
 
     public OfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
-        offerMessageService = new OfferMessageService(networkService, identityService);
-        bisqEasyOfferService = new BisqEasyOfferService(persistenceService, offerMessageService);
+        // offerMessageService = new OfferMessageService(networkService, identityService);
+        // multisigOfferService = new MultisigOfferService(persistenceService, offerMessageService);
     }
 
 
@@ -45,13 +45,11 @@ public class OfferService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return offerMessageService.initialize()
-                .thenCompose(result -> bisqEasyOfferService.initialize());
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return bisqEasyOfferService.shutdown()
-                .thenCompose(result -> offerMessageService.shutdown());
+        return CompletableFuture.completedFuture(true);
     }
 }

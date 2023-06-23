@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.bisq_easy;
+package bisq.offer.multisig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
@@ -36,30 +36,30 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
-public class BisqEasyOfferService implements Service {
-    private final MyBisqEasyOffersService myBisqEasyOffersService;
+public class MultisigOfferService implements Service {
+    private final MyMultisigOffersService myMultisigOffersService;
     private final OfferMessageService offerMessageService;
     @Getter
-    private final ObservableSet<BisqEasyOffer> offers = new ObservableSet<>();
+    private final ObservableSet<MultisigOffer> offers = new ObservableSet<>();
     private final CollectionObserver<Offer<?, ?>> offersObserver;
     private Pin offersObserverPin;
 
-    public BisqEasyOfferService(PersistenceService persistenceService,
+    public MultisigOfferService(PersistenceService persistenceService,
                                 OfferMessageService offerMessageService) {
         this.offerMessageService = offerMessageService;
-        myBisqEasyOffersService = new MyBisqEasyOffersService(persistenceService);
+        myMultisigOffersService = new MyMultisigOffersService(persistenceService);
         offersObserver = new CollectionObserver<>() {
             @Override
             public void add(Offer<?, ?> element) {
-                if (element instanceof BisqEasyOffer) {
-                    processAddedBisqEasyOffer((BisqEasyOffer) element);
+                if (element instanceof MultisigOffer) {
+                    processAddedOffer((MultisigOffer) element);
                 }
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof BisqEasyOffer) {
-                    processRemovedBisqEasyOffer((BisqEasyOffer) element);
+                if (element instanceof MultisigOffer) {
+                    processRemovedOffer((MultisigOffer) element);
                 }
             }
 
@@ -83,13 +83,13 @@ public class BisqEasyOfferService implements Service {
         // todo provide an API from network to get an event for that
         Scheduler.run(this::republishMyOffers).after(5000, TimeUnit.MILLISECONDS);
 
-        return myBisqEasyOffersService.initialize();
+        return myMultisigOffersService.initialize();
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         offersObserverPin.unbind();
-        return removeAllOfferFromNetwork().thenCompose(e -> myBisqEasyOffersService.shutdown());
+        return removeAllOfferFromNetwork().thenCompose(e -> myMultisigOffersService.shutdown());
     }
 
 
@@ -103,8 +103,8 @@ public class BisqEasyOfferService implements Service {
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishOffer(BisqEasyOffer offer) {
-        myBisqEasyOffersService.add(offer);
+    public CompletableFuture<DataService.BroadCastDataResult> publishOffer(MultisigOffer offer) {
+        myMultisigOffersService.add(offer);
         return offerMessageService.addToNetwork(offer);
     }
 
@@ -114,12 +114,12 @@ public class BisqEasyOfferService implements Service {
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeOffer(BisqEasyOffer offer) {
-        myBisqEasyOffersService.remove(offer);
+    public CompletableFuture<DataService.BroadCastDataResult> removeOffer(MultisigOffer offer) {
+        myMultisigOffersService.remove(offer);
         return offerMessageService.removeFromNetwork(offer);
     }
 
-    public Optional<BisqEasyOffer> findOffer(String offerId) {
+    public Optional<MultisigOffer> findOffer(String offerId) {
         return offers.stream().filter(offer -> offer.getId().equals(offerId)).findAny();
     }
 
@@ -128,12 +128,12 @@ public class BisqEasyOfferService implements Service {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean processAddedBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
-        return offers.add(bisqEasyOffer);
+    private boolean processAddedOffer(MultisigOffer offer) {
+        return offers.add(offer);
     }
 
-    private boolean processRemovedBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
-        return offers.remove(bisqEasyOffer);
+    private boolean processRemovedOffer(MultisigOffer offer) {
+        return offers.remove(offer);
     }
 
     private void republishMyOffers() {

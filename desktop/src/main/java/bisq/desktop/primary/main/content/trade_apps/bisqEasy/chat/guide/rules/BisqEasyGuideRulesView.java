@@ -70,8 +70,8 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
     protected void onViewAttached() {
         confirmCheckBox.setSelected(model.getTradeRulesConfirmed().get());
 
-        confirmCheckBox.visibleProperty().bind(model.getTradeRulesConfirmed().not());
-        confirmCheckBox.managedProperty().bind(model.getTradeRulesConfirmed().not());
+        confirmCheckBox.setVisible(!model.getTradeRulesConfirmed().get());
+        confirmCheckBox.setManaged(!model.getTradeRulesConfirmed().get());
 
         tradeRulesConfirmedPin = EasyBind.subscribe(model.getTradeRulesConfirmed(), tradeRulesConfirmed -> {
             closeButton.setDefaultButton(tradeRulesConfirmed);
@@ -93,9 +93,6 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
 
     @Override
     protected void onViewDetached() {
-        confirmCheckBox.visibleProperty().unbind();
-        confirmCheckBox.managedProperty().unbind();
-
         tradeRulesConfirmedPin.unsubscribe();
         widthPin.unsubscribe();
 

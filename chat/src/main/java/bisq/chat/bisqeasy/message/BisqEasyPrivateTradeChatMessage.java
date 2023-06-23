@@ -25,7 +25,6 @@ import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
-import bisq.offer.Offer;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
@@ -45,7 +44,6 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
 
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
-    private final Optional<String> bisqEasyOfferId;
 
     public BisqEasyPrivateTradeChatMessage(String messageId,
                                            String channelId,
@@ -89,7 +87,6 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
         super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
-        bisqEasyOfferId = bisqEasyOffer.map(Offer::getId);
     }
 
     public static BisqEasyPrivateTradeChatMessage createTakeOfferMessage(String channelId,
@@ -122,7 +119,6 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 new MetaData(TTL, 100000, BisqEasyPrivateTradeChatMessage.class.getSimpleName()));
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
-        bisqEasyOfferId = this.bisqEasyOffer.map(Offer::getId);
     }
 
     @Override
