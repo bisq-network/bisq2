@@ -54,6 +54,11 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
+    @Override
+    public void onPersistedApplied(AccountStore persisted) {
+        accounts.setAll(persisted.getAccountByName().values());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
