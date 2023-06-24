@@ -19,7 +19,10 @@ package bisq.trade.bisq_easy.protocol;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.events.*;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyBtcConfirmedEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyBtcConfirmedEventHandler;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatSentEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatSentEventHandler;
 import bisq.trade.bisq_easy.protocol.messages.*;
 
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.*;
@@ -61,10 +64,5 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .on(BisqEasyBtcConfirmedEvent.class)
                 .run(BisqEasyBtcConfirmedEventHandler.class)
                 .to(BTC_CONFIRMED);
-
-        addTransition()
-                .from(BTC_CONFIRMED)
-                .on(BisqEasyTradeCompletedEvent.class)
-                .to(COMPLETED);
     }
 }

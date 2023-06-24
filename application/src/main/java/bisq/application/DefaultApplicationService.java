@@ -115,7 +115,7 @@ public class DefaultApplicationService extends ApplicationService {
 
         oracleService = new OracleService(OracleService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
 
-        accountService = new AccountService(networkService, persistenceService, identityService);
+        accountService = new AccountService(persistenceService);
 
         contractService = new ContractService(securityService);
 

@@ -67,6 +67,11 @@ public class BuyerState2 extends BaseState {
         @Override
         public void onActivate() {
             model.getButtonDisabled().bind(model.getBtcAddress().isEmpty());
+
+            // random address from
+            // https://mempool.emzy.de/tx/bd6c813bbabfd64c5f74e04280d41b5c46aebaabb0860116112a8451e75e83cf
+            model.btcAddress.set("bc1qu6pu42xv2z7jpmusqj4x8yld5lrvh6fr8d37q0");
+
             super.onActivate();
         }
 

@@ -31,8 +31,9 @@ import java.nio.file.Paths;
 @Slf4j
 public class FileChooserUtil {
     @Nullable
-    public static File openFile(Scene scene) {
+    public static File openFile(Scene scene, String initialFileName) {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialFileName(initialFileName);
         String initialDirectory = SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
                 .orElse(OsUtils.getDownloadOfHomeDir());
         File initDir = new File(initialDirectory);

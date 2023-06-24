@@ -246,12 +246,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         persist();
     }
 
-    public void tradeCompleted(BisqEasyTrade tradeModel) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyTradeCompletedEvent());
-        persist();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Misc API

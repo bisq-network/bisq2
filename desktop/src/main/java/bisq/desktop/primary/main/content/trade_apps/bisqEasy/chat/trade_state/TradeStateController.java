@@ -130,11 +130,11 @@ public class TradeStateController implements Controller {
                         model.getStateInfoVBox().set(new BuyerState4(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BTC_CONFIRMED:
-                        model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
-                        model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
-                        break;
-                    case COMPLETED:
-                        //todo
+                        if (isSeller) {
+                            model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        } else {
+                            model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        }
                         break;
                     default:
                         log.error(state.name());

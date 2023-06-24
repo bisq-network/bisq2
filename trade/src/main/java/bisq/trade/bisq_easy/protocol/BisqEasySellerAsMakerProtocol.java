@@ -63,10 +63,5 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .on(BisqEasyBtcConfirmedEvent.class)
                 .run(BisqEasyBtcConfirmedEventHandler.class)
                 .to(BTC_CONFIRMED);
-
-        addTransition()
-                .from(BTC_CONFIRMED)
-                .on(BisqEasyTradeCompletedEvent.class)
-                .to(COMPLETED);
     }
 }

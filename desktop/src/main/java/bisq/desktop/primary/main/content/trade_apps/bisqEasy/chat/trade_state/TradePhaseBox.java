@@ -140,9 +140,6 @@ class TradePhaseBox {
                         case BTC_CONFIRMED:
                             model.getPhaseIndex().set(4);
                             break;
-                        case COMPLETED:
-                            //todo
-                            break;
                     }
                     int phaseIndex = model.getPhaseIndex().get();
                     model.getDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
