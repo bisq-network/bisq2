@@ -69,10 +69,6 @@ public class SellerState3 extends BaseState {
             super.onActivate();
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
             model.getButtonDisabled().bind(model.getTxId().isEmpty());
-
-            // random tx with address bc1qu6pu42xv2z7jpmusqj4x8yld5lrvh6fr8d37q0 
-            // https://mempool.emzy.de/tx/bd6c813bbabfd64c5f74e04280d41b5c46aebaabb0860116112a8451e75e83cf
-            model.getTxId().set("bd6c813bbabfd64c5f74e04280d41b5c46aebaabb0860116112a8451e75e83cf");
         }
 
         @Override

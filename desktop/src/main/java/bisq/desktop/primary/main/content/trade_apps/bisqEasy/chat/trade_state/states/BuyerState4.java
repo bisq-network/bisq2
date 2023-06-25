@@ -136,7 +136,8 @@ public class BuyerState4 extends BaseState {
                                     scheduler = UIScheduler.run(this::requestTx).after(20, TimeUnit.SECONDS);
                                 }
                             } else {
-                                new Popup().warning(Res.get("bisqEasy.tradeState.info.phase4.txId.failed", throwable)).show();
+                                model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase4.txId.failed"));
+                                log.warn("Transaction lookup failed", throwable);
                             }
                         });
                     });
