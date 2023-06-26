@@ -115,8 +115,8 @@ class TradePhaseBox {
                     switch (state) {
                         case INIT:
                             break;
-                        case TAKER_SEND_TAKE_OFFER_REQUEST:
-                        case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
+                        case TAKER_SENT_TAKE_OFFER_REQUEST:
+                        case MAKER_SENT_TAKE_OFFER_RESPONSE:
                             model.getPhaseIndex().set(0);
                             break;
                         case SELLER_SENT_ACCOUNT_DATA:

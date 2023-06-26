@@ -39,10 +39,10 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .from(INIT)
                 .on(BisqEasyTakeOfferRequest.class)
                 .run(BisqEasyTakeOfferRequestHandler.class)
-                .to(MAKER_RECEIVED_TAKE_OFFER_REQUEST);
+                .to(MAKER_SENT_TAKE_OFFER_RESPONSE);
 
         addTransition()
-                .from(MAKER_RECEIVED_TAKE_OFFER_REQUEST)
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
                 .on(BisqEasyAccountDataMessage.class)
                 .run(BisqEasyAccountDataMessageHandler.class)
                 .to(BUYER_RECEIVED_ACCOUNT_DATA);

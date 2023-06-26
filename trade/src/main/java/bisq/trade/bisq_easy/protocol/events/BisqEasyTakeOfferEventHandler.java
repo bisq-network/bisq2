@@ -38,15 +38,15 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
         BisqEasyTakeOfferEvent bisqEasyTakeOfferEvent = (BisqEasyTakeOfferEvent) event;
         BisqEasyContract bisqEasyContract = bisqEasyTakeOfferEvent.getBisqEasyContract();
         try {
-            ContractSignatureData myContractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, model.getMyIdentity().getKeyPair());
-            commitToModel(myContractSignatureData);
-            sendMessage(new BisqEasyTakeOfferRequest(model.getId(), model.getMyIdentity().getNetworkId(), bisqEasyContract, myContractSignatureData));
+            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, trade.getMyIdentity().getKeyPair());
+            commitToModel(contractSignatureData);
+            sendMessage(new BisqEasyTakeOfferRequest(trade.getId(), trade.getMyIdentity().getNetworkId(), bisqEasyContract, contractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void commitToModel(ContractSignatureData takersContractSignatureData) {
-        model.getMyself().getContractSignatureData().set(takersContractSignatureData);
+    private void commitToModel(ContractSignatureData contractSignatureData) {
+        trade.getMyself().getContractSignatureData().set(contractSignatureData);
     }
 }

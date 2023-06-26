@@ -103,8 +103,8 @@ public class TradeStateController implements Controller {
                 switch (state) {
                     case INIT:
                         break;
-                    case TAKER_SEND_TAKE_OFFER_REQUEST:
-                    case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
+                    case TAKER_SENT_TAKE_OFFER_REQUEST:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE:
                         if (isSeller) {
                             model.getStateInfoVBox().set(new SellerState1(applicationService, bisqEasyTrade, channel).getView().getRoot());
                         } else {

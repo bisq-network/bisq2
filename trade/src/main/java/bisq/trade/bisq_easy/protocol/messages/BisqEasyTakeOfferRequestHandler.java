@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.fsm.Event;
+import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -25,6 +26,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.events.TradeMessageSender;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +34,7 @@ import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 @Slf4j
-public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> {
+public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> implements TradeMessageSender<BisqEasyTrade> {
 
     public BisqEasyTakeOfferRequestHandler(ServiceProvider serviceProvider,
                                            BisqEasyTrade model) {
@@ -44,14 +46,23 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         BisqEasyTakeOfferRequest message = (BisqEasyTakeOfferRequest) event;
         verifyMessage(message);
 
-        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
+        BisqEasyContract takersContract = message.getBisqEasyContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
-        BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
-        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyOffer.getMakerNetworkId().getNodeId()).orElseThrow();
+        Identity myIdentity = trade.getMyIdentity();
+        ContractService contractService = serviceProvider.getContractService();
+        BisqEasyContract makersContract = new BisqEasyContract(trade.getOffer(),
+                message.getSender(),
+                takersContract.getBaseSideAmount(),
+                takersContract.getQuoteSideAmount(),
+                takersContract.getBaseSidePaymentMethodSpecs(),
+                takersContract.getQuoteSidePaymentMethodSpec(),
+                takersContract.getMediator());
         try {
-            ContractSignatureData makersContractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
+            ContractSignatureData makersContractSignatureData = contractService.signContract(makersContract, myIdentity.getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
-            //todo sent my sig to peer
+
+            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(trade.getId(), trade.getMyself().getNetworkId(), makersContract, makersContractSignatureData);
+            sendMessage(response, serviceProvider, trade);
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -66,7 +77,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
     }
 
     private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
-        model.getPeer().getContractSignatureData().set(takersContractSignatureData);
-        model.getMyself().getContractSignatureData().set(makersContractSignatureData);
+        trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
+        trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 }

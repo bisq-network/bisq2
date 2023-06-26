@@ -40,10 +40,7 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
+import bisq.trade.bisq_easy.protocol.messages.*;
 import bisq.trade.protocol.Protocol;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -119,6 +116,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof BisqEasyTakeOfferRequest) {
             onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) networkMessage);
+        } else if (networkMessage instanceof BisqEasyTakeOfferResponse) {
+            onBisqEasyTakeOfferResponse((BisqEasyTakeOfferResponse) networkMessage);
         } else if (networkMessage instanceof BisqEasyAccountDataMessage) {
             onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
         } else if (networkMessage instanceof BisqEasyConfirmFiatSentMessage) {
@@ -126,6 +125,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         } else if (networkMessage instanceof BisqEasyConfirmBtcSentMessage) {
             onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) networkMessage);
         }
+
     }
 
 
@@ -153,6 +153,17 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         } catch (TradeException e) {
             log.error("Error at processing message " + message, e);
         }
+    }
+
+    private void onBisqEasyTakeOfferResponse(BisqEasyTakeOfferResponse message) {
+        findProtocol(message.getTradeId()).ifPresent(protocol -> {
+            try {
+                protocol.handle(message);
+                persist();
+            } catch (TradeException e) {
+                log.error("Error at processing message " + message, e);
+            }
+        });
     }
 
     private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {

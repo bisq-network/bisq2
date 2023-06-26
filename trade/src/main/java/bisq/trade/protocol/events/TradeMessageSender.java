@@ -21,18 +21,15 @@ import bisq.network.NetworkService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
-@Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
-
-    protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
-    }
-
-    protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
-        return sendMessage(message, serviceProvider, trade);
+public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
+    default CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message, ServiceProvider serviceProvider, M model) {
+        return serviceProvider.getNetworkService().confidentialSend(message, model.getPeer().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
+                .whenComplete((result, throwable) -> {
+                    System.out.println("sendMessage " + message + ". result=" + result);
+                    //todo store info if message arrive or stored in mailbox
+                });
     }
 }

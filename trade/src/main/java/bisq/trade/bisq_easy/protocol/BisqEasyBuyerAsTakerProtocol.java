@@ -20,10 +20,7 @@ package bisq.trade.bisq_easy.protocol;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.events.*;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessageHandler;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessageHandler;
+import bisq.trade.bisq_easy.protocol.messages.*;
 
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.*;
 
@@ -39,10 +36,16 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 .from(INIT)
                 .on(BisqEasyTakeOfferEvent.class)
                 .run(BisqEasyTakeOfferEventHandler.class)
-                .to(TAKER_SEND_TAKE_OFFER_REQUEST);
+                .to(TAKER_SENT_TAKE_OFFER_REQUEST);
 
         addTransition()
-                .from(TAKER_SEND_TAKE_OFFER_REQUEST)
+                .from(TAKER_SENT_TAKE_OFFER_REQUEST)
+                .on(BisqEasyTakeOfferResponse.class)
+                .run(BisqEasyTakeOfferResponseHandler.class)
+                .to(TAKER_RECEIVED_TAKE_OFFER_RESPONSE);
+
+        addTransition()
+                .from(TAKER_RECEIVED_TAKE_OFFER_RESPONSE)
                 .on(BisqEasyAccountDataMessage.class)
                 .run(BisqEasyAccountDataMessageHandler.class)
                 .to(BUYER_RECEIVED_ACCOUNT_DATA);

@@ -49,6 +49,6 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
     }
 
     private void commitToModel(String paymentAccountData) {
-        model.getPaymentAccountData().set(paymentAccountData);
+        trade.getPaymentAccountData().set(paymentAccountData);
     }
 }
