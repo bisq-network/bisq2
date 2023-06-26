@@ -12,6 +12,7 @@ dependencies {
     implementation project(':offer')
     implementation project(':contract')
     implementation project(':support')
+    implementation project(':chat')
     implementation project(':oracle')
 
     implementation("network:network")

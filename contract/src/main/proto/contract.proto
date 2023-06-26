@@ -78,7 +78,7 @@ message SignedBisqEasyContract {
 message BisqEasyContract {
   uint64 baseSideAmount = 1;
   uint64 quoteSideAmount = 2;
-  offer.PaymentMethodSpec baseSidePaymentMethodSpecs = 3;
+  offer.PaymentMethodSpec baseSidePaymentMethodSpec = 3;
   offer.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
   optional user.UserProfile mediator = 12;
 }

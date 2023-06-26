@@ -34,7 +34,7 @@ import java.util.Optional;
  * - fixPriceAmount, minAmount, maxAmount
  * - Combinations of fallbacks for fixPriceAmount, minAmount, maxAmount
  */
-public class AmountUtil {
+public class OfferAmountUtil {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // BaseAmount: If no BaseAmountSpec we calculate it from the QuoteAmountSpec with the PriceSpec

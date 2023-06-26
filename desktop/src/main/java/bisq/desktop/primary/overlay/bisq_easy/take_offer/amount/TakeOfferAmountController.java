@@ -23,8 +23,8 @@ import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
-import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
@@ -60,8 +60,8 @@ public class TakeOfferAmountController implements Controller {
         amountComponent.setDirection(bisqEasyOffer.getDirection());
         Market market = bisqEasyOffer.getMarket();
         amountComponent.setMarket(market);
-        amountComponent.setMinMaxRange(AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow(),
-                AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow());
+        amountComponent.setMinMaxRange(OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow(),
+                OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow());
 
         String direction = bisqEasyOffer.getTakersDirection().isBuy() ?
                 Res.get("offer.buy").toUpperCase() :
@@ -79,9 +79,9 @@ public class TakeOfferAmountController implements Controller {
         }
 
         takersAmountSpec.ifPresent(amountSpec -> {
-            AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
+            OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
                     .ifPresent(amountComponent::setQuoteSideAmount);
-            AmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
+            OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
                     .ifPresent(amountComponent::setBaseSideAmount);
         });
     }

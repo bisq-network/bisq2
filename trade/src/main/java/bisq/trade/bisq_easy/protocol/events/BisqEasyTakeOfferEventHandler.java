@@ -47,6 +47,6 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
     }
 
     private void commitToModel(ContractSignatureData contractSignatureData) {
-        trade.getMyself().getContractSignatureData().set(contractSignatureData);
+        trade.getTaker().getContractSignatureData().set(contractSignatureData);
     }
 }

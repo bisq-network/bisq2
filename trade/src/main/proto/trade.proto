@@ -97,8 +97,7 @@ message BisqEasyTakeOfferRequest {
   contract.ContractSignatureData contractSignatureData = 2;
 }
 message BisqEasyTakeOfferResponse {
-  contract.Contract bisqEasyContract = 1;
-  contract.ContractSignatureData contractSignatureData = 2;
+  contract.ContractSignatureData contractSignatureData = 1;
 }
 message BisqEasyAccountDataMessage {
   string paymentAccountData = 1;

@@ -33,8 +33,8 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -276,14 +276,14 @@ public class CreateOfferReviewOfferController implements Controller {
                 if (!peersOffer.getMarket().equals(bisqEasyOffer.getMarket())) {
                     return false;
                 }
-                Optional<Monetary> myQuoteSideMinOrFixedAmount = AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMaxOrFixedAmount = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersQuoteSideMinOrFixedAmount = AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }

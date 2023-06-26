@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.user.accounts.create;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -31,6 +32,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreatePaymentAccountController implements Controller {
@@ -80,8 +82,10 @@ public class CreatePaymentAccountController implements Controller {
                     .onAction(() -> model.setAccountName(""))
                     .show();
         } else {
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(model.getAccountName(),
-                    model.getAccountData());
+            String accountData = model.getAccountData();
+            checkNotNull(accountData);
+            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(model.getAccountName(), accountData);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);
             close();

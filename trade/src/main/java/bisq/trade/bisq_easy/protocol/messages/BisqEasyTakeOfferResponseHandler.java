@@ -20,7 +20,6 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.common.fsm.Event;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -48,10 +47,7 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
 
     @Override
     protected void verifyMessage(BisqEasyTakeOfferResponse message) {
-        //todo
-        BisqEasyContract makersContract = message.getBisqEasyContract();
-        BisqEasyContract takersContract = trade.getContract();
-        checkArgument(makersContract.equals(takersContract));
+       super.verifyMessage(message);
 
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
         ContractSignatureData takersContractSignatureData = trade.getTaker().getContractSignatureData().get();
@@ -59,7 +55,7 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
 
         ContractService contractService = serviceProvider.getContractService();
         try {
-            checkArgument(contractService.verifyContractSignature(makersContract, makersContractSignatureData));
+            checkArgument(contractService.verifyContractSignature(trade.getContract(), makersContractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

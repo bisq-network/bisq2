@@ -21,11 +21,16 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends BisqEasyTradeMessage> extends TradeEventHandler<M> {
 
     protected TradeMessageHandler(ServiceProvider serviceProvider, M model) {
         super(serviceProvider, model);
     }
 
-    protected abstract void verifyMessage(S message);
+    protected void verifyMessage(S message) {
+        checkArgument(message.getTradeId().equals(trade.getId()));
+        checkArgument(message.getSender().equals(trade.getPeer().getNetworkId()));
+    }
 }

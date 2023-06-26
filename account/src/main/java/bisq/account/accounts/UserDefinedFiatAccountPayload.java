@@ -22,15 +22,19 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class UserDefinedFiatAccountPayload extends AccountPayload {
+    public static final int MAX_DATA_LENGTH = 1000;
     private final String accountData;
 
     public UserDefinedFiatAccountPayload(String id, String paymentMethodName, String accountData) {
         super(id, paymentMethodName);
+        checkArgument(accountData.length() <= MAX_DATA_LENGTH);
         this.accountData = accountData;
     }
 

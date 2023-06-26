@@ -48,24 +48,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class MediationService implements Service, DataService.Listener, MessageListener {
-    // This method can be used for verification when taker provides mediators list.
-    // If mediator list was not matching the expected one present in the network it might have been a manipulation attempt.
-    public static Optional<UserProfile> selectMediator(Set<AuthorizedRoleRegistrationData> mediators, String makersProfileId, String takersProfileId) {
-        if (mediators.isEmpty()) {
-            return Optional.empty();
-        } else if (mediators.iterator().hasNext()) {
-            return Optional.of(mediators.iterator().next().getUserProfile());
-        } else {
-            String concat = makersProfileId + takersProfileId;
-            int index = new BigInteger(concat.getBytes(StandardCharsets.UTF_8)).mod(BigInteger.valueOf(mediators.size())).intValue();
-            return Optional.of(new ArrayList<>(mediators).get(index).getUserProfile());
-        }
-    }
-
     private final NetworkService networkService;
     private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();
     private final UserIdentityService userIdentityService;
@@ -153,23 +137,23 @@ public class MediationService implements Service, DataService.Listener, MessageL
         networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
     }
 
-    // As maker might have different mediator data we use the taker to select. For verification, we still can add 
-    // a method that taker need to provide the data for the selection to the maker which would reveal if the selection
-    // was faked.
-    public Optional<UserProfile> takerSelectMediator(String makersProfileId, String takersProfileId) {
-        return selectMediator(mediators, makersProfileId, takersProfileId);
+    public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
+        return selectMediator(mediators, makersUserProfileId, takersUserProfileId);
     }
 
-    public Optional<UserProfile> takerSelectMediator(String makersProfileId) {
-        return userProfileService.findUserProfile(makersProfileId)
-                .flatMap(makerUserProfile -> {
-                    UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-                    return takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
-                })
-                .stream()
-                .findAny();
+    // This method can be used for verification when taker provides mediators list.
+    // If mediator list was not matching the expected one present in the network it might have been a manipulation attempt.
+    public Optional<UserProfile> selectMediator(Set<AuthorizedRoleRegistrationData> mediators, String makersProfileId, String takersProfileId) {
+        if (mediators.isEmpty()) {
+            return Optional.empty();
+        } else if (mediators.size() == 1 && mediators.iterator().hasNext()) {
+            return Optional.of(mediators.iterator().next().getUserProfile());
+        } else {
+            String concat = makersProfileId + takersProfileId;
+            int index = new BigInteger(concat.getBytes(StandardCharsets.UTF_8)).mod(BigInteger.valueOf(mediators.size())).intValue();
+            return Optional.of(new ArrayList<>(mediators).get(index).getUserProfile());
+        }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private

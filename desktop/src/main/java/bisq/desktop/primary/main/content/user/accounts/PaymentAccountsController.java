@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.user.accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
@@ -34,6 +35,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 import static bisq.desktop.common.view.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -105,11 +107,13 @@ public class PaymentAccountsController implements Controller {
         checkNotNull(model.getSelectedAccount());
         String accountName = model.getSelectedAccount().getAccountName();
         String accountData = model.getAccountData();
-        UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
-
-        accountService.removePaymentAccount(model.getSelectedAccount());
-        accountService.addPaymentAccount(newAccount);
-        accountService.setSelectedAccount(newAccount);
+        if (accountData != null) {
+            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
+            accountService.removePaymentAccount(model.getSelectedAccount());
+            accountService.addPaymentAccount(newAccount);
+            accountService.setSelectedAccount(newAccount);
+        }
     }
 
     void onDeleteAccount() {

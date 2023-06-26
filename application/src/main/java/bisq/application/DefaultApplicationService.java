@@ -142,7 +142,8 @@ public class DefaultApplicationService extends ApplicationService {
 
         supportService = new SupportService(networkService, chatService, userService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService, contractService, supportService);
+        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
+                contractService, supportService, chatService, oracleService);
     }
 
     @Override

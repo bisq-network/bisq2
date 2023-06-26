@@ -29,8 +29,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
 
-    public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider,
-                                                 BisqEasyTrade model) {
+    public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
@@ -44,8 +43,11 @@ public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<B
 
     @Override
     protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
-        //todo
+        super.verifyMessage(message);
+
         checkArgument(StringUtils.isNotEmpty(message.getBtcAddress()));
+        // We leave it flexible so that users can use other than a BTC address data as btcAddress
+        checkArgument(message.getBtcAddress().length() <= 100);
     }
 
     private void commitToModel(String btcAddress) {

@@ -20,6 +20,7 @@ package bisq.oracle.explorer;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
@@ -146,17 +147,15 @@ public class ExplorerService {
         BaseHttpClient httpClient = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
 
         return CompletableFuture.supplyAsync(() -> {
+            long ts = System.currentTimeMillis();
+            String param = provider.getApiPath() + provider.getTxPath() + txId;
             try {
-                long ts = System.currentTimeMillis();
-                String param = provider.getApiPath() + provider.getTxPath() + txId;
                 String json = httpClient.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                log.info("Request tx from {} took {} ms", httpClient.getBaseUrl() + param, System.currentTimeMillis() - ts);
-                ObjectMapper objectMapper = new ObjectMapper();
-                return objectMapper.readValue(json, Tx.class);
-
+                log.info("Requesting tx from {} took {} ms", httpClient.getBaseUrl() + param, System.currentTimeMillis() - ts);
+                return new ObjectMapper().readValue(json, Tx.class);
             } catch (IOException e) {
                 if (!shutdownStarted) {
-                    e.printStackTrace();
+                    log.info("Requesting tx from {} failed. {}" + httpClient.getBaseUrl() + param, ExceptionUtil.getMostMeaningfulMessage(e));
                 }
                 throw new RuntimeException(e);
             }
