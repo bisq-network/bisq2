@@ -35,7 +35,7 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;

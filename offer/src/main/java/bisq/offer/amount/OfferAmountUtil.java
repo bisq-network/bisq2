@@ -24,7 +24,7 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPriceService;
 
 import java.util.Optional;
 

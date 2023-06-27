@@ -43,7 +43,7 @@ import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;

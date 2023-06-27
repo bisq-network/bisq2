@@ -20,10 +20,10 @@ package bisq.application;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.oracle.OracleService;
-import bisq.oracle.daobridge.DaoBridgeHttpService;
-import bisq.oracle.daobridge.DaoBridgeService;
-import bisq.oracle.timestamp.TimestampService;
+import bisq.oracle.node.bisq1_bridge.Bisq1BridgeHttpService;
+import bisq.oracle.node.bisq1_bridge.Bisq1BridgeService;
+import bisq.oracle.node.timestamp.TimestampService;
+import bisq.oracle.service.OracleService;
 import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +37,8 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Getter
 public class BridgeApplicationService extends ApplicationService {
     private final IdentityService identityService;
-    private final DaoBridgeService daoBridgeService;
-    private final DaoBridgeHttpService daoBridgeHttpService;
+    private final Bisq1BridgeService bisq1BridgeService;
+    private final Bisq1BridgeHttpService bisq1BridgeHttpService;
     private final SecurityService securityService;
     private final NetworkService networkService;
     private final TimestampService timestampService;
@@ -60,16 +60,17 @@ public class BridgeApplicationService extends ApplicationService {
                 networkService
         );
 
-        DaoBridgeHttpService.Config daoBridgeConfig = DaoBridgeHttpService.Config.from(getConfig("oracle.daoBridgeHttpService"));
-        daoBridgeHttpService = new DaoBridgeHttpService(daoBridgeConfig, networkService);
+        Bisq1BridgeHttpService.Config daoBridgeConfig = Bisq1BridgeHttpService.Config.from(getConfig("oracle.daoBridgeHttpService"));
+        bisq1BridgeHttpService = new Bisq1BridgeHttpService(daoBridgeConfig, networkService);
 
         OracleService.Config oracleConfig = OracleService.Config.from(getConfig("oracle"));
-        daoBridgeService = new DaoBridgeService(oracleConfig,
+        bisq1BridgeService = new Bisq1BridgeService(oracleConfig,
                 networkService,
                 identityService,
-                daoBridgeHttpService);
+                persistenceService,
+                bisq1BridgeHttpService);
 
-        timestampService = new TimestampService(oracleConfig, getPersistenceService(), identityService, networkService);
+        timestampService = new TimestampService(oracleConfig, persistenceService, identityService, networkService);
     }
 
     @Override
@@ -77,8 +78,8 @@ public class BridgeApplicationService extends ApplicationService {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> daoBridgeHttpService.initialize())
-                .thenCompose(result -> daoBridgeService.initialize())
+                .thenCompose(result -> bisq1BridgeHttpService.initialize())
+                .thenCompose(result -> bisq1BridgeService.initialize())
                 .thenCompose(result -> timestampService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -94,8 +95,8 @@ public class BridgeApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> timestampService.shutdown()
-                        .thenCompose(result -> daoBridgeService.shutdown())
-                        .thenCompose(result -> daoBridgeHttpService.shutdown())
+                .thenCompose(result -> bisq1BridgeService.shutdown())
+                .thenCompose(result -> bisq1BridgeHttpService.shutdown())
                         .thenCompose(result -> identityService.shutdown())
                         .thenCompose(result -> networkService.shutdown())
                         .thenCompose(result -> securityService.shutdown())

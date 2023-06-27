@@ -5,7 +5,7 @@ option java_multiple_files = true;
 import "common.proto";
 import "network.proto";
 
-message AuthorizedDaoBridgeServiceProvider {
+message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
 }
 
@@ -61,4 +61,8 @@ message AuthorizedTimestampData {
 
 message TimestampStore {
   repeated common.StringLongPair stringLongPairs = 1;
+}
+message Bisq1BridgeStore {
+  repeated AuthorizeAccountAgeRequest accountAgeRequests = 1;
+  repeated AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
 }

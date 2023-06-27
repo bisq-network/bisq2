@@ -25,7 +25,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
+import bisq.oracle.node.AuthorizedOracleNode;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -89,8 +89,8 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     }
 
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedDaoBridgeServiceProvider) {
-            AuthorizedDaoBridgeServiceProvider data = (AuthorizedDaoBridgeServiceProvider) authenticatedData.getDistributedData();
+        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode data = (AuthorizedOracleNode) authenticatedData.getDistributedData();
             daoBridgeServiceProviders.add(data.getNetworkId());
         }
     }

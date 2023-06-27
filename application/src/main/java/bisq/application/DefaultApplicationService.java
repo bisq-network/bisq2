@@ -27,7 +27,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.oracle.OracleService;
+import bisq.oracle.service.OracleService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;

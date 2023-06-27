@@ -29,7 +29,7 @@ import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.oracle.explorer.ExplorerService;
+import bisq.oracle.service.explorer.ExplorerService;
 import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
