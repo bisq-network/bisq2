@@ -24,6 +24,7 @@ public enum RoleType implements ProtoEnum {
     MEDIATOR,
     ARBITRATOR,
     MODERATOR,
+    SEED_NODE,
     ORACLE;
 
     @Override

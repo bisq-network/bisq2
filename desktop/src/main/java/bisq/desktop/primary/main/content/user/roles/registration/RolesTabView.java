@@ -46,6 +46,9 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
         addTab(Res.get("user.roles.type.MODERATOR"),
                 NavigationTarget.REGISTER_MODERATOR,
                 styles);
+        addTab(Res.get("user.roles.type.SEED_NODE"),
+                NavigationTarget.REGISTER_SEED,
+                styles);
         addTab(Res.get("user.roles.type.ORACLE"),
                 NavigationTarget.REGISTER_ORACLE,
                 styles);
@@ -54,11 +57,9 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
     @Override
     protected void onViewAttached() {
         line.prefWidthProperty().unbind();
-        double paddings = root.getPadding().getLeft() + root.getPadding().getRight();
-        line.prefWidthProperty().bind(root.widthProperty().subtract(paddings));
-
-        line.prefWidthProperty().unbind();
         line.prefWidthProperty().bind(root.widthProperty().subtract(61));
+
+        onStartTransition();
     }
 
     @Override

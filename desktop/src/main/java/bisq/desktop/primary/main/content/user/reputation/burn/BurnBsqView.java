@@ -65,10 +65,6 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
     @Override
     protected void onViewAttached() {
         line.prefWidthProperty().unbind();
-        double paddings = root.getPadding().getLeft() + root.getPadding().getRight();
-        line.prefWidthProperty().bind(root.widthProperty().subtract(paddings));
-
-        line.prefWidthProperty().unbind();
         line.prefWidthProperty().bind(root.widthProperty().subtract(136));
         closeButton.setOnAction(e -> controller.onClose());
     }
