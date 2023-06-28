@@ -41,7 +41,7 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         double width = PrimaryStageModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = PrimaryStageModel.MIN_HEIGHT - 40;
+        double height = PrimaryStageModel.MIN_HEIGHT;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 
