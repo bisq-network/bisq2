@@ -20,10 +20,7 @@ package bisq.application;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.oracle.node.bisq1_bridge.Bisq1BridgeHttpService;
-import bisq.oracle.node.bisq1_bridge.Bisq1BridgeService;
-import bisq.oracle.node.timestamp.TimestampService;
-import bisq.oracle.service.OracleService;
+import bisq.oracle.node.OracleNodeService;
 import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,16 +32,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 @Getter
-public class BridgeApplicationService extends ApplicationService {
+public class Bisq1BridgeApplicationService extends ApplicationService {
     private final IdentityService identityService;
-    private final Bisq1BridgeService bisq1BridgeService;
-    private final Bisq1BridgeHttpService bisq1BridgeHttpService;
     private final SecurityService securityService;
     private final NetworkService networkService;
-    private final TimestampService timestampService;
+    private final OracleNodeService oracleNodeService;
 
-    public BridgeApplicationService(String[] args) {
-        super("default", args);
+    public Bisq1BridgeApplicationService(String[] args) {
+        super("bisq1_bridge", args);
 
         securityService = new SecurityService(persistenceService);
 
@@ -60,17 +55,11 @@ public class BridgeApplicationService extends ApplicationService {
                 networkService
         );
 
-        Bisq1BridgeHttpService.Config daoBridgeConfig = Bisq1BridgeHttpService.Config.from(getConfig("oracle.daoBridgeHttpService"));
-        bisq1BridgeHttpService = new Bisq1BridgeHttpService(daoBridgeConfig, networkService);
-
-        OracleService.Config oracleConfig = OracleService.Config.from(getConfig("oracle"));
-        bisq1BridgeService = new Bisq1BridgeService(oracleConfig,
-                networkService,
+        OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
+        oracleNodeService = new OracleNodeService(oracleNodeConfig,
                 identityService,
-                persistenceService,
-                bisq1BridgeHttpService);
-
-        timestampService = new TimestampService(oracleConfig, persistenceService, identityService, networkService);
+                networkService,
+                persistenceService);
     }
 
     @Override
@@ -78,9 +67,7 @@ public class BridgeApplicationService extends ApplicationService {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> bisq1BridgeHttpService.initialize())
-                .thenCompose(result -> bisq1BridgeService.initialize())
-                .thenCompose(result -> timestampService.initialize())
+                .thenCompose(result -> oracleNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
@@ -94,14 +81,12 @@ public class BridgeApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> timestampService.shutdown()
-                .thenCompose(result -> bisq1BridgeService.shutdown())
-                .thenCompose(result -> bisq1BridgeHttpService.shutdown())
-                        .thenCompose(result -> identityService.shutdown())
-                        .thenCompose(result -> networkService.shutdown())
-                        .thenCompose(result -> securityService.shutdown())
-                        .orTimeout(2, TimeUnit.MINUTES)
-                        .handle((result, throwable) -> throwable == null)
-                        .join());
+        return supplyAsync(() -> oracleNodeService.shutdown()
+                .thenCompose(result -> identityService.shutdown())
+                .thenCompose(result -> networkService.shutdown())
+                .thenCompose(result -> securityService.shutdown())
+                .orTimeout(2, TimeUnit.MINUTES)
+                .handle((result, throwable) -> throwable == null)
+                .join());
     }
 }

@@ -30,6 +30,12 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+/**
+ * We persist the requests so that in case of a scam or trade rule violation we could block the user at Bisq 1 as well.
+ * This is a bit of a trade-off between security and privacy. One option to improve that would be that all data is
+ * persisted as encrypted entries and the decryption key is help by another bonded role. So it would require the
+ * cooperation of the oracle node operator with the key holder.
+ */
 @Slf4j
 public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore> {
     @Getter

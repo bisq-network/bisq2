@@ -133,6 +133,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     private boolean requestTimestamp(String profileId) {
+        log.error("requestTimestamp profileId={}", profileId);
         if (daoBridgeServiceProviders.isEmpty()) {
             return false;
 
