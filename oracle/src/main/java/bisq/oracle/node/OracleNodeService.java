@@ -127,7 +127,6 @@ public class OracleNodeService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        log.error("publishAuthorizedData data={}", data);
         return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
                 .thenCompose(identity -> networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
@@ -151,5 +150,4 @@ public class OracleNodeService implements Service {
             throw new RuntimeException(e);
         }
     }
-
 }
