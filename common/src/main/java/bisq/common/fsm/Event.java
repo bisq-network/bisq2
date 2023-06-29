@@ -18,5 +18,3 @@ package bisq.common.fsm;
 
 public interface Event {
 }
-
-
