@@ -29,7 +29,7 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
+import bisq.oracle.node.AuthorizedOracleNode;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -128,8 +128,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedDaoBridgeServiceProvider) {
-            AuthorizedDaoBridgeServiceProvider data = (AuthorizedDaoBridgeServiceProvider) authenticatedData.getDistributedData();
+        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode data = (AuthorizedOracleNode) authenticatedData.getDistributedData();
             daoBridgeServiceProviders.add(data.getNetworkId());
         }
     }

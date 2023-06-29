@@ -31,7 +31,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyBooleanProperty;

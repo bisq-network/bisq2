@@ -60,6 +60,9 @@ public class RolesTabController extends TabController<RolesTabModel> {
             case REGISTER_MODERATOR: {
                 return Optional.of(new RoleRegistrationController(applicationService, RoleType.MODERATOR));
             }
+            case REGISTER_SEED: {
+                return Optional.of(new RoleRegistrationController(applicationService, RoleType.SEED_NODE));
+            }
             case REGISTER_ORACLE: {
                 return Optional.of(new RoleRegistrationController(applicationService, RoleType.ORACLE));
             }

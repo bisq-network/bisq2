@@ -23,7 +23,7 @@ import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
-import bisq.oracle.OracleService;
+import bisq.oracle.service.OracleService;
 import bisq.persistence.PersistenceService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;

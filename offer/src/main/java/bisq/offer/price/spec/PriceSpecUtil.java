@@ -19,8 +19,8 @@ package bisq.offer.price.spec;
 
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
-import bisq.oracle.marketprice.MarketPrice;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPrice;
+import bisq.oracle.service.market_price.MarketPriceService;
 
 import java.util.Optional;
 

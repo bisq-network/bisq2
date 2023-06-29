@@ -36,9 +36,8 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
 
     public BurnBsqTab1View(BurnBsqTab1Model model,
                            BurnBsqTab1Controller controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(20), model, controller);
 
-        root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("user.reputation.burnedBsq.infoHeadline"));

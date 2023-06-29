@@ -20,7 +20,7 @@ package bisq.offer.price;
 import bisq.common.monetary.PriceQuote;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.PriceFormatter;
 
 import java.util.function.Function;

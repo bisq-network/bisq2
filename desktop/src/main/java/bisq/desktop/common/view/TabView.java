@@ -118,7 +118,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     @Override
     public void onStartTransition() {
-        this.transitionStarted = true;
+        transitionStarted = true;
         UIThread.runOnNextRenderFrame(this::maybeAnimateMark);
     }
 

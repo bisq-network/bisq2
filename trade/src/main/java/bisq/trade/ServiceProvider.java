@@ -17,6 +17,8 @@
 
 package bisq.trade;
 
+import bisq.oracle.service.OracleService;
+
 public interface ServiceProvider {
     bisq.network.NetworkService getNetworkService();
 
@@ -32,5 +34,5 @@ public interface ServiceProvider {
 
     bisq.chat.ChatService getChatService();
 
-    bisq.oracle.OracleService getOracleService();
+    OracleService getOracleService();
 }

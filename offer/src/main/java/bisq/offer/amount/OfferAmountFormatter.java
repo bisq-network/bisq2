@@ -23,7 +23,7 @@ import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import lombok.extern.slf4j.Slf4j;
 

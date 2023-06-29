@@ -19,8 +19,7 @@ package bisq.bisq1Bridge;
 
 import bisq.application.BridgeApplicationService;
 import bisq.common.timer.Scheduler;
-import bisq.oracle.daobridge.DaoBridgeHttpService;
-import bisq.oracle.daobridge.DaoBridgeService;
+import bisq.oracle.node.bisq1_bridge.Bisq1BridgeService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -35,13 +34,11 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class Bisq1BridgeClient {
-    private final DaoBridgeService daoBridgeService;
-    private final DaoBridgeHttpService daoBridgeHttpService;
+    private final Bisq1BridgeService bisq1BridgeService;
 
     public Bisq1BridgeClient(String[] args) {
         BridgeApplicationService applicationService = new BridgeApplicationService(args);
-        daoBridgeHttpService = applicationService.getDaoBridgeHttpService();
-        daoBridgeService = applicationService.getDaoBridgeService();
+        bisq1BridgeService = applicationService.getBisq1BridgeService();
 
         applicationService.readAllPersisted()
                 .thenCompose(result -> applicationService.initialize())
@@ -49,13 +46,13 @@ public class Bisq1BridgeClient {
     }
 
     private void startRequests() {
-        Scheduler.run(this::requestSerial).periodically(0, 5, TimeUnit.SECONDS);
+        Scheduler.run(this::request).periodically(0, 5, TimeUnit.SECONDS);
     }
 
-    private CompletableFuture<Boolean> requestSerial() {
-        return daoBridgeHttpService.requestProofOfBurnTxs()
-                .thenCompose(daoBridgeService::publishProofOfBurnDtoSet)
-                .thenCompose(result -> daoBridgeHttpService.requestBondedReputations())
-                .thenCompose(daoBridgeService::publishBondedReputationDtoSet);
+    private CompletableFuture<Boolean> request() {
+        return bisq1BridgeService.requestProofOfBurnTxs()
+                .thenCompose(bisq1BridgeService::publishProofOfBurnDtoSet)
+                .thenCompose(result -> bisq1BridgeService.requestBondedReputations())
+                .thenCompose(bisq1BridgeService::publishBondedReputationDtoSet);
     }
 }
