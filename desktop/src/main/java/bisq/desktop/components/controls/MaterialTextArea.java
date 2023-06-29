@@ -44,6 +44,8 @@ public class MaterialTextArea extends MaterialTextField {
 
         textInputControl.setMinHeight(height);
         textInputControl.setMaxHeight(height);
+        ((TextArea) textInputControl).setWrapText(true);
+        setFixedHeight(128);
     }
 
     @Override

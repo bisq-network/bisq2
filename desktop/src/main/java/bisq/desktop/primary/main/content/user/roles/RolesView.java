@@ -102,7 +102,7 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.roles.table.columns.role"))
-                .fixWidth(100)
+                .minWidth(200)
                 .comparator(Comparator.comparing(ListItem::getRoleType))
                 .valueSupplier(ListItem::getRoleType)
                 .build());

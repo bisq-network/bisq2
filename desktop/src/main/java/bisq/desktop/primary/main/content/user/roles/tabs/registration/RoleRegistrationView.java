@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs.registration;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -42,7 +42,7 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
 
     public RoleRegistrationView(RoleRegistrationModel model,
                                 RoleRegistrationController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
 
@@ -67,10 +67,7 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         selectedProfile.setEditable(false);
 
         privateKey = new MaterialPasswordField(Res.get("user.roles.registration.privateKey"));
-        privateKey.setEditable(false);
-
         publicKey = new MaterialTextField(Res.get("user.roles.registration.publicKey"));
-        publicKey.setEditable(false);
 
         registrationButton = new Button(Res.get("user.roles.registration.register"));
         removeRegistrationButton = new Button(Res.get("user.roles.registration.removeRegistration"));

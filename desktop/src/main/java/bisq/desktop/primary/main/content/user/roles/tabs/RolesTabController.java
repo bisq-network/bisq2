@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.user.roles.tabs.registration.RoleRegistrationController;
 import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,10 @@ public class RolesTabController extends TabController<RolesTabModel> {
                 return Optional.of(new RoleRegistrationController(applicationService, RoleType.SEED_NODE));
             }
             case REGISTER_ORACLE: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.ORACLE));
+                return Optional.of(new RoleRegistrationController(applicationService, RoleType.ORACLE_NODE));
+            }
+            case REGISTER_NOTIFICATION_SENDER: {
+                return Optional.of(new RoleRegistrationController(applicationService, RoleType.SECURITY_MANAGER));
             }
             default: {
                 return Optional.empty();

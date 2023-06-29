@@ -128,7 +128,6 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
     private MaterialTextArea addTextArea(String description, String prompt) {
         MaterialTextArea field = new MaterialTextArea(description, prompt);
         field.setEditable(false);
-        field.setFixedHeight(2 * 56 + 20); // MaterialTextField has height 56
         formVBox.getChildren().add(field);
         return field;
     }

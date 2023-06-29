@@ -29,7 +29,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.support.MediationService;
+import bisq.support.mediation.MediationService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;

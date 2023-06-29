@@ -24,8 +24,12 @@ public enum RoleType implements ProtoEnum {
     MEDIATOR,
     ARBITRATOR,
     MODERATOR,
+    SECURITY_MANAGER,
+    RELEASE_MANAGER,
+    ORACLE_NODE,
     SEED_NODE,
-    ORACLE;
+    EXPLORER_NODE,
+    MARKET_PRICE_NODE;
 
     @Override
     public bisq.user.protobuf.RoleType toProto() {

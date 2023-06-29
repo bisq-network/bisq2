@@ -15,20 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user;
+package bisq.support.alert;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import lombok.Getter;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
 
-@Getter
-public class UserModel extends TabModel {
-    private final BooleanProperty sendNotificationTabButtonVisible = new SimpleBooleanProperty();
+public enum AlertType implements ProtoEnum {
+    INFO,
+    WARN,
+    EMERGENCY,
+    BAN;
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+    public bisq.support.protobuf.AlertType toProto() {
+        return bisq.support.protobuf.AlertType.valueOf(name());
+    }
+
+    public static AlertType fromProto(bisq.support.protobuf.AlertType proto) {
+        return ProtobufUtils.enumFromProto(AlertType.class, proto.name());
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;

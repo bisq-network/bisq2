@@ -20,6 +20,8 @@ package bisq.support;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
+import bisq.support.alert.AlertService;
+import bisq.support.mediation.MediationService;
 import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
+@Getter
 public class SupportService implements Service {
-    @Getter
     private final MediationService mediationService;
+    private final AlertService alertService;
 
     public SupportService(NetworkService networkService, ChatService chatService, UserService userService) {
         mediationService = new MediationService(networkService, chatService, userService);
+        alertService = new AlertService(networkService, userService);
     }
 
 
@@ -42,11 +46,13 @@ public class SupportService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return mediationService.initialize();
+        return mediationService.initialize()
+                .thenCompose(result -> alertService.initialize());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        return mediationService.shutdown();
+        return mediationService.shutdown()
+                .thenCompose(result -> alertService.shutdown());
     }
 }

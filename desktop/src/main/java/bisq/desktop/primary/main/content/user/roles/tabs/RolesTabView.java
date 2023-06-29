@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs;
 
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.view.NavigationTarget;
@@ -49,8 +49,11 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
         addTab(Res.get("user.roles.type.SEED_NODE"),
                 NavigationTarget.REGISTER_SEED,
                 styles);
-        addTab(Res.get("user.roles.type.ORACLE"),
+        addTab(Res.get("user.roles.type.ORACLE_NODE"),
                 NavigationTarget.REGISTER_ORACLE,
+                styles);
+        addTab(Res.get("user.roles.type.NOTIFICATION_SENDER"),
+                NavigationTarget.REGISTER_NOTIFICATION_SENDER,
                 styles);
     }
 

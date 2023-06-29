@@ -87,7 +87,9 @@ enum RoleType {
   MEDIATOR = 0;
   ARBITRATOR = 1;
   MODERATOR = 2;
-  ORACLE = 3;
+  SEED_NODE = 3;
+  ORACLE = 4;
+  NOTIFICATION_SENDER = 5;
 }
 
 message AuthorizedRoleRegistrationData {

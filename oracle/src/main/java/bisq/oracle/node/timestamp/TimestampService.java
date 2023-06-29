@@ -72,7 +72,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload()
                 .filter(data -> data.getDistributedData() instanceof AuthorizedTimestampData)
                 .map(data -> (AuthorizedTimestampData) data.getDistributedData())
-                .forEach(this::processAuthenticatedData));
+                .forEach(this::processAuthorizedTimestampData));
 
         persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value)));
 
@@ -106,7 +106,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
-            processAuthenticatedData((AuthorizedTimestampData) authenticatedData.getDistributedData());
+            processAuthorizedTimestampData((AuthorizedTimestampData) authenticatedData.getDistributedData());
         }
     }
 
@@ -139,7 +139,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         }
     }
 
-    private void processAuthenticatedData(AuthorizedTimestampData data) {
+    private void processAuthorizedTimestampData(AuthorizedTimestampData data) {
         // We might get data published from other oracle nodes and put it into our local store.
         String profileId = data.getProfileId();
         if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
