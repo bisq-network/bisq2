@@ -86,14 +86,18 @@ message BisqEasyTradeStore {
 message BisqEasyTradeMessage {
   oneof message {
     BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = 20;
-    BisqEasyAccountDataMessage bisqEasyAccountDataMessage = 21;
-    BisqEasyConfirmFiatSentMessage bisqEasyConfirmFiatSentMessage = 22;
-    BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 23;
+    BisqEasyTakeOfferResponse bisqEasyTakeOfferResponse = 21;
+    BisqEasyAccountDataMessage bisqEasyAccountDataMessage = 22;
+    BisqEasyConfirmFiatSentMessage bisqEasyConfirmFiatSentMessage = 23;
+    BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 24;
   }
 }
 message BisqEasyTakeOfferRequest {
   contract.Contract bisqEasyContract = 1;
   contract.ContractSignatureData contractSignatureData = 2;
+}
+message BisqEasyTakeOfferResponse {
+  contract.ContractSignatureData contractSignatureData = 1;
 }
 message BisqEasyAccountDataMessage {
   string paymentAccountData = 1;

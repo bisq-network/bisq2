@@ -20,8 +20,6 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
@@ -35,12 +33,11 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import bisq.offer.amount.AmountUtil;
 import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.bisq_easy.BisqEasyOfferService;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -50,7 +47,6 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;
-import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -77,28 +73,19 @@ public class CreateOfferReviewOfferController implements Controller {
     private final UserIdentityService userIdentityService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final UserProfileService userProfileService;
-    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
-    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
-    private final MediationService mediationService;
-    private final ChatService chatService;
     private final MarketPriceService marketPriceService;
-    private final BisqEasyOfferService bisqEasyOfferService;
 
     public CreateOfferReviewOfferController(DefaultApplicationService applicationService,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
                                             Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
-        bisqEasyOfferService = applicationService.getOfferService().getBisqEasyOfferService();
-        chatService = applicationService.getChatService();
+        ChatService chatService = applicationService.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
-        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
-        bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        mediationService = applicationService.getSupportService().getMediationService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         this.resetHandler = resetHandler;
 
@@ -199,7 +186,7 @@ public class CreateOfferReviewOfferController implements Controller {
 
         BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
                 userIdentity.getUserProfile().getId(),
-                Optional.of(bisqEasyOffer.getId()),
+                Optional.of(bisqEasyOffer),
                 Optional.of(chatMessageText),
                 Optional.empty(),
                 new Date().getTime(),
@@ -208,17 +195,11 @@ public class CreateOfferReviewOfferController implements Controller {
         model.setMyOfferMessage(myOfferMessage);
 
         model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .filter(chatMessage -> chatMessage.getBisqEasyOfferId().isPresent())
-                .map(chatMessage -> {
-                    String offerId = chatMessage.getBisqEasyOfferId().get();
-                    return bisqEasyOfferService.findOffer(offerId)
-                            .map(offer -> new CreateOfferReviewOfferView.ListItem(offer,
-                                    userProfileService,
-                                    reputationService,
-                                    marketPriceService))
-                            .orElse(null);
-                })
-                .filter(Objects::nonNull)
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                        userProfileService,
+                        reputationService,
+                        marketPriceService))
                 .filter(getTakeOfferPredicate())
                 .sorted(Comparator.comparing(CreateOfferReviewOfferView.ListItem::getReputationScore))
                 .limit(3)
@@ -243,8 +224,6 @@ public class CreateOfferReviewOfferController implements Controller {
     }
 
     void onPublishOffer() {
-        bisqEasyOfferService.publishOffer(model.getBisqEasyOffer());
-
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
@@ -283,7 +262,7 @@ public class CreateOfferReviewOfferController implements Controller {
                 if (model.getMyOfferMessage() == null) {
                     return false;
                 }
-                if (model.getMyOfferMessage().getBisqEasyOfferId().isEmpty()) {
+                if (model.getMyOfferMessage().getBisqEasyOffer().isEmpty()) {
                     return false;
                 }
 
@@ -297,14 +276,14 @@ public class CreateOfferReviewOfferController implements Controller {
                 if (!peersOffer.getMarket().equals(bisqEasyOffer.getMarket())) {
                     return false;
                 }
-                Optional<Monetary> myQuoteSideMinOrFixedAmount = AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMaxOrFixedAmount = AmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersQuoteSideMinOrFixedAmount = AmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }

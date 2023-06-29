@@ -19,6 +19,7 @@ package bisq.oracle;
 
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
+import bisq.oracle.explorer.ExplorerService;
 import bisq.oracle.marketprice.MarketPriceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,31 +29,40 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class OracleService implements Service {
+
     @Getter
     public static class Config {
         private final String privateKey;
         private final String publicKey;
         private final com.typesafe.config.Config marketPrice;
+        private final com.typesafe.config.Config blockchainExplorer;
 
         public Config(String privateKey,
                       String publicKey,
-                      com.typesafe.config.Config marketPrice) {
+                      com.typesafe.config.Config marketPrice,
+                      com.typesafe.config.Config blockchainExplorer) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
             this.marketPrice = marketPrice;
+            this.blockchainExplorer = blockchainExplorer;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getString("privateKey"),
                     config.getString("publicKey"),
-                    config.getConfig("marketPrice"));
+                    config.getConfig("marketPrice"),
+                    config.getConfig("blockchainExplorer"));
         }
     }
 
     private final MarketPriceService marketPriceService;
+    private final ExplorerService explorerService;
 
     public OracleService(Config config, String applicationVersion, NetworkService networkService) {
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
+                networkService,
+                applicationVersion);
+        explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
                 networkService,
                 applicationVersion);
     }

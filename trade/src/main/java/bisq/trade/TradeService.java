@@ -17,11 +17,13 @@
 
 package bisq.trade;
 
+import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
+import bisq.oracle.OracleService;
 import bisq.persistence.PersistenceService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -32,22 +34,35 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class TradeService implements Service {
+public class TradeService implements Service, ServiceProvider {
     private final BisqEasyTradeService bisqEasyTradeService;
+    private final NetworkService networkService;
+    private final IdentityService identityService;
+    private final PersistenceService persistenceService;
+    private final OfferService offerService;
+    private final ContractService contractService;
+    private final SupportService supportService;
+    private final ChatService chatService;
+    private final OracleService oracleService;
 
     public TradeService(NetworkService networkService,
                         IdentityService identityService,
                         PersistenceService persistenceService,
                         OfferService offerService,
                         ContractService contractService,
-                        SupportService supportService) {
+                        SupportService supportService,
+                        ChatService chatService,
+                        OracleService oracleService) {
+        this.networkService = networkService;
+        this.identityService = identityService;
+        this.persistenceService = persistenceService;
+        this.offerService = offerService;
+        this.contractService = contractService;
+        this.supportService = supportService;
+        this.chatService = chatService;
+        this.oracleService = oracleService;
 
-        bisqEasyTradeService = new BisqEasyTradeService(networkService,
-                identityService,
-                persistenceService,
-                offerService,
-                contractService,
-                supportService);
+        bisqEasyTradeService = new BisqEasyTradeService(this);
     }
 
 

@@ -40,7 +40,7 @@ import bisq.desktop.primary.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.offer.Direction;
-import bisq.offer.amount.AmountUtil;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -107,9 +107,9 @@ public class TakeOfferReviewController implements Controller {
         priceInput.setDescription(Res.get("bisqEasy.takeOffer.review.price.sellersPrice", marketCodes));
 
         if (bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec) {
-            AmountUtil.findBaseSideFixedAmount(marketPriceService, bisqEasyOffer)
+            OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, bisqEasyOffer)
                     .ifPresent(model::setTakersBaseSideAmount);
-            AmountUtil.findQuoteSideFixedAmount(marketPriceService, bisqEasyOffer)
+            OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, bisqEasyOffer)
                     .ifPresent(model::setTakersQuoteSideAmount);
         }
 

@@ -17,33 +17,20 @@
 
 package bisq.trade;
 
-import bisq.contract.ContractService;
-import bisq.identity.IdentityService;
-import bisq.network.NetworkService;
-import bisq.offer.OfferService;
-import bisq.support.MediationService;
-import bisq.support.SupportService;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+public interface ServiceProvider {
+    bisq.network.NetworkService getNetworkService();
 
-@Slf4j
-@Getter
-public class ServiceProvider {
-    private final IdentityService identityService;
-    private final OfferService offerService;
-    private final ContractService contractService;
-    private final MediationService mediationService;
-    private final NetworkService networkService;
+    bisq.identity.IdentityService getIdentityService();
 
-    public ServiceProvider(NetworkService networkService,
-                           IdentityService identityService,
-                           OfferService offerService,
-                           ContractService contractService,
-                           SupportService supportService) {
-        this.networkService = networkService;
-        this.identityService = identityService;
-        this.offerService = offerService;
-        this.contractService = contractService;
-        this.mediationService = supportService.getMediationService();
-    }
+    bisq.persistence.PersistenceService getPersistenceService();
+
+    bisq.offer.OfferService getOfferService();
+
+    bisq.contract.ContractService getContractService();
+
+    bisq.support.SupportService getSupportService();
+
+    bisq.chat.ChatService getChatService();
+
+    bisq.oracle.OracleService getOracleService();
 }

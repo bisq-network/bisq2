@@ -46,10 +46,12 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOfferService;
+import bisq.network.NetworkId;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
-import bisq.support.MediationService;
+import bisq.trade.Trade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -127,7 +129,6 @@ public class ChatMessagesListView {
         private final UserIdentityService userIdentityService;
         private final UserProfileService userProfileService;
         private final ReputationService reputationService;
-        private final MediationService mediationService;
         private final SettingsService settingsService;
         private final Consumer<UserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
@@ -136,7 +137,7 @@ public class ChatMessagesListView {
         @Getter
         private final View view;
         private final ChatNotificationService chatNotificationService;
-        private final BisqEasyOfferService bisqEasyOfferService;
+        private final BisqEasyTradeService bisqEasyTradeService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
@@ -146,13 +147,12 @@ public class ChatMessagesListView {
                            Consumer<ChatMessage> replyHandler,
                            ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
-            bisqEasyOfferService = applicationService.getOfferService().getBisqEasyOfferService();
             chatNotificationService = chatService.getChatNotificationService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
-            mediationService = applicationService.getSupportService().getMediationService();
             settingsService = applicationService.getSettingsService();
+            bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -268,13 +268,16 @@ public class ChatMessagesListView {
         // UI - handler
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void onTakeOffer(BisqEasyPublicChatMessage chatMessage) {
+        private void onTakeOffer(BisqEasyPublicChatMessage chatMessage, boolean canTakeOffer) {
+            if (!canTakeOffer) {
+                new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
+                return;
+            }
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
-            checkArgument(chatMessage.getBisqEasyOfferId().isPresent(), "message must contain offer");
-            chatMessage.getBisqEasyOfferId()
-                    .flatMap(bisqEasyOfferService::findOffer)
-                    .ifPresent(bisqEasyOffer ->
-                            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer)));
+            checkArgument(chatMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
+
+            BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().get();
+            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {
@@ -300,7 +303,6 @@ public class ChatMessagesListView {
             checkArgument(chatMessage instanceof PublicChatMessage);
 
             if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
-                bisqEasyPublicChatMessage.getBisqEasyOfferId().ifPresent(bisqEasyOfferService::removeOffer);
                 chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity)
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
@@ -404,7 +406,8 @@ public class ChatMessagesListView {
 
         private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
             return FxBindings.<M, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                    .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
+                    .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                            bisqEasyTradeService, userIdentityService))
                     .to(channel.getChatMessages());
         }
 
@@ -513,7 +516,6 @@ public class ChatMessagesListView {
 
                             reputationScoreDisplay = new ReputationScoreDisplay();
                             takeOfferButton = new Button(Res.get("offer.takeOffer"));
-                            takeOfferButton.getStyleClass().add("default-button");
 
                             removeOfferButton = new Button(Res.get("offer.deleteOffer"));
                             removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
@@ -681,7 +683,9 @@ public class ChatMessagesListView {
                                         VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
                                         reputationVBox.setAlignment(Pos.CENTER_LEFT);
 
-                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer((BisqEasyPublicChatMessage) chatMessage));
+                                        BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
+                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyPublicChatMessage, item.isCanTakeOffer()));
+                                        takeOfferButton.setDefaultButton(item.isCanTakeOffer());
 
                                         VBox messageVBox = new VBox(quotedMessageVBox, message);
                                         HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
@@ -907,8 +911,13 @@ public class ChatMessagesListView {
         private final String nickName;
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
+        private final boolean canTakeOffer;
 
-        public ChatMessageListItem(T chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
+        public ChatMessageListItem(T chatMessage,
+                                   UserProfileService userProfileService,
+                                   ReputationService reputationService,
+                                   BisqEasyTradeService bisqEasyTradeService,
+                                   UserIdentityService userIdentityService) {
             this.chatMessage = chatMessage;
 
             if (chatMessage instanceof PrivateChatMessage) {
@@ -925,6 +934,21 @@ public class ChatMessagesListView {
             nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
 
             reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
+
+            if (chatMessage instanceof BisqEasyPublicChatMessage) {
+                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
+                if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyPublicChatMessage.getBisqEasyOffer().isPresent()) {
+                    UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+                    NetworkId takerNetworkId = userProfile.getNetworkId();
+                    BisqEasyOffer bisqEasyOffer = bisqEasyPublicChatMessage.getBisqEasyOffer().get();
+                    String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
+                    canTakeOffer = bisqEasyTradeService.findTrade(tradeId).isEmpty();
+                } else {
+                    canTakeOffer = false;
+                }
+            } else {
+                canTakeOffer = false;
+            }
         }
 
         @Override

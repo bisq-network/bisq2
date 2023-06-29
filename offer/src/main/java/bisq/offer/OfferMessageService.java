@@ -65,7 +65,7 @@ public class OfferMessageService implements Service, DataService.Listener {
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // DataService.Listener

@@ -18,21 +18,14 @@
 package bisq.trade.submarine;
 
 import bisq.common.application.Service;
-import bisq.contract.ContractService;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.offer.OfferService;
 import bisq.offer.submarine.SubmarineOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
-import bisq.support.MediationService;
-import bisq.support.SupportService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeException;
 import bisq.trade.protocol.Protocol;
@@ -54,33 +47,14 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     private final SubmarineTradeStore persistableStore = new SubmarineTradeStore();
     @Getter
     private final Persistence<SubmarineTradeStore> persistence;
-    private final IdentityService identityService;
-    private final OfferService offerService;
-    private final ContractService contractService;
-    private final MediationService mediationService;
-    private final NetworkService networkService;
     private final ServiceProvider serviceProvider;
 
     // We don't persist the protocol, only the model.
     private final Map<String, SubmarineProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
-    public SubmarineTradeService(NetworkService networkService,
-                                 IdentityService identityService,
-                                 PersistenceService persistenceService,
-                                 OfferService offerService,
-                                 ContractService contractService,
-                                 SupportService supportService) {
-        this.networkService = networkService;
-        this.identityService = identityService;
-        this.offerService = offerService;
-        this.contractService = contractService;
-        this.mediationService = supportService.getMediationService();
-        serviceProvider = new ServiceProvider(networkService,
-                identityService,
-                offerService,
-                contractService,
-                supportService);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    public SubmarineTradeService(ServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
     }
 
 
@@ -89,7 +63,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        networkService.addMessageListener(this);
+        serviceProvider.getNetworkService().addMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -97,7 +71,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeMessageListener(this);
+        serviceProvider.getNetworkService().removeMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

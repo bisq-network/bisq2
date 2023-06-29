@@ -26,18 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> {
+public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> implements TradeMessageSender<M> {
 
     protected SendTradeMessageHandler(ServiceProvider serviceProvider, M model) {
         super(serviceProvider, model);
     }
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
-        log.error("send {} to {} (sender={})", message.getClass().getSimpleName(), model.getPeer().getNetworkId(), model.getMyIdentity().getNetworkId());
-        return serviceProvider.getNetworkService().confidentialSend(message, model.getPeer().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
-                .whenComplete((result, throwable) -> {
-                    log.error("result={}", result);
-                    //todo store info if message arrive or stored in mailbox
-                });
+        return sendMessage(message, serviceProvider, trade);
     }
 }

@@ -115,33 +115,25 @@ class TradePhaseBox {
                     switch (state) {
                         case INIT:
                             break;
-                        case TAKER_SEND_TAKE_OFFER_REQUEST:
-                        case MAKER_RECEIVED_TAKE_OFFER_REQUEST:
+                        case TAKER_SENT_TAKE_OFFER_REQUEST:
+                        case MAKER_SENT_TAKE_OFFER_RESPONSE:
+                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
                             model.getPhaseIndex().set(0);
                             break;
                         case SELLER_SENT_ACCOUNT_DATA:
-                            model.getPhaseIndex().set(1);
-                            break;
                         case BUYER_RECEIVED_ACCOUNT_DATA:
                             model.getPhaseIndex().set(1);
                             break;
                         case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                            model.getPhaseIndex().set(2);
-                            break;
                         case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(2);
                             break;
                         case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                            model.getPhaseIndex().set(3);
-                            break;
                         case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(3);
                             break;
                         case BTC_CONFIRMED:
                             model.getPhaseIndex().set(4);
-                            break;
-                        case COMPLETED:
-                            //todo
                             break;
                     }
                     int phaseIndex = model.getPhaseIndex().get();

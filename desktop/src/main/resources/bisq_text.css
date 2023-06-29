@@ -44,7 +44,7 @@
 .text-area {
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-    -fx-background-color: -bisq-grey-12;
+    -fx-background-color: transparent;
     -fx-background-radius: 4;
     -fx-border-style: none;;
     -fx-text-fill: -fx-light-text-color;

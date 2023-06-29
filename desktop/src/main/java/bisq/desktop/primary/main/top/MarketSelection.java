@@ -149,8 +149,9 @@ public class MarketSelection {
             codes.textProperty().bind(model.codes);
             price.textProperty().bind(model.price);
             root.setOnMouseClicked(e -> {
-                if (model.items.isEmpty()) return;
-
+                if (model.items.isEmpty()) {
+                    return;
+                }
                 new ComboBoxOverlay<>(root,
                         model.items,
                         c -> getListCell(),
@@ -165,6 +166,7 @@ public class MarketSelection {
         @Override
         protected void onViewDetached() {
             codes.textProperty().unbind();
+            price.textProperty().unbind();
             root.setOnMouseClicked(null);
         }
 

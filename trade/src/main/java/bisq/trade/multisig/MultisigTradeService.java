@@ -18,21 +18,14 @@
 package bisq.trade.multisig;
 
 import bisq.common.application.Service;
-import bisq.contract.ContractService;
 import bisq.contract.multisig.MultisigContract;
 import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.offer.OfferService;
 import bisq.offer.multisig.MultisigOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
-import bisq.support.MediationService;
-import bisq.support.SupportService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeException;
 import bisq.trade.multisig.protocol.*;
@@ -54,33 +47,14 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     private final MultisigTradeStore persistableStore = new MultisigTradeStore();
     @Getter
     private final Persistence<MultisigTradeStore> persistence;
-    private final IdentityService identityService;
-    private final OfferService offerService;
-    private final ContractService contractService;
-    private final MediationService mediationService;
-    private final NetworkService networkService;
     private final ServiceProvider serviceProvider;
 
     // We don't persist the protocol, only the model.
     private final Map<String, MultisigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
-    public MultisigTradeService(NetworkService networkService,
-                                IdentityService identityService,
-                                PersistenceService persistenceService,
-                                OfferService offerService,
-                                ContractService contractService,
-                                SupportService supportService) {
-        this.networkService = networkService;
-        this.identityService = identityService;
-        this.offerService = offerService;
-        this.contractService = contractService;
-        this.mediationService = supportService.getMediationService();
-        serviceProvider = new ServiceProvider(networkService,
-                identityService,
-                offerService,
-                contractService,
-                supportService);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    public MultisigTradeService(ServiceProvider serviceProvider) {
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
+        this.serviceProvider = serviceProvider;
     }
 
 
@@ -89,7 +63,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        networkService.addMessageListener(this);
+        serviceProvider.getNetworkService().addMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -97,7 +71,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeMessageListener(this);
+        serviceProvider.getNetworkService().removeMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

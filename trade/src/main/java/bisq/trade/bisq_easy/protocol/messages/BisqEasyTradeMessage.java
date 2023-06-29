@@ -44,6 +44,9 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
             case BISQEASYTAKEOFFERREQUEST: {
                 return BisqEasyTakeOfferRequest.fromProto(proto);
             }
+            case BISQEASYTAKEOFFERRESPONSE: {
+                return BisqEasyTakeOfferResponse.fromProto(proto);
+            }
             case BISQEASYACCOUNTDATAMESSAGE: {
                 return BisqEasyAccountDataMessage.fromProto(proto);
             }

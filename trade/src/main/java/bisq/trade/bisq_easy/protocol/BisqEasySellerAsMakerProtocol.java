@@ -38,10 +38,10 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .from(INIT)
                 .on(BisqEasyTakeOfferRequest.class)
                 .run(BisqEasyTakeOfferRequestHandler.class)
-                .to(MAKER_RECEIVED_TAKE_OFFER_REQUEST);
+                .to(MAKER_SENT_TAKE_OFFER_RESPONSE);
 
         addTransition()
-                .from(MAKER_RECEIVED_TAKE_OFFER_REQUEST)
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
                 .on(BisqEasyAccountDataEvent.class)
                 .run(BisqEasyAccountDataEventHandler.class)
                 .to(SELLER_SENT_ACCOUNT_DATA);
@@ -63,10 +63,5 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .on(BisqEasyBtcConfirmedEvent.class)
                 .run(BisqEasyBtcConfirmedEventHandler.class)
                 .to(BTC_CONFIRMED);
-
-        addTransition()
-                .from(BTC_CONFIRMED)
-                .on(BisqEasyTradeCompletedEvent.class)
-                .to(COMPLETED);
     }
 }

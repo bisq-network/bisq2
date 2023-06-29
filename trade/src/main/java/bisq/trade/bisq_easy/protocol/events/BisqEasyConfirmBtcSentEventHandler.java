@@ -34,10 +34,10 @@ public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<
         BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
         String txId = bisqEasyConfirmBtcSentEvent.getTxId();
         commitToModel(txId);
-        sendMessage(new BisqEasyConfirmBtcSentMessage(model.getId(), model.getMyIdentity().getNetworkId(), txId));
+        sendMessage(new BisqEasyConfirmBtcSentMessage(trade.getId(), trade.getMyIdentity().getNetworkId(), txId));
     }
 
     private void commitToModel(String txId) {
-        model.getTxId().set(txId);
+        trade.getTxId().set(txId);
     }
 }

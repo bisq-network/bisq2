@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
@@ -29,11 +30,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
 
-    public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider,
-                                             BisqEasyTrade model) {
+    public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
-
 
     @Override
     public void handle(Event event) {
@@ -44,11 +43,13 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
 
     @Override
     protected void verifyMessage(BisqEasyAccountDataMessage message) {
-        //todo
+        super.verifyMessage(message);
+
         checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()));
+        checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
     }
 
     private void commitToModel(String paymentAccountData) {
-        model.getPaymentAccountData().set(paymentAccountData);
+        trade.getPaymentAccountData().set(paymentAccountData);
     }
 }

@@ -26,8 +26,9 @@ import lombok.ToString;
 public enum BisqEasyTradeState implements State {
     INIT,
 
-    TAKER_SEND_TAKE_OFFER_REQUEST,
-    MAKER_RECEIVED_TAKE_OFFER_REQUEST,
+    TAKER_SENT_TAKE_OFFER_REQUEST,
+    MAKER_SENT_TAKE_OFFER_RESPONSE,
+    TAKER_RECEIVED_TAKE_OFFER_RESPONSE,
 
     SELLER_SENT_ACCOUNT_DATA,
     BUYER_RECEIVED_ACCOUNT_DATA,
@@ -38,8 +39,7 @@ public enum BisqEasyTradeState implements State {
     SELLER_SENT_BTC_SENT_CONFIRMATION,
     BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
 
-    BTC_CONFIRMED,
-    COMPLETED(true);
+    BTC_CONFIRMED(true);
 
     private final boolean isFinalState;
 

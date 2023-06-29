@@ -115,7 +115,7 @@ public class DefaultApplicationService extends ApplicationService {
 
         oracleService = new OracleService(OracleService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
 
-        accountService = new AccountService(networkService, persistenceService, identityService);
+        accountService = new AccountService(persistenceService);
 
         contractService = new ContractService(securityService);
 
@@ -142,7 +142,8 @@ public class DefaultApplicationService extends ApplicationService {
 
         supportService = new SupportService(networkService, chatService, userService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService, contractService, supportService);
+        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
+                contractService, supportService, chatService, oracleService);
     }
 
     @Override

@@ -17,20 +17,19 @@
 
 package bisq.trade.protocol.events;
 
+import bisq.network.NetworkService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.concurrent.CompletableFuture;
 
-public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends BisqEasyTradeMessage> extends TradeEventHandler<M> {
-
-    protected TradeMessageHandler(ServiceProvider serviceProvider, M model) {
-        super(serviceProvider, model);
-    }
-
-    protected void verifyMessage(S message) {
-        checkArgument(message.getTradeId().equals(trade.getId()));
-        checkArgument(message.getSender().equals(trade.getPeer().getNetworkId()));
+public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
+    default CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message, ServiceProvider serviceProvider, M model) {
+        return serviceProvider.getNetworkService().confidentialSend(message, model.getPeer().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
+                .whenComplete((result, throwable) -> {
+                    System.out.println("sendMessage " + message + ". result=" + result);
+                    //todo store info if message arrive or stored in mailbox
+                });
     }
 }

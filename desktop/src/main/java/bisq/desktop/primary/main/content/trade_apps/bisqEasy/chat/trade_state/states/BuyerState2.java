@@ -67,6 +67,7 @@ public class BuyerState2 extends BaseState {
         @Override
         public void onActivate() {
             model.getButtonDisabled().bind(model.getBtcAddress().isEmpty());
+
             super.onActivate();
         }
 

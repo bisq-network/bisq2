@@ -23,10 +23,10 @@ import bisq.trade.Trade;
 
 public abstract class TradeEventHandler<M extends Trade<?, ?, ?>> implements EventHandler {
     protected final ServiceProvider serviceProvider;
-    protected final M model;
+    protected final M trade;
 
-    protected TradeEventHandler(ServiceProvider serviceProvider, M model) {
+    protected TradeEventHandler(ServiceProvider serviceProvider, M trade) {
         this.serviceProvider = serviceProvider;
-        this.model = model;
+        this.trade = trade;
     }
 }

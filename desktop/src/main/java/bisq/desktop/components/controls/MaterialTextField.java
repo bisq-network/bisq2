@@ -49,6 +49,7 @@ public class MaterialTextField extends Pane {
     protected final Region selectionLine = new Region();
     protected final Label descriptionLabel = new Label();
     protected final TextInputControl textInputControl;
+    @Getter
     protected final Label helpLabel = new Label();
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
@@ -338,7 +339,8 @@ public class MaterialTextField extends Pane {
             line.setPrefWidth(width);
             selectionLine.setPrefWidth(textInputControl.isFocused() && textInputControl.isEditable() ? width : 0);
             descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
-            textInputControl.setPrefWidth(width - 2 * textInputControl.getLayoutX());
+            double iconWidth = iconButton.isVisible() ? 25 : 0;
+            textInputControl.setPrefWidth(width - 2 * textInputControl.getLayoutX() - iconWidth);
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
         }
     }

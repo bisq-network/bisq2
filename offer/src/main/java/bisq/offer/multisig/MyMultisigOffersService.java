@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.bisq_easy;
+package bisq.offer.multisig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
@@ -29,13 +29,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class MyBisqEasyOffersService implements PersistenceClient<MyBisqEasyOffersStore>, Service {
+public class MyMultisigOffersService implements PersistenceClient<MyMultisigOffersStore>, Service {
     @Getter
-    private final MyBisqEasyOffersStore persistableStore = new MyBisqEasyOffersStore();
+    private final MyMultisigOffersStore persistableStore = new MyMultisigOffersStore();
     @Getter
-    private final Persistence<MyBisqEasyOffersStore> persistence;
+    private final Persistence<MyMultisigOffersStore> persistence;
 
-    public MyBisqEasyOffersService(PersistenceService persistenceService) {
+    public MyMultisigOffersService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -61,21 +61,21 @@ public class MyBisqEasyOffersService implements PersistenceClient<MyBisqEasyOffe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void add(BisqEasyOffer offer) {
+    public void add(MultisigOffer offer) {
         persistableStore.add(offer);
         persist();
     }
 
-    public void remove(BisqEasyOffer offer) {
+    public void remove(MultisigOffer offer) {
         persistableStore.remove(offer);
         persist();
     }
 
-    public ObservableSet<BisqEasyOffer> getOffers() {
+    public ObservableSet<MultisigOffer> getOffers() {
         return persistableStore.getOffers();
     }
 
-    public Optional<BisqEasyOffer> findOffer(String offerId) {
+    public Optional<MultisigOffer> findOffer(String offerId) {
         return getOffers().stream()
                 .filter(offer -> offer.getId().equals(offerId))
                 .findAny();

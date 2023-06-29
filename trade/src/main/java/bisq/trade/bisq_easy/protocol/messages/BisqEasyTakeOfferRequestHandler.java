@@ -18,24 +18,29 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.fsm.Event;
+import bisq.common.monetary.Monetary;
+import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.identity.Identity;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.protocol.events.TradeMessageSender;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
 
-@Slf4j
-public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> {
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-    public BisqEasyTakeOfferRequestHandler(ServiceProvider serviceProvider,
-                                           BisqEasyTrade model) {
+@Slf4j
+public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> implements TradeMessageSender<BisqEasyTrade> {
+
+    public BisqEasyTakeOfferRequestHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
@@ -44,14 +49,17 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         BisqEasyTakeOfferRequest message = (BisqEasyTakeOfferRequest) event;
         verifyMessage(message);
 
-        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
+        BisqEasyContract contract = message.getBisqEasyContract();
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
-        BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
-        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyOffer.getMakerNetworkId().getNodeId()).orElseThrow();
+        ContractService contractService = serviceProvider.getContractService();
         try {
-            ContractSignatureData makersContractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, myIdentity.getKeyPair());
+            checkArgument(contractService.verifyContractSignature(contract, takersContractSignatureData));
+
+            ContractSignatureData makersContractSignatureData = contractService.signContract(contract, trade.getMyIdentity().getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
-            //todo sent my sig to peer
+
+            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(trade.getId(), trade.getMyself().getNetworkId(), makersContractSignatureData);
+            sendMessage(response, serviceProvider, trade);
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -59,14 +67,40 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
     @Override
     protected void verifyMessage(BisqEasyTakeOfferRequest message) {
-        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyOffer bisqEasyOffer = bisqEasyContract.getOffer();
-        Optional<UserProfile> mediator = serviceProvider.getMediationService().takerSelectMediator(bisqEasyOffer.getMakersUserProfileId());
-        //todo
+        super.verifyMessage(message);
+
+        BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract());
+        BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer());
+        serviceProvider.getChatService().getBisqEasyPublicChatChannelService().getChannels().stream()
+                .flatMap(channel -> channel.getChatMessages().stream())
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
+                .filter(offer -> offer.getMakerNetworkId().equals(trade.getMyIdentity().getNetworkId()))
+                .filter(offer -> offer.equals(takersOffer))
+                .findAny()
+                .orElseThrow();
+
+        checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
+
+        Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
+        checkArgument(takersContract.getBaseSideAmount() >= baseSideMinAmount.getValue());
+        checkArgument(takersContract.getBaseSideAmount() <= baseSideMaxAmount.getValue());
+
+        Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
+        checkArgument(takersContract.getQuoteSideAmount() >= quoteSideMinAmount.getValue());
+        checkArgument(takersContract.getQuoteSideAmount() <= quoteSideMaxAmount.getValue());
+
+        checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
+        checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
+
+        Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationService().selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
+        checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match");
     }
 
     private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
-        model.getPeer().getContractSignatureData().set(takersContractSignatureData);
-        model.getMyself().getContractSignatureData().set(makersContractSignatureData);
+        trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
+        trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 }

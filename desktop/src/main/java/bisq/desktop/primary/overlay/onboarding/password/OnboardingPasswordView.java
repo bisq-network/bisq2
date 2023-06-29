@@ -28,6 +28,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -48,13 +49,18 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         Label subtitleLabel = new Label(Res.get("onboarding.password.subTitle"));
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subtitleLabel.setMinHeight(40);
+        subtitleLabel.setMaxWidth(375);
 
         password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"));
         password.setValidator(new PasswordValidator());
+        password.setMaxWidth(315);
 
         confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
         confirmedPassword.setValidator(confirmedPasswordValidator);
+        confirmedPassword.setMaxWidth(password.getMaxWidth());
 
         setPasswordButton = new Button(Res.get("onboarding.password.button.savePassword"));
         setPasswordButton.setDefaultButton(true);
