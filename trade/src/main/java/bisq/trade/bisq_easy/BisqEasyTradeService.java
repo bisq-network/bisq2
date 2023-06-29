@@ -86,7 +86,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         this.mediationService = supportService.getMediationService();
         serviceProvider = new ServiceProvider(networkService,
                 identityService,
-                persistenceService,
                 offerService,
                 contractService,
                 supportService);

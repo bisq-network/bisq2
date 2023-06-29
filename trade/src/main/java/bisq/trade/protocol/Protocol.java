@@ -30,20 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm {
+public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
 
     protected final ServiceProvider serviceProvider;
-    protected final M model;
 
     public Protocol(ServiceProvider serviceProvider, M model) {
         super(model);
         this.serviceProvider = serviceProvider;
-        this.model = model;
     }
 
     public void handle(Event event) throws TradeException {
         try {
-            log.error("event={}", event);
             super.handle(event);
         } catch (FsmException e) {
             throw new TradeException(e);

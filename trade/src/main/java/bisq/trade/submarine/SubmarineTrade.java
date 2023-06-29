@@ -26,6 +26,7 @@ import bisq.network.NetworkId;
 import bisq.offer.submarine.SubmarineOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
+import bisq.trade.TradeRole;
 import bisq.trade.submarine.protocol.SubmarineTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -55,13 +56,12 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
 
     private SubmarineTrade(SubmarineTradeState state,
                            String id,
-                           boolean isBuyer,
-                           boolean isTaker,
+                           TradeRole tradeRole,
                            Identity myIdentity,
                            SubmarineContract contract,
                            SubmarineTradeParty taker,
                            SubmarineTradeParty maker) {
-        super(state, id, isBuyer, isTaker, myIdentity, contract, taker, maker);
+        super(state, id, tradeRole, myIdentity, contract, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
@@ -75,8 +75,7 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
     public static SubmarineTrade fromProto(bisq.trade.protobuf.Trade proto) {
         return new SubmarineTrade(ProtobufUtils.enumFromProto(SubmarineTradeState.class, proto.getState()),
                 proto.getId(),
-                proto.getIsBuyer(),
-                proto.getIsTaker(),
+                TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 SubmarineContract.fromProto(proto.getContract()),
                 TradeParty.protoToSubmarineTradeParty(proto.getTaker()),

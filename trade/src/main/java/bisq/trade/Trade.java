@@ -36,38 +36,22 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements Proto {
-    @Getter
-    public enum Role {
-        BUYER_AS_TAKER(true, true),
-        BUYER_AS_MAKER(true, false),
-        SELLER_AS_TAKER(false, true),
-        SELLER_AS_MAKER(false, false);
-
-        private final boolean isBuyer;
-        private final boolean isTaker;
-
-        Role(boolean isBuyer, boolean isTaker) {
-            this.isBuyer = isBuyer;
-            this.isTaker = isTaker;
-        }
-
-        public boolean isMaker() {
-            return !isTaker;
-        }
-
-        public boolean isSeller() {
-            return !isBuyer;
-        }
-    }
-
     public static String createId(String offerId, String takerPubKeyHash) {
         return offerId + "." + takerPubKeyHash;
     }
 
+    private static TradeRole createRole(boolean isBuyer, boolean isTaker) {
+        return isBuyer ?
+                (isTaker ?
+                        TradeRole.BUYER_AS_TAKER :
+                        TradeRole.BUYER_AS_MAKER) :
+                (isTaker ?
+                        TradeRole.SELLER_AS_TAKER :
+                        TradeRole.SELLER_AS_MAKER);
+    }
+
     @Getter
     private final String id;
-    private final boolean isBuyer;
-    private final boolean isTaker;
     @Getter
     private final Identity myIdentity;
     @Getter
@@ -77,45 +61,33 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     @Getter
     private final P maker;
     @Getter
-    private transient final Role role;
+    private transient final TradeRole tradeRole;
 
     public Trade(State state, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
         this(state,
                 createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
-                isBuyer,
-                isTaker,
+                createRole(isBuyer, isTaker),
                 myIdentity,
                 contract,
                 taker,
                 maker);
-
     }
 
-    protected Trade(State state, String id, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+    protected Trade(State state, String id, TradeRole tradeRole, Identity myIdentity, C contract, P taker, P maker) {
         super(state);
 
         this.id = id;
-        this.isBuyer = isBuyer;
-        this.isTaker = isTaker;
+        this.tradeRole = tradeRole;
         this.myIdentity = myIdentity;
         this.contract = contract;
         this.taker = taker;
         this.maker = maker;
-
-        role = isBuyer ?
-                (isTaker ?
-                        Role.BUYER_AS_TAKER :
-                        Role.BUYER_AS_MAKER) :
-                (isTaker ?
-                        Role.SELLER_AS_TAKER :
-                        Role.SELLER_AS_MAKER);
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
         return bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
-                .setIsBuyer(isBuyer)
-                .setIsTaker(isTaker)
+                .setTradeRole(tradeRole.toProto())
                 .setMyIdentity(myIdentity.toProto())
                 .setContract(contract.toProto())
                 .setTaker(taker.toProto())
@@ -162,8 +134,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         throw new UnresolvableProtobufMessageException(proto);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Convenience Getters
+    // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public T getOffer() {
@@ -171,51 +144,51 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     }
 
     public boolean isBuyer() {
-        return isBuyer;
+        return tradeRole.isBuyer();
     }
 
     public boolean isSeller() {
-        return !isBuyer;
+        return tradeRole.isSeller();
     }
 
     public boolean isTaker() {
-        return isTaker;
+        return tradeRole.isTaker();
     }
 
     public boolean isMaker() {
-        return !isTaker;
+        return tradeRole.isMaker();
     }
 
     public P getPeer() {
-        return isTaker ? maker : taker;
+        return tradeRole.isTaker() ? maker : taker;
     }
 
     public P getMyself() {
-        return isTaker ? taker : maker;
+        return tradeRole.isTaker() ? taker : maker;
     }
 
     public P getBuyer() {
-        if (role == Role.BUYER_AS_TAKER) {
+        if (tradeRole == TradeRole.BUYER_AS_TAKER) {
             return taker;
-        } else if (role == Role.BUYER_AS_MAKER) {
+        } else if (tradeRole == TradeRole.BUYER_AS_MAKER) {
             return maker;
-        } else if (role == Role.SELLER_AS_TAKER) {
+        } else if (tradeRole == TradeRole.SELLER_AS_TAKER) {
             return maker;
         } else {
-            // role == Role.SELLER_AS_MAKER
+            // tradeRole == TradeRole.SELLER_AS_MAKER
             return taker;
         }
     }
 
     public P getSeller() {
-        if (role == Role.BUYER_AS_TAKER) {
+        if (tradeRole == TradeRole.BUYER_AS_TAKER) {
             return maker;
-        } else if (role == Role.BUYER_AS_MAKER) {
+        } else if (tradeRole == TradeRole.BUYER_AS_MAKER) {
             return taker;
-        } else if (role == Role.SELLER_AS_TAKER) {
+        } else if (tradeRole == TradeRole.SELLER_AS_TAKER) {
             return taker;
         } else {
-            // role == Role.SELLER_AS_MAKER
+            // tradeRole == TradeRole.SELLER_AS_MAKER
             return maker;
         }
     }

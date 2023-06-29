@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@ToString
 @EqualsAndHashCode
 @Getter
 public final class NetworkId implements Proto {

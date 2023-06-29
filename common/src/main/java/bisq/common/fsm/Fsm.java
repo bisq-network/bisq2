@@ -30,17 +30,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 
-public class Fsm {
+public class Fsm<M extends FsmModel> {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
-    private final Object lock = new Object();
     @Getter
-    private final FsmModel model;
+    protected final M model;
 
-    public Fsm(State initialState) {
-        this(new FsmModel(initialState));
-    }
-
-    public Fsm(FsmModel model) {
+    public Fsm(M model) {
         this.model = model;
         configTransitions();
     }
@@ -52,7 +47,7 @@ public class Fsm {
     public void handle(Event event) throws FsmException {
         try {
             checkNotNull(event, "event must not be null");
-            synchronized (lock) {
+            synchronized (this) {
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
@@ -87,38 +82,36 @@ public class Fsm {
             Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
             checkArgument(!transitionMap.containsKey(pair),
                     "A transition exists already with the state/event pair. pair=%s", pair);
-            synchronized (lock) {
-                transitionMap.put(pair, transition);
-            }
+            transitionMap.put(pair, transition);
         } catch (Exception e) {
             throw new FsmException(e);
         }
     }
 
-    public TransitionBuilder addTransition() {
-        return new TransitionBuilder(this);
+    public TransitionBuilder<M> addTransition() {
+        return new TransitionBuilder<>(this);
     }
 
-    public static class TransitionBuilder {
+    public static class TransitionBuilder<M extends FsmModel> {
         private final Transition transition;
-        private final Fsm fsm;
+        private final Fsm<M> fsm;
 
-        private TransitionBuilder(Fsm fsm) {
+        private TransitionBuilder(Fsm<M> fsm) {
             this.fsm = fsm;
             transition = new Transition();
         }
 
-        public TransitionBuilder from(State sourceState) {
+        public TransitionBuilder<M> from(State sourceState) {
             transition.setSourceState(sourceState);
             return this;
         }
 
-        public TransitionBuilder on(Class<? extends Event> eventClass) {
+        public TransitionBuilder<M> on(Class<? extends Event> eventClass) {
             transition.setEventClass(eventClass);
             return this;
         }
 
-        public TransitionBuilder run(Class<? extends EventHandler> eventHandlerClass) {
+        public TransitionBuilder<M> run(Class<? extends EventHandler> eventHandlerClass) {
             try {
                 transition.setEventHandlerClass(Optional.of(eventHandlerClass));
             } catch (Exception e) {

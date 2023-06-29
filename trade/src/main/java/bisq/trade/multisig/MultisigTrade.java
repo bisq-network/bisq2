@@ -26,6 +26,7 @@ import bisq.network.NetworkId;
 import bisq.offer.multisig.MultisigOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
+import bisq.trade.TradeRole;
 import bisq.trade.multisig.protocol.MultisigTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -55,13 +56,12 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
 
     private MultisigTrade(MultisigTradeState state,
                           String id,
-                          boolean isBuyer,
-                          boolean isTaker,
+                          TradeRole tradeRole,
                           Identity myIdentity,
                           MultisigContract contract,
                           MultisigTradeParty taker,
                           MultisigTradeParty maker) {
-        super(state, id, isBuyer, isTaker, myIdentity, contract, taker, maker);
+        super(state, id, tradeRole, myIdentity, contract, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((MultisigTradeState) s));
     }
@@ -75,8 +75,7 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
     public static MultisigTrade fromProto(bisq.trade.protobuf.Trade proto) {
         return new MultisigTrade(ProtobufUtils.enumFromProto(MultisigTradeState.class, proto.getState()),
                 proto.getId(),
-                proto.getIsBuyer(),
-                proto.getIsTaker(),
+                TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 MultisigContract.fromProto(proto.getContract()),
                 TradeParty.protoToMultisigTradeParty(proto.getTaker()),

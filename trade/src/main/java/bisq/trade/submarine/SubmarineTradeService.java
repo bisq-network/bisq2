@@ -77,7 +77,6 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
         this.mediationService = supportService.getMediationService();
         serviceProvider = new ServiceProvider(networkService,
                 identityService,
-                persistenceService,
                 offerService,
                 contractService,
                 supportService);
