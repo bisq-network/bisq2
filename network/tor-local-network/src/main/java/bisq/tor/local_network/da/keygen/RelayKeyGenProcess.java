@@ -15,7 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network;
+package bisq.tor.local_network.da.keygen;
+
+import bisq.tor.local_network.KeyFingerprintReader;
+import bisq.tor.local_network.da.DirectoryAuthority;
 
 import java.io.File;
 import java.io.IOException;
