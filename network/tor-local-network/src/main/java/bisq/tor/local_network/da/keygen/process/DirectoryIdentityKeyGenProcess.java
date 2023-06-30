@@ -60,19 +60,19 @@ public class DirectoryIdentityKeyGenProcess {
         outputStream = Optional.of(process.getOutputStream());
     }
 
-    public String getKeyFingerprint() throws InterruptedException, IOException {
+    public String getKeyFingerprint() throws InterruptedException {
         Process process = this.process.orElseThrow();
         process.waitFor(1, TimeUnit.MINUTES);
         return readKeyFingerprint();
     }
 
-    private String readKeyFingerprint() throws IOException {
+    private String readKeyFingerprint() {
         File certificateFile = new File(torKeyDirPath.toFile(), "authority_certificate");
 
         Predicate<String> lineMatcher = s -> s.startsWith("fingerprint ");
         UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
 
         var keyFingerprintReader = new KeyFingerprintReader(certificateFile, lineMatcher, dataExtractor);
-        return keyFingerprintReader.read();
+        return keyFingerprintReader.read().orElseThrow();
     }
 }

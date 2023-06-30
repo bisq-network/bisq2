@@ -56,7 +56,7 @@ public class RelayKeyGenProcess {
         return readKeyFingerprint();
     }
 
-    private String readKeyFingerprint() throws IOException {
+    private String readKeyFingerprint() {
         File dataDirFile = directoryAuthority.getDataDir().toFile();
         File fingerprintFile = new File(dataDirFile, "fingerprint");
 
@@ -64,6 +64,6 @@ public class RelayKeyGenProcess {
         UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
 
         var keyFingerprintReader = new KeyFingerprintReader(fingerprintFile, lineMatcher, dataExtractor);
-        return keyFingerprintReader.read();
+        return keyFingerprintReader.read().orElseThrow();
     }
 }
