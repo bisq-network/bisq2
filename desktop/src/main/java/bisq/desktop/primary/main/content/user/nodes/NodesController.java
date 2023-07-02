@@ -25,8 +25,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.user.nodes.tabs.NodesTabController;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
+import bisq.user.node.NodeRegistrationService;
 import bisq.user.reputation.ReputationService;
-import bisq.user.role.RoleRegistrationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,13 +37,13 @@ public class NodesController implements Controller {
     private final ReputationService reputationService;
     private final NodesModel model;
     private final NodesTabController nodesTabController;
-    private final RoleRegistrationService roleRegistrationService;
-    private Pin roleRegistrationDataSetPin;
+    private final NodeRegistrationService nodeRegistrationService;
+    private Pin registrationDataSetPin;
 
     public NodesController(DefaultApplicationService applicationService) {
         UserService userService = applicationService.getUserService();
         reputationService = userService.getReputationService();
-        roleRegistrationService = userService.getRoleRegistrationService();
+        nodeRegistrationService = userService.getNodeRegistrationService();
 
         nodesTabController = new NodesTabController(applicationService);
         model = new NodesModel();
@@ -52,14 +52,14 @@ public class NodesController implements Controller {
 
     @Override
     public void onActivate() {
-        roleRegistrationDataSetPin = FxBindings.<AuthorizedData, NodesView.ListItem>bind(model.getListItems())
+        registrationDataSetPin = FxBindings.<AuthorizedData, NodesView.ListItem>bind(model.getListItems())
                 .map(data -> new NodesView.ListItem(data, reputationService.getProfileAgeService()))
-                .to(roleRegistrationService.getAuthorizedNodeDataSet());
+                .to(nodeRegistrationService.getAuthorizedNodeDataSet());
     }
 
     @Override
     public void onDeactivate() {
-        roleRegistrationDataSetPin.unbind();
+        registrationDataSetPin.unbind();
     }
 
     public void onCopyPublicKeyAsHex(String publicKeyAsHex) {

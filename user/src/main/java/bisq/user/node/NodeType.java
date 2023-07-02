@@ -15,24 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.role;
+package bisq.user.node;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-public enum RoleType implements ProtoEnum {
-    MEDIATOR,
-    ARBITRATOR,
-    MODERATOR,
-    SECURITY_MANAGER,
-    RELEASE_MANAGER;
+public enum NodeType implements ProtoEnum {
+    SEED_NODE,
+    ORACLE_NODE,
+    EXPLORER_NODE,
+    MARKET_PRICE_NODE;
 
     @Override
-    public bisq.user.protobuf.RoleType toProto() {
-        return bisq.user.protobuf.RoleType.valueOf(name());
+    public bisq.user.protobuf.NodeType toProto() {
+        return bisq.user.protobuf.NodeType.valueOf(name());
     }
 
-    public static RoleType fromProto(bisq.user.protobuf.RoleType proto) {
-        return ProtobufUtils.enumFromProto(RoleType.class, proto.name());
+    public static NodeType fromProto(bisq.user.protobuf.NodeType proto) {
+        return ProtobufUtils.enumFromProto(NodeType.class, proto.name());
     }
 }

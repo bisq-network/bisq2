@@ -92,7 +92,7 @@ public class SendNotificationController implements Controller {
                     throw new RuntimeException(e);
                 }
             } else {
-                KeyPair keyPair = roleRegistrationService.findOrCreateRegistrationKey(RoleType.SECURITY_MANAGER, userProfileId);
+                KeyPair keyPair = roleRegistrationService.findOrCreateRoleRegistrationKey(RoleType.SECURITY_MANAGER, userProfileId);
                 model.setKeyPair(keyPair);
                 model.getPrivateKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
                 String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());

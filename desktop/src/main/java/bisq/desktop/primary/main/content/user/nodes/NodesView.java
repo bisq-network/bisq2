@@ -29,10 +29,10 @@ import bisq.desktop.primary.main.content.user.nodes.tabs.registration.NodeRegist
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.user.node.AuthorizedNodeRegistrationData;
+import bisq.user.node.NodeType;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ProfileAgeService;
-import bisq.user.role.AuthorizedNodeRegistrationData;
-import bisq.user.role.RoleType;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -102,10 +102,10 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
                 .valueSupplier(ListItem::getProfileAgeString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.table.columns.role"))
+                .title(Res.get("user.nodes.table.columns.node"))
                 .minWidth(200)
-                .comparator(Comparator.comparing(ListItem::getRoleType))
-                .valueSupplier(ListItem::getRoleType)
+                .comparator(Comparator.comparing(ListItem::getNodeType))
+                .valueSupplier(ListItem::getNodeType)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.table.columns.pubKey"))
@@ -227,7 +227,7 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
     @ToString
     static class ListItem implements TableItem {
         private final UserProfile userProfile;
-        private final String roleType;
+        private final String nodeType;
         private final String publicKeyAsHex;
         private final String userName;
         private final Long profileAge;
@@ -239,8 +239,8 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
             this.userProfile = nodeRegistrationData.getUserProfile();
             this.publicKeyAsHex = nodeRegistrationData.getPublicKeyAsHex();
             address = NodeRegistrationController.addressByNetworkTypeToDisplayString(nodeRegistrationData.getAddressByNetworkType());
-            RoleType type = nodeRegistrationData.getRoleType();
-            roleType = Res.get("user.nodes.type." + type);
+            NodeType type = nodeRegistrationData.getNodeType();
+            nodeType = Res.get("user.nodes.type." + type);
             profileAge = profileAgeService.getProfileAge(userProfile)
                     .orElse(0L);
             profileAgeString = profileAgeService.getProfileAge(userProfile)

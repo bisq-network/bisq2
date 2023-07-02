@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.role;
+package bisq.user.node;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -30,28 +30,28 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public final class RoleRegistrationServiceStore implements PersistableStore<RoleRegistrationServiceStore> {
-    private final ObservableSet<AuthorizedRoleRegistrationData> myRoleRegistrations = new ObservableSet<>();
+public final class NodeRegistrationServiceStore implements PersistableStore<NodeRegistrationServiceStore> {
+    private final ObservableSet<AuthorizedNodeRegistrationData> myNodeRegistrations = new ObservableSet<>();
 
-    RoleRegistrationServiceStore() {
+    NodeRegistrationServiceStore() {
     }
 
-    private RoleRegistrationServiceStore(Set<AuthorizedRoleRegistrationData> myRoleRegistrations) {
-        this.myRoleRegistrations.setAll(myRoleRegistrations);
+    private NodeRegistrationServiceStore(Set<AuthorizedNodeRegistrationData> myNodeRegistrations) {
+        this.myNodeRegistrations.setAll(myNodeRegistrations);
     }
 
     @Override
-    public bisq.user.protobuf.RoleRegistrationServiceStore toProto() {
-        return bisq.user.protobuf.RoleRegistrationServiceStore.newBuilder()
-                .addAllMyRoleRegistrations(myRoleRegistrations.stream()
-                        .map(AuthorizedRoleRegistrationData::toProto)
+    public bisq.user.protobuf.NodeRegistrationServiceStore toProto() {
+        return bisq.user.protobuf.NodeRegistrationServiceStore.newBuilder()
+                .addAllMyNodeRegistrations(myNodeRegistrations.stream()
+                        .map(AuthorizedNodeRegistrationData::toProto)
                         .collect(Collectors.toList()))
                 .build();
     }
 
-    public static RoleRegistrationServiceStore fromProto(bisq.user.protobuf.RoleRegistrationServiceStore proto) {
-        return new RoleRegistrationServiceStore(proto.getMyRoleRegistrationsList().stream()
-                .map(AuthorizedRoleRegistrationData::fromProto)
+    public static NodeRegistrationServiceStore fromProto(bisq.user.protobuf.NodeRegistrationServiceStore proto) {
+        return new NodeRegistrationServiceStore(proto.getMyNodeRegistrationsList().stream()
+                .map(AuthorizedNodeRegistrationData::fromProto)
                 .collect(Collectors.toSet()));
     }
 
@@ -59,7 +59,7 @@ public final class RoleRegistrationServiceStore implements PersistableStore<Role
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.RoleRegistrationServiceStore.class));
+                return fromProto(any.unpack(bisq.user.protobuf.NodeRegistrationServiceStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -67,12 +67,12 @@ public final class RoleRegistrationServiceStore implements PersistableStore<Role
     }
 
     @Override
-    public RoleRegistrationServiceStore getClone() {
-        return new RoleRegistrationServiceStore(myRoleRegistrations);
+    public NodeRegistrationServiceStore getClone() {
+        return new NodeRegistrationServiceStore(myNodeRegistrations);
     }
 
     @Override
-    public void applyPersisted(RoleRegistrationServiceStore persisted) {
-        myRoleRegistrations.setAll(persisted.getMyRoleRegistrations());
+    public void applyPersisted(NodeRegistrationServiceStore persisted) {
+        myNodeRegistrations.setAll(persisted.getMyNodeRegistrations());
     }
 }

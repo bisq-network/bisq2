@@ -48,16 +48,16 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
 
         root.setAlignment(Pos.TOP_LEFT);
 
-        String role = model.getRoleType().name();
+        String nodeType = model.getNodeType().name();
 
-        String inlineAbout = Res.get("user.nodes.type." + role + ".inline.about");
+        String inlineAbout = Res.get("user.nodes.type." + nodeType + ".inline.about");
         Label aboutHeadline = new Label(Res.get("user.registration.headline.about", inlineAbout));
         aboutHeadline.getStyleClass().add("bisq-text-headline-2");
 
-        MultiLineLabel aboutInfo = new MultiLineLabel(Res.get("user.nodes.registration.info.about." + role));
+        MultiLineLabel aboutInfo = new MultiLineLabel(Res.get("user.nodes.registration.info.about." + nodeType));
         aboutInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
-        String inlineHow = Res.get("user.nodes.type." + role + ".inline.how");
+        String inlineHow = Res.get("user.nodes.type." + nodeType + ".inline.how");
         Label howHeadline = new Label(Res.get("user.registration.headline.how", inlineHow));
         howHeadline.getStyleClass().add("bisq-text-headline-2");
 

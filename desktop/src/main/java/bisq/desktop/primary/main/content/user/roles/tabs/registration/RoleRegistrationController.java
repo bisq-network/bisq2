@@ -84,7 +84,7 @@ public class RoleRegistrationController implements Controller {
                     throw new RuntimeException(e);
                 }
             } else {
-                KeyPair keyPair = roleRegistrationService.findOrCreateRegistrationKey(model.getRoleType(), userProfileId);
+                KeyPair keyPair = roleRegistrationService.findOrCreateRoleRegistrationKey(model.getRoleType(), userProfileId);
                 model.setKeyPair(keyPair);
                 model.getPrivateKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
                 String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());

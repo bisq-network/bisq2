@@ -34,10 +34,10 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.KeyGeneration;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.node.AuthorizedNodeRegistrationData;
+import bisq.user.node.NodeRegistrationService;
+import bisq.user.node.NodeType;
 import bisq.user.profile.UserProfile;
-import bisq.user.role.AuthorizedRoleRegistrationData;
-import bisq.user.role.RoleRegistrationService;
-import bisq.user.role.RoleType;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -68,15 +68,15 @@ public class NodeRegistrationController implements Controller {
     private final DefaultApplicationService applicationService;
     private final NodeRegistrationModel model;
     private final UserIdentityService userIdentityService;
-    private final RoleRegistrationService roleRegistrationService;
+    private final NodeRegistrationService nodeRegistrationService;
     private Pin userIdentityPin;
     private Subscription updateRegistrationStatePin;
 
-    public NodeRegistrationController(DefaultApplicationService applicationService, RoleType roleType) {
+    public NodeRegistrationController(DefaultApplicationService applicationService, NodeType nodeType) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
-        roleRegistrationService = applicationService.getUserService().getRoleRegistrationService();
+        nodeRegistrationService = applicationService.getUserService().getNodeRegistrationService();
         this.applicationService = applicationService;
-        model = new NodeRegistrationModel(roleType);
+        model = new NodeRegistrationModel(nodeType);
         view = new NodeRegistrationView(model, this);
     }
 
@@ -102,7 +102,7 @@ public class NodeRegistrationController implements Controller {
                     throw new RuntimeException(e);
                 }
             } else {
-                KeyPair keyPair = roleRegistrationService.findOrCreateRegistrationKey(model.getRoleType(), userProfileId);
+                KeyPair keyPair = nodeRegistrationService.findOrCreateNodeRegistrationKey(model.getNodeType(), userProfileId);
                 model.setKeyPair(keyPair);
                 model.getPrivateKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
                 String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
@@ -128,12 +128,12 @@ public class NodeRegistrationController implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisq2/nodes/" + model.getRoleType().name().toLowerCase());
+        Browser.open("https://bisq.wiki/bisq2/nodes/" + model.getNodeType().name().toLowerCase());
     }
 
     void onRegister() {
-        roleRegistrationService.registerNode(model.getUserIdentity(),
-                        model.getRoleType(),
+        nodeRegistrationService.registerNode(model.getUserIdentity(),
+                        model.getNodeType(),
                         model.getKeyPair(),
                         model.getAddressByNetworkType())
                 .whenComplete((result, throwable) -> {
@@ -149,8 +149,8 @@ public class NodeRegistrationController implements Controller {
     }
 
     void onRemoveRegistration() {
-        roleRegistrationService.removeNodeRegistration(model.getUserIdentity(),
-                        model.getRoleType(),
+        nodeRegistrationService.removeNodeRegistration(model.getUserIdentity(),
+                        model.getNodeType(),
                         model.getPublicKey().get())
                 .whenComplete((result, throwable) -> {
                     UIThread.run(() -> {
@@ -190,9 +190,9 @@ public class NodeRegistrationController implements Controller {
     private void updateRegistrationState() {
         String publicKeyAsHex = model.getPublicKey().get();
         boolean isAuthorizedPublicKey = DevMode.isDevMode() ? DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex) :
-                AuthorizedRoleRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex);
-        boolean isNodeRegistered = roleRegistrationService.isNodeRegistered(model.getUserIdentity().getUserProfile().getId(),
-                model.getRoleType(),
+                AuthorizedNodeRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex);
+        boolean isNodeRegistered = nodeRegistrationService.isNodeRegistered(model.getUserIdentity().getUserProfile().getId(),
+                model.getNodeType(),
                 publicKeyAsHex);
         model.getRegistrationDisabled().set(!isAuthorizedPublicKey ||
                 !StringUtils.isNotEmpty(model.getPrivateKey().get()) ||

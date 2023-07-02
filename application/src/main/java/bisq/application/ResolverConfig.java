@@ -34,8 +34,8 @@ import bisq.support.alert.AuthorizedAlertData;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationResponse;
 import bisq.trade.protocol.messages.TradeMessage;
+import bisq.user.node.AuthorizedNodeRegistrationData;
 import bisq.user.profile.UserProfile;
-import bisq.user.role.AuthorizedNodeRegistrationData;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 
 public class ResolverConfig {

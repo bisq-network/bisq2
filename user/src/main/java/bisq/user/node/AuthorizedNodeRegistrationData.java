@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.role;
+package bisq.user.node;
 
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
@@ -54,13 +54,13 @@ public final class AuthorizedNodeRegistrationData implements AuthorizedDistribut
             AuthorizedNodeRegistrationData.class.getSimpleName());
 
     private final UserProfile userProfile;
-    private final RoleType roleType;
+    private final NodeType nodeType;
     private final String publicKeyAsHex;
     private final Map<Transport.Type, Address> addressByNetworkType;
 
-    public AuthorizedNodeRegistrationData(UserProfile userProfile, RoleType roleType, String publicKeyAsHex, Map<Transport.Type, Address> addressByNetworkType) {
+    public AuthorizedNodeRegistrationData(UserProfile userProfile, NodeType nodeType, String publicKeyAsHex, Map<Transport.Type, Address> addressByNetworkType) {
         this.userProfile = userProfile;
-        this.roleType = roleType;
+        this.nodeType = nodeType;
         this.publicKeyAsHex = publicKeyAsHex;
         this.addressByNetworkType = addressByNetworkType;
     }
@@ -69,7 +69,7 @@ public final class AuthorizedNodeRegistrationData implements AuthorizedDistribut
     public bisq.user.protobuf.AuthorizedNodeRegistrationData toProto() {
         return bisq.user.protobuf.AuthorizedNodeRegistrationData.newBuilder()
                 .setUserProfile(userProfile.toProto())
-                .setRoleType(roleType.toProto())
+                .setNodeType(nodeType.toProto())
                 .setPublicKeyAsHex(publicKeyAsHex)
                 .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
@@ -81,7 +81,7 @@ public final class AuthorizedNodeRegistrationData implements AuthorizedDistribut
                 .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
         return new AuthorizedNodeRegistrationData(UserProfile.fromProto(proto.getUserProfile()),
-                RoleType.fromProto(proto.getRoleType()),
+                NodeType.fromProto(proto.getNodeType()),
                 proto.getPublicKeyAsHex(),
                 addressByNetworkType);
     }

@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.user.nodes.tabs.registration.NodeRegistrationController;
-import bisq.user.role.RoleType;
+import bisq.user.node.NodeType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,16 +53,16 @@ public class NodesTabController extends TabController<NodesTabModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case REGISTER_SEED_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, RoleType.SEED_NODE));
+                return Optional.of(new NodeRegistrationController(applicationService, NodeType.SEED_NODE));
             }
             case REGISTER_ORACLE_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, RoleType.ORACLE_NODE));
+                return Optional.of(new NodeRegistrationController(applicationService, NodeType.ORACLE_NODE));
             }
             case REGISTER_EXPLORER_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, RoleType.EXPLORER_NODE));
+                return Optional.of(new NodeRegistrationController(applicationService, NodeType.EXPLORER_NODE));
             }
             case REGISTER_MARKET_PRICE_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, RoleType.MARKET_PRICE_NODE));
+                return Optional.of(new NodeRegistrationController(applicationService, NodeType.MARKET_PRICE_NODE));
             }
             default: {
                 return Optional.empty();
