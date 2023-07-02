@@ -42,8 +42,7 @@ public class DirectoryAuthorityFactory {
             throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.");
         }
 
-        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator();
-        directoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
+        DirectoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
 
         allDirectoryAuthorities.add(directoryAuthority);
     }
