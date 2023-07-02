@@ -214,7 +214,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return roleRegistrationService.getMyRegistrations().stream()
+        return roleRegistrationService.getMyRoleRegistrations().stream()
                 .filter(data -> data.getRoleType() == RoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getUserProfile().getId()).stream())
                 .findAny();

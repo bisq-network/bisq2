@@ -21,7 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.user.roles.tabs.registration.RoleRegistrationController;
+import bisq.desktop.primary.main.content.user.roles.tabs.node.NodeRegistrationController;
+import bisq.desktop.primary.main.content.user.roles.tabs.role.RoleRegistrationController;
 import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -61,14 +62,23 @@ public class RolesTabController extends TabController<RolesTabModel> {
             case REGISTER_MODERATOR: {
                 return Optional.of(new RoleRegistrationController(applicationService, RoleType.MODERATOR));
             }
-            case REGISTER_SEED: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.SEED_NODE));
-            }
-            case REGISTER_ORACLE: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.ORACLE_NODE));
-            }
-            case REGISTER_NOTIFICATION_SENDER: {
+            case REGISTER_SECURITY_MANAGER: {
                 return Optional.of(new RoleRegistrationController(applicationService, RoleType.SECURITY_MANAGER));
+            }
+            case REGISTER_RELEASE_MANAGER: {
+                return Optional.of(new RoleRegistrationController(applicationService, RoleType.RELEASE_MANAGER));
+            }
+            case REGISTER_SEED_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.SEED_NODE));
+            }
+            case REGISTER_ORACLE_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.ORACLE_NODE));
+            }
+            case REGISTER_EXPLORER_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.EXPLORER_NODE));
+            }
+            case REGISTER_MARKET_PRICE_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.MARKET_PRICE_NODE));
             }
             default: {
                 return Optional.empty();

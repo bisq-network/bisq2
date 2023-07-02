@@ -46,15 +46,25 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
         addTab(Res.get("user.roles.type.MODERATOR"),
                 NavigationTarget.REGISTER_MODERATOR,
                 styles);
+        addTab(Res.get("user.roles.type.SECURITY_MANAGER"),
+                NavigationTarget.REGISTER_SECURITY_MANAGER,
+                styles);
+        addTab(Res.get("user.roles.type.RELEASE_MANAGER"),
+                NavigationTarget.REGISTER_RELEASE_MANAGER,
+                styles);
         addTab(Res.get("user.roles.type.SEED_NODE"),
-                NavigationTarget.REGISTER_SEED,
+                NavigationTarget.REGISTER_SEED_NODE,
                 styles);
         addTab(Res.get("user.roles.type.ORACLE_NODE"),
-                NavigationTarget.REGISTER_ORACLE,
+                NavigationTarget.REGISTER_ORACLE_NODE,
                 styles);
-        addTab(Res.get("user.roles.type.NOTIFICATION_SENDER"),
-                NavigationTarget.REGISTER_NOTIFICATION_SENDER,
+        addTab(Res.get("user.roles.type.EXPLORER_NODE"),
+                NavigationTarget.REGISTER_EXPLORER_NODE,
                 styles);
+        addTab(Res.get("user.roles.type.MARKET_PRICE_NODE"),
+                NavigationTarget.REGISTER_MARKET_PRICE_NODE,
+                styles);
+
     }
 
     @Override

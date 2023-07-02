@@ -21,6 +21,8 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
+import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -33,6 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -91,11 +94,15 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
             authorizedDataSet.remove((AuthorizedData) authenticatedData);
+        } else if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
+            authorizedDataSet.remove((AuthorizedData) authenticatedData);
         }
     }
 
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+            authorizedDataSet.add((AuthorizedData) authenticatedData);
+        } else if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
             authorizedDataSet.add((AuthorizedData) authenticatedData);
         }
     }
@@ -104,7 +111,9 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> register(UserIdentity userIdentity, RoleType roleType, KeyPair keyPair) {
+    public CompletableFuture<DataService.BroadCastDataResult> registerRole(UserIdentity userIdentity,
+                                                                           RoleType roleType,
+                                                                           KeyPair keyPair) {
         String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
         AuthorizedRoleRegistrationData data = new AuthorizedRoleRegistrationData(userIdentity.getUserProfile(),
                 roleType,
@@ -116,7 +125,7 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
                             keyPair.getPublic())
                     .whenComplete((result, throwable) -> {
                         if (throwable == null) {
-                            getMyRegistrations().add(data);
+                            getMyRoleRegistrations().add(data);
                             persist();
                         }
                     });
@@ -126,34 +135,94 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
         }
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
+    public CompletableFuture<DataService.BroadCastDataResult> registerNode(UserIdentity userIdentity,
+                                                                           RoleType roleType,
+                                                                           KeyPair keyPair,
+                                                                           Map<Transport.Type, Address> addressByNetworkType) {
+        String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
+        AuthorizedNodeRegistrationData data = new AuthorizedNodeRegistrationData(userIdentity.getUserProfile(),
+                roleType,
+                publicKeyAsHex,
+                addressByNetworkType);
+        if (data.getAuthorizedPublicKeys().contains(publicKeyAsHex)) {
+            return networkService.publishAuthorizedData(data,
+                            userIdentity.getIdentity().getNodeIdAndKeyPair(),
+                            keyPair.getPrivate(),
+                            keyPair.getPublic())
+                    .whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            getMyNodeRegistrations().add(data);
+                            persist();
+                        }
+                    });
+        } else {
+            return CompletableFuture.failedFuture(new RuntimeException("The public key is not in the list of the authorized keys yet. " +
+                    "Please follow the process as described at the registration popup."));
+        }
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> removeRoleRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
         return findAuthorizedRoleRegistrationData(userIdentity.getUserProfile().getId(), roleType, publicKeyAsHex)
                 .map(authorizedData -> networkService.removeAuthorizedData(authorizedData,
                                 userIdentity.getIdentity().getNodeIdAndKeyPair())
                         .whenComplete((result, throwable) -> {
                             if (throwable == null) {
-                                getMyRegistrations().remove((AuthorizedRoleRegistrationData) authorizedData.getDistributedData());
+                                getMyRoleRegistrations().remove((AuthorizedRoleRegistrationData) authorizedData.getDistributedData());
                                 persist();
                             }
                         }))
                 .orElse(CompletableFuture.completedFuture(null));
     }
 
-    public ObservableSet<AuthorizedRoleRegistrationData> getMyRegistrations() {
-        return persistableStore.getMyRegistrations();
+    public CompletableFuture<DataService.BroadCastDataResult> removeNodeRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
+        return findAuthorizedNodeRegistrationData(userIdentity.getUserProfile().getId(), roleType, publicKeyAsHex)
+                .map(authorizedData -> networkService.removeAuthorizedData(authorizedData,
+                                userIdentity.getIdentity().getNodeIdAndKeyPair())
+                        .whenComplete((result, throwable) -> {
+                            if (throwable == null) {
+                                getMyNodeRegistrations().remove((AuthorizedNodeRegistrationData) authorizedData.getDistributedData());
+                                persist();
+                            }
+                        }))
+                .orElse(CompletableFuture.completedFuture(null));
+    }
+
+    public ObservableSet<AuthorizedRoleRegistrationData> getMyRoleRegistrations() {
+        return persistableStore.getMyRoleRegistrations();
+    }
+
+    public ObservableSet<AuthorizedNodeRegistrationData> getMyNodeRegistrations() {
+        return persistableStore.getMyNodeRegistrations();
     }
 
     public Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return authorizedDataSet.stream().filter(authenticatedData -> {
-            AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
-            return userProfileId.equals(data.getUserProfile().getId()) &&
-                    roleType.equals(data.getRoleType()) &&
-                    publicKeyAsHex.equals(data.getPublicKeyAsHex());
-        }).findAny();
+        return authorizedDataSet.stream()
+                .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedRoleRegistrationData)
+                .filter(authorizedData -> {
+                    AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authorizedData.getDistributedData();
+                    return userProfileId.equals(data.getUserProfile().getId()) &&
+                            roleType.equals(data.getRoleType()) &&
+                            publicKeyAsHex.equals(data.getPublicKeyAsHex());
+                }).findAny();
     }
 
-    public boolean isRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
+    public Optional<AuthorizedData> findAuthorizedNodeRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
+        return authorizedDataSet.stream()
+                .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedNodeRegistrationData)
+                .filter(authenticatedData -> {
+                    AuthorizedNodeRegistrationData data = (AuthorizedNodeRegistrationData) authenticatedData.getDistributedData();
+                    return userProfileId.equals(data.getUserProfile().getId()) &&
+                            roleType.equals(data.getRoleType()) &&
+                            publicKeyAsHex.equals(data.getPublicKeyAsHex());
+                }).findAny();
+    }
+
+    public boolean isRoleRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
         return findAuthorizedRoleRegistrationData(userProfileId, roleType, publicKeyAsHex).isPresent();
+    }
+
+    public boolean isNodeRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
+        return findAuthorizedNodeRegistrationData(userProfileId, roleType, publicKeyAsHex).isPresent();
     }
 
     public KeyPair findOrCreateRegistrationKey(RoleType roleType, String userProfileId) {

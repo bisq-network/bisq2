@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.tabs.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs.node;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialPasswordField;
+import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
@@ -33,15 +34,16 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, RoleRegistrationController> {
-    private final Button copyButton, registrationButton, removeRegistrationButton;
+public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, NodeRegistrationController> {
+    private final Button importNodeAddressButton, registrationButton, removeRegistrationButton;
     private final Hyperlink learnMore;
     private final MaterialTextField selectedProfile, publicKey;
     private final MaterialPasswordField privateKey;
+    private final MaterialTextArea addressInfo;
 
 
-    public RoleRegistrationView(RoleRegistrationModel model,
-                                RoleRegistrationController controller) {
+    public NodeRegistrationView(NodeRegistrationModel model,
+                                NodeRegistrationController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
@@ -59,7 +61,7 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         Label howHeadline = new Label(Res.get("user.roles.registration.headline.how", inlineHow));
         howHeadline.getStyleClass().add("bisq-text-headline-2");
 
-        MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.roles.registration.info.how", inlineHow));
+        MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.roles.registration.info.how", inlineHow, Res.get("user.roles.registration.node.info.how")));
         howInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
 
@@ -68,22 +70,26 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
 
         privateKey = new MaterialPasswordField(Res.get("user.roles.registration.privateKey"));
         publicKey = new MaterialTextField(Res.get("user.roles.registration.publicKey"));
+        publicKey.showCopyIcon();
+        addressInfo = new MaterialTextArea(Res.get("user.roles.registration.node.addressInfo"));
+        addressInfo.setEditable(false);
 
+        importNodeAddressButton = new Button(Res.get("user.roles.registration.node.importAddress"));
+        importNodeAddressButton.getStyleClass().add("outlined-button");
         registrationButton = new Button(Res.get("user.roles.registration.register"));
+        registrationButton.setDefaultButton(true);
         removeRegistrationButton = new Button(Res.get("user.roles.registration.removeRegistration"));
-        copyButton = new Button(Res.get("user.roles.registration.copyPubKey"));
-        copyButton.getStyleClass().add("outlined-button");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, removeRegistrationButton, copyButton);
+        HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, removeRegistrationButton, importNodeAddressButton);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(aboutHeadline, new Insets(10, 0, 0, 0));
         VBox.setMargin(howHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(howInfo, new Insets(0, 0, 10, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(aboutHeadline, aboutInfo, howHeadline, howInfo, selectedProfile, privateKey, publicKey, buttons);
+        root.getChildren().addAll(aboutHeadline, aboutInfo, howHeadline, howInfo, selectedProfile, privateKey, publicKey, addressInfo, buttons);
     }
 
     @Override
@@ -91,15 +97,20 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         selectedProfile.textProperty().bind(model.getSelectedProfileUserName());
         privateKey.textProperty().bindBidirectional(model.getPrivateKey());
         publicKey.textProperty().bindBidirectional(model.getPublicKey());
+        addressInfo.textProperty().bind(model.getAddressInfo());
         registrationButton.disableProperty().bind(model.getRegistrationDisabled());
-        registrationButton.defaultButtonProperty().bind(model.getRegistrationDisabled());
+        registrationButton.managedProperty().bind(model.getRemoveRegistrationVisible().not());
+        registrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible().not());
+        importNodeAddressButton.visibleProperty().bind(model.getRemoveRegistrationVisible().not());
+        importNodeAddressButton.managedProperty().bind(model.getRemoveRegistrationVisible().not());
         removeRegistrationButton.managedProperty().bind(model.getRemoveRegistrationVisible());
         removeRegistrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible());
 
+        importNodeAddressButton.setOnAction(e -> controller.onImportNodeAddress());
         registrationButton.setOnAction(e -> controller.onRegister());
         removeRegistrationButton.setOnAction(e -> controller.onRemoveRegistration());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        copyButton.setOnAction(e -> controller.onCopy());
+        publicKey.getIconButton().setOnAction(e -> controller.onCopy());
     }
 
     @Override
@@ -107,14 +118,19 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         selectedProfile.textProperty().unbind();
         privateKey.textProperty().unbindBidirectional(model.getPrivateKey());
         publicKey.textProperty().unbindBidirectional(model.getPublicKey());
+        addressInfo.textProperty().unbind();
         registrationButton.disableProperty().unbind();
-        registrationButton.defaultButtonProperty().unbind();
+        registrationButton.managedProperty().unbind();
+        registrationButton.visibleProperty().unbind();
+        importNodeAddressButton.managedProperty().unbind();
+        importNodeAddressButton.visibleProperty().unbind();
         removeRegistrationButton.managedProperty().unbind();
         removeRegistrationButton.visibleProperty().unbind();
 
+        importNodeAddressButton.setOnAction(null);
         registrationButton.setOnAction(null);
         removeRegistrationButton.setOnAction(null);
         learnMore.setOnAction(null);
-        copyButton.setOnAction(null);
+        publicKey.getIconButton().setOnAction(null);
     }
 }

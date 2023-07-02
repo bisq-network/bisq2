@@ -28,34 +28,40 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Persists my user profiles and the selected user profile.
- */
 @Slf4j
 @Getter
 public final class RoleRegistrationServiceStore implements PersistableStore<RoleRegistrationServiceStore> {
-    private final ObservableSet<AuthorizedRoleRegistrationData> myRegistrations = new ObservableSet<>();
+    private final ObservableSet<AuthorizedRoleRegistrationData> myRoleRegistrations = new ObservableSet<>();
+    private final ObservableSet<AuthorizedNodeRegistrationData> myNodeRegistrations = new ObservableSet<>();
 
     RoleRegistrationServiceStore() {
     }
 
-    private RoleRegistrationServiceStore(Set<AuthorizedRoleRegistrationData> myRegistrations) {
-        this.myRegistrations.addAll(myRegistrations);
+    private RoleRegistrationServiceStore(Set<AuthorizedRoleRegistrationData> myRoleRegistrations,
+                                         Set<AuthorizedNodeRegistrationData> myNodeRegistrations) {
+        this.myRoleRegistrations.setAll(myRoleRegistrations);
+        this.myNodeRegistrations.setAll(myNodeRegistrations);
     }
 
     @Override
     public bisq.user.protobuf.RoleRegistrationServiceStore toProto() {
         return bisq.user.protobuf.RoleRegistrationServiceStore.newBuilder()
-                .addAllMyRegistrations(myRegistrations.stream()
+                .addAllMyRoleRegistrations(myRoleRegistrations.stream()
                         .map(AuthorizedRoleRegistrationData::toProto)
+                        .collect(Collectors.toList()))
+                .addAllMyNodeRegistrations(myNodeRegistrations.stream()
+                        .map(AuthorizedNodeRegistrationData::toProto)
                         .collect(Collectors.toList()))
                 .build();
     }
 
     public static RoleRegistrationServiceStore fromProto(bisq.user.protobuf.RoleRegistrationServiceStore proto) {
-        return new RoleRegistrationServiceStore(proto.getMyRegistrationsList().stream()
+        return new RoleRegistrationServiceStore(proto.getMyRoleRegistrationsList().stream()
                 .map(AuthorizedRoleRegistrationData::fromProto)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet()),
+                proto.getMyNodeRegistrationsList().stream()
+                        .map(AuthorizedNodeRegistrationData::fromProto)
+                        .collect(Collectors.toSet()));
     }
 
     @Override
@@ -71,12 +77,12 @@ public final class RoleRegistrationServiceStore implements PersistableStore<Role
 
     @Override
     public RoleRegistrationServiceStore getClone() {
-        return new RoleRegistrationServiceStore(myRegistrations);
+        return new RoleRegistrationServiceStore(myRoleRegistrations, myNodeRegistrations);
     }
 
     @Override
     public void applyPersisted(RoleRegistrationServiceStore persisted) {
-        myRegistrations.clear();
-        myRegistrations.addAll(persisted.getMyRegistrations());
+        myRoleRegistrations.setAll(persisted.getMyRoleRegistrations());
+        myNodeRegistrations.setAll(persisted.getMyNodeRegistrations());
     }
 }

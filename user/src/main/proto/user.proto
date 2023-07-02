@@ -87,9 +87,12 @@ enum RoleType {
   MEDIATOR = 0;
   ARBITRATOR = 1;
   MODERATOR = 2;
-  SEED_NODE = 3;
-  ORACLE = 4;
-  NOTIFICATION_SENDER = 5;
+  SECURITY_MANAGER = 3;
+  RELEASE_MANAGER = 4;
+  ORACLE_NODE = 5;
+  SEED_NODE = 6;
+  EXPLORER_NODE = 7;
+  MARKET_PRICE_NODE = 8;
 }
 
 message AuthorizedRoleRegistrationData {
@@ -97,8 +100,14 @@ message AuthorizedRoleRegistrationData {
   RoleType roleType = 2;
   string publicKeyAsHex = 3;
 }
-
+message AuthorizedNodeRegistrationData {
+  UserProfile userProfile = 1;
+  RoleType roleType = 2;
+  string publicKeyAsHex = 3;
+  map<string, network.Address> addressByNetworkType = 4;
+}
 message RoleRegistrationServiceStore {
-  repeated AuthorizedRoleRegistrationData myRegistrations = 1;
+  repeated AuthorizedRoleRegistrationData myRoleRegistrations = 1;
+  repeated AuthorizedNodeRegistrationData myNodeRegistrations = 2;
 }
     

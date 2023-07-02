@@ -35,6 +35,7 @@ import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationResponse;
 import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.profile.UserProfile;
+import bisq.user.role.AuthorizedNodeRegistrationData;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 
 public class ResolverConfig {
@@ -44,6 +45,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedRoleRegistrationData", AuthorizedRoleRegistrationData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedNodeRegistrationData", AuthorizedNodeRegistrationData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());

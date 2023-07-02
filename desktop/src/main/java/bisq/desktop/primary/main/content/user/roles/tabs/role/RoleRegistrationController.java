@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.tabs.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs.role;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -35,6 +36,9 @@ import bisq.user.role.RoleRegistrationService;
 import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -49,6 +53,7 @@ public class RoleRegistrationController implements Controller {
     private final UserIdentityService userIdentityService;
     private final RoleRegistrationService roleRegistrationService;
     private Pin userIdentityPin;
+    private Subscription updateRegistrationStatePin;
 
     public RoleRegistrationController(DefaultApplicationService applicationService, RoleType roleType) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -88,22 +93,17 @@ public class RoleRegistrationController implements Controller {
 
             updateRegistrationState();
         });
-    }
 
-    private void updateRegistrationState() {
-        String publicKeyAsHex = model.getPublicKey().get();
-        boolean isAuthorizedPublicKey = DevMode.isDevMode() ? DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex) :
-                AuthorizedRoleRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex);
-        boolean isRegistered = roleRegistrationService.isRegistered(model.getUserIdentity().getUserProfile().getId(),
-                model.getRoleType(),
-                publicKeyAsHex);
-        model.getRegistrationDisabled().set(!isAuthorizedPublicKey || isRegistered);
-        model.getRemoveRegistrationVisible().set(isAuthorizedPublicKey && isRegistered);
+        MonadicBinding<Boolean> binding = EasyBind.combine(model.getPrivateKey(), model.getPublicKey(),
+                (priv, pub) -> StringUtils.isNotEmpty(priv) && StringUtils.isNotEmpty(pub));
+        updateRegistrationStatePin = EasyBind.subscribe(binding, e -> updateRegistrationState());
+        updateRegistrationState();
     }
 
     @Override
     public void onDeactivate() {
         userIdentityPin.unbind();
+        updateRegistrationStatePin.unsubscribe();
     }
 
     void onLearnMore() {
@@ -111,7 +111,7 @@ public class RoleRegistrationController implements Controller {
     }
 
     void onRegister() {
-        roleRegistrationService.register(model.getUserIdentity(),
+        roleRegistrationService.registerRole(model.getUserIdentity(),
                         model.getRoleType(),
                         model.getKeyPair())
                 .whenComplete((result, throwable) -> {
@@ -127,7 +127,7 @@ public class RoleRegistrationController implements Controller {
     }
 
     void onRemoveRegistration() {
-        roleRegistrationService.removeRegistration(model.getUserIdentity(),
+        roleRegistrationService.removeRoleRegistration(model.getUserIdentity(),
                         model.getRoleType(),
                         model.getPublicKey().get())
                 .whenComplete((result, throwable) -> {
@@ -144,5 +144,17 @@ public class RoleRegistrationController implements Controller {
 
     void onCopy() {
         ClipboardUtil.copyToClipboard(model.getPublicKey().get());
+    }
+
+    private void updateRegistrationState() {
+        String publicKeyAsHex = model.getPublicKey().get();
+        boolean isAuthorizedPublicKey = DevMode.isDevMode() ? DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex) :
+                AuthorizedRoleRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex);
+        boolean isRoleRegistered = roleRegistrationService.isRoleRegistered(model.getUserIdentity().getUserProfile().getId(),
+                model.getRoleType(),
+                publicKeyAsHex);
+        model.getRegistrationDisabled().set(!isAuthorizedPublicKey ||
+                !StringUtils.isNotEmpty(model.getPrivateKey().get()));
+        model.getRemoveRegistrationVisible().set(isRoleRegistered);
     }
 }
