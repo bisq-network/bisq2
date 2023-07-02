@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network.da.keygen.process;
 
-import bisq.tor.local_network.da.TorNode;
+import bisq.tor.local_network.TorNode;
 import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 
 import java.io.IOException;

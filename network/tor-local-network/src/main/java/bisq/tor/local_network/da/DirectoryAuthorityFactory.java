@@ -17,6 +17,7 @@
 
 package bisq.tor.local_network.da;
 
+import bisq.tor.local_network.TorNode;
 import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
 import lombok.Getter;
 

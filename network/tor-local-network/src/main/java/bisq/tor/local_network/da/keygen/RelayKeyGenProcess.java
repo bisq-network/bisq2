@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network.da.keygen;
 
-import bisq.tor.local_network.da.TorNode;
+import bisq.tor.local_network.TorNode;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

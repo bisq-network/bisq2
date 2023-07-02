@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.da.TorNode;
+import bisq.tor.local_network.TorNode;
 import lombok.Getter;
 
 /**

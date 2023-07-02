@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.da;
+package bisq.tor.local_network;
 
-import bisq.tor.local_network.KeyFingerprintReader;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

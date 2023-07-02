@@ -17,7 +17,6 @@
 
 package bisq.tor.local_network;
 
-import bisq.tor.local_network.da.TorNode;
 import bisq.tor.local_network.torrc.RelayTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
