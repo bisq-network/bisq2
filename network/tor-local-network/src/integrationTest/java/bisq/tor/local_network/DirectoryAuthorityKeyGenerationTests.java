@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,7 +35,7 @@ public class DirectoryAuthorityKeyGenerationTests {
         assertThat(keysPath.toFile().mkdirs())
                 .isTrue();
 
-        var directoryAuthority = DirectoryAuthority.builder()
+        var directoryAuthority = TorNode.builder()
                 .nickname("Nick")
                 .dataDir(dataDir)
                 .controlPort(1)

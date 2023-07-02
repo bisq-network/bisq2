@@ -17,10 +17,10 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 
 public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
-    public DirectoryAuthorityTorrcGenerator(DirectoryAuthority thisDirectoryAuthority) {
+    public DirectoryAuthorityTorrcGenerator(TorNode thisDirectoryAuthority) {
         super(thisDirectoryAuthority);
     }
 
@@ -31,7 +31,7 @@ public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
         torrcStringBuilder
                 .append("AuthoritativeDirectory 1\n")
                 .append("V3AuthoritativeDirectory 1\n")
-                .append("ContactInfo auth-").append(thisDirectoryAuthority.getNickname()).append("@test.test\n")
+                .append("ContactInfo auth-").append(thisTorNode.getNickname()).append("@test.test\n")
 
                 .append("AssumeReachable 1\n")
 
@@ -43,6 +43,6 @@ public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
                 .append("V3AuthVoteDelay 4\n")
                 .append("V3AuthDistDelay 4\n")
 
-                .append(thisDirectoryAuthority.getExitPolicy()).append("\n");
+                .append(thisTorNode.getExitPolicy()).append("\n");
     }
 }

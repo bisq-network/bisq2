@@ -17,13 +17,13 @@
 
 package bisq.tor.local_network.da.keygen.process;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 
 import java.io.IOException;
 
 public class DirectoryAuthorityKeyGenerator {
-    public static void generate(DirectoryAuthority directoryAuthority, String passphrase) throws IOException, InterruptedException {
+    public static void generate(TorNode directoryAuthority, String passphrase) throws IOException, InterruptedException {
         var identityKeyGenProcess = new DirectoryIdentityKeyGenProcess(
                 directoryAuthority.getKeysPath(),
                 "127.0.0.1:" + directoryAuthority.getDirPort()

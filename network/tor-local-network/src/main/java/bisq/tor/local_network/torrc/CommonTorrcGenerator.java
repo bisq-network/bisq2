@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 import lombok.Getter;
 
 /**
@@ -25,11 +25,11 @@ import lombok.Getter;
  */
 @Getter
 public abstract class CommonTorrcGenerator {
-    protected final DirectoryAuthority thisDirectoryAuthority;
+    protected final TorNode thisTorNode;
     protected final StringBuilder torrcStringBuilder = new StringBuilder();
 
-    public CommonTorrcGenerator(DirectoryAuthority thisDirectoryAuthority) {
-        this.thisDirectoryAuthority = thisDirectoryAuthority;
+    public CommonTorrcGenerator(TorNode thisTorNode) {
+        this.thisTorNode = thisTorNode;
     }
 
     public void generate() {
@@ -43,28 +43,28 @@ public abstract class CommonTorrcGenerator {
                 .append("TestingDirAuthVoteGuard *\n")
                 .append("TestingMinExitFlagThreshold 0\n")
 
-                .append("DataDirectory ").append(thisDirectoryAuthority.getDataDir()).append("\n")
+                .append("DataDirectory ").append(thisTorNode.getDataDir()).append("\n")
                 .append("RunAsDaemon 1\n")
-                .append("Nickname ").append(thisDirectoryAuthority.getNickname()).append("\n")
+                .append("Nickname ").append(thisTorNode.getNickname()).append("\n")
 
                 .append("ShutdownWaitLength 2\n")
                 .append("DisableDebuggerAttachment 0\n")
 
-                .append("ControlPort 127.0.0.1:").append(thisDirectoryAuthority.getControlPort()).append("\n")
+                .append("ControlPort 127.0.0.1:").append(thisTorNode.getControlPort()).append("\n")
                 .append("CookieAuthentication 1\n")
 
-                .append("Log debug file ").append(thisDirectoryAuthority.getDataDir().resolve("debug.log").toAbsolutePath()).append("\n")
+                .append("Log debug file ").append(thisTorNode.getDataDir().resolve("debug.log").toAbsolutePath()).append("\n")
                 .append("ProtocolWarnings 1\n")
                 .append("SafeLogging 0\n")
                 .append("LogTimeGranularity 1\n")
 
                 .append("SocksPort 0\n")
-                .append("OrPort ").append(thisDirectoryAuthority.getOrPort()).append("\n")
+                .append("OrPort ").append(thisTorNode.getOrPort()).append("\n")
                 .append("Address 127.0.0.1\n")
 
                 .append("ServerDNSDetectHijacking 0\n")
                 .append("ServerDNSTestAddresses\n")
 
-                .append("DirPort ").append(thisDirectoryAuthority.getDirPort()).append("\n");
+                .append("DirPort ").append(thisTorNode.getDirPort()).append("\n");
     }
 }

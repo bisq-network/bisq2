@@ -17,11 +17,11 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 
 public class RelayTorrcGenerator extends CommonTorrcGenerator {
-    public RelayTorrcGenerator(DirectoryAuthority thisDirectoryAuthority) {
-        super(thisDirectoryAuthority);
+    public RelayTorrcGenerator(TorNode thisTorNode) {
+        super(thisTorNode);
     }
 
     @Override

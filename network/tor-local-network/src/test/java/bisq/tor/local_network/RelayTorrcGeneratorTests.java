@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 import bisq.tor.local_network.torrc.RelayTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
@@ -38,8 +38,8 @@ public class RelayTorrcGeneratorTests {
         Path daAPath = tempDir.resolve("DA_A");
         assertThat(daAPath.toFile().mkdir()).isTrue();
 
-        DirectoryAuthority firstDirAuth = spy(
-                DirectoryAuthority.builder()
+        TorNode firstDirAuth = spy(
+                TorNode.builder()
                         .nickname("A")
                         .dataDir(daAPath)
 
@@ -58,8 +58,8 @@ public class RelayTorrcGeneratorTests {
                 .when(firstDirAuth)
                 .getRelayKeyFingerprint();
 
-        DirectoryAuthority secondDirAuth = spy(
-                DirectoryAuthority.builder()
+        TorNode secondDirAuth = spy(
+                TorNode.builder()
                         .nickname("B")
                         .dataDir(tempDir.resolve("DA_B"))
 

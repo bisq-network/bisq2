@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.TorNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,9 +25,9 @@ import java.util.Set;
 
 public class TorrcFileGenerator {
     private final CommonTorrcGenerator commonTorrcGenerator;
-    private final Set<DirectoryAuthority> allDirAuthorities;
+    private final Set<TorNode> allDirAuthorities;
 
-    public TorrcFileGenerator(CommonTorrcGenerator commonTorrcGenerator, Set<DirectoryAuthority> allDirAuthorities) {
+    public TorrcFileGenerator(CommonTorrcGenerator commonTorrcGenerator, Set<TorNode> allDirAuthorities) {
         this.commonTorrcGenerator = commonTorrcGenerator;
         this.allDirAuthorities = allDirAuthorities;
     }
@@ -44,7 +44,7 @@ public class TorrcFileGenerator {
                         .append(" ").append(dirAuthority.getRelayKeyFingerprint().orElseThrow())
                         .append("\n"));
 
-        DirectoryAuthority thisDirectoryAuthority = commonTorrcGenerator.getThisDirectoryAuthority();
-        Files.writeString(thisDirectoryAuthority.getTorrcPath(), torrcStringBuilder.toString());
+        TorNode thisTorNode = commonTorrcGenerator.getThisTorNode();
+        Files.writeString(thisTorNode.getTorrcPath(), torrcStringBuilder.toString());
     }
 }
