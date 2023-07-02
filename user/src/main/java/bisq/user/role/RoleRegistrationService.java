@@ -49,7 +49,9 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     @Getter
-    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedData> authorizedRoleDataSet = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<AuthorizedData> authorizedNodeDataSet = new ObservableSet<>();
 
     public RoleRegistrationService(PersistenceService persistenceService,
                                    KeyPairService keyPairService,
@@ -93,17 +95,17 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedDataSet.remove((AuthorizedData) authenticatedData);
+            authorizedRoleDataSet.remove((AuthorizedData) authenticatedData);
         } else if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
-            authorizedDataSet.remove((AuthorizedData) authenticatedData);
+            authorizedNodeDataSet.remove((AuthorizedData) authenticatedData);
         }
     }
 
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedDataSet.add((AuthorizedData) authenticatedData);
+            authorizedRoleDataSet.add((AuthorizedData) authenticatedData);
         } else if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
-            authorizedDataSet.add((AuthorizedData) authenticatedData);
+            authorizedNodeDataSet.add((AuthorizedData) authenticatedData);
         }
     }
 
@@ -196,7 +198,7 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     }
 
     public Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return authorizedDataSet.stream()
+        return authorizedRoleDataSet.stream()
                 .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedRoleRegistrationData)
                 .filter(authorizedData -> {
                     AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authorizedData.getDistributedData();
@@ -207,7 +209,7 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     }
 
     public Optional<AuthorizedData> findAuthorizedNodeRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return authorizedDataSet.stream()
+        return authorizedNodeDataSet.stream()
                 .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedNodeRegistrationData)
                 .filter(authenticatedData -> {
                     AuthorizedNodeRegistrationData data = (AuthorizedNodeRegistrationData) authenticatedData.getDistributedData();

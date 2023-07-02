@@ -37,6 +37,7 @@ public class UserView extends TabView<UserModel, UserController> {
         addTab(Res.get("user.paymentAccounts"), NavigationTarget.BISQ_EASY_PAYMENT_ACCOUNTS);
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
+        addTab(Res.get("user.nodes"), NavigationTarget.NODES);
         sendNotificationTabButton = addTab(Res.get("user.sendNotification"), NavigationTarget.SEND_NOTIFICATION);
         headLine.setText(Res.get("user.headline"));
     }

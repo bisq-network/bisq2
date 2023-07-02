@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.tabs.node;
+package bisq.desktop.primary.main.content.user.nodes.tabs.registration;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.application.DevMode;
@@ -128,7 +128,7 @@ public class NodeRegistrationController implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisq2/roles/" + model.getRoleType().name().toLowerCase());
+        Browser.open("https://bisq.wiki/bisq2/nodes/" + model.getRoleType().name().toLowerCase());
     }
 
     void onRegister() {
@@ -140,9 +140,9 @@ public class NodeRegistrationController implements Controller {
                     UIThread.run(() -> {
                         updateRegistrationState();
                         if (throwable == null) {
-                            new Popup().feedback(Res.get("user.roles.registration.success")).show();
+                            new Popup().feedback(Res.get("user.registration.success")).show();
                         } else {
-                            new Popup().warning(Res.get("user.roles.registration.failed", throwable.getMessage())).show();
+                            new Popup().warning(Res.get("user.registration.failed", throwable.getMessage())).show();
                         }
                     });
                 });
@@ -156,9 +156,9 @@ public class NodeRegistrationController implements Controller {
                     UIThread.run(() -> {
                         updateRegistrationState();
                         if (throwable == null) {
-                            new Popup().feedback(Res.get("user.roles.removeRegistration.success")).show();
+                            new Popup().feedback(Res.get("user.removeRegistration.success")).show();
                         } else {
-                            new Popup().warning(Res.get("user.roles.removeRegistration.failed", throwable.getMessage())).show();
+                            new Popup().warning(Res.get("user.removeRegistration.failed", throwable.getMessage())).show();
                         }
                     });
                 });

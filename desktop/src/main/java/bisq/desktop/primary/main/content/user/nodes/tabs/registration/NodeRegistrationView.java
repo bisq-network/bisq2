@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.tabs.node;
+package bisq.desktop.primary.main.content.user.nodes.tabs.registration;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -50,35 +50,35 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
 
         String role = model.getRoleType().name();
 
-        String inlineAbout = Res.get("user.roles.type." + role + ".inline.about");
-        Label aboutHeadline = new Label(Res.get("user.roles.registration.headline.about", inlineAbout));
+        String inlineAbout = Res.get("user.nodes.type." + role + ".inline.about");
+        Label aboutHeadline = new Label(Res.get("user.registration.headline.about", inlineAbout));
         aboutHeadline.getStyleClass().add("bisq-text-headline-2");
 
-        MultiLineLabel aboutInfo = new MultiLineLabel(Res.get("user.roles.registration.info.about." + role));
+        MultiLineLabel aboutInfo = new MultiLineLabel(Res.get("user.nodes.registration.info.about." + role));
         aboutInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
-        String inlineHow = Res.get("user.roles.type." + role + ".inline.how");
-        Label howHeadline = new Label(Res.get("user.roles.registration.headline.how", inlineHow));
+        String inlineHow = Res.get("user.nodes.type." + role + ".inline.how");
+        Label howHeadline = new Label(Res.get("user.registration.headline.how", inlineHow));
         howHeadline.getStyleClass().add("bisq-text-headline-2");
 
-        MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.roles.registration.info.how", inlineHow, Res.get("user.roles.registration.node.info.how")));
+        MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.registration.info.how", inlineHow, Res.get("user.nodes.registration.node.info.how")));
         howInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
 
-        selectedProfile = new MaterialTextField(Res.get("user.roles.registration.selectedProfile"));
+        selectedProfile = new MaterialTextField(Res.get("user.registration.selectedProfile"));
         selectedProfile.setEditable(false);
 
-        privateKey = new MaterialPasswordField(Res.get("user.roles.registration.privateKey"));
-        publicKey = new MaterialTextField(Res.get("user.roles.registration.publicKey"));
+        privateKey = new MaterialPasswordField(Res.get("user.registration.privateKey"));
+        publicKey = new MaterialTextField(Res.get("user.registration.publicKey"));
         publicKey.showCopyIcon();
-        addressInfo = new MaterialTextArea(Res.get("user.roles.registration.node.addressInfo"));
+        addressInfo = new MaterialTextArea(Res.get("user.nodes.registration.node.addressInfo"));
         addressInfo.setEditable(false);
 
-        importNodeAddressButton = new Button(Res.get("user.roles.registration.node.importAddress"));
+        importNodeAddressButton = new Button(Res.get("user.nodes.registration.node.importAddress"));
         importNodeAddressButton.getStyleClass().add("outlined-button");
-        registrationButton = new Button(Res.get("user.roles.registration.register"));
+        registrationButton = new Button(Res.get("user.registration.register"));
         registrationButton.setDefaultButton(true);
-        removeRegistrationButton = new Button(Res.get("user.roles.registration.removeRegistration"));
+        removeRegistrationButton = new Button(Res.get("user.registration.removeRegistration"));
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 

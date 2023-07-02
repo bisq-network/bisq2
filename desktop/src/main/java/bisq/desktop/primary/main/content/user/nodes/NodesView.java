@@ -15,21 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles;
+package bisq.desktop.primary.main.content.user.nodes;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.UserProfileIcon;
+import bisq.desktop.primary.main.content.user.nodes.tabs.registration.NodeRegistrationController;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ProfileAgeService;
-import bisq.user.role.AuthorizedRoleRegistrationData;
+import bisq.user.role.AuthorizedNodeRegistrationData;
 import bisq.user.role.RoleType;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -49,27 +51,27 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public class RolesView extends View<VBox, RolesModel, RolesController> {
+public class NodesView extends View<VBox, NodesModel, NodesController> {
     private final BisqTableView<ListItem> tableView;
     private Subscription userProfileIdOfScoreUpdatePin;
 
-    public RolesView(RolesModel model,
-                     RolesController controller,
-                     VBox rolesTabControllerRoot) {
+    public NodesView(NodesModel model,
+                     NodesController controller,
+                     VBox tabControllerRoot) {
         super(new VBox(20), model, controller);
 
-        Label tableHeadline = new Label(Res.get("user.roles.table.headline"));
+        Label tableHeadline = new Label(Res.get("user.nodes.table.headline"));
         tableHeadline.getStyleClass().add("bisq-content-headline-label");
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.setMinHeight(200);
         configTableView();
 
-        VBox.setVgrow(rolesTabControllerRoot, Priority.ALWAYS);
-        VBox.setMargin(rolesTabControllerRoot, new Insets(30, 0, 20, 0));
+        VBox.setVgrow(tabControllerRoot, Priority.ALWAYS);
+        VBox.setMargin(tabControllerRoot, new Insets(30, 0, 20, 0));
         VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        root.getChildren().addAll(rolesTabControllerRoot, tableHeadline, tableView);
+        root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView);
     }
 
     @Override
@@ -110,6 +112,12 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
                 .minWidth(200)
                 .comparator(Comparator.comparing(ListItem::getPublicKeyAsHex))
                 .setCellFactory(getPubKeyCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("user.nodes.table.columns.address"))
+                .minWidth(200)
+                .isLast()
+                .setCellFactory(getAddressCellFactory())
                 .build());
     }
 
@@ -175,6 +183,45 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
         };
     }
 
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getAddressCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label address = new Label();
+            private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
+            private final HBox hBox = new HBox(address, icon);
+
+            {
+                icon.setMinWidth(30);
+                HBox.setHgrow(icon, Priority.ALWAYS);
+                HBox.setMargin(icon, new Insets(0, 10, 0, 10));
+                hBox.setAlignment(Pos.CENTER_RIGHT);
+            }
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String addressString = item.getAddress();
+                    address.setText(addressString);
+                    Tooltip tooltip = new BisqTooltip(addressString);
+                    tooltip.getStyleClass().add("dark-tooltip");
+                    address.setTooltip(tooltip);
+                    icon.setOnAction(e -> new Popup()
+                            .headLine(Res.get("user.nodes.table.columns.address.popup.headline"))
+                            .message(addressString)
+                            .show());
+                    Tooltip tooltip2 = new BisqTooltip(Res.get("user.nodes.table.columns.address.openPopup"));
+                    tooltip2.getStyleClass().add("dark-tooltip");
+                    icon.setTooltip(tooltip2);
+                    setGraphic(hBox);
+                } else {
+                    icon.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
     @EqualsAndHashCode
     @Getter
     @ToString
@@ -185,13 +232,15 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
         private final String userName;
         private final Long profileAge;
         private final String profileAgeString;
+        private final String address;
 
         public ListItem(AuthorizedData authorizedData, ProfileAgeService profileAgeService) {
-            AuthorizedRoleRegistrationData roleRegistrationData = (AuthorizedRoleRegistrationData) authorizedData.getAuthorizedDistributedData();
-            this.userProfile = roleRegistrationData.getUserProfile();
-            this.publicKeyAsHex = roleRegistrationData.getPublicKeyAsHex();
-            RoleType type = roleRegistrationData.getRoleType();
-            roleType = Res.get("user.roles.type." + type);
+            AuthorizedNodeRegistrationData nodeRegistrationData = (AuthorizedNodeRegistrationData) authorizedData.getDistributedData();
+            this.userProfile = nodeRegistrationData.getUserProfile();
+            this.publicKeyAsHex = nodeRegistrationData.getPublicKeyAsHex();
+            address = NodeRegistrationController.addressByNetworkTypeToDisplayString(nodeRegistrationData.getAddressByNetworkType());
+            RoleType type = nodeRegistrationData.getRoleType();
+            roleType = Res.get("user.nodes.type." + type);
             profileAge = profileAgeService.getProfileAge(userProfile)
                     .orElse(0L);
             profileAgeString = profileAgeService.getProfileAge(userProfile)

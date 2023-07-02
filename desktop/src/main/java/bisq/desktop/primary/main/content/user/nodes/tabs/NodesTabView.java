@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.tabs;
+package bisq.desktop.primary.main.content.user.nodes.tabs;
 
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.view.NavigationTarget;
@@ -27,8 +27,8 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
-    public RolesTabView(RolesTabModel model, RolesTabController controller) {
+public class NodesTabView extends TabView<NodesTabModel, NodesTabController> {
+    public NodesTabView(NodesTabModel model, NodesTabController controller) {
         super(model, controller);
 
         root.setPadding(new Insets(30));
@@ -37,21 +37,19 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
         VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
-        addTab(Res.get("user.roles.type.MEDIATOR"),
-                NavigationTarget.REGISTER_MEDIATOR,
+        addTab(Res.get("user.nodes.type.SEED_NODE"),
+                NavigationTarget.REGISTER_SEED_NODE,
                 styles);
-     /*   addTab(Res.get("roles.type.ARBITRATOR"),
-                NavigationTarget.REGISTER_ARBITRATOR,
-                styles);*/
-        addTab(Res.get("user.roles.type.MODERATOR"),
-                NavigationTarget.REGISTER_MODERATOR,
+        addTab(Res.get("user.nodes.type.ORACLE_NODE"),
+                NavigationTarget.REGISTER_ORACLE_NODE,
                 styles);
-        addTab(Res.get("user.roles.type.SECURITY_MANAGER"),
-                NavigationTarget.REGISTER_SECURITY_MANAGER,
+        addTab(Res.get("user.nodes.type.EXPLORER_NODE"),
+                NavigationTarget.REGISTER_EXPLORER_NODE,
                 styles);
-        addTab(Res.get("user.roles.type.RELEASE_MANAGER"),
-                NavigationTarget.REGISTER_RELEASE_MANAGER,
+        addTab(Res.get("user.nodes.type.MARKET_PRICE_NODE"),
+                NavigationTarget.REGISTER_MARKET_PRICE_NODE,
                 styles);
+
     }
 
     @Override
@@ -69,7 +67,7 @@ public class RolesTabView extends TabView<RolesTabModel, RolesTabController> {
 
     @Override
     protected void setupTopBox() {
-        headLine = new Label(Res.get("user.roles.headline"));
+        headLine = new Label(Res.get("user.nodes.headline"));
         headLine.getStyleClass().add("bisq-text-headline-5");
 
         tabs.setFillHeight(true);

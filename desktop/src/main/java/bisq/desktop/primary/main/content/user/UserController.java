@@ -23,6 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.user.accounts.PaymentAccountsController;
+import bisq.desktop.primary.main.content.user.nodes.NodesController;
 import bisq.desktop.primary.main.content.user.notifications.SendNotificationController;
 import bisq.desktop.primary.main.content.user.password.PasswordController;
 import bisq.desktop.primary.main.content.user.reputation.ReputationController;
@@ -81,6 +82,9 @@ public class UserController extends TabController<UserModel> {
             }
             case ROLES: {
                 return Optional.of(new RolesController(applicationService));
+            }
+            case NODES: {
+                return Optional.of(new NodesController(applicationService));
             }
             case SEND_NOTIFICATION: {
                 return Optional.of(new SendNotificationController(applicationService));

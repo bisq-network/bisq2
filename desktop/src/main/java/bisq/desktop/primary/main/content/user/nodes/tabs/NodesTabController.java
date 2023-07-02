@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.tabs;
+package bisq.desktop.primary.main.content.user.nodes.tabs;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.user.roles.tabs.registration.RoleRegistrationController;
+import bisq.desktop.primary.main.content.user.nodes.tabs.registration.NodeRegistrationController;
 import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,16 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class RolesTabController extends TabController<RolesTabModel> {
+public class NodesTabController extends TabController<NodesTabModel> {
     @Getter
-    private final RolesTabView view;
+    private final NodesTabView view;
     private final DefaultApplicationService applicationService;
 
-    public RolesTabController(DefaultApplicationService applicationService) {
-        super(new RolesTabModel(), NavigationTarget.ROLES_TABS);
+    public NodesTabController(DefaultApplicationService applicationService) {
+        super(new NodesTabModel(), NavigationTarget.NODES_TABS);
 
         this.applicationService = applicationService;
-        view = new RolesTabView(model, this);
+        view = new NodesTabView(model, this);
     }
 
     @Override
@@ -52,20 +52,17 @@ public class RolesTabController extends TabController<RolesTabModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case REGISTER_MEDIATOR: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.MEDIATOR));
+            case REGISTER_SEED_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.SEED_NODE));
             }
-            case REGISTER_ARBITRATOR: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.ARBITRATOR));
+            case REGISTER_ORACLE_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.ORACLE_NODE));
             }
-            case REGISTER_MODERATOR: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.MODERATOR));
+            case REGISTER_EXPLORER_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.EXPLORER_NODE));
             }
-            case REGISTER_SECURITY_MANAGER: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.SECURITY_MANAGER));
-            }
-            case REGISTER_RELEASE_MANAGER: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.RELEASE_MANAGER));
+            case REGISTER_MARKET_PRICE_NODE: {
+                return Optional.of(new NodeRegistrationController(applicationService, RoleType.MARKET_PRICE_NODE));
             }
             default: {
                 return Optional.empty();

@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles;
+package bisq.desktop.primary.main.content.user.nodes;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.user.roles.tabs.RolesTabController;
+import bisq.desktop.primary.main.content.user.nodes.tabs.NodesTabController;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
 import bisq.user.reputation.ReputationService;
@@ -31,37 +31,36 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class RolesController implements Controller {
+public class NodesController implements Controller {
     @Getter
-    private final RolesView view;
+    private final NodesView view;
     private final ReputationService reputationService;
-    private final RolesModel model;
-    private final RolesTabController rolesTabController;
+    private final NodesModel model;
+    private final NodesTabController nodesTabController;
     private final RoleRegistrationService roleRegistrationService;
     private Pin roleRegistrationDataSetPin;
 
-    public RolesController(DefaultApplicationService applicationService) {
+    public NodesController(DefaultApplicationService applicationService) {
         UserService userService = applicationService.getUserService();
         reputationService = userService.getReputationService();
         roleRegistrationService = userService.getRoleRegistrationService();
 
-        rolesTabController = new RolesTabController(applicationService);
-        model = new RolesModel();
-        view = new RolesView(model, this, rolesTabController.getView().getRoot());
+        nodesTabController = new NodesTabController(applicationService);
+        model = new NodesModel();
+        view = new NodesView(model, this, nodesTabController.getView().getRoot());
     }
 
     @Override
     public void onActivate() {
-        roleRegistrationDataSetPin = FxBindings.<AuthorizedData, RolesView.ListItem>bind(model.getListItems())
-                .map(data -> new RolesView.ListItem(data, reputationService.getProfileAgeService()))
-                .to(roleRegistrationService.getAuthorizedRoleDataSet());
+        roleRegistrationDataSetPin = FxBindings.<AuthorizedData, NodesView.ListItem>bind(model.getListItems())
+                .map(data -> new NodesView.ListItem(data, reputationService.getProfileAgeService()))
+                .to(roleRegistrationService.getAuthorizedNodeDataSet());
     }
 
     @Override
     public void onDeactivate() {
         roleRegistrationDataSetPin.unbind();
     }
-
 
     public void onCopyPublicKeyAsHex(String publicKeyAsHex) {
         ClipboardUtil.copyToClipboard(publicKeyAsHex);
