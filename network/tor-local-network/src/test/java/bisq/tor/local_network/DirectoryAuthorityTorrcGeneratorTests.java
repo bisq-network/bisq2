@@ -39,6 +39,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
 
         TorNode firstDirAuth = spy(
                 TorNode.builder()
+                        .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("A")
                         .dataDir(daAPath)
 
@@ -59,6 +60,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
 
         TorNode secondDirAuth = spy(
                 TorNode.builder()
+                        .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("B")
                         .dataDir(tempDir.resolve("DA_B"))
 

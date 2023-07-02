@@ -35,6 +35,7 @@ public class DirectoryAuthorityKeyGenerationTests {
                 .isTrue();
 
         var directoryAuthority = TorNode.builder()
+                .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("Nick")
                 .dataDir(dataDir)
                 .controlPort(1)

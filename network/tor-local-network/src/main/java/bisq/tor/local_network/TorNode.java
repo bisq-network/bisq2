@@ -29,6 +29,13 @@ import java.util.function.UnaryOperator;
 
 @Getter
 public class TorNode {
+
+    public enum Type {
+        DIRECTORY_AUTHORITY,
+        RELAY
+    }
+
+    private final Type type;
     private final String nickname;
 
     private final Path dataDir;
@@ -47,7 +54,8 @@ public class TorNode {
     private Optional<String> relayKeyFingerprint = Optional.empty();
 
     @Builder
-    public TorNode(String nickname, Path dataDir, int controlPort, int orPort, int dirPort) {
+    public TorNode(Type type, String nickname, Path dataDir, int controlPort, int orPort, int dirPort) {
+        this.type = type;
         this.nickname = nickname;
         this.dataDir = dataDir;
         this.controlPort = controlPort;
@@ -61,6 +69,10 @@ public class TorNode {
     }
 
     public Optional<String> getIdentityKeyFingerprint() {
+        if (type != Type.DIRECTORY_AUTHORITY) {
+            return Optional.empty();
+        }
+
         if (identityKeyFingerprint.isPresent()) {
             return identityKeyFingerprint;
         }
