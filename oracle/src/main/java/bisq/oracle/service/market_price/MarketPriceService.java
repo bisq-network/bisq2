@@ -131,7 +131,7 @@ public class MarketPriceService {
     private void startRequesting() {
         scheduler = Scheduler.run(() -> {
             findNextHttpClient().ifPresent(httpClient -> {
-                doRequest(httpClient)
+                request(httpClient)
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
                                 if (scheduler != null) {
@@ -168,7 +168,7 @@ public class MarketPriceService {
         return findMarketPrice(market).stream().map(MarketPrice::getPriceQuote).findAny();
     }
 
-    private CompletableFuture<Map<Market, MarketPrice>> doRequest(BaseHttpClient httpClient) {
+    private CompletableFuture<Map<Market, MarketPrice>> request(BaseHttpClient httpClient) {
         if (httpClient.hasPendingRequest()) {
             return CompletableFuture.failedFuture(new PendingRequestException());
         }
@@ -188,7 +188,6 @@ public class MarketPriceService {
                 if (selectedMarket.get() == null) {
                     selectedMarket.set(map.get(MarketRepository.getDefault()).getMarket());
                 }
-
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {
                 if (!shutdownStarted) {

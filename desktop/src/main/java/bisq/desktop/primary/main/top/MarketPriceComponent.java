@@ -79,33 +79,39 @@ public class MarketPriceComponent {
 
         @Override
         public void onActivate() {
-            selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> {
-                if (selectedMarket != null) {
-                    UIThread.run(() -> model.items.stream()
-                            .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
-                            .findAny()
-                            .ifPresent(listItem -> {
-                                model.price.set(listItem.price);
-                                model.codes.set(listItem.codes);
-                                model.selected.set(listItem);
-                            }));
-                }
-            });
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ ->
+                    UIThread.run(() -> {
+                        List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
+                                .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
+                                .filter(Objects::nonNull)
+                                .map(ListItem::new)
+                                .collect(Collectors.toList());
+                        model.items.setAll(list);
 
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> UIThread.run(() -> {
-                List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
-                        .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
-                        .filter(Objects::nonNull)
-                        .map(ListItem::new)
-                        .collect(Collectors.toList());
-                model.items.setAll(list);
-            }));
+                        // We use the model.items in the selectedMarket handler code, so we only start the observer 
+                        // registration once we got the list.
+                        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
+                                UIThread.run(() -> {
+                                    if (selectedMarket != null) {
+                                        model.items.stream()
+                                                .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
+                                                .findAny()
+                                                .ifPresent(listItem -> {
+                                                    model.price.set(listItem.price);
+                                                    model.codes.set(listItem.codes);
+                                                    model.selected.set(listItem);
+                                                });
+                                    }
+                                }));
+                    }));
         }
 
         @Override
         public void onDeactivate() {
-            selectedMarketPin.unbind();
             marketPriceUpdateFlagPin.unbind();
+            if (selectedMarketPin != null) {
+                selectedMarketPin.unbind();
+            }
         }
 
         private void onSelected(MarketPriceComponent.ListItem selectedItem) {
@@ -159,6 +165,16 @@ public class MarketPriceComponent {
         @Override
         protected void onViewAttached() {
             codes.textProperty().bind(model.codes);
+            pricePin = EasyBind.subscribe(model.price, priceValue -> {
+                boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
+                arrow.setVisible(isPriceSet);
+                arrow.setManaged(isPriceSet);
+                progressBarWithLabel.setVisible(!isPriceSet);
+                progressBarWithLabel.setManaged(!isPriceSet);
+                progressBarWithLabel.setProgress(isPriceSet ? 0 : -1);
+                price.setText(isPriceSet ? priceValue : "");
+            });
+
             root.setOnMouseClicked(e -> {
                 if (model.items.isEmpty()) {
                     return;
@@ -171,15 +187,6 @@ public class MarketPriceComponent {
                         null,
                         250, 30, 20, 125)
                         .show();
-            });
-            pricePin = EasyBind.subscribe(model.price, priceValue -> {
-                boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
-                arrow.setVisible(isPriceSet);
-                arrow.setManaged(isPriceSet);
-                progressBarWithLabel.setVisible(!isPriceSet);
-                progressBarWithLabel.setManaged(!isPriceSet);
-                progressBarWithLabel.setProgress(isPriceSet ? 0 : -1);
-                price.setText(isPriceSet ? priceValue : "");
             });
         }
 
