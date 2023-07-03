@@ -35,7 +35,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
                         UserProfileSelection userProfileSelection,
-                        Pane marketPriceBox) {
+                        Pane marketPriceComponent) {
         super(new HBox(), model, controller);
 
         root.setMinHeight(HEIGHT);
@@ -43,7 +43,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.setSpacing(28);
         root.setFillHeight(true);
         root.setStyle("-fx-background-color: -bisq-dark-grey;");
-        HBox.setMargin(marketPriceBox, new Insets(0, 10, 0, 0));
+        HBox.setMargin(marketPriceComponent, new Insets(0, 10, 0, 0));
 
         Pane userProfileSelectionRoot = userProfileSelection.getRoot();
         userProfileSelection.setIsLeftAligned(true);
@@ -54,7 +54,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         balanceLabel = balanceTriple.getSecond();
         HBox.setMargin(balanceBox, new Insets(0, 0, 0, 30));
 
-        root.getChildren().addAll(Spacer.fillHBox(), marketPriceBox, userProfileSelectionRoot);
+        root.getChildren().addAll(Spacer.fillHBox(), marketPriceComponent, userProfileSelectionRoot);
 
         if (model.isWalletEnabled()) {
             root.getChildren().add(0, balanceBox);
