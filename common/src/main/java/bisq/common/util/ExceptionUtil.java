@@ -24,7 +24,7 @@ public class ExceptionUtil {
      * @return Returns either the message of the cause if available, otherwise the cause as string, if cause is not available
      * * it returns the message if available, otherwise the throwable as string.
      */
-    public static String getMostMeaningfulMessage(Throwable throwable) {
+    public static String print(Throwable throwable) {
         if (throwable.getCause() != null) {
             if (throwable.getCause().getMessage() != null) {
                 return throwable.getCause().getMessage();

@@ -48,7 +48,7 @@ public class PercentageParser {
         } catch (NumberFormatException e) {
             throw e;
         } catch (Throwable t) {
-            throw new NumberFormatException(ExceptionUtil.getMostMeaningfulMessage(t));
+            throw new NumberFormatException(ExceptionUtil.print(t));
         }
     }
 }
