@@ -39,8 +39,7 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
     private final Hyperlink learnMore;
     private final MaterialTextField selectedProfile, publicKey;
     private final MaterialPasswordField privateKey;
-    private final MaterialTextArea addressInfo;
-
+    private final MaterialTextArea addressInfoJson;
 
     public NodeRegistrationView(NodeRegistrationModel model,
                                 NodeRegistrationController controller) {
@@ -71,8 +70,7 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
         privateKey = new MaterialPasswordField(Res.get("user.registration.privateKey"));
         publicKey = new MaterialTextField(Res.get("user.registration.publicKey"));
         publicKey.showCopyIcon();
-        addressInfo = new MaterialTextArea(Res.get("user.nodes.registration.node.addressInfo"));
-        addressInfo.setEditable(false);
+        addressInfoJson = new MaterialTextArea(Res.get("user.nodes.registration.node.addressInfo"));
 
         importNodeAddressButton = new Button(Res.get("user.nodes.registration.node.importAddress"));
         importNodeAddressButton.getStyleClass().add("outlined-button");
@@ -89,7 +87,7 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
         VBox.setMargin(howHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(howInfo, new Insets(0, 0, 10, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(aboutHeadline, aboutInfo, howHeadline, howInfo, selectedProfile, privateKey, publicKey, addressInfo, buttons);
+        root.getChildren().addAll(aboutHeadline, aboutInfo, howHeadline, howInfo, selectedProfile, privateKey, publicKey, addressInfoJson, buttons);
     }
 
     @Override
@@ -97,7 +95,7 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
         selectedProfile.textProperty().bind(model.getSelectedProfileUserName());
         privateKey.textProperty().bindBidirectional(model.getPrivateKey());
         publicKey.textProperty().bindBidirectional(model.getPublicKey());
-        addressInfo.textProperty().bind(model.getAddressInfo());
+        addressInfoJson.textProperty().bindBidirectional(model.getAddressInfoJson());
         registrationButton.disableProperty().bind(model.getRegistrationDisabled());
         registrationButton.managedProperty().bind(model.getRemoveRegistrationVisible().not());
         registrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible().not());
@@ -118,7 +116,7 @@ public class NodeRegistrationView extends View<VBox, NodeRegistrationModel, Node
         selectedProfile.textProperty().unbind();
         privateKey.textProperty().unbindBidirectional(model.getPrivateKey());
         publicKey.textProperty().unbindBidirectional(model.getPublicKey());
-        addressInfo.textProperty().unbind();
+        addressInfoJson.textProperty().unbindBidirectional(model.getAddressInfoJson());
         registrationButton.disableProperty().unbind();
         registrationButton.managedProperty().unbind();
         registrationButton.visibleProperty().unbind();

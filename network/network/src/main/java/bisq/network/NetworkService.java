@@ -449,7 +449,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .or(() -> createNetworkId(nodeId, pubKey)
                         .map(networkId -> {
                             persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
-                            log.error("nodeId={}, networkId={}", nodeId, networkId);
                             persist();
                             return networkId;
                         })

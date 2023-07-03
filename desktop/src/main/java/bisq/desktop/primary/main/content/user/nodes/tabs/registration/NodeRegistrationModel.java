@@ -18,8 +18,6 @@
 package bisq.desktop.primary.main.content.user.nodes.tabs.registration;
 
 import bisq.desktop.common.view.Model;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.user.identity.UserIdentity;
 import bisq.user.node.NodeType;
 import javafx.beans.property.BooleanProperty;
@@ -31,7 +29,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Map;
 
 @Slf4j
 @Getter
@@ -39,7 +36,7 @@ public class NodeRegistrationModel implements Model {
     private final StringProperty selectedProfileUserName = new SimpleStringProperty();
     private final StringProperty privateKey = new SimpleStringProperty();
     private final StringProperty publicKey = new SimpleStringProperty();
-    private final StringProperty addressInfo = new SimpleStringProperty();
+    private final StringProperty addressInfoJson = new SimpleStringProperty();
     private final BooleanProperty registrationDisabled = new SimpleBooleanProperty();
     private final BooleanProperty removeRegistrationVisible = new SimpleBooleanProperty();
     private final NodeType nodeType;
@@ -47,8 +44,6 @@ public class NodeRegistrationModel implements Model {
     private UserIdentity userIdentity;
     @Setter
     private KeyPair keyPair;
-    @Setter
-    private Map<Transport.Type, Address> addressByNetworkType;
 
     public NodeRegistrationModel(NodeType nodeType) {
         this.nodeType = nodeType;
