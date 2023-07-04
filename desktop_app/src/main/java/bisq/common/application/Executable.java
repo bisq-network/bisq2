@@ -1,4 +1,4 @@
-package bisq.desktop.common.application;
+package bisq.common.application;
 
 import bisq.application.ApplicationService;
 import lombok.extern.slf4j.Slf4j;

@@ -25,6 +25,7 @@ import bisq.account.AccountService;
 import bisq.application.ApplicationService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
+import bisq.desktop.common.application.ShotDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
@@ -40,14 +41,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
 public class ServiceProvider {
-    public interface ShotDownHandler {
-        CompletableFuture<Boolean> shutdown();
-    }
 
     private final ApplicationService.Config config;
     private final SecurityService securityService;
