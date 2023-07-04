@@ -23,7 +23,7 @@ import bisq.i18n.Res;
 public class PasswordValidator extends InputValidator {
     public ValidationResult validate(CharSequence value) {
         //todo trim
-        if (value == null || value.isEmpty()) {
+        if (value == null || value.length() == 0) {
             return new ValidationResult(false, Res.get("validation.empty"));
         }
 

@@ -44,6 +44,7 @@ import lombok.Getter;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ReputationDetailsPopup extends VBox {
     private final BisqTableView<ReputationDetailsPopup.ListItem> tableView;
@@ -61,7 +62,7 @@ public class ReputationDetailsPopup extends VBox {
                                 data.getTime(),
                                 proofOfBurnService.calculateScore(data),
                                 data.getAmount()))
-                        .toList()));
+                        .collect(Collectors.toList())));
 
         BondedReputationService bondedReputationService = reputationService.getBondedReputationService();
         Optional.ofNullable(bondedReputationService.getDataSetByHash().get(userProfile.getBondedReputationKey()))
@@ -71,7 +72,7 @@ public class ReputationDetailsPopup extends VBox {
                                 bondedReputationService.calculateScore(data),
                                 Optional.of(data.getAmount()),
                                 Optional.of(data.getLockTime())))
-                        .toList()));
+                        .collect(Collectors.toList())));
 
         AccountAgeService accountAgeService = reputationService.getAccountAgeService();
         Optional.ofNullable(accountAgeService.getDataSetByHash().get(userProfile.getAccountAgeKey()))
@@ -79,14 +80,14 @@ public class ReputationDetailsPopup extends VBox {
                         .map(data -> new ListItem(ReputationSource.BISQ1_ACCOUNT_AGE,
                                 data.getDate(),
                                 accountAgeService.calculateScore(data)))
-                        .toList()));
+                        .collect(Collectors.toList())));
         SignedWitnessService signedWitnessService = reputationService.getSignedWitnessService();
         Optional.ofNullable(signedWitnessService.getDataSetByHash().get(userProfile.getSignedWitnessKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
                         .map(data -> new ListItem(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
                                 data.getWitnessSignDate(),
                                 signedWitnessService.calculateScore(data)))
-                        .toList()));
+                        .collect(Collectors.toList())));
 
         ProfileAgeService profileAgeService = reputationService.getProfileAgeService();
         Optional.ofNullable(profileAgeService.getDataSetByHash().get(userProfile.getProfileAgeKey()))
@@ -94,7 +95,7 @@ public class ReputationDetailsPopup extends VBox {
                         .map(data -> new ListItem(ReputationSource.PROFILE_AGE,
                                 data.getDate(),
                                 profileAgeService.calculateScore(data)))
-                        .toList()));
+                        .collect(Collectors.toList())));
 
         SortedList<ReputationDetailsPopup.ListItem> sortedList = new SortedList<>(listItems);
         tableView = new BisqTableView<>(sortedList);

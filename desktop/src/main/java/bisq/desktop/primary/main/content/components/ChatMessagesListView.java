@@ -302,7 +302,8 @@ public class ChatMessagesListView {
         private void doDeleteMessage(ChatMessage chatMessage, UserIdentity userIdentity) {
             checkArgument(chatMessage instanceof PublicChatMessage);
 
-            if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
+            if (chatMessage instanceof BisqEasyPublicChatMessage) {
+                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
                 chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity)
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
@@ -329,9 +330,11 @@ public class ChatMessagesListView {
             checkArgument(model.isMyMessage(chatMessage));
 
             UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-            if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
+            if (chatMessage instanceof BisqEasyPublicChatMessage) {
+                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
                 chatService.getBisqEasyPublicChatChannelService().publishEditedChatMessage(bisqEasyPublicChatMessage, editedText, userIdentity);
-            } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {
+            } else if (chatMessage instanceof CommonPublicChatMessage) {
+                CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
                 chatService.getCommonPublicChatChannelServices().get(model.chatChannelDomain).publishEditedChatMessage(commonPublicChatMessage, editedText, userIdentity);
             }
         }

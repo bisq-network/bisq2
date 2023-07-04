@@ -21,7 +21,7 @@ import bisq.application.OracleNodeApplicationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OracleNodeAppMain {
+public class OracleNodeApp {
     public static void main(String[] args) {
         OracleNodeApplicationService applicationService = new OracleNodeApplicationService(args);
         applicationService.readAllPersisted()
