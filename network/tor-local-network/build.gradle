@@ -1,6 +1,11 @@
 plugins {
     id 'bisq.java-library'
     id 'bisq.java-integration-tests'
+    id 'application'
+}
+
+application {
+    mainClass = 'bisq.tor.local_network.Main'
 }
 
 dependencies {
