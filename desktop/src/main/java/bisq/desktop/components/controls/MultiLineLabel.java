@@ -105,18 +105,21 @@ public class MultiLineLabel extends Label {
             if (getText() != null && !getText().isEmpty()) {
                 parentPane.setMinHeight(2000);
             }
-            UIThread.runOnNextRenderFrame(() -> {
-                double height = getHeight();
-                if (height > 0 && getText() != null && !getText().isEmpty()) {
-                    if (initialHeight == height && numRecursions < 500) {
-                        numRecursions++;
-                        adjustMinHeight();
-                    } else {
-                        minHeight = height;
-                        parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);
-                    }
-                }
-            });
+            trySetMinHeight(parentPane);
+            UIThread.runOnNextRenderFrame(() -> trySetMinHeight(parentPane));
+        }
+    }
+
+    private void trySetMinHeight(Pane parentPane) {
+        double height = getHeight();
+        if (height > 0 && getText() != null && !getText().isEmpty()) {
+            if (initialHeight == height && numRecursions < 500) {
+                numRecursions++;
+                adjustMinHeight();
+            } else {
+                minHeight = height;
+                parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);
+            }
         }
     }
 }

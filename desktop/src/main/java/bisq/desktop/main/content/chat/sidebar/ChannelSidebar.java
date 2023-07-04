@@ -28,6 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.desktop.main.content.components.ChatUserOverview;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -45,11 +46,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -234,7 +233,7 @@ public class ChannelSidebar {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ListView<ChatUserOverview> participants;
         private final Label headline;
-        private final Text descriptionText;
+        private final MultiLineLabel descriptionText;
         private final Button closeButton;
 
         private View(Model model, Controller controller, Pane notificationsSidebar) {
@@ -253,7 +252,7 @@ public class ChannelSidebar {
             HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
             HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
-            descriptionText = new Text();
+            descriptionText = new MultiLineLabel();
             descriptionText.setId("chat-sidebar-text");
 
             Label participantsLabel = new Label(Res.get("chat.sideBar.channelInfo.participants"));
@@ -274,12 +273,6 @@ public class ChannelSidebar {
             descriptionText.textProperty().bind(model.description);
             descriptionText.visibleProperty().bind(model.descriptionVisible);
             descriptionText.managedProperty().bind(model.descriptionVisible);
-            EasyBind.subscribe(root.widthProperty(), w -> {
-                double width = w.doubleValue();
-                if (width > 0) {
-                    descriptionText.setWrappingWidth(width - 20);
-                }
-            });
             closeButton.setOnAction(e -> controller.onClose());
         }
 
