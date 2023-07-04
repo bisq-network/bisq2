@@ -43,7 +43,7 @@ public class SeedNodeApplicationService extends ApplicationService {
     protected final SecurityService securityService;
 
     public SeedNodeApplicationService(String[] args) {
-        super("network", args);
+        super("seed_node", args);
 
         securityService = new SecurityService(persistenceService);
 
