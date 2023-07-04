@@ -21,6 +21,8 @@ import bisq.desktop.DesktopModel;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.OrderedList;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -28,9 +30,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -73,21 +73,19 @@ public class TacView extends View<VBox, TacModel, TacController> {
                 "accordance with the Bisq arbitration rules as at present in force. The arbitration is conducted online. " +
                 "The language to be used in the arbitration proceedings shall be English if not otherwise stated.\n\n" +
 
-                "6. The user confirms that they have read and agreed to the rules regarding the dispute process:\n" +
-                "    - Leave the \"reason for payment\" field empty. NEVER put the trade ID or any other text like 'bitcoin', 'BTC', or 'Bisq'.\n" +
-                "    - If the bank of the fiat sender charges fees, the sender (BTC buyer) has to cover the fees.\n" +
-                "    - In case of mediation, you must cooperate with the mediator and respond to each message within 48 hours.\n" +
-                "    - The mediator has no enforcement power over the trade. They can only help the traders to come to a cooperative resolution.\n" +
-                "    - In case of clear evidence for a scam or severe violation of the trade rules the mediator can ban the misbehaving trader and in\n" +
-                "      case that the trader was the Bitcoin seller and used 'account age' or 'signed account age witness' as reputation source, they will also\n" +
-                "      get banned on Bisq 1. If the seller has used 'bonded BSQ' as reputation source the mediator will report the incident to the DAO and\n" +
-                "      make a proposal for confiscating their bonded BSQ.\n";
+                "6. The user confirms that they have read and agreed to the rules regarding the dispute process:";
 
-        TextArea tac = new TextArea(text);
-        tac.getStyleClass().add("tac-text");
+        String rules = "- Leave the \"reason for payment\" field empty. NEVER put the trade ID or any other text like 'bitcoin', 'BTC', or 'Bisq'." +
+                "- If the bank of the fiat sender charges fees, the sender (BTC buyer) has to cover the fees." +
+                "- In case of mediation, you must cooperate with the mediator and respond to each message within 48 hours." +
+                "- The mediator has no enforcement power over the trade. They can only help the traders to come to a cooperative resolution. " +
+                "- In case of clear evidence for a scam or severe violation of the trade rules the mediator can ban the misbehaving trader and in " +
+                "case that the trader was the Bitcoin seller and used 'account age' or 'signed account age witness' as reputation source, they will also " +
+                "get banned on Bisq 1. If the seller has used 'bonded BSQ' as reputation source the mediator will report the incident to the DAO and " +
+                "make a proposal for confiscating their bonded BSQ.";
 
-        tac.setWrapText(true);
-        tac.setEditable(false);
+        OrderedList textList = new OrderedList(text, "tac-text", 5, 20);
+        UnorderedList rulesList = new UnorderedList(rules, "tac-text");
 
         confirmCheckBox = new CheckBox(Res.get("tac.confirm"));
 
@@ -96,9 +94,14 @@ public class TacView extends View<VBox, TacModel, TacController> {
         rejectButton.getStyleClass().add("outlined-button");
 
         HBox buttons = new HBox(20, acceptButton, rejectButton);
-        VBox.setVgrow(tac, Priority.ALWAYS);
+        VBox.setMargin(rulesList, new Insets(-20, 0, 0, 20));
         VBox.setMargin(confirmCheckBox, new Insets(10, 0, 0, 10));
-        root.getChildren().addAll(headline, tac, confirmCheckBox, buttons);
+
+        root.getChildren().addAll(headline,
+                textList,
+                rulesList,
+                confirmCheckBox,
+                buttons);
     }
 
     @Override
