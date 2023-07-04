@@ -17,10 +17,10 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.common.Styles;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.Styles;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;

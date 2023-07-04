@@ -1,0 +1,34 @@
+plugins {
+    id 'bisq.java-library'
+    id 'application'
+    alias(libs.plugins.shadow)
+}
+
+application {
+    project.mainClassName = 'bisq.seed_node.SeedNodeApp'
+}
+
+run {
+    // Pass command-line properties to application
+    // Normally they'd only be applied to the gradle process, but we need them in the started application
+    // See https://stackoverflow.com/a/23689696
+    systemProperties System.getProperties()
+}
+
+dependencies {
+    implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':application')
+
+    implementation 'network:network'
+
+    implementation libs.typesafe.config
+    implementation libs.google.gson
+}
+
+distZip.enabled = false
+distTar.enabled = false
+shadowDistZip.enabled = false
+shadowDistTar.enabled = false
+shadowJar.enabled = false
+shadowJar.enabled = false

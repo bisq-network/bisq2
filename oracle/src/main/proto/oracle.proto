@@ -58,11 +58,3 @@ message AuthorizedTimestampData {
   string profileId = 1;
   sint64 date = 2;
 }
-
-message TimestampStore {
-  repeated common.StringLongPair stringLongPairs = 1;
-}
-message Bisq1BridgeStore {
-  repeated AuthorizeAccountAgeRequest accountAgeRequests = 1;
-  repeated AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
-}

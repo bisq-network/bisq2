@@ -44,7 +44,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class ApplicationService {
-
     @Getter
     @ToString
     @EqualsAndHashCode
@@ -132,8 +131,8 @@ public abstract class ApplicationService {
     private void checkInstanceLock() {
         // Acquire exclusive lock on file basedir/lock, throw if locks fails
         // to avoid running multiple instances using the same basedir
-        try {
-            instanceLock = new FileOutputStream(Paths.get(config.getBaseDir(), "lock").toString()).getChannel().tryLock();
+        try (FileOutputStream fileOutputStream = new FileOutputStream(Paths.get(config.getBaseDir(), "lock").toString())) {
+            instanceLock = fileOutputStream.getChannel().tryLock();
         } catch (Exception e) {
             e.printStackTrace();
         }

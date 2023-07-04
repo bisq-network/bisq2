@@ -18,10 +18,10 @@
 package bisq.desktop.components.controls;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
-import bisq.desktop.common.utils.Transitions;
-import bisq.desktop.common.utils.validation.InputValidator;
+import bisq.desktop.common.validation.InputValidator;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyBooleanProperty;

@@ -1,0 +1,75 @@
+plugins {
+    id 'bisq.java-library'
+    id 'application'
+    alias(libs.plugins.shadow)
+}
+
+application {
+    project.mainClassName = 'bisq.rest_api.RestApiApp'
+}
+
+run {
+    // Pass command-line properties to application
+    // Normally they'd only be applied to the gradle process, but we need them in the started application
+    // See https://stackoverflow.com/a/23689696
+    systemProperties System.getProperties()
+}
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation project(':persistence')
+    implementation project(':i18n')
+    implementation project(':security')
+    implementation project(':identity')
+    implementation project(':account')
+    implementation project(':offer')
+    implementation project(':contract')
+    implementation project(':trade')
+    implementation project(':oracle')
+    implementation project(':settings')
+    implementation project(':user')
+    implementation project(':chat')
+    implementation project(':support')
+    implementation project(':presentation')
+    implementation project(':application')
+
+    implementation("network:network")
+    implementation("wallets:electrum")
+    implementation("wallets:bitcoind")
+
+
+    /* api platform(project(':platforms:common-platform'))
+ 
+     implementation project(':common')
+     implementation project(':persistence')
+     implementation project(':security')
+     implementation project(':identity')
+     implementation project(':account')
+     implementation project(':offer')
+     implementation project(':contract')
+     implementation project(':trade')
+     implementation project(':oracle')
+     implementation project(':settings')
+     implementation project(':user')
+     implementation project(':chat')
+     implementation project(':presentation')
+     implementation project(':application')
+ 
+     implementation 'network:network'*/
+
+    implementation libs.typesafe.config
+    implementation libs.bundles.glassfish.jersey
+    implementation libs.bundles.jackson
+
+    implementation libs.google.guava
+    implementation libs.swagger.jaxrs2.jakarta
+}
+
+distZip.enabled = false
+distTar.enabled = false
+shadowDistZip.enabled = false
+shadowDistTar.enabled = false
+shadowJar.enabled = false
+shadowJar.enabled = false

@@ -61,7 +61,7 @@ The social module manages chat use-cases. User management is not implemented yet
 
 Bisq 2 requires Java 17 and Gradle 7.3.3.
 
-You can right-click the `bisq.desktop.Main` class in the desktop module to create a run config or create
+You can right-click the `bisq.desktop_app.DesktopApp` class in the desktop module to create a run config or create
 a `run config` in `Run/Edit Configurations`.
 
 The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you
@@ -146,7 +146,7 @@ To add multiple seeds add more lines of the same network type with other index (
 
 To set up your local tor hidden service addresses and I2P addresses for the seed nodes you need to start once to get
 them created and then take them from the data directories.
-Start the 'SeedMain' with Tor and I2P enabled (I2P need to be started manually and SAM enabled).
+Start the 'SeedNodeApp' with Tor and I2P enabled (I2P need to be started manually and SAM enabled).
 Let the nodes start up for about 2 minutes so the hidden service is deployed. Then stop it (no seeds are found at that
 point).
 Pick the onion and I2P addresses from the generated files and put them into the seed node config.

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package oracle;
+option java_package = "bisq.oracle_node.protobuf";
+option java_multiple_files = true;
+import "common.proto";
+import "network.proto";
+import "oracle.proto";
+
+
+message TimestampStore {
+  repeated common.StringLongPair stringLongPairs = 1;
+}
+
+message Bisq1BridgeStore {
+  repeated oracle.AuthorizeAccountAgeRequest accountAgeRequests = 1;
+  repeated oracle.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
+}

@@ -5,22 +5,15 @@ plugins {
 dependencies {
     implementation project(':i18n')
     implementation project(':persistence')
-    implementation project(':security')
-    implementation project(':identity')
-    implementation project(':account')
-    implementation project(':contract')
-    implementation project(':offer')
-    implementation project(':trade')
-    implementation project(':oracle')
     implementation project(':settings')
     implementation project(':user')
     implementation project(':chat')
     implementation project(':support')
-    implementation project(':presentation')
+    implementation project(':oracle')
+    implementation project(':offer')
+    implementation project(':trade')
 
     implementation('network:network')
-    implementation("wallets:electrum")
-    implementation("wallets:bitcoind")
 
     implementation libs.google.guava
     implementation libs.typesafe.config

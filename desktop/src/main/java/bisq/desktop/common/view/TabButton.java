@@ -17,9 +17,9 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.Styles;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.utils.Styles;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
