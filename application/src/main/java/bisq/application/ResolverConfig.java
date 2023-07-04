@@ -30,9 +30,11 @@ import bisq.oracle.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
 import bisq.oracle.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
 import bisq.oracle.node.timestamp.AuthorizeTimestampRequest;
 import bisq.oracle.node.timestamp.AuthorizedTimestampData;
-import bisq.support.MediationRequest;
-import bisq.support.MediationResponse;
+import bisq.support.alert.AuthorizedAlertData;
+import bisq.support.mediation.MediationRequest;
+import bisq.support.mediation.MediationResponse;
 import bisq.trade.protocol.messages.TradeMessage;
+import bisq.user.node.AuthorizedNodeRegistrationData;
 import bisq.user.profile.UserProfile;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 
@@ -43,12 +45,14 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedRoleRegistrationData", AuthorizedRoleRegistrationData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedNodeRegistrationData", AuthorizedNodeRegistrationData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
+        DistributedDataResolver.addResolver("support.AuthorizedAlertData", AuthorizedAlertData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage",

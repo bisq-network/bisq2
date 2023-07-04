@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support;
+package bisq.support.mediation;
 
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.common.data.ByteArray;

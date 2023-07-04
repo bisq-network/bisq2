@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.registration;
+package bisq.desktop.primary.main.content.user.roles.tabs.registration;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -42,39 +42,37 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
 
     public RoleRegistrationView(RoleRegistrationModel model,
                                 RoleRegistrationController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
 
         String role = model.getRoleType().name();
 
         String inlineAbout = Res.get("user.roles.type." + role + ".inline.about");
-        Label aboutHeadline = new Label(Res.get("user.roles.registration.headline.about", inlineAbout));
+        Label aboutHeadline = new Label(Res.get("user.registration.headline.about", inlineAbout));
         aboutHeadline.getStyleClass().add("bisq-text-headline-2");
 
         MultiLineLabel aboutInfo = new MultiLineLabel(Res.get("user.roles.registration.info.about." + role));
         aboutInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
         String inlineHow = Res.get("user.roles.type." + role + ".inline.how");
-        Label howHeadline = new Label(Res.get("user.roles.registration.headline.how", inlineHow));
+        Label howHeadline = new Label(Res.get("user.registration.headline.how", inlineHow));
         howHeadline.getStyleClass().add("bisq-text-headline-2");
 
-        MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.roles.registration.info.how", inlineHow));
+        MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.registration.info.how", inlineHow, Res.get("user.roles.registration.role.info.how")));
         howInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
 
-        selectedProfile = new MaterialTextField(Res.get("user.roles.registration.selectedProfile"));
+        selectedProfile = new MaterialTextField(Res.get("user.registration.selectedProfile"));
         selectedProfile.setEditable(false);
 
-        privateKey = new MaterialPasswordField(Res.get("user.roles.registration.privateKey"));
-        privateKey.setEditable(false);
+        privateKey = new MaterialPasswordField(Res.get("user.registration.privateKey"));
+        publicKey = new MaterialTextField(Res.get("user.registration.publicKey"));
 
-        publicKey = new MaterialTextField(Res.get("user.roles.registration.publicKey"));
-        publicKey.setEditable(false);
-
-        registrationButton = new Button(Res.get("user.roles.registration.register"));
-        removeRegistrationButton = new Button(Res.get("user.roles.registration.removeRegistration"));
-        copyButton = new Button(Res.get("user.roles.registration.copyPubKey"));
+        registrationButton = new Button(Res.get("user.registration.register"));
+        removeRegistrationButton = new Button(Res.get("user.registration.removeRegistration"));
+        registrationButton.setDefaultButton(true);
+        copyButton = new Button(Res.get("user.registration.copyPubKey"));
         copyButton.getStyleClass().add("outlined-button");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
@@ -95,7 +93,8 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         privateKey.textProperty().bindBidirectional(model.getPrivateKey());
         publicKey.textProperty().bindBidirectional(model.getPublicKey());
         registrationButton.disableProperty().bind(model.getRegistrationDisabled());
-        registrationButton.defaultButtonProperty().bind(model.getRegistrationDisabled());
+        registrationButton.managedProperty().bind(model.getRemoveRegistrationVisible().not());
+        registrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible().not());
         removeRegistrationButton.managedProperty().bind(model.getRemoveRegistrationVisible());
         removeRegistrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible());
 
@@ -111,7 +110,8 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         privateKey.textProperty().unbindBidirectional(model.getPrivateKey());
         publicKey.textProperty().unbindBidirectional(model.getPublicKey());
         registrationButton.disableProperty().unbind();
-        registrationButton.defaultButtonProperty().unbind();
+        registrationButton.managedProperty().unbind();
+        registrationButton.visibleProperty().unbind();
         removeRegistrationButton.managedProperty().unbind();
         removeRegistrationButton.visibleProperty().unbind();
 

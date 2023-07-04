@@ -60,16 +60,16 @@ public class Bisq1BridgeHttpService implements Service {
         }
     }
 
-    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("dao-bridge-http-thread", 4, 60);
+    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("bisq1-bridge-http-thread", 4, 60);
     private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;
     private final String url;
     private BaseHttpClient httpClient;
 
-    public Bisq1BridgeHttpService(Config config, NetworkService networkService) {
+    public Bisq1BridgeHttpService(Bisq1BridgeHttpService.Config httpServiceConfig, NetworkService networkService) {
         this.networkService = networkService;
-        this.url = config.getUrl();
+        this.url = httpServiceConfig.getUrl();
 
         if (!DevMode.isDevMode()) {
             lastRequestedProofOfBurnBlockHeight.set(LAUNCH_BLOCK_HEIGHT);
@@ -84,13 +84,14 @@ public class Bisq1BridgeHttpService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        // We expect to request at localhost, so we use clear net 
-        httpClient = networkService.getHttpClient(url, "DaoBridgeService", Transport.Type.CLEAR);
+        // We expect that bisq 1 dao node runs on localhost, so we use clear net 
+        httpClient = networkService.getHttpClient(url, "Bisq1Bridge", Transport.Type.CLEAR);
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        httpClient.shutdown();
         executorService.shutdownNow();
         return CompletableFuture.completedFuture(true);
     }

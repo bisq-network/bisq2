@@ -17,12 +17,16 @@
 
 package bisq.bisq1Bridge;
 
+import bisq.application.Bisq1BridgeApplicationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Bisq1BridgeMain {
     public static void main(String[] args) {
-        new Bisq1BridgeClient(args);
+        Bisq1BridgeApplicationService applicationService = new Bisq1BridgeApplicationService(args);
+        applicationService.readAllPersisted()
+                .thenCompose(result -> applicationService.initialize());
+
         try {
             // Keep running
             Thread.currentThread().join();

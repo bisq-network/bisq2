@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.user.roles;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -29,13 +30,11 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ProfileAgeService;
 import bisq.user.role.AuthorizedRoleRegistrationData;
+import bisq.user.role.RoleType;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -89,25 +88,25 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.roles.table.columns.userProfile"))
+                .title(Res.get("user.table.columns.userProfile"))
                 .isFirst()
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.roles.table.columns.profileAge"))
+                .title(Res.get("user.table.columns.profileAge"))
                 .fixWidth(100)
                 .comparator(Comparator.comparing(ListItem::getProfileAge))
                 .valueSupplier(ListItem::getProfileAgeString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.roles.table.columns.role"))
-                .fixWidth(100)
+                .minWidth(200)
                 .comparator(Comparator.comparing(ListItem::getRoleType))
                 .valueSupplier(ListItem::getRoleType)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.roles.table.columns.pubKey"))
+                .title(Res.get("user.table.columns.pubKey"))
                 .minWidth(200)
                 .comparator(Comparator.comparing(ListItem::getPublicKeyAsHex))
                 .setCellFactory(getPubKeyCellFactory())
@@ -148,7 +147,6 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
 
             {
                 icon.setMinWidth(30);
-                // HBox.setHgrow(pubKey, Priority.NEVER);
                 HBox.setHgrow(icon, Priority.ALWAYS);
                 HBox.setMargin(icon, new Insets(0, 10, 0, 10));
                 hBox.setAlignment(Pos.CENTER_LEFT);
@@ -160,7 +158,14 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
 
                 if (item != null && !empty) {
                     pubKey.setText(item.getPublicKeyAsHex());
+                    Tooltip tooltip = new BisqTooltip(item.getPublicKeyAsHex());
+                    tooltip.getStyleClass().add("dark-tooltip");
+                    pubKey.setTooltip(tooltip);
+
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getPublicKeyAsHex()));
+                    Tooltip tooltip2 = new BisqTooltip(Res.get("action.copyToClipboard"));
+                    tooltip2.getStyleClass().add("dark-tooltip");
+                    icon.setTooltip(tooltip2);
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);
@@ -177,17 +182,16 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
         private final UserProfile userProfile;
         private final String roleType;
         private final String publicKeyAsHex;
-        private final AuthorizedRoleRegistrationData data;
         private final String userName;
         private final Long profileAge;
         private final String profileAgeString;
 
         public ListItem(AuthorizedData authorizedData, ProfileAgeService profileAgeService) {
-            data = (AuthorizedRoleRegistrationData) authorizedData.getAuthorizedDistributedData();
-            this.userProfile = data.getUserProfile();
-            this.roleType = Res.get("user.roles.type." + data.getRoleType());
-            this.publicKeyAsHex = data.getPublicKeyAsHex();
-
+            AuthorizedRoleRegistrationData roleRegistrationData = (AuthorizedRoleRegistrationData) authorizedData.getAuthorizedDistributedData();
+            this.userProfile = roleRegistrationData.getUserProfile();
+            this.publicKeyAsHex = roleRegistrationData.getPublicKeyAsHex();
+            RoleType type = roleRegistrationData.getRoleType();
+            roleType = Res.get("user.roles.type." + type);
             profileAge = profileAgeService.getProfileAge(userProfile)
                     .orElse(0L);
             profileAgeString = profileAgeService.getProfileAge(userProfile)

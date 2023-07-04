@@ -46,7 +46,9 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     @Getter
-    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedData> authorizedRoleDataSet = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<AuthorizedData> authorizedNodeDataSet = new ObservableSet<>();
 
     public RoleRegistrationService(PersistenceService persistenceService,
                                    KeyPairService keyPairService,
@@ -90,13 +92,13 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedDataSet.remove((AuthorizedData) authenticatedData);
+            authorizedRoleDataSet.remove((AuthorizedData) authenticatedData);
         }
     }
 
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedDataSet.add((AuthorizedData) authenticatedData);
+            authorizedRoleDataSet.add((AuthorizedData) authenticatedData);
         }
     }
 
@@ -104,7 +106,9 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> register(UserIdentity userIdentity, RoleType roleType, KeyPair keyPair) {
+    public CompletableFuture<DataService.BroadCastDataResult> registerRole(UserIdentity userIdentity,
+                                                                           RoleType roleType,
+                                                                           KeyPair keyPair) {
         String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
         AuthorizedRoleRegistrationData data = new AuthorizedRoleRegistrationData(userIdentity.getUserProfile(),
                 roleType,
@@ -116,7 +120,7 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
                             keyPair.getPublic())
                     .whenComplete((result, throwable) -> {
                         if (throwable == null) {
-                            getMyRegistrations().add(data);
+                            getMyRoleRegistrations().add(data);
                             persist();
                         }
                     });
@@ -126,37 +130,39 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
         }
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
+    public CompletableFuture<DataService.BroadCastDataResult> removeRoleRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
         return findAuthorizedRoleRegistrationData(userIdentity.getUserProfile().getId(), roleType, publicKeyAsHex)
                 .map(authorizedData -> networkService.removeAuthorizedData(authorizedData,
                                 userIdentity.getIdentity().getNodeIdAndKeyPair())
                         .whenComplete((result, throwable) -> {
                             if (throwable == null) {
-                                getMyRegistrations().remove((AuthorizedRoleRegistrationData) authorizedData.getDistributedData());
+                                getMyRoleRegistrations().remove((AuthorizedRoleRegistrationData) authorizedData.getDistributedData());
                                 persist();
                             }
                         }))
                 .orElse(CompletableFuture.completedFuture(null));
     }
 
-    public ObservableSet<AuthorizedRoleRegistrationData> getMyRegistrations() {
-        return persistableStore.getMyRegistrations();
+    public ObservableSet<AuthorizedRoleRegistrationData> getMyRoleRegistrations() {
+        return persistableStore.getMyRoleRegistrations();
     }
 
     public Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return authorizedDataSet.stream().filter(authenticatedData -> {
-            AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
-            return userProfileId.equals(data.getUserProfile().getId()) &&
-                    roleType.equals(data.getRoleType()) &&
-                    publicKeyAsHex.equals(data.getPublicKeyAsHex());
-        }).findAny();
+        return authorizedRoleDataSet.stream()
+                .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedRoleRegistrationData)
+                .filter(authorizedData -> {
+                    AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authorizedData.getDistributedData();
+                    return userProfileId.equals(data.getUserProfile().getId()) &&
+                            roleType.equals(data.getRoleType()) &&
+                            publicKeyAsHex.equals(data.getPublicKeyAsHex());
+                }).findAny();
     }
 
-    public boolean isRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
+    public boolean isRoleRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
         return findAuthorizedRoleRegistrationData(userProfileId, roleType, publicKeyAsHex).isPresent();
     }
 
-    public KeyPair findOrCreateRegistrationKey(RoleType roleType, String userProfileId) {
+    public KeyPair findOrCreateRoleRegistrationKey(RoleType roleType, String userProfileId) {
         String keyId = REGISTRATION_PREFIX + roleType.name() + "-" + userProfileId;
         return keyPairService.findKeyPair(keyId)
                 .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));

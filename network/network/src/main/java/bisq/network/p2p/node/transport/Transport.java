@@ -54,6 +54,7 @@ public interface Transport {
 
     interface Config {
         String getBaseDir();
+
         int getSocketTimeout();
     }
 

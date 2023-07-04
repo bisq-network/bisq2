@@ -15,11 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.user.roles.registration;
+package bisq.desktop.primary.main.content.user.nodes.tabs.registration;
 
 import bisq.desktop.common.view.Model;
+import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.user.identity.UserIdentity;
-import bisq.user.role.RoleType;
+import bisq.user.node.NodeType;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -29,22 +31,26 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Map;
 
 @Slf4j
 @Getter
-public class RoleRegistrationModel implements Model {
+public class NodeRegistrationModel implements Model {
     private final StringProperty selectedProfileUserName = new SimpleStringProperty();
     private final StringProperty privateKey = new SimpleStringProperty();
     private final StringProperty publicKey = new SimpleStringProperty();
+    private final StringProperty addressInfo = new SimpleStringProperty();
     private final BooleanProperty registrationDisabled = new SimpleBooleanProperty();
     private final BooleanProperty removeRegistrationVisible = new SimpleBooleanProperty();
-    private final RoleType roleType;
+    private final NodeType nodeType;
     @Setter
     private UserIdentity userIdentity;
     @Setter
     private KeyPair keyPair;
+    @Setter
+    private Map<Transport.Type, Address> addressByNetworkType;
 
-    public RoleRegistrationModel(RoleType roleType) {
-        this.roleType = roleType;
+    public NodeRegistrationModel(NodeType nodeType) {
+        this.nodeType = nodeType;
     }
 }

@@ -18,14 +18,13 @@
 package bisq.oracle.node.bisq1_bridge;
 
 import bisq.common.application.Service;
-import bisq.common.encoding.Hex;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.node.AuthorizedOracleNode;
 import bisq.oracle.node.bisq1_bridge.data.AuthorizedAccountAgeData;
 import bisq.oracle.node.bisq1_bridge.data.AuthorizedBondedReputationData;
 import bisq.oracle.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
@@ -34,7 +33,6 @@ import bisq.oracle.node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle.node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.oracle.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
 import bisq.oracle.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
-import bisq.oracle.service.OracleService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -49,56 +47,50 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-/**
- * Prepares a service for distributing authorized DAO data. Could be useful for providing existing proof or burns or
- * bonded role data as long we do not have the DAO integrated.
- * An authorized developer could add those data. Verification is done by verifying the signature and pubKey against
- * the provided hard-coded pubKeys.
- * Similar concept is used in Bisq 1 for Filter, Alert or mediator/arbitrator registration.
- * The user who is authorized for publishing that data need to pass the private key as VM argument.
- * For development we use the keys defined in DevMode.AUTHORIZED_DEV_PUBLIC_KEYS:
- * -Dbisq.oracle.privateKey=30818d020100301006072a8648ce3d020106052b8104000a04763074020101042010c2ea3b2b1f1787f8a57d074e550b120cc04b326b43c545214434e474e5cde2a00706052b8104000aa14403420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
- * -Dbisq.oracle.publicKey=3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
- */
-@SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class Bisq1BridgeService implements Service, MessageListener, PersistenceClient<Bisq1BridgeStore> {
+    @Getter
+    public static class Config {
+        private final com.typesafe.config.Config httpService;
+
+        public Config(com.typesafe.config.Config httpService) {
+            this.httpService = httpService;
+        }
+
+        public static Bisq1BridgeService.Config from(com.typesafe.config.Config config) {
+            return new Bisq1BridgeService.Config(config.getConfig("httpService"));
+        }
+    }
+
     @Getter
     private final Bisq1BridgeStore persistableStore = new Bisq1BridgeStore();
     @Getter
     private final Persistence<Bisq1BridgeStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final Bisq1BridgeHttpService bisq1BridgeHttpService;
-    private Optional<PrivateKey> authorizedPrivateKey = Optional.empty();
-    private Optional<PublicKey> authorizedPublicKey = Optional.empty();
+    private final Bisq1BridgeHttpService httpService;
+    private final PrivateKey authorizedPrivateKey;
+    private final PublicKey authorizedPublicKey;
+    private Scheduler scheduler;
 
-    public Bisq1BridgeService(OracleService.Config config,
+    public Bisq1BridgeService(Bisq1BridgeService.Config config,
                               NetworkService networkService,
                               IdentityService identityService,
                               PersistenceService persistenceService,
-                              Bisq1BridgeHttpService bisq1BridgeHttpService) {
+                              PrivateKey authorizedPrivateKey,
+                              PublicKey authorizedPublicKey) {
         this.networkService = networkService;
         this.identityService = identityService;
-        this.bisq1BridgeHttpService = bisq1BridgeHttpService;
+        this.authorizedPrivateKey = authorizedPrivateKey;
+        this.authorizedPublicKey = authorizedPublicKey;
+
+        Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
+        httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-
-        String privateKey = config.getPrivateKey();
-        String publicKey = config.getPublicKey();
-        if (privateKey != null && !privateKey.isEmpty() && publicKey != null && !publicKey.isEmpty()) {
-            try {
-                authorizedPrivateKey = Optional.of(KeyGeneration.generatePrivate(Hex.decode(privateKey)));
-                authorizedPublicKey = Optional.of(KeyGeneration.generatePublic(Hex.decode(publicKey)));
-            } catch (GeneralSecurityException e) {
-                log.error("Invalid authorization keys", e);
-            }
-        }
     }
 
 
@@ -108,25 +100,19 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        if (authorizedPrivateKey.isPresent() && authorizedPublicKey.isPresent()) {
-            networkService.addMessageListener(this);
-            identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                    .whenComplete((identity, throwable) -> {
-                        AuthorizedOracleNode data = new AuthorizedOracleNode(identity.getNetworkId());
-                        publishAuthorizedData(data);
-                    });
-        }
-        return CompletableFuture.completedFuture(true);
+        return httpService.initialize()
+                .whenComplete((resul, throwable) -> {
+                    networkService.addMessageListener(this);
+                    scheduler = Scheduler.run(this::requestDoaData).periodically(0, 5, TimeUnit.SECONDS);
+                });
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (authorizedPrivateKey.isPresent() && authorizedPublicKey.isPresent()) {
-            networkService.removeMessageListener(this);
-        }
-        return CompletableFuture.completedFuture(true);
+        scheduler.stop();
+        networkService.removeMessageListener(this);
+        return httpService.shutdown();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
@@ -147,16 +133,14 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
-        return bisq1BridgeHttpService.requestProofOfBurnTxs();
+        return httpService.requestProofOfBurnTxs();
     }
 
     public CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
-        return bisq1BridgeHttpService.requestBondedReputations();
+        return httpService.requestBondedReputations();
     }
 
     public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
-        checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
-        checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");
         return CompletableFutureUtils.allOf(proofOfBurnList.stream()
                         .map(AuthorizedProofOfBurnData::from)
                         .map(this::publishAuthorizedData))
@@ -176,8 +160,8 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
                 .thenCompose(identity -> networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
-                        authorizedPrivateKey.orElseThrow(),
-                        authorizedPublicKey.orElseThrow()))
+                        authorizedPrivateKey,
+                        authorizedPublicKey))
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -185,6 +169,13 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private CompletableFuture<Boolean> requestDoaData() {
+        return requestProofOfBurnTxs()
+                .thenCompose(this::publishProofOfBurnDtoSet)
+                .thenCompose(result -> requestBondedReputations())
+                .thenCompose(this::publishBondedReputationDtoSet);
+    }
 
     private void processAuthorizeAccountAgeRequest(AuthorizeAccountAgeRequest request) {
         long requestDate = request.getDate();
@@ -201,7 +192,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                     publicKey,
                     SignatureUtil.SHA256withDSA);
             if (isValid) {
-                bisq1BridgeHttpService.requestAccountAgeWitness(hashAsHex)
+                httpService.requestAccountAgeWitness(hashAsHex)
                         .whenComplete((result, throwable) -> {
                             if (throwable == null) {
                                 result.ifPresentOrElse(date -> {
@@ -246,7 +237,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                     publicKey,
                     SignatureUtil.SHA256withDSA);
             if (isValid) {
-                bisq1BridgeHttpService.requestSignedWitnessDate(request.getHashAsHex())
+                httpService.requestSignedWitnessDate(request.getHashAsHex())
                         .whenComplete((result, throwable) -> {
                             if (throwable == null) {
                                 result.ifPresentOrElse(date -> {

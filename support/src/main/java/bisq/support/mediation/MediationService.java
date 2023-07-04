@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support;
+package bisq.support.mediation;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
@@ -214,7 +214,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return roleRegistrationService.getMyRegistrations().stream()
+        return roleRegistrationService.getMyRoleRegistrations().stream()
                 .filter(data -> data.getRoleType() == RoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getUserProfile().getId()).stream())
                 .findAny();

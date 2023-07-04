@@ -19,11 +19,13 @@ package bisq.desktop.primary.main.content.user;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import lombok.Getter;
 
+@Getter
 public class UserModel extends TabModel {
-
-    public UserModel() {
-    }
+    private final BooleanProperty sendNotificationTabButtonVisible = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

@@ -18,14 +18,18 @@
 package bisq.desktop.primary.main.content.user;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.user.accounts.PaymentAccountsController;
+import bisq.desktop.primary.main.content.user.nodes.NodesController;
+import bisq.desktop.primary.main.content.user.notifications.SendNotificationController;
 import bisq.desktop.primary.main.content.user.password.PasswordController;
 import bisq.desktop.primary.main.content.user.reputation.ReputationController;
 import bisq.desktop.primary.main.content.user.roles.RolesController;
 import bisq.desktop.primary.main.content.user.user_profile.UserProfileController;
+import bisq.support.alert.AlertService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,21 +40,30 @@ public class UserController extends TabController<UserModel> {
     private final DefaultApplicationService applicationService;
     @Getter
     private final UserView view;
+    private final AlertService alertService;
+    private Pin hasNotificationSenderIdentityPin;
 
     public UserController(DefaultApplicationService applicationService) {
         super(new UserModel(), NavigationTarget.USER);
 
         this.applicationService = applicationService;
+        alertService = applicationService.getSupportService().getAlertService();
 
         view = new UserView(model, this);
     }
 
     @Override
     public void onActivate() {
+        hasNotificationSenderIdentityPin = alertService.getHasNotificationSenderIdentity().addObserver(value -> {
+            if (value != null) {
+                model.getSendNotificationTabButtonVisible().set(value);
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        hasNotificationSenderIdentityPin.unbind();
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -69,6 +82,12 @@ public class UserController extends TabController<UserModel> {
             }
             case ROLES: {
                 return Optional.of(new RolesController(applicationService));
+            }
+            case NODES: {
+                return Optional.of(new NodesController(applicationService));
+            }
+            case SEND_NOTIFICATION: {
+                return Optional.of(new SendNotificationController(applicationService));
             }
             default: {
                 return Optional.empty();

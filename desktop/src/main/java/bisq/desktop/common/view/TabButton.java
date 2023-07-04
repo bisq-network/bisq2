@@ -73,7 +73,7 @@ public class TabButton extends Pane implements Toggle {
 
         label.getStyleClass().addAll("bisq-tab-button-label", styles.getNormal());
         label.setGraphic(icon);
-        getChildren().addAll(label);
+        getChildren().add(label);
 
         hoverProperty().addListener((ov, wasHovered, isHovered) -> {
             if (isSelected()) return;

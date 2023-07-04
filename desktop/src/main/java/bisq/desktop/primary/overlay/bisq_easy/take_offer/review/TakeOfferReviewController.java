@@ -51,7 +51,7 @@ import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.support.MediationService;
+import bisq.support.mediation.MediationService;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;

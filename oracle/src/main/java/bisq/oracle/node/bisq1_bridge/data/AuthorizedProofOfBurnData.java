@@ -96,7 +96,6 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return metaData;
     }
 
-
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;

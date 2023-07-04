@@ -22,7 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.user.roles.registration.RolesTabController;
+import bisq.desktop.primary.main.content.user.roles.tabs.RolesTabController;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
 import bisq.user.reputation.ReputationService;
@@ -54,7 +54,7 @@ public class RolesController implements Controller {
     public void onActivate() {
         roleRegistrationDataSetPin = FxBindings.<AuthorizedData, RolesView.ListItem>bind(model.getListItems())
                 .map(data -> new RolesView.ListItem(data, reputationService.getProfileAgeService()))
-                .to(roleRegistrationService.getAuthorizedDataSet());
+                .to(roleRegistrationService.getAuthorizedRoleDataSet());
     }
 
     @Override

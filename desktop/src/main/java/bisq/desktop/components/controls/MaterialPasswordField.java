@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.threading.UIThread;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -82,7 +83,7 @@ public class MaterialPasswordField extends MaterialTextField {
 
     public BooleanProperty isMaskedProperty() {
         if (isMasked == null) {
-            isMasked = new SimpleBooleanProperty();
+            isMasked = new SimpleBooleanProperty(true);
         }
         return isMasked;
     }
@@ -104,16 +105,17 @@ public class MaterialPasswordField extends MaterialTextField {
 
             // We get called from the constructor of materialPasswordField, some fields might not be initiated yet, 
             // so we need to take care of which fields we access.
-            iconButton = materialPasswordField.getIconButton();
             materialPasswordField.isMaskedProperty().addListener(
                     new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) ->
                             handleIsMaskedChange(newValue)).get());
-            materialPasswordField.setIcon(AwesomeIcon.EYE_OPEN);
+            iconButton = materialPasswordField.getIconButton();
             iconButton.setOnAction(e -> {
                 boolean isMasked = !materialPasswordField.isMasked();
                 materialPasswordField.setIsMasked(isMasked);
                 handleIsMaskedChange(isMasked);
             });
+
+            UIThread.runOnNextRenderFrame(() -> materialPasswordField.setIcon(AwesomeIcon.EYE_OPEN));
         }
 
         private void handleIsMaskedChange(boolean isMasked) {

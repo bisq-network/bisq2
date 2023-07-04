@@ -18,10 +18,16 @@
 package bisq.desktop.primary.main.content.user;
 
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 public class UserView extends TabView<UserModel, UserController> {
+
+    private final TabButton sendNotificationTabButton;
+    private Subscription sendNotificationTabButtonVisiblePin;
 
     public UserView(UserModel model, UserController controller) {
         super(model, controller);
@@ -31,15 +37,23 @@ public class UserView extends TabView<UserModel, UserController> {
         addTab(Res.get("user.paymentAccounts"), NavigationTarget.BISQ_EASY_PAYMENT_ACCOUNTS);
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
-
+        addTab(Res.get("user.nodes"), NavigationTarget.NODES);
+        sendNotificationTabButton = addTab(Res.get("user.sendNotification"), NavigationTarget.SEND_NOTIFICATION);
         headLine.setText(Res.get("user.headline"));
     }
 
     @Override
     protected void onViewAttached() {
+        sendNotificationTabButtonVisiblePin = EasyBind.subscribe(model.getSendNotificationTabButtonVisible(),
+                value -> {
+                    sendNotificationTabButton.setVisible(value);
+                    sendNotificationTabButton.setManaged(value);
+                    maybeAnimateMark();
+                });
     }
 
     @Override
     protected void onViewDetached() {
+        sendNotificationTabButtonVisiblePin.unsubscribe();
     }
 }

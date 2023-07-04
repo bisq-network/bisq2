@@ -17,9 +17,13 @@ run {
 
 dependencies {
     implementation project(':application')
+    implementation project(':persistence')
+
+    implementation 'network:network'
 
     implementation libs.google.guava
     implementation libs.typesafe.config
+    implementation libs.google.gson
 }
 
 distZip.enabled = false

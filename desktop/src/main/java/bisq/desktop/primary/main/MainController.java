@@ -18,12 +18,17 @@
 package bisq.desktop.primary.main;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.left.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
+import bisq.support.alert.AlertService;
+import bisq.support.alert.AuthorizedAlertData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,11 +42,15 @@ public class MainController extends NavigationController {
     private final MainView view;
     private final DefaultApplicationService applicationService;
     private final LeftNavController leftNavController;
+    private final AlertService alertService;
+    private Pin alertsPin;
 
     public MainController(DefaultApplicationService applicationService) {
         super(NavigationTarget.MAIN);
 
         this.applicationService = applicationService;
+
+        alertService = applicationService.getSupportService().getAlertService();
 
         leftNavController = new LeftNavController(applicationService);
         TopPanelController topPanelController = new TopPanelController(applicationService);
@@ -54,10 +63,27 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
+        alertsPin = alertService.getAlerts().addListener(new CollectionObserver<>() {
+            @Override
+            public void add(AuthorizedAlertData element) {
+                new Popup().attention(element.getMessage()).show();
+            }
+
+            @Override
+            public void remove(Object element) {
+
+            }
+
+            @Override
+            public void clear() {
+
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        alertsPin.unbind();
     }
 
     @SuppressWarnings("SwitchStatementWithTooFewBranches")

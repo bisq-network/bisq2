@@ -61,6 +61,8 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        super.initialize();
+
         // We delay a bit to ensure the network is well established
         Scheduler.run(this::maybeRequestAgain).after(3, TimeUnit.SECONDS);
 
@@ -70,7 +72,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
             }
         });
 
-        return super.initialize();
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override

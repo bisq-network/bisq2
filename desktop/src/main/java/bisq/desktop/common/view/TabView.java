@@ -156,28 +156,29 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
     }
 
-    protected void addTab(String text, NavigationTarget navigationTarget) {
-        addTab(text,
+    protected TabButton addTab(String text, NavigationTarget navigationTarget) {
+        return addTab(text,
                 navigationTarget,
                 new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9"),
                 null);
     }
 
-    protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
-        addTab(text,
+    protected TabButton addTab(String text, NavigationTarget navigationTarget, String icon) {
+        return addTab(text,
                 navigationTarget,
                 new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9"),
                 icon);
     }
 
-    protected void addTab(String text, NavigationTarget navigationTarget, Styles styles) {
-        addTab(text, navigationTarget, styles, null);
+    protected TabButton addTab(String text, NavigationTarget navigationTarget, Styles styles) {
+        return addTab(text, navigationTarget, styles, null);
     }
 
-    protected void addTab(String text, NavigationTarget navigationTarget, Styles styles, @Nullable String icon) {
+    protected TabButton addTab(String text, NavigationTarget navigationTarget, Styles styles, @Nullable String icon) {
         TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, styles, icon);
         controller.onTabButtonCreated(tabButton);
         tabs.getChildren().add(tabButton);
+        return tabButton;
     }
 
     //todo 

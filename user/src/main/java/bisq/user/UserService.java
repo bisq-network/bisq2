@@ -24,6 +24,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.node.NodeRegistrationService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import bisq.user.role.RoleRegistrationService;
@@ -36,6 +37,8 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class UserService implements Service {
+    private final NodeRegistrationService nodeRegistrationService;
+
     @Getter
     @ToString
     public static final class Config {
@@ -67,6 +70,7 @@ public class UserService implements Service {
                 identityService,
                 networkService);
         roleRegistrationService = new RoleRegistrationService(persistenceService, keyPairService, networkService);
+        nodeRegistrationService = new NodeRegistrationService(persistenceService, keyPairService, networkService);
         reputationService = new ReputationService(persistenceService,
                 networkService,
                 userIdentityService,
@@ -83,6 +87,7 @@ public class UserService implements Service {
         return userProfileService.initialize()
                 .thenCompose(result -> userIdentityService.initialize())
                 .thenCompose(result -> roleRegistrationService.initialize())
+                .thenCompose(result -> nodeRegistrationService.initialize())
                 .thenCompose(result -> reputationService.initialize());
     }
 
@@ -91,6 +96,7 @@ public class UserService implements Service {
         return userProfileService.shutdown()
                 .thenCompose(result -> userIdentityService.shutdown())
                 .thenCompose(result -> roleRegistrationService.shutdown())
+                .thenCompose(result -> nodeRegistrationService.shutdown())
                 .thenCompose(result -> reputationService.shutdown());
     }
 }
