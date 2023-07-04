@@ -17,7 +17,7 @@
 
 package bisq.desktop_app;
 
-import bisq.desktop.PrimaryStageController;
+import bisq.desktop.DesktopController;
 import bisq.desktop.common.application.Executable;
 import bisq.desktop.common.application.JavaFXApplication;
 import bisq.desktop.common.threading.UIThread;
@@ -33,7 +33,7 @@ import static bisq.common.util.OsUtils.EXIT_FAILURE;
 @Slf4j
 public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Nullable
-    private PrimaryStageController primaryStageController;
+    private DesktopController desktopController;
 
     public DesktopExecutable(String[] args) {
         super(args);
@@ -56,7 +56,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                     if (throwable == null) {
                         try {
                             log.info("Java FX Application launched");
-                            primaryStageController = new PrimaryStageController(applicationService.getState(), applicationService.getServiceProvider(),
+                            desktopController = new DesktopController(applicationService.getState(), applicationService.getServiceProvider(),
                                     applicationData,
                                     this::onApplicationLaunched);
                         } catch (Throwable t) {
@@ -74,8 +74,8 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     }
 
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
-        if (primaryStageController != null) {
-            Platform.runLater(() -> primaryStageController.onApplicationServiceInitialized(result, throwable));
+        if (desktopController != null) {
+            Platform.runLater(() -> desktopController.onApplicationServiceInitialized(result, throwable));
         } else if (throwable != null) {
             UIThread.run(() -> new Popup().error(throwable).show());
         }
@@ -86,8 +86,8 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception", throwable);
             UIThread.run(() -> {
-                if (primaryStageController != null) {
-                    primaryStageController.onUncaughtException(thread, throwable);
+                if (desktopController != null) {
+                    desktopController.onUncaughtException(thread, throwable);
                 } else {
                     log.error("primaryStageController not set yet");
                 }

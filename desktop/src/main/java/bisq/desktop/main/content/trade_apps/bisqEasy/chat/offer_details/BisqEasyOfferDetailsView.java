@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.offer_details;
 
-import bisq.desktop.PrimaryStageModel;
+import bisq.desktop.DesktopModel;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -52,8 +52,8 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
 
         root.setMinWidth(OverlayModel.WIDTH);
         root.setMinHeight(OverlayModel.HEIGHT);
-        root.setMaxWidth(PrimaryStageModel.PREF_WIDTH);
-        root.setMaxHeight(PrimaryStageModel.PREF_HEIGHT);
+        root.setMaxWidth(DesktopModel.PREF_WIDTH);
+        root.setMaxHeight(DesktopModel.PREF_HEIGHT);
 
         root.setFitToHeight(true);
         root.setFitToWidth(true);

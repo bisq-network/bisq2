@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.bond;
 
-import bisq.desktop.PrimaryStageModel;
+import bisq.desktop.DesktopModel;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
@@ -38,10 +38,10 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
     public BondedReputationView(BondedReputationModel model, BondedReputationController controller) {
         super(model, controller);
 
-        double width = PrimaryStageModel.MIN_WIDTH - 20;
+        double width = DesktopModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = PrimaryStageModel.MIN_HEIGHT - 20;
+        double height = DesktopModel.MIN_HEIGHT - 20;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 

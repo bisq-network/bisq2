@@ -17,7 +17,7 @@
 
 package bisq.desktop.overlay.tac;
 
-import bisq.desktop.PrimaryStageModel;
+import bisq.desktop.DesktopModel;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
@@ -146,7 +146,7 @@ public class TacView extends View<VBox, TacModel, TacController> {
     private void updateHeight() {
         double height = OverlayController.getInstance().getApplicationRoot().getHeight();
         if (height > 0) {
-            double scale = (height - PrimaryStageModel.MIN_HEIGHT) / (PrimaryStageModel.PREF_HEIGHT - PrimaryStageModel.MIN_HEIGHT);
+            double scale = (height - DesktopModel.MIN_HEIGHT) / (DesktopModel.PREF_HEIGHT - DesktopModel.MIN_HEIGHT);
             double boundedScale = Math.max(0.25, Math.min(1, scale));
             double paddedHeight = height - 6 * PADDING * boundedScale;
             rootScene.getWindow().setHeight(paddedHeight);
@@ -157,7 +157,7 @@ public class TacView extends View<VBox, TacModel, TacController> {
     private void updateWidth() {
         double width = OverlayController.getInstance().getApplicationRoot().getWidth();
         if (width > 0) {
-            double scale = (width - PrimaryStageModel.MIN_WIDTH) / (PrimaryStageModel.PREF_WIDTH - PrimaryStageModel.MIN_WIDTH);
+            double scale = (width - DesktopModel.MIN_WIDTH) / (DesktopModel.PREF_WIDTH - DesktopModel.MIN_WIDTH);
             double boundedScale = Math.max(0.25, Math.min(1, scale));
             double padding = 6 * PADDING * boundedScale;
             double paddedWidth = width - padding;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.burn;
 
-import bisq.desktop.PrimaryStageModel;
+import bisq.desktop.DesktopModel;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
@@ -38,10 +38,10 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
     public BurnBsqView(BurnBsqModel model, BurnBsqController controller) {
         super(model, controller);
 
-        double width = PrimaryStageModel.MIN_WIDTH - 20;
+        double width = DesktopModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = PrimaryStageModel.MIN_HEIGHT;
+        double height = DesktopModel.MIN_HEIGHT;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 

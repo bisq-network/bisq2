@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class PrimaryStageModel extends NavigationModel {
+public class DesktopModel extends NavigationModel {
     // Min supported screens: 1024x768
     public static final double MIN_WIDTH = 1000;
     public static final double MIN_HEIGHT = 730;
@@ -44,7 +44,7 @@ public class PrimaryStageModel extends NavigationModel {
     @Setter
     private boolean isUnlocked;
 
-    public PrimaryStageModel(String title) {
+    public DesktopModel(String title) {
         this.title = title;
     }
 

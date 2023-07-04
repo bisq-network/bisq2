@@ -58,21 +58,21 @@ import static bisq.settings.DontShowAgainKey.WELCOME;
  * If user has created a user profile the last persisted navigation target is shown.
  */
 @Slf4j
-public class PrimaryStageController extends NavigationController {
+public class DesktopController extends NavigationController {
     @Getter
-    protected final PrimaryStageModel model;
+    protected final DesktopModel model;
     @Getter
-    protected final PrimaryStageView view;
+    protected final DesktopView view;
     protected final SettingsService settingsService;
     protected final Runnable onActivatedHandler;
     private final SplashController splashController;
     private final UserIdentityService userIdentityService;
     private final ServiceProvider serviceProvider;
 
-    public PrimaryStageController(Observable<State> applicationServiceState,
-                                  ServiceProvider serviceProvider,
-                                  JavaFxApplicationData applicationJavaFxApplicationData,
-                                  Runnable onActivatedHandler) {
+    public DesktopController(Observable<State> applicationServiceState,
+                             ServiceProvider serviceProvider,
+                             JavaFxApplicationData applicationJavaFxApplicationData,
+                             Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
         this.serviceProvider = serviceProvider;
 
@@ -80,9 +80,9 @@ public class PrimaryStageController extends NavigationController {
         userIdentityService = this.serviceProvider.getUserService().getUserIdentityService();
         this.onActivatedHandler = onActivatedHandler;
 
-        model = new PrimaryStageModel(serviceProvider.getConfig().getAppName());
+        model = new DesktopModel(serviceProvider.getConfig().getAppName());
         setInitialScreenSize();
-        view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.getStage());
+        view = new DesktopView(model, this, applicationJavaFxApplicationData.getStage());
 
         splashController = new SplashController(applicationServiceState, this.serviceProvider);
 
@@ -106,9 +106,9 @@ public class PrimaryStageController extends NavigationController {
         Cookie cookie = serviceProvider.getSettingsService().getCookie();
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
-                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
+                .orElse(Math.max(DesktopModel.MIN_WIDTH, Math.min(DesktopModel.PREF_WIDTH, screenBounds.getWidth()))));
         model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
-                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
+                .orElse(Math.max(DesktopModel.MIN_HEIGHT, Math.min(DesktopModel.PREF_HEIGHT, screenBounds.getHeight()))));
         model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
                 .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
         model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)

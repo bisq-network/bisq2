@@ -33,12 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageModel, PrimaryStageController> {
+public class DesktopView extends NavigationView<AnchorPane, DesktopModel, DesktopController> {
     private final Stage stage;
     @Getter
     private final Scene scene;
 
-    public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
+    public DesktopView(DesktopModel model, DesktopController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
 
         this.stage = stage;
@@ -107,8 +107,8 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
         stage.setY(model.getStageY());
         stage.setWidth(model.getStageWidth());
         stage.setHeight(model.getStageHeight());
-        stage.setMinWidth(PrimaryStageModel.MIN_WIDTH);
-        stage.setMinHeight(PrimaryStageModel.MIN_HEIGHT);
+        stage.setMinWidth(DesktopModel.MIN_WIDTH);
+        stage.setMinHeight(DesktopModel.MIN_HEIGHT);
         stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));
         stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged((double) newValue));
         stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged((double) newValue));
