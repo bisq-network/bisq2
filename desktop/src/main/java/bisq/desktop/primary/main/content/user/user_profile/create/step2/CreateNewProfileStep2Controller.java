@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.user.user_profile.create.step2;
 
 import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.overlay.OverlayController;

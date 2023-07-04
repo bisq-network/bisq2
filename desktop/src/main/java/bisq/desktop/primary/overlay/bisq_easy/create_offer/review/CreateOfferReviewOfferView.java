@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;

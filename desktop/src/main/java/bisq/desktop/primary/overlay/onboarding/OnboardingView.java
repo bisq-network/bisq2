@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.overlay.onboarding;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.primary.overlay.OverlayModel;
 import javafx.scene.Scene;

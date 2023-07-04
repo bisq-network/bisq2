@@ -18,11 +18,11 @@
 package bisq.desktop.primary.overlay;
 
 import bisq.common.util.OsUtils;
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.overview.list;
 
-import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;

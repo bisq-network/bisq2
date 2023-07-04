@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils;
+package bisq.desktop.common;
 
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;

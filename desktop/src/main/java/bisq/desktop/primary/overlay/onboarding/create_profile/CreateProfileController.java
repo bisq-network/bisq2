@@ -18,8 +18,8 @@
 package bisq.desktop.primary.overlay.onboarding.create_profile;
 
 import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;

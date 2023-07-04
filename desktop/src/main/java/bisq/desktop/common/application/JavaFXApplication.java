@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.desktop.common.application;
 
 import bisq.desktop.common.JavaFxApplicationData;
 import javafx.application.Application;
@@ -26,8 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class JavaFXApplication extends Application {
-
-    static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
+    public static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
 
     @Override
     public void start(Stage stage) {

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding.password;
 
-import bisq.desktop.common.utils.validation.PasswordValidator;
+import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.primary.overlay.OverlayModel;

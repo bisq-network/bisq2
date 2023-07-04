@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.direction;
 
 import bisq.common.data.Pair;
-import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.CreateOfferView;

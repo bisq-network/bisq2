@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.components;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.desktop.common.utils.validation.MonetaryValidator;
+import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;

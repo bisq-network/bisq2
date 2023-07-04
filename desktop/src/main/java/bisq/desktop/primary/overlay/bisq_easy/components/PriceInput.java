@@ -21,7 +21,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.validation.PriceValidator;
+import bisq.desktop.common.validation.PriceValidator;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.oracle.service.market_price.MarketPriceService;

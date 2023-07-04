@@ -17,10 +17,10 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;

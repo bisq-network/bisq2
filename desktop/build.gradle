@@ -1,6 +1,5 @@
 plugins {
     id 'bisq.java-library'
-    id 'bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin'
     alias(libs.plugins.openjfx)
 }
 

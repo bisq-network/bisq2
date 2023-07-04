@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.validation.MonetaryValidator;
+import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.wallets.core.WalletService;

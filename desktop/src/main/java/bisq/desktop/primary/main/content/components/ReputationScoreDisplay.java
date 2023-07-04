@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.Icons;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.reputation.ReputationScore;
 import de.jensd.fx.fontawesome.AwesomeIcon;

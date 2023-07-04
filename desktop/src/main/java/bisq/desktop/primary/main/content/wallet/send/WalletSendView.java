@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.send;
 
-import bisq.desktop.common.utils.validation.MonetaryValidator;
+import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;

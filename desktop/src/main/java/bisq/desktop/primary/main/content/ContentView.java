@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content;
 
-import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;

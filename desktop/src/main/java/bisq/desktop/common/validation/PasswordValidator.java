@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils.validation;
+package bisq.desktop.common.validation;
 
 
 import bisq.i18n.Res;

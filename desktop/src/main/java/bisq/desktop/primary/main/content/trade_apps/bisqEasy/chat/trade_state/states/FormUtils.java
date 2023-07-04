@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import javafx.geometry.Insets;

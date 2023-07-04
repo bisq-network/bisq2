@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide;
 
-import bisq.desktop.common.utils.Styles;
+import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;

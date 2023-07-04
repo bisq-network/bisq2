@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.unlock;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.validation.PasswordValidator;
+import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.i18n.Res;

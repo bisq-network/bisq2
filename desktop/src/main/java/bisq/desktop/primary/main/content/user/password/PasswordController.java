@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.user.password;
 
 import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.validation.PasswordValidator;
+import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;

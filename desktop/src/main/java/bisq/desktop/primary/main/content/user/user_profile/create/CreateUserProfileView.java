@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create;
 
-import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.primary.overlay.OverlayModel;
 import javafx.scene.layout.Region;

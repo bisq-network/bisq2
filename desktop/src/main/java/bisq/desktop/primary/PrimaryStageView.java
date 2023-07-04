@@ -18,10 +18,10 @@
 package bisq.desktop.primary;
 
 import bisq.common.util.OsUtils;
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;

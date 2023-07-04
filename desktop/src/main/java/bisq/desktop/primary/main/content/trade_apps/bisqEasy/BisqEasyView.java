@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy;
 
-import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.AnchorPane;
 import lombok.extern.slf4j.Slf4j;

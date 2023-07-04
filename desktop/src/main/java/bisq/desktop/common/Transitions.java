@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils;
+package bisq.desktop.common;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIScheduler;

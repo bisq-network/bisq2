@@ -9,11 +9,11 @@ plugins {
 }
 
 compileJava {
-    options.release = 17
+    options.release = 11
 }
 
 application {
-    project.mainClassName = 'bisq.desktop.DesktopApp'
+    project.mainClassName = 'bisq.desktop_app.DesktopApp'
     applicationDefaultJvmArgs = []
 }
 
@@ -34,7 +34,7 @@ tasks.named('jar') {
     manifest {
         attributes('Implementation-Title': project.name,
                 'Implementation-Version': project.version,
-                'Main-Class': 'bisq.desktop.Main')
+                'Main-Class': 'bisq.desktop_app.DesktopApp')
     }
 }
 
@@ -69,7 +69,7 @@ tasks.jpackage {
     copyright = 'Copyright (c) 2013-2022 The Bisq developers'
     appDescription = 'A decentralized bitcoin exchange network.'
     vendor = 'Bisq'
-    mainClass = "bisq.desktop.Main"
+    mainClass = "bisq.desktop_app.DesktopApp"
     mainJar = jar.archiveFileName.get()
     verbose = false
 //    arguments = --arguments <main class arguments>

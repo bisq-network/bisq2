@@ -1,4 +1,4 @@
-package bisq.desktop.common.utils;
+package bisq.desktop.common.data;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.chat;
 
-import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat;
 
-import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.Layout;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.primary.main.content.chat.ChatView;
 import bisq.i18n.Res;

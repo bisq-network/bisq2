@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils;
+package bisq.desktop.components.list_view;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
 
+// https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
 public class NoSelectionModel<T> extends MultipleSelectionModel<T> {
 
     @Override

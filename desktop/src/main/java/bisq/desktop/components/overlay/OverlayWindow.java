@@ -17,9 +17,9 @@
 
 package bisq.desktop.components.overlay;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Bounds;

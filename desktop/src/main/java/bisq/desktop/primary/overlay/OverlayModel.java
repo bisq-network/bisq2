@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay;
 
 import bisq.desktop.DesktopApplicationService;
-import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.settings.SettingsService;
