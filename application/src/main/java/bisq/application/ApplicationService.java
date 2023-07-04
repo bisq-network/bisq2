@@ -44,7 +44,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class ApplicationService {
-
     @Getter
     @ToString
     @EqualsAndHashCode
