@@ -188,6 +188,9 @@ public class FileUtils {
         try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
                 sb.append(scanner.nextLine());
+                if (scanner.hasNextLine()) {
+                    sb.append(System.lineSeparator());
+                }
             }
         }
         return sb.toString();

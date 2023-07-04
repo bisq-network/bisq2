@@ -38,7 +38,6 @@ import bisq.user.node.AuthorizedNodeRegistrationData;
 import bisq.user.node.NodeRegistrationService;
 import bisq.user.node.NodeType;
 import bisq.user.profile.UserProfile;
-import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
@@ -55,9 +54,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -112,7 +109,7 @@ public class NodeRegistrationController implements Controller {
             updateRegistrationState();
         });
 
-        MonadicBinding<Boolean> binding = EasyBind.combine(model.getPrivateKey(), model.getPublicKey(), model.getAddressInfo(),
+        MonadicBinding<Boolean> binding = EasyBind.combine(model.getPrivateKey(), model.getPublicKey(), model.getAddressInfoJson(),
                 (priv, pub, address) ->
                         StringUtils.isNotEmpty(priv) &&
                                 StringUtils.isNotEmpty(pub) &&
@@ -132,10 +129,11 @@ public class NodeRegistrationController implements Controller {
     }
 
     void onRegister() {
+        Map<Transport.Type, Address> addressByNetworkType = addressByNetworkTypeFromJson(model.getAddressInfoJson().get());
         nodeRegistrationService.registerNode(model.getUserIdentity(),
                         model.getNodeType(),
                         model.getKeyPair(),
-                        model.getAddressByNetworkType())
+                        addressByNetworkType)
                 .whenComplete((result, throwable) -> {
                     UIThread.run(() -> {
                         updateRegistrationState();
@@ -175,16 +173,18 @@ public class NodeRegistrationController implements Controller {
             try {
                 String json = FileUtils.readFromFile(file);
                 checkArgument(StringUtils.isNotEmpty(json));
-                Type type = new TypeToken<HashMap<Transport.Type, Address>>() {
-                }.getType();
-                Map<Transport.Type, Address> addressByNetworkType = new Gson().fromJson(json, type);
-                model.setAddressByNetworkType(addressByNetworkType);
-                model.getAddressInfo().set(addressByNetworkTypeToDisplayString(addressByNetworkType));
+                model.getAddressInfoJson().set(json);
                 updateRegistrationState();
             } catch (Exception e) {
                 new Popup().error(e).show();
             }
         }
+    }
+
+    private Map<Transport.Type, Address> addressByNetworkTypeFromJson(String json) {
+        Type type = new TypeToken<HashMap<Transport.Type, Address>>() {
+        }.getType();
+        return new Gson().fromJson(json, type);
     }
 
     private void updateRegistrationState() {
@@ -196,14 +196,7 @@ public class NodeRegistrationController implements Controller {
                 publicKeyAsHex);
         model.getRegistrationDisabled().set(!isAuthorizedPublicKey ||
                 !StringUtils.isNotEmpty(model.getPrivateKey().get()) ||
-                model.getAddressByNetworkType() == null);
+                model.getAddressInfoJson() == null);
         model.getRemoveRegistrationVisible().set(isNodeRegistered);
-    }
-
-    public static String addressByNetworkTypeToDisplayString(Map<Transport.Type, Address> addressByNetworkType) {
-        List<String> list = addressByNetworkType.entrySet().stream()
-                .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
-                .collect(Collectors.toList());
-        return Joiner.on("\n").join(list);
     }
 }

@@ -99,11 +99,6 @@ public class NodeRegistrationService implements PersistenceClient<NodeRegistrati
         }
     }
 
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
-            authorizedNodeDataSet.add((AuthorizedData) authenticatedData);
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -149,13 +144,25 @@ public class NodeRegistrationService implements PersistenceClient<NodeRegistrati
                 .orElse(CompletableFuture.completedFuture(null));
     }
 
+    public boolean isNodeRegistered(String userProfileId, NodeType nodeType, String publicKeyAsHex) {
+        return findAuthorizedNodeRegistrationData(userProfileId, nodeType, publicKeyAsHex).isPresent();
+    }
 
-    public ObservableSet<AuthorizedNodeRegistrationData> getMyNodeRegistrations() {
+    public KeyPair findOrCreateNodeRegistrationKey(NodeType nodeType, String userProfileId) {
+        String keyId = REGISTRATION_PREFIX + nodeType.name() + "-" + userProfileId;
+        return keyPairService.findKeyPair(keyId)
+                .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private ObservableSet<AuthorizedNodeRegistrationData> getMyNodeRegistrations() {
         return persistableStore.getMyNodeRegistrations();
     }
 
-
-    public Optional<AuthorizedData> findAuthorizedNodeRegistrationData(String userProfileId, NodeType nodeType, String publicKeyAsHex) {
+    private Optional<AuthorizedData> findAuthorizedNodeRegistrationData(String userProfileId, NodeType nodeType, String publicKeyAsHex) {
         return authorizedNodeDataSet.stream()
                 .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedNodeRegistrationData)
                 .filter(authenticatedData -> {
@@ -166,13 +173,9 @@ public class NodeRegistrationService implements PersistenceClient<NodeRegistrati
                 }).findAny();
     }
 
-    public boolean isNodeRegistered(String userProfileId, NodeType nodeType, String publicKeyAsHex) {
-        return findAuthorizedNodeRegistrationData(userProfileId, nodeType, publicKeyAsHex).isPresent();
-    }
-
-    public KeyPair findOrCreateNodeRegistrationKey(NodeType nodeType, String userProfileId) {
-        String keyId = REGISTRATION_PREFIX + nodeType.name() + "-" + userProfileId;
-        return keyPairService.findKeyPair(keyId)
-                .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));
+    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
+            authorizedNodeDataSet.add((AuthorizedData) authenticatedData);
+        }
     }
 }

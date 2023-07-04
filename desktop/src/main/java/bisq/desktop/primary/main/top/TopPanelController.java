@@ -41,8 +41,8 @@ public class TopPanelController implements Controller {
 
         model = new TopPanelModel(applicationService.getWalletService().isPresent());
         UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getUserService().getUserIdentityService());
-        MarketSelection marketSelection = new MarketSelection(applicationService.getOracleService().getMarketPriceService());
-        view = new TopPanelView(model, this, userProfileSelection, marketSelection.getRoot());
+        MarketPriceComponent marketPriceComponent = new MarketPriceComponent(applicationService.getOracleService().getMarketPriceService());
+        view = new TopPanelView(model, this, userProfileSelection, marketPriceComponent.getRoot());
 
     }
 

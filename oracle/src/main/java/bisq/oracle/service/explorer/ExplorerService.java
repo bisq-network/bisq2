@@ -155,7 +155,7 @@ public class ExplorerService {
                 return new ObjectMapper().readValue(json, Tx.class);
             } catch (IOException e) {
                 if (!shutdownStarted) {
-                    log.info("Requesting tx from {} failed. {}" + httpClient.getBaseUrl() + param, ExceptionUtil.getMostMeaningfulMessage(e));
+                    log.info("Requesting tx from {} failed. {}" + httpClient.getBaseUrl() + param, ExceptionUtil.print(e));
                 }
                 throw new RuntimeException(e);
             }

@@ -19,8 +19,10 @@ package bisq.desktop.primary.main.top;
 
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
 import bisq.oracle.service.market_price.MarketPrice;
@@ -34,24 +36,26 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MarketSelection {
+public class MarketPriceComponent {
     private final Controller controller;
 
-    public MarketSelection(MarketPriceService marketPriceService) {
+    public MarketPriceComponent(MarketPriceService marketPriceService) {
         controller = new Controller(marketPriceService);
     }
 
@@ -75,36 +79,42 @@ public class MarketSelection {
 
         @Override
         public void onActivate() {
-            selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> {
-                if (selectedMarket != null) {
-                    UIThread.run(() -> model.items.stream()
-                            .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
-                            .findAny()
-                            .ifPresent(listItem -> {
-                                model.price.set(listItem.price);
-                                model.codes.set(listItem.codes);
-                                model.selected.set(listItem);
-                            }));
-                }
-            });
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ ->
+                    UIThread.run(() -> {
+                        List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
+                                .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
+                                .filter(Objects::nonNull)
+                                .map(ListItem::new)
+                                .collect(Collectors.toList());
+                        model.items.setAll(list);
 
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> UIThread.run(() -> {
-                List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
-                        .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
-                        .filter(Objects::nonNull)
-                        .map(ListItem::new)
-                        .collect(Collectors.toList());
-                model.items.setAll(list);
-            }));
+                        // We use the model.items in the selectedMarket handler code, so we only start the observer 
+                        // registration once we got the list.
+                        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
+                                UIThread.run(() -> {
+                                    if (selectedMarket != null) {
+                                        model.items.stream()
+                                                .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
+                                                .findAny()
+                                                .ifPresent(listItem -> {
+                                                    model.price.set(listItem.price);
+                                                    model.codes.set(listItem.codes);
+                                                    model.selected.set(listItem);
+                                                });
+                                    }
+                                }));
+                    }));
         }
 
         @Override
         public void onDeactivate() {
-            selectedMarketPin.unbind();
             marketPriceUpdateFlagPin.unbind();
+            if (selectedMarketPin != null) {
+                selectedMarketPin.unbind();
+            }
         }
 
-        private void onSelected(MarketSelection.ListItem selectedItem) {
+        private void onSelected(MarketPriceComponent.ListItem selectedItem) {
             if (selectedItem != null) {
                 marketPriceService.select(selectedItem.marketPrice.getMarket());
             }
@@ -112,8 +122,8 @@ public class MarketSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObservableList<MarketSelection.ListItem> items = FXCollections.observableArrayList();
-        private final ObjectProperty<MarketSelection.ListItem> selected = new SimpleObjectProperty<>();
+        private final ObservableList<MarketPriceComponent.ListItem> items = FXCollections.observableArrayList();
+        private final ObjectProperty<MarketPriceComponent.ListItem> selected = new SimpleObjectProperty<>();
         private final StringProperty codes = new SimpleStringProperty();
         private final StringProperty price = new SimpleStringProperty();
 
@@ -124,6 +134,9 @@ public class MarketSelection {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final Label codes, price;
+        private final ImageView arrow;
+        private final ProgressBarWithLabel progressBarWithLabel;
+        private Subscription pricePin;
 
         private View(Model model, Controller controller) {
             super(new HBox(7), model, controller);
@@ -138,16 +151,30 @@ public class MarketSelection {
             price.setMouseTransparent(true);
             price.getStyleClass().add("bisq-text-19");
 
-            Node arrow = ImageUtil.getImageViewById("arrow-down");
+            progressBarWithLabel = new ProgressBarWithLabel(Res.get("component.marketPrice.requesting"));
+
+            arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setMouseTransparent(true);
+            arrow.setVisible(false);
+            arrow.setManaged(false);
+            HBox.setMargin(progressBarWithLabel, new Insets(2.5, 0, 0, 0));
             HBox.setMargin(codes, new Insets(0, 5, 0, 0));
-            root.getChildren().addAll(codes, price, arrow);
+            root.getChildren().addAll(codes, price, arrow, progressBarWithLabel);
         }
 
         @Override
         protected void onViewAttached() {
             codes.textProperty().bind(model.codes);
-            price.textProperty().bind(model.price);
+            pricePin = EasyBind.subscribe(model.price, priceValue -> {
+                boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
+                arrow.setVisible(isPriceSet);
+                arrow.setManaged(isPriceSet);
+                progressBarWithLabel.setVisible(!isPriceSet);
+                progressBarWithLabel.setManaged(!isPriceSet);
+                progressBarWithLabel.setProgress(isPriceSet ? 0 : -1);
+                price.setText(isPriceSet ? priceValue : "");
+            });
+
             root.setOnMouseClicked(e -> {
                 if (model.items.isEmpty()) {
                     return;
@@ -166,7 +193,7 @@ public class MarketSelection {
         @Override
         protected void onViewDetached() {
             codes.textProperty().unbind();
-            price.textProperty().unbind();
+            pricePin.unsubscribe();
             root.setOnMouseClicked(null);
         }
 

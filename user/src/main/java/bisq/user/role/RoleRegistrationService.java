@@ -96,11 +96,6 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
         }
     }
 
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedRoleDataSet.add((AuthorizedData) authenticatedData);
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -147,7 +142,22 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
         return persistableStore.getMyRoleRegistrations();
     }
 
-    public Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
+    public boolean isRoleRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
+        return findAuthorizedRoleRegistrationData(userProfileId, roleType, publicKeyAsHex).isPresent();
+    }
+
+    public KeyPair findOrCreateRoleRegistrationKey(RoleType roleType, String userProfileId) {
+        String keyId = REGISTRATION_PREFIX + roleType.name() + "-" + userProfileId;
+        return keyPairService.findKeyPair(keyId)
+                .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    private Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
         return authorizedRoleDataSet.stream()
                 .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedRoleRegistrationData)
                 .filter(authorizedData -> {
@@ -158,13 +168,10 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
                 }).findAny();
     }
 
-    public boolean isRoleRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return findAuthorizedRoleRegistrationData(userProfileId, roleType, publicKeyAsHex).isPresent();
-    }
 
-    public KeyPair findOrCreateRoleRegistrationKey(RoleType roleType, String userProfileId) {
-        String keyId = REGISTRATION_PREFIX + roleType.name() + "-" + userProfileId;
-        return keyPairService.findKeyPair(keyId)
-                .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));
+    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+            authorizedRoleDataSet.add((AuthorizedData) authenticatedData);
+        }
     }
 }

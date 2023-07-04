@@ -26,6 +26,7 @@ import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
@@ -49,8 +50,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class MarketPriceService {
     public static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
-    private static final long REQUEST_INTERVAL_SEC = 180;
-    private volatile boolean shutdownStarted;
+    private static final long INTERVAL = 180;
 
     @Getter
     @ToString
@@ -103,14 +103,15 @@ public class MarketPriceService {
     private final NetworkService networkService;
     private final String userAgent;
     private final List<Provider> candidates = new ArrayList<>();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
+    private Optional<BaseHttpClient> currentHttpClient = Optional.empty();
     @Getter
     private final Map<Market, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
-
     @Getter
     private final Observable<Market> selectedMarket = new Observable<>();
     @Getter
     private final Observable<Boolean> marketPriceUpdateFlag = new Observable<>(true);
+    private volatile boolean shutdownStarted;
+    private Scheduler scheduler;
 
     public MarketPriceService(Config conf, NetworkService networkService, String version) {
         providers = new ArrayList<>(conf.providers);
@@ -121,26 +122,37 @@ public class MarketPriceService {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        getHttpClientAndRequest();
-        Scheduler.run(() -> request()
-                        .whenComplete((map, throwable) -> {
-                            if (map.isEmpty() || throwable != null) {
-                                // Get a new provider/httpClient
-                                getHttpClientAndRequest();
+
+        startRequesting();
+
+        return CompletableFuture.completedFuture(true);
+    }
+
+    private void startRequesting() {
+        scheduler = Scheduler.run(() -> {
+            findNextHttpClient().ifPresent(httpClient -> {
+                request(httpClient)
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                if (scheduler != null) {
+                                    scheduler.stop();
+                                }
+                                startRequesting();
                             }
-                        }))
-                .periodically(REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
+                        });
+            });
+        }).periodically(0, INTERVAL, TimeUnit.SECONDS);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        shutdownStarted = true;
+        scheduler.stop();
+        currentHttpClient.ifPresent(BaseHttpClient::shutdown);
         return CompletableFuture.completedFuture(true);
     }
 
     public void select(Market market) {
         selectedMarket.set(market);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        shutdownStarted = true;
-        httpClient.ifPresent(BaseHttpClient::shutdown);
-        return CompletableFuture.completedFuture(true);
     }
 
     public Optional<MarketPrice> findMarketPrice(Market market) {
@@ -153,15 +165,7 @@ public class MarketPriceService {
     }
 
     public Optional<PriceQuote> findMarketPriceQuote(Market market) {
-        return findMarketPrice(market).map(MarketPrice::getPriceQuote).stream().findAny();
-    }
-
-    public CompletableFuture<Map<Market, MarketPrice>> request() {
-        if (httpClient.isEmpty()) {
-            log.warn("No httpClient present");
-            return CompletableFuture.completedFuture(new HashMap<>());
-        }
-        return request(httpClient.get());
+        return findMarketPrice(market).stream().map(MarketPrice::getPriceQuote).findAny();
     }
 
     private CompletableFuture<Map<Market, MarketPrice>> request(BaseHttpClient httpClient) {
@@ -184,11 +188,10 @@ public class MarketPriceService {
                 if (selectedMarket.get() == null) {
                     selectedMarket.set(map.get(MarketRepository.getDefault()).getMarket());
                 }
-
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {
                 if (!shutdownStarted) {
-                    e.printStackTrace();
+                    log.warn("Request to market price provider {} failed. Error={}", httpClient.getBaseUrl(), ExceptionUtil.print(e));
                 }
                 throw new RuntimeException(e);
             }
@@ -226,14 +229,8 @@ public class MarketPriceService {
         return map;
     }
 
-    private BaseHttpClient getHttpClientAndRequest() {
-        return findProvider()
-                .map(provider -> {
-                    BaseHttpClient httpClient = getHttpClient(provider);
-                    this.httpClient = Optional.of(httpClient);
-                    request();
-                    return httpClient;
-                }).orElseThrow();
+    private Optional<BaseHttpClient> findNextHttpClient() {
+        return findProvider().map(this::getNewHttpClient);
     }
 
     private Optional<Provider> findProvider() {
@@ -254,15 +251,16 @@ public class MarketPriceService {
                     providers, networkService.getSupportedTransportTypes());
             return Optional.empty();
         }
-
         Provider candidate = Objects.requireNonNull(CollectionUtil.getRandomElement(candidates));
         candidates.remove(candidate);
         return Optional.of(candidate);
     }
 
-    private BaseHttpClient getHttpClient(Provider provider) {
-        httpClient.ifPresent(BaseHttpClient::shutdown);
-        return networkService.getHttpClient(provider.url, userAgent, provider.transportType);
+    private BaseHttpClient getNewHttpClient(Provider provider) {
+        currentHttpClient.ifPresent(BaseHttpClient::shutdown);
+        BaseHttpClient newClient = networkService.getHttpClient(provider.url, userAgent, provider.transportType);
+        currentHttpClient = Optional.of(newClient);
+        return newClient;
     }
 
     private void notifyObservers() {

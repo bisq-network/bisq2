@@ -25,14 +25,17 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.UserProfileIcon;
-import bisq.desktop.primary.main.content.user.nodes.tabs.registration.NodeRegistrationController;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.node.AuthorizedNodeRegistrationData;
 import bisq.user.node.NodeType;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ProfileAgeService;
+import com.google.common.base.Joiner;
+import com.google.gson.GsonBuilder;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,6 +52,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class NodesView extends View<VBox, NodesModel, NodesController> {
@@ -208,7 +214,7 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
                     address.setTooltip(tooltip);
                     icon.setOnAction(e -> new Popup()
                             .headLine(Res.get("user.nodes.table.columns.address.popup.headline"))
-                            .message(addressString)
+                            .message(item.getAddressInfoJson())
                             .show());
                     Tooltip tooltip2 = new BisqTooltip(Res.get("user.nodes.table.columns.address.openPopup"));
                     tooltip2.getStyleClass().add("dark-tooltip");
@@ -233,12 +239,18 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
         private final Long profileAge;
         private final String profileAgeString;
         private final String address;
+        private final String addressInfoJson;
 
         public ListItem(AuthorizedData authorizedData, ProfileAgeService profileAgeService) {
             AuthorizedNodeRegistrationData nodeRegistrationData = (AuthorizedNodeRegistrationData) authorizedData.getDistributedData();
             this.userProfile = nodeRegistrationData.getUserProfile();
             this.publicKeyAsHex = nodeRegistrationData.getPublicKeyAsHex();
-            address = NodeRegistrationController.addressByNetworkTypeToDisplayString(nodeRegistrationData.getAddressByNetworkType());
+            Map<Transport.Type, Address> addressByNetworkType = nodeRegistrationData.getAddressByNetworkType();
+            List<String> list = addressByNetworkType.entrySet().stream()
+                    .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
+                    .collect(Collectors.toList());
+            address = Joiner.on("\n").join(list);
+            addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
             NodeType type = nodeRegistrationData.getNodeType();
             nodeType = Res.get("user.nodes.type." + type);
             profileAge = profileAgeService.getProfileAge(userProfile)

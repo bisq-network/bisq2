@@ -22,7 +22,7 @@ import bisq.common.util.FileUtils;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class Seed {
                 .thenCompose(result -> applicationService.initialize())
                 .whenComplete((r, t) -> {
                     Map<Transport.Type, Address> addressByNetworkType = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
-                    String json = new Gson().toJson(addressByNetworkType);
+                    String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
                     Path path = Path.of(applicationService.getConfig().getBaseDir(), "default_node_address.json");
                     try {
                         FileUtils.writeToFile(json, path.toFile());

@@ -34,8 +34,8 @@ public class ProtobufUtils {
         E result = Enums.getIfPresent(enumType, enumName).orNull();
         if (result == null) {
             result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
-            log.warn("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
-                    "otherwise the enum is null. enum={}", result);
+            log.warn("Enum with name {} for enum class {} is not present. We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
+                    "otherwise the enum is null. enum={}", name, enumType.getSimpleName(), result);
             return result;
         }
         return result;
