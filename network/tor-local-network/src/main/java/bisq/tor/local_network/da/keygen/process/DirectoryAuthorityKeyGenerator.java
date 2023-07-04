@@ -19,17 +19,12 @@ package bisq.tor.local_network.da.keygen.process;
 
 import bisq.tor.local_network.da.DirectoryAuthority;
 import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Slf4j
 public class DirectoryAuthorityKeyGenerator {
-    @Getter
-    private Optional<String> relayKeyFingerprint = Optional.empty();
-
     public void generate(DirectoryAuthority directoryAuthority, String passphrase) throws IOException, InterruptedException {
         var identityKeyGenProcess = new DirectoryIdentityKeyGenProcess(
                 directoryAuthority.getKeysPath(),
@@ -40,8 +35,6 @@ public class DirectoryAuthorityKeyGenerator {
         String identityKeyFingerprint = directoryAuthority.getIdentityKeyFingerprint().orElseThrow();
 
         var relayKeyGenProcess = new RelayKeyGenProcess(directoryAuthority);
-        String relayKeyFingerprint = relayKeyGenProcess.generateKeys(identityKeyFingerprint);
-
-        this.relayKeyFingerprint = Optional.of(relayKeyFingerprint);
+        relayKeyGenProcess.generateKeys(identityKeyFingerprint);
     }
 }

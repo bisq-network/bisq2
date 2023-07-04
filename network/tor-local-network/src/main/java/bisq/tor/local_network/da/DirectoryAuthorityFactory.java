@@ -45,10 +45,6 @@ public class DirectoryAuthorityFactory {
         var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator();
         directoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
 
-        directoryAuthority.setRelayKeyFingerprint(
-                directoryAuthorityKeyGenerator.getRelayKeyFingerprint()
-        );
-
         allDirectoryAuthorities.add(directoryAuthority);
     }
 

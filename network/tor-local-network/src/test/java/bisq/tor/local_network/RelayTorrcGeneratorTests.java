@@ -54,7 +54,9 @@ public class RelayTorrcGeneratorTests {
                 .when(firstDirAuth)
                 .getIdentityKeyFingerprint();
 
-        firstDirAuth.setRelayKeyFingerprint(Optional.of("AAAA_v3"));
+        doReturn(Optional.of("AAAA_v3"))
+                .when(firstDirAuth)
+                .getRelayKeyFingerprint();
 
         DirectoryAuthority secondDirAuth = spy(
                 DirectoryAuthority.builder()
@@ -72,7 +74,9 @@ public class RelayTorrcGeneratorTests {
                 .when(secondDirAuth)
                 .getIdentityKeyFingerprint();
 
-        secondDirAuth.setRelayKeyFingerprint(Optional.of("BBBB_v3"));
+        doReturn(Optional.of("BBBB_v3"))
+                .when(secondDirAuth)
+                .getRelayKeyFingerprint();
 
         var relayTorrcGenerator = new RelayTorrcGenerator(firstDirAuth);
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);

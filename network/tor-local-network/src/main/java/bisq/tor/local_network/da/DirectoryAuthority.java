@@ -18,9 +18,9 @@
 package bisq.tor.local_network.da;
 
 import bisq.tor.local_network.KeyFingerprintReader;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -42,8 +42,9 @@ public class DirectoryAuthority {
 
     private final Path keysPath;
 
+    @Getter(AccessLevel.NONE)
     private Optional<String> identityKeyFingerprint = Optional.empty();
-    @Setter
+    @Getter(AccessLevel.NONE)
     private Optional<String> relayKeyFingerprint = Optional.empty();
 
     @Builder
@@ -66,11 +67,24 @@ public class DirectoryAuthority {
         }
 
         File certificateFile = new File(keysPath.toFile(), "authority_certificate");
-        Predicate<String> lineMatcher = s -> s.startsWith("fingerprint ");
-        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
-
-        var keyFingerprintReader = new KeyFingerprintReader(certificateFile, lineMatcher, dataExtractor);
-        identityKeyFingerprint = keyFingerprintReader.read();
+        identityKeyFingerprint = readFingerprint(certificateFile, "fingerprint ");
         return identityKeyFingerprint;
+    }
+
+    public Optional<String> getRelayKeyFingerprint() {
+        if (relayKeyFingerprint.isPresent()) {
+            return relayKeyFingerprint;
+        }
+
+        File fingerprintFile = new File(dataDir.toFile(), "fingerprint");
+        relayKeyFingerprint = readFingerprint(fingerprintFile, "Unnamed ");
+        return relayKeyFingerprint;
+    }
+
+    private Optional<String> readFingerprint(File fingerprintFile, String linePrefix) {
+        Predicate<String> lineMatcher = s -> s.startsWith(linePrefix);
+        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
+        var keyFingerprintReader = new KeyFingerprintReader(fingerprintFile, lineMatcher, dataExtractor);
+        return keyFingerprintReader.read();
     }
 }
