@@ -31,6 +31,7 @@ import java.util.function.UnaryOperator;
 public class TorNode {
 
     public enum Type {
+        CLIENT,
         DIRECTORY_AUTHORITY,
         RELAY
     }

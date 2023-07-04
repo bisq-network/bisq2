@@ -56,9 +56,13 @@ public abstract class CommonTorrcGenerator {
                 .append("Log debug file ").append(thisTorNode.getDataDir().resolve("debug.log").toAbsolutePath()).append("\n")
                 .append("ProtocolWarnings 1\n")
                 .append("SafeLogging 0\n")
-                .append("LogTimeGranularity 1\n")
+                .append("LogTimeGranularity 1\n");
 
-                .append("SocksPort 0\n")
+        if (thisTorNode.getType() != TorNode.Type.CLIENT) {
+            torrcStringBuilder.append("SocksPort 0\n");
+        }
+
+        torrcStringBuilder
                 .append("OrPort ").append(thisTorNode.getOrPort()).append("\n")
                 .append("Address 127.0.0.1\n")
 
