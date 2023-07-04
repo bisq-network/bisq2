@@ -19,18 +19,13 @@ dependencies {
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')
-    implementation project(':settings')
-    implementation project(':oracle')
     implementation project(':oracle_node')
     implementation project(':application')
 
     implementation 'network:network'
 
     implementation libs.google.gson
-    implementation libs.google.guava
     implementation libs.typesafe.config
-    implementation libs.bundles.jackson
-    implementation libs.protobuf.java.util
 }
 
 distZip.enabled = false

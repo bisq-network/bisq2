@@ -17,12 +17,34 @@
 
 package bisq.seed_node;
 
+import bisq.common.util.FileUtils;
+import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.Transport;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
 
 @Slf4j
 public class SeedNodeApp {
     public static void main(String[] args) {
-        new SeedNode(args);
+        SeedNodeApplicationService applicationService = new SeedNodeApplicationService(args);
+        applicationService.readAllPersisted()
+                .thenCompose(result -> applicationService.initialize())
+                .whenComplete((r, t) -> {
+                    Map<Transport.Type, Address> addressByNetworkType = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
+                    String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
+                    Path path = Path.of(applicationService.getConfig().getBaseDir(), "default_node_address.json");
+                    try {
+                        FileUtils.writeToFile(json, path.toFile());
+                    } catch (IOException e) {
+                        log.error("Error at write json", e);
+                    }
+                });
+
         keepRunning();
     }
 

@@ -16,12 +16,12 @@ run {
 }
 
 dependencies {
-    implementation project(':application')
     implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':application')
 
     implementation 'network:network'
 
-    implementation libs.google.guava
     implementation libs.typesafe.config
     implementation libs.google.gson
 }

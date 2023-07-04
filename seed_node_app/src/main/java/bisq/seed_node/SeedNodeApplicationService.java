@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.seed_node;
 
+import bisq.application.ApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -37,11 +38,11 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class NetworkApplicationService extends ApplicationService {
+public class SeedNodeApplicationService extends ApplicationService {
     protected final NetworkService networkService;
     protected final SecurityService securityService;
 
-    public NetworkApplicationService(String[] args) {
+    public SeedNodeApplicationService(String[] args) {
         super("network", args);
 
         securityService = new SecurityService(persistenceService);
