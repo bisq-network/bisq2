@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle.node.bisq1_bridge;
+package bisq.oracle_node.bisq1_bridge;
 
 import bisq.common.application.Service;
 import bisq.common.timer.Scheduler;
@@ -25,6 +25,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.oracle.node.bisq1_bridge.Bisq1BridgeHttpService;
 import bisq.oracle.node.bisq1_bridge.data.AuthorizedAccountAgeData;
 import bisq.oracle.node.bisq1_bridge.data.AuthorizedBondedReputationData;
 import bisq.oracle.node.bisq1_bridge.data.AuthorizedProofOfBurnData;

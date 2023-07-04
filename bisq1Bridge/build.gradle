@@ -21,6 +21,7 @@ dependencies {
     implementation project(':identity')
     implementation project(':settings')
     implementation project(':oracle')
+    implementation project(':oracle_node')
     implementation project(':application')
 
     implementation 'network:network'

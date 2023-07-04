@@ -20,7 +20,7 @@ package bisq.application;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.oracle.node.OracleNodeService;
+import bisq.oracle_node.OracleNodeService;
 import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

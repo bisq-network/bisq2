@@ -12,6 +12,7 @@ dependencies {
     implementation project(':offer')
     implementation project(':trade')
     implementation project(':oracle')
+    implementation project(':oracle_node')
     implementation project(':settings')
     implementation project(':user')
     implementation project(':chat')

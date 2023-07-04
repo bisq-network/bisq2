@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle.node.timestamp;
+package bisq.oracle_node.timestamp;
 
 import bisq.common.data.StringLongPair;
 import bisq.common.proto.ProtoResolver;
@@ -42,8 +42,8 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
     }
 
     @Override
-    public bisq.oracle.protobuf.TimestampStore toProto() {
-        return bisq.oracle.protobuf.TimestampStore.newBuilder()
+    public bisq.oracle_node.protobuf.TimestampStore toProto() {
+        return bisq.oracle_node.protobuf.TimestampStore.newBuilder()
                 .addAllStringLongPairs(timestampsByProfileId.entrySet().stream()
                         .map(entry -> new StringLongPair(entry.getKey(), entry.getValue()))
                         .map(StringLongPair::toProto)
@@ -51,7 +51,7 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
                 .build();
     }
 
-    public static TimestampStore fromProto(bisq.oracle.protobuf.TimestampStore proto) {
+    public static TimestampStore fromProto(bisq.oracle_node.protobuf.TimestampStore proto) {
         Map<String, Long> map = proto.getStringLongPairsList().stream()
                 .map(StringLongPair::fromProto)
                 .collect(Collectors.toMap(StringLongPair::getKey, StringLongPair::getValue));
@@ -62,7 +62,7 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.TimestampStore.class));
+                return fromProto(any.unpack(bisq.oracle_node.protobuf.TimestampStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle.node.bisq1_bridge;
+package bisq.oracle_node.bisq1_bridge;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -52,8 +52,8 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
     }
 
     @Override
-    public bisq.oracle.protobuf.Bisq1BridgeStore toProto() {
-        return bisq.oracle.protobuf.Bisq1BridgeStore.newBuilder()
+    public bisq.oracle_node.protobuf.Bisq1BridgeStore toProto() {
+        return bisq.oracle_node.protobuf.Bisq1BridgeStore.newBuilder()
                 .addAllAccountAgeRequests(accountAgeRequests.stream()
                         .map(AuthorizeAccountAgeRequest::toAuthorizeAccountAgeRequestProto)
                         .collect(Collectors.toList()))
@@ -63,7 +63,7 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
                 .build();
     }
 
-    public static Bisq1BridgeStore fromProto(bisq.oracle.protobuf.Bisq1BridgeStore proto) {
+    public static Bisq1BridgeStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeStore proto) {
         return new Bisq1BridgeStore(
                 proto.getAccountAgeRequestsList().stream()
                         .map(AuthorizeAccountAgeRequest::fromProto)
@@ -77,7 +77,7 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.Bisq1BridgeStore.class));
+                return fromProto(any.unpack(bisq.oracle_node.protobuf.Bisq1BridgeStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
