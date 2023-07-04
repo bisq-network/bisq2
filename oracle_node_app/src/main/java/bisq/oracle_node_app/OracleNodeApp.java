@@ -17,7 +17,6 @@
 
 package bisq.oracle_node_app;
 
-import bisq.application.OracleNodeApplicationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
