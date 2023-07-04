@@ -91,13 +91,13 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
 
     private void configCss() {
         scene.getStylesheets().setAll(
-                requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/bisq_text.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/bisq_controls.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/bisq_containers.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/bisq_chat.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/bisq_easy.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/images.css")).toExternalForm());
+                requireNonNull(getClass().getResource("/css/bisq.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/bisq_text.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/bisq_controls.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/bisq_containers.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/bisq_chat.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/bisq_easy.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/images.css")).toExternalForm());
     }
 
     private void configSizeAndPosition() {

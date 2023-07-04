@@ -22,7 +22,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.FileUtils;
 import bisq.common.util.StringUtils;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -62,17 +62,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class NodeRegistrationController implements Controller {
     @Getter
     private final NodeRegistrationView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     private final NodeRegistrationModel model;
     private final UserIdentityService userIdentityService;
     private final NodeRegistrationService nodeRegistrationService;
     private Pin userIdentityPin;
     private Subscription updateRegistrationStatePin;
 
-    public NodeRegistrationController(DesktopApplicationService applicationService, NodeType nodeType) {
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        nodeRegistrationService = applicationService.getUserService().getNodeRegistrationService();
-        this.applicationService = applicationService;
+    public NodeRegistrationController(ServiceProvider serviceProvider, NodeType nodeType) {
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        nodeRegistrationService = serviceProvider.getUserService().getNodeRegistrationService();
+        this.serviceProvider = serviceProvider;
         model = new NodeRegistrationModel(nodeType);
         view = new NodeRegistrationView(model, this);
     }
@@ -167,7 +167,7 @@ public class NodeRegistrationController implements Controller {
     }
 
     void onImportNodeAddress() {
-        Path path = Path.of(applicationService.getConfig().getBaseDir());
+        Path path = Path.of(serviceProvider.getConfig().getBaseDir());
         File file = FileChooserUtil.openFile(getView().getRoot().getScene(), path.toAbsolutePath().toString());
         if (file != null) {
             try {

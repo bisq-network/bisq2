@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.reputation.burn.tab3;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -40,8 +40,8 @@ public class BurnBsqTab3Controller implements Controller {
     private final UserIdentityService userIdentityService;
     private Pin selectedUserProfilePin;
 
-    public BurnBsqTab3Controller(DesktopApplicationService applicationService) {
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
+    public BurnBsqTab3Controller(ServiceProvider serviceProvider) {
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new BurnBsqTab3Model();

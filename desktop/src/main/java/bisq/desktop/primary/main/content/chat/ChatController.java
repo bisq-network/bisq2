@@ -27,7 +27,7 @@ import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -73,7 +73,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     @Getter
     protected V view;
     protected final UserIdentityService userIdentityService;
-    protected final DesktopApplicationService applicationService;
+    protected final ServiceProvider serviceProvider;
     protected final TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
     protected final ChannelSidebar channelSidebar;
     protected final CitationBlock citationBlock;
@@ -81,25 +81,25 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
-    public ChatController(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public ChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
 
-        this.applicationService = applicationService;
-        chatService = applicationService.getChatService();
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        userProfileService = applicationService.getUserService().getUserProfileService();
-        reputationService = applicationService.getUserService().getReputationService();
-        twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(applicationService, chatChannelDomain);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService,
+        this.serviceProvider = serviceProvider;
+        chatService = serviceProvider.getChatService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(serviceProvider, chatChannelDomain);
+        chatMessagesComponent = new ChatMessagesComponent(serviceProvider,
                 chatChannelDomain,
                 this::openUserProfileSidebar);
-        channelSidebar = new ChannelSidebar(applicationService,
+        channelSidebar = new ChannelSidebar(serviceProvider,
                 () -> {
                     onCloseSideBar();
                     chatMessagesComponent.resetSelectedChatMessage();
                 },
                 this::openUserProfileSidebar);
-        citationBlock = new CitationBlock(applicationService);
+        citationBlock = new CitationBlock(serviceProvider);
 
         createDependencies(chatChannelDomain);
 

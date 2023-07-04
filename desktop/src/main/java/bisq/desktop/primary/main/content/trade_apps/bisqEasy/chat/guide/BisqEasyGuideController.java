@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -36,12 +36,12 @@ import java.util.Optional;
 public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     @Getter
     private final BisqEasyGuideView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public BisqEasyGuideController(DesktopApplicationService applicationService) {
+    public BisqEasyGuideController(ServiceProvider serviceProvider) {
         super(new BisqEasyGuideModel(), NavigationTarget.BISQ_EASY_GUIDE);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new BisqEasyGuideView(model, this);
     }
 
@@ -57,16 +57,16 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case BISQ_EASY_GUIDE_WELCOME: {
-                return Optional.of(new BisqEasyGuideWelcomeController(applicationService));
+                return Optional.of(new BisqEasyGuideWelcomeController(serviceProvider));
             }
             case BISQ_EASY_GUIDE_SECURITY: {
-                return Optional.of(new BisqEasyGuideSecurityController(applicationService));
+                return Optional.of(new BisqEasyGuideSecurityController(serviceProvider));
             }
             case BISQ_EASY_GUIDE_PROCESS: {
-                return Optional.of(new BisqEasyGuideProcessController(applicationService));
+                return Optional.of(new BisqEasyGuideProcessController(serviceProvider));
             }
             case BISQ_EASY_GUIDE_RULES: {
-                return Optional.of(new BisqEasyGuideRulesController(applicationService));
+                return Optional.of(new BisqEasyGuideRulesController(serviceProvider));
             }
             default: {
                 return Optional.empty();
@@ -79,6 +79,6 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     }
 
     public void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 }

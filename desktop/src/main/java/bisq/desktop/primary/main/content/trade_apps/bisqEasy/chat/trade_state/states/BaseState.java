@@ -21,7 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -48,12 +48,12 @@ public abstract class BaseState {
         protected final UserIdentityService userIdentityService;
         private final MarketPriceService marketPriceService;
 
-        protected Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-            chatService = applicationService.getChatService();
-            bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
-            accountService = applicationService.getAccountService();
-            userIdentityService = applicationService.getUserService().getUserIdentityService();
-            marketPriceService = applicationService.getOracleService().getMarketPriceService();
+        protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            chatService = serviceProvider.getChatService();
+            bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+            accountService = serviceProvider.getAccountService();
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
 
             model = createModel(bisqEasyTrade, channel);
             view = createView();

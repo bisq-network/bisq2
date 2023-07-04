@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.common_chat;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.PublicChatController;
@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonChatController extends PublicChatController<CommonChatView, CommonChatModel> implements Controller {
-    public CommonChatController(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-        super(applicationService, chatChannelDomain, NavigationTarget.NONE);
+    public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
+        super(serviceProvider, chatChannelDomain, NavigationTarget.NONE);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class CommonChatController extends PublicChatController<CommonChatView, C
 
     @Override
     public PublicChannelSelectionMenu<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain) {
-        return new CommonPublicChannelSelectionMenu(applicationService, chatChannelDomain);
+        return new CommonPublicChannelSelectionMenu(serviceProvider, chatChannelDomain);
     }
 
     @Override

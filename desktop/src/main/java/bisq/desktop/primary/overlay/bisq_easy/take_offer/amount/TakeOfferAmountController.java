@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.take_offer.amount;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
@@ -47,10 +47,10 @@ public class TakeOfferAmountController implements Controller {
     private final MarketPriceService marketPriceService;
     private Subscription baseSideAmountPin, quoteSideAmountPin;
 
-    public TakeOfferAmountController(DesktopApplicationService applicationService) {
+    public TakeOfferAmountController(ServiceProvider serviceProvider) {
         model = new TakeOfferAmountModel();
-        marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        amountComponent = new AmountComponent(applicationService, true);
+        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        amountComponent = new AmountComponent(serviceProvider, true);
         view = new TakeOfferAmountView(model, this, amountComponent.getView().getRoot());
     }
 

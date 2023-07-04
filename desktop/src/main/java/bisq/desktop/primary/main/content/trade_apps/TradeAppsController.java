@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -30,14 +30,14 @@ import java.util.Optional;
 
 @Slf4j
 public class TradeAppsController extends TabController<TradeAppsModel> {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final TradeAppsView view;
 
-    public TradeAppsController(DesktopApplicationService applicationService) {
+    public TradeAppsController(ServiceProvider serviceProvider) {
         super(new TradeAppsModel(), NavigationTarget.TRADE_OVERVIEW);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
 
         view = new TradeAppsView(model, this);
     }
@@ -54,10 +54,10 @@ public class TradeAppsController extends TabController<TradeAppsModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case TRADE_OVERVIEW_LIST: {
-                return Optional.of(new TradeOverviewListController(applicationService));
+                return Optional.of(new TradeOverviewListController(serviceProvider));
             }
             case TRADE_OVERVIEW_GRID: {
-                return Optional.of(new TradeOverviewGridController(applicationService));
+                return Optional.of(new TradeOverviewGridController(serviceProvider));
             }
             default: {
                 return Optional.empty();

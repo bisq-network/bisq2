@@ -25,7 +25,7 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.observable.FxBindings;
@@ -70,8 +70,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
     @Getter
     private final Controller controller;
 
-    public BisqEasyPrivateChannelSelectionMenu(DesktopApplicationService applicationService) {
-        controller = new Controller(applicationService);
+    public BisqEasyPrivateChannelSelectionMenu(ServiceProvider serviceProvider) {
+        controller = new Controller(serviceProvider);
     }
 
     protected static class Controller extends PrivateChannelSelectionMenu.Controller<
@@ -84,8 +84,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
         private Pin inMediationPin;
 
-        protected Controller(DesktopApplicationService applicationService) {
-            super(applicationService, ChatChannelDomain.BISQ_EASY);
+        protected Controller(ServiceProvider serviceProvider) {
+            super(serviceProvider, ChatChannelDomain.BISQ_EASY);
         }
 
         @Override

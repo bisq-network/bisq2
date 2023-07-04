@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy.wallets;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class WalletsAcademyController implements Controller {
     @Getter
     private final WalletsAcademyView view;
 
-    public WalletsAcademyController(DesktopApplicationService applicationService) {
+    public WalletsAcademyController(ServiceProvider serviceProvider) {
         WalletsAcademyModel model = new WalletsAcademyModel();
         view = new WalletsAcademyView(model, this);
     }

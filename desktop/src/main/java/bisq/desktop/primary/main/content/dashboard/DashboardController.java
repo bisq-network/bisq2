@@ -21,7 +21,7 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -46,10 +46,10 @@ public class DashboardController implements Controller {
     private Pin selectedMarketPin, marketPriceUpdateFlagPin, userProfileUpdateFlagPin;
     private boolean allowUpdateOffersOnline;
 
-    public DashboardController(DesktopApplicationService applicationService) {
-        marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        userProfileService = applicationService.getUserService().getUserProfileService();
-        bisqEasyPublicChatChannelService = applicationService.getChatService().getBisqEasyPublicChatChannelService();
+    public DashboardController(ServiceProvider serviceProvider) {
+        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        bisqEasyPublicChatChannelService = serviceProvider.getChatService().getBisqEasyPublicChatChannelService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);

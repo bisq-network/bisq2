@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.wallet.dashboard;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -36,8 +36,8 @@ public class WalletDashboardController implements Controller {
     private final WalletService walletService;
     private Pin balancePin;
 
-    public WalletDashboardController(DesktopApplicationService applicationService) {
-        walletService = applicationService.getWalletService().orElseThrow();
+    public WalletDashboardController(ServiceProvider serviceProvider) {
+        walletService = serviceProvider.getWalletService().orElseThrow();
         model = new WalletDashboardModel();
         view = new WalletDashboardView(model, this);
     }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -34,16 +34,16 @@ import java.util.Optional;
 
 @Slf4j
 public class OnboardingController extends NavigationController {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final OnboardingModel model;
     @Getter
     private final OnboardingView view;
 
-    public OnboardingController(DesktopApplicationService applicationService) {
+    public OnboardingController(ServiceProvider serviceProvider) {
         super(NavigationTarget.ONBOARDING);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         model = new OnboardingModel();
         view = new OnboardingView(model, this);
     }
@@ -62,13 +62,13 @@ public class OnboardingController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case ONBOARDING_WELCOME: {
-                return Optional.of(new WelcomeController(applicationService));
+                return Optional.of(new WelcomeController(serviceProvider));
             }
             case ONBOARDING_GENERATE_NYM: {
-                return Optional.of(new CreateProfileController(applicationService));
+                return Optional.of(new CreateProfileController(serviceProvider));
             }
             case ONBOARDING_PASSWORD: {
-                return Optional.of(new OnboardingPasswordController(applicationService));
+                return Optional.of(new OnboardingPasswordController(serviceProvider));
             }
             default: {
                 return Optional.empty();
@@ -77,6 +77,6 @@ public class OnboardingController extends NavigationController {
     }
 
     public void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 }

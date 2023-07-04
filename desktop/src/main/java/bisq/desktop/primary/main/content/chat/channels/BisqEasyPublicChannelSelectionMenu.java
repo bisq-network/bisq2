@@ -26,7 +26,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.components.containers.Spacer;
@@ -73,8 +73,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
     @Getter
     private final Controller controller;
 
-    public BisqEasyPublicChannelSelectionMenu(DesktopApplicationService applicationService) {
-        controller = new Controller(applicationService);
+    public BisqEasyPublicChannelSelectionMenu(ServiceProvider serviceProvider) {
+        controller = new Controller(serviceProvider);
     }
 
     protected static class Controller extends PublicChannelSelectionMenu.Controller<
@@ -87,8 +87,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         private Pin numVisibleChannelsPin;
 
-        protected Controller(DesktopApplicationService applicationService) {
-            super(applicationService, ChatChannelDomain.BISQ_EASY);
+        protected Controller(ServiceProvider serviceProvider) {
+            super(serviceProvider, ChatChannelDomain.BISQ_EASY);
         }
 
         @Override

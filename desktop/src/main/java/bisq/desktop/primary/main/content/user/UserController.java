@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -37,17 +37,17 @@ import java.util.Optional;
 
 @Slf4j
 public class UserController extends TabController<UserModel> {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final UserView view;
     private final AlertService alertService;
     private Pin hasNotificationSenderIdentityPin;
 
-    public UserController(DesktopApplicationService applicationService) {
+    public UserController(ServiceProvider serviceProvider) {
         super(new UserModel(), NavigationTarget.USER);
 
-        this.applicationService = applicationService;
-        alertService = applicationService.getSupportService().getAlertService();
+        this.serviceProvider = serviceProvider;
+        alertService = serviceProvider.getSupportService().getAlertService();
 
         view = new UserView(model, this);
     }
@@ -69,25 +69,25 @@ public class UserController extends TabController<UserModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case USER_PROFILE: {
-                return Optional.of(new UserProfileController(applicationService));
+                return Optional.of(new UserProfileController(serviceProvider));
             }
             case PASSWORD: {
-                return Optional.of(new PasswordController(applicationService));
+                return Optional.of(new PasswordController(serviceProvider));
             }
             case BISQ_EASY_PAYMENT_ACCOUNTS: {
-                return Optional.of(new PaymentAccountsController(applicationService));
+                return Optional.of(new PaymentAccountsController(serviceProvider));
             }
             case REPUTATION: {
-                return Optional.of(new ReputationController(applicationService));
+                return Optional.of(new ReputationController(serviceProvider));
             }
             case ROLES: {
-                return Optional.of(new RolesController(applicationService));
+                return Optional.of(new RolesController(serviceProvider));
             }
             case NODES: {
-                return Optional.of(new NodesController(applicationService));
+                return Optional.of(new NodesController(serviceProvider));
             }
             case SEND_NOTIFICATION: {
-                return Optional.of(new SendNotificationController(applicationService));
+                return Optional.of(new SendNotificationController(serviceProvider));
             }
             default: {
                 return Optional.empty();

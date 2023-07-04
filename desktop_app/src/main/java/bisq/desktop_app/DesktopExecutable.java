@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.desktop_app;
 
 import bisq.desktop.common.application.Executable;
 import bisq.desktop.common.application.JavaFXApplication;
@@ -31,11 +31,11 @@ import javax.annotation.Nullable;
 import static bisq.common.util.OsUtils.EXIT_FAILURE;
 
 @Slf4j
-public class JavaFxExecutable extends Executable<DesktopApplicationService> {
+public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Nullable
     private PrimaryStageController primaryStageController;
 
-    public JavaFxExecutable(String[] args) {
+    public DesktopExecutable(String[] args) {
         super(args);
     }
 
@@ -56,7 +56,7 @@ public class JavaFxExecutable extends Executable<DesktopApplicationService> {
                     if (throwable == null) {
                         try {
                             log.info("Java FX Application launched");
-                            primaryStageController = new PrimaryStageController(applicationService,
+                            primaryStageController = new PrimaryStageController(applicationService.getState(), applicationService.getServiceProvider(),
                                     applicationData,
                                     this::onApplicationLaunched);
                         } catch (Throwable t) {

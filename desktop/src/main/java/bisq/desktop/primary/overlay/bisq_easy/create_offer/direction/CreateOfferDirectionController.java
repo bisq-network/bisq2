@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.direction;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -37,7 +37,7 @@ public class CreateOfferDirectionController implements Controller {
     private final Runnable onNextHandler;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
 
-    public CreateOfferDirectionController(DesktopApplicationService applicationService,
+    public CreateOfferDirectionController(ServiceProvider serviceProvider,
                                           Runnable onNextHandler,
                                           Consumer<Boolean> mainButtonsVisibleHandler) {
         this.onNextHandler = onNextHandler;

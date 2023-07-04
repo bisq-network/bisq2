@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.roles.tabs;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -32,12 +32,12 @@ import java.util.Optional;
 public class RolesTabController extends TabController<RolesTabModel> {
     @Getter
     private final RolesTabView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public RolesTabController(DesktopApplicationService applicationService) {
+    public RolesTabController(ServiceProvider serviceProvider) {
         super(new RolesTabModel(), NavigationTarget.ROLES_TABS);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new RolesTabView(model, this);
     }
 
@@ -53,19 +53,19 @@ public class RolesTabController extends TabController<RolesTabModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case REGISTER_MEDIATOR: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.MEDIATOR));
+                return Optional.of(new RoleRegistrationController(serviceProvider, RoleType.MEDIATOR));
             }
             case REGISTER_ARBITRATOR: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.ARBITRATOR));
+                return Optional.of(new RoleRegistrationController(serviceProvider, RoleType.ARBITRATOR));
             }
             case REGISTER_MODERATOR: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.MODERATOR));
+                return Optional.of(new RoleRegistrationController(serviceProvider, RoleType.MODERATOR));
             }
             case REGISTER_SECURITY_MANAGER: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.SECURITY_MANAGER));
+                return Optional.of(new RoleRegistrationController(serviceProvider, RoleType.SECURITY_MANAGER));
             }
             case REGISTER_RELEASE_MANAGER: {
-                return Optional.of(new RoleRegistrationController(applicationService, RoleType.RELEASE_MANAGER));
+                return Optional.of(new RoleRegistrationController(serviceProvider, RoleType.RELEASE_MANAGER));
             }
             default: {
                 return Optional.empty();

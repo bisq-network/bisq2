@@ -29,7 +29,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -81,18 +81,18 @@ public class TakeOfferReviewController implements Controller {
     private final UserIdentityService userIdentityService;
     private final BisqEasyTradeService bisqEasyTradeService;
 
-    public TakeOfferReviewController(DesktopApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
+    public TakeOfferReviewController(ServiceProvider serviceProvider, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
-        contractService = applicationService.getContractService();
-        identityService = applicationService.getIdentityService();
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        chatService = applicationService.getChatService();
+        contractService = serviceProvider.getContractService();
+        identityService = serviceProvider.getIdentityService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        chatService = serviceProvider.getChatService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        mediationService = applicationService.getSupportService().getMediationService();
-        marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
+        mediationService = serviceProvider.getSupportService().getMediationService();
+        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
-        priceInput = new PriceInput(applicationService.getOracleService().getMarketPriceService());
+        priceInput = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
 
         model = new TakeOfferReviewModel();
         view = new TakeOfferReviewView(model, this, priceInput.getRoot());

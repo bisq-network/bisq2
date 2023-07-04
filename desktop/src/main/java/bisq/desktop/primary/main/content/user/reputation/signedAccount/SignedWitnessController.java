@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.signedAccount;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,12 +34,12 @@ import java.util.Optional;
 public class SignedWitnessController extends TabController<SignedWitnessModel> {
     @Getter
     private final SignedWitnessView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public SignedWitnessController(DesktopApplicationService applicationService) {
+    public SignedWitnessController(ServiceProvider serviceProvider) {
         super(new SignedWitnessModel(), NavigationTarget.SIGNED_WITNESS);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new SignedWitnessView(model, this);
     }
 
@@ -55,13 +55,13 @@ public class SignedWitnessController extends TabController<SignedWitnessModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SIGNED_WITNESS_TAB_1: {
-                return Optional.of(new SignedWitnessTab1Controller(applicationService));
+                return Optional.of(new SignedWitnessTab1Controller(serviceProvider));
             }
             case SIGNED_WITNESS_TAB_2: {
-                return Optional.of(new SignedWitnessTab2Controller(applicationService));
+                return Optional.of(new SignedWitnessTab2Controller(serviceProvider));
             }
             case SIGNED_WITNESS_TAB_3: {
-                return Optional.of(new SignedWitnessTab3Controller(applicationService, view));
+                return Optional.of(new SignedWitnessTab3Controller(serviceProvider, view));
             }
             default: {
                 return Optional.empty();

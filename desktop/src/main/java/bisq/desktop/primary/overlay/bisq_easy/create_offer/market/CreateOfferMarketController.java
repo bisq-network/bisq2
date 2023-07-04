@@ -25,7 +25,7 @@ import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -48,9 +48,9 @@ public class CreateOfferMarketController implements Controller {
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private Subscription searchTextPin;
 
-    public CreateOfferMarketController(DesktopApplicationService applicationService, Runnable onNextHandler) {
+    public CreateOfferMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
-        chatService = applicationService.getChatService();
+        chatService = serviceProvider.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         model = new CreateOfferMarketModel();

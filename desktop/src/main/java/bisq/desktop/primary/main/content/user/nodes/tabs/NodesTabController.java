@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.nodes.tabs;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -32,12 +32,12 @@ import java.util.Optional;
 public class NodesTabController extends TabController<NodesTabModel> {
     @Getter
     private final NodesTabView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public NodesTabController(DesktopApplicationService applicationService) {
+    public NodesTabController(ServiceProvider serviceProvider) {
         super(new NodesTabModel(), NavigationTarget.NODES_TABS);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new NodesTabView(model, this);
     }
 
@@ -53,16 +53,16 @@ public class NodesTabController extends TabController<NodesTabModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case REGISTER_SEED_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, NodeType.SEED_NODE));
+                return Optional.of(new NodeRegistrationController(serviceProvider, NodeType.SEED_NODE));
             }
             case REGISTER_ORACLE_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, NodeType.ORACLE_NODE));
+                return Optional.of(new NodeRegistrationController(serviceProvider, NodeType.ORACLE_NODE));
             }
             case REGISTER_EXPLORER_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, NodeType.EXPLORER_NODE));
+                return Optional.of(new NodeRegistrationController(serviceProvider, NodeType.EXPLORER_NODE));
             }
             case REGISTER_MARKET_PRICE_NODE: {
-                return Optional.of(new NodeRegistrationController(applicationService, NodeType.MARKET_PRICE_NODE));
+                return Optional.of(new NodeRegistrationController(serviceProvider, NodeType.MARKET_PRICE_NODE));
             }
             default: {
                 return Optional.empty();

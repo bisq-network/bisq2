@@ -21,7 +21,7 @@ import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -55,9 +55,9 @@ public class RoleRegistrationController implements Controller {
     private Pin userIdentityPin;
     private Subscription updateRegistrationStatePin;
 
-    public RoleRegistrationController(DesktopApplicationService applicationService, RoleType roleType) {
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        roleRegistrationService = applicationService.getUserService().getRoleRegistrationService();
+    public RoleRegistrationController(ServiceProvider serviceProvider, RoleType roleType) {
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        roleRegistrationService = serviceProvider.getUserService().getRoleRegistrationService();
         model = new RoleRegistrationModel(roleType);
         view = new RoleRegistrationView(model, this);
     }

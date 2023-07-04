@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -75,17 +75,17 @@ public class OverlayController extends NavigationController {
     private final OverlayView view;
     @Getter
     private final Region applicationRoot;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Nullable
     private Runnable onHiddenHandler;
 
-    public OverlayController(DesktopApplicationService applicationService, Region applicationRoot) {
+    public OverlayController(ServiceProvider serviceProvider, Region applicationRoot) {
         super(NavigationTarget.OVERLAY);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         this.applicationRoot = applicationRoot;
 
-        model = new OverlayModel(applicationService);
+        model = new OverlayModel(serviceProvider);
         view = new OverlayView(model, this, applicationRoot);
         INSTANCE = this;
         onActivateInternal();
@@ -115,43 +115,43 @@ public class OverlayController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case UNLOCK: {
-                return Optional.of(new UnlockController(applicationService));
+                return Optional.of(new UnlockController(serviceProvider));
             }
             case TAC: {
-                return Optional.of(new TacController(applicationService));
+                return Optional.of(new TacController(serviceProvider));
             }
             case ONBOARDING: {
-                return Optional.of(new OnboardingController(applicationService));
+                return Optional.of(new OnboardingController(serviceProvider));
             }
             case CREATE_OFFER: {
-                return Optional.of(new CreateOfferController(applicationService));
+                return Optional.of(new CreateOfferController(serviceProvider));
             }
             case TAKE_OFFER: {
-                return Optional.of(new TakeOfferController(applicationService));
+                return Optional.of(new TakeOfferController(serviceProvider));
             }
             case BISQ_EASY_GUIDE: {
-                return Optional.of(new BisqEasyGuideController(applicationService));
+                return Optional.of(new BisqEasyGuideController(serviceProvider));
             }
             case BISQ_EASY_OFFER_DETAILS: {
-                return Optional.of(new BisqEasyOfferDetailsController(applicationService));
+                return Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
             }
             case CREATE_PROFILE: {
-                return Optional.of(new CreateUserProfileController(applicationService));
+                return Optional.of(new CreateUserProfileController(serviceProvider));
             }
             case CREATE_BISQ_EASY_PAYMENT_ACCOUNT: {
-                return Optional.of(new CreatePaymentAccountController(applicationService));
+                return Optional.of(new CreatePaymentAccountController(serviceProvider));
             }
             case BURN_BSQ: {
-                return Optional.of(new BurnBsqController(applicationService));
+                return Optional.of(new BurnBsqController(serviceProvider));
             }
             case BSQ_BOND: {
-                return Optional.of(new BondedReputationController(applicationService));
+                return Optional.of(new BondedReputationController(serviceProvider));
             }
             case ACCOUNT_AGE: {
-                return Optional.of(new AccountAgeController(applicationService));
+                return Optional.of(new AccountAgeController(serviceProvider));
             }
             case SIGNED_WITNESS: {
-                return Optional.of(new SignedWitnessController(applicationService));
+                return Optional.of(new SignedWitnessController(serviceProvider));
             }
             default: {
                 return Optional.empty();
@@ -171,6 +171,6 @@ public class OverlayController extends NavigationController {
     }
 
     void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 }

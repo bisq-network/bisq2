@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.CreateOfferAmountController;
@@ -56,7 +56,7 @@ public class CreateOfferController extends NavigationController implements InitW
         }
     }
 
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final CreateOfferModel model;
     @Getter
@@ -71,10 +71,10 @@ public class CreateOfferController extends NavigationController implements InitW
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin;
 
-    public CreateOfferController(DesktopApplicationService applicationService) {
+    public CreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_OFFER);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
 
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
@@ -87,12 +87,12 @@ public class CreateOfferController extends NavigationController implements InitW
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
-        createOfferDirectionController = new CreateOfferDirectionController(applicationService, this::onNext, this::setMainButtonsVisibleState);
-        createOfferMarketController = new CreateOfferMarketController(applicationService, this::onNext);
-        createOfferPriceController = new CreateOfferPriceController(applicationService);
-        createOfferAmountController = new CreateOfferAmountController(applicationService);
-        createOfferPaymentMethodController = new CreateOfferPaymentMethodController(applicationService);
-        createOfferReviewOfferController = new CreateOfferReviewOfferController(applicationService, this::setMainButtonsVisibleState, this::reset);
+        createOfferDirectionController = new CreateOfferDirectionController(serviceProvider, this::onNext, this::setMainButtonsVisibleState);
+        createOfferMarketController = new CreateOfferMarketController(serviceProvider, this::onNext);
+        createOfferPriceController = new CreateOfferPriceController(serviceProvider);
+        createOfferAmountController = new CreateOfferAmountController(serviceProvider);
+        createOfferPaymentMethodController = new CreateOfferPaymentMethodController(serviceProvider);
+        createOfferReviewOfferController = new CreateOfferReviewOfferController(serviceProvider, this::setMainButtonsVisibleState, this::reset);
 
         paymentMethodsListener = c -> {
             c.next();
@@ -213,7 +213,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     private void reset() {

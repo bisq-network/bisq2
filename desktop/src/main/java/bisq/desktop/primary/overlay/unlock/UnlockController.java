@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.unlock;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -45,14 +45,14 @@ public class UnlockController implements InitWithDataController<UnlockController
     private final UnlockModel model;
     @Getter
     private final UnlockView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     private final UserIdentityService userIdentityService;
     private Subscription pin;
     private Runnable completeHandler;
 
-    public UnlockController(DesktopApplicationService applicationService) {
-        this.applicationService = applicationService;
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
+    public UnlockController(ServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
 
         model = new UnlockModel();
         view = new UnlockView(model, this);
@@ -78,7 +78,7 @@ public class UnlockController implements InitWithDataController<UnlockController
     }
 
     void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     void onUnlock() {
@@ -104,7 +104,7 @@ public class UnlockController implements InitWithDataController<UnlockController
     }
 
     void onCancel() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     private void handleError() {

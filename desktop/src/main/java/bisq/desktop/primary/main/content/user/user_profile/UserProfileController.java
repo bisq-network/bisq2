@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.user_profile;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -55,9 +55,9 @@ public class UserProfileController implements Controller {
     private Subscription statementPin, termsPin;
 
 
-    public UserProfileController(DesktopApplicationService applicationService) {
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        reputationService = applicationService.getUserService().getReputationService();
+    public UserProfileController(ServiceProvider serviceProvider) {
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        reputationService = serviceProvider.getUserService().getReputationService();
         profileAgeService = reputationService.getProfileAgeService();
 
         model = new UserProfileModel();

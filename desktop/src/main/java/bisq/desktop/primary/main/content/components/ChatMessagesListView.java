@@ -32,7 +32,7 @@ import bisq.chat.message.*;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -100,12 +100,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesListView {
     private final Controller controller;
 
-    public ChatMessagesListView(DesktopApplicationService applicationService,
+    public ChatMessagesListView(ServiceProvider serviceProvider,
                                 Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
                                 ChatChannelDomain chatChannelDomain) {
-        controller = new Controller(applicationService,
+        controller = new Controller(serviceProvider,
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
@@ -141,18 +141,18 @@ public class ChatMessagesListView {
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
-        private Controller(DesktopApplicationService applicationService,
+        private Controller(ServiceProvider serviceProvider,
                            Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
                            ChatChannelDomain chatChannelDomain) {
-            chatService = applicationService.getChatService();
+            chatService = serviceProvider.getChatService();
             chatNotificationService = chatService.getChatNotificationService();
-            userIdentityService = applicationService.getUserService().getUserIdentityService();
-            userProfileService = applicationService.getUserService().getUserProfileService();
-            reputationService = applicationService.getUserService().getReputationService();
-            settingsService = applicationService.getSettingsService();
-            bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
+            reputationService = serviceProvider.getUserService().getReputationService();
+            settingsService = serviceProvider.getSettingsService();
+            bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;

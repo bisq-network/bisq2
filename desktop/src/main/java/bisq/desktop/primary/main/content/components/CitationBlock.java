@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.chat.ChatService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
@@ -50,8 +50,8 @@ import java.util.Optional;
 public class CitationBlock {
     private final Controller controller;
 
-    public CitationBlock(DesktopApplicationService applicationService) {
-        controller = new Controller(applicationService);
+    public CitationBlock(ServiceProvider serviceProvider) {
+        controller = new Controller(serviceProvider);
     }
 
     public Pane getRoot() {
@@ -83,9 +83,9 @@ public class CitationBlock {
         private final UserProfileService userProfileService;
 
 
-        private Controller(DesktopApplicationService applicationService) {
-            this.chatService = applicationService.getChatService();
-            userProfileService = applicationService.getUserService().getUserProfileService();
+        private Controller(ServiceProvider serviceProvider) {
+            this.chatService = serviceProvider.getChatService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);
         }

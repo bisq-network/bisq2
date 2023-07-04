@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.user.reputation.accountAge.tab3;
 
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.observable.FxBindings;
@@ -49,11 +49,11 @@ public class AccountAgeTab3Controller implements Controller {
     private final AccountAgeService accountAgeService;
     private Pin selectedUserProfilePin;
 
-    public AccountAgeTab3Controller(DesktopApplicationService applicationService, AccountAgeView parentView) {
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
+    public AccountAgeTab3Controller(ServiceProvider serviceProvider, AccountAgeView parentView) {
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.parentView = parentView;
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
-        accountAgeService = applicationService.getUserService().getReputationService().getAccountAgeService();
+        accountAgeService = serviceProvider.getUserService().getReputationService().getAccountAgeService();
 
         model = new AccountAgeTab3Model();
         this.view = new AccountAgeTab3View(model, this, userProfileSelection.getRoot());

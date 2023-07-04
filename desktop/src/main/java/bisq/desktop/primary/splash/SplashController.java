@@ -19,7 +19,8 @@ package bisq.desktop.primary.splash;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.State;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.network.p2p.node.Node;
@@ -39,27 +40,28 @@ public class SplashController implements Controller {
     private final SplashModel model;
     @Getter
     private final SplashView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
+    private final Observable<State> applicationServiceState;
     private Pin pinApplicationStatus;
-    private Pin pinClearnetStatus;
+    private Pin pinClearNetStatus;
     private Pin pinTorStatus;
     private Pin pinI2pStatus;
     private Subscription statePin;
-    private MonadicBinding<String> binding;
 
-    public SplashController(DesktopApplicationService applicationService) {
-        this.applicationService = applicationService;
+    public SplashController(Observable<State> applicationServiceState, ServiceProvider serviceProvider) {
+        this.applicationServiceState = applicationServiceState;
+        this.serviceProvider = serviceProvider;
         model = new SplashModel();
         view = new SplashView(model, this);
     }
 
     @Override
     public void onActivate() {
-        pinApplicationStatus = FxBindings.bind(model.getApplicationState()).to(applicationService.getState());
+        pinApplicationStatus = FxBindings.bind(model.getApplicationState()).to(applicationServiceState);
 
-        Map<Transport.Type, Observable<Node.State>> map = applicationService.getNetworkService().getNodeStateByTransportType();
+        Map<Transport.Type, Observable<Node.State>> map = serviceProvider.getNetworkService().getNodeStateByTransportType();
         if (map.containsKey(Transport.Type.CLEAR)) {
-            pinClearnetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(map.get(Transport.Type.CLEAR));
+            pinClearNetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(map.get(Transport.Type.CLEAR));
         }
         if (map.containsKey(Transport.Type.TOR)) {
             pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(map.get(Transport.Type.TOR));
@@ -68,7 +70,7 @@ public class SplashController implements Controller {
             pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(map.get(Transport.Type.I2P));
         }
 
-        binding = EasyBind.combine(model.getClearServiceNodeState(),
+        MonadicBinding<String> binding = EasyBind.combine(model.getClearServiceNodeState(),
                 model.getTorServiceNodeState(),
                 model.getI2pServiceNodeState(),
                 this::getStatus);
@@ -80,8 +82,8 @@ public class SplashController implements Controller {
     @Override
     public void onDeactivate() {
         pinApplicationStatus.unbind();
-        if (pinClearnetStatus != null) {
-            pinClearnetStatus.unbind();
+        if (pinClearNetStatus != null) {
+            pinClearNetStatus.unbind();
         }
         if (pinTorStatus != null) {
             pinTorStatus.unbind();

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.top;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
@@ -36,12 +36,12 @@ public class TopPanelController implements Controller {
     @Nullable
     private Pin balancePin;
 
-    public TopPanelController(DesktopApplicationService applicationService) {
-        walletService = applicationService.getWalletService();
+    public TopPanelController(ServiceProvider serviceProvider) {
+        walletService = serviceProvider.getWalletService();
 
-        model = new TopPanelModel(applicationService.getWalletService().isPresent());
-        UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getUserService().getUserIdentityService());
-        MarketPriceComponent marketPriceComponent = new MarketPriceComponent(applicationService.getOracleService().getMarketPriceService());
+        model = new TopPanelModel(serviceProvider.getWalletService().isPresent());
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider.getUserService().getUserIdentityService());
+        MarketPriceComponent marketPriceComponent = new MarketPriceComponent(serviceProvider.getOracleService().getMarketPriceService());
         view = new TopPanelView(model, this, userProfileSelection, marketPriceComponent.getRoot());
 
     }

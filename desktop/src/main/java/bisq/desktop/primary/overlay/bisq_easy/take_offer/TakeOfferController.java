@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountController;
@@ -65,7 +65,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         }
     }
 
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final TakeOfferModel model;
     @Getter
@@ -76,18 +76,18 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferReviewController takeOfferReviewController;
     private Subscription tradePriceSpecPin, takersBaseSideAmountPin, takersQuoteSideAmountPin, methodNamePin;
 
-    public TakeOfferController(DesktopApplicationService applicationService) {
+    public TakeOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.TAKE_OFFER);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
 
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
 
-        takeOfferPriceController = new TakeOfferPriceController(applicationService);
-        takeOfferAmountController = new TakeOfferAmountController(applicationService);
-        takeOfferPaymentController = new TakeOfferPaymentController(applicationService);
-        takeOfferReviewController = new TakeOfferReviewController(applicationService, this::setMainButtonsVisibleState);
+        takeOfferPriceController = new TakeOfferPriceController(serviceProvider);
+        takeOfferAmountController = new TakeOfferAmountController(serviceProvider);
+        takeOfferPaymentController = new TakeOfferPaymentController(serviceProvider);
+        takeOfferReviewController = new TakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState);
     }
 
     @Override
@@ -232,7 +232,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     }
 
     void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     private void updateNextButtonDisabledState() {

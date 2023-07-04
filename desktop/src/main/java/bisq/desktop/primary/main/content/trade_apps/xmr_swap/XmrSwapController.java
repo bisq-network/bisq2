@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.xmr_swap;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class XmrSwapController implements Controller {
     @Getter
     private final XmrSwapView view;
 
-    public XmrSwapController(DesktopApplicationService applicationService) {
+    public XmrSwapController(ServiceProvider serviceProvider) {
         XmrSwapModel model = new XmrSwapModel();
         view = new XmrSwapView(model, this);
     }

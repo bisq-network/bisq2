@@ -17,10 +17,12 @@
 
 package bisq.desktop.primary;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.common.observable.Observable;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.State;
 import bisq.desktop.common.Browser;
-import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -59,7 +61,6 @@ import static bisq.settings.DontShowAgainKey.WELCOME;
  */
 @Slf4j
 public class PrimaryStageController extends NavigationController {
-    protected final DesktopApplicationService applicationService;
     @Getter
     protected final PrimaryStageModel model;
     @Getter
@@ -68,22 +69,24 @@ public class PrimaryStageController extends NavigationController {
     protected final Runnable onActivatedHandler;
     private final SplashController splashController;
     private final UserIdentityService userIdentityService;
+    private final ServiceProvider serviceProvider;
 
-    public PrimaryStageController(DesktopApplicationService applicationService,
+    public PrimaryStageController(Observable<State> applicationServiceState,
+                                  ServiceProvider serviceProvider,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
                                   Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
+        this.serviceProvider = serviceProvider;
 
-        this.applicationService = applicationService;
-        settingsService = applicationService.getSettingsService();
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
+        settingsService = this.serviceProvider.getSettingsService();
+        userIdentityService = this.serviceProvider.getUserService().getUserIdentityService();
         this.onActivatedHandler = onActivatedHandler;
 
-        model = new PrimaryStageModel(applicationService.getConfig().getAppName());
+        model = new PrimaryStageModel(serviceProvider.getConfig().getAppName());
         setInitialScreenSize();
         view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.getStage());
 
-        splashController = new SplashController(applicationService);
+        splashController = new SplashController(applicationServiceState, this.serviceProvider);
 
         Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
         Transitions.setSettingsService(settingsService);
@@ -91,18 +94,18 @@ public class PrimaryStageController extends NavigationController {
 
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
-                applicationService.getConfig().getBaseDir(),
+                serviceProvider.getConfig().getBaseDir(),
                 settingsService,
                 this::shutdown);
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
 
-        new OverlayController(applicationService, viewRoot);
+        new OverlayController(this.serviceProvider, viewRoot);
     }
 
     private void setInitialScreenSize() {
-        Cookie cookie = applicationService.getSettingsService().getCookie();
+        Cookie cookie = serviceProvider.getSettingsService().getCookie();
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
                 .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
@@ -121,7 +124,7 @@ public class PrimaryStageController extends NavigationController {
                 return Optional.of(splashController);
             }
             case MAIN: {
-                return Optional.of(new MainController(applicationService));
+                return Optional.of(new MainController(serviceProvider));
             }
             default: {
                 return Optional.empty();
@@ -188,7 +191,7 @@ public class PrimaryStageController extends NavigationController {
 
     private void applyNavigationTarget() {
         splashController.stopAnimation();
-        boolean hasUserIdentities = applicationService.getUserService().getUserIdentityService().hasUserIdentities();
+        boolean hasUserIdentities = serviceProvider.getUserService().getUserIdentityService().hasUserIdentities();
 
         if (!hasUserIdentities) {
             if (DontShowAgainService.showAgain(WELCOME)) {
@@ -217,7 +220,7 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void shutdown() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     public void onStageXChanged(double value) {

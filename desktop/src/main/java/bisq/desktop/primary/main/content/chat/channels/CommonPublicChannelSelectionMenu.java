@@ -21,7 +21,7 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,10 +34,10 @@ public class CommonPublicChannelSelectionMenu extends PublicChannelSelectionMenu
     @Getter
     private final Controller controller;
 
-    public CommonPublicChannelSelectionMenu(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+    public CommonPublicChannelSelectionMenu(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
         super();
 
-        controller = new Controller(applicationService, chatChannelDomain);
+        controller = new Controller(serviceProvider, chatChannelDomain);
     }
 
     protected static class Controller extends PublicChannelSelectionMenu.Controller<
@@ -48,8 +48,8 @@ public class CommonPublicChannelSelectionMenu extends PublicChannelSelectionMenu
             ChatChannelSelectionService
             > {
 
-        protected Controller(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-            super(applicationService, chatChannelDomain);
+        protected Controller(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
+            super(serviceProvider, chatChannelDomain);
         }
 
         @Override

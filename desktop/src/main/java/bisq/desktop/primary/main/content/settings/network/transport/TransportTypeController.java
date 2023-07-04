@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.network.transport;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.network.p2p.node.transport.Transport;
 import lombok.Getter;
@@ -27,8 +27,8 @@ public class TransportTypeController implements Controller {
     @Getter
     private final TransportTypeView view;
 
-    public TransportTypeController(DesktopApplicationService applicationService, Transport.Type transportType) {
-        model = new TransportTypeModel(applicationService, transportType);
+    public TransportTypeController(ServiceProvider serviceProvider, Transport.Type transportType) {
+        model = new TransportTypeModel(serviceProvider, transportType);
         view = new TransportTypeView(model, this);
     }
 

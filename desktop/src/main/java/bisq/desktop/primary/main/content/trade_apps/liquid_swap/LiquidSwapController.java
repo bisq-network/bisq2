@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.liquid_swap;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class LiquidSwapController implements Controller {
     @Getter
     private final LiquidSwapView view;
 
-    public LiquidSwapController(DesktopApplicationService applicationService) {
+    public LiquidSwapController(ServiceProvider serviceProvider) {
         LiquidSwapModel model = new LiquidSwapModel();
         view = new LiquidSwapView(model, this);
     }

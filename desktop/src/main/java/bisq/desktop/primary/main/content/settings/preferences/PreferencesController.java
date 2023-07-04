@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.settings.ChatNotificationType;
@@ -35,8 +35,8 @@ public class PreferencesController implements Controller {
     private final PreferencesModel model;
     private Pin useAnimationsPin, chatNotificationTypePin;
 
-    public PreferencesController(DesktopApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
+    public PreferencesController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }

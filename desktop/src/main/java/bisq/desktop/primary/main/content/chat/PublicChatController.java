@@ -25,7 +25,7 @@ import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -41,8 +41,8 @@ public abstract class PublicChatController<V extends ChatView, M extends ChatMod
     protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChannelSelectionMenu<?, ?, ?> publicChatChannelSelection;
 
-    public PublicChatController(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
-        super(applicationService, chatChannelDomain, host);
+    public PublicChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+        super(serviceProvider, chatChannelDomain, host);
     }
 
     @Override

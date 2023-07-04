@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.roles;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
@@ -40,12 +40,12 @@ public class RolesController implements Controller {
     private final RoleRegistrationService roleRegistrationService;
     private Pin roleRegistrationDataSetPin;
 
-    public RolesController(DesktopApplicationService applicationService) {
-        UserService userService = applicationService.getUserService();
+    public RolesController(ServiceProvider serviceProvider) {
+        UserService userService = serviceProvider.getUserService();
         reputationService = userService.getReputationService();
         roleRegistrationService = userService.getRoleRegistrationService();
 
-        rolesTabController = new RolesTabController(applicationService);
+        rolesTabController = new RolesTabController(serviceProvider);
         model = new RolesModel();
         view = new RolesView(model, this, rolesTabController.getView().getRoot());
     }

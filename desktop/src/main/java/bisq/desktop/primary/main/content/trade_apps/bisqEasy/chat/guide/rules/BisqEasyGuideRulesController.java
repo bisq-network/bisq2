@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide.rules;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -34,8 +34,8 @@ public class BisqEasyGuideRulesController implements Controller {
     private final BisqEasyGuideRulesView view;
     private final SettingsService settingsService;
 
-    public BisqEasyGuideRulesController(DesktopApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
+    public BisqEasyGuideRulesController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
         model = new BisqEasyGuideRulesModel();
         view = new BisqEasyGuideRulesView(model, this);
     }

@@ -15,26 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade_apps.lightning;
+package bisq.desktop.common.application;
 
-import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.view.Controller;
+import javafx.application.Application;
+import javafx.application.HostServices;
+import javafx.stage.Stage;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
-public class LightningController implements Controller {
-    @Getter
-    private final LightningView view;
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class JavaFxApplicationData {
+    private final Stage stage;
+    private final Application.Parameters parameters;
+    private final HostServices hostServices;
 
-    public LightningController(ServiceProvider serviceProvider) {
-        LightningModel model = new LightningModel();
-        view = new LightningView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
+    public JavaFxApplicationData(Stage stage, Application.Parameters parameters, HostServices hostServices) {
+        this.stage = stage;
+        this.parameters = parameters;
+        this.hostServices = hostServices;
     }
 }

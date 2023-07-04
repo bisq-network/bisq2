@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.accountAge;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,12 +34,12 @@ import java.util.Optional;
 public class AccountAgeController extends TabController<AccountAgeModel> {
     @Getter
     private final AccountAgeView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public AccountAgeController(DesktopApplicationService applicationService) {
+    public AccountAgeController(ServiceProvider serviceProvider) {
         super(new AccountAgeModel(), NavigationTarget.ACCOUNT_AGE);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new AccountAgeView(model, this);
     }
 
@@ -55,13 +55,13 @@ public class AccountAgeController extends TabController<AccountAgeModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case ACCOUNT_AGE_TAB_1: {
-                return Optional.of(new AccountAgeTab1Controller(applicationService));
+                return Optional.of(new AccountAgeTab1Controller(serviceProvider));
             }
             case ACCOUNT_AGE_TAB_2: {
-                return Optional.of(new AccountAgeTab2Controller(applicationService));
+                return Optional.of(new AccountAgeTab2Controller(serviceProvider));
             }
             case ACCOUNT_AGE_TAB_3: {
-                return Optional.of(new AccountAgeTab3Controller(applicationService, view));
+                return Optional.of(new AccountAgeTab3Controller(serviceProvider, view));
             }
             default: {
                 return Optional.empty();

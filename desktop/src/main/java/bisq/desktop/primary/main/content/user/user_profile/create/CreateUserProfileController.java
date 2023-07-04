@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -31,16 +31,16 @@ import java.util.Optional;
 
 @Slf4j
 public class CreateUserProfileController extends NavigationController {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final CreateUserProfileModel model;
     @Getter
     private final CreateUserProfileView view;
 
-    public CreateUserProfileController(DesktopApplicationService applicationService) {
+    public CreateUserProfileController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_PROFILE);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         model = new CreateUserProfileModel();
         view = new CreateUserProfileView(model, this);
     }
@@ -62,10 +62,10 @@ public class CreateUserProfileController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CREATE_PROFILE_STEP1: {
-                return Optional.of(new CreateNewProfileStep1Controller(applicationService));
+                return Optional.of(new CreateNewProfileStep1Controller(serviceProvider));
             }
             case CREATE_PROFILE_STEP2: {
-                return Optional.of(new CreateNewProfileStep2Controller(applicationService));
+                return Optional.of(new CreateNewProfileStep2Controller(serviceProvider));
             }
             default: {
                 return Optional.empty();
@@ -74,6 +74,6 @@ public class CreateUserProfileController extends NavigationController {
     }
 
     public void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.network;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -44,13 +44,13 @@ public class NetworkInfoModel implements Model {
     private final KeyPairService keyPairService;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
 
-    public NetworkInfoModel(DesktopApplicationService applicationService) {
-        networkService = applicationService.getNetworkService();
+    public NetworkInfoModel(ServiceProvider serviceProvider) {
+        networkService = serviceProvider.getNetworkService();
         supportedTransportTypes = networkService.getSupportedTransportTypes();
         clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));
         torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));
         i2pDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.I2P));
 
-        keyPairService = applicationService.getKeyPairService();
+        keyPairService = serviceProvider.getSecurityService().getKeyPairService();
     }
 }

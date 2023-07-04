@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.tac;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.settings.SettingsService;
@@ -39,13 +39,13 @@ public class TacController implements InitWithDataController<TacController.InitD
     private final TacModel model;
     @Getter
     private final TacView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
     private Runnable completeHandler;
 
-    public TacController(DesktopApplicationService applicationService) {
-        this.applicationService = applicationService;
-        settingsService = applicationService.getSettingsService();
+    public TacController(ServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        settingsService = serviceProvider.getSettingsService();
         model = new TacModel();
         view = new TacView(model, this);
     }
@@ -64,7 +64,7 @@ public class TacController implements InitWithDataController<TacController.InitD
     }
 
     public void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     public void onConfirm(boolean selected) {
@@ -82,6 +82,6 @@ public class TacController implements InitWithDataController<TacController.InitD
 
     void onReject() {
         settingsService.setTacAccepted(false);
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        onQuit();
     }
 }

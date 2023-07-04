@@ -19,7 +19,7 @@ package bisq.desktop.primary.main;
 
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -40,20 +40,20 @@ public class MainController extends NavigationController {
     private final MainModel model = new MainModel();
     @Getter
     private final MainView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     private final LeftNavController leftNavController;
     private final AlertService alertService;
     private Pin alertsPin;
 
-    public MainController(DesktopApplicationService applicationService) {
+    public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
 
-        alertService = applicationService.getSupportService().getAlertService();
+        alertService = serviceProvider.getSupportService().getAlertService();
 
-        leftNavController = new LeftNavController(applicationService);
-        TopPanelController topPanelController = new TopPanelController(applicationService);
+        leftNavController = new LeftNavController(serviceProvider);
+        TopPanelController topPanelController = new TopPanelController(serviceProvider);
 
         view = new MainView(model,
                 this,
@@ -91,7 +91,7 @@ public class MainController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CONTENT: {
-                return Optional.of(new ContentController(applicationService));
+                return Optional.of(new ContentController(serviceProvider));
             }
             default: {
                 return Optional.empty();

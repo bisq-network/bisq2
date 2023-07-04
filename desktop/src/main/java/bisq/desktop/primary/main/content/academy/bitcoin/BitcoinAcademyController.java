@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy.bitcoin;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class BitcoinAcademyController implements Controller {
     @Getter
     private final BitcoinAcademyView view;
 
-    public BitcoinAcademyController(DesktopApplicationService applicationService) {
+    public BitcoinAcademyController(ServiceProvider serviceProvider) {
         BitcoinAcademyModel model = new BitcoinAcademyModel();
         view = new BitcoinAcademyView(model, this);
     }

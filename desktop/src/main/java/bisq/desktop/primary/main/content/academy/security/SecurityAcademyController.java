@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy.security;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class SecurityAcademyController implements Controller {
     @Getter
     private final SecurityAcademyView view;
 
-    public SecurityAcademyController(DesktopApplicationService applicationService) {
+    public SecurityAcademyController(ServiceProvider serviceProvider) {
         SecurityAcademyModel model = new SecurityAcademyModel();
         view = new SecurityAcademyView(model, this);
     }

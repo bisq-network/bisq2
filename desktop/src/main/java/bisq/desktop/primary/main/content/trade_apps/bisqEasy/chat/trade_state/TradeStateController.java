@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state;
 
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -56,20 +56,20 @@ public class TradeStateController implements Controller {
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     private final TradePhaseBox tradePhaseBox;
     private Subscription isCollapsedPin;
     private Pin tradeRulesConfirmedPin, bisqEasyTradeStatePin;
 
-    public TradeStateController(DesktopApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
-        this.applicationService = applicationService;
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        marketPriceService = applicationService.getOracleService().getMarketPriceService();
-        settingsService = applicationService.getSettingsService();
-        bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
+    public TradeStateController(ServiceProvider serviceProvider, Consumer<UserProfile> openUserProfileSidebarHandler) {
+        this.serviceProvider = serviceProvider;
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        settingsService = serviceProvider.getSettingsService();
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
         TradeWelcome tradeWelcome = new TradeWelcome();
-        tradePhaseBox = new TradePhaseBox(applicationService);
+        tradePhaseBox = new TradePhaseBox(serviceProvider);
 
         model = new TradeStateModel();
         view = new TradeStateView(model, this, tradeWelcome.getView().getRoot(), tradePhaseBox.getView().getRoot());
@@ -107,34 +107,34 @@ public class TradeStateController implements Controller {
                     case MAKER_SENT_TAKE_OFFER_RESPONSE:
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
                         if (isSeller) {
-                            model.getStateInfoVBox().set(new SellerState1(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                            model.getStateInfoVBox().set(new SellerState1(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         } else {
-                            model.getStateInfoVBox().set(new BuyerState1(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                            model.getStateInfoVBox().set(new BuyerState1(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         }
                         break;
                     case SELLER_SENT_ACCOUNT_DATA:
-                        model.getStateInfoVBox().set(new SellerState2(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState2(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BUYER_RECEIVED_ACCOUNT_DATA:
-                        model.getStateInfoVBox().set(new BuyerState2(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState2(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new BuyerState3(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState3(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new SellerState3(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState3(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new SellerState4(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new SellerState4(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                        model.getStateInfoVBox().set(new BuyerState4(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                        model.getStateInfoVBox().set(new BuyerState4(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case BTC_CONFIRMED:
                         if (isSeller) {
-                            model.getStateInfoVBox().set(new SellerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                            model.getStateInfoVBox().set(new SellerState5(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         } else {
-                            model.getStateInfoVBox().set(new BuyerState5(applicationService, bisqEasyTrade, channel).getView().getRoot());
+                            model.getStateInfoVBox().set(new BuyerState5(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         }
                         break;
                     default:

@@ -24,7 +24,7 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -76,17 +76,17 @@ public class CreateOfferReviewOfferController implements Controller {
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
 
-    public CreateOfferReviewOfferController(DesktopApplicationService applicationService,
+    public CreateOfferReviewOfferController(ServiceProvider serviceProvider,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
                                             Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
-        ChatService chatService = applicationService.getChatService();
+        ChatService chatService = serviceProvider.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
-        reputationService = applicationService.getUserService().getReputationService();
-        settingsService = applicationService.getSettingsService();
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        userProfileService = applicationService.getUserService().getUserProfileService();
-        marketPriceService = applicationService.getOracleService().getMarketPriceService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        settingsService = serviceProvider.getSettingsService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
         this.resetHandler = resetHandler;
 
         model = new CreateOfferReviewOfferModel();

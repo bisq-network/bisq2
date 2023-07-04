@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create.step2;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
@@ -64,11 +64,11 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @Getter
     protected final CreateNewProfileStep2View view;
     protected final UserIdentityService userIdentityService;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public CreateNewProfileStep2Controller(DesktopApplicationService applicationService) {
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        this.applicationService = applicationService;
+    public CreateNewProfileStep2Controller(ServiceProvider serviceProvider) {
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        this.serviceProvider = serviceProvider;
 
         model = createModel();
         view = createView();
@@ -112,7 +112,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     }
 
     void onQuit() {
-        applicationService.shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 
     protected void onSave() {

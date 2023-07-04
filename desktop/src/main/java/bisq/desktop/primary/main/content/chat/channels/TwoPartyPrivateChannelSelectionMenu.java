@@ -23,7 +23,7 @@ import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.components.containers.Spacer;
@@ -63,8 +63,8 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
     @Getter
     private final Controller controller;
 
-    public TwoPartyPrivateChannelSelectionMenu(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-        controller = new Controller(applicationService, chatChannelDomain);
+    public TwoPartyPrivateChannelSelectionMenu(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
+        controller = new Controller(serviceProvider, chatChannelDomain);
     }
 
     protected static class Controller extends PrivateChannelSelectionMenu.Controller<
@@ -75,8 +75,8 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
             ChatChannelSelectionService
             > {
 
-        protected Controller(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-            super(applicationService, chatChannelDomain);
+        protected Controller(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
+            super(serviceProvider, chatChannelDomain);
         }
 
         @Override

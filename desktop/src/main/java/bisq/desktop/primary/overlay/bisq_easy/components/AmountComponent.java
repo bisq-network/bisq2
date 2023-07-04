@@ -24,7 +24,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -59,9 +59,9 @@ public class AmountComponent {
 
     private final Controller controller;
 
-    public AmountComponent(DesktopApplicationService applicationService,
+    public AmountComponent(ServiceProvider serviceProvider,
                            boolean useQuoteCurrencyForMinMaxRange) {
-        controller = new Controller(applicationService, useQuoteCurrencyForMinMaxRange);
+        controller = new Controller(serviceProvider, useQuoteCurrencyForMinMaxRange);
     }
 
     public View getView() {
@@ -123,11 +123,11 @@ public class AmountComponent {
         private Subscription baseAmountFromModelPin, baseAmountFromCompPin,
                 quoteAmountFromCompPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin;
 
-        private Controller(DesktopApplicationService applicationService,
+        private Controller(ServiceProvider serviceProvider,
                            boolean useQuoteCurrencyForMinMaxRange) {
             quoteSideAmountInput = new BigAmountInput(false);
             baseSideAmountInput = new SmallAmountInput(true);
-            price = new PriceInput(applicationService.getOracleService().getMarketPriceService());
+            price = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
 
             model = new Model(useQuoteCurrencyForMinMaxRange);
             view = new View(model, this,

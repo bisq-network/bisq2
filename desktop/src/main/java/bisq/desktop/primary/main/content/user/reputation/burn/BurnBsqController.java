@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.burn;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,12 +34,12 @@ import java.util.Optional;
 public class BurnBsqController extends TabController<BurnBsqModel> {
     @Getter
     private final BurnBsqView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public BurnBsqController(DesktopApplicationService applicationService) {
+    public BurnBsqController(ServiceProvider serviceProvider) {
         super(new BurnBsqModel(), NavigationTarget.BURN_BSQ);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new BurnBsqView(model, this);
     }
 
@@ -55,13 +55,13 @@ public class BurnBsqController extends TabController<BurnBsqModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case BURN_BSQ_TAB_1: {
-                return Optional.of(new BurnBsqTab1Controller(applicationService));
+                return Optional.of(new BurnBsqTab1Controller(serviceProvider));
             }
             case BURN_BSQ_TAB_2: {
-                return Optional.of(new BurnBsqTab2Controller(applicationService));
+                return Optional.of(new BurnBsqTab2Controller(serviceProvider));
             }
             case BURN_BSQ_TAB_3: {
-                return Optional.of(new BurnBsqTab3Controller(applicationService));
+                return Optional.of(new BurnBsqTab3Controller(serviceProvider));
             }
             default: {
                 return Optional.empty();

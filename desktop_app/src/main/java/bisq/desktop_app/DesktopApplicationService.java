@@ -15,22 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.desktop_app;
 
 import bisq.account.AccountService;
-import bisq.application.ApplicationService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.State;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.oracle.service.OracleService;
 import bisq.presentation.notifications.NotificationsService;
-import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
@@ -40,6 +40,7 @@ import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +49,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -57,18 +57,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * Initializes the domain instances according to the requirements of their dependencies either in sequence
  * or in parallel.
  */
-@Getter
-@Slf4j
-public class DesktopApplicationService extends ApplicationService {
 
-    public enum State {
-        INITIALIZE_APP,
-        INITIALIZE_NETWORK,
-        INITIALIZE_WALLET,
-        INITIALIZE_SERVICES,
-        APP_INITIALIZED,
-        FAILED
-    }
+@Slf4j
+public class DesktopApplicationService extends bisq.application.ApplicationService {
+
+    @Getter
+    private final ServiceProvider serviceProvider;
+    @Getter
+    private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -84,8 +80,6 @@ public class DesktopApplicationService extends ApplicationService {
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
-
-    private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public DesktopApplicationService(String[] args) {
         super("desktop", args);
@@ -123,7 +117,7 @@ public class DesktopApplicationService extends ApplicationService {
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
-                getKeyPairService(),
+                securityService.getKeyPairService(),
                 identityService,
                 networkService,
                 securityService.getProofOfWorkService());
@@ -146,6 +140,23 @@ public class DesktopApplicationService extends ApplicationService {
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, oracleService);
+
+        serviceProvider = new ServiceProvider(this::shutdown,
+                getConfig(),
+                securityService,
+                walletService,
+                networkService,
+                identityService,
+                oracleService,
+                accountService,
+                offerService,
+                contractService,
+                userService,
+                chatService,
+                settingsService,
+                supportService,
+                notificationsService,
+                tradeService);
     }
 
     @Override
@@ -230,13 +241,8 @@ public class DesktopApplicationService extends ApplicationService {
                 .join());
     }
 
-    public KeyPairService getKeyPairService() {
-        return securityService.getKeyPairService();
-    }
-
-
     private void setState(State newState) {
-        checkArgument(state.get().ordinal() < newState.ordinal(),
+        Preconditions.checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);

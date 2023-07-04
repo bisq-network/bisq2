@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.application;
 
-import bisq.desktop.common.JavaFxApplicationData;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;

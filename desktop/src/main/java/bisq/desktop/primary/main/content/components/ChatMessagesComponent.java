@@ -35,7 +35,7 @@ import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -82,10 +82,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DesktopApplicationService applicationService,
+    public ChatMessagesComponent(ServiceProvider serviceProvider,
                                  ChatChannelDomain chatChannelDomain,
                                  Consumer<UserProfile> openUserProfileSidebarHandler) {
-        controller = new Controller(applicationService,
+        controller = new Controller(serviceProvider,
                 chatChannelDomain,
                 openUserProfileSidebarHandler);
     }
@@ -133,24 +133,24 @@ public class ChatMessagesComponent {
                 selectedPaymentAccountPin, paymentAccountsPin;
         private Subscription selectedPaymentAccountSubscription;
 
-        private Controller(DesktopApplicationService applicationService,
+        private Controller(ServiceProvider serviceProvider,
                            ChatChannelDomain chatChannelDomain,
                            Consumer<UserProfile> openUserProfileSidebarHandler) {
             this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
 
-            chatService = applicationService.getChatService();
-            settingsService = applicationService.getSettingsService();
-            userIdentityService = applicationService.getUserService().getUserIdentityService();
-            userProfileService = applicationService.getUserService().getUserProfileService();
-            accountService = applicationService.getAccountService();
-            mediationService = applicationService.getSupportService().getMediationService();
-            walletService = applicationService.getWalletService();
+            chatService = serviceProvider.getChatService();
+            settingsService = serviceProvider.getSettingsService();
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
+            accountService = serviceProvider.getAccountService();
+            mediationService = serviceProvider.getSupportService().getMediationService();
+            walletService = serviceProvider.getWalletService();
 
-            citationBlock = new CitationBlock(applicationService);
+            citationBlock = new CitationBlock(serviceProvider);
 
             UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
-            chatMessagesListView = new ChatMessagesListView(applicationService,
+            chatMessagesListView = new ChatMessagesListView(serviceProvider,
                     this::mentionUserHandler,
                     this::showChatUserDetailsHandler,
                     this::replyHandler,

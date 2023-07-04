@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content;
 
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -48,17 +48,17 @@ import java.util.Optional;
 
 @Slf4j
 public class ContentController extends NavigationController {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final ContentModel model;
     @Getter
     private final ContentView view;
 
-    public ContentController(DesktopApplicationService applicationService) {
+    public ContentController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CONTENT);
 
-        this.applicationService = applicationService;
-        model = new ContentModel(applicationService.getWalletService().isPresent());
+        this.serviceProvider = serviceProvider;
+        model = new ContentModel(serviceProvider.getWalletService().isPresent());
         view = new ContentView(model, this);
     }
 
@@ -77,67 +77,67 @@ public class ContentController extends NavigationController {
         }
         switch (navigationTarget) {
             case DASHBOARD: {
-                return Optional.of(new DashboardController(applicationService));
+                return Optional.of(new DashboardController(serviceProvider));
             }
             case DISCUSSION: {
-                return Optional.of(new CommonChatController(applicationService, ChatChannelDomain.DISCUSSION));
+                return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.DISCUSSION));
             }
             case ACADEMY_OVERVIEW: {
-                return Optional.of(new AcademyOverviewController(applicationService));
+                return Optional.of(new AcademyOverviewController(serviceProvider));
             }
             case BISQ_ACADEMY: {
-                return Optional.of(new BisqAcademyController(applicationService));
+                return Optional.of(new BisqAcademyController(serviceProvider));
             }
             case BITCOIN_ACADEMY: {
-                return Optional.of(new BitcoinAcademyController(applicationService));
+                return Optional.of(new BitcoinAcademyController(serviceProvider));
             }
             case SECURITY_ACADEMY: {
-                return Optional.of(new SecurityAcademyController(applicationService));
+                return Optional.of(new SecurityAcademyController(serviceProvider));
             }
             case PRIVACY_ACADEMY: {
-                return Optional.of(new PrivacyAcademyController(applicationService));
+                return Optional.of(new PrivacyAcademyController(serviceProvider));
             }
             case WALLETS_ACADEMY: {
-                return Optional.of(new WalletsAcademyController(applicationService));
+                return Optional.of(new WalletsAcademyController(serviceProvider));
             }
             case FOSS_ACADEMY: {
-                return Optional.of(new FossAcademyController(applicationService));
+                return Optional.of(new FossAcademyController(serviceProvider));
             }
             case EVENTS: {
-                return Optional.of(new CommonChatController(applicationService, ChatChannelDomain.EVENTS));
+                return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.EVENTS));
             }
             case SUPPORT: {
-                return Optional.of(new CommonChatController(applicationService, ChatChannelDomain.SUPPORT));
+                return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.SUPPORT));
             }
             case TRADE_OVERVIEW: {
-                return Optional.of(new TradeAppsController(applicationService));
+                return Optional.of(new TradeAppsController(serviceProvider));
             }
             case BISQ_EASY: {
-                return Optional.of(new BisqEasyController(applicationService));
+                return Optional.of(new BisqEasyController(serviceProvider));
             }
             case LIQUID_SWAP: {
-                return Optional.of(new LiquidSwapController(applicationService));
+                return Optional.of(new LiquidSwapController(serviceProvider));
             }
             case MULTISIG: {
-                return Optional.of(new MultiSigController(applicationService));
+                return Optional.of(new MultiSigController(serviceProvider));
             }
             case MONERO_SWAP: {
-                return Optional.of(new XmrSwapController(applicationService));
+                return Optional.of(new XmrSwapController(serviceProvider));
             }
             case BSQ_SWAP: {
-                return Optional.of(new BsqSwapController(applicationService));
+                return Optional.of(new BsqSwapController(serviceProvider));
             }
             case LIGHTNING_X: {
-                return Optional.of(new LightningController(applicationService));
+                return Optional.of(new LightningController(serviceProvider));
             }
             case USER: {
-                return Optional.of(new UserController(applicationService));
+                return Optional.of(new UserController(serviceProvider));
             }
             case SETTINGS: {
-                return Optional.of(new SettingsController(applicationService));
+                return Optional.of(new SettingsController(serviceProvider));
             }
             case WALLET: {
-                return Optional.of(new WalletController(applicationService));
+                return Optional.of(new WalletController(serviceProvider));
             }
             default: {
                 return Optional.empty();

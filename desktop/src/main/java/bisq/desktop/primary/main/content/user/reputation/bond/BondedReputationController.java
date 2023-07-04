@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.bond;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,12 +34,12 @@ import java.util.Optional;
 public class BondedReputationController extends TabController<BondedReputationModel> {
     @Getter
     private final BondedReputationView view;
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
 
-    public BondedReputationController(DesktopApplicationService applicationService) {
+    public BondedReputationController(ServiceProvider serviceProvider) {
         super(new BondedReputationModel(), NavigationTarget.BSQ_BOND);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
         view = new BondedReputationView(model, this);
     }
 
@@ -55,13 +55,13 @@ public class BondedReputationController extends TabController<BondedReputationMo
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case BSQ_BOND_TAB_1: {
-                return Optional.of(new BondedReputationTab1Controller(applicationService));
+                return Optional.of(new BondedReputationTab1Controller(serviceProvider));
             }
             case BSQ_BOND_TAB_2: {
-                return Optional.of(new BondedReputationTab2Controller(applicationService));
+                return Optional.of(new BondedReputationTab2Controller(serviceProvider));
             }
             case BSQ_BOND_TAB_3: {
-                return Optional.of(new BondedReputationTab3Controller(applicationService));
+                return Optional.of(new BondedReputationTab3Controller(serviceProvider));
             }
             default: {
                 return Optional.empty();

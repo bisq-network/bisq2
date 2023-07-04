@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -33,14 +33,14 @@ import java.util.Optional;
 
 @Slf4j
 public class WalletController extends TabController<WalletModel> {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final WalletView view;
 
-    public WalletController(DesktopApplicationService applicationService) {
+    public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET);
 
-        this.applicationService = applicationService;
+        this.serviceProvider = serviceProvider;
 
         view = new WalletView(model, this);
     }
@@ -56,19 +56,19 @@ public class WalletController extends TabController<WalletModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case WALLET_DASHBOARD: {
-                return Optional.of(new WalletDashboardController(applicationService));
+                return Optional.of(new WalletDashboardController(serviceProvider));
             }
             case WALLET_SEND: {
-                return Optional.of(new WalletSendController(applicationService));
+                return Optional.of(new WalletSendController(serviceProvider));
             }
             case WALLET_RECEIVE: {
-                return Optional.of(new WalletReceiveController(applicationService));
+                return Optional.of(new WalletReceiveController(serviceProvider));
             }
             case WALLET_TXS: {
-                return Optional.of(new WalletTxsController(applicationService));
+                return Optional.of(new WalletTxsController(serviceProvider));
             }
             case WALLET_SETTINGS: {
-                return Optional.of(new WalletSettingsController(applicationService));
+                return Optional.of(new WalletSettingsController(serviceProvider));
             }
             default: {
                 return Optional.empty();

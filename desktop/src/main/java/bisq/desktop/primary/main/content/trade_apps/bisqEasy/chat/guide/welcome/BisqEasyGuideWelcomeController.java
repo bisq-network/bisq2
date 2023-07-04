@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide.welcome;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -33,8 +33,8 @@ public class BisqEasyGuideWelcomeController implements Controller {
     private final SettingsService settingsService;
     private final BisqEasyGuideWelcomeModel model;
 
-    public BisqEasyGuideWelcomeController(DesktopApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
+    public BisqEasyGuideWelcomeController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
         model = new BisqEasyGuideWelcomeModel();
         view = new BisqEasyGuideWelcomeView(model, this);
     }

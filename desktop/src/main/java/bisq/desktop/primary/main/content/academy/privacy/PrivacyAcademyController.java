@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy.privacy;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class PrivacyAcademyController implements Controller {
     @Getter
     private final PrivacyAcademyView view;
 
-    public PrivacyAcademyController(DesktopApplicationService applicationService) {
+    public PrivacyAcademyController(ServiceProvider serviceProvider) {
         PrivacyAcademyModel model = new PrivacyAcademyModel();
         view = new PrivacyAcademyView(model, this);
     }

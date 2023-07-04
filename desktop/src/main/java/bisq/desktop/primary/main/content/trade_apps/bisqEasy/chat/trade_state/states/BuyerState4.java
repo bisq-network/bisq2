@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.monetary.Coin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -50,8 +50,8 @@ import java.util.concurrent.TimeUnit;
 public class BuyerState4 extends BaseState {
     private final Controller controller;
 
-    public BuyerState4(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyTrade, channel);
+    public BuyerState4(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -62,10 +62,10 @@ public class BuyerState4 extends BaseState {
         private final ExplorerService explorerService;
         private UIScheduler scheduler;
 
-        private Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyTrade, channel);
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(serviceProvider, bisqEasyTrade, channel);
 
-            explorerService = applicationService.getOracleService().getExplorerService();
+            explorerService = serviceProvider.getOracleService().getExplorerService();
         }
 
         @Override

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.user.nodes;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
@@ -40,12 +40,12 @@ public class NodesController implements Controller {
     private final NodeRegistrationService nodeRegistrationService;
     private Pin registrationDataSetPin;
 
-    public NodesController(DesktopApplicationService applicationService) {
-        UserService userService = applicationService.getUserService();
+    public NodesController(ServiceProvider serviceProvider) {
+        UserService userService = serviceProvider.getUserService();
         reputationService = userService.getReputationService();
         nodeRegistrationService = userService.getNodeRegistrationService();
 
-        nodesTabController = new NodesTabController(applicationService);
+        nodesTabController = new NodesTabController(serviceProvider);
         model = new NodesModel();
         view = new NodesView(model, this, nodesTabController.getView().getRoot());
     }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -27,7 +27,7 @@ public class AcademyOverviewController implements Controller {
     @Getter
     private final AcademyOverviewView view;
 
-    public AcademyOverviewController(DesktopApplicationService applicationService) {
+    public AcademyOverviewController(ServiceProvider serviceProvider) {
         AcademyOverviewModel model = new AcademyOverviewModel();
         view = new AcademyOverviewView(model, this);
     }

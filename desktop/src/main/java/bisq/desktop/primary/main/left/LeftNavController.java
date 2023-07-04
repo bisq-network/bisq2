@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.left;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -40,11 +40,11 @@ public class LeftNavController implements Controller {
     private final ChatNotificationService chatNotificationService;
     private final NotificationsService notificationsService;
 
-    public LeftNavController(DesktopApplicationService applicationService) {
-        chatNotificationService = applicationService.getChatService().getChatNotificationService();
-        notificationsService = applicationService.getNotificationsService();
+    public LeftNavController(ServiceProvider serviceProvider) {
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        notificationsService = serviceProvider.getNotificationsService();
 
-        model = new LeftNavModel(applicationService);
+        model = new LeftNavModel(serviceProvider);
         view = new LeftNavView(model, this);
     }
 

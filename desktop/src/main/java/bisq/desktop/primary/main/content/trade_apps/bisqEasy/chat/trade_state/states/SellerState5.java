@@ -22,7 +22,7 @@ import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.util.FileUtils;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.controls.BisqText;
@@ -49,8 +49,8 @@ import java.util.List;
 public class SellerState5 extends BaseState {
     private final Controller controller;
 
-    public SellerState5(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyTrade, channel);
+    public SellerState5(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -62,12 +62,12 @@ public class SellerState5 extends BaseState {
         private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
 
-        private Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyTrade, channel);
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(serviceProvider, bisqEasyTrade, channel);
 
-            explorerService = applicationService.getOracleService().getExplorerService();
-            bisqEasyPrivateTradeChatChannelService = applicationService.getChatService().getBisqEasyPrivateTradeChatChannelService();
-            bisqEasyChatChannelSelectionService = applicationService.getChatService().getBisqEasyChatChannelSelectionService();
+            explorerService = serviceProvider.getOracleService().getExplorerService();
+            bisqEasyPrivateTradeChatChannelService = serviceProvider.getChatService().getBisqEasyPrivateTradeChatChannelService();
+            bisqEasyChatChannelSelectionService = serviceProvider.getChatService().getBisqEasyChatChannelSelectionService();
 
         }
 

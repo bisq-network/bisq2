@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
@@ -52,14 +52,14 @@ public class CreateOfferAmountController implements Controller {
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
-    public CreateOfferAmountController(DesktopApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
-        marketPriceService = applicationService.getOracleService().getMarketPriceService();
+    public CreateOfferAmountController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
+        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
         model = new CreateOfferAmountModel();
 
-        minAmountComponent = new AmountComponent(applicationService, true);
+        minAmountComponent = new AmountComponent(serviceProvider, true);
         minAmountComponent.setDescription(Res.get("bisqEasy.createOffer.amount.description.minAmount"));
-        maxOrFixAmountComponent = new AmountComponent(applicationService, true);
+        maxOrFixAmountComponent = new AmountComponent(serviceProvider, true);
 
         view = new CreateOfferAmountView(model, this,
                 minAmountComponent,

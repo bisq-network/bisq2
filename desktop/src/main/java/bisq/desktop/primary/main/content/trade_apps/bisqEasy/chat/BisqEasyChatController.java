@@ -27,7 +27,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -59,18 +59,18 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
     private TradeStateController tradeStateController;
 
-    public BisqEasyChatController(DesktopApplicationService applicationService) {
-        super(applicationService, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_CHAT);
+    public BisqEasyChatController(ServiceProvider serviceProvider) {
+        super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_CHAT);
 
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
-        settingsService = applicationService.getSettingsService();
+        settingsService = serviceProvider.getSettingsService();
     }
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeStateController = new TradeStateController(applicationService, this::openUserProfileSidebar);
-        bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(applicationService);
-        bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(applicationService);
+        tradeStateController = new TradeStateController(serviceProvider, this::openUserProfileSidebar);
+        bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(serviceProvider);
+        bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(serviceProvider);
     }
 
     @Override

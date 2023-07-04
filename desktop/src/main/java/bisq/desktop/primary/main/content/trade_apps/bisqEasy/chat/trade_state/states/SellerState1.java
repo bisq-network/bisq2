@@ -21,7 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqText;
@@ -54,8 +54,8 @@ import java.util.stream.Collectors;
 public class SellerState1 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-        controller = new Controller(applicationService, bisqEasyTrade, channel);
+    public SellerState1(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
     public View getView() {
@@ -65,8 +65,8 @@ public class SellerState1 extends BaseState {
     private static class Controller extends BaseState.Controller<Model, View> {
         private Pin accountsPin, selectedAccountPin;
 
-        private Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
-            super(applicationService, bisqEasyTrade, channel);
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+            super(serviceProvider, bisqEasyTrade, channel);
         }
 
         @Override

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.network;
 
-import bisq.desktop.DesktopApplicationService;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.settings.network.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class NetworkInfoController implements Controller {
-    private final DesktopApplicationService applicationService;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final NetworkInfoModel model;
     @Getter
@@ -40,12 +40,12 @@ public class NetworkInfoController implements Controller {
     @Getter
     private final Optional<TransportTypeController> i2pController = Optional.empty();
 
-    public NetworkInfoController(DesktopApplicationService applicationService) {
-        this.applicationService = applicationService;
-        model = new NetworkInfoModel(applicationService);
+    public NetworkInfoController(ServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        model = new NetworkInfoModel(serviceProvider);
 
 
-        Set<Transport.Type> supportedTransportTypes = applicationService.getNetworkService().getSupportedTransportTypes();
+        Set<Transport.Type> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
         view = new NetworkInfoView(model, this,
                 getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.CLEAR),
                 getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.TOR),
@@ -62,7 +62,7 @@ public class NetworkInfoController implements Controller {
 
     private Optional<Node> getTransportTypeViewRoot(Set<Transport.Type> supportedTransportTypes, Transport.Type type) {
         if (supportedTransportTypes.contains(type)) {
-            return Optional.of(new TransportTypeController(applicationService, type)).map(e -> e.getView().getRoot());
+            return Optional.of(new TransportTypeController(serviceProvider, type)).map(e -> e.getView().getRoot());
         } else {
             return Optional.empty();
         }
