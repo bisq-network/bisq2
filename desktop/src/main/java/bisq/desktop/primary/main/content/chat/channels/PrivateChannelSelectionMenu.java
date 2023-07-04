@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -26,6 +25,7 @@ import bisq.chat.channel.priv.PrivateChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
@@ -51,7 +51,7 @@ public abstract class PrivateChannelSelectionMenu<
 
         protected Pin channelCollectionObserverPin;
 
-        public Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        public Controller(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService, chatChannelDomain);
         }
 

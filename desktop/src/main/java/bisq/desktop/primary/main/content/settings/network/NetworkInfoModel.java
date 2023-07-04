@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.network;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -44,7 +44,7 @@ public class NetworkInfoModel implements Model {
     private final KeyPairService keyPairService;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
 
-    public NetworkInfoModel(DefaultApplicationService applicationService) {
+    public NetworkInfoModel(DesktopApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         supportedTransportTypes = networkService.getSupportedTransportTypes();
         clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));

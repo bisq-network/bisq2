@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.user.accounts.create;
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.overlay.OverlayController;
@@ -40,11 +40,11 @@ public class CreatePaymentAccountController implements Controller {
     protected final CreatePaymentAccountModel model;
     @Getter
     protected final CreatePaymentAccountView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private final AccountService accountService;
     private Subscription accountDataSubscription, accountNameSubscription;
 
-    public CreatePaymentAccountController(DefaultApplicationService applicationService) {
+    public CreatePaymentAccountController(DesktopApplicationService applicationService) {
         this.applicationService = applicationService;
         accountService = applicationService.getAccountService();
 

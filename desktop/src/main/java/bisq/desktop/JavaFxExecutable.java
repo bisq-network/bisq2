@@ -17,7 +17,6 @@
 
 package bisq.desktop;
 
-import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
 import static bisq.common.util.OsUtils.EXIT_FAILURE;
 
 @Slf4j
-public class JavaFxExecutable extends Executable<DefaultApplicationService> {
+public class JavaFxExecutable extends Executable<DesktopApplicationService> {
     @Nullable
     private PrimaryStageController primaryStageController;
 
@@ -40,8 +39,8 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
     }
 
     @Override
-    protected DefaultApplicationService createApplicationService(String[] args) {
-        return new DefaultApplicationService(args);
+    protected DesktopApplicationService createApplicationService(String[] args) {
+        return new DesktopApplicationService(args);
     }
 
     @Override

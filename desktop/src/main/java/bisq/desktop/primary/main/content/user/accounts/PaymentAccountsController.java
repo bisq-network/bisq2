@@ -22,8 +22,8 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -48,7 +48,7 @@ public class PaymentAccountsController implements Controller {
     private Pin accountsPin, selectedAccountPin;
 
 
-    public PaymentAccountsController(DefaultApplicationService applicationService) {
+    public PaymentAccountsController(DesktopApplicationService applicationService) {
         accountService = applicationService.getAccountService();
 
         model = new PaymentAccountsModel();

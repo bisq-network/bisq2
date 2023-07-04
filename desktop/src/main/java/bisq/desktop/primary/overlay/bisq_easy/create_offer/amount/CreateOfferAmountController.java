@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.amount;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
@@ -52,7 +52,7 @@ public class CreateOfferAmountController implements Controller {
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
-    public CreateOfferAmountController(DefaultApplicationService applicationService) {
+    public CreateOfferAmountController(DesktopApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         model = new CreateOfferAmountModel();

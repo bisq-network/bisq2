@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.burn.tab1;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +30,7 @@ public class BurnBsqTab1Controller implements Controller {
     @Getter
     private final BurnBsqTab1View view;
 
-    public BurnBsqTab1Controller(DefaultApplicationService applicationService) {
+    public BurnBsqTab1Controller(DesktopApplicationService applicationService) {
         BurnBsqTab1Model model = new BurnBsqTab1Model();
         view = new BurnBsqTab1View(model, this);
     }

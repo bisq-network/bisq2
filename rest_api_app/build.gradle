@@ -19,10 +19,8 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    api platform(project(':platforms:common-platform'))
-
-    implementation project(':common')
     implementation project(':persistence')
+    implementation project(':i18n')
     implementation project(':security')
     implementation project(':identity')
     implementation project(':account')
@@ -33,11 +31,35 @@ dependencies {
     implementation project(':settings')
     implementation project(':user')
     implementation project(':chat')
+    implementation project(':support')
     implementation project(':presentation')
     implementation project(':application')
 
-    implementation 'network:network'
+    implementation("network:network")
+    implementation("wallets:electrum")
+    implementation("wallets:bitcoind")
 
+
+    /* api platform(project(':platforms:common-platform'))
+ 
+     implementation project(':common')
+     implementation project(':persistence')
+     implementation project(':security')
+     implementation project(':identity')
+     implementation project(':account')
+     implementation project(':offer')
+     implementation project(':contract')
+     implementation project(':trade')
+     implementation project(':oracle')
+     implementation project(':settings')
+     implementation project(':user')
+     implementation project(':chat')
+     implementation project(':presentation')
+     implementation project(':application')
+ 
+     implementation 'network:network'*/
+
+    implementation libs.typesafe.config
     implementation libs.bundles.glassfish.jersey
     implementation libs.bundles.jackson
 

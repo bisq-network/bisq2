@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.onboarding;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -34,7 +34,7 @@ public class BisqEasyOnboardingController implements Controller {
     @Getter
     private final BisqEasyOnboardingView view;
 
-    public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
+    public BisqEasyOnboardingController(DesktopApplicationService applicationService) {
         SettingsService settingsService = applicationService.getSettingsService();
         BisqEasyOnboardingModel model = new BisqEasyOnboardingModel();
         view = new BisqEasyOnboardingView(model, this);

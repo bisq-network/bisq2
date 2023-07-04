@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.password;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
@@ -46,7 +46,7 @@ public class PasswordController implements Controller {
     private Subscription pin;
     private MonadicBinding<Boolean> binding;
 
-    public PasswordController(DefaultApplicationService applicationService) {
+    public PasswordController(DesktopApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         confirmedPasswordValidator = new PasswordValidator();
         model = new PasswordModel();

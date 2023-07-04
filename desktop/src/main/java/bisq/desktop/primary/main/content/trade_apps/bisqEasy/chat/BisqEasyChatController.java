@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
@@ -28,6 +27,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -59,7 +59,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
     private TradeStateController tradeStateController;
 
-    public BisqEasyChatController(DefaultApplicationService applicationService) {
+    public BisqEasyChatController(DesktopApplicationService applicationService) {
         super(applicationService, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_CHAT);
 
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();

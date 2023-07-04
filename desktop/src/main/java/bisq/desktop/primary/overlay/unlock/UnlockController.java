@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.unlock;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -45,12 +45,12 @@ public class UnlockController implements InitWithDataController<UnlockController
     private final UnlockModel model;
     @Getter
     private final UnlockView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private final UserIdentityService userIdentityService;
     private Subscription pin;
     private Runnable completeHandler;
 
-    public UnlockController(DefaultApplicationService applicationService) {
+    public UnlockController(DesktopApplicationService applicationService) {
         this.applicationService = applicationService;
         userIdentityService = applicationService.getUserService().getUserIdentityService();
 

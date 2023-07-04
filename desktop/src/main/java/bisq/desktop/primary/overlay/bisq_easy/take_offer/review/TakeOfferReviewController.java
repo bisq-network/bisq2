@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.review;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannelDomain;
@@ -30,6 +29,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -81,7 +81,7 @@ public class TakeOfferReviewController implements Controller {
     private final UserIdentityService userIdentityService;
     private final BisqEasyTradeService bisqEasyTradeService;
 
-    public TakeOfferReviewController(DefaultApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
+    public TakeOfferReviewController(DesktopApplicationService applicationService, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         contractService = applicationService.getContractService();
         identityService = applicationService.getIdentityService();

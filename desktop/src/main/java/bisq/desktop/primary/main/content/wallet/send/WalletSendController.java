@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.send;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.desktop.common.view.Controller;
@@ -40,7 +40,7 @@ public class WalletSendController implements Controller {
     private Subscription addressPin;
     private Subscription amountPin;
 
-    public WalletSendController(DefaultApplicationService applicationService) {
+    public WalletSendController(DesktopApplicationService applicationService) {
         walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletSendModel();
         view = new WalletSendView(model, this, amountValidator);

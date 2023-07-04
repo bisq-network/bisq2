@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -40,12 +40,12 @@ public class MainController extends NavigationController {
     private final MainModel model = new MainModel();
     @Getter
     private final MainView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private final LeftNavController leftNavController;
     private final AlertService alertService;
     private Pin alertsPin;
 
-    public MainController(DefaultApplicationService applicationService) {
+    public MainController(DesktopApplicationService applicationService) {
         super(NavigationTarget.MAIN);
 
         this.applicationService = applicationService;

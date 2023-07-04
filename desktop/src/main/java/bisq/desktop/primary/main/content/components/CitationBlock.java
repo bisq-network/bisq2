@@ -17,10 +17,10 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
@@ -50,7 +50,7 @@ import java.util.Optional;
 public class CitationBlock {
     private final Controller controller;
 
-    public CitationBlock(DefaultApplicationService applicationService) {
+    public CitationBlock(DesktopApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
@@ -83,7 +83,7 @@ public class CitationBlock {
         private final UserProfileService userProfileService;
 
 
-        private Controller(DefaultApplicationService applicationService) {
+        private Controller(DesktopApplicationService applicationService) {
             this.chatService = applicationService.getChatService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             model = new Model();

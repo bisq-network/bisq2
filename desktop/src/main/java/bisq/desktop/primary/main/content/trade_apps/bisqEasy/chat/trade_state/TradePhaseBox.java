@@ -17,10 +17,10 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.Navigation;
@@ -54,7 +54,7 @@ import java.util.Optional;
 class TradePhaseBox {
     private final Controller controller;
 
-    TradePhaseBox(DefaultApplicationService applicationService) {
+    TradePhaseBox(DesktopApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
@@ -77,7 +77,7 @@ class TradePhaseBox {
         private final MediationService mediationService;
         private Pin bisqEasyTradeStatePin;
 
-        private Controller(DefaultApplicationService applicationService) {
+        private Controller(DesktopApplicationService applicationService) {
             mediationService = applicationService.getSupportService().getMediationService();
 
             model = new Model();

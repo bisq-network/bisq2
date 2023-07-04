@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.splash;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.network.p2p.node.Node;
 import javafx.beans.property.*;
@@ -25,7 +25,7 @@ import lombok.Getter;
 
 @Getter
 public class SplashModel implements Model {
-    private final ObjectProperty<DefaultApplicationService.State> applicationState = new SimpleObjectProperty<>();
+    private final ObjectProperty<DesktopApplicationService.State> applicationState = new SimpleObjectProperty<>();
     private final ObjectProperty<Node.State> clearServiceNodeState = new SimpleObjectProperty<>();
     private final ObjectProperty<Node.State> torServiceNodeState = new SimpleObjectProperty<>();
     private final ObjectProperty<Node.State> i2pServiceNodeState = new SimpleObjectProperty<>();

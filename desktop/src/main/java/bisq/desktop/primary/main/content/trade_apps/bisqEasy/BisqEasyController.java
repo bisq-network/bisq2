@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -35,13 +35,13 @@ import static bisq.settings.DontShowAgainKey.BISQ_EASY_INTRO;
 //todo can be removed if we dont have a intro screen anymore... but leave it for now...
 @Slf4j
 public class BisqEasyController extends NavigationController {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final BisqEasyModel model;
     @Getter
     private final BisqEasyView view;
 
-    public BisqEasyController(DefaultApplicationService applicationService) {
+    public BisqEasyController(DesktopApplicationService applicationService) {
         super(NavigationTarget.BISQ_EASY);
 
         this.applicationService = applicationService;

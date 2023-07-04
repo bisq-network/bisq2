@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.rest_api;
 
 import bisq.account.AccountService;
+import bisq.application.ApplicationService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -36,6 +37,7 @@ import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
+import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
@@ -57,7 +59,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class DefaultApplicationService extends ApplicationService {
+public class RestApiApplicationService extends ApplicationService {
 
     public enum State {
         INITIALIZE_APP,
@@ -85,8 +87,8 @@ public class DefaultApplicationService extends ApplicationService {
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
-    public DefaultApplicationService(String[] args) {
-        super("default", args);
+    public RestApiApplicationService(String[] args) {
+        super("rest_api", args);
         securityService = new SecurityService(persistenceService);
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");

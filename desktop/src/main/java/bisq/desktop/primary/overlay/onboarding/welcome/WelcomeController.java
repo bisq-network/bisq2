@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding.welcome;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,7 +32,7 @@ public class WelcomeController implements Controller {
     @Getter
     private final WelcomeView view;
 
-    public WelcomeController(DefaultApplicationService applicationService) {
+    public WelcomeController(DesktopApplicationService applicationService) {
         WelcomeModel model = new WelcomeModel();
         view = new WelcomeView(model, this);
     }

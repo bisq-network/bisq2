@@ -17,10 +17,10 @@
 
 package bisq.desktop.primary.main.content.common_chat;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.PublicChatController;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonChatController extends PublicChatController<CommonChatView, CommonChatModel> implements Controller {
-    public CommonChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+    public CommonChatController(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
         super(applicationService, chatChannelDomain, NavigationTarget.NONE);
     }
 

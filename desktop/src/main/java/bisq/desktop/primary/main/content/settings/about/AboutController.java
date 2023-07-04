@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.about;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class AboutController implements Controller {
     private final AboutView view;
     private final AboutModel model;
 
-    public AboutController(DefaultApplicationService applicationService) {
+    public AboutController(DesktopApplicationService applicationService) {
         model = new AboutModel();
         view = new AboutView(model, this);
     }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.bond;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,9 +34,9 @@ import java.util.Optional;
 public class BondedReputationController extends TabController<BondedReputationModel> {
     @Getter
     private final BondedReputationView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public BondedReputationController(DefaultApplicationService applicationService) {
+    public BondedReputationController(DesktopApplicationService applicationService) {
         super(new BondedReputationModel(), NavigationTarget.BSQ_BOND);
 
         this.applicationService = applicationService;

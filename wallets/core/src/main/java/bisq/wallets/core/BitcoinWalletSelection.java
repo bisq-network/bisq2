@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.wallets.core;
 
-enum BitcoinWalletSelection {
+public enum BitcoinWalletSelection {
     BITCOIND,
     ELECTRUM,
     NONE

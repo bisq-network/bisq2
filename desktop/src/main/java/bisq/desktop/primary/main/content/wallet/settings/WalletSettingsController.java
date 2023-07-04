@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.settings;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
@@ -30,7 +30,7 @@ public class WalletSettingsController implements Controller {
     private final WalletSettingsModel model;
     private final WalletService walletService;
 
-    public WalletSettingsController(DefaultApplicationService applicationService) {
+    public WalletSettingsController(DesktopApplicationService applicationService) {
         walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletSettingsModel();
         view = new WalletSettingsView(model, this);

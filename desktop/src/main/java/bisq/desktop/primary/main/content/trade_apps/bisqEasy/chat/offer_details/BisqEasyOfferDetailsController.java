@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.offer_details;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -56,7 +56,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
 
     private final MarketPriceService marketPriceService;
 
-    public BisqEasyOfferDetailsController(DefaultApplicationService applicationService) {
+    public BisqEasyOfferDetailsController(DesktopApplicationService applicationService) {
         marketPriceService = applicationService.getOracleService().getMarketPriceService();
         model = new BisqEasyOfferDetailsModel();
         view = new BisqEasyOfferDetailsView(model, this);

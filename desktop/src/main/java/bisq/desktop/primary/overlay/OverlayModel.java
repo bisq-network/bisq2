@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
@@ -48,7 +48,7 @@ public class OverlayModel extends NavigationModel {
         return NavigationTarget.NONE;
     }
 
-    OverlayModel(DefaultApplicationService applicationService) {
+    OverlayModel(DesktopApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
     }
 

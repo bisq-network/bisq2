@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -75,11 +75,11 @@ public class OverlayController extends NavigationController {
     private final OverlayView view;
     @Getter
     private final Region applicationRoot;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Nullable
     private Runnable onHiddenHandler;
 
-    public OverlayController(DefaultApplicationService applicationService, Region applicationRoot) {
+    public OverlayController(DesktopApplicationService applicationService, Region applicationRoot) {
         super(NavigationTarget.OVERLAY);
 
         this.applicationService = applicationService;

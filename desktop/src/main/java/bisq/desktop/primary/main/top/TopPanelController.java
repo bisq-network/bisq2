@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.top;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
@@ -36,7 +36,7 @@ public class TopPanelController implements Controller {
     @Nullable
     private Pin balancePin;
 
-    public TopPanelController(DefaultApplicationService applicationService) {
+    public TopPanelController(DesktopApplicationService applicationService) {
         walletService = applicationService.getWalletService();
 
         model = new TopPanelModel(applicationService.getWalletService().isPresent());

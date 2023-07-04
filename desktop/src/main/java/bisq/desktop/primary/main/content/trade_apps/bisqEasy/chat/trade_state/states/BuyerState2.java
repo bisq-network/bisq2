@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BuyerState2 extends BaseState {
     private final Controller controller;
 
-    public BuyerState2(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+    public BuyerState2(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
         controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
@@ -50,7 +50,7 @@ public class BuyerState2 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        private Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             super(applicationService, bisqEasyTrade, channel);
         }
 

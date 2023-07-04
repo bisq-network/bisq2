@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create.step1;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
@@ -28,9 +28,9 @@ import bisq.desktop.primary.overlay.onboarding.create_profile.CreateProfileView;
 import javafx.application.Platform;
 
 public class CreateNewProfileStep1Controller extends CreateProfileController {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public CreateNewProfileStep1Controller(DefaultApplicationService applicationService) {
+    public CreateNewProfileStep1Controller(DesktopApplicationService applicationService) {
         super(applicationService);
         this.applicationService = applicationService;
     }

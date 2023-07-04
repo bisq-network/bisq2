@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.wallet.txs;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.core.WalletService;
@@ -34,7 +34,7 @@ public class WalletTxsController implements Controller {
     private final WalletService walletService;
     private Pin transactionsPin;
 
-    public WalletTxsController(DefaultApplicationService applicationService) {
+    public WalletTxsController(DesktopApplicationService applicationService) {
         walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletTxsModel();
         view = new WalletTxsView(model, this);

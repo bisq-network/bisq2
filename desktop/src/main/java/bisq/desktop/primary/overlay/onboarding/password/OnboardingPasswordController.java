@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding.password;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
@@ -47,7 +47,7 @@ public class OnboardingPasswordController implements Controller {
     private Subscription pin;
     private MonadicBinding<Boolean> binding;
 
-    public OnboardingPasswordController(DefaultApplicationService applicationService) {
+    public OnboardingPasswordController(DesktopApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         confirmedPasswordValidator = new PasswordValidator();
         model = new OnboardingPasswordModel();

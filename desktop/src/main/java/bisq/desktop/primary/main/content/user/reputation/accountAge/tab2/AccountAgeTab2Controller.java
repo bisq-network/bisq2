@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.accountAge.tab2;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +30,7 @@ public class AccountAgeTab2Controller implements Controller {
     @Getter
     private final AccountAgeTab2View view;
 
-    public AccountAgeTab2Controller(DefaultApplicationService applicationService) {
+    public AccountAgeTab2Controller(DesktopApplicationService applicationService) {
         AccountAgeTab2Model model = new AccountAgeTab2Model();
         view = new AccountAgeTab2View(model, this);
     }

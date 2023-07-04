@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.take_offer.amount.TakeOfferAmountController;
@@ -65,7 +65,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         }
     }
 
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final TakeOfferModel model;
     @Getter
@@ -76,7 +76,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferReviewController takeOfferReviewController;
     private Subscription tradePriceSpecPin, takersBaseSideAmountPin, takersQuoteSideAmountPin, methodNamePin;
 
-    public TakeOfferController(DefaultApplicationService applicationService) {
+    public TakeOfferController(DesktopApplicationService applicationService) {
         super(NavigationTarget.TAKE_OFFER);
 
         this.applicationService = applicationService;

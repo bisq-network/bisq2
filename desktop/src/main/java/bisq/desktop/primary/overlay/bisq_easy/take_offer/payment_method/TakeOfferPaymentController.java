@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.take_offer.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -39,7 +39,7 @@ public class TakeOfferPaymentController implements Controller {
     @Getter
     private final TakeOfferPaymentView view;
 
-    public TakeOfferPaymentController(DefaultApplicationService applicationService) {
+    public TakeOfferPaymentController(DesktopApplicationService applicationService) {
         model = new TakeOfferPaymentModel();
         view = new TakeOfferPaymentView(model, this);
     }

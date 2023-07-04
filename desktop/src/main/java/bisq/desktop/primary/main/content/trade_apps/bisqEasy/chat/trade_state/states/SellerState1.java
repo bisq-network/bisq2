@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqText;
@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 public class SellerState1 extends BaseState {
     private final Controller controller;
 
-    public SellerState1(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+    public SellerState1(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
         controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
@@ -65,7 +65,7 @@ public class SellerState1 extends BaseState {
     private static class Controller extends BaseState.Controller<Model, View> {
         private Pin accountsPin, selectedAccountPin;
 
-        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        private Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             super(applicationService, bisqEasyTrade, channel);
         }
 

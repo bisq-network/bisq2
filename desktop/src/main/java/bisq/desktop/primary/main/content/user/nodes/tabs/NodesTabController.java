@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.nodes.tabs;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -32,9 +32,9 @@ import java.util.Optional;
 public class NodesTabController extends TabController<NodesTabModel> {
     @Getter
     private final NodesTabView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public NodesTabController(DefaultApplicationService applicationService) {
+    public NodesTabController(DesktopApplicationService applicationService) {
         super(new NodesTabModel(), NavigationTarget.NODES_TABS);
 
         this.applicationService = applicationService;

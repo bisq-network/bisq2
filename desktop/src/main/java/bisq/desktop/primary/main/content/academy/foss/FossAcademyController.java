@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy.foss;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class FossAcademyController implements Controller {
     @Getter
     private final FossAcademyView view;
 
-    public FossAcademyController(DefaultApplicationService applicationService) {
+    public FossAcademyController(DesktopApplicationService applicationService) {
         FossAcademyModel model = new FossAcademyModel();
         view = new FossAcademyView(model, this);
     }

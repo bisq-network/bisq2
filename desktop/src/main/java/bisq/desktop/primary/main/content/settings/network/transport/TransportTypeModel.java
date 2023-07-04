@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.settings.network.transport;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.data.Pair;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
@@ -69,7 +69,7 @@ public class TransportTypeModel implements Model {
     private Collection<Node> allNodes = new ArrayList<>();
 
     //todo move behaviour code to controller
-    public TransportTypeModel(DefaultApplicationService applicationService, Transport.Type transportType) {
+    public TransportTypeModel(DesktopApplicationService applicationService, Transport.Type transportType) {
         networkService = applicationService.getNetworkService();
         identityService = applicationService.getIdentityService();
         this.transportType = transportType;

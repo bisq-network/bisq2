@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationTarget;
@@ -58,7 +58,7 @@ public class LeftNavModel implements Model {
     private final BooleanProperty learnsSubMenuExpanded = new SimpleBooleanProperty(false);
 
 
-    public LeftNavModel(DefaultApplicationService applicationService) {
+    public LeftNavModel(DesktopApplicationService applicationService) {
         isWalletEnabled = applicationService.getWalletService().isPresent();
         networkService = applicationService.getNetworkService();
 

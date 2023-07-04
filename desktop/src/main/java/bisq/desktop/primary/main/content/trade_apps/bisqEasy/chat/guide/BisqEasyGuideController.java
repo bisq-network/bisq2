@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -36,9 +36,9 @@ import java.util.Optional;
 public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     @Getter
     private final BisqEasyGuideView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public BisqEasyGuideController(DefaultApplicationService applicationService) {
+    public BisqEasyGuideController(DesktopApplicationService applicationService) {
         super(new BisqEasyGuideModel(), NavigationTarget.BISQ_EASY_GUIDE);
 
         this.applicationService = applicationService;

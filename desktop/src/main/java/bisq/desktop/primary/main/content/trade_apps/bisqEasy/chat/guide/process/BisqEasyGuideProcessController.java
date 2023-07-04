@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide.process;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +30,7 @@ public class BisqEasyGuideProcessController implements Controller {
     @Getter
     private final BisqEasyGuideProcessView view;
 
-    public BisqEasyGuideProcessController(DefaultApplicationService applicationService) {
+    public BisqEasyGuideProcessController(DesktopApplicationService applicationService) {
         BisqEasyGuideProcessModel model = new BisqEasyGuideProcessModel();
         view = new BisqEasyGuideProcessView(model, this);
     }

@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.chat;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.channel.ChatChannel;
@@ -28,6 +27,7 @@ import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -73,7 +73,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     @Getter
     protected V view;
     protected final UserIdentityService userIdentityService;
-    protected final DefaultApplicationService applicationService;
+    protected final DesktopApplicationService applicationService;
     protected final TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
     protected final ChannelSidebar channelSidebar;
     protected final CitationBlock citationBlock;
@@ -81,7 +81,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
-    public ChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public ChatController(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;

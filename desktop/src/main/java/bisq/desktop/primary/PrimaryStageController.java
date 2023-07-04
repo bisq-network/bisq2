@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIThread;
@@ -59,7 +59,7 @@ import static bisq.settings.DontShowAgainKey.WELCOME;
  */
 @Slf4j
 public class PrimaryStageController extends NavigationController {
-    protected final DefaultApplicationService applicationService;
+    protected final DesktopApplicationService applicationService;
     @Getter
     protected final PrimaryStageModel model;
     @Getter
@@ -69,7 +69,7 @@ public class PrimaryStageController extends NavigationController {
     private final SplashController splashController;
     private final UserIdentityService userIdentityService;
 
-    public PrimaryStageController(DefaultApplicationService applicationService,
+    public PrimaryStageController(DesktopApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
                                   Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);

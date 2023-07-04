@@ -17,12 +17,12 @@
 
 package bisq.desktop.primary.main.content.user.nodes.tabs.registration;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.FileUtils;
 import bisq.common.util.StringUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -62,14 +62,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class NodeRegistrationController implements Controller {
     @Getter
     private final NodeRegistrationView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private final NodeRegistrationModel model;
     private final UserIdentityService userIdentityService;
     private final NodeRegistrationService nodeRegistrationService;
     private Pin userIdentityPin;
     private Subscription updateRegistrationStatePin;
 
-    public NodeRegistrationController(DefaultApplicationService applicationService, NodeType nodeType) {
+    public NodeRegistrationController(DesktopApplicationService applicationService, NodeType nodeType) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         nodeRegistrationService = applicationService.getUserService().getNodeRegistrationService();
         this.applicationService = applicationService;

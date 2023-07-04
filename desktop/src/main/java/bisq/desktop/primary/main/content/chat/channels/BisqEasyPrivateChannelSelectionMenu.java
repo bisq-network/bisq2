@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -26,6 +25,7 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
@@ -70,7 +70,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
     @Getter
     private final Controller controller;
 
-    public BisqEasyPrivateChannelSelectionMenu(DefaultApplicationService applicationService) {
+    public BisqEasyPrivateChannelSelectionMenu(DesktopApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
@@ -84,7 +84,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
         private Pin inMediationPin;
 
-        protected Controller(DefaultApplicationService applicationService) {
+        protected Controller(DesktopApplicationService applicationService) {
             super(applicationService, ChatChannelDomain.BISQ_EASY);
         }
 

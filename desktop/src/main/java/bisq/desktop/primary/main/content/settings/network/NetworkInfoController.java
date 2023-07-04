@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.network;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.settings.network.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class NetworkInfoController implements Controller {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final NetworkInfoModel model;
     @Getter
@@ -40,7 +40,7 @@ public class NetworkInfoController implements Controller {
     @Getter
     private final Optional<TransportTypeController> i2pController = Optional.empty();
 
-    public NetworkInfoController(DefaultApplicationService applicationService) {
+    public NetworkInfoController(DesktopApplicationService applicationService) {
         this.applicationService = applicationService;
         model = new NetworkInfoModel(applicationService);
 

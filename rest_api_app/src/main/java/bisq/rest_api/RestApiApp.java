@@ -16,7 +16,6 @@
  */
 package bisq.rest_api;
 
-import bisq.application.DefaultApplicationService;
 import bisq.rest_api.endpoints.ChatApi;
 import bisq.rest_api.endpoints.KeyPairApi;
 import bisq.rest_api.error.CustomExceptionMapper;
@@ -74,10 +73,10 @@ public class RestApiApp extends ResourceConfig {
     }
 
     @Getter
-    private final DefaultApplicationService applicationService;
+    private final RestApiApplicationService applicationService;
 
     public RestApiApp(String[] args) {
-        applicationService = new DefaultApplicationService(args);
+        applicationService = new RestApiApplicationService(args);
         applicationService.readAllPersisted().thenCompose(result -> applicationService.initialize());
     }
 }

@@ -1,6 +1,5 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
@@ -9,6 +8,7 @@ import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
@@ -89,7 +89,7 @@ public abstract class ChannelSelectionMenu<
         protected Pin channelsPin, selectedChannelPin;
         private final Map<String, NotificationsService.Listener> listenerByChannelId = new HashMap<>();
 
-        protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        protected Controller(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();

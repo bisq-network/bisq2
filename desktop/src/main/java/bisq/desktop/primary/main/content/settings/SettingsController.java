@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -31,11 +31,11 @@ import java.util.Optional;
 
 @Slf4j
 public class SettingsController extends TabController<SettingsModel> {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final SettingsView view;
 
-    public SettingsController(DefaultApplicationService applicationService) {
+    public SettingsController(DesktopApplicationService applicationService) {
         super(new SettingsModel(), NavigationTarget.SETTINGS);
 
         this.applicationService = applicationService;

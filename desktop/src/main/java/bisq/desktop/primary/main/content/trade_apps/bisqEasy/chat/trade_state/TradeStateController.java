@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -56,12 +56,12 @@ public class TradeStateController implements Controller {
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private final TradePhaseBox tradePhaseBox;
     private Subscription isCollapsedPin;
     private Pin tradeRulesConfirmedPin, bisqEasyTradeStatePin;
 
-    public TradeStateController(DefaultApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
+    public TradeStateController(DesktopApplicationService applicationService, Consumer<UserProfile> openUserProfileSidebarHandler) {
         this.applicationService = applicationService;
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         marketPriceService = applicationService.getOracleService().getMarketPriceService();

@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.chat.sidebar;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
@@ -25,6 +24,7 @@ import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 public class ChannelSidebar {
     private final Controller controller;
 
-    public ChannelSidebar(DefaultApplicationService applicationService,
+    public ChannelSidebar(DesktopApplicationService applicationService,
                           Runnable closeHandler,
                           Consumer<UserProfile> openUserProfileSidebarHandler) {
         controller = new Controller(applicationService,
@@ -96,7 +96,7 @@ public class ChannelSidebar {
         @Nullable
         private Pin userProfileIdsOfParticipantsPin;
 
-        private Controller(DefaultApplicationService applicationService,
+        private Controller(DesktopApplicationService applicationService,
                            Runnable closeHandler,
                            Consumer<UserProfile> openUserProfileSidebarHandler) {
             this.closeHandler = closeHandler;

@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.components;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
@@ -36,6 +35,7 @@ import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -82,7 +82,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DefaultApplicationService applicationService,
+    public ChatMessagesComponent(DesktopApplicationService applicationService,
                                  ChatChannelDomain chatChannelDomain,
                                  Consumer<UserProfile> openUserProfileSidebarHandler) {
         controller = new Controller(applicationService,
@@ -133,7 +133,7 @@ public class ChatMessagesComponent {
                 selectedPaymentAccountPin, paymentAccountsPin;
         private Subscription selectedPaymentAccountSubscription;
 
-        private Controller(DefaultApplicationService applicationService,
+        private Controller(DesktopApplicationService applicationService,
                            ChatChannelDomain chatChannelDomain,
                            Consumer<UserProfile> openUserProfileSidebarHandler) {
             this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;

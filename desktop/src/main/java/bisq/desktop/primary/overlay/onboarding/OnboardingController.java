@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -34,13 +34,13 @@ import java.util.Optional;
 
 @Slf4j
 public class OnboardingController extends NavigationController {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final OnboardingModel model;
     @Getter
     private final OnboardingView view;
 
-    public OnboardingController(DefaultApplicationService applicationService) {
+    public OnboardingController(DesktopApplicationService applicationService) {
         super(NavigationTarget.ONBOARDING);
 
         this.applicationService = applicationService;

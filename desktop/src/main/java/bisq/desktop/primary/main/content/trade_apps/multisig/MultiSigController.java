@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.multisig;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class MultiSigController implements Controller {
     @Getter
     private final MultiSigView view;
 
-    public MultiSigController(DefaultApplicationService applicationService) {
+    public MultiSigController(DesktopApplicationService applicationService) {
         MultiSigModel model = new MultiSigModel();
         view = new MultiSigView(model, this);
     }

@@ -18,13 +18,13 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer.review;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -76,7 +76,7 @@ public class CreateOfferReviewOfferController implements Controller {
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
 
-    public CreateOfferReviewOfferController(DefaultApplicationService applicationService,
+    public CreateOfferReviewOfferController(DesktopApplicationService applicationService,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
                                             Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;

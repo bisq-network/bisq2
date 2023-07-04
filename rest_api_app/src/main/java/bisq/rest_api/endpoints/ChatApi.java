@@ -1,9 +1,9 @@
 package bisq.rest_api.endpoints;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.rest_api.RestApiApp;
+import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.BisqEasyPublicChatChannelDto;
 import bisq.rest_api.dto.CommonPublicChatChannelDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +31,7 @@ public class ChatApi {
     private final ChatService chatService;
 
     public ChatApi(@Context Application application) {
-        DefaultApplicationService appService = ((RestApiApp) application).getApplicationService();
+        RestApiApplicationService appService = ((RestApiApp) application).getApplicationService();
         chatService = appService.getChatService();
     }
 

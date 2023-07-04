@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.receive;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
@@ -32,7 +32,7 @@ public class WalletReceiveController implements Controller {
     private final WalletReceiveModel model;
     private final WalletService walletService;
 
-    public WalletReceiveController(DefaultApplicationService applicationService) {
+    public WalletReceiveController(DesktopApplicationService applicationService) {
         walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletReceiveModel();
         view = new WalletReceiveView(model, this);

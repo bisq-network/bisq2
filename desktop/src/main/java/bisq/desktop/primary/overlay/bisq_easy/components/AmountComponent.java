@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.overlay.bisq_easy.components;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -25,6 +24,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
@@ -59,7 +59,7 @@ public class AmountComponent {
 
     private final Controller controller;
 
-    public AmountComponent(DefaultApplicationService applicationService,
+    public AmountComponent(DesktopApplicationService applicationService,
                            boolean useQuoteCurrencyForMinMaxRange) {
         controller = new Controller(applicationService, useQuoteCurrencyForMinMaxRange);
     }
@@ -123,7 +123,7 @@ public class AmountComponent {
         private Subscription baseAmountFromModelPin, baseAmountFromCompPin,
                 quoteAmountFromCompPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin;
 
-        private Controller(DefaultApplicationService applicationService,
+        private Controller(DesktopApplicationService applicationService,
                            boolean useQuoteCurrencyForMinMaxRange) {
             quoteSideAmountInput = new BigAmountInput(false);
             baseSideAmountInput = new SmallAmountInput(true);

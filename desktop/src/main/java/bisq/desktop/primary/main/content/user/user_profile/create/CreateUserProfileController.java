@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -31,13 +31,13 @@ import java.util.Optional;
 
 @Slf4j
 public class CreateUserProfileController extends NavigationController {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final CreateUserProfileModel model;
     @Getter
     private final CreateUserProfileView view;
 
-    public CreateUserProfileController(DefaultApplicationService applicationService) {
+    public CreateUserProfileController(DesktopApplicationService applicationService) {
         super(NavigationTarget.CREATE_PROFILE);
 
         this.applicationService = applicationService;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.user_profile.create.step2;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.InitWithDataController;
@@ -64,9 +64,9 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @Getter
     protected final CreateNewProfileStep2View view;
     protected final UserIdentityService userIdentityService;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public CreateNewProfileStep2Controller(DefaultApplicationService applicationService) {
+    public CreateNewProfileStep2Controller(DesktopApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         this.applicationService = applicationService;
 

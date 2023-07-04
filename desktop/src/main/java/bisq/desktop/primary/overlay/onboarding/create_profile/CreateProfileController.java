@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding.create_profile;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyPairAndId;
 import bisq.desktop.common.view.Controller;
@@ -62,7 +62,7 @@ public class CreateProfileController implements Controller {
     protected final List<Identity> pooledIdentities = new ArrayList<>();
     protected boolean pooledIdentitiesInitialized;
 
-    public CreateProfileController(DefaultApplicationService applicationService) {
+    public CreateProfileController(DesktopApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();

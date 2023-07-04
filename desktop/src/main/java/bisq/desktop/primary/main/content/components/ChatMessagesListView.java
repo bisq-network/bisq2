@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
@@ -33,6 +32,7 @@ import bisq.chat.message.*;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -100,7 +100,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesListView {
     private final Controller controller;
 
-    public ChatMessagesListView(DefaultApplicationService applicationService,
+    public ChatMessagesListView(DesktopApplicationService applicationService,
                                 Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
@@ -141,7 +141,7 @@ public class ChatMessagesListView {
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
-        private Controller(DefaultApplicationService applicationService,
+        private Controller(DesktopApplicationService applicationService,
                            Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,

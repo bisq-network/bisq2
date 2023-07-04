@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.overview.list;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.primary.main.content.trade_apps.overview.TradeOverviewController;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class TradeOverviewListController extends TradeOverviewController<TradeOv
     @Getter
     private final TradeOverviewListView view;
 
-    public TradeOverviewListController(DefaultApplicationService applicationService) {
+    public TradeOverviewListController(DesktopApplicationService applicationService) {
         super(new TradeOverviewListModel());
 
         this.view = new TradeOverviewListView(model, this);

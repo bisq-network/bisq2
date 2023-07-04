@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.guide.security;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +30,7 @@ public class BisqEasyGuideSecurityController implements Controller {
     @Getter
     private final BisqEasyGuideSecurityView view;
 
-    public BisqEasyGuideSecurityController(DefaultApplicationService applicationService) {
+    public BisqEasyGuideSecurityController(DesktopApplicationService applicationService) {
         BisqEasyGuideSecurityModel model = new BisqEasyGuideSecurityModel();
         view = new BisqEasyGuideSecurityView(model, this);
     }

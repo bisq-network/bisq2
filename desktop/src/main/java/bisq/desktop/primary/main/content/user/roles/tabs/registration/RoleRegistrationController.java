@@ -17,11 +17,11 @@
 
 package bisq.desktop.primary.main.content.user.roles.tabs.registration;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -55,7 +55,7 @@ public class RoleRegistrationController implements Controller {
     private Pin userIdentityPin;
     private Subscription updateRegistrationStatePin;
 
-    public RoleRegistrationController(DefaultApplicationService applicationService, RoleType roleType) {
+    public RoleRegistrationController(DesktopApplicationService applicationService, RoleType roleType) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         roleRegistrationService = applicationService.getUserService().getRoleRegistrationService();
         model = new RoleRegistrationModel(roleType);

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.tac;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.settings.SettingsService;
@@ -39,11 +39,11 @@ public class TacController implements InitWithDataController<TacController.InitD
     private final TacModel model;
     @Getter
     private final TacView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private final SettingsService settingsService;
     private Runnable completeHandler;
 
-    public TacController(DefaultApplicationService applicationService) {
+    public TacController(DesktopApplicationService applicationService) {
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
         model = new TacModel();

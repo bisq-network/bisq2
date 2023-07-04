@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -26,6 +25,7 @@ import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.ChatMessage;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
@@ -56,7 +56,7 @@ public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
             E extends ChatChannelSelectionService>
             extends ChannelSelectionMenu.Controller<V, M, C, S, E> {
 
-        public Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        public Controller(DesktopApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService, chatChannelDomain);
         }
 

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.bisq_easy.create_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.bisq_easy.create_offer.amount.CreateOfferAmountController;
@@ -56,7 +56,7 @@ public class CreateOfferController extends NavigationController implements InitW
         }
     }
 
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final CreateOfferModel model;
     @Getter
@@ -71,7 +71,7 @@ public class CreateOfferController extends NavigationController implements InitW
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin;
 
-    public CreateOfferController(DefaultApplicationService applicationService) {
+    public CreateOfferController(DesktopApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
 
         this.applicationService = applicationService;

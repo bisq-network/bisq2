@@ -17,11 +17,11 @@
 
 package bisq.desktop.primary.main.content.user.notifications;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -55,7 +55,7 @@ public class SendNotificationController implements Controller {
     private final RoleRegistrationService roleRegistrationService;
     private Pin userIdentityPin;
 
-    public SendNotificationController(DefaultApplicationService applicationService) {
+    public SendNotificationController(DesktopApplicationService applicationService) {
         alertService = applicationService.getSupportService().getAlertService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         roleRegistrationService = applicationService.getUserService().getRoleRegistrationService();

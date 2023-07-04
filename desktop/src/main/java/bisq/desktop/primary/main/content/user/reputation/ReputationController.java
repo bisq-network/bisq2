@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.user.reputation;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -43,7 +43,7 @@ public class ReputationController implements Controller {
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin;
 
-    public ReputationController(DefaultApplicationService applicationService) {
+    public ReputationController(DesktopApplicationService applicationService) {
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
 

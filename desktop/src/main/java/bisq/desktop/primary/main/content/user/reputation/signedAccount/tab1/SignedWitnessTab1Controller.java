@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.signedAccount.tab1;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +30,7 @@ public class SignedWitnessTab1Controller implements Controller {
     @Getter
     private final SignedWitnessTab1View view;
 
-    public SignedWitnessTab1Controller(DefaultApplicationService applicationService) {
+    public SignedWitnessTab1Controller(DesktopApplicationService applicationService) {
         SignedWitnessTab1Model model = new SignedWitnessTab1Model();
         view = new SignedWitnessTab1View(model, this);
     }

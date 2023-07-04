@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bsq_swap;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class BsqSwapController implements Controller {
     @Getter
     private final BsqSwapView view;
 
-    public BsqSwapController(DefaultApplicationService applicationService) {
+    public BsqSwapController(DesktopApplicationService applicationService) {
         BsqSwapModel model = new BsqSwapModel();
         view = new BsqSwapView(model, this);
     }

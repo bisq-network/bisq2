@@ -17,12 +17,12 @@
 
 package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.util.FileUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.controls.BisqText;
@@ -49,7 +49,7 @@ import java.util.List;
 public class SellerState5 extends BaseState {
     private final Controller controller;
 
-    public SellerState5(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+    public SellerState5(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
         controller = new Controller(applicationService, bisqEasyTrade, channel);
     }
 
@@ -62,7 +62,7 @@ public class SellerState5 extends BaseState {
         private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
 
-        private Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        private Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             super(applicationService, bisqEasyTrade, channel);
 
             explorerService = applicationService.getOracleService().getExplorerService();

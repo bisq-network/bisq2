@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.bond.tab1;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +30,7 @@ public class BondedReputationTab1Controller implements Controller {
     @Getter
     private final BondedReputationTab1View view;
 
-    public BondedReputationTab1Controller(DefaultApplicationService applicationService) {
+    public BondedReputationTab1Controller(DesktopApplicationService applicationService) {
         BondedReputationTab1Model model = new BondedReputationTab1Model();
         view = new BondedReputationTab1View(model, this);
     }

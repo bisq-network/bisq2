@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -48,13 +48,13 @@ import java.util.Optional;
 
 @Slf4j
 public class ContentController extends NavigationController {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final ContentModel model;
     @Getter
     private final ContentView view;
 
-    public ContentController(DefaultApplicationService applicationService) {
+    public ContentController(DesktopApplicationService applicationService) {
         super(NavigationTarget.CONTENT);
 
         this.applicationService = applicationService;

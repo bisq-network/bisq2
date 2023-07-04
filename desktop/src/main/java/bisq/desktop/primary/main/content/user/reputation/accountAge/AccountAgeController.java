@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.accountAge;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,9 +34,9 @@ import java.util.Optional;
 public class AccountAgeController extends TabController<AccountAgeModel> {
     @Getter
     private final AccountAgeView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public AccountAgeController(DefaultApplicationService applicationService) {
+    public AccountAgeController(DesktopApplicationService applicationService) {
         super(new AccountAgeModel(), NavigationTarget.ACCOUNT_AGE);
 
         this.applicationService = applicationService;

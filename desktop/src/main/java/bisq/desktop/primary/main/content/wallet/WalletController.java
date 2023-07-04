@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -33,11 +33,11 @@ import java.util.Optional;
 
 @Slf4j
 public class WalletController extends TabController<WalletModel> {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final WalletView view;
 
-    public WalletController(DefaultApplicationService applicationService) {
+    public WalletController(DesktopApplicationService applicationService) {
         super(new WalletModel(), NavigationTarget.WALLET);
 
         this.applicationService = applicationService;

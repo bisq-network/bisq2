@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.splash;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.network.p2p.node.Node;
@@ -39,7 +39,7 @@ public class SplashController implements Controller {
     private final SplashModel model;
     @Getter
     private final SplashView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     private Pin pinApplicationStatus;
     private Pin pinClearnetStatus;
     private Pin pinTorStatus;
@@ -47,7 +47,7 @@ public class SplashController implements Controller {
     private Subscription statePin;
     private MonadicBinding<String> binding;
 
-    public SplashController(DefaultApplicationService applicationService) {
+    public SplashController(DesktopApplicationService applicationService) {
         this.applicationService = applicationService;
         model = new SplashModel();
         view = new SplashView(model, this);

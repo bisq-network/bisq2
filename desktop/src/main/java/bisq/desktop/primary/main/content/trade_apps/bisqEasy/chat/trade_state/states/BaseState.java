@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.trade_apps.bisqEasy.chat.trade_state.s
 
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.desktop.DesktopApplicationService;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -48,7 +48,7 @@ public abstract class BaseState {
         protected final UserIdentityService userIdentityService;
         private final MarketPriceService marketPriceService;
 
-        protected Controller(DefaultApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        protected Controller(DesktopApplicationService applicationService, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             chatService = applicationService.getChatService();
             bisqEasyTradeService = applicationService.getTradeService().getBisqEasyTradeService();
             accountService = applicationService.getAccountService();

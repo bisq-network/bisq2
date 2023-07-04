@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.burn;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,9 +34,9 @@ import java.util.Optional;
 public class BurnBsqController extends TabController<BurnBsqModel> {
     @Getter
     private final BurnBsqView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public BurnBsqController(DefaultApplicationService applicationService) {
+    public BurnBsqController(DesktopApplicationService applicationService) {
         super(new BurnBsqModel(), NavigationTarget.BURN_BSQ);
 
         this.applicationService = applicationService;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.reputation.signedAccount;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -34,9 +34,9 @@ import java.util.Optional;
 public class SignedWitnessController extends TabController<SignedWitnessModel> {
     @Getter
     private final SignedWitnessView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public SignedWitnessController(DefaultApplicationService applicationService) {
+    public SignedWitnessController(DesktopApplicationService applicationService) {
         super(new SignedWitnessModel(), NavigationTarget.SIGNED_WITNESS);
 
         this.applicationService = applicationService;

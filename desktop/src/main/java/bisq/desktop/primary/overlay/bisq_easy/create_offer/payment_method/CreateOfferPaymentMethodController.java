@@ -21,8 +21,8 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
-import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -47,7 +47,7 @@ public class CreateOfferPaymentMethodController implements Controller {
     private final SettingsService settingsService;
     private Subscription customMethodPin;
 
-    public CreateOfferPaymentMethodController(DefaultApplicationService applicationService) {
+    public CreateOfferPaymentMethodController(DesktopApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
 
         model = new CreateOfferPaymentMethodModel();

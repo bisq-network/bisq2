@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main.content.user.reputation.signedAccount.tab3;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -49,7 +49,7 @@ public class SignedWitnessTab3Controller implements Controller {
     private final SignedWitnessService signedWitnessService;
     private Pin selectedUserProfilePin;
 
-    public SignedWitnessTab3Controller(DefaultApplicationService applicationService, SignedWitnessView parentView) {
+    public SignedWitnessTab3Controller(DesktopApplicationService applicationService, SignedWitnessView parentView) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         this.parentView = parentView;
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);

@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.user;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -37,13 +37,13 @@ import java.util.Optional;
 
 @Slf4j
 public class UserController extends TabController<UserModel> {
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
     @Getter
     private final UserView view;
     private final AlertService alertService;
     private Pin hasNotificationSenderIdentityPin;
 
-    public UserController(DefaultApplicationService applicationService) {
+    public UserController(DesktopApplicationService applicationService) {
         super(new UserModel(), NavigationTarget.USER);
 
         this.applicationService = applicationService;

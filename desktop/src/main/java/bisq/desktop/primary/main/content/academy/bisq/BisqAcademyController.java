@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.academy.bisq;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class BisqAcademyController implements Controller {
     @Getter
     private final BisqAcademyView view;
 
-    public BisqAcademyController(DefaultApplicationService applicationService) {
+    public BisqAcademyController(DesktopApplicationService applicationService) {
         BisqAcademyModel model = new BisqAcademyModel();
         view = new BisqAcademyView(model, this);
     }

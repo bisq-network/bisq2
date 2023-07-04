@@ -45,7 +45,6 @@ javafx {
 
 dependencies {
     implementation project(':desktop')
-    implementation project(':application')
 }
 
 distZip.enabled = false

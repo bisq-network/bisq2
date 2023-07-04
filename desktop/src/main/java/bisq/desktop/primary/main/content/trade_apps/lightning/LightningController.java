@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade_apps.lightning;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class LightningController implements Controller {
     @Getter
     private final LightningView view;
 
-    public LightningController(DefaultApplicationService applicationService) {
+    public LightningController(DesktopApplicationService applicationService) {
         LightningModel model = new LightningModel();
         view = new LightningView(model, this);
     }

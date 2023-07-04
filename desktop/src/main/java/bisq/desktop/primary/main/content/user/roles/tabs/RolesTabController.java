@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.user.roles.tabs;
 
-import bisq.application.DefaultApplicationService;
+import bisq.desktop.DesktopApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -32,9 +32,9 @@ import java.util.Optional;
 public class RolesTabController extends TabController<RolesTabModel> {
     @Getter
     private final RolesTabView view;
-    private final DefaultApplicationService applicationService;
+    private final DesktopApplicationService applicationService;
 
-    public RolesTabController(DefaultApplicationService applicationService) {
+    public RolesTabController(DesktopApplicationService applicationService) {
         super(new RolesTabModel(), NavigationTarget.ROLES_TABS);
 
         this.applicationService = applicationService;
