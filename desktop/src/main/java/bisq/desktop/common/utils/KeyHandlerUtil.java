@@ -20,7 +20,7 @@ package bisq.desktop.common.utils;
 import bisq.common.application.DevMode;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
+import bisq.desktop.overlay.OverlayController;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 

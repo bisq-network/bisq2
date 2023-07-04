@@ -17,11 +17,11 @@
 
 package bisq.desktop_app;
 
+import bisq.desktop.PrimaryStageController;
 import bisq.desktop.common.application.Executable;
 import bisq.desktop.common.application.JavaFXApplication;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.primary.PrimaryStageController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
