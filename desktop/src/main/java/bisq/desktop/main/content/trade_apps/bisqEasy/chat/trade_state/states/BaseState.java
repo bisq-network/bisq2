@@ -19,13 +19,13 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;

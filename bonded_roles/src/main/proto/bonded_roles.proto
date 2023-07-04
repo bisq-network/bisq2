@@ -1,0 +1,59 @@
+syntax = "proto3";
+package bonded_roles;
+option java_package = "bisq.bonded_roles.protobuf";
+option java_multiple_files = true;
+import "common.proto";
+import "network.proto";
+
+message AuthorizedOracleNode {
+  network.NetworkId networkId = 1;
+}
+
+message AuthorizedProofOfBurnData {
+  sint64 amount = 1;
+  sint64 time = 2;
+  bytes hash = 3;
+}
+
+message AuthorizedBondedReputationData {
+  sint64 amount = 1;
+  sint64 time = 2;
+  bytes hash = 3;
+  sint64 lockTime = 4;
+}
+
+message AuthorizedAccountAgeData {
+  string profileId = 1;
+  sint64 date = 2;
+}
+
+message AuthorizedSignedWitnessData {
+  string profileId = 1;
+  sint64 witnessSignDate = 2;
+}
+
+message AuthorizeAccountAgeRequest {
+  string profileId = 1;
+  string hashAsHex = 2;
+  sint64 date = 3;
+  string pubKeyBase64 = 4;
+  string signatureBase64 = 5;
+}
+
+message AuthorizeSignedWitnessRequest {
+  string profileId = 1;
+  string hashAsHex = 2;
+  sint64 accountAgeWitnessDate = 3;
+  sint64 witnessSignDate = 4;
+  string pubKeyBase64 = 5;
+  string signatureBase64 = 6;
+}
+
+message AuthorizeTimestampRequest {
+  string profileId = 1;
+}
+
+message AuthorizedTimestampData {
+  string profileId = 1;
+  sint64 date = 2;
+}

@@ -17,12 +17,12 @@
 
 package bisq.user.reputation;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedAccountAgeData;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedAccountAgeData;
-import bisq.oracle.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

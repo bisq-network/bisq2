@@ -23,13 +23,13 @@ package bisq.desktop;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.bonded_roles.service.OracleService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
 import bisq.desktop.common.application.ShotDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
-import bisq.oracle.service.OracleService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;

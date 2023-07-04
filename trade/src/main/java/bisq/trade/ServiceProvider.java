@@ -17,7 +17,7 @@
 
 package bisq.trade;
 
-import bisq.oracle.service.OracleService;
+import bisq.bonded_roles.service.OracleService;
 
 public interface ServiceProvider {
     bisq.network.NetworkService getNetworkService();

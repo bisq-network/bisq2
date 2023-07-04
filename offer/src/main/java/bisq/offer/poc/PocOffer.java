@@ -18,6 +18,8 @@
 package bisq.offer.poc;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.bonded_roles.service.market_price.MarketPrice;
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -31,8 +33,6 @@ import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.service.market_price.MarketPrice;
-import bisq.oracle.service.market_price.MarketPriceService;
 import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

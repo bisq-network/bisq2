@@ -11,7 +11,7 @@ dependencies {
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')
-    implementation project(':oracle')
+    implementation project(':bonded_roles')
 
     implementation 'network:network'
 

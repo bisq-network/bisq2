@@ -19,6 +19,7 @@ package bisq.rest_api;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.bonded_roles.service.OracleService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -28,7 +29,6 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.oracle.service.OracleService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;

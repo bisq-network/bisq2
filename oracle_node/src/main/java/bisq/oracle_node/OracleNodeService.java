@@ -17,13 +17,13 @@
 
 package bisq.oracle_node;
 
+import bisq.bonded_roles.node.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.node.AuthorizedOracleNode;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;

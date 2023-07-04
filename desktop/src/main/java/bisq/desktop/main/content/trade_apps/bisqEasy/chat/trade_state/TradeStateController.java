@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -30,7 +31,6 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;

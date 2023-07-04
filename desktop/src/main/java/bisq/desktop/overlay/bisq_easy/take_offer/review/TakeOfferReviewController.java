@@ -17,6 +17,8 @@
 
 package bisq.desktop.overlay.bisq_easy.take_offer.review;
 
+import bisq.bonded_roles.service.market_price.MarketPrice;
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannelDomain;
@@ -46,8 +48,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.service.market_price.MarketPrice;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;

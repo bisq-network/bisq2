@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.top;
 
+import bisq.bonded_roles.service.market_price.MarketPrice;
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
@@ -25,8 +27,6 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
-import bisq.oracle.service.market_price.MarketPrice;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.PriceFormatter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

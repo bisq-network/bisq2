@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.offer_details;
 
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
@@ -27,7 +28,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
