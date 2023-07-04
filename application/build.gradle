@@ -9,7 +9,7 @@ dependencies {
     implementation project(':user')
     implementation project(':chat')
     implementation project(':support')
-    implementation project(':oracle')
+    implementation project(':bonded_roles')
     implementation project(':offer')
     implementation project(':trade')
 

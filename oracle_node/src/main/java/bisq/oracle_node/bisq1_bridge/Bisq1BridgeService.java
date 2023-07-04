@@ -17,6 +17,15 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.bonded_roles.node.bisq1_bridge.Bisq1BridgeHttpService;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedAccountAgeData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedReputationData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedSignedWitnessData;
+import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
+import bisq.bonded_roles.node.bisq1_bridge.dto.ProofOfBurnDto;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
 import bisq.common.application.Service;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
@@ -25,15 +34,6 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.node.bisq1_bridge.Bisq1BridgeHttpService;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedAccountAgeData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedBondedReputationData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedSignedWitnessData;
-import bisq.oracle.node.bisq1_bridge.dto.BondedReputationDto;
-import bisq.oracle.node.bisq1_bridge.dto.ProofOfBurnDto;
-import bisq.oracle.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.oracle.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

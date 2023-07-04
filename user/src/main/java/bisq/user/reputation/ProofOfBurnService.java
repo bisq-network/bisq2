@@ -17,10 +17,10 @@
 
 package bisq.user.reputation;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;

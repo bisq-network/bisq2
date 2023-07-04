@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay.bisq_easy.create_offer.price;
 
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
@@ -26,7 +27,6 @@ import bisq.desktop.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.*;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;

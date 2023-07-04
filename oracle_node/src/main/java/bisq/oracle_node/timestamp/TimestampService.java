@@ -17,6 +17,8 @@
 
 package bisq.oracle_node.timestamp;
 
+import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
+import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -25,8 +27,6 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.node.timestamp.AuthorizeTimestampRequest;
-import bisq.oracle.node.timestamp.AuthorizedTimestampData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

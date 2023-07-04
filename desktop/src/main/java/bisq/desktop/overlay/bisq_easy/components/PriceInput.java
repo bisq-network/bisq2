@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay.bisq_easy.components;
 
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
@@ -24,7 +25,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.validation.PriceValidator;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.*;

@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.dashboard;
 
+import bisq.bonded_roles.service.market_price.MarketPrice;
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
@@ -26,8 +28,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.oracle.service.market_price.MarketPrice;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;

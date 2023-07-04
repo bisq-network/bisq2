@@ -17,6 +17,7 @@
 
 package bisq.offer.amount;
 
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.offer.Offer;
@@ -24,7 +25,6 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.oracle.service.market_price.MarketPriceService;
 
 import java.util.Optional;
 

@@ -10,7 +10,7 @@ dependencies {
     implementation project(':identity')
     implementation project(':account')
     implementation project(':presentation')
-    implementation project(':oracle')
+    implementation project(':bonded_roles')
 
     implementation("network:network")
 

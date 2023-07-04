@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
+import bisq.bonded_roles.service.explorer.ExplorerService;
+import bisq.bonded_roles.service.explorer.dto.Output;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.monetary.Coin;
 import bisq.desktop.ServiceProvider;
@@ -27,8 +29,6 @@ import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.oracle.service.explorer.ExplorerService;
-import bisq.oracle.service.explorer.dto.Output;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;

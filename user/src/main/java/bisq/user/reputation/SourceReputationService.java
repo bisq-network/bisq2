@@ -17,6 +17,7 @@
 
 package bisq.user.reputation;
 
+import bisq.bonded_roles.node.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
@@ -25,7 +26,6 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.node.AuthorizedOracleNode;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;

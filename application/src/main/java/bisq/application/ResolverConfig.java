@@ -17,19 +17,19 @@
 
 package bisq.application;
 
+import bisq.bonded_roles.node.AuthorizedOracleNode;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedAccountAgeData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedReputationData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedSignedWitnessData;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
+import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
+import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
 import bisq.chat.message.ChatMessage;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.OfferMessage;
-import bisq.oracle.node.AuthorizedOracleNode;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedAccountAgeData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedBondedReputationData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
-import bisq.oracle.node.bisq1_bridge.data.AuthorizedSignedWitnessData;
-import bisq.oracle.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.oracle.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
-import bisq.oracle.node.timestamp.AuthorizeTimestampRequest;
-import bisq.oracle.node.timestamp.AuthorizedTimestampData;
 import bisq.support.alert.AuthorizedAlertData;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationResponse;
@@ -46,22 +46,22 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedRoleRegistrationData", AuthorizedRoleRegistrationData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedNodeRegistrationData", AuthorizedNodeRegistrationData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
-        DistributedDataResolver.addResolver("oracle.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
         DistributedDataResolver.addResolver("support.AuthorizedAlertData", AuthorizedAlertData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage",
                 ChatMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AuthorizeAccountAgeRequest",
+        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeAccountAgeRequest",
                 AuthorizeAccountAgeRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AuthorizeSignedWitnessRequest",
+        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeSignedWitnessRequest",
                 AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AuthorizeTimestampRequest",
+        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeTimestampRequest",
                 AuthorizeTimestampRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationRequest",
                 MediationRequest.getNetworkMessageResolver());

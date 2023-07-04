@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay.bisq_easy.create_offer.review;
 
+import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.Transitions;
@@ -35,7 +36,6 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
-import bisq.oracle.service.market_price.MarketPriceService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
