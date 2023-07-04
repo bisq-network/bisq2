@@ -24,6 +24,7 @@ import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
 import bisq.tor.local_network.torrc.RelayTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -51,10 +52,7 @@ public class TorNetwork {
         String nickname = "da" + dirAuthIndex++;
 
         Path nodeDataDir = rootDataDir.resolve(nickname);
-        boolean isSuccess = nodeDataDir.toFile().mkdir();
-        if (!isSuccess) {
-            throw new IllegalStateException("Couldn't create data directory for " + nickname);
-        }
+        createDataDirIfNotPresent(nodeDataDir);
 
         var dirAuth = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
@@ -74,10 +72,7 @@ public class TorNetwork {
         String nickname = "relay" + relayIndex++;
 
         Path nodeDataDir = rootDataDir.resolve(nickname);
-        boolean isSuccess = nodeDataDir.toFile().mkdir();
-        if (!isSuccess) {
-            throw new IllegalStateException("Couldn't create data directory for " + nickname);
-        }
+        createDataDirIfNotPresent(nodeDataDir);
 
         TorNode firstRelay = TorNode.builder()
                 .type(TorNode.Type.RELAY)
@@ -97,10 +92,7 @@ public class TorNetwork {
         String nickname = "client" + clientIndex++;
 
         Path nodeDataDir = rootDataDir.resolve(nickname);
-        boolean isSuccess = nodeDataDir.toFile().mkdir();
-        if (!isSuccess) {
-            throw new IllegalStateException("Couldn't create data directory for " + nickname);
-        }
+        createDataDirIfNotPresent(nodeDataDir);
 
         TorNode firstClient = TorNode.builder()
                 .type(TorNode.Type.CLIENT)
@@ -121,24 +113,36 @@ public class TorNetwork {
         startProcesses();
     }
 
+    private void createDataDirIfNotPresent(Path nodeDataDirPath) {
+        File nodeDataDirFile = nodeDataDirPath.toFile();
+        if (nodeDataDirFile.exists()) {
+            return;
+        }
+
+        boolean isSuccess = nodeDataDirPath.toFile().mkdir();
+        if (!isSuccess) {
+            throw new IllegalStateException("Couldn't create data directory: " + nodeDataDirPath.toAbsolutePath());
+        }
+    }
+
     private void generateTorrcFiles() throws IOException {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
             var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDAs);
-            torrcFileGenerator.generate();
+            generateTorrc(da, torrcFileGenerator);
         }
 
         for (TorNode relay : relays) {
             var relayTorrcGenerator = new RelayTorrcGenerator(relay);
             var torrcFileGenerator = new TorrcFileGenerator(relayTorrcGenerator, allDAs);
-            torrcFileGenerator.generate();
+            generateTorrc(relay, torrcFileGenerator);
         }
 
         for (TorNode client : clients) {
             var clientTorrcGenerator = new ClientTorrcGenerator(client);
             var torrcFileGenerator = new TorrcFileGenerator(clientTorrcGenerator, allDAs);
-            torrcFileGenerator.generate();
+            generateTorrc(client, torrcFileGenerator);
         }
     }
 
@@ -167,5 +171,12 @@ public class TorNetwork {
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
         return processBuilder.start();
+    }
+
+    private void generateTorrc(TorNode torNode, TorrcFileGenerator torrcFileGenerator) throws IOException {
+        if (torNode.getTorrcPath().toFile().exists()) {
+            return;
+        }
+        torrcFileGenerator.generate();
     }
 }
