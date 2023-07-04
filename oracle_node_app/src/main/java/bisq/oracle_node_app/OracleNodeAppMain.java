@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq1Bridge;
+package bisq.oracle_node_app;
 
-import bisq.application.Bisq1BridgeApplicationService;
+import bisq.application.OracleNodeApplicationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class Bisq1BridgeMain {
+public class OracleNodeAppMain {
     public static void main(String[] args) {
-        Bisq1BridgeApplicationService applicationService = new Bisq1BridgeApplicationService(args);
+        OracleNodeApplicationService applicationService = new OracleNodeApplicationService(args);
         applicationService.readAllPersisted()
                 .thenCompose(result -> applicationService.initialize());
 

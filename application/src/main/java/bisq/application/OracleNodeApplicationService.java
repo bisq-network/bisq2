@@ -32,14 +32,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 @Getter
-public class Bisq1BridgeApplicationService extends ApplicationService {
+public class OracleNodeApplicationService extends ApplicationService {
     private final IdentityService identityService;
     private final SecurityService securityService;
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
 
-    public Bisq1BridgeApplicationService(String[] args) {
-        super("bisq1_bridge", args);
+    public OracleNodeApplicationService(String[] args) {
+        super("oracle_node", args);
 
         securityService = new SecurityService(persistenceService);
 

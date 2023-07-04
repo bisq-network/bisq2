@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    project.mainClassName = 'bisq.bisq1Bridge.Bisq1BridgeMain'
+    project.mainClassName = 'bisq.oracle_node_app.OracleNodeAppMain'
 }
 
 run {
