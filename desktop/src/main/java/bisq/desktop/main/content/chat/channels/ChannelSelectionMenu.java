@@ -247,7 +247,6 @@ public abstract class ChannelSelectionMenu<
             listView.getStyleClass().add("channel-selection-list-view");
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
-            listView.setPrefHeight(40);
 
             VBox vBox = new VBox(10, headerBox, listView);
             Layout.pinToAnchorPane(vBox, 0, 0, 0, 0);
