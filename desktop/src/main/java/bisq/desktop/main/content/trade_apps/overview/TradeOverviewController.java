@@ -21,7 +21,6 @@ import bisq.common.data.Pair;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.i18n.Res;
 import lombok.Getter;
 
 public abstract class TradeOverviewController<M extends TradeOverviewModel> implements Controller {
@@ -33,94 +32,59 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
 
         ProtocolListItem bisqEasy = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_EASY,
                 NavigationTarget.BISQ_EASY,
-                Res.get("tradeApps.basic.info.bisqEasy"),
-                Res.get("tradeApps.markets.bisqEasy"),
-                "",
-                "",
                 new Pair<>(10000L, 700000L),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "protocol-satoshi-square"
+                ""
         );
-        ProtocolListItem bisqMultisig = new ProtocolListItem(TradeAppsAttributes.Type.MULTISIG,
+        ProtocolListItem multisig = new ProtocolListItem(TradeAppsAttributes.Type.MULTISIG,
                 NavigationTarget.MULTISIG,
-                Res.get("tradeApps.basic.info.bisqMultisig"),
-                Res.get("tradeApps.markets.bisqMultisig"),
-                Res.get("tradeApps.markets.info.bisqMultisig"),
-                Res.get("tradeApps.security.info.bisqMultisig"),
                 new Pair<>(10000L, 700000L),
-                Res.get("tradeApps.privacy.info.bisqMultisig"),
-                Res.get("tradeApps.convenience.info.bisqMultisig"),
-                Res.get("tradeApps.costs.info.bisqMultisig"),
-                Res.get("tradeApps.speed.info.bisqMultisig"),
-                "Q4/23",
-                "protocol-bisq"
+                "Q4/23"
         );
-        ProtocolListItem liquidSwap = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_SWAP,
-                NavigationTarget.LIQUID_SWAP,
-                Res.get("tradeApps.basic.info.liquidSwap"),
-                Res.get("tradeApps.markets.liquidSwap"),
-                Res.get("tradeApps.markets.info.liquidSwap"),
-                Res.get("tradeApps.security.info.liquidSwap"),
+        ProtocolListItem submarine = new ProtocolListItem(TradeAppsAttributes.Type.SUBMARINE,
+                NavigationTarget.SUBMARINE,
                 new Pair<>(10000L, 700000L),
-                Res.get("tradeApps.privacy.info.liquidSwap"),
-                Res.get("tradeApps.convenience.info.liquidSwap"),
-                Res.get("tradeApps.costs.info.liquidSwap"),
-                Res.get("tradeApps.speed.info.liquidSwap"),
-                "Q1/24",
-                "protocol-liquid"
+                "Q1/24"
+        );
+        ProtocolListItem liquidMultisig = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_MULTISIG,
+                NavigationTarget.LIQUID_MULTISIG,
+                new Pair<>(10000L, 700000L),
+                "Q2/24"
+        );
+        ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.LIGHTNING_FIAT,
+                NavigationTarget.LIGHTNING_FIAT,
+                new Pair<>(10000L, 700000L),
+                "Q3/24"
+        );
+        ProtocolListItem lightningEscrow = new ProtocolListItem(TradeAppsAttributes.Type.LIGHTNING_ESCROW,
+                NavigationTarget.LIGHTNING_ESCROW,
+                new Pair<>(10000L, 700000L),
+                "Q4/24"
         );
         ProtocolListItem moneroSwap = new ProtocolListItem(TradeAppsAttributes.Type.MONERO_SWAP,
                 NavigationTarget.MONERO_SWAP,
-                Res.get("tradeApps.basic.info.moneroSwap"),
-                Res.get("tradeApps.markets.moneroSwap"),
-                Res.get("tradeApps.markets.info.moneroSwap"),
-                Res.get("tradeApps.security.info.moneroSwap"),
                 new Pair<>(10000L, 700000L),
-                Res.get("tradeApps.privacy.info.moneroSwap"),
-                Res.get("tradeApps.convenience.info.moneroSwap"),
-                Res.get("tradeApps.costs.info.moneroSwap"),
-                Res.get("tradeApps.speed.info.moneroSwap"),
-                "Q1/23",
-                "protocol-monero"
+                "Q4/24"
         );
-        ProtocolListItem lightning = new ProtocolListItem(TradeAppsAttributes.Type.LIGHTNING_X,
-                NavigationTarget.LIGHTNING_X,
-                Res.get("tradeApps.basic.info.lightning"),
-                Res.get("tradeApps.markets.lightning"),
-                Res.get("tradeApps.markets.info.lightning"),
-                Res.get("tradeApps.security.info.lightning"),
+        ProtocolListItem liquidSwap = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_SWAP,
+                NavigationTarget.LIQUID_SWAP,
                 new Pair<>(10000L, 700000L),
-                Res.get("tradeApps.privacy.info.lightning"),
-                Res.get("tradeApps.convenience.info.lightning"),
-                Res.get("tradeApps.costs.info.lightning"),
-                Res.get("tradeApps.speed.info.lightning"),
-                "Q2/23",
-                "protocol-lightning"
+                "Q4/24"
         );
         ProtocolListItem bsqSwap = new ProtocolListItem(TradeAppsAttributes.Type.BSQ_SWAP,
                 NavigationTarget.BSQ_SWAP,
-                Res.get("tradeApps.basic.info.bsqSwap"),
-                Res.get("tradeApps.markets.bsqSwap"),
-                Res.get("tradeApps.markets.info.bsqSwap"),
-                Res.get("tradeApps.security.info.bsqSwap"),
                 new Pair<>(10000L, 700000L),
-                Res.get("tradeApps.privacy.info.bsqSwap"),
-                Res.get("tradeApps.convenience.info.bsqSwap"),
-                Res.get("tradeApps.costs.info.bsqSwap"),
-                Res.get("tradeApps.speed.info.bsqSwap"),
-                "Q2/24",
-                "protocol-bsq"
+                "Q4/24"
         );
+
         model.getListItems().setAll(
                 bisqEasy,
-                bisqMultisig,
+                multisig,
+                submarine,
+                liquidMultisig,
+                liquidFiat,
+                lightningEscrow,
+                moneroSwap,
                 liquidSwap,
-               /* moneroSwap,
-                lightning,*/
                 bsqSwap
         );
     }

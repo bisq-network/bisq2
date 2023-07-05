@@ -23,10 +23,11 @@ public enum TradeProtocolType implements ProtocolType {
     BISQ_EASY,
     MULTISIG,
     SUBMARINE,
-    MULTISIG_LIQUID,
+    LIQUID_MULTISIG,
+    LIGHTNING_FIAT,
     LIQUID_SWAP,
     BSQ_SWAP,
-    LIGHTNING_X,
+    LIGHTNING_ESCROW,
     MONERO_SWAP;
 
     @Override

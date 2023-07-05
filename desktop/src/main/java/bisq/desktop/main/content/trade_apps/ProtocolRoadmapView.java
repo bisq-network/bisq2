@@ -17,52 +17,49 @@
 
 package bisq.desktop.main.content.trade_apps;
 
-import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MultiLineLabel;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ProtocolRoadmapView<M extends Model, C extends Controller> extends View<VBox, M, C> {
-    protected final MultiLineLabel headline, subHeadline, overviewHeadline, overview, releaseHeadline, release, tradeOffsHeadline, tradeOffs;
+public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, ProtocolRoadmapController> {
     protected final Hyperlink learnMore;
 
-    public ProtocolRoadmapView(M model, C controller) {
+    public ProtocolRoadmapView(ProtocolRoadmapModel model, ProtocolRoadmapController controller) {
         super(new VBox(10), model, controller);
 
-        String key = getKey();
-        headline = new MultiLineLabel(Res.get("tradeApps." + key));
-        headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
-        headline.getStyleClass().addAll("font-size-20", "font-light");
+        String name = model.getTradeProtocolType().name();
+        Label headline = new Label(Res.get("tradeApps." + name));
+        headline.setGraphic(ImageUtil.getImageViewById(model.getIconId()));
+        headline.getStyleClass().add("trade-apps-roadmap-headline");
         headline.setGraphicTextGap(10);
 
-        subHeadline = new MultiLineLabel(Res.get("tradeApps." + key + ".subHeadline"));
-        subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
+        MultiLineLabel subHeadline = new MultiLineLabel(Res.get("tradeApps." + name + ".subHeadline"));
+        subHeadline.getStyleClass().add("trade-apps-roadmap-sub-headline");
 
-        overviewHeadline = new MultiLineLabel(Res.get("tradeApps.overview"));
-        overviewHeadline.getStyleClass().addAll("font-size-16", "font-light");
+        Label overviewHeadline = new Label(Res.get("tradeApps.overview"));
+        overviewHeadline.getStyleClass().add("trade-apps-roadmap-content-headline");
 
-        overview = new MultiLineLabel(Res.get("tradeApps." + key + ".overview"));
-        overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
+        UnorderedList overview = new UnorderedList(Res.get("tradeApps." + name + ".overview"), "trade-apps-roadmap-text");
 
-        releaseHeadline = new MultiLineLabel(Res.get("tradeApps.release"));
+        Label releaseHeadline = new Label(Res.get("tradeApps.release"));
         releaseHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        release = new MultiLineLabel(Res.get("tradeApps." + key + ".release"));
+        MultiLineLabel release = new MultiLineLabel(Res.get("tradeApps." + name + ".release"));
         release.getStyleClass().addAll("font-size-12", "font-light");
 
-        tradeOffsHeadline = new MultiLineLabel(Res.get("tradeApps.tradeOffs"));
+        Label tradeOffsHeadline = new Label(Res.get("tradeApps.tradeOffs"));
         tradeOffsHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        tradeOffs = new MultiLineLabel(Res.get("tradeApps." + key + ".tradeOffs"));
-        tradeOffs.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
+        UnorderedList pro = new UnorderedList(Res.get("tradeApps." + name + ".pro"), "trade-apps-roadmap-text", "\\+ ", "+ ");
+        UnorderedList con = new UnorderedList(Res.get("tradeApps." + name + ".con"), "trade-apps-roadmap-text", "- ", "- ");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
@@ -71,24 +68,17 @@ public abstract class ProtocolRoadmapView<M extends Model, C extends Controller>
         VBox.setMargin(overviewHeadline, new Insets(25, 0, 0, 0));
         VBox.setMargin(releaseHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(tradeOffsHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(tradeOffs, new Insets(0, 0, 15, 0));
+        VBox.setMargin(con, new Insets(0, 0, 15, 0));
         root.getChildren().addAll(headline, subHeadline,
                 overviewHeadline, overview,
                 releaseHeadline, release,
-                tradeOffsHeadline, tradeOffs,
+                tradeOffsHeadline, pro, con,
                 learnMore);
-
     }
-
-    protected abstract String getIconId();
-
-    protected abstract String getKey();
-
-    protected abstract String getUrl();
 
     @Override
     protected void onViewAttached() {
-        learnMore.setOnAction(e -> Browser.open(getUrl()));
+        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override

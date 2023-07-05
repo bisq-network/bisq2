@@ -15,28 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps.multisig;
+package bisq.desktop.main.content.trade_apps;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.desktop.main.content.trade_apps.ProtocolRoadmapView;
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class MultiSigView extends ProtocolRoadmapView<MultiSigModel, MultiSigController> {
-    public MultiSigView(MultiSigModel model, MultiSigController controller) {
-        super(model, controller);
+public class ProtocolRoadmapController implements Controller {
+    @Getter
+    private final ProtocolRoadmapView view;
+    private final ProtocolRoadmapModel model;
+
+    public ProtocolRoadmapController(TradeProtocolType tradeProtocolType, String iconId, String url) {
+        model = new ProtocolRoadmapModel(tradeProtocolType, iconId, url);
+        view = new ProtocolRoadmapView(model, this);
     }
 
     @Override
-    protected String getKey() {
-        return TradeProtocolType.MULTISIG.name();
+    public void onActivate() {
     }
 
     @Override
-    protected String getIconId() {
-        return "protocol-bisq";
+    public void onDeactivate() {
     }
 
-    @Override
-    protected String getUrl() {
-        return "https://bisq.network/";
+    public void onLearnMore() {
+        Browser.open(model.getUrl());
     }
 }

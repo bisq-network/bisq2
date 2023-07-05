@@ -29,16 +29,18 @@ import java.util.List;
 @Slf4j
 
 public abstract class TextList extends VBox {
-    public static final String LIST_INDICATOR = "- ";
-    private static final String BULLET_POINT = "•";
-
-    public TextList(String text, String style) {
-        this(text, style, 5, 0);
-    }
-
-    public TextList(String text, @Nullable String style, double gap, double vSpacing) {
+    public TextList(String text, @Nullable String style, double gap, double vSpacing, String regex, @Nullable String mark) {
         setSpacing(vSpacing);
-        List<String> list = List.of(text.split(getRegex()));
+        List<String> list = List.of(text.split(regex));
+        if (list.size() == 1 && list.get(0).equals(text)) {
+            MultiLineLabel content = new MultiLineLabel(text);
+            if (style != null) {
+                content.getStyleClass().add(style);
+            }
+            getChildren().add(content);
+            return;
+        }
+
         int i = 0;
         for (String item : list) {
             String textContent = item.stripLeading();
@@ -48,17 +50,18 @@ public abstract class TextList extends VBox {
             i++;
             textContent = textContent.stripTrailing();
             MultiLineLabel content = new MultiLineLabel(textContent);
-            Text mark = new Text(getMark(i));
+            mark = mark == null ? getMark(i) : mark;
+            Text markText = new Text(mark);
             if (style != null) {
-                mark.getStyleClass().add(style);
+                markText.getStyleClass().add(style);
                 content.getStyleClass().add(style);
             }
-            HBox.setHgrow(mark, Priority.ALWAYS);
-            getChildren().add(new HBox(gap, mark, content));
+            HBox.setHgrow(markText, Priority.ALWAYS);
+            getChildren().add(new HBox(gap, markText, content));
         }
     }
 
-    protected abstract String getRegex();
-
-    protected abstract String getMark(int index);
+    protected String getMark(int index) {
+        return index + ". ";
+    }
 }

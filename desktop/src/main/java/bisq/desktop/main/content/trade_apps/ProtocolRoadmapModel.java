@@ -15,9 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps.xmr_swap;
+package bisq.desktop.main.content.trade_apps;
 
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.common.view.Model;
+import lombok.Getter;
 
-public class XmrSwapModel implements Model {
+@Getter
+public class ProtocolRoadmapModel implements Model {
+    private final TradeProtocolType tradeProtocolType;
+    private final String iconId;
+    private final String url;
+
+    public ProtocolRoadmapModel(TradeProtocolType tradeProtocolType, String iconId, String url) {
+        this.tradeProtocolType = tradeProtocolType;
+        this.iconId = iconId;
+        this.url = url;
+    }
 }

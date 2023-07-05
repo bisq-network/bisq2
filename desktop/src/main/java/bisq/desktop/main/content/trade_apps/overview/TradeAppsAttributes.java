@@ -23,11 +23,14 @@ public class TradeAppsAttributes {
     @Getter
     public enum Type {
         BISQ_EASY(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),
-        LIQUID_SWAP(Security.HIGH, Privacy.HIGH, Convenience.MID, Cost.LOW, Speed.HIGH),
-        MONERO_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID),
         MULTISIG(Security.MID, Privacy.MID, Convenience.MID, Cost.MID, Speed.LOW),
+        SUBMARINE(Security.HIGH, Privacy.HIGH, Convenience.MID, Cost.LOW, Speed.HIGH),
+        LIQUID_MULTISIG(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW),
+        LIGHTNING_FIAT(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.MID),
+        LIQUID_SWAP(Security.HIGH, Privacy.HIGH, Convenience.MID, Cost.LOW, Speed.HIGH),
         BSQ_SWAP(Security.HIGH, Privacy.MID, Convenience.MID, Cost.MID, Speed.MID),
-        LIGHTNING_X(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW);
+        LIGHTNING_ESCROW(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.MID),
+        MONERO_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID);
 
         private final Security security;
         private final Privacy privacy;

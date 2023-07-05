@@ -88,9 +88,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         VBox tradeSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("navigation.tradeApps.bisqEasy"), NavigationTarget.BISQ_EASY, tradeAppsButton),
                 createSubmenuNavigationButton(Res.get("navigation.tradeApps.multiSig"), NavigationTarget.MULTISIG, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.submarine"), NavigationTarget.SUBMARINE, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.liquidMultisig"), NavigationTarget.LIQUID_MULTISIG, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.lightningFiat"), NavigationTarget.LIGHTNING_FIAT, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.lightningEscrow"), NavigationTarget.LIGHTNING_ESCROW, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("navigation.tradeApps.moneroSwap"), NavigationTarget.MONERO_SWAP, tradeAppsButton),
                 createSubmenuNavigationButton(Res.get("navigation.tradeApps.liquidSwap"), NavigationTarget.LIQUID_SWAP, tradeAppsButton),
-                // createSubmenuNavigationButton(Res.get("navigation.tradeApps.moneroSwap"), NavigationTarget.MONERO_SWAP, tradeAppsButton),
-                // createSubmenuNavigationButton(Res.get("navigation.tradeApps.lightning"), NavigationTarget.LIGHTNING_X, tradeAppsButton),
                 createSubmenuNavigationButton(Res.get("navigation.tradeApps.bsqSwap"), NavigationTarget.BSQ_SWAP, tradeAppsButton)
         );
 

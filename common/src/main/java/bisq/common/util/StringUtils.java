@@ -17,6 +17,7 @@
 
 package bisq.common.util;
 
+import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
@@ -112,5 +113,25 @@ public class StringUtils {
 
     public static boolean isNotEmpty(String value) {
         return value != null && !value.isEmpty();
+    }
+
+    public static String snakeCaseToCamelCase(String value) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+    }
+
+    public static String kebapCaseToCamelCase(String value) {
+        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+    }
+
+    public static String camelCaseToSnakeCase(String value) {
+        return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, value);
+    }
+
+    public static String camelCaseToKebapCase(String value) {
+        return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, value);
+    }
+
+    public static String snakeCaseToKebapCase(String value) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase());
     }
 }

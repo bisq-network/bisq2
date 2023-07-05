@@ -1,0 +1,34 @@
+/*******************************************************************************
+ *                                                                             *
+ * Protocol roadmap                                                            *
+ *                                                                             *
+ ******************************************************************************/
+
+.trade-apps-roadmap-headline {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+    -fx-font-size: 2em !Important;
+}
+
+.trade-apps-roadmap-sub-headline {
+    -fx-fill: -fx-mid-text-color !Important;
+    -fx-text-fill: -fx-mid-text-color !Important;
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+    -fx-font-size: 1.4em !Important;
+}
+
+.trade-apps-roadmap-content-headline {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+    -fx-font-size: 1.6em !Important;
+}
+
+.trade-apps-roadmap-text {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+    -fx-font-size: 1.2em !Important;
+    -fx-line-spacing: .1em;
+}

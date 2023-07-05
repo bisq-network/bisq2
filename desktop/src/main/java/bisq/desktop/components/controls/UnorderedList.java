@@ -24,22 +24,18 @@ import javax.annotation.Nullable;
 @Slf4j
 
 public class UnorderedList extends TextList {
+    private static final String REGEX = "- ";
+    private static final String MARK = "•";
+
+    public UnorderedList(String text, String style, String regex, String mark) {
+        this(text, style, 7, 0, regex, mark);
+    }
 
     public UnorderedList(String text, String style) {
-        this(text, style, 5, 0);
+        this(text, style, 7, 0, REGEX, MARK);
     }
 
-    public UnorderedList(String text, @Nullable String style, double gap, double vSpacing) {
-        super(text, style, gap, vSpacing);
-    }
-
-    @Override
-    protected String getRegex() {
-        return "- ";
-    }
-
-    @Override
-    protected String getMark(int index) {
-        return "•";
+    public UnorderedList(String text, @Nullable String style, double gap, double vSpacing, String regex, String mark) {
+        super(text, style, gap, vSpacing, regex, mark);
     }
 }

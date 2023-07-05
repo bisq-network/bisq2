@@ -53,10 +53,9 @@ public class TradeOverviewListView extends TradeOverviewView<VBox, TradeOverview
 
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.getStyleClass().add("trade-overview-table-view");
-        tableView.setMinHeight(500);
+        tableView.setMinHeight(700);
         configDataTableView();
-
-        this.root.getChildren().addAll(tableView);
+        root.getChildren().add(tableView);
     }
 
     @Override
@@ -86,22 +85,22 @@ public class TradeOverviewListView extends TradeOverviewView<VBox, TradeOverview
                 .title(Res.get("tradeApps.security"))
                 .minWidth(80)
                 .isFirst()
-                .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getSecurity().ordinal()))
-                .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getSecurity().ordinal(), ProtocolListItem::getSecurityInfo))
+                .comparator(Comparator.comparing(e -> e.getTradeAppsAttributesType().getSecurity().ordinal()))
+                .setCellFactory(getCellFactory(e -> e.getTradeAppsAttributesType().getSecurity().ordinal(), ProtocolListItem::getSecurityInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("tradeApps.privacy"))
                 .minWidth(80)
                 .isFirst()
-                .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getPrivacy().ordinal()))
-                .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getPrivacy().ordinal(), ProtocolListItem::getPrivacyInfo))
+                .comparator(Comparator.comparing(e -> e.getTradeAppsAttributesType().getPrivacy().ordinal()))
+                .setCellFactory(getCellFactory(e -> e.getTradeAppsAttributesType().getPrivacy().ordinal(), ProtocolListItem::getPrivacyInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("tradeApps.convenience"))
                 .minWidth(80)
                 .isFirst()
-                .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getConvenience().ordinal()))
-                .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getConvenience().ordinal(), ProtocolListItem::getConvenienceInfo))
+                .comparator(Comparator.comparing(e -> e.getTradeAppsAttributesType().getConvenience().ordinal()))
+                .setCellFactory(getCellFactory(e -> e.getTradeAppsAttributesType().getConvenience().ordinal(), ProtocolListItem::getConvenienceInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("tradeApps.release"))
