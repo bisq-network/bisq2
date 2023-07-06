@@ -84,6 +84,13 @@ public class TradeStateController implements Controller {
                 myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(tradeId);
+        boolean isMyRoleMediator = channel.getMediator().map(mediatorUserProfile -> myUserIdentity.getUserProfile().equals(mediatorUserProfile)).orElse(false);
+        //todo handle mediator case
+        if (isMyRoleMediator) {
+            model.getIsCollapsed().set(true); //todo
+            return;
+        }
+
         if (optionalBisqEasyTrade.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.tradeState.warn.noTradeFound")).show();
             return;
