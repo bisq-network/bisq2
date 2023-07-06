@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum;
+package bisq.common;
 
 import com.sun.nio.file.SensitivityWatchEventModifier;
 
