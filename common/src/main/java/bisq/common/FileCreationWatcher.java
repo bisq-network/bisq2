@@ -18,14 +18,17 @@
 package bisq.common;
 
 import com.sun.nio.file.SensitivityWatchEventModifier;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class FileCreationWatcher {
     private final Path directoryToWatch;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -35,10 +38,14 @@ public class FileCreationWatcher {
     }
 
     public Future<Path> waitUntilNewFileCreated() {
-        return executor.submit(this::waitForNewFile);
+        return executor.submit(() -> waitForNewFile(Optional.empty()));
     }
 
-    private Path waitForNewFile() throws IOException, InterruptedException {
+    public Future<Path> waitForFile(Path path) {
+        return executor.submit(() -> waitForNewFile(Optional.of(path)));
+    }
+
+    private Path waitForNewFile(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService,
                     new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE},
@@ -54,8 +61,16 @@ public class FileCreationWatcher {
                 @SuppressWarnings("unchecked")
                 WatchEvent<Path> castedWatchEvent = (WatchEvent<Path>) event;
                 Path filename = castedWatchEvent.context();
-                return directoryToWatch.resolve(filename);
+                Path newFilePath = directoryToWatch.resolve(filename);
+
+                if (optionalPath.isEmpty()) {
+                    return newFilePath;
+                } else if (optionalPath.get().equals(newFilePath)) {
+                    return newFilePath;
+                }
             }
+        } catch (IOException | InterruptedException e) {
+            log.error("Couldn't watch directory: " + directoryToWatch.toAbsolutePath(), e);
         }
 
         throw new IllegalStateException("FileCreationWatcher terminated prematurely.");
