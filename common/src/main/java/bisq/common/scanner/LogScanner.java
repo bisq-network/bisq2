@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.process.scanner;
+package bisq.common.scanner;
 
 import java.io.IOException;
 import java.util.HashSet;

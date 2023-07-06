@@ -17,10 +17,10 @@
 
 package bisq.wallets.process;
 
+import bisq.common.scanner.LogScanner;
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.exceptions.WalletShutdownFailedException;
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
-import bisq.wallets.process.scanner.LogScanner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

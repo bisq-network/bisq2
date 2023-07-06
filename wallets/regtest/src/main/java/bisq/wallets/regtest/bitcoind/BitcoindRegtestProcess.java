@@ -17,16 +17,16 @@
 
 package bisq.wallets.regtest.bitcoind;
 
+import bisq.common.scanner.InputStreamScanner;
+import bisq.common.scanner.LogScanner;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.json_rpc.RpcCallFailureException;
-import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.RpcCallFailureException;
+import bisq.wallets.json_rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
-import bisq.wallets.process.scanner.InputStreamScanner;
-import bisq.wallets.process.scanner.LogScanner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
