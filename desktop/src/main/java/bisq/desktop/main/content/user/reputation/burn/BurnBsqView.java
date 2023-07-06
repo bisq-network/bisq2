@@ -41,13 +41,13 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         double width = DesktopModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = DesktopModel.MIN_HEIGHT;
+        double height = DesktopModel.MIN_HEIGHT - 40;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
-      
+
         VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
