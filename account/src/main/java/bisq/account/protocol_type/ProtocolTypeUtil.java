@@ -40,7 +40,7 @@ public class ProtocolTypeUtil {
             result.add(TradeProtocolType.BSQ_SWAP);
         }
         if (isLNSwapSupported(market)) {
-            result.add(TradeProtocolType.LIGHTNING_X);
+            result.add(TradeProtocolType.LIGHTNING_ESCROW);
         }
         if (isMultiSigSupported(market)) {
             result.add(TradeProtocolType.MULTISIG);

@@ -91,11 +91,14 @@ public class LeftNavController implements Controller {
                 onLearSubMenuExpanded(true);
                 break;
             case BISQ_EASY:
-            case LIQUID_SWAP:
             case MULTISIG:
-            case MONERO_SWAP:
+            case SUBMARINE:
+            case LIQUID_MULTISIG:
+            case LIGHTNING_FIAT:
+            case LIQUID_SWAP:
             case BSQ_SWAP:
-            case LIGHTNING_X:
+            case LIGHTNING_ESCROW:
+            case MONERO_SWAP:
                 onTradeAppsSubMenuExpanded(true);
                 break;
         }

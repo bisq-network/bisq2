@@ -349,21 +349,27 @@
 #SEPA {
     -fx-image: url("/images/payment/SEPA.png");
 }
+
 #SEPA_INSTANT {
     -fx-image: url("/images/payment/SEPA.png");
 }
+
 #ZELLE {
     -fx-image: url("/images/payment/Zelle.png");
 }
+
 #REVOLUT {
     -fx-image: url("/images/payment/Revolut.png");
 }
+
 #WISE {
     -fx-image: url("/images/payment/Wise.png");
 }
+
 #NATIONAL_BANK {
     -fx-image: url("/images/payment/NationalBankTransfer.png");
 }
+
 #SWIFT {
     -fx-image: url("/images/payment/NationalBankTransfer.png");
 }
@@ -380,28 +386,41 @@
 }
 
 /* Protocols */
-#protocol-bisq {
-    -fx-image: url("/images/protocols/protocol-bisq.png");
+#protocol-bisq-easy {
+    -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-bsq {
-    -fx-image: url("/images/protocols/protocol-bsq.png");
+#protocol-multisig {
+    -fx-image: url("/images/protocols/protocol-multisig.png");
 }
 
-#protocol-lightning {
-    -fx-image: url("/images/protocols/protocol-lightning.png");
+#protocol-submarine {
+    -fx-image: url("/images/protocols/protocol-submarine.png");
 }
 
-#protocol-liquid {
-    -fx-image: url("/images/protocols/protocol-liquid.png");
+#protocol-liquid-multisig {
+    -fx-image: url("/images/protocols/protocol-liquid-multisig.png");
 }
 
-#protocol-monero {
-    -fx-image: url("/images/protocols/protocol-monero.png");
+#protocol-lightning-fiat {
+    -fx-image: url("/images/protocols/protocol-lightning-fiat.png");
 }
 
-#protocol-satoshi-square {
-    -fx-image: url("/images/protocols/protocol-satoshi-square.png");
+#protocol-liquid-swap {
+    -fx-image: url("/images/protocols/protocol-liquid-swap.png");
+}
+
+#protocol-bsq-swap {
+    -fx-image: url("/images/protocols/protocol-bsq-swap.png");
+}
+
+#protocol-lightning-escrow {
+    -fx-image: url("/images/protocols/protocol-lightning-escrow.png");
+}
+
+
+#protocol-monero-swap {
+    -fx-image: url("/images/protocols/protocol-monero-swap.png");
 }
 
 

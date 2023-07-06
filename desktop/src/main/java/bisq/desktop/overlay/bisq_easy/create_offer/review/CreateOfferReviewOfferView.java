@@ -270,7 +270,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                     .comparator(Comparator.comparing(ListItem::getPriceAsLong))
                     .build());
         }
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        BisqTableColumn<ListItem> reputationColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.createOffer.review.table.reputation"))
                 .minWidth(120)
                 .setCellFactory(new Callback<>() {
@@ -292,8 +292,11 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                         };
                     }
                 })
-                .comparator(Comparator.comparing(ListItem::getReputationScore))
-                .build());
+                .comparator(Comparator.comparing(ListItem::getReputationScore).reversed())
+                .build();
+        tableView.getColumns().add(reputationColumn);
+        tableView.getSortOrder().add(reputationColumn);
+
         BisqTableColumn<ListItem> takeOffer = new BisqTableColumn.Builder<ListItem>()
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .value(Res.get("offer.takeOffer"))
@@ -308,6 +311,8 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 .isLast()
                 .build();
         tableView.getColumns().add(takeOffer);
+
+
     }
 
     private void configCreateOfferSuccess() {

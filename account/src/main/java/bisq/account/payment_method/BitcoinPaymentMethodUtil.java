@@ -46,7 +46,7 @@ public class BitcoinPaymentMethodUtil {
             case MONERO_SWAP:
             case BSQ_SWAP:
                 return List.of(BitcoinPaymentRail.MAIN_CHAIN);    // Require BTC main chain
-            case LIGHTNING_X:
+            case LIGHTNING_ESCROW:
                 return List.of(BitcoinPaymentRail.LN);
             case LIQUID_SWAP:
                 throw new IllegalArgumentException("No paymentMethods for that protocolType");

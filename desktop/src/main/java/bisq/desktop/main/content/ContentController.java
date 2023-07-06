@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content;
 
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -32,13 +33,9 @@ import bisq.desktop.main.content.academy.wallets.WalletsAcademyController;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
+import bisq.desktop.main.content.trade_apps.ProtocolRoadmapController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
 import bisq.desktop.main.content.trade_apps.bisqEasy.BisqEasyController;
-import bisq.desktop.main.content.trade_apps.bsq_swap.BsqSwapController;
-import bisq.desktop.main.content.trade_apps.lightning.LightningController;
-import bisq.desktop.main.content.trade_apps.liquid_swap.LiquidSwapController;
-import bisq.desktop.main.content.trade_apps.multisig.MultiSigController;
-import bisq.desktop.main.content.trade_apps.xmr_swap.XmrSwapController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
 import lombok.Getter;
@@ -115,21 +112,48 @@ public class ContentController extends NavigationController {
             case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(serviceProvider));
             }
-            case LIQUID_SWAP: {
-                return Optional.of(new LiquidSwapController(serviceProvider));
-            }
+
             case MULTISIG: {
-                return Optional.of(new MultiSigController(serviceProvider));
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MULTISIG,
+                        "protocol-multisig",
+                        "https://bisq.network/"));
             }
-            case MONERO_SWAP: {
-                return Optional.of(new XmrSwapController(serviceProvider));
+            case SUBMARINE: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
+                        "protocol-submarine",
+                        "https://docs.lightning.engineering/the-lightning-network/multihop-payments/understanding-submarine-swaps"));
+            }
+            case LIQUID_MULTISIG: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MULTISIG,
+                        "protocol-liquid-multisig",
+                        "https://bisq.wiki/liquid-multisig"));
+            }
+            case LIGHTNING_FIAT: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_FIAT,
+                        "protocol-ln-liquid",
+                        "https://bisq.wiki/ln-liquid"));
+            }
+            case LIQUID_SWAP: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_SWAP,
+                        "protocol-liquid-multisig",
+                        "https://www.blockstream.com/liquid/"));
             }
             case BSQ_SWAP: {
-                return Optional.of(new BsqSwapController(serviceProvider));
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
+                        "protocol-bsq",
+                        "https://bisq.wiki/BSQ"));
             }
-            case LIGHTNING_X: {
-                return Optional.of(new LightningController(serviceProvider));
+            case LIGHTNING_ESCROW: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_ESCROW,
+                        "protocol-lightning-escrow",
+                        "https://github.com/bisq-network/proposals/issues/416"));
             }
+            case MONERO_SWAP: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
+                        "protocol-monero",
+                        "https://www.monerooutreach.org/stories/monero-atomic-swaps.html"));
+            }
+
             case USER: {
                 return Optional.of(new UserController(serviceProvider));
             }

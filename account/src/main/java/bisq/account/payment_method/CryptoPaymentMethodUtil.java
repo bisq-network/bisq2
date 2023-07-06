@@ -43,7 +43,7 @@ public class CryptoPaymentMethodUtil {
             case BISQ_EASY:
                 throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
             case MULTISIG:
-            case LIGHTNING_X:
+            case LIGHTNING_ESCROW:
                 return getPaymentRails();
             case MONERO_SWAP:
                 return List.of(CryptoPaymentRail.MONERO);

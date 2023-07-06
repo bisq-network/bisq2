@@ -41,7 +41,7 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
         double width = DesktopModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = DesktopModel.MIN_HEIGHT - 20;
+        double height = DesktopModel.MIN_HEIGHT - 40;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 

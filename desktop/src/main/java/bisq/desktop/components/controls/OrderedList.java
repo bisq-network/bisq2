@@ -24,17 +24,15 @@ import javax.annotation.Nullable;
 @Slf4j
 
 public class OrderedList extends TextList {
+    private static final String REGEX = "\\d+\\.\\s+";
+    private static final String MARK = null;
+
     public OrderedList(String text, String style) {
-        this(text, style, 5, 0);
+        this(text, style, 7, 0);
     }
 
     public OrderedList(String text, @Nullable String style, double gap, double vSpacing) {
-        super(text, style, gap, vSpacing);
-    }
-
-    @Override
-    protected String getRegex() {
-        return "\\d+\\.\\s+";
+        super(text, style, gap, vSpacing, REGEX, MARK);
     }
 
     @Override

@@ -28,11 +28,12 @@ enum TradeProtocolType {
   BISQ_EASY = 0;
   MULTISIG = 1;
   SUBMARINE = 2;
-  MULTISIG_LIQUID = 3;
-  LIQUID_SWAP = 4;
-  BSQ_SWAP = 5;
-  LIGHTNING_X = 6;
-  MONERO_SWAP = 7;
+  LIQUID_MULTISIG = 3;
+  LIGHTNING_FIAT = 4;
+  LIQUID_SWAP = 5;
+  BSQ_SWAP = 6;
+  LIGHTNING_ESCROW = 7;
+  MONERO_SWAP = 8;
 }
 enum LoanProtocolType {
   COLLATERALIZED = 0;

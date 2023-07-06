@@ -50,7 +50,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final GridPane gridPane;
     private Subscription showTakeOfferSuccessPin;
 
-    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller, Pane sellersPriceComponent) {
+    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller) {
         super(new StackPane(), model, controller);
 
         gridPane = new GridPane();

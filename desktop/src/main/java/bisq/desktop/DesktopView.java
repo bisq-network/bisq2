@@ -91,12 +91,13 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
 
     private void configCss() {
         scene.getStylesheets().setAll(
-                requireNonNull(getClass().getResource("/css/bisq.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/bisq_text.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/bisq_controls.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/bisq_containers.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/bisq_chat.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/base.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/text.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/controls.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/containers.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/chat.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/bisq_easy.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/trade_apps.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/images.css")).toExternalForm());
     }
 

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.common.data.Pair;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
@@ -30,48 +31,35 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public class ProtocolListItem implements TableItem {
 
-    private final TradeAppsAttributes.Type swapProtocolType;
+    private final TradeAppsAttributes.Type tradeAppsAttributesType;
     private final NavigationTarget navigationTarget;
+    private final String protocolsName;
     private final String basicInfo;
     private final String markets;
-    private final String marketsInfo;
     private final String securityInfo;
     private final Pair<Long, Long> tradeLimits;
     private final String privacyInfo;
     private final String convenienceInfo;
-    private final String costInfo;
-    private final String speedInfo;
     private final String releaseDate;
-    private final String protocolsName;
     private final String iconId;
 
-    ProtocolListItem(TradeAppsAttributes.Type swapProtocolType,
+    ProtocolListItem(TradeAppsAttributes.Type tradeAppsAttributesType,
                      NavigationTarget navigationTarget,
-                     String basicInfo,
-                     String markets,
-                     String marketsInfo,
-                     String securityInfo,
                      Pair<Long, Long> tradeLimits,
-                     String privacyInfo,
-                     String convenienceInfo,
-                     String costInfo,
-                     String speedInfo,
-                     String releaseDate,
-                     String iconId) {
-        this.swapProtocolType = swapProtocolType;
+                     String releaseDate) {
+        this.tradeAppsAttributesType = tradeAppsAttributesType;
         this.navigationTarget = navigationTarget;
-        this.basicInfo = basicInfo;
-        this.markets = markets;
-        this.marketsInfo = marketsInfo;
-        this.securityInfo = securityInfo;
+        String name = tradeAppsAttributesType.name();
+        protocolsName = Res.get("tradeApps." + name);
+        this.basicInfo = Res.get("tradeApps.overview." + name);
+        this.markets = Res.get("tradeApps.overview.markets." + name);
+        this.securityInfo = Res.get("tradeApps.overview.security." + name);
         this.tradeLimits = tradeLimits;
-        this.privacyInfo = privacyInfo;
-        this.convenienceInfo = convenienceInfo;
-        this.costInfo = costInfo;
-        this.speedInfo = speedInfo;
+        this.privacyInfo = Res.get("tradeApps.overview.privacy." + name);
+        this.convenienceInfo = Res.get("tradeApps.overview.convenience." + name);
         this.releaseDate = releaseDate;
-        this.iconId = iconId;
-        protocolsName = Res.get("tradeApps." + swapProtocolType.name());
+
+        this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(name.toLowerCase());
     }
 
     @Override
