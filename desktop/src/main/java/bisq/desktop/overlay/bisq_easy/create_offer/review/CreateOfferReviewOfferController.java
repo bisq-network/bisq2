@@ -139,8 +139,6 @@ public class CreateOfferReviewOfferController implements Controller {
         model.getShowCreateOfferSuccess().set(false);
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-
-
         String priceInfo;
         PriceSpec priceSpec = model.getPriceSpec();
         Direction direction = model.getDirection();

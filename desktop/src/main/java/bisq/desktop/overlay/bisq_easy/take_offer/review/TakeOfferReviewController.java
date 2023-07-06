@@ -29,7 +29,6 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
-import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -40,7 +39,6 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
-import bisq.identity.IdentityService;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
@@ -51,7 +49,6 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.support.mediation.MediationService;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -71,31 +68,25 @@ public class TakeOfferReviewController implements Controller {
     @Getter
     private final TakeOfferReviewView view;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
-    private final MediationService mediationService;
     private final ChatService chatService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
-    private final ContractService contractService;
-    private final IdentityService identityService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyTradeService bisqEasyTradeService;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
-        contractService = serviceProvider.getContractService();
-        identityService = serviceProvider.getIdentityService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatService = serviceProvider.getChatService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        mediationService = serviceProvider.getSupportService().getMediationService();
         marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
         priceInput = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
 
         model = new TakeOfferReviewModel();
-        view = new TakeOfferReviewView(model, this, priceInput.getRoot());
+        view = new TakeOfferReviewView(model, this);
     }
 
     public void init(BisqEasyOffer bisqEasyOffer) {
