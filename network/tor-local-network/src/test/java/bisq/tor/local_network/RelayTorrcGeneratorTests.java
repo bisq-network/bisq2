@@ -52,7 +52,7 @@ public class RelayTorrcGeneratorTests {
 
         doReturn(Optional.of("AAAA_fp"))
                 .when(firstDirAuth)
-                .getIdentityKeyFingerprint();
+                .getAuthorityIdentityKeyFingerprint();
 
         doReturn(Optional.of("AAAA_v3"))
                 .when(firstDirAuth)
@@ -73,7 +73,7 @@ public class RelayTorrcGeneratorTests {
 
         doReturn(Optional.of("BBBB_fp"))
                 .when(secondDirAuth)
-                .getIdentityKeyFingerprint();
+                .getAuthorityIdentityKeyFingerprint();
 
         doReturn(Optional.of("BBBB_v3"))
                 .when(secondDirAuth)

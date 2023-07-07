@@ -39,7 +39,7 @@ public class TorrcFileGenerator {
         allDirAuthorities.forEach(dirAuthority ->
                 torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
                         .append(" orport=").append(dirAuthority.getOrPort())
-                        .append(" v3ident=").append(dirAuthority.getIdentityKeyFingerprint().orElseThrow())
+                        .append(" v3ident=").append(dirAuthority.getAuthorityIdentityKeyFingerprint().orElseThrow())
                         .append(" 127.0.0.1:").append(dirAuthority.getDirPort())
                         .append(" ").append(dirAuthority.getRelayKeyFingerprint().orElseThrow())
                         .append("\n"));
