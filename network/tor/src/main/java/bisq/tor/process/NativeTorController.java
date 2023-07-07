@@ -36,6 +36,11 @@ public class NativeTorController {
         torControlConnection = Optional.of(controlConnection);
     }
 
+    public void takeOwnership() throws IOException {
+        TorControlConnection controlConnection = torControlConnection.orElseThrow();
+        controlConnection.takeOwnership();
+    }
+
     public void shutdown() throws IOException {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
         controlConnection.shutdownTor("SHUTDOWN");
