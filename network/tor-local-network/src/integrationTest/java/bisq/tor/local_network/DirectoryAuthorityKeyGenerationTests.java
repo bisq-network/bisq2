@@ -43,8 +43,7 @@ public class DirectoryAuthorityKeyGenerationTests {
                 .dirPort(3)
                 .build();
 
-        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator();
-        directoryAuthorityKeyGenerator.generate(directoryAuthority, "my_passphrase");
+        DirectoryAuthorityKeyGenerator.generate(directoryAuthority, "my_passphrase");
 
         File dataDirFile = dataDir.toFile();
         assertThat(new File(dataDirFile, "fingerprint"))
