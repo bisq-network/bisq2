@@ -19,6 +19,8 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
 import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -27,10 +29,9 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
-import bisq.offer.amount.OfferAmountFormatter;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
@@ -153,11 +154,13 @@ public class TradeStateController implements Controller {
         String directionString = isSeller ?
                 Res.get("offer.selling").toUpperCase() :
                 Res.get("offer.buying").toUpperCase();
-        AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
-        String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-        String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
         FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
         String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
+
+        long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
+        long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
+        String baseAmountString = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
+        String quoteAmountString = AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
         model.getHeadline().set(Res.get("bisqEasy.tradeState.header.headline",
                 directionString,
                 baseAmountString,

@@ -22,10 +22,11 @@ import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.bonded_roles.service.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
-import bisq.offer.amount.OfferAmountFormatter;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
@@ -68,14 +69,10 @@ public abstract class BaseState {
             BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
             model.setQuoteCode(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
 
-            AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
-            String baseAmountString = OfferAmountFormatter.formatBaseSideMaxOrFixedAmount(marketPriceService, amountSpec,
-                    bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-            model.setFormattedBaseAmount(baseAmountString);
-
-            String quoteAmountString = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec,
-                    bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket(), true);
-            model.setFormattedQuoteAmount(quoteAmountString);
+            long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
+            long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
+            model.setFormattedBaseAmount(AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
+            model.setFormattedQuoteAmount(AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
         }
 
         @Override
