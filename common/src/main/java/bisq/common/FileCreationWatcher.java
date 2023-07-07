@@ -50,23 +50,26 @@ public class FileCreationWatcher {
             directoryToWatch.register(watchService,
                     new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE},
                     SensitivityWatchEventModifier.HIGH);
-            WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
-            for (WatchEvent<?> event : watchKey.pollEvents()) {
-                WatchEvent.Kind<?> kind = event.kind();
+            while (true) {
+                WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
+                for (WatchEvent<?> event : watchKey.pollEvents()) {
+                    WatchEvent.Kind<?> kind = event.kind();
 
-                if (kind == StandardWatchEventKinds.OVERFLOW) {
-                    continue;
-                }
+                    if (kind == StandardWatchEventKinds.OVERFLOW) {
+                        continue;
+                    }
 
-                @SuppressWarnings("unchecked")
-                WatchEvent<Path> castedWatchEvent = (WatchEvent<Path>) event;
-                Path filename = castedWatchEvent.context();
-                Path newFilePath = directoryToWatch.resolve(filename);
+                    @SuppressWarnings("unchecked")
+                    WatchEvent<Path> castedWatchEvent = (WatchEvent<Path>) event;
+                    Path filename = castedWatchEvent.context();
+                    Path newFilePath = directoryToWatch.resolve(filename);
 
-                if (optionalPath.isEmpty()) {
-                    return newFilePath;
-                } else if (optionalPath.get().equals(newFilePath)) {
-                    return newFilePath;
+                    if (optionalPath.isEmpty()) {
+                        return newFilePath;
+                    } else if (optionalPath.get().equals(newFilePath)) {
+                        return newFilePath;
+                    }
+                    watchKey.reset();
                 }
             }
         } catch (IOException | InterruptedException e) {
