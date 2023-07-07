@@ -38,12 +38,14 @@ public class DirectoryAuthorityFactory {
         createDataDirIfNotPresent(dataDir);
 
         Path keysPath = dataDir.resolve("keys");
-        boolean isSuccess = keysPath.toFile().mkdirs();
-        if (!isSuccess) {
-            throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.");
+        File keysDirFile = keysPath.toFile();
+        if (!keysDirFile.exists()) {
+            boolean isSuccess = keysDirFile.mkdirs();
+            if (!isSuccess) {
+                throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.");
+            }
+            DirectoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
         }
-
-        DirectoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
 
         allDirectoryAuthorities.add(directoryAuthority);
     }
