@@ -17,13 +17,17 @@
 
 package bisq.tor.local_network;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+@Slf4j
 public class KeyFingerprintReader {
     private final File fingerprintFile;
     private final Predicate<String> lineMatcher;
@@ -38,19 +42,23 @@ public class KeyFingerprintReader {
     }
 
 
-    public String read() throws IOException {
+    public Optional<String> read() {
         try (var reader = new BufferedReader(new FileReader(fingerprintFile))) {
             String line = reader.readLine();
             while (line != null) {
 
                 if (lineMatcher.test(line)) {
-                    return dataExtractor.apply(line);
+                    return Optional.of(
+                            dataExtractor.apply(line)
+                    );
                 }
 
                 line = reader.readLine();
             }
+        } catch (IOException e) {
+            log.error("Cannot read " + fingerprintFile.getAbsolutePath(), e);
         }
 
-        throw new IllegalStateException(fingerprintFile.getAbsolutePath() + " was never created.");
+        return Optional.empty();
     }
 }
