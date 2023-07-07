@@ -17,12 +17,16 @@
 
 package bisq.tor.local_network.da;
 
+import bisq.tor.local_network.KeyFingerprintReader;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 @Getter
 public class DirectoryAuthority {
@@ -36,7 +40,8 @@ public class DirectoryAuthority {
 
     private final String exitPolicy = "ExitPolicy accept *:*";
 
-    @Setter
+    private final Path keysPath;
+
     private Optional<String> identityKeyFingerprint = Optional.empty();
     @Setter
     private Optional<String> relayKeyFingerprint = Optional.empty();
@@ -48,9 +53,24 @@ public class DirectoryAuthority {
         this.controlPort = controlPort;
         this.orPort = orPort;
         this.dirPort = dirPort;
+        this.keysPath = dataDir.resolve("keys");
     }
 
     public Path getTorrcPath() {
         return dataDir.resolve("torrc");
+    }
+
+    public Optional<String> getIdentityKeyFingerprint() {
+        if (identityKeyFingerprint.isPresent()) {
+            return identityKeyFingerprint;
+        }
+
+        File certificateFile = new File(keysPath.toFile(), "authority_certificate");
+        Predicate<String> lineMatcher = s -> s.startsWith("fingerprint ");
+        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
+
+        var keyFingerprintReader = new KeyFingerprintReader(certificateFile, lineMatcher, dataExtractor);
+        identityKeyFingerprint = keyFingerprintReader.read();
+        return identityKeyFingerprint;
     }
 }

@@ -19,8 +19,6 @@ package bisq.tor.local_network;
 
 import bisq.tor.local_network.da.DirectoryAuthority;
 import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
-import bisq.tor.local_network.da.keygen.process.DirectoryIdentityKeyGenProcess;
-import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -37,8 +35,6 @@ public class DirectoryAuthorityKeyGenerationTests {
         assertThat(keysPath.toFile().mkdirs())
                 .isTrue();
 
-        var torDAKeyGenProcess = new DirectoryIdentityKeyGenProcess(keysPath, "127.0.0.1:8080");
-
         var directoryAuthority = DirectoryAuthority.builder()
                 .nickname("Nick")
                 .dataDir(dataDir)
@@ -46,10 +42,9 @@ public class DirectoryAuthorityKeyGenerationTests {
                 .orPort(2)
                 .dirPort(3)
                 .build();
-        RelayKeyGenProcess relayKeyGenProcess = new RelayKeyGenProcess(directoryAuthority);
 
-        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator(torDAKeyGenProcess, relayKeyGenProcess);
-        directoryAuthorityKeyGenerator.generate("my_passphrase");
+        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator();
+        directoryAuthorityKeyGenerator.generate(directoryAuthority, "my_passphrase");
 
         File dataDirFile = dataDir.toFile();
         assertThat(new File(dataDirFile, "fingerprint"))
