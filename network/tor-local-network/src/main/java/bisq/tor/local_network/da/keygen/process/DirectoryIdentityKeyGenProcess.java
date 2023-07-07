@@ -17,53 +17,66 @@
 
 package bisq.tor.local_network.da.keygen.process;
 
+import bisq.tor.local_network.InputStreamWaiter;
 import bisq.tor.local_network.KeyFingerprintReader;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 @Slf4j
 public class DirectoryIdentityKeyGenProcess {
+    private static final String PEM_PASSPHRASE_PROMPT = "Enter PEM pass phrase:";
+    private static final String PEM_VERIFY_PASSPHRASE_PROMPT = "\nVerifying - Enter PEM pass phrase:";
+
     private final Path torKeyDirPath;
     private final String directoryAddress;
-
-    private Optional<Process> process = Optional.empty();
-    @Getter
-    private Optional<InputStream> inputStream = Optional.empty();
-    @Getter
-    private Optional<OutputStream> outputStream = Optional.empty();
 
     public DirectoryIdentityKeyGenProcess(Path torKeyDirPath, String directoryAddress) {
         this.torKeyDirPath = torKeyDirPath;
         this.directoryAddress = directoryAddress;
     }
 
-    public void start() throws IOException {
+    public String generateKeys(String passphrase) throws IOException, InterruptedException {
+        Process process = createAndStartKeygenProcess();
+        InputStream inputStream = process.getInputStream();
+        OutputStream outputStream = process.getOutputStream();
+
+        var inputStreamWaiter = new InputStreamWaiter(inputStream);
+
+        inputStreamWaiter.waitForString(PEM_PASSPHRASE_PROMPT);
+        enterPassphrase(outputStream, passphrase);
+
+        inputStreamWaiter.waitForString(PEM_VERIFY_PASSPHRASE_PROMPT);
+        enterPassphrase(outputStream, passphrase);
+
+        return getKeyFingerprint(process);
+    }
+
+    public String getKeyFingerprint(Process process) throws InterruptedException {
+        process.waitFor(1, TimeUnit.MINUTES);
+        return readKeyFingerprint();
+    }
+
+    private Process createAndStartKeygenProcess() throws IOException {
         var processBuilder = new ProcessBuilder(
                 "tor-gencert", "--create-identity-key", "-a", directoryAddress);
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(torKeyDirPath.toFile());
-
-        Process process = processBuilder.start();
-        this.process = Optional.of(process);
-
-        inputStream = Optional.of(process.getInputStream());
-        outputStream = Optional.of(process.getOutputStream());
+        return processBuilder.start();
     }
 
-    public String getKeyFingerprint() throws InterruptedException {
-        Process process = this.process.orElseThrow();
-        process.waitFor(1, TimeUnit.MINUTES);
-        return readKeyFingerprint();
+    private void enterPassphrase(OutputStream outputStream, String passphrase) throws IOException {
+        String passphraseWithNewLine = passphrase + "\n";
+        outputStream.write(passphraseWithNewLine.getBytes(StandardCharsets.UTF_8));
+        outputStream.flush();
     }
 
     private String readKeyFingerprint() {
