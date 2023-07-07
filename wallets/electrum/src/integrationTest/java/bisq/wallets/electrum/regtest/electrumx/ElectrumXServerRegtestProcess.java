@@ -17,11 +17,11 @@
 
 package bisq.wallets.electrum.regtest.electrumx;
 
+import bisq.common.scanner.InputStreamScanner;
+import bisq.common.scanner.LogScanner;
 import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
-import bisq.wallets.process.scanner.InputStreamScanner;
-import bisq.wallets.process.scanner.LogScanner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
