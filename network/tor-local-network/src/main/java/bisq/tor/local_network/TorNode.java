@@ -20,6 +20,7 @@ package bisq.tor.local_network;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -48,6 +49,9 @@ public class TorNode {
     private final String exitPolicy = "ExitPolicy accept *:*";
 
     private final Path keysPath;
+
+    @Getter
+    private final PasswordDigest controlConnectionPassword = PasswordDigest.generateDigest();
 
     @Getter(AccessLevel.NONE)
     private Optional<String> identityKeyFingerprint = Optional.empty();
