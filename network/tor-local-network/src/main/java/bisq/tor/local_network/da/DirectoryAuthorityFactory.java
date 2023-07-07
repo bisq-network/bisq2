@@ -17,6 +17,7 @@
 
 package bisq.tor.local_network.da;
 
+import bisq.tor.local_network.TorNode;
 import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
 import lombok.Getter;
 
@@ -29,9 +30,9 @@ import java.util.Set;
 public class DirectoryAuthorityFactory {
 
     @Getter
-    private final Set<DirectoryAuthority> allDirectoryAuthorities = new HashSet<>();
+    private final Set<TorNode> allDirectoryAuthorities = new HashSet<>();
 
-    public void createDirectoryAuthority(DirectoryAuthority directoryAuthority,
+    public void createDirectoryAuthority(TorNode directoryAuthority,
                                          String passphrase) throws IOException, InterruptedException {
         Path dataDir = directoryAuthority.getDataDir();
         createDataDirIfNotPresent(dataDir);

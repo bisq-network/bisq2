@@ -17,15 +17,15 @@
 
 package bisq.tor.local_network.da.keygen;
 
-import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.TorNode;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class RelayKeyGenProcess {
-    private final DirectoryAuthority directoryAuthority;
+    private final TorNode directoryAuthority;
 
-    public RelayKeyGenProcess(DirectoryAuthority directoryAuthority) {
+    public RelayKeyGenProcess(TorNode directoryAuthority) {
         this.directoryAuthority = directoryAuthority;
     }
 

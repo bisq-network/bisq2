@@ -18,7 +18,6 @@
 package bisq.tor.local_network;
 
 import bisq.common.util.NetworkUtils;
-import bisq.tor.local_network.da.DirectoryAuthority;
 import bisq.tor.local_network.da.DirectoryAuthorityFactory;
 import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
@@ -36,7 +35,7 @@ public class DirectoryAuthorityTests {
 
     @Test
     public void createOneDA(@TempDir Path tempDir) throws IOException, InterruptedException {
-        var firstDirectoryAuthority = DirectoryAuthority.builder()
+        var firstDirectoryAuthority = TorNode.builder()
                 .nickname("DA_1")
                 .dataDir(tempDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -54,7 +53,7 @@ public class DirectoryAuthorityTests {
         var dirAuthFactory = new DirectoryAuthorityFactory();
 
         Path firstDaDataDir = tempDir.resolve("da_1");
-        var firstDirectoryAuthority = DirectoryAuthority.builder()
+        var firstDirectoryAuthority = TorNode.builder()
                 .nickname("DA_1")
                 .dataDir(firstDaDataDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -64,7 +63,7 @@ public class DirectoryAuthorityTests {
         dirAuthFactory.createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
         Path secondDaDataDir = tempDir.resolve("da_2");
-        var secondDirectoryAuthority = DirectoryAuthority.builder()
+        var secondDirectoryAuthority = TorNode.builder()
                 .nickname("DA_2")
                 .dataDir(secondDaDataDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -74,7 +73,7 @@ public class DirectoryAuthorityTests {
         dirAuthFactory.createDirectoryAuthority(secondDirectoryAuthority, PASSPHRASE);
 
         Path thirdDaDataDir = tempDir.resolve("da_3");
-        var thirdDirectoryAuthority = DirectoryAuthority.builder()
+        var thirdDirectoryAuthority = TorNode.builder()
                 .nickname("DA_3")
                 .dataDir(thirdDaDataDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -83,8 +82,8 @@ public class DirectoryAuthorityTests {
                 .build();
         dirAuthFactory.createDirectoryAuthority(thirdDirectoryAuthority, PASSPHRASE);
 
-        Set<DirectoryAuthority> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
-        for (DirectoryAuthority da : allDAs) {
+        Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
+        for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
             var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDAs);
             torrcFileGenerator.generate();

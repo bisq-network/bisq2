@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.da;
+package bisq.tor.local_network;
 
-import bisq.tor.local_network.KeyFingerprintReader;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,7 +28,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 @Getter
-public class DirectoryAuthority {
+public class TorNode {
     private final String nickname;
 
     private final Path dataDir;
@@ -48,7 +47,7 @@ public class DirectoryAuthority {
     private Optional<String> relayKeyFingerprint = Optional.empty();
 
     @Builder
-    public DirectoryAuthority(String nickname, Path dataDir, int controlPort, int orPort, int dirPort) {
+    public TorNode(String nickname, Path dataDir, int controlPort, int orPort, int dirPort) {
         this.nickname = nickname;
         this.dataDir = dataDir;
         this.controlPort = controlPort;
