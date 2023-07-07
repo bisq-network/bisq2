@@ -68,7 +68,7 @@ public class TorNode {
         return dataDir.resolve("torrc");
     }
 
-    public Optional<String> getIdentityKeyFingerprint() {
+    public Optional<String> getAuthorityIdentityKeyFingerprint() {
         if (type != Type.DIRECTORY_AUTHORITY) {
             return Optional.empty();
         }

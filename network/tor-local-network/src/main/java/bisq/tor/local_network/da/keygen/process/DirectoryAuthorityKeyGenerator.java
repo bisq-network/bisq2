@@ -29,7 +29,7 @@ public class DirectoryAuthorityKeyGenerator {
                 "127.0.0.1:" + directoryAuthority.getDirPort()
         );
         identityKeyGenProcess.generateKeys(passphrase);
-        String identityKeyFingerprint = directoryAuthority.getIdentityKeyFingerprint().orElseThrow();
+        String identityKeyFingerprint = directoryAuthority.getAuthorityIdentityKeyFingerprint().orElseThrow();
 
         var relayKeyGenProcess = new RelayKeyGenProcess(directoryAuthority);
         relayKeyGenProcess.generateKeys(identityKeyFingerprint);
