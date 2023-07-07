@@ -15,8 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network;
+package bisq.tor.local_network.da;
 
+import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
+import bisq.tor.local_network.da.keygen.process.DirectoryIdentityKeyGenProcess;
+import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 import lombok.Getter;
 
 import java.io.File;

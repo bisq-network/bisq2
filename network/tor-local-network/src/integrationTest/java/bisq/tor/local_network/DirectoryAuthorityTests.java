@@ -18,6 +18,8 @@
 package bisq.tor.local_network;
 
 import bisq.common.util.NetworkUtils;
+import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.DirectoryAuthorityFactory;
 import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;

@@ -17,7 +17,7 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.DirectoryAuthority;
+import bisq.tor.local_network.da.DirectoryAuthority;
 import lombok.Getter;
 
 /**

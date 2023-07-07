@@ -17,6 +17,10 @@
 
 package bisq.tor.local_network;
 
+import bisq.tor.local_network.da.DirectoryAuthority;
+import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
+import bisq.tor.local_network.da.keygen.process.DirectoryIdentityKeyGenProcess;
+import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

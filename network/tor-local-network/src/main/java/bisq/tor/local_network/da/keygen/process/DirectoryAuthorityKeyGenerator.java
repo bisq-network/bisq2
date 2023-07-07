@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network;
+package bisq.tor.local_network.da.keygen.process;
 
+import bisq.tor.local_network.InputStreamWaiter;
+import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
