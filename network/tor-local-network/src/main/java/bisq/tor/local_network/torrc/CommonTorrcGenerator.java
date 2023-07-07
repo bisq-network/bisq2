@@ -51,7 +51,10 @@ public abstract class CommonTorrcGenerator {
                 .append("DisableDebuggerAttachment 0\n")
 
                 .append("ControlPort 127.0.0.1:").append(thisTorNode.getControlPort()).append("\n")
-                .append("CookieAuthentication 1\n")
+
+                .append("HashedControlPassword ")
+                .append(thisTorNode.getControlConnectionPassword().getHashedPassword())
+                .append("\n")
 
                 .append("Log debug file ").append(thisTorNode.getDataDir().resolve("debug.log").toAbsolutePath()).append("\n")
                 .append("ProtocolWarnings 1\n")
