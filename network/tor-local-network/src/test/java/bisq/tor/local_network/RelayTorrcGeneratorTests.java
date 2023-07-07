@@ -34,14 +34,14 @@ import static org.mockito.Mockito.spy;
 public class RelayTorrcGeneratorTests {
     @Test
     void basicTest(@TempDir Path tempDir) throws IOException {
-        Path daAPath = tempDir.resolve("DA_A");
-        assertThat(daAPath.toFile().mkdir()).isTrue();
+        Path relayAPath = tempDir.resolve("RELAY_A");
+        assertThat(relayAPath.toFile().mkdir()).isTrue();
 
-        TorNode firstDirAuth = spy(
+        TorNode firstRelay = spy(
                 TorNode.builder()
                         .type(TorNode.Type.RELAY)
                         .nickname("A")
-                        .dataDir(daAPath)
+                        .dataDir(relayAPath)
 
                         .controlPort(1)
                         .orPort(2)
@@ -51,14 +51,14 @@ public class RelayTorrcGeneratorTests {
         );
 
         doReturn(Optional.of("AAAA_fp"))
-                .when(firstDirAuth)
+                .when(firstRelay)
                 .getAuthorityIdentityKeyFingerprint();
 
         doReturn(Optional.of("AAAA_v3"))
-                .when(firstDirAuth)
+                .when(firstRelay)
                 .getRelayKeyFingerprint();
 
-        TorNode secondDirAuth = spy(
+        TorNode secondRelay = spy(
                 TorNode.builder()
                         .type(TorNode.Type.RELAY)
                         .nickname("B")
@@ -72,20 +72,20 @@ public class RelayTorrcGeneratorTests {
         );
 
         doReturn(Optional.of("BBBB_fp"))
-                .when(secondDirAuth)
+                .when(secondRelay)
                 .getAuthorityIdentityKeyFingerprint();
 
         doReturn(Optional.of("BBBB_v3"))
-                .when(secondDirAuth)
+                .when(secondRelay)
                 .getRelayKeyFingerprint();
 
-        var relayTorrcGenerator = new RelayTorrcGenerator(firstDirAuth);
-        var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
+        var relayTorrcGenerator = new RelayTorrcGenerator(firstRelay);
+        var allDirAuthorities = Set.of(firstRelay, secondRelay);
 
         var torrcFileGenerator = new TorrcFileGenerator(relayTorrcGenerator, allDirAuthorities);
         torrcFileGenerator.generate();
 
-        assertThat(firstDirAuth.getTorrcPath())
+        assertThat(firstRelay.getTorrcPath())
                 .isNotEmptyFile();
     }
 }
