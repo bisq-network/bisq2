@@ -39,6 +39,7 @@ public class RelayTorrcGeneratorTests {
 
         TorNode firstDirAuth = spy(
                 TorNode.builder()
+                        .type(TorNode.Type.RELAY)
                         .nickname("A")
                         .dataDir(daAPath)
 
@@ -59,6 +60,7 @@ public class RelayTorrcGeneratorTests {
 
         TorNode secondDirAuth = spy(
                 TorNode.builder()
+                        .type(TorNode.Type.RELAY)
                         .nickname("B")
                         .dataDir(tempDir.resolve("DA_B"))
 

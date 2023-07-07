@@ -36,6 +36,7 @@ public class DirectoryAuthorityTests {
     @Test
     public void createOneDA(@TempDir Path tempDir) throws IOException, InterruptedException {
         var firstDirectoryAuthority = TorNode.builder()
+                .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
                 .dataDir(tempDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -54,6 +55,7 @@ public class DirectoryAuthorityTests {
 
         Path firstDaDataDir = tempDir.resolve("da_1");
         var firstDirectoryAuthority = TorNode.builder()
+                .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
                 .dataDir(firstDaDataDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -64,6 +66,7 @@ public class DirectoryAuthorityTests {
 
         Path secondDaDataDir = tempDir.resolve("da_2");
         var secondDirectoryAuthority = TorNode.builder()
+                .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_2")
                 .dataDir(secondDaDataDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
@@ -74,6 +77,7 @@ public class DirectoryAuthorityTests {
 
         Path thirdDaDataDir = tempDir.resolve("da_3");
         var thirdDirectoryAuthority = TorNode.builder()
+                .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_3")
                 .dataDir(thirdDaDataDir)
                 .controlPort(NetworkUtils.findFreeSystemPort())
