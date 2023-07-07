@@ -17,12 +17,16 @@
 
 package bisq.tor.local_network.da;
 
+import bisq.tor.local_network.KeyFingerprintReader;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 @Getter
 public class DirectoryAuthority {
@@ -36,9 +40,11 @@ public class DirectoryAuthority {
 
     private final String exitPolicy = "ExitPolicy accept *:*";
 
-    @Setter
+    private final Path keysPath;
+
+    @Getter(AccessLevel.NONE)
     private Optional<String> identityKeyFingerprint = Optional.empty();
-    @Setter
+    @Getter(AccessLevel.NONE)
     private Optional<String> relayKeyFingerprint = Optional.empty();
 
     @Builder
@@ -48,9 +54,37 @@ public class DirectoryAuthority {
         this.controlPort = controlPort;
         this.orPort = orPort;
         this.dirPort = dirPort;
+        this.keysPath = dataDir.resolve("keys");
     }
 
     public Path getTorrcPath() {
         return dataDir.resolve("torrc");
+    }
+
+    public Optional<String> getIdentityKeyFingerprint() {
+        if (identityKeyFingerprint.isPresent()) {
+            return identityKeyFingerprint;
+        }
+
+        File certificateFile = new File(keysPath.toFile(), "authority_certificate");
+        identityKeyFingerprint = readFingerprint(certificateFile, "fingerprint ");
+        return identityKeyFingerprint;
+    }
+
+    public Optional<String> getRelayKeyFingerprint() {
+        if (relayKeyFingerprint.isPresent()) {
+            return relayKeyFingerprint;
+        }
+
+        File fingerprintFile = new File(dataDir.toFile(), "fingerprint");
+        relayKeyFingerprint = readFingerprint(fingerprintFile, "Unnamed ");
+        return relayKeyFingerprint;
+    }
+
+    private Optional<String> readFingerprint(File fingerprintFile, String linePrefix) {
+        Predicate<String> lineMatcher = s -> s.startsWith(linePrefix);
+        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
+        var keyFingerprintReader = new KeyFingerprintReader(fingerprintFile, lineMatcher, dataExtractor);
+        return keyFingerprintReader.read();
     }
 }

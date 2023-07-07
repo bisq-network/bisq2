@@ -17,34 +17,24 @@
 
 package bisq.tor.local_network.da.keygen.process;
 
+import bisq.tor.local_network.da.DirectoryAuthority;
 import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Slf4j
 public class DirectoryAuthorityKeyGenerator {
-    private final DirectoryIdentityKeyGenProcess identityKeyGenProcess;
-    private final RelayKeyGenProcess relayKeyGenProcess;
+    public void generate(DirectoryAuthority directoryAuthority, String passphrase) throws IOException, InterruptedException {
+        var identityKeyGenProcess = new DirectoryIdentityKeyGenProcess(
+                directoryAuthority.getKeysPath(),
+                "127.0.0.1:" + directoryAuthority.getDirPort()
+        );
+        identityKeyGenProcess.generateKeys(passphrase);
 
-    @Getter
-    private Optional<String> identityKeyFingerprint = Optional.empty();
-    @Getter
-    private Optional<String> relayKeyFingerprint = Optional.empty();
+        String identityKeyFingerprint = directoryAuthority.getIdentityKeyFingerprint().orElseThrow();
 
-    public DirectoryAuthorityKeyGenerator(DirectoryIdentityKeyGenProcess identityKeyGenProcess,
-                                          RelayKeyGenProcess relayKeyGenProcess) {
-        this.identityKeyGenProcess = identityKeyGenProcess;
-        this.relayKeyGenProcess = relayKeyGenProcess;
-    }
-
-    public void generate(String passphrase) throws IOException, InterruptedException {
-        String identityKeyFingerprint = identityKeyGenProcess.generateKeys(passphrase);
-        this.identityKeyFingerprint = Optional.of(identityKeyFingerprint);
-
-        String relayKeyFingerprint = relayKeyGenProcess.generateKeys(identityKeyFingerprint);
-        this.relayKeyFingerprint = Optional.of(relayKeyFingerprint);
+        var relayKeyGenProcess = new RelayKeyGenProcess(directoryAuthority);
+        relayKeyGenProcess.generateKeys(identityKeyFingerprint);
     }
 }

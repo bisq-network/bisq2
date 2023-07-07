@@ -18,18 +18,14 @@
 package bisq.tor.local_network.da.keygen.process;
 
 import bisq.tor.local_network.InputStreamWaiter;
-import bisq.tor.local_network.KeyFingerprintReader;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 @Slf4j
 public class DirectoryIdentityKeyGenProcess {
@@ -44,7 +40,7 @@ public class DirectoryIdentityKeyGenProcess {
         this.directoryAddress = directoryAddress;
     }
 
-    public String generateKeys(String passphrase) throws IOException, InterruptedException {
+    public void generateKeys(String passphrase) throws IOException, InterruptedException {
         Process process = createAndStartKeygenProcess();
         InputStream inputStream = process.getInputStream();
         OutputStream outputStream = process.getOutputStream();
@@ -57,12 +53,7 @@ public class DirectoryIdentityKeyGenProcess {
         inputStreamWaiter.waitForString(PEM_VERIFY_PASSPHRASE_PROMPT);
         enterPassphrase(outputStream, passphrase);
 
-        return getKeyFingerprint(process);
-    }
-
-    public String getKeyFingerprint(Process process) throws InterruptedException {
         process.waitFor(1, TimeUnit.MINUTES);
-        return readKeyFingerprint();
     }
 
     private Process createAndStartKeygenProcess() throws IOException {
@@ -77,15 +68,5 @@ public class DirectoryIdentityKeyGenProcess {
         String passphraseWithNewLine = passphrase + "\n";
         outputStream.write(passphraseWithNewLine.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
-    }
-
-    private String readKeyFingerprint() {
-        File certificateFile = new File(torKeyDirPath.toFile(), "authority_certificate");
-
-        Predicate<String> lineMatcher = s -> s.startsWith("fingerprint ");
-        UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
-
-        var keyFingerprintReader = new KeyFingerprintReader(certificateFile, lineMatcher, dataExtractor);
-        return keyFingerprintReader.read().orElseThrow();
     }
 }

@@ -18,8 +18,6 @@
 package bisq.tor.local_network.da;
 
 import bisq.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
-import bisq.tor.local_network.da.keygen.process.DirectoryIdentityKeyGenProcess;
-import bisq.tor.local_network.da.keygen.RelayKeyGenProcess;
 import lombok.Getter;
 
 import java.io.File;
@@ -44,19 +42,8 @@ public class DirectoryAuthorityFactory {
             throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.");
         }
 
-        var relayKeyGenProcess = new RelayKeyGenProcess(directoryAuthority);
-        String firstDirectoryAuthorityAddress = "127.0.0.1:" + directoryAuthority.getDirPort();
-        var torDAKeyGenProcess = new DirectoryIdentityKeyGenProcess(keysPath, firstDirectoryAuthorityAddress);
-
-        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator(torDAKeyGenProcess, relayKeyGenProcess);
-        directoryAuthorityKeyGenerator.generate(passphrase);
-
-        directoryAuthority.setIdentityKeyFingerprint(
-                directoryAuthorityKeyGenerator.getIdentityKeyFingerprint()
-        );
-        directoryAuthority.setRelayKeyFingerprint(
-                directoryAuthorityKeyGenerator.getRelayKeyFingerprint()
-        );
+        var directoryAuthorityKeyGenerator = new DirectoryAuthorityKeyGenerator();
+        directoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
 
         allDirectoryAuthorities.add(directoryAuthority);
     }

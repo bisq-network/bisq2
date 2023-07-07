@@ -29,6 +29,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
@@ -36,31 +38,45 @@ public class DirectoryAuthorityTorrcGeneratorTests {
         Path daAPath = tempDir.resolve("DA_A");
         assertThat(daAPath.toFile().mkdir()).isTrue();
 
-        DirectoryAuthority firstDirAuth = DirectoryAuthority.builder()
-                .nickname("A")
-                .dataDir(daAPath)
+        DirectoryAuthority firstDirAuth = spy(
+                DirectoryAuthority.builder()
+                        .nickname("A")
+                        .dataDir(daAPath)
 
-                .controlPort(1)
-                .orPort(2)
-                .dirPort(3)
+                        .controlPort(1)
+                        .orPort(2)
+                        .dirPort(3)
 
-                .build();
+                        .build()
+        );
 
-        firstDirAuth.setIdentityKeyFingerprint(Optional.of("AAAA_fp"));
-        firstDirAuth.setRelayKeyFingerprint(Optional.of("AAAA_v3"));
+        doReturn(Optional.of("AAAA_fp"))
+                .when(firstDirAuth)
+                .getIdentityKeyFingerprint();
 
-        DirectoryAuthority secondDirAuth = DirectoryAuthority.builder()
-                .nickname("B")
-                .dataDir(tempDir.resolve("DA_B"))
+        doReturn(Optional.of("AAAA_v3"))
+                .when(firstDirAuth)
+                .getRelayKeyFingerprint();
 
-                .controlPort(1)
-                .orPort(2)
-                .dirPort(3)
+        DirectoryAuthority secondDirAuth = spy(
+                DirectoryAuthority.builder()
+                        .nickname("B")
+                        .dataDir(tempDir.resolve("DA_B"))
 
-                .build();
+                        .controlPort(1)
+                        .orPort(2)
+                        .dirPort(3)
 
-        secondDirAuth.setIdentityKeyFingerprint(Optional.of("BBBB_fp"));
-        secondDirAuth.setRelayKeyFingerprint(Optional.of("BBBB_v3"));
+                        .build()
+        );
+
+        doReturn(Optional.of("BBBB_fp"))
+                .when(secondDirAuth)
+                .getIdentityKeyFingerprint();
+
+        doReturn(Optional.of("BBBB_v3"))
+                .when(secondDirAuth)
+                .getRelayKeyFingerprint();
 
         var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(firstDirAuth);
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
