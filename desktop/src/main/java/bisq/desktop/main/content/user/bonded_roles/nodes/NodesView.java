@@ -64,7 +64,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                 .setCellFactory(getUserProfileCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
-                .title(Res.get("user.bondedRoles.table.columns.role"))
+                .title(Res.get("user.bondedRoles.table.columns.node"))
                 .fixWidth(150)
                 .comparator(Comparator.comparing(BondedRolesListItem::getRoleTypeString))
                 .valueSupplier(BondedRolesListItem::getRoleTypeString)

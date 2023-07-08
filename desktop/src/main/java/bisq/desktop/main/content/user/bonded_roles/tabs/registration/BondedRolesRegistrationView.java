@@ -51,7 +51,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         root.setAlignment(Pos.TOP_LEFT);
 
         String bondedRoleType = "user.bondedRoles.type." + model.getBondedRoleType().name();
-        String inlineAbout = Res.get(bondedRoleType + ".inline.about");
+        String inlineAbout = Res.get(bondedRoleType + ".about.inline");
         Label aboutHeadline = new Label(Res.get("user.bondedRoles.registration.about.headline", inlineAbout));
         aboutHeadline.getStyleClass().add("user-bonded-roles-info-headline");
 
@@ -59,7 +59,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         aboutInfo.getStyleClass().add("user-bonded-roles-info-text");
 
 
-        String inlineHow = Res.get(bondedRoleType + ".inline.how");
+        String inlineHow = Res.get(bondedRoleType + ".how.inline");
         Label howHeadline = new Label(Res.get("user.bondedRoles.registration.how.headline", inlineHow));
         howHeadline.getStyleClass().add("user-bonded-roles-info-headline");
 
