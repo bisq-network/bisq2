@@ -21,9 +21,9 @@ import bisq.bonded_roles.node.bisq1_bridge.data.*;
 import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.bonded_roles.node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeNodeRegistrationRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeRoleRegistrationRequest;
 import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
+import bisq.bonded_roles.node.bisq1_bridge.requests.BondedRoleRegistrationRequest;
+import bisq.bonded_roles.registration.BondedRoleType;
 import bisq.common.application.Service;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
@@ -130,10 +130,8 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
             processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) networkMessage);
         } else if (networkMessage instanceof AuthorizeSignedWitnessRequest) {
             processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) networkMessage);
-        } else if (networkMessage instanceof AuthorizeRoleRegistrationRequest) {
-            processAuthorizeRoleRegistrationRequest((AuthorizeRoleRegistrationRequest) networkMessage);
-        } else if (networkMessage instanceof AuthorizeNodeRegistrationRequest) {
-            processAuthorizeNodeRegistrationRequest((AuthorizeNodeRegistrationRequest) networkMessage);
+        } else if (networkMessage instanceof BondedRoleRegistrationRequest) {
+            processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) networkMessage);
         }
     }
 
@@ -276,39 +274,19 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         }
     }
 
-    private void processAuthorizeRoleRegistrationRequest(AuthorizeRoleRegistrationRequest request) {
-        String roleType = request.getRoleType();
-        String bisq1RoleType = toBisq1RoleType(roleType);
-        String bondUserName = request.getBondUserName();
-        String profileId = request.getProfileId();
-        String signatureBase64 = request.getSignatureBase64();
-        httpService.requestBondedRoleVerification(bondUserName, bisq1RoleType, profileId, signatureBase64)
-                .whenComplete((bondedRoleVerificationDto, throwable) -> {
-                    if (throwable == null) {
-                        if (bondedRoleVerificationDto.getErrorMessage() == null) {
-                            AuthorizedBondedRoleData data = new AuthorizedBondedRoleData(profileId, roleType, bondUserName, signatureBase64, authorizedOracleNode);
-                            publishAuthorizedData(data);
-                        } else {
-                            log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());
-                        }
-                    } else {
-                        log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
-                    }
-                });
-    }
 
-    private void processAuthorizeNodeRegistrationRequest(AuthorizeNodeRegistrationRequest request) {
-        String roleType = request.getRoleType();
-        String bisq1RoleType = toBisq1RoleType(roleType);
+    private void processBondedRoleRegistrationRequest(BondedRoleRegistrationRequest request) {
+        BondedRoleType bondedRoleType = request.getBondedRoleType();
+        String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
         String bondUserName = request.getBondUserName();
         String profileId = request.getProfileId();
         String signatureBase64 = request.getSignatureBase64();
-        httpService.requestBondedRoleVerification(bondUserName, bisq1RoleType, profileId, signatureBase64)
+        httpService.requestBondedRoleVerification(bondUserName, bisq1RoleTypeName, profileId, signatureBase64)
                 .whenComplete((bondedRoleVerificationDto, throwable) -> {
                     if (throwable == null) {
                         if (bondedRoleVerificationDto.getErrorMessage() == null) {
-                            AuthorizedBondedNodeData data = new AuthorizedBondedNodeData(profileId,
-                                    roleType,
+                            AuthorizedBondedRoleData data = new AuthorizedBondedRoleData(profileId,
+                                    bondedRoleType,
                                     bondUserName,
                                     signatureBase64,
                                     request.getAddressByNetworkType(),
@@ -323,26 +301,28 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                 });
     }
 
-    private String toBisq1RoleType(String roleType) {
-        if (roleType.equals("MEDIATOR")) {
+    private String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
+        //todo switch
+        String name = bondedRoleType.name();
+        if (name.equals("MEDIATOR")) {
             return "MEDIATOR"; // 5k
-        } else if (roleType.equals("ARBITRATOR")) {
+        } else if (name.equals("ARBITRATOR")) {
             return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k! 
-        } else if (roleType.equals("MODERATOR")) {
+        } else if (name.equals("MODERATOR")) {
             return "YOUTUBE_ADMIN"; // 5k; repurpose unused role
-        } else if (roleType.equals("SECURITY_MANAGER")) {
+        } else if (name.equals("SECURITY_MANAGER")) {
             return "BITCOINJ_MAINTAINER"; // 10k repurpose unused role
-        } else if (roleType.equals("RELEASE_MANAGER")) {
+        } else if (name.equals("RELEASE_MANAGER")) {
             return "FORUM_ADMIN"; // 10k; repurpose unused role 
-        } else if (roleType.equals("ORACLE_NODE")) {
+        } else if (name.equals("ORACLE_NODE")) {
             return "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
-        } else if (roleType.equals("SEED_NODE")) {
+        } else if (name.equals("SEED_NODE")) {
             return "SEED_NODE_OPERATOR"; // 10k
-        } else if (roleType.equals("EXPLORER_NODE")) {
+        } else if (name.equals("EXPLORER_NODE")) {
             return "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
-        } else if (roleType.equals("MARKET_PRICE_NODE")) {
+        } else if (name.equals("MARKET_PRICE_NODE")) {
             return "DATA_RELAY_NODE_OPERATOR"; // 10k; price node
         }
-        return roleType;
+        return name;
     }
 }

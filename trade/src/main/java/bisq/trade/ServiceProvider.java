@@ -17,7 +17,7 @@
 
 package bisq.trade;
 
-import bisq.bonded_roles.service.OracleService;
+import bisq.bonded_roles.service.BondedRolesService;
 
 public interface ServiceProvider {
     bisq.network.NetworkService getNetworkService();
@@ -34,5 +34,5 @@ public interface ServiceProvider {
 
     bisq.chat.ChatService getChatService();
 
-    OracleService getOracleService();
+    BondedRolesService getBondedRolesService();
 }

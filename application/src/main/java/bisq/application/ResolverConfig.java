@@ -19,9 +19,8 @@ package bisq.application;
 
 import bisq.bonded_roles.node.bisq1_bridge.data.*;
 import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeNodeRegistrationRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeRoleRegistrationRequest;
 import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
+import bisq.bonded_roles.node.bisq1_bridge.requests.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
 import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
 import bisq.chat.message.ChatMessage;
@@ -40,10 +39,9 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRoleData", AuthorizedBondedRoleData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRoleData", AuthorizedBondedRoleData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedNodeData", AuthorizedBondedNodeData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
@@ -55,8 +53,7 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("bonded_roles.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("bonded_roles.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("bonded_roles.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeRoleRegistrationRequest", AuthorizeRoleRegistrationRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeNodeRegistrationRequest", AuthorizeNodeRegistrationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationResponse", MediationResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());

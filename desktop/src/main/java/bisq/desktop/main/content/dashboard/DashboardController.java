@@ -47,7 +47,7 @@ public class DashboardController implements Controller {
     private boolean allowUpdateOffersOnline;
 
     public DashboardController(ServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyPublicChatChannelService = serviceProvider.getChatService().getBisqEasyPublicChatChannelService();
 

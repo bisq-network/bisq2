@@ -106,7 +106,7 @@ public class MultiLineLabel extends Label {
                 parentPane.setMinHeight(2000);
             }
             trySetMinHeight(parentPane);
-            UIThread.runOnNextRenderFrame(() -> trySetMinHeight(parentPane));
+            // UIThread.runOnNextRenderFrame(() -> trySetMinHeight(parentPane));
         }
     }
 
@@ -115,7 +115,8 @@ public class MultiLineLabel extends Label {
         if (height > 0 && getText() != null && !getText().isEmpty()) {
             if (initialHeight == height && numRecursions < 500) {
                 numRecursions++;
-                UIThread.runOnNextRenderFrame(this::adjustMinHeight);
+                adjustMinHeight();
+                // UIThread.runOnNextRenderFrame(this::adjustMinHeight);
             } else {
                 minHeight = height;
                 parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);

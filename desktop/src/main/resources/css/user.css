@@ -1,0 +1,40 @@
+/*******************************************************************************
+ *                                                                             *
+ * Bonded roles                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.user-bonded-roles-info-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+    /*-fx-line-spacing: -0.16em;*/
+}
+
+.user-bonded-roles-info-text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.1em;
+}
+
+.user-bonded-roles-select-user-box {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4 4 0 0;
+}
+
+.user-bonded-roles-select-user-description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.95em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.user-bonded-roles-table-view {
+    -fx-background-color: -bisq-grey-2;
+}
+
+.user-bonded-roles-tab-view {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}

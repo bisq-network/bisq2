@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.notifications;
 
+import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
@@ -32,8 +33,6 @@ import bisq.support.alert.AuthorizedAlertData;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.role.RoleRegistrationService;
-import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,13 +51,13 @@ public class SendNotificationController implements Controller {
     private final SendNotificationModel model;
     private final AlertService alertService;
     private final UserIdentityService userIdentityService;
-    private final RoleRegistrationService roleRegistrationService;
+    private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private Pin userIdentityPin;
 
     public SendNotificationController(ServiceProvider serviceProvider) {
         alertService = serviceProvider.getSupportService().getAlertService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        roleRegistrationService = serviceProvider.getUserService().getRoleRegistrationService();
+        bondedRoleRegistrationService = serviceProvider.getBondedRolesService().getBondedRoleRegistrationService();
         model = new SendNotificationModel();
         view = new SendNotificationView(model, this);
     }
@@ -92,11 +91,12 @@ public class SendNotificationController implements Controller {
                     throw new RuntimeException(e);
                 }
             } else {
-                KeyPair keyPair = roleRegistrationService.findOrCreateRoleRegistrationKey(RoleType.SECURITY_MANAGER, userProfileId);
+                //todo
+           /*     KeyPair keyPair = roleRegistrationService.findOrCreateRoleRegistrationKey(RoleType.SECURITY_MANAGER, userProfileId);
                 model.setKeyPair(keyPair);
                 model.getPrivateKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
                 String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
-                model.getPublicKey().set(publicKeyAsHex);
+                model.getPublicKey().set(publicKeyAsHex);*/
             }
         });
     }

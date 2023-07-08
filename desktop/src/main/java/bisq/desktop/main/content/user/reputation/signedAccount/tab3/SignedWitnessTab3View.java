@@ -53,7 +53,7 @@ public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, Si
         Label info = new Label(Res.get("user.reputation.signedWitness.howTo"));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
-        Label userProfileSelectLabel = new Label(Res.get("user.userProfile.select").toUpperCase());
+        Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
         userProfileSelectLabel.setAlignment(Pos.TOP_LEFT);
 

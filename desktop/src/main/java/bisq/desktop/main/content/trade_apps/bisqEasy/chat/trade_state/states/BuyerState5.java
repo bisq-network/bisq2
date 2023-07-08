@@ -65,7 +65,7 @@ public class BuyerState5 extends BaseState {
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
-            explorerService = serviceProvider.getOracleService().getExplorerService();
+            explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             bisqEasyPrivateTradeChatChannelService = serviceProvider.getChatService().getBisqEasyPrivateTradeChatChannelService();
             bisqEasyChatChannelSelectionService = serviceProvider.getChatService().getBisqEasyChatChannelSelectionService();
 

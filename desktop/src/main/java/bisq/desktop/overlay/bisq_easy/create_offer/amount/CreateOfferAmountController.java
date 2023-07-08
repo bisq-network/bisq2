@@ -54,7 +54,7 @@ public class CreateOfferAmountController implements Controller {
 
     public CreateOfferAmountController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         model = new CreateOfferAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);

@@ -17,6 +17,7 @@
 
 package bisq.support.alert;
 
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -47,7 +48,7 @@ public class AlertService implements Service, DataService.Listener {
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final UserProfileService userProfileService;
 
-    public AlertService(NetworkService networkService, UserService userService) {
+    public AlertService(NetworkService networkService, UserService userService, BondedRolesService bondedRolesService) {
         this.userProfileService = userService.getUserProfileService();
         this.networkService = networkService;
     }

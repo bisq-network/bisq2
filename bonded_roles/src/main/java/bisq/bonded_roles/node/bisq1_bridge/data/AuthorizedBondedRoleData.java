@@ -17,9 +17,13 @@
 
 package bisq.bonded_roles.node.bisq1_bridge.data;
 
+import bisq.bonded_roles.registration.BondedRoleType;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ProtobufUtils;
+import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -29,8 +33,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ToString
@@ -47,16 +53,23 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
             AuthorizedBondedRoleData.class.getSimpleName());
 
     private final String profileId;
-    private final String roleType;
+    private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signature;
-    AuthorizedOracleNode oracleNode;
+    private final Map<Transport.Type, Address> addressByNetworkType;
+    private final AuthorizedOracleNode oracleNode;
 
-    public AuthorizedBondedRoleData(String profileId, String roleType, String bondUserName, String signature, AuthorizedOracleNode oracleNode) {
+    public AuthorizedBondedRoleData(String profileId,
+                                    BondedRoleType bondedRoleType,
+                                    String bondUserName,
+                                    String signature,
+                                    Map<Transport.Type, Address> addressByNetworkType,
+                                    AuthorizedOracleNode oracleNode) {
         this.profileId = profileId;
-        this.roleType = roleType;
+        this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
         this.signature = signature;
+        this.addressByNetworkType = addressByNetworkType;
         this.oracleNode = oracleNode;
     }
 
@@ -64,18 +77,24 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
     public bisq.bonded_roles.protobuf.AuthorizedBondedRoleData toProto() {
         return bisq.bonded_roles.protobuf.AuthorizedBondedRoleData.newBuilder()
                 .setProfileId(profileId)
-                .setRoleType(roleType)
+                .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignature(signature)
+                .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
                 .setOracleNode(oracleNode.toProto())
                 .build();
     }
 
     public static AuthorizedBondedRoleData fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRoleData proto) {
+        Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
+                .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
+                        e -> Address.fromProto(e.getValue())));
         return new AuthorizedBondedRoleData(proto.getProfileId(),
-                proto.getRoleType(),
+                BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignature(),
+                addressByNetworkType,
                 AuthorizedOracleNode.fromProto(proto.getOracleNode()));
     }
 

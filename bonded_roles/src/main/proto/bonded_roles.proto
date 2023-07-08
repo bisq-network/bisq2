@@ -11,17 +11,21 @@ message AuthorizedOracleNode {
   string signature = 3;
 }
 
-
-message AuthorizeRoleRegistrationRequest {
-  string profileId = 1;
-  string roleType = 2;
-  string bondUserName = 3;
-  string signatureBase64 = 4;
+enum BondedRoleType {
+  MEDIATOR = 0;
+  ARBITRATOR = 1;
+  MODERATOR = 2;
+  SECURITY_MANAGER = 3;
+  RELEASE_MANAGER = 4;
+  SEED_NODE = 10;
+  ORACLE_NODE = 11;
+  EXPLORER_NODE = 12;
+  MARKET_PRICE_NODE = 13;
 }
 
-message AuthorizeNodeRegistrationRequest {
+message BondedRoleRegistrationRequest {
   string profileId = 1;
-  string roleType = 2;
+  BondedRoleType bondedRoleType = 2;
   string bondUserName = 3;
   string signatureBase64 = 4;
   map<string, network.Address> addressByNetworkType = 5;
@@ -29,15 +33,7 @@ message AuthorizeNodeRegistrationRequest {
 
 message AuthorizedBondedRoleData {
   string profileId = 1;
-  string roleType = 2;
-  string bondUserName = 3;
-  string signature = 4;
-  AuthorizedOracleNode oracleNode = 5;
-}
-
-message AuthorizedBondedNodeData {
-  string profileId = 1;
-  string roleType = 2;
+  BondedRoleType bondedRoleType = 2;
   string bondUserName = 3;
   string signature = 4;
   map<string, network.Address> addressByNetworkType = 5;

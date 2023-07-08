@@ -127,7 +127,7 @@ public class AmountComponent {
                            boolean useQuoteCurrencyForMinMaxRange) {
             quoteSideAmountInput = new BigAmountInput(false);
             baseSideAmountInput = new SmallAmountInput(true);
-            price = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
+            price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
             model = new Model(useQuoteCurrencyForMinMaxRange);
             view = new View(model, this,

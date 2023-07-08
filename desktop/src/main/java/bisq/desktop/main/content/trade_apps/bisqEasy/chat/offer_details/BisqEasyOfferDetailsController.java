@@ -57,7 +57,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
     private final MarketPriceService marketPriceService;
 
     public BisqEasyOfferDetailsController(ServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         model = new BisqEasyOfferDetailsModel();
         view = new BisqEasyOfferDetailsView(model, this);
     }

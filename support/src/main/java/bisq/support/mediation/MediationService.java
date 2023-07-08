@@ -17,6 +17,9 @@
 
 package bisq.support.mediation;
 
+import bisq.bonded_roles.registration.BondedRoleRegistrationService;
+import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -35,8 +38,6 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.role.RoleRegistrationService;
-import bisq.user.role.RoleType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -46,19 +47,19 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class MediationService implements Service, DataService.Listener, MessageListener {
     private final NetworkService networkService;
-  /*  private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();*/
+    /*  private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();*/
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    private final RoleRegistrationService roleRegistrationService;
+    private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
 
     public MediationService(NetworkService networkService,
                             ChatService chatService,
-                            UserService userService) {
+                            UserService userService, BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
-        roleRegistrationService = userService.getRoleRegistrationService();
+        bondedRoleRegistrationService = bondedRolesService.getBondedRoleRegistrationService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
     }
 
@@ -210,8 +211,9 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return roleRegistrationService.getMyAuthorizedBondedRoleDataSet().stream()
-                .filter(data -> data.getRoleType().equals(RoleType.MEDIATOR.name()))
+        return bondedRoleRegistrationService.getAuthorizedBondedRoleDataSet().stream()
+                .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
+                .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream())
                 .findAny();
     }

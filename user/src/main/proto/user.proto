@@ -82,18 +82,3 @@ message ProfileAgeStore {
   repeated string profileIds = 1;
   sint64 lastRequested = 2;
 }
-
-enum RoleType {
-  MEDIATOR = 0;
-  ARBITRATOR = 1;
-  MODERATOR = 2;
-  SECURITY_MANAGER = 3;
-  RELEASE_MANAGER = 4;
-}
-
-enum NodeType {
-  SEED_NODE = 0;
-  ORACLE_NODE = 1;
-  EXPLORER_NODE = 2;
-  MARKET_PRICE_NODE = 3;
-}

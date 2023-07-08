@@ -17,6 +17,7 @@
 
 package bisq.support;
 
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
@@ -34,9 +35,9 @@ public class SupportService implements Service {
     private final MediationService mediationService;
     private final AlertService alertService;
 
-    public SupportService(NetworkService networkService, ChatService chatService, UserService userService) {
-        mediationService = new MediationService(networkService, chatService, userService);
-        alertService = new AlertService(networkService, userService);
+    public SupportService(NetworkService networkService, ChatService chatService, UserService userService, BondedRolesService bondedRolesService) {
+        mediationService = new MediationService(networkService, chatService, userService, bondedRolesService);
+        alertService = new AlertService(networkService, userService, bondedRolesService);
     }
 
 
