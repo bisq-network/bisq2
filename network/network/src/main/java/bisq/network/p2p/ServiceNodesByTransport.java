@@ -62,7 +62,7 @@ public class ServiceNodesByTransport {
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                                   Map<Transport.Type, List<Address>> seedAddressesByTransport,
+                                   Map<Transport.Type, Set<Address>> seedAddressesByTransport,
                                    Optional<DataService> dataService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
@@ -75,7 +75,7 @@ public class ServiceNodesByTransport {
                     new AuthorizationService(proofOfWorkService),
                     transportConfig,
                     transportConfig.getSocketTimeout());
-            List<Address> seedAddresses = seedAddressesByTransport.get(transportType);
+            Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupService.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
