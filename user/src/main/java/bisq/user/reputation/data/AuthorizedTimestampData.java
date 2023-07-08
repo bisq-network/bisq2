@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.data;
+package bisq.user.reputation.data;
 
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
+public final class AuthorizedTimestampData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(15);
 
     // The pubKeys which are authorized for publishing that data.
@@ -44,26 +44,26 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedAccountAgeData.class.getSimpleName());
+            AuthorizedTimestampData.class.getSimpleName());
 
     private final String profileId;
     private final long date;
 
-    public AuthorizedAccountAgeData(String profileId, long date) {
+    public AuthorizedTimestampData(String profileId, long date) {
         this.profileId = profileId;
         this.date = date;
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedAccountAgeData toProto() {
-        return bisq.bonded_roles.protobuf.AuthorizedAccountAgeData.newBuilder()
+    public bisq.user.protobuf.AuthorizedTimestampData toProto() {
+        return bisq.user.protobuf.AuthorizedTimestampData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
                 .build();
     }
 
-    public static AuthorizedAccountAgeData fromProto(bisq.bonded_roles.protobuf.AuthorizedAccountAgeData proto) {
-        return new AuthorizedAccountAgeData(
+    public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {
+        return new AuthorizedTimestampData(
                 proto.getProfileId(),
                 proto.getDate());
     }
@@ -71,7 +71,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedAccountAgeData.class));
+                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedTimestampData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -99,9 +99,9 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     @Override
     public String toString() {
-        return "AuthorizedAccountAgeData{" +
+        return "AuthorizedTimestampData{" +
                 ",\r\n     profileId=" + profileId +
-                ",\r\n     time=" + new Date(date) +
+                ",\r\n     date=" + new Date(date) +
                 "\r\n}";
     }
 }

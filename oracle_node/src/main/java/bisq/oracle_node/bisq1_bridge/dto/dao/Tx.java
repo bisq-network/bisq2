@@ -15,20 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto;
+package bisq.oracle_node.bisq1_bridge.dto.dao;
 
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
-/**
- * Minimal data required for bonded roles use case.
- * Need to be in sync with the Bisq 1 BondedRoleDto class.
- */
-@Slf4j
 @Data
-public class BondedRoleVerificationDto {
+public final class Tx {
+    private String txVersion;
+    private String id;
+    private int blockHeight;
+    private String blockHash;
+    private long time;
+    private List<TxInput> txInputs;
+    private List<TxOutput> txOutputs;
     @Nullable
-    private final String errorMessage;
+    private TxType txType;
+    private TxOutput lastTxOutput;
+    private long burntBsq;
+    private long burntFee;
+    private long invalidatedBsq;
+    private int lockTime;
+    private long lockedAmount;
+    // The lockTime is stored in the first output of the LOCKUP tx.
+    private TxOutput lockupOutput;
+    // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
+    private int unlockBlockHeight;
 }

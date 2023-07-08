@@ -17,12 +17,9 @@
 
 package bisq.application;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.*;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.BondedRoleRegistrationRequest;
-import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
-import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
+import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedOracleNode;
+import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.chat.message.ChatMessage;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
@@ -32,6 +29,10 @@ import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationResponse;
 import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.data.*;
+import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
+import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
+import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 
 public class ResolverConfig {
     public static void config() {
@@ -40,19 +41,19 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
         DistributedDataResolver.addResolver("support.AuthorizedAlertData", AuthorizedAlertData.getResolver());
         DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("bonded_roles.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("user.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationResponse", MediationResponse.getNetworkMessageResolver());

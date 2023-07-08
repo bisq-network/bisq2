@@ -15,19 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.dto;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-import java.util.List;
-
+/**
+ * Minimal data for the reputation use case.
+ * Need to be in sync with the Bisq 1 ProofOfBurnDto class.
+ */
+@Slf4j
 @Data
-public final class Block {
-    private List<Tx> txs;
-    private int height;
-    private long time; // in ms
+public class ProofOfBurnDto {
+    private long amount;
+    private long time;
     private String hash;
-    @Nullable // in case of first block in the blockchain
-    private String previousBlockHash;
+    private int blockHeight;
 }

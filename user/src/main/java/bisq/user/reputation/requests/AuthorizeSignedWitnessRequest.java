@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.requests;
+package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -60,8 +60,8 @@ public final class AuthorizeSignedWitnessRequest implements NetworkMessage {
                 .build();
     }
 
-    public bisq.bonded_roles.protobuf.AuthorizeSignedWitnessRequest toAuthorizeSignedWitnessRequestProto() {
-        return bisq.bonded_roles.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
+    public bisq.user.protobuf.AuthorizeSignedWitnessRequest toAuthorizeSignedWitnessRequestProto() {
+        return bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
                 .setProfileId(profileId)
                 .setHashAsHex(hashAsHex)
                 .setAccountAgeWitnessDate(accountAgeWitnessDate)
@@ -71,7 +71,7 @@ public final class AuthorizeSignedWitnessRequest implements NetworkMessage {
                 .build();
     }
 
-    public static AuthorizeSignedWitnessRequest fromProto(bisq.bonded_roles.protobuf.AuthorizeSignedWitnessRequest proto) {
+    public static AuthorizeSignedWitnessRequest fromProto(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto) {
         return new AuthorizeSignedWitnessRequest(proto.getProfileId(),
                 proto.getHashAsHex(),
                 proto.getAccountAgeWitnessDate(),
@@ -83,7 +83,7 @@ public final class AuthorizeSignedWitnessRequest implements NetworkMessage {
     public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.bonded_roles.protobuf.AuthorizeSignedWitnessRequest proto = any.unpack(bisq.bonded_roles.protobuf.AuthorizeSignedWitnessRequest.class);
+                bisq.user.protobuf.AuthorizeSignedWitnessRequest proto = any.unpack(bisq.user.protobuf.AuthorizeSignedWitnessRequest.class);
                 return AuthorizeSignedWitnessRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

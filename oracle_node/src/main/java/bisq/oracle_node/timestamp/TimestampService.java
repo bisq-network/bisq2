@@ -17,9 +17,7 @@
 
 package bisq.oracle_node.timestamp;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
-import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
-import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
+import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -31,6 +29,8 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.user.reputation.data.AuthorizedTimestampData;
+import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

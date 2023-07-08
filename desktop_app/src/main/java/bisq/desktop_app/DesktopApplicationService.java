@@ -117,9 +117,9 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
-                securityService.getKeyPairService(),
                 identityService,
                 networkService,
+                bondedRolesService,
                 securityService.getProofOfWorkService());
 
         settingsService = new SettingsService(persistenceService);

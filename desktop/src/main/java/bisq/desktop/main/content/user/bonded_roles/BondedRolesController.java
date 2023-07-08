@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.bonded_roles;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
-import bisq.bonded_roles.registration.BondedRoleRegistrationService;
+import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -35,7 +35,7 @@ public abstract class BondedRolesController implements Controller {
     @Getter
     protected final BondedRolesView<? extends BondedRolesModel, ? extends BondedRolesController> view;
     protected final BondedRolesModel model;
-    protected final BondedRoleRegistrationService bondedRoleRegistrationService;
+    protected final AuthorizedBondedRolesService authorizedBondedRolesService;
     protected final ServiceProvider serviceProvider;
     protected final UserService userService;
     protected Pin bondedRoleDataPin;
@@ -43,7 +43,7 @@ public abstract class BondedRolesController implements Controller {
     public BondedRolesController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         userService = serviceProvider.getUserService();
-        bondedRoleRegistrationService = serviceProvider.getBondedRolesService().getBondedRoleRegistrationService();
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
 
         model = createAndGetModel();
         view = createAndGetView();
@@ -59,7 +59,7 @@ public abstract class BondedRolesController implements Controller {
     public void onActivate() {
         bondedRoleDataPin = FxBindings.<AuthorizedBondedRole, BondedRolesListItem>bind(model.getBondedRolesListItems())
                 .map(data -> new BondedRolesListItem(data, userService))
-                .to(bondedRoleRegistrationService.getAuthorizedBondedRoleSet());
+                .to(authorizedBondedRolesService.getAuthorizedBondedRoleSet());
 
         model.getFilteredList().setPredicate(getPredicate());
     }

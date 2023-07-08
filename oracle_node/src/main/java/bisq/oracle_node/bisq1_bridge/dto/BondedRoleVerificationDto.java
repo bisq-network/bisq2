@@ -15,13 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.dto;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+/**
+ * Minimal data required for bonded roles use case.
+ * Need to be in sync with the Bisq 1 BondedRoleDto class.
+ */
+@Slf4j
 @Data
-public final class SpentInfo {
-    private long blockHeight;
-    private String txId;
-    private int inputIndex;
+public class BondedRoleVerificationDto {
+    @Nullable
+    private final String errorMessage;
 }

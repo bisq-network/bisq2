@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles.nodes.tabs.registration;
 
-import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.FileUtils;
 import bisq.common.util.StringUtils;

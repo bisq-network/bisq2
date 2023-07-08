@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.requests;
+package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -63,8 +63,8 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
                 .build();
     }
 
-    public bisq.bonded_roles.protobuf.AuthorizeAccountAgeRequest toAuthorizeAccountAgeRequestProto() {
-        return bisq.bonded_roles.protobuf.AuthorizeAccountAgeRequest.newBuilder()
+    public bisq.user.protobuf.AuthorizeAccountAgeRequest toAuthorizeAccountAgeRequestProto() {
+        return bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
                 .setProfileId(profileId)
                 .setHashAsHex(hashAsHex)
                 .setDate(date)
@@ -73,7 +73,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
                 .build();
     }
 
-    public static AuthorizeAccountAgeRequest fromProto(bisq.bonded_roles.protobuf.AuthorizeAccountAgeRequest proto) {
+    public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
         return new AuthorizeAccountAgeRequest(proto.getProfileId(),
                 proto.getHashAsHex(),
                 proto.getDate(),
@@ -84,7 +84,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.bonded_roles.protobuf.AuthorizeAccountAgeRequest proto = any.unpack(bisq.bonded_roles.protobuf.AuthorizeAccountAgeRequest.class);
+                bisq.user.protobuf.AuthorizeAccountAgeRequest proto = any.unpack(bisq.user.protobuf.AuthorizeAccountAgeRequest.class);
                 return AuthorizeAccountAgeRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

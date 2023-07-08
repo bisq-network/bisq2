@@ -17,14 +17,12 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.*;
-import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
-import bisq.bonded_roles.node.bisq1_bridge.dto.ProofOfBurnDto;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.BondedRoleRegistrationRequest;
-import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedOracleNode;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
@@ -32,11 +30,19 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
+import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import bisq.user.reputation.data.AuthorizedAccountAgeData;
+import bisq.user.reputation.data.AuthorizedBondedReputationData;
+import bisq.user.reputation.data.AuthorizedProofOfBurnData;
+import bisq.user.reputation.data.AuthorizedSignedWitnessData;
+import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
+import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -154,14 +160,21 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
     public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         return CompletableFutureUtils.allOf(proofOfBurnList.stream()
-                        .map(AuthorizedProofOfBurnData::from)
+                        .map(dto -> new AuthorizedProofOfBurnData(
+                                dto.getAmount(),
+                                dto.getTime(),
+                                Hex.decode(dto.getHash())))
                         .map(this::publishAuthorizedData))
                 .thenApply(results -> !results.contains(false));
     }
 
     public CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         return CompletableFutureUtils.allOf(bondedReputationList.stream()
-                        .map(AuthorizedBondedReputationData::from)
+                        .map(dto -> new AuthorizedBondedReputationData(
+                                dto.getAmount(),
+                                dto.getTime(),
+                                Hex.decode(dto.getHash()),
+                                dto.getLockTime()))
                         .map(this::publishAuthorizedData))
                 .thenApply(results -> !results.contains(false));
     }

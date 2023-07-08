@@ -123,9 +123,9 @@ public class RestApiApplicationService extends ApplicationService {
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
-                getKeyPairService(),
                 identityService,
                 networkService,
+                bondedRolesService,
                 securityService.getProofOfWorkService());
 
         settingsService = new SettingsService(persistenceService);

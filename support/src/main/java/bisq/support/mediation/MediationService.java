@@ -17,9 +17,9 @@
 
 package bisq.support.mediation;
 
+import bisq.bonded_roles.AuthorizedBondedRolesService;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.registration.BondedRoleRegistrationService;
-import bisq.bonded_roles.registration.BondedRoleType;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -50,8 +50,8 @@ public class MediationService implements Service, DataService.Listener, MessageL
     /*  private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();*/
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     public MediationService(NetworkService networkService,
                             ChatService chatService,
@@ -59,7 +59,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
-        bondedRoleRegistrationService = bondedRolesService.getBondedRoleRegistrationService();
+        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
     }
 
@@ -211,7 +211,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return bondedRoleRegistrationService.getAuthorizedBondedRoleSet().stream()
+        return authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
                 .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream())

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.dto.dao;
 
 import lombok.Getter;
 

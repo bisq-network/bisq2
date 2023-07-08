@@ -17,11 +17,11 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
+import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

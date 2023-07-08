@@ -17,9 +17,6 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
-import bisq.bonded_roles.node.bisq1_bridge.dto.BondedRoleVerificationDto;
-import bisq.bonded_roles.node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
@@ -29,6 +26,9 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
+import bisq.oracle_node.bisq1_bridge.dto.BondedRoleVerificationDto;
+import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;

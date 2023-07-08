@@ -17,13 +17,14 @@
 
 package bisq.user.reputation;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedReputationData;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.data.AuthorizedBondedReputationData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,8 +36,9 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     public BondedReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
-                                   UserProfileService userProfileService) {
-        super(networkService, userIdentityService, userProfileService);
+                                   UserProfileService userProfileService,
+                                   AuthorizedBondedRolesService authorizedBondedRolesService) {
+        super(networkService, userIdentityService, userProfileService, authorizedBondedRolesService);
     }
 
     @Override

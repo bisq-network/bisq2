@@ -55,7 +55,7 @@ public class BondedRolesService implements Service {
 
     public BondedRolesService(Config config, String applicationVersion, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
-        bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService);
+        bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,
                 applicationVersion);

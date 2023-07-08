@@ -15,17 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.dto.dao;
 
 import lombok.Data;
 
-import javax.annotation.Nullable;
-
 @Data
-public final class TxInput {
-    private String connectedTxOutputTxId;
-    private int connectedTxOutputIndex;
-    @Nullable
-    private String pubKey; // as hex
-    private TxOutputKey connectedTxOutputKey;
+public final class SpentInfo {
+    private long blockHeight;
+    private String txId;
+    private int inputIndex;
 }

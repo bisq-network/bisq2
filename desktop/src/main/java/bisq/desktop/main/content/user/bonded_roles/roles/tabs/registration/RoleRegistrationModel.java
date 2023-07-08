@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles.roles.tabs.registration;
 
-import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRolesRegistrationModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
