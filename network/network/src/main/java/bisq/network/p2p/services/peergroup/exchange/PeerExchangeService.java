@@ -124,6 +124,7 @@ public class PeerExchangeService implements Node.Listener {
                                 doInitialPeerExchangeDelaySec = Math.min(60, doInitialPeerExchangeDelaySec * 2);
                             } else {
                                 scheduler.ifPresent(Scheduler::stop);
+                                scheduler = Optional.empty();
                             }
                         }
                     });

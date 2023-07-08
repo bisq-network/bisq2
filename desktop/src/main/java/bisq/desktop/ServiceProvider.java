@@ -23,7 +23,7 @@ package bisq.desktop;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
-import bisq.bonded_roles.service.BondedRolesService;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
 import bisq.desktop.common.application.ShotDownHandler;

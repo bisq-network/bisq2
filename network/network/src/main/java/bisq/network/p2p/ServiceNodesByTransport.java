@@ -122,10 +122,10 @@ public class ServiceNodesByTransport {
         map.get(type).initializePeerGroup();
     }
 
-    public void addSeedNodeAddressesByTransport(Map<Transport.Type, Set<Address>> seedNodeAddressesByTransport) {
+    public void addSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
         supportedTransportTypes.forEach(transportType -> {
-            Set<Address> seedNodeAddresses = seedNodeAddressesByTransport.get(transportType);
-            map.get(transportType).addSeedNodeAddresses(seedNodeAddresses);
+            Address seedNodeAddress = seedNodeAddressesByTransport.get(transportType);
+            map.get(transportType).addSeedNodeAddress(seedNodeAddress);
         });
     }
 

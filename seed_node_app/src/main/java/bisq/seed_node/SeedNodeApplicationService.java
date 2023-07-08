@@ -18,6 +18,7 @@
 package bisq.seed_node;
 
 import bisq.application.ApplicationService;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -41,6 +42,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class SeedNodeApplicationService extends ApplicationService {
     protected final NetworkService networkService;
     protected final SecurityService securityService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     public SeedNodeApplicationService(String[] args) {
         super("seed_node", args);
@@ -52,18 +54,21 @@ public class SeedNodeApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyPairService(),
                 securityService.getProofOfWorkService());
+
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
+                .thenCompose(result -> authorizedBondedRolesService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        log.info("NetworkApplicationService initialized");
+                        log.info("SeedNodeApplicationService initialized");
                     } else {
-                        log.error("Initializing networkApplicationService failed", throwable);
+                        log.error("Initializing SeedNodeApplicationService failed", throwable);
                     }
                 });
     }
@@ -71,10 +76,11 @@ public class SeedNodeApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> networkService.shutdown()
-                        .thenCompose(result -> securityService.shutdown())
-                        .orTimeout(10, TimeUnit.SECONDS)
-                        .handle((result, throwable) -> throwable == null)
-                        .join());
+        return supplyAsync(() -> authorizedBondedRolesService.shutdown()
+                .thenCompose(result -> networkService.shutdown())
+                .thenCompose(result -> securityService.shutdown())
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> throwable == null)
+                .join());
     }
 }

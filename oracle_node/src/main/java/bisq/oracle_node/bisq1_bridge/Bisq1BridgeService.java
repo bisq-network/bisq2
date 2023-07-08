@@ -78,7 +78,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
     @Nullable
-    private Scheduler scheduler;
+    private Scheduler requestDoaDataScheduler, republishAuthorizedBondedRolesScheduler;
 
     public Bisq1BridgeService(Bisq1BridgeService.Config config,
                               NetworkService networkService,
@@ -107,21 +107,18 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
                     networkService.addMessageListener(this);
-                    scheduler = Scheduler.run(this::requestDoaData).periodically(0, 5, TimeUnit.SECONDS);
-
-                   /* AuthorizedBondedRole data = new AuthorizedBondedRole(profileId,
-                            bondedRoleType,
-                            bondUserName,
-                            signatureBase64,
-                            request.getAddressByNetworkType(),
-                            authorizedOracleNode);*/
+                    requestDoaDataScheduler = Scheduler.run(this::requestDoaData).periodically(0, 5, TimeUnit.SECONDS);
+                    republishAuthorizedBondedRolesScheduler = Scheduler.run(this::republishAuthorizedBondedRoles).after(5, TimeUnit.SECONDS);
                 });
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (scheduler != null) {
-            scheduler.stop();
+        if (requestDoaDataScheduler != null) {
+            requestDoaDataScheduler.stop();
+        }
+        if (republishAuthorizedBondedRolesScheduler != null) {
+            republishAuthorizedBondedRolesScheduler.stop();
         }
         networkService.removeMessageListener(this);
         return httpService.shutdown();
@@ -163,7 +160,6 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     }
 
     public CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
-
         return CompletableFutureUtils.allOf(bondedReputationList.stream()
                         .map(AuthorizedBondedReputationData::from)
                         .map(this::publishAuthorizedData))
@@ -172,7 +168,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
 
     public CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
+        return identityService.createAndInitializeDefaultIdentity()
                 .thenCompose(identity -> networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,
@@ -184,6 +180,20 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void republishAuthorizedBondedRoles() {
+        networkService.getDataService()
+                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
+                        .forEach(authenticatedData -> {
+                            if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
+                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) authenticatedData.getDistributedData();
+                                if (authorizedBondedRole.getOracleNode().equals(authorizedOracleNode)) {
+                                    publishAuthorizedData(authorizedBondedRole);
+                                }
+
+                            }
+                        }));
+    }
 
     private CompletableFuture<Boolean> requestDoaData() {
         return requestProofOfBurnTxs()

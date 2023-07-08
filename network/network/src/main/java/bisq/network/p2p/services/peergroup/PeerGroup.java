@@ -167,8 +167,8 @@ public class PeerGroup {
     // Address
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
-        this.seedNodeAddresses.addAll(seedNodeAddresses);
+    public void addSeedNodeAddress(Address seedNodeAddress) {
+        this.seedNodeAddresses.add(seedNodeAddress);
     }
 
     public Stream<Address> getAllConnectedPeerAddresses() {

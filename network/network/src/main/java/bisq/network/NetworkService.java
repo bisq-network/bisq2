@@ -445,11 +445,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Add seed nodes
+    // Add seed node address
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addSeedNodeAddressesByTransport(Map<Transport.Type, Set<Address>> seedNodeAddressesByTransport) {
-        this.serviceNodesByTransport.addSeedNodeAddressesByTransport(seedNodeAddressesByTransport);
+    public void addSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
+        this.serviceNodesByTransport.addSeedNodeAddressByTransport(seedNodeAddressesByTransport);
     }
 
     // If not persisted we try to create the networkId and persist if available.

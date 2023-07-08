@@ -19,7 +19,7 @@ package bisq.rest_api;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
-import bisq.bonded_roles.service.BondedRolesService;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -115,7 +115,7 @@ public class RestApiApplicationService extends ApplicationService {
                 securityService,
                 networkService);
 
-        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
+        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bonded_roles")), config.getVersion(), networkService);
 
         accountService = new AccountService(persistenceService);
 

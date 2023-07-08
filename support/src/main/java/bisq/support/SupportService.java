@@ -17,7 +17,7 @@
 
 package bisq.support;
 
-import bisq.bonded_roles.service.BondedRolesService;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;

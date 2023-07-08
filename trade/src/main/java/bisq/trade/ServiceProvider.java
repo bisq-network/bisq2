@@ -17,7 +17,7 @@
 
 package bisq.trade;
 
-import bisq.bonded_roles.service.BondedRolesService;
+import bisq.bonded_roles.BondedRolesService;
 
 public interface ServiceProvider {
     bisq.network.NetworkService getNetworkService();

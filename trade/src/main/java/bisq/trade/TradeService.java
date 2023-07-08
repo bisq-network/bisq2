@@ -17,7 +17,7 @@
 
 package bisq.trade;
 
-import bisq.bonded_roles.service.BondedRolesService;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;

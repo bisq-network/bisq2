@@ -18,6 +18,7 @@
 package bisq.oracle_node_app;
 
 import bisq.application.ApplicationService;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -38,6 +39,7 @@ public class OracleNodeApplicationService extends ApplicationService {
     private final SecurityService securityService;
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args);
@@ -56,6 +58,7 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService
         );
 
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,
@@ -70,6 +73,7 @@ public class OracleNodeApplicationService extends ApplicationService {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
+                .thenCompose(result -> authorizedBondedRolesService.initialize())
                 .thenCompose(result -> oracleNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -85,6 +89,7 @@ public class OracleNodeApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> oracleNodeService.shutdown()
+                .thenCompose(result -> authorizedBondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
