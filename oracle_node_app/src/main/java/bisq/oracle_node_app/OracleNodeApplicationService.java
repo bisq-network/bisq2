@@ -23,7 +23,6 @@ import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.oracle_node.OracleNodeService;
 import bisq.security.SecurityService;
-import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +38,6 @@ public class OracleNodeApplicationService extends ApplicationService {
     private final SecurityService securityService;
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
-    private final UserService userService;
 
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args);
@@ -58,20 +56,13 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService
         );
 
-        userService = new UserService(UserService.Config.from(getConfig("user")),
-                persistenceService,
-                securityService.getKeyPairService(),
-                identityService,
-                networkService,
-                securityService.getProofOfWorkService());
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,
                 identityService,
                 networkService,
                 persistenceService,
-                securityService,
-                userService);
+                securityService);
     }
 
     @Override
@@ -79,7 +70,6 @@ public class OracleNodeApplicationService extends ApplicationService {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> oracleNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -95,7 +85,6 @@ public class OracleNodeApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> oracleNodeService.shutdown()
-                .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())

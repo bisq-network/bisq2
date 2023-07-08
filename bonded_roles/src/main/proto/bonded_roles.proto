@@ -5,12 +5,6 @@ option java_multiple_files = true;
 import "common.proto";
 import "network.proto";
 
-message AuthorizedOracleNode {
-  network.NetworkId networkId = 1;
-  string userName = 2;
-  string signature = 3;
-}
-
 enum BondedRoleType {
   MEDIATOR = 0;
   ARBITRATOR = 1;
@@ -22,6 +16,11 @@ enum BondedRoleType {
   EXPLORER_NODE = 12;
   MARKET_PRICE_NODE = 13;
 }
+message AuthorizedOracleNode {
+  network.NetworkId networkId = 1;
+  string bondUserName = 2;
+  string signature = 3;
+}
 
 message BondedRoleRegistrationRequest {
   string profileId = 1;
@@ -31,7 +30,7 @@ message BondedRoleRegistrationRequest {
   map<string, network.Address> addressByNetworkType = 5;
 }
 
-message AuthorizedBondedRoleData {
+message AuthorizedBondedRole {
   string profileId = 1;
   BondedRoleType bondedRoleType = 2;
   string bondUserName = 3;

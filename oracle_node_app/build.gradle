@@ -19,7 +19,6 @@ dependencies {
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')
-    implementation project(':user')
     implementation project(':oracle_node')
     implementation project(':application')
 

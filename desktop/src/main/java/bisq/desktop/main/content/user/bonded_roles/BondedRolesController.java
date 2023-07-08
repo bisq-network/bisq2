@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRoleData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -57,9 +57,9 @@ public abstract class BondedRolesController implements Controller {
 
     @Override
     public void onActivate() {
-        bondedRoleDataPin = FxBindings.<AuthorizedBondedRoleData, BondedRolesListItem>bind(model.getBondedRolesListItems())
+        bondedRoleDataPin = FxBindings.<AuthorizedBondedRole, BondedRolesListItem>bind(model.getBondedRolesListItems())
                 .map(data -> new BondedRolesListItem(data, userService))
-                .to(bondedRoleRegistrationService.getAuthorizedBondedRoleDataSet());
+                .to(bondedRoleRegistrationService.getAuthorizedBondedRoleSet());
 
         model.getFilteredList().setPredicate(getPredicate());
     }

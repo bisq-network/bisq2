@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedRoleData implements AuthorizedDistributedData {
+public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
@@ -50,7 +50,7 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedBondedRoleData.class.getSimpleName());
+            AuthorizedBondedRole.class.getSimpleName());
 
     private final String profileId;
     private final BondedRoleType bondedRoleType;
@@ -59,12 +59,12 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
     private final Map<Transport.Type, Address> addressByNetworkType;
     private final AuthorizedOracleNode oracleNode;
 
-    public AuthorizedBondedRoleData(String profileId,
-                                    BondedRoleType bondedRoleType,
-                                    String bondUserName,
-                                    String signature,
-                                    Map<Transport.Type, Address> addressByNetworkType,
-                                    AuthorizedOracleNode oracleNode) {
+    public AuthorizedBondedRole(String profileId,
+                                BondedRoleType bondedRoleType,
+                                String bondUserName,
+                                String signature,
+                                Map<Transport.Type, Address> addressByNetworkType,
+                                AuthorizedOracleNode oracleNode) {
         this.profileId = profileId;
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
@@ -74,8 +74,8 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedBondedRoleData toProto() {
-        return bisq.bonded_roles.protobuf.AuthorizedBondedRoleData.newBuilder()
+    public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto() {
+        return bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
                 .setProfileId(profileId)
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
@@ -86,11 +86,11 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
                 .build();
     }
 
-    public static AuthorizedBondedRoleData fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRoleData proto) {
+    public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
         Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
-        return new AuthorizedBondedRoleData(proto.getProfileId(),
+        return new AuthorizedBondedRole(proto.getProfileId(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignature(),
@@ -101,7 +101,7 @@ public final class AuthorizedBondedRoleData implements AuthorizedDistributedData
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedBondedRoleData.class));
+                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedBondedRole.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

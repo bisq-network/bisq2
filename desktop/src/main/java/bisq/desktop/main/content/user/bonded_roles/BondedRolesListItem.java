@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRoleData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
 import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleType;
 import bisq.desktop.components.table.TableItem;
@@ -52,9 +52,9 @@ public class BondedRolesListItem implements TableItem {
     private final String address;
     private final String addressInfoJson;
 
-    public BondedRolesListItem(AuthorizedBondedRoleData bondedRoleData, UserService userService) {
+    public BondedRolesListItem(AuthorizedBondedRole bondedRoleData, UserService userService) {
         oracleNode = bondedRoleData.getOracleNode();
-        oracleNodeUserName = oracleNode.getUserName();
+        oracleNodeUserName = oracleNode.getBondUserName();
         userProfile = userService.getUserProfileService().findUserProfile(bondedRoleData.getProfileId()).orElseThrow();
         userProfileId = userProfile.getId();
         userName = userProfile.getUserName();

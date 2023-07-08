@@ -51,7 +51,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
         tableView.getStyleClass().add("user-bonded-roles-table-view");
         configTableView();
 
-        Label verificationHeadline = new Label(Res.get("user.bondedRoles.verification.howTo"));
+        Label verificationHeadline = new Label(getVerificationHeadline());
         verificationHeadline.getStyleClass().add("bisq-text-headline-2");
         OrderedList verificationInstruction = new OrderedList(Res.get("user.bondedRoles.verification.howTo.instruction"), "bisq-text-13");
 
@@ -62,6 +62,10 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
         VBox.setMargin(verificationInstruction, new Insets(0, 0, 0, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView, verificationHeadline, verificationInstruction);
+    }
+
+    protected String getVerificationHeadline() {
+        return Res.get("user.bondedRoles.verification.howTo");
     }
 
     protected abstract String getTableHeadline();

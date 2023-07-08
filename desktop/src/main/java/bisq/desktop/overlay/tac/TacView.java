@@ -95,7 +95,7 @@ public class TacView extends View<VBox, TacModel, TacController> {
 
         HBox buttons = new HBox(20, acceptButton, rejectButton);
         VBox.setMargin(rulesList, new Insets(-20, 0, 0, 20));
-        VBox.setMargin(confirmCheckBox, new Insets(10, 0, 0, 10));
+        VBox.setMargin(confirmCheckBox, new Insets(20, 0, 5, 10));
 
         root.getChildren().addAll(headline,
                 textList,

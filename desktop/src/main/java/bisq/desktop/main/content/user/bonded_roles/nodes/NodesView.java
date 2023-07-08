@@ -50,6 +50,11 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
     }
 
     @Override
+    protected String getVerificationHeadline() {
+        return Res.get("user.bondedRoles.verification.howTo.nodes");
+    }
+
+    @Override
     protected void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.userProfile"))

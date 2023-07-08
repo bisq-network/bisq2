@@ -47,14 +47,14 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
             AuthorizedOracleNode.class.getSimpleName());
 
     private final NetworkId networkId;
-    private final String userName;          // username from DAO proposal
+    private final String bondUserName;          // username from DAO proposal
     private final String signature;   // signature created by bond with username as message
 
     public AuthorizedOracleNode(NetworkId networkId,
-                                String userName,
+                                String bondUserName,
                                 String signature) {
         this.networkId = networkId;
-        this.userName = userName;
+        this.bondUserName = bondUserName;
         this.signature = signature;
     }
 
@@ -62,14 +62,14 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     public bisq.bonded_roles.protobuf.AuthorizedOracleNode toProto() {
         return bisq.bonded_roles.protobuf.AuthorizedOracleNode.newBuilder()
                 .setNetworkId(networkId.toProto())
-                .setUserName(userName)
+                .setBondUserName(bondUserName)
                 .setSignature(signature)
                 .build();
     }
 
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {
         return new AuthorizedOracleNode(NetworkId.fromProto(proto.getNetworkId()),
-                proto.getUserName(),
+                proto.getBondUserName(),
                 proto.getSignature());
     }
 

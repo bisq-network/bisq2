@@ -17,7 +17,7 @@
 
 package bisq.bonded_roles.registration;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRoleData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
 import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
 import bisq.bonded_roles.node.bisq1_bridge.requests.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 public class BondedRoleRegistrationService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
-    private final ObservableSet<AuthorizedBondedRoleData> authorizedBondedRoleDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
     @Getter
     private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
 
@@ -122,8 +122,8 @@ public class BondedRoleRegistrationService implements Service, DataService.Liste
     private void processAuthenticatedData(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
             authorizedOracleNodes.add((AuthorizedOracleNode) authenticatedData.getDistributedData());
-        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRoleData) {
-            authorizedBondedRoleDataSet.add((AuthorizedBondedRoleData) authenticatedData.getDistributedData());
+        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
+            authorizedBondedRoleSet.add((AuthorizedBondedRole) authenticatedData.getDistributedData());
         }
     }
 }

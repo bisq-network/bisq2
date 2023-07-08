@@ -105,9 +105,16 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return httpService.initialize()
-                .whenComplete((resul, throwable) -> {
+                .whenComplete((result, throwable) -> {
                     networkService.addMessageListener(this);
                     scheduler = Scheduler.run(this::requestDoaData).periodically(0, 5, TimeUnit.SECONDS);
+
+                   /* AuthorizedBondedRole data = new AuthorizedBondedRole(profileId,
+                            bondedRoleType,
+                            bondUserName,
+                            signatureBase64,
+                            request.getAddressByNetworkType(),
+                            authorizedOracleNode);*/
                 });
     }
 
@@ -274,7 +281,6 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         }
     }
 
-
     private void processBondedRoleRegistrationRequest(BondedRoleRegistrationRequest request) {
         BondedRoleType bondedRoleType = request.getBondedRoleType();
         String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
@@ -285,7 +291,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                 .whenComplete((bondedRoleVerificationDto, throwable) -> {
                     if (throwable == null) {
                         if (bondedRoleVerificationDto.getErrorMessage() == null) {
-                            AuthorizedBondedRoleData data = new AuthorizedBondedRoleData(profileId,
+                            AuthorizedBondedRole data = new AuthorizedBondedRole(profileId,
                                     bondedRoleType,
                                     bondUserName,
                                     signatureBase64,

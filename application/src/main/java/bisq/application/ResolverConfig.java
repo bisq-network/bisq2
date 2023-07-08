@@ -39,7 +39,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRoleData", AuthorizedBondedRoleData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
