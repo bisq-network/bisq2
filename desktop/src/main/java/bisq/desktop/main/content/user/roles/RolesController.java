@@ -17,15 +17,14 @@
 
 package bisq.desktop.main.content.user.roles;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRoleData;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.roles.tabs.RolesTabController;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
-import bisq.user.reputation.ReputationService;
 import bisq.user.role.RoleRegistrationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,15 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class RolesController implements Controller {
     @Getter
     private final RolesView view;
-    private final ReputationService reputationService;
     private final RolesModel model;
     private final RolesTabController rolesTabController;
     private final RoleRegistrationService roleRegistrationService;
-    private Pin roleRegistrationDataSetPin;
+    private final UserService userService;
+    private Pin registrationDataSetPin;
 
     public RolesController(ServiceProvider serviceProvider) {
-        UserService userService = serviceProvider.getUserService();
-        reputationService = userService.getReputationService();
+        userService = serviceProvider.getUserService();
         roleRegistrationService = userService.getRoleRegistrationService();
 
         rolesTabController = new RolesTabController(serviceProvider);
@@ -52,14 +50,14 @@ public class RolesController implements Controller {
 
     @Override
     public void onActivate() {
-        roleRegistrationDataSetPin = FxBindings.<AuthorizedData, RolesView.ListItem>bind(model.getListItems())
-                .map(data -> new RolesView.ListItem(data, reputationService.getProfileAgeService()))
-                .to(roleRegistrationService.getAuthorizedRoleDataSet());
+        registrationDataSetPin = FxBindings.<AuthorizedBondedRoleData, RolesView.ListItem>bind(model.getListItems())
+                .map(data -> new RolesView.ListItem(data, userService))
+                .to(roleRegistrationService.getAuthorizedBondedRoleDataSet());
     }
 
     @Override
     public void onDeactivate() {
-        roleRegistrationDataSetPin.unbind();
+        registrationDataSetPin.unbind();
     }
 
 

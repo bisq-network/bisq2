@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.node;
+package bisq.bonded_roles.node.bisq1_bridge.data;
 
 import bisq.common.application.DevMode;
-import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ProtobufUtils;
@@ -27,7 +26,6 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,53 +41,66 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedNodeRegistrationData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(Long.MAX_VALUE);
+public final class AuthorizedBondedNodeData implements AuthorizedDistributedData {
+    public final static long TTL = TimeUnit.DAYS.toMillis(100);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
-    public static final Set<String> authorizedPublicKeys = Set.of();
+    private static final Set<String> authorizedPublicKeys = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedNodeRegistrationData.class.getSimpleName());
+            AuthorizedBondedNodeData.class.getSimpleName());
 
-    private final UserProfile userProfile;
-    private final NodeType nodeType;
-    private final String publicKeyAsHex;
+    private final String profileId;
+    private final String roleType;
+    private final String bondUserName;
+    private final String signature;
     private final Map<Transport.Type, Address> addressByNetworkType;
+    private final AuthorizedOracleNode oracleNode;
 
-    public AuthorizedNodeRegistrationData(UserProfile userProfile, NodeType nodeType, String publicKeyAsHex, Map<Transport.Type, Address> addressByNetworkType) {
-        this.userProfile = userProfile;
-        this.nodeType = nodeType;
-        this.publicKeyAsHex = publicKeyAsHex;
+    public AuthorizedBondedNodeData(String profileId,
+                                    String roleType,
+                                    String bondUserName,
+                                    String signature,
+                                    Map<Transport.Type, Address> addressByNetworkType,
+                                    AuthorizedOracleNode oracleNode) {
+        this.profileId = profileId;
+        this.roleType = roleType;
+        this.bondUserName = bondUserName;
+        this.signature = signature;
         this.addressByNetworkType = addressByNetworkType;
+        this.oracleNode = oracleNode;
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedNodeRegistrationData toProto() {
-        return bisq.user.protobuf.AuthorizedNodeRegistrationData.newBuilder()
-                .setUserProfile(userProfile.toProto())
-                .setNodeType(nodeType.toProto())
-                .setPublicKeyAsHex(publicKeyAsHex)
+    public bisq.bonded_roles.protobuf.AuthorizedBondedNodeData toProto() {
+        return bisq.bonded_roles.protobuf.AuthorizedBondedNodeData.newBuilder()
+                .setProfileId(profileId)
+                .setRoleType(roleType)
+                .setBondUserName(bondUserName)
+                .setSignature(signature)
                 .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
+                .setOracleNode(oracleNode.toProto())
                 .build();
     }
 
-    public static AuthorizedNodeRegistrationData fromProto(bisq.user.protobuf.AuthorizedNodeRegistrationData proto) {
+    public static AuthorizedBondedNodeData fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedNodeData proto) {
         Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
-        return new AuthorizedNodeRegistrationData(UserProfile.fromProto(proto.getUserProfile()),
-                NodeType.fromProto(proto.getNodeType()),
-                proto.getPublicKeyAsHex(),
-                addressByNetworkType);
+        return new AuthorizedBondedNodeData(proto.getProfileId(),
+                proto.getRoleType(),
+                proto.getBondUserName(),
+                proto.getSignature(),
+                addressByNetworkType,
+                AuthorizedOracleNode.fromProto(proto.getOracleNode()));
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedNodeRegistrationData.class));
+                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedBondedNodeData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -103,7 +114,7 @@ public final class AuthorizedNodeRegistrationData implements AuthorizedDistribut
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !userProfile.getId().equals(Hex.encode(pubKeyHash));
+        return false;
     }
 
     @Override

@@ -28,27 +28,21 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.KeyGeneration;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfileService;
-import bisq.user.role.AuthorizedRoleRegistrationData;
-import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AlertService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
     private final ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
-    @Getter
-    private final Set<AuthorizedRoleRegistrationData> notificationSenders = new CopyOnWriteArraySet<>();
+    /*  @Getter
+      private final Set<AuthorizedRoleRegistrationData> notificationSenders = new CopyOnWriteArraySet<>();*/
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final UserProfileService userProfileService;
@@ -88,13 +82,14 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
             AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
             if (data.getRoleType() == RoleType.SECURITY_MANAGER) {
                 notificationSenders.remove(data);
                 updateHasNotificationSenderIdentity();
             }
-        } else if (authenticatedData.getDistributedData() instanceof AuthorizedAlertData) {
+        } else*/
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAlertData) {
             AuthorizedAlertData data = (AuthorizedAlertData) authenticatedData.getDistributedData();
             alerts.remove(data);
         }
@@ -109,7 +104,7 @@ public class AlertService implements Service, DataService.Listener {
                                                    AuthorizedAlertData alert,
                                                    String privateKey,
                                                    String publicKey) throws GeneralSecurityException {
-        checkArgument(notificationSenders.stream().anyMatch(data -> data.getUserProfile().getNetworkId().equals(networkIdWithKeyPair.getNetworkId())));
+        //     checkArgument(notificationSenders.stream().anyMatch(data -> data.getUserProfile().getNetworkId().equals(networkIdWithKeyPair.getNetworkId())));
         PrivateKey authorizedPrivateKey = KeyGeneration.generatePrivate(Hex.decode(privateKey));
         PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(publicKey));
         return networkService.publishAuthorizedData(alert,
@@ -125,20 +120,21 @@ public class AlertService implements Service, DataService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
             AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
             if (data.getRoleType() == RoleType.SECURITY_MANAGER) {
                 notificationSenders.add(data);
                 updateHasNotificationSenderIdentity();
             }
-        } else if (authenticatedData.getDistributedData() instanceof AuthorizedAlertData) {
+        } else */
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAlertData) {
             AuthorizedAlertData data = (AuthorizedAlertData) authenticatedData.getDistributedData();
             alerts.add(data);
         }
     }
 
     private void updateHasNotificationSenderIdentity() {
-        hasNotificationSenderIdentity.set(notificationSenders.stream()
-                .anyMatch(data -> userProfileService.findUserProfile(data.getUserProfile().getId()).isPresent()));
+       /* hasNotificationSenderIdentity.set(notificationSenders.stream()
+                .anyMatch(data -> userProfileService.findUserProfile(data.getUserProfile().getId()).isPresent()));*/
     }
 }

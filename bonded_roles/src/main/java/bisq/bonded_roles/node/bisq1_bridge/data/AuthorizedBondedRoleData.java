@@ -15,16 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.role;
+package bisq.bonded_roles.node.bisq1_bridge.data;
 
 import bisq.common.application.DevMode;
-import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,45 +36,53 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedRoleRegistrationData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(Long.MAX_VALUE);
+public final class AuthorizedBondedRoleData implements AuthorizedDistributedData {
+    public final static long TTL = TimeUnit.DAYS.toMillis(100);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
-    public static final Set<String> authorizedPublicKeys = Set.of();
+    private static final Set<String> authorizedPublicKeys = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedRoleRegistrationData.class.getSimpleName());
+            AuthorizedBondedRoleData.class.getSimpleName());
 
-    private final UserProfile userProfile;
-    private final RoleType roleType;
-    private final String publicKeyAsHex;
+    private final String profileId;
+    private final String roleType;
+    private final String bondUserName;
+    private final String signature;
+    AuthorizedOracleNode oracleNode;
 
-    public AuthorizedRoleRegistrationData(UserProfile userProfile, RoleType roleType, String publicKeyAsHex) {
-        this.userProfile = userProfile;
+    public AuthorizedBondedRoleData(String profileId, String roleType, String bondUserName, String signature, AuthorizedOracleNode oracleNode) {
+        this.profileId = profileId;
         this.roleType = roleType;
-        this.publicKeyAsHex = publicKeyAsHex;
+        this.bondUserName = bondUserName;
+        this.signature = signature;
+        this.oracleNode = oracleNode;
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedRoleRegistrationData toProto() {
-        return bisq.user.protobuf.AuthorizedRoleRegistrationData.newBuilder()
-                .setUserProfile(userProfile.toProto())
-                .setRoleType(roleType.toProto())
-                .setPublicKeyAsHex(publicKeyAsHex)
+    public bisq.bonded_roles.protobuf.AuthorizedBondedRoleData toProto() {
+        return bisq.bonded_roles.protobuf.AuthorizedBondedRoleData.newBuilder()
+                .setProfileId(profileId)
+                .setRoleType(roleType)
+                .setBondUserName(bondUserName)
+                .setSignature(signature)
+                .setOracleNode(oracleNode.toProto())
                 .build();
     }
 
-    public static AuthorizedRoleRegistrationData fromProto(bisq.user.protobuf.AuthorizedRoleRegistrationData proto) {
-        return new AuthorizedRoleRegistrationData(UserProfile.fromProto(proto.getUserProfile()),
-                RoleType.fromProto(proto.getRoleType()),
-                proto.getPublicKeyAsHex());
+    public static AuthorizedBondedRoleData fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRoleData proto) {
+        return new AuthorizedBondedRoleData(proto.getProfileId(),
+                proto.getRoleType(),
+                proto.getBondUserName(),
+                proto.getSignature(),
+                AuthorizedOracleNode.fromProto(proto.getOracleNode()));
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedRoleRegistrationData.class));
+                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedBondedRoleData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -90,7 +96,7 @@ public final class AuthorizedRoleRegistrationData implements AuthorizedDistribut
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !userProfile.getId().equals(Hex.encode(pubKeyHash));
+        return false;
     }
 
     @Override

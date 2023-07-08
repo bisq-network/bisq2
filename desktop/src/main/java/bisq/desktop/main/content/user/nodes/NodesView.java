@@ -17,9 +17,12 @@
 
 package bisq.desktop.main.content.user.nodes;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedNodeData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.OrderedList;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -28,12 +31,9 @@ import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.presentation.formatters.TimeFormatter;
-import bisq.user.node.AuthorizedNodeRegistrationData;
+import bisq.user.UserService;
 import bisq.user.node.NodeType;
 import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ProfileAgeService;
 import com.google.common.base.Joiner;
 import com.google.gson.GsonBuilder;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -48,7 +48,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
@@ -73,61 +72,74 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
         tableView.setMinHeight(200);
         configTableView();
 
+        Label verificationHeadline = new Label(Res.get("user.bondedRoles.verification.howTo"));
+        verificationHeadline.getStyleClass().add("bisq-text-headline-2");
+        OrderedList verificationInstruction = new OrderedList(Res.get("user.bondedRoles.verification.howTo.instruction"), "bisq-text-13");
+
         VBox.setVgrow(tabControllerRoot, Priority.ALWAYS);
         VBox.setMargin(tabControllerRoot, new Insets(30, 0, 20, 0));
         VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
+        VBox.setMargin(verificationHeadline, new Insets(0, 0, -10, 10));
+        VBox.setMargin(verificationInstruction, new Insets(0, 0, 0, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView);
+        root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView, verificationHeadline, verificationInstruction);
     }
 
     @Override
     protected void onViewAttached() {
-        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
-            if (profileId != null) {
-                tableView.refresh();
-            }
-        });
     }
 
     @Override
     protected void onViewDetached() {
-        userProfileIdOfScoreUpdatePin.unsubscribe();
     }
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.table.columns.userProfile"))
                 .isFirst()
+                .minWidth(150)
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.table.columns.profileAge"))
-                .fixWidth(100)
-                .comparator(Comparator.comparing(ListItem::getProfileAge))
-                .valueSupplier(ListItem::getProfileAgeString)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<NodesView.ListItem>()
                 .title(Res.get("user.nodes.table.columns.node"))
-                .minWidth(200)
-                .comparator(Comparator.comparing(ListItem::getNodeType))
-                .valueSupplier(ListItem::getNodeType)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.table.columns.pubKey"))
-                .minWidth(200)
-                .comparator(Comparator.comparing(ListItem::getPublicKeyAsHex))
-                .setCellFactory(getPubKeyCellFactory())
+                .fixWidth(150)
+                .comparator(Comparator.comparing(NodesView.ListItem::getNodeType))
+                .valueSupplier(NodesView.ListItem::getNodeType)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.nodes.table.columns.address"))
                 .minWidth(200)
-                .isLast()
                 .setCellFactory(getAddressCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<NodesView.ListItem>()
+                .title(Res.get("user.table.columns.bondUserName"))
+                .minWidth(200)
+                .comparator(Comparator.comparing(NodesView.ListItem::getBondUserName))
+                .valueSupplier(NodesView.ListItem::getBondUserName)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<NodesView.ListItem>()
+                .title(Res.get("user.table.columns.profileId"))
+                .minWidth(150)
+                .comparator(Comparator.comparing(NodesView.ListItem::getUserProfileId))
+                .setCellFactory(getUserProfileIdCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<NodesView.ListItem>()
+                .title(Res.get("user.table.columns.signature"))
+                .minWidth(150)
+                .comparator(Comparator.comparing(NodesView.ListItem::getSignature))
+                .setCellFactory(getSignatureCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<NodesView.ListItem>()
+                .title(Res.get("user.table.columns.oracleNode"))
+                .minWidth(200)
+                .isLast()
+                .comparator(Comparator.comparing(NodesView.ListItem::getOracleNodeUserName))
+                .valueSupplier(NodesView.ListItem::getOracleNodeUserName)
                 .build());
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
+    private Callback<TableColumn<NodesView.ListItem, NodesView.ListItem>, TableCell<NodesView.ListItem, NodesView.ListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
             private final Label userName = new Label();
             private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
@@ -139,7 +151,7 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
             }
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            public void updateItem(final NodesView.ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -153,11 +165,11 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getPubKeyCellFactory() {
+    private Callback<TableColumn<NodesView.ListItem, NodesView.ListItem>, TableCell<NodesView.ListItem, NodesView.ListItem>> getUserProfileIdCellFactory() {
         return column -> new TableCell<>() {
-            private final Label pubKey = new Label();
+            private final Label userProfileId = new Label();
             private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.COPY);
-            private final HBox hBox = new HBox(pubKey, icon);
+            private final HBox hBox = new HBox(userProfileId, icon);
 
             {
                 icon.setMinWidth(30);
@@ -167,16 +179,16 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
             }
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            public void updateItem(final NodesView.ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    pubKey.setText(item.getPublicKeyAsHex());
-                    Tooltip tooltip = new BisqTooltip(item.getPublicKeyAsHex());
+                    userProfileId.setText(item.getUserProfileId());
+                    Tooltip tooltip = new BisqTooltip(item.getUserProfileId());
                     tooltip.getStyleClass().add("dark-tooltip");
-                    pubKey.setTooltip(tooltip);
+                    userProfileId.setTooltip(tooltip);
 
-                    icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getPublicKeyAsHex()));
+                    icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getUserProfileId()));
                     Tooltip tooltip2 = new BisqTooltip(Res.get("action.copyToClipboard"));
                     tooltip2.getStyleClass().add("dark-tooltip");
                     icon.setTooltip(tooltip2);
@@ -228,38 +240,73 @@ public class NodesView extends View<VBox, NodesModel, NodesController> {
         };
     }
 
+    private Callback<TableColumn<NodesView.ListItem, NodesView.ListItem>, TableCell<NodesView.ListItem, NodesView.ListItem>> getSignatureCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label signature = new Label();
+            private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.COPY);
+            private final HBox hBox = new HBox(signature, icon);
+
+            {
+                icon.setMinWidth(30);
+                HBox.setHgrow(icon, Priority.ALWAYS);
+                HBox.setMargin(icon, new Insets(0, 10, 0, 10));
+                hBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            public void updateItem(final NodesView.ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    signature.setText(item.getSignature());
+                    Tooltip tooltip = new BisqTooltip(item.getSignature());
+                    tooltip.getStyleClass().add("dark-tooltip");
+                    signature.setTooltip(tooltip);
+
+                    icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getSignature()));
+                    Tooltip tooltip2 = new BisqTooltip(Res.get("action.copyToClipboard"));
+                    tooltip2.getStyleClass().add("dark-tooltip");
+                    icon.setTooltip(tooltip2);
+                    setGraphic(hBox);
+                } else {
+                    icon.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
     @EqualsAndHashCode
     @Getter
     @ToString
     static class ListItem implements TableItem {
         private final UserProfile userProfile;
         private final String nodeType;
-        private final String publicKeyAsHex;
+        private final String bondUserName;
+        private final String signature;
+        private final String userProfileId;
         private final String userName;
-        private final Long profileAge;
-        private final String profileAgeString;
+        private final AuthorizedOracleNode oracleNode;
+        private final String oracleNodeUserName;
         private final String address;
         private final String addressInfoJson;
 
-        public ListItem(AuthorizedData authorizedData, ProfileAgeService profileAgeService) {
-            AuthorizedNodeRegistrationData nodeRegistrationData = (AuthorizedNodeRegistrationData) authorizedData.getDistributedData();
-            this.userProfile = nodeRegistrationData.getUserProfile();
-            this.publicKeyAsHex = nodeRegistrationData.getPublicKeyAsHex();
-            Map<Transport.Type, Address> addressByNetworkType = nodeRegistrationData.getAddressByNetworkType();
+        public ListItem(AuthorizedBondedNodeData data, UserService userService) {
+            oracleNode = data.getOracleNode();
+            oracleNodeUserName = oracleNode.getUserName();
+            userProfile = userService.getUserProfileService().findUserProfile(data.getProfileId()).orElseThrow();
+            userProfileId = userProfile.getId();
+            userName = userProfile.getUserName();
+            bondUserName = data.getBondUserName();
+            signature = data.getSignature();
+            NodeType type = NodeType.valueOf(data.getRoleType());
+            nodeType = Res.get("user.nodes.type." + type);
+            Map<Transport.Type, Address> addressByNetworkType = data.getAddressByNetworkType();
             List<String> list = addressByNetworkType.entrySet().stream()
                     .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
                     .collect(Collectors.toList());
             address = Joiner.on("\n").join(list);
             addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
-            NodeType type = nodeRegistrationData.getNodeType();
-            nodeType = Res.get("user.nodes.type." + type);
-            profileAge = profileAgeService.getProfileAge(userProfile)
-                    .orElse(0L);
-            profileAgeString = profileAgeService.getProfileAge(userProfile)
-                    .map(TimeFormatter::formatAgeInDays)
-                    .orElse(Res.get("data.na"));
-
-            userName = userProfile.getUserName();
         }
     }
 }

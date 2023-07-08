@@ -17,42 +17,33 @@
 
 package bisq.desktop.main.content.user.nodes.tabs.registration;
 
-import bisq.common.application.DevMode;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.FileUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
-import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.Transitions;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.security.KeyGeneration;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.node.AuthorizedNodeRegistrationData;
 import bisq.user.node.NodeRegistrationService;
 import bisq.user.node.NodeType;
-import bisq.user.profile.UserProfile;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import java.io.File;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,104 +57,55 @@ public class NodeRegistrationController implements Controller {
     private final NodeRegistrationModel model;
     private final UserIdentityService userIdentityService;
     private final NodeRegistrationService nodeRegistrationService;
-    private Pin userIdentityPin;
-    private Subscription updateRegistrationStatePin;
+    private Pin selectedUserProfilePin;
 
     public NodeRegistrationController(ServiceProvider serviceProvider, NodeType nodeType) {
+        this.serviceProvider = serviceProvider;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         nodeRegistrationService = serviceProvider.getUserService().getNodeRegistrationService();
-        this.serviceProvider = serviceProvider;
+
+        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
         model = new NodeRegistrationModel(nodeType);
-        view = new NodeRegistrationView(model, this);
+        view = new NodeRegistrationView(model, this, userProfileSelection.getRoot());
     }
 
     @Override
     public void onActivate() {
-        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
-            model.setUserIdentity(userIdentity);
-            UserProfile userProfile = userIdentity.getUserProfile();
-            String userProfileId = userProfile.getId();
-            model.getSelectedProfileUserName().set(userProfile.getUserName());
-            if (DevMode.isDevMode()) {
-                // Keypair matching pubKey from DevMode.AUTHORIZED_DEV_PUBLIC_KEYS
-                String privateKeyAsHex = "30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b4479d165652fe5410419b1d03c937956be0e1c4f46e9fbe86c66776529d81ca00706052b8104000aa144034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
-                model.getPrivateKey().set(privateKeyAsHex);
-                String publicKeyAsHex = "3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
-                model.getPublicKey().set(publicKeyAsHex);
-                try {
-                    PrivateKey privateKey = KeyGeneration.generatePrivate(Hex.decode(privateKeyAsHex));
-                    PublicKey publicKey = KeyGeneration.generatePublic(Hex.decode(publicKeyAsHex));
-                    KeyPair keyPair = new KeyPair(publicKey, privateKey);
-                    model.setKeyPair(keyPair);
-                } catch (GeneralSecurityException e) {
-                    throw new RuntimeException(e);
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
+                chatUserIdentity -> {
+                    model.getSelectedChatUserIdentity().set(chatUserIdentity);
+                    model.getProfileId().set(chatUserIdentity.getId());
                 }
-            } else {
-                KeyPair keyPair = nodeRegistrationService.findOrCreateNodeRegistrationKey(model.getNodeType(), userProfileId);
-                model.setKeyPair(keyPair);
-                model.getPrivateKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
-                String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
-                model.getPublicKey().set(publicKeyAsHex);
-            }
+        );
 
-            updateRegistrationState();
-        });
-
-        MonadicBinding<Boolean> binding = EasyBind.combine(model.getPrivateKey(), model.getPublicKey(), model.getAddressInfoJson(),
-                (priv, pub, address) ->
-                        StringUtils.isNotEmpty(priv) &&
-                                StringUtils.isNotEmpty(pub) &&
-                                StringUtils.isNotEmpty(address));
-        updateRegistrationStatePin = EasyBind.subscribe(binding, e -> updateRegistrationState());
-        updateRegistrationState();
+        model.getRequestRegistrationButtonDisabled().bind(model.getBondUserName().isEmpty().or(model.getAddressInfoJson().isEmpty()));
     }
 
     @Override
     public void onDeactivate() {
-        userIdentityPin.unbind();
-        updateRegistrationStatePin.unsubscribe();
+        selectedUserProfilePin.unbind();
+        model.getRequestRegistrationButtonDisabled().unbind();
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisq2/nodes/" + model.getNodeType().name().toLowerCase());
-    }
-
-    void onRegister() {
-        Map<Transport.Type, Address> addressByNetworkType = addressByNetworkTypeFromJson(model.getAddressInfoJson().get());
-        nodeRegistrationService.registerNode(model.getUserIdentity(),
-                        model.getNodeType(),
-                        model.getKeyPair(),
-                        addressByNetworkType)
-                .whenComplete((result, throwable) -> {
-                    UIThread.run(() -> {
-                        updateRegistrationState();
-                        if (throwable == null) {
-                            new Popup().feedback(Res.get("user.registration.success")).show();
-                        } else {
-                            new Popup().warning(Res.get("user.registration.failed", throwable.getMessage())).show();
-                        }
-                    });
-                });
-    }
-
-    void onRemoveRegistration() {
-        nodeRegistrationService.removeNodeRegistration(model.getUserIdentity(),
-                        model.getNodeType(),
-                        model.getPublicKey().get())
-                .whenComplete((result, throwable) -> {
-                    UIThread.run(() -> {
-                        updateRegistrationState();
-                        if (throwable == null) {
-                            new Popup().feedback(Res.get("user.removeRegistration.success")).show();
-                        } else {
-                            new Popup().warning(Res.get("user.removeRegistration.failed", throwable.getMessage())).show();
-                        }
-                    });
-                });
-    }
-
-    void onCopy() {
-        ClipboardUtil.copyToClipboard(model.getPublicKey().get());
+    void onRequestAuthorization() {
+        ClipboardUtil.getClipboardString().ifPresent(signature -> {
+            boolean success = nodeRegistrationService.requestAuthorization(model.getProfileId().get(),
+                    model.getNodeType(),
+                    model.getBondUserName().get(),
+                    signature,
+                    addressByNetworkTypeFromJson(model.getAddressInfoJson().get()));
+            if (success) {
+                new Popup().information(Res.get("user.reputation.request.success"))
+                        .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                        .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                        .show();
+            } else {
+                new Popup().warning(Res.get("user.reputation.request.error", StringUtils.truncate(signature)))
+                        .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                        .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                        .show();
+            }
+        });
     }
 
     void onImportNodeAddress() {
@@ -174,29 +116,24 @@ public class NodeRegistrationController implements Controller {
                 String json = FileUtils.readFromFile(file);
                 checkArgument(StringUtils.isNotEmpty(json));
                 model.getAddressInfoJson().set(json);
-                updateRegistrationState();
             } catch (Exception e) {
                 new Popup().error(e).show();
             }
         }
     }
 
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/bisq2/nodes/" + model.getNodeType().name().toLowerCase());
+    }
+
+    void onCopyToClipboard() {
+        ClipboardUtil.copyToClipboard(model.getProfileId().get());
+    }
+
+
     private Map<Transport.Type, Address> addressByNetworkTypeFromJson(String json) {
         Type type = new TypeToken<HashMap<Transport.Type, Address>>() {
         }.getType();
         return new Gson().fromJson(json, type);
-    }
-
-    private void updateRegistrationState() {
-        String publicKeyAsHex = model.getPublicKey().get();
-        boolean isAuthorizedPublicKey = DevMode.isDevMode() ? DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex) :
-                AuthorizedNodeRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex);
-        boolean isNodeRegistered = nodeRegistrationService.isNodeRegistered(model.getUserIdentity().getUserProfile().getId(),
-                model.getNodeType(),
-                publicKeyAsHex);
-        model.getRegistrationDisabled().set(!isAuthorizedPublicKey ||
-                !StringUtils.isNotEmpty(model.getPrivateKey().get()) ||
-                model.getAddressInfoJson() == null);
-        model.getRemoveRegistrationVisible().set(isNodeRegistered);
     }
 }

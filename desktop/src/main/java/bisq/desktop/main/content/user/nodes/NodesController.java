@@ -17,16 +17,15 @@
 
 package bisq.desktop.main.content.user.nodes;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedNodeData;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.nodes.tabs.NodesTabController;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
 import bisq.user.node.NodeRegistrationService;
-import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,15 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class NodesController implements Controller {
     @Getter
     private final NodesView view;
-    private final ReputationService reputationService;
     private final NodesModel model;
     private final NodesTabController nodesTabController;
     private final NodeRegistrationService nodeRegistrationService;
+    private final UserService userService;
     private Pin registrationDataSetPin;
 
     public NodesController(ServiceProvider serviceProvider) {
-        UserService userService = serviceProvider.getUserService();
-        reputationService = userService.getReputationService();
+        userService = serviceProvider.getUserService();
         nodeRegistrationService = userService.getNodeRegistrationService();
 
         nodesTabController = new NodesTabController(serviceProvider);
@@ -52,9 +50,9 @@ public class NodesController implements Controller {
 
     @Override
     public void onActivate() {
-        registrationDataSetPin = FxBindings.<AuthorizedData, NodesView.ListItem>bind(model.getListItems())
-                .map(data -> new NodesView.ListItem(data, reputationService.getProfileAgeService()))
-                .to(nodeRegistrationService.getAuthorizedNodeDataSet());
+        registrationDataSetPin = FxBindings.<AuthorizedBondedNodeData, NodesView.ListItem>bind(model.getListItems())
+                .map(data -> new NodesView.ListItem(data, userService))
+                .to(nodeRegistrationService.getAuthorizedBondedNodeDataSet());
     }
 
     @Override

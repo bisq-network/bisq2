@@ -135,9 +135,7 @@ public class CreateProfileController implements Controller {
             userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
                     model.getNickName().get().trim(),
-                    model.getProofOfWork().orElseThrow(),
-                    "",
-                    "");
+                    model.getProofOfWork().orElseThrow());
             model.getCreateProfileProgress().set(0);
             next();
         }

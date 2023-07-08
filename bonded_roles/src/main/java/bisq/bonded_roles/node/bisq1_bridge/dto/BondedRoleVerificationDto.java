@@ -15,28 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.bonded_roles.node.bisq1_bridge.dto;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+/**
+ * Minimal data required for bonded roles use case.
+ * Need to be in sync with the Bisq 1 BondedRoleDto class.
+ */
 @Slf4j
-
-public class OrderedList extends TextList {
-    private static final String REGEX = "\\d+\\.\\s+";
-    private static final String MARK = null;
-
-    public OrderedList(String text, String style) {
-        this(text, style, 7, 0);
-    }
-
-    public OrderedList(String text, @Nullable String style, double gap, double vSpacing) {
-        super(text, style, gap, vSpacing, REGEX, null);
-    }
-
-    @Override
-    protected String getMark(int index) {
-        return index + ".";
-    }
+@Data
+public class BondedRoleVerificationDto {
+    @Nullable
+    private final String errorMessage;
 }

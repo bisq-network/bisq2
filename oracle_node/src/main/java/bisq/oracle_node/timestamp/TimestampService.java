@@ -17,6 +17,7 @@
 
 package bisq.oracle_node.timestamp;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
 import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
 import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
 import bisq.common.application.Service;
@@ -31,6 +32,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
@@ -48,6 +50,8 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     private final NetworkService networkService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
+    @Setter
+    private AuthorizedOracleNode authorizedOracleNode;
 
     public TimestampService(PersistenceService persistenceService,
                             IdentityService identityService,

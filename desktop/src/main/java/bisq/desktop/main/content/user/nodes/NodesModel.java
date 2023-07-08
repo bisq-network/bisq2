@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.user.nodes;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -33,5 +31,4 @@ public class NodesModel implements Model {
     private final ObservableList<NodesView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<NodesView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<NodesView.ListItem> sortedList = new SortedList<>(filteredList);
-    private final StringProperty userProfileIdOfScoreUpdate = new SimpleStringProperty();
 }

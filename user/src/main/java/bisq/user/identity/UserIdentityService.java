@@ -17,7 +17,7 @@
 
 package bisq.user.identity;
 
-import bisq.bonded_roles.node.AuthorizedOracleNode;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -59,14 +59,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     @Getter
     @ToString
     public static final class Config {
-        private final long chatUserRepublishAge;
+        private final long republishUserProfileDelay;
 
-        public Config(long chatUserRepublishAge) {
-            this.chatUserRepublishAge = TimeUnit.HOURS.toMillis(chatUserRepublishAge);
+        public Config(long republishUserProfileDelay) {
+            this.republishUserProfileDelay = TimeUnit.HOURS.toMillis(republishUserProfileDelay);
         }
 
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
-            return new Config(typeSafeConfig.getLong("chatUserRepublishAge"));
+            return new Config(typeSafeConfig.getLong("republishUserProfileDelay"));
         }
     }
 
@@ -189,12 +189,22 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
                                                        String nickName,
-                                                       ProofOfWork proofOfWork,
-                                                       String terms,
-                                                       String bio) {
+                                                       ProofOfWork proofOfWork) {
         String tag = getTag(nickName, proofOfWork);
         Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
-        UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, bio, identity);
+        UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, "", "", identity);
+        publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
+        return userIdentity;
+    }
+
+    public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
+                                                       String nickName,
+                                                       ProofOfWork proofOfWork,
+                                                       String terms,
+                                                       String statement) {
+        String tag = getTag(nickName, proofOfWork);
+        Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
+        UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, statement, identity);
         publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
         return userIdentity;
     }
@@ -204,10 +214,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                           KeyPair keyPair,
                                                                           ProofOfWork proofOfWork,
                                                                           String terms,
-                                                                          String bio) {
+                                                                          String statement) {
         String tag = getTag(nickName, proofOfWork);
         return identityService.createNewActiveIdentity(tag, keyId, keyPair)
-                .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, bio, identity))
+                .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
                 .thenApply(userIdentity -> {
                     publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
                     return userIdentity;
@@ -219,10 +229,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String bio) {
+    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String statement) {
         Identity oldIdentity = oldUserIdentity.getIdentity();
         UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
-        UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, bio);
+        UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, statement);
         UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
 
         synchronized (lock) {
@@ -264,7 +274,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                              NetworkIdWithKeyPair nodeIdAndKeyPair) {
         long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(userProfile.getId())).orElse(0L);
         long passed = System.currentTimeMillis() - lastPublished;
-        if (passed > config.getChatUserRepublishAge()) {
+        if (passed > config.getRepublishUserProfileDelay()) {
             return publishPublicUserProfile(userProfile, nodeIdAndKeyPair).thenApply(result -> true);
         } else {
             return CompletableFuture.completedFuture(false);
@@ -309,11 +319,11 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private UserIdentity createUserIdentity(String nickName,
                                             ProofOfWork proofOfWork,
                                             String terms,
-                                            String bio,
+                                            String statement,
                                             Identity identity) {
         checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
                 "Nickname must not have leading or trailing spaces and must not be empty.");
-        UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
+        UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, statement);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
         getUserIdentities().add(userIdentity);

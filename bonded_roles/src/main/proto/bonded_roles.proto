@@ -7,6 +7,41 @@ import "network.proto";
 
 message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
+  string userName = 2;
+  string signature = 3;
+}
+
+
+message AuthorizeRoleRegistrationRequest {
+  string profileId = 1;
+  string roleType = 2;
+  string bondUserName = 3;
+  string signatureBase64 = 4;
+}
+
+message AuthorizeNodeRegistrationRequest {
+  string profileId = 1;
+  string roleType = 2;
+  string bondUserName = 3;
+  string signatureBase64 = 4;
+  map<string, network.Address> addressByNetworkType = 5;
+}
+
+message AuthorizedBondedRoleData {
+  string profileId = 1;
+  string roleType = 2;
+  string bondUserName = 3;
+  string signature = 4;
+  AuthorizedOracleNode oracleNode = 5;
+}
+
+message AuthorizedBondedNodeData {
+  string profileId = 1;
+  string roleType = 2;
+  string bondUserName = 3;
+  string signature = 4;
+  map<string, network.Address> addressByNetworkType = 5;
+  AuthorizedOracleNode oracleNode = 6;
 }
 
 message AuthorizedProofOfBurnData {
@@ -52,6 +87,7 @@ message AuthorizeSignedWitnessRequest {
 message AuthorizeTimestampRequest {
   string profileId = 1;
 }
+
 
 message AuthorizedTimestampData {
   string profileId = 1;

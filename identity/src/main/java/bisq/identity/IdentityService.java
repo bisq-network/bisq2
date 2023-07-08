@@ -21,6 +21,7 @@ package bisq.identity;
 import bisq.common.application.Service;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -45,7 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class IdentityService implements PersistenceClient<IdentityStore>, Service {
     public final static String POOL_PREFIX = "pool-";
     public final static String DEFAULT = "default";
-  
+
     @Getter
     @ToString
     public static final class Config {
@@ -100,6 +101,21 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Use the default KeyId, default nodeId and default identityTag.
+     * This is used usually by network nodes like the seed node or oracle node, which do not have privacy concerns.
+     *
+     * @return A future with the identity
+     */
+    public CompletableFuture<Identity> createAndInitializeDefaultIdentity() {
+        String keyId = KeyPairService.DEFAULT;
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+        String nodeId = Node.DEFAULT;
+        return networkService.getInitializedNetworkId(nodeId, pubKey)
+                .thenApply(networkId -> new Identity(DEFAULT, networkId, keyPair));
+    }
 
     /**
      * We first look up if we find an identity in the active identities map, if not we take one from the pool and

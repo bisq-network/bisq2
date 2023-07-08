@@ -20,29 +20,18 @@ package bisq.desktop.main.content.user.roles.tabs.registration;
 import bisq.desktop.common.view.Model;
 import bisq.user.identity.UserIdentity;
 import bisq.user.role.RoleType;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.security.KeyPair;
 
 @Slf4j
 @Getter
 public class RoleRegistrationModel implements Model {
-    private final StringProperty selectedProfileUserName = new SimpleStringProperty();
-    private final StringProperty privateKey = new SimpleStringProperty();
-    private final StringProperty publicKey = new SimpleStringProperty();
-    private final BooleanProperty registrationDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty removeRegistrationVisible = new SimpleBooleanProperty();
     private final RoleType roleType;
-    @Setter
-    private UserIdentity userIdentity;
-    @Setter
-    private KeyPair keyPair;
+    private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
+    private final StringProperty profileId = new SimpleStringProperty();
+    private final StringProperty bondUserName = new SimpleStringProperty();
+    private final BooleanProperty requestRegistrationButtonDisabled = new SimpleBooleanProperty();
 
     public RoleRegistrationModel(RoleType roleType) {
         this.roleType = roleType;

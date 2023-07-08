@@ -19,29 +19,30 @@ package bisq.desktop.main.content.user.roles.tabs.registration;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, RoleRegistrationController> {
-    private final Button copyButton, registrationButton, removeRegistrationButton;
     private final Hyperlink learnMore;
-    private final MaterialTextField selectedProfile, publicKey;
-    private final MaterialPasswordField privateKey;
-
+    private final MaterialTextField bondHolderName, profileId;
+    private final Button requestRegistrationButton;
 
     public RoleRegistrationView(RoleRegistrationModel model,
-                                RoleRegistrationController controller) {
+                                RoleRegistrationController controller,
+                                Pane userProfileSelection) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
@@ -62,62 +63,54 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         MultiLineLabel howInfo = new MultiLineLabel(Res.get("user.registration.info.how", inlineHow, Res.get("user.roles.registration.role.info.how")));
         howInfo.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
+        Label userProfileSelectLabel = new Label(Res.get("user.userProfile.select").toUpperCase());
+        userProfileSelectLabel.getStyleClass().add("bisq-text-4");
+        userProfileSelectLabel.setAlignment(Pos.TOP_LEFT);
 
-        selectedProfile = new MaterialTextField(Res.get("user.registration.selectedProfile"));
-        selectedProfile.setEditable(false);
+        profileId = new MaterialTextField(Res.get("user.registration.profileId"), "");
+        profileId.setEditable(false);
+        profileId.setIcon(AwesomeIcon.COPY);
+        profileId.setIconTooltip(Res.get("action.copyToClipboard"));
 
-        privateKey = new MaterialPasswordField(Res.get("user.registration.privateKey"));
-        publicKey = new MaterialTextField(Res.get("user.registration.publicKey"));
+        bondHolderName = new MaterialTextField(Res.get("user.registration.bondHolderName"), Res.get("user.registration.bondHolderName.prompt"));
 
-        registrationButton = new Button(Res.get("user.registration.register"));
-        removeRegistrationButton = new Button(Res.get("user.registration.removeRegistration"));
-        registrationButton.setDefaultButton(true);
-        copyButton = new Button(Res.get("user.registration.copyPubKey"));
-        copyButton.getStyleClass().add("outlined-button");
+        requestRegistrationButton = new Button(Res.get("user.registration.requestRegistration"));
+        requestRegistrationButton.setDefaultButton(true);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, removeRegistrationButton, copyButton);
+        HBox buttons = new HBox(20, requestRegistrationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(aboutHeadline, new Insets(10, 0, 0, 0));
         VBox.setMargin(howHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(howInfo, new Insets(0, 0, 10, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(aboutHeadline, aboutInfo, howHeadline, howInfo, selectedProfile, privateKey, publicKey, buttons);
+        VBox.setMargin(userProfileSelection, new Insets(0, 0, 40, 0));
+        VBox.setVgrow(aboutInfo, Priority.ALWAYS);
+        VBox.setVgrow(howHeadline, Priority.ALWAYS);
+        root.getChildren().addAll(aboutHeadline, aboutInfo, howHeadline, howInfo, userProfileSelectLabel, userProfileSelection, profileId, bondHolderName, buttons);
     }
 
     @Override
     protected void onViewAttached() {
-        selectedProfile.textProperty().bind(model.getSelectedProfileUserName());
-        privateKey.textProperty().bindBidirectional(model.getPrivateKey());
-        publicKey.textProperty().bindBidirectional(model.getPublicKey());
-        registrationButton.disableProperty().bind(model.getRegistrationDisabled());
-        registrationButton.managedProperty().bind(model.getRemoveRegistrationVisible().not());
-        registrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible().not());
-        removeRegistrationButton.managedProperty().bind(model.getRemoveRegistrationVisible());
-        removeRegistrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible());
+        bondHolderName.textProperty().bindBidirectional(model.getBondUserName());
+        profileId.textProperty().bind(model.getProfileId());
+        requestRegistrationButton.disableProperty().bind(model.getRequestRegistrationButtonDisabled());
 
-        registrationButton.setOnAction(e -> controller.onRegister());
-        removeRegistrationButton.setOnAction(e -> controller.onRemoveRegistration());
+        profileId.getIconButton().setOnAction(e -> controller.onCopyToClipboard());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        copyButton.setOnAction(e -> controller.onCopy());
+        requestRegistrationButton.setOnAction(e -> controller.onRequestAuthorization());
     }
 
     @Override
     protected void onViewDetached() {
-        selectedProfile.textProperty().unbind();
-        privateKey.textProperty().unbindBidirectional(model.getPrivateKey());
-        publicKey.textProperty().unbindBidirectional(model.getPublicKey());
-        registrationButton.disableProperty().unbind();
-        registrationButton.managedProperty().unbind();
-        registrationButton.visibleProperty().unbind();
-        removeRegistrationButton.managedProperty().unbind();
-        removeRegistrationButton.visibleProperty().unbind();
+        bondHolderName.textProperty().unbindBidirectional(model.getBondUserName());
+        profileId.textProperty().unbind();
+        requestRegistrationButton.disableProperty().unbind();
 
-        registrationButton.setOnAction(null);
-        removeRegistrationButton.setOnAction(null);
+        profileId.getIconButton().setOnAction(null);
         learnMore.setOnAction(null);
-        copyButton.setOnAction(null);
+        requestRegistrationButton.setOnAction(null);
     }
 }

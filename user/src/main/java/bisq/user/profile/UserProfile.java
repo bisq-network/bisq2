@@ -51,8 +51,8 @@ public final class UserProfile implements DistributedData {
     // Metadata are not sent over the wire but hardcoded as we want to control it by ourselves.
     private final static MetaData META_DATA = new MetaData(TTL, 100000, UserProfile.class.getSimpleName());
 
-    public static UserProfile from(UserProfile userProfile, String terms, String bio) {
-        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getNetworkId(), terms, bio);
+    public static UserProfile from(UserProfile userProfile, String terms, String statement) {
+        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getNetworkId(), terms, statement);
     }
 
     private final String nickName;

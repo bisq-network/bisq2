@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node;
+package bisq.bonded_roles.node.bisq1_bridge.data;
 
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(100);
+    public final static long TTL = TimeUnit.DAYS.toMillis(30);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
@@ -47,20 +47,30 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
             AuthorizedOracleNode.class.getSimpleName());
 
     private final NetworkId networkId;
+    private final String userName;          // username from DAO proposal
+    private final String signature;   // signature created by bond with username as message
 
-    public AuthorizedOracleNode(NetworkId networkId) {
+    public AuthorizedOracleNode(NetworkId networkId,
+                                String userName,
+                                String signature) {
         this.networkId = networkId;
+        this.userName = userName;
+        this.signature = signature;
     }
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedOracleNode toProto() {
         return bisq.bonded_roles.protobuf.AuthorizedOracleNode.newBuilder()
                 .setNetworkId(networkId.toProto())
+                .setUserName(userName)
+                .setSignature(signature)
                 .build();
     }
 
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {
-        return new AuthorizedOracleNode(NetworkId.fromProto(proto.getNetworkId()));
+        return new AuthorizedOracleNode(NetworkId.fromProto(proto.getNetworkId()),
+                proto.getUserName(),
+                proto.getSignature());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

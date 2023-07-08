@@ -15,19 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge;
+package bisq.oracle_node.bisq1_bridge;
 
 import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
+import bisq.bonded_roles.node.bisq1_bridge.dto.BondedRoleVerificationDto;
 import bisq.bonded_roles.node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
+import bisq.common.encoding.Base64;
+import bisq.common.encoding.Hex;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -180,6 +185,33 @@ public class Bisq1BridgeHttpService implements Service {
             } catch (IOException e) {
                 e.printStackTrace();
                 return Optional.empty();
+            }
+        }, executorService);
+    }
+
+    public CompletableFuture<BondedRoleVerificationDto> requestBondedRoleVerification(String bondUserName,
+                                                                                      String roleType,
+                                                                                      String profileId,
+                                                                                      String signatureBase64) {
+        return CompletableFuture.supplyAsync(() -> {
+            // We cannot use URLEncoding as it would convert a + into a space (+ and / can appear in base64 encoding)
+            String signatureAsHex = Hex.encode(Base64.decode(signatureBase64));
+            //todo URLEncoding for userName
+            String path = "/api/v1/bonded-role-verification/get-bonded-role-verification/" +
+                    bondUserName + "/" +
+                    roleType + "/" +
+                    profileId + "/" +
+                    signatureAsHex;
+            log.info("Request Bisq DAO node: {}", path);
+            try {
+                String response = httpClient.get(path, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
+                TypeToken<BondedRoleVerificationDto> typeToken = new TypeToken<>() {
+                };
+                BondedRoleVerificationDto dto = new Gson().fromJson(response, typeToken.getType());
+                log.info("Bisq DAO node response: {}", dto);
+                return dto;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }, executorService);
     }

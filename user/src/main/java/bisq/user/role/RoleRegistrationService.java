@@ -17,45 +17,37 @@
 
 package bisq.user.role;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRoleData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeRoleRegistrationRequest;
 import bisq.common.application.Service;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
-import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class RoleRegistrationService implements PersistenceClient<RoleRegistrationServiceStore>, Service, DataService.Listener {
-    private final static String REGISTRATION_PREFIX = "Registration-";
-    @Getter
-    private final RoleRegistrationServiceStore persistableStore = new RoleRegistrationServiceStore();
-    @Getter
-    private final Persistence<RoleRegistrationServiceStore> persistence;
-    private final KeyPairService keyPairService;
+public class RoleRegistrationService implements Service, DataService.Listener {
     private final NetworkService networkService;
+    private final UserIdentityService userIdentityService;
     @Getter
-    private final ObservableSet<AuthorizedData> authorizedRoleDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedBondedRoleData> authorizedBondedRoleDataSet = new ObservableSet<>();
     @Getter
-    private final ObservableSet<AuthorizedData> authorizedNodeDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
 
-    public RoleRegistrationService(PersistenceService persistenceService,
-                                   KeyPairService keyPairService,
-                                   NetworkService networkService) {
-        this.keyPairService = keyPairService;
+    public RoleRegistrationService(NetworkService networkService,
+                                   UserIdentityService userIdentityService) {
         this.networkService = networkService;
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.userIdentityService = userIdentityService;
     }
 
 
@@ -81,7 +73,7 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // DataService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -91,9 +83,10 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedRoleDataSet.remove((AuthorizedData) authenticatedData);
-        }
+       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+            //todo
+            // authorizedDataSetOfRoleRegistrationData.remove((AuthorizedData) authenticatedData);
+        }*/
     }
 
 
@@ -101,77 +94,46 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> registerRole(UserIdentity userIdentity,
-                                                                           RoleType roleType,
-                                                                           KeyPair keyPair) {
-        String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
-        AuthorizedRoleRegistrationData data = new AuthorizedRoleRegistrationData(userIdentity.getUserProfile(),
-                roleType,
-                publicKeyAsHex);
-        if (data.getAuthorizedPublicKeys().contains(publicKeyAsHex)) {
-            return networkService.publishAuthorizedData(data,
-                            userIdentity.getIdentity().getNodeIdAndKeyPair(),
-                            keyPair.getPrivate(),
-                            keyPair.getPublic())
-                    .whenComplete((result, throwable) -> {
-                        if (throwable == null) {
-                            getMyRoleRegistrations().add(data);
-                            persist();
-                        }
-                    });
-        } else {
-            return CompletableFuture.failedFuture(new RuntimeException("The public key is not in the list of the authorized keys yet. " +
-                    "Please follow the process as described at the registration popup."));
+    public boolean requestAuthorization(String profileId, RoleType roleType, String bondUserName, String signatureBase64) {
+        try {
+            if (authorizedOracleNodes.isEmpty()) {
+                log.warn("authorizedOracleNodes is empty");
+                return false;
+            }
+            return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
+                        checkArgument(userIdentity.getUserProfile().getId().equals(profileId));
+                        AuthorizeRoleRegistrationRequest request = new AuthorizeRoleRegistrationRequest(profileId,
+                                roleType.name(),
+                                bondUserName,
+                                signatureBase64);
+                        authorizedOracleNodes.forEach(oracleNode ->
+                                networkService.confidentialSend(request, oracleNode.getNetworkId(), userIdentity.getNodeIdAndKeyPair()));
+                        //todo return result
+                        return true;
+                    })
+                    .orElse(false);
+        } catch (Exception e) {
+            log.error("Error at requestAuthorization", e);
+            return false;
         }
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeRoleRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
-        return findAuthorizedRoleRegistrationData(userIdentity.getUserProfile().getId(), roleType, publicKeyAsHex)
-                .map(authorizedData -> networkService.removeAuthorizedData(authorizedData,
-                                userIdentity.getIdentity().getNodeIdAndKeyPair())
-                        .whenComplete((result, throwable) -> {
-                            if (throwable == null) {
-                                getMyRoleRegistrations().remove((AuthorizedRoleRegistrationData) authorizedData.getDistributedData());
-                                persist();
-                            }
-                        }))
-                .orElse(CompletableFuture.completedFuture(null));
+    public Set<AuthorizedBondedRoleData> getMyAuthorizedBondedRoleDataSet() {
+        return authorizedBondedRoleDataSet.stream()
+                .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
+                .collect(Collectors.toSet());
     }
 
-    public ObservableSet<AuthorizedRoleRegistrationData> getMyRoleRegistrations() {
-        return persistableStore.getMyRoleRegistrations();
-    }
-
-    public boolean isRoleRegistered(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return findAuthorizedRoleRegistrationData(userProfileId, roleType, publicKeyAsHex).isPresent();
-    }
-
-    public KeyPair findOrCreateRoleRegistrationKey(RoleType roleType, String userProfileId) {
-        String keyId = REGISTRATION_PREFIX + roleType.name() + "-" + userProfileId;
-        return keyPairService.findKeyPair(keyId)
-                .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    private Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {
-        return authorizedRoleDataSet.stream()
-                .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedRoleRegistrationData)
-                .filter(authorizedData -> {
-                    AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authorizedData.getDistributedData();
-                    return userProfileId.equals(data.getUserProfile().getId()) &&
-                            roleType.equals(data.getRoleType()) &&
-                            publicKeyAsHex.equals(data.getPublicKeyAsHex());
-                }).findAny();
-    }
-
-
     private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            authorizedRoleDataSet.add((AuthorizedData) authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
+            authorizedOracleNodes.add((AuthorizedOracleNode) authenticatedData.getDistributedData());
+        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRoleData) {
+            authorizedBondedRoleDataSet.add((AuthorizedBondedRoleData) authenticatedData.getDistributedData());
         }
     }
 }

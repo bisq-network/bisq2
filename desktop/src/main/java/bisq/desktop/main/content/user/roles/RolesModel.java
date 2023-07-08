@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.user.roles;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -33,5 +31,4 @@ public class RolesModel implements Model {
     private final ObservableList<RolesView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<RolesView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<RolesView.ListItem> sortedList = new SortedList<>(filteredList);
-    private final StringProperty userProfileIdOfScoreUpdate = new SimpleStringProperty();
 }

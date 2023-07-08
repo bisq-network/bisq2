@@ -17,14 +17,12 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.bonded_roles.node.bisq1_bridge.Bisq1BridgeHttpService;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedAccountAgeData;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedReputationData;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedProofOfBurnData;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedSignedWitnessData;
+import bisq.bonded_roles.node.bisq1_bridge.data.*;
 import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.bonded_roles.node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeNodeRegistrationRequest;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeRoleRegistrationRequest;
 import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeSignedWitnessRequest;
 import bisq.common.application.Service;
 import bisq.common.timer.Scheduler;
@@ -40,8 +38,10 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -75,12 +75,15 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     private final Bisq1BridgeHttpService httpService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
+    @Setter
+    private AuthorizedOracleNode authorizedOracleNode;
+    @Nullable
     private Scheduler scheduler;
 
     public Bisq1BridgeService(Bisq1BridgeService.Config config,
                               NetworkService networkService,
-                              IdentityService identityService,
                               PersistenceService persistenceService,
+                              IdentityService identityService,
                               PrivateKey authorizedPrivateKey,
                               PublicKey authorizedPublicKey) {
         this.networkService = networkService;
@@ -110,7 +113,9 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        scheduler.stop();
+        if (scheduler != null) {
+            scheduler.stop();
+        }
         networkService.removeMessageListener(this);
         return httpService.shutdown();
     }
@@ -125,6 +130,10 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
             processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) networkMessage);
         } else if (networkMessage instanceof AuthorizeSignedWitnessRequest) {
             processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) networkMessage);
+        } else if (networkMessage instanceof AuthorizeRoleRegistrationRequest) {
+            processAuthorizeRoleRegistrationRequest((AuthorizeRoleRegistrationRequest) networkMessage);
+        } else if (networkMessage instanceof AuthorizeNodeRegistrationRequest) {
+            processAuthorizeNodeRegistrationRequest((AuthorizeNodeRegistrationRequest) networkMessage);
         }
     }
 
@@ -265,5 +274,75 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         } catch (GeneralSecurityException e) {
             log.warn("Error at processAuthorizeSignedWitnessRequest", e);
         }
+    }
+
+    private void processAuthorizeRoleRegistrationRequest(AuthorizeRoleRegistrationRequest request) {
+        String roleType = request.getRoleType();
+        String bisq1RoleType = toBisq1RoleType(roleType);
+        String bondUserName = request.getBondUserName();
+        String profileId = request.getProfileId();
+        String signatureBase64 = request.getSignatureBase64();
+        httpService.requestBondedRoleVerification(bondUserName, bisq1RoleType, profileId, signatureBase64)
+                .whenComplete((bondedRoleVerificationDto, throwable) -> {
+                    if (throwable == null) {
+                        if (bondedRoleVerificationDto.getErrorMessage() == null) {
+                            AuthorizedBondedRoleData data = new AuthorizedBondedRoleData(profileId, roleType, bondUserName, signatureBase64, authorizedOracleNode);
+                            publishAuthorizedData(data);
+                        } else {
+                            log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());
+                        }
+                    } else {
+                        log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
+                    }
+                });
+    }
+
+    private void processAuthorizeNodeRegistrationRequest(AuthorizeNodeRegistrationRequest request) {
+        String roleType = request.getRoleType();
+        String bisq1RoleType = toBisq1RoleType(roleType);
+        String bondUserName = request.getBondUserName();
+        String profileId = request.getProfileId();
+        String signatureBase64 = request.getSignatureBase64();
+        httpService.requestBondedRoleVerification(bondUserName, bisq1RoleType, profileId, signatureBase64)
+                .whenComplete((bondedRoleVerificationDto, throwable) -> {
+                    if (throwable == null) {
+                        if (bondedRoleVerificationDto.getErrorMessage() == null) {
+                            AuthorizedBondedNodeData data = new AuthorizedBondedNodeData(profileId,
+                                    roleType,
+                                    bondUserName,
+                                    signatureBase64,
+                                    request.getAddressByNetworkType(),
+                                    authorizedOracleNode);
+                            publishAuthorizedData(data);
+                        } else {
+                            log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());
+                        }
+                    } else {
+                        log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
+                    }
+                });
+    }
+
+    private String toBisq1RoleType(String roleType) {
+        if (roleType.equals("MEDIATOR")) {
+            return "MEDIATOR"; // 5k
+        } else if (roleType.equals("ARBITRATOR")) {
+            return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k! 
+        } else if (roleType.equals("MODERATOR")) {
+            return "YOUTUBE_ADMIN"; // 5k; repurpose unused role
+        } else if (roleType.equals("SECURITY_MANAGER")) {
+            return "BITCOINJ_MAINTAINER"; // 10k repurpose unused role
+        } else if (roleType.equals("RELEASE_MANAGER")) {
+            return "FORUM_ADMIN"; // 10k; repurpose unused role 
+        } else if (roleType.equals("ORACLE_NODE")) {
+            return "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
+        } else if (roleType.equals("SEED_NODE")) {
+            return "SEED_NODE_OPERATOR"; // 10k
+        } else if (roleType.equals("EXPLORER_NODE")) {
+            return "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
+        } else if (roleType.equals("MARKET_PRICE_NODE")) {
+            return "DATA_RELAY_NODE_OPERATOR"; // 10k; price node
+        }
+        return roleType;
     }
 }

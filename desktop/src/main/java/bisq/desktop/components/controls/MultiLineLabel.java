@@ -115,7 +115,7 @@ public class MultiLineLabel extends Label {
         if (height > 0 && getText() != null && !getText().isEmpty()) {
             if (initialHeight == height && numRecursions < 500) {
                 numRecursions++;
-                adjustMinHeight();
+                UIThread.runOnNextRenderFrame(this::adjustMinHeight);
             } else {
                 minHeight = height;
                 parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);

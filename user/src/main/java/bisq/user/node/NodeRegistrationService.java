@@ -17,48 +17,38 @@
 
 package bisq.user.node;
 
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedNodeData;
+import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
+import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeNodeRegistrationRequest;
 import bisq.common.application.Service;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
-import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-@Slf4j
-public class NodeRegistrationService implements PersistenceClient<NodeRegistrationServiceStore>, Service, DataService.Listener {
-    private final static String REGISTRATION_PREFIX = "Registration-";
-    @Getter
-    private final NodeRegistrationServiceStore persistableStore = new NodeRegistrationServiceStore();
-    @Getter
-    private final Persistence<NodeRegistrationServiceStore> persistence;
-    private final KeyPairService keyPairService;
-    private final NetworkService networkService;
-    @Getter
-    private final ObservableSet<AuthorizedData> authorizedRoleDataSet = new ObservableSet<>();
-    @Getter
-    private final ObservableSet<AuthorizedData> authorizedNodeDataSet = new ObservableSet<>();
+import static com.google.common.base.Preconditions.checkArgument;
 
-    public NodeRegistrationService(PersistenceService persistenceService,
-                                   KeyPairService keyPairService,
-                                   NetworkService networkService) {
-        this.keyPairService = keyPairService;
+@Slf4j
+public class NodeRegistrationService implements Service, DataService.Listener {
+    private final NetworkService networkService;
+    private final UserIdentityService userIdentityService;
+    @Getter
+    private final ObservableSet<AuthorizedBondedNodeData> authorizedBondedNodeDataSet = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
+
+    public NodeRegistrationService(NetworkService networkService,
+                                   UserIdentityService userIdentityService) {
         this.networkService = networkService;
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.userIdentityService = userIdentityService;
     }
 
 
@@ -84,7 +74,7 @@ public class NodeRegistrationService implements PersistenceClient<NodeRegistrati
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // DataService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -94,9 +84,10 @@ public class NodeRegistrationService implements PersistenceClient<NodeRegistrati
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
-            authorizedNodeDataSet.remove((AuthorizedData) authenticatedData);
-        }
+       /* if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
+            //todo
+            //  authorizedNodeDataSet.remove((AuthorizedData) authenticatedData);
+        }*/
     }
 
 
@@ -104,78 +95,45 @@ public class NodeRegistrationService implements PersistenceClient<NodeRegistrati
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> registerNode(UserIdentity userIdentity,
-                                                                           NodeType nodeType,
-                                                                           KeyPair keyPair,
-                                                                           Map<Transport.Type, Address> addressByNetworkType) {
-        String publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
-        AuthorizedNodeRegistrationData data = new AuthorizedNodeRegistrationData(userIdentity.getUserProfile(),
-                nodeType,
-                publicKeyAsHex,
-                addressByNetworkType);
-        if (data.getAuthorizedPublicKeys().contains(publicKeyAsHex)) {
-            return networkService.publishAuthorizedData(data,
-                            userIdentity.getIdentity().getNodeIdAndKeyPair(),
-                            keyPair.getPrivate(),
-                            keyPair.getPublic())
-                    .whenComplete((result, throwable) -> {
-                        if (throwable == null) {
-                            getMyNodeRegistrations().add(data);
-                            persist();
-                        }
-                    });
-        } else {
-            return CompletableFuture.failedFuture(new RuntimeException("The public key is not in the list of the authorized keys yet. " +
-                    "Please follow the process as described at the registration popup."));
+    public boolean requestAuthorization(String profileId,
+                                        NodeType nodeType,
+                                        String bondUserName,
+                                        String signatureBase64,
+                                        Map<Transport.Type, Address> addressByNetworkType) {
+        try {
+            if (authorizedOracleNodes.isEmpty()) {
+                log.warn("authorizedOracleNodes is empty");
+                return false;
+            }
+            return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
+                        checkArgument(userIdentity.getUserProfile().getId().equals(profileId));
+                        AuthorizeNodeRegistrationRequest request = new AuthorizeNodeRegistrationRequest(profileId,
+                                nodeType.name(),
+                                bondUserName,
+                                signatureBase64,
+                                addressByNetworkType);
+                        authorizedOracleNodes.forEach(oracleNode ->
+                                networkService.confidentialSend(request, oracleNode.getNetworkId(), userIdentity.getNodeIdAndKeyPair()));
+                        //todo return result
+                        return true;
+                    })
+                    .orElse(false);
+        } catch (Exception e) {
+            log.error("Error at requestAuthorization", e);
+            return false;
         }
     }
 
-
-    public CompletableFuture<DataService.BroadCastDataResult> removeNodeRegistration(UserIdentity userIdentity, NodeType nodeType, String publicKeyAsHex) {
-        return findAuthorizedNodeRegistrationData(userIdentity.getUserProfile().getId(), nodeType, publicKeyAsHex)
-                .map(authorizedData -> networkService.removeAuthorizedData(authorizedData,
-                                userIdentity.getIdentity().getNodeIdAndKeyPair())
-                        .whenComplete((result, throwable) -> {
-                            if (throwable == null) {
-                                getMyNodeRegistrations().remove((AuthorizedNodeRegistrationData) authorizedData.getDistributedData());
-                                persist();
-                            }
-                        }))
-                .orElse(CompletableFuture.completedFuture(null));
-    }
-
-    public boolean isNodeRegistered(String userProfileId, NodeType nodeType, String publicKeyAsHex) {
-        return findAuthorizedNodeRegistrationData(userProfileId, nodeType, publicKeyAsHex).isPresent();
-    }
-
-    public KeyPair findOrCreateNodeRegistrationKey(NodeType nodeType, String userProfileId) {
-        String keyId = REGISTRATION_PREFIX + nodeType.name() + "-" + userProfileId;
-        return keyPairService.findKeyPair(keyId)
-                .orElseGet(() -> keyPairService.getOrCreateKeyPair(keyId));
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private ObservableSet<AuthorizedNodeRegistrationData> getMyNodeRegistrations() {
-        return persistableStore.getMyNodeRegistrations();
-    }
-
-    private Optional<AuthorizedData> findAuthorizedNodeRegistrationData(String userProfileId, NodeType nodeType, String publicKeyAsHex) {
-        return authorizedNodeDataSet.stream()
-                .filter(authorizedData -> authorizedData.getDistributedData() instanceof AuthorizedNodeRegistrationData)
-                .filter(authenticatedData -> {
-                    AuthorizedNodeRegistrationData data = (AuthorizedNodeRegistrationData) authenticatedData.getDistributedData();
-                    return userProfileId.equals(data.getUserProfile().getId()) &&
-                            nodeType.equals(data.getNodeType()) &&
-                            publicKeyAsHex.equals(data.getPublicKeyAsHex());
-                }).findAny();
-    }
-
     private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedNodeRegistrationData) {
-            authorizedNodeDataSet.add((AuthorizedData) authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
+            authorizedOracleNodes.add((AuthorizedOracleNode) authenticatedData.getDistributedData());
+        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedNodeData) {
+            authorizedBondedNodeDataSet.add((AuthorizedBondedNodeData) authenticatedData.getDistributedData());
         }
     }
 }
