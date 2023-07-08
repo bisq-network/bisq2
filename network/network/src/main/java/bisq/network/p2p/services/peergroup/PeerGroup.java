@@ -77,10 +77,6 @@ public class PeerGroup {
         this.persistedPeersHandler = persistedPeersHandler;
     }
 
-    public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
-        this.seedNodeAddresses.addAll(seedNodeAddresses);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Reported peers
@@ -170,6 +166,10 @@ public class PeerGroup {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Address
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        this.seedNodeAddresses.addAll(seedNodeAddresses);
+    }
 
     public Stream<Address> getAllConnectedPeerAddresses() {
         return getAllConnectedPeers().map(Peer::getAddress);

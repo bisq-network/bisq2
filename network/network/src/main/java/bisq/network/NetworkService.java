@@ -443,6 +443,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Add seed nodes
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addSeedNodeAddressesByTransport(Map<Transport.Type, Set<Address>> seedNodeAddressesByTransport) {
+        this.serviceNodesByTransport.addSeedNodeAddressesByTransport(seedNodeAddressesByTransport);
+    }
+
     // If not persisted we try to create the networkId and persist if available.
     private Optional<NetworkId> maybePersistNewNetworkId(String nodeId, PubKey pubKey) {
         return findNetworkId(nodeId)

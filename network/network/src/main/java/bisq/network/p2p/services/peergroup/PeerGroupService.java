@@ -168,6 +168,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
                 .build();
     }
 
+
     public void initialize() {
         Failsafe.with(retryPolicy).run(this::doInitialize);
     }
@@ -200,6 +201,17 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
     }
 
+    public CompletableFuture<Boolean> shutdown() {
+        setState(State.STOPPING);
+        peerExchangeService.shutdown();
+        addressValidationService.shutdown();
+        keepAliveService.shutdown();
+        scheduler.ifPresent(Scheduler::stop);
+        setState(State.TERMINATED);
+        return CompletableFuture.completedFuture(true);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // PersistedPeersHandler
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +220,20 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         persistableStore.getPersistedPeers().addAll(peers);
         persist();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Add seed nodes
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        peerGroup.addSeedNodeAddresses(seedNodeAddresses);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Tasks
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void runBlockingTasks() {
         log.debug("Node {} called runBlockingTasks", node);
@@ -233,20 +259,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public CompletableFuture<Boolean> shutdown() {
-        setState(State.STOPPING);
-        peerExchangeService.shutdown();
-        addressValidationService.shutdown();
-        keepAliveService.shutdown();
-        scheduler.ifPresent(Scheduler::stop);
-        setState(State.TERMINATED);
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Tasks
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void closeBanned() {
         log.debug("Node {} called closeBanned", node);

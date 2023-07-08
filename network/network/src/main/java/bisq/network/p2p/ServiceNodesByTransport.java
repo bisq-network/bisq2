@@ -42,7 +42,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -57,6 +60,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ServiceNodesByTransport {
     @Getter
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
+    private final Set<Transport.Type> supportedTransportTypes;
 
     public ServiceNodesByTransport(Map<Transport.Type, Transport.Config> configByTransportType,
                                    Set<Transport.Type> supportedTransportTypes,
@@ -67,6 +71,7 @@ public class ServiceNodesByTransport {
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService) {
+        this.supportedTransportTypes = supportedTransportTypes;
         supportedTransportTypes.forEach(transportType -> {
             Transport.Config transportConfig = configByTransportType.get(transportType);
 
@@ -89,6 +94,7 @@ public class ServiceNodesByTransport {
             map.put(transportType, serviceNode);
         });
     }
+
 
     public CompletableFuture<Boolean> shutdown() {
         Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
@@ -114,6 +120,13 @@ public class ServiceNodesByTransport {
 
     public void initializePeerGroup(Transport.Type type) {
         map.get(type).initializePeerGroup();
+    }
+
+    public void addSeedNodeAddressesByTransport(Map<Transport.Type, Set<Address>> seedNodeAddressesByTransport) {
+        supportedTransportTypes.forEach(transportType -> {
+            Set<Address> seedNodeAddresses = seedNodeAddressesByTransport.get(transportType);
+            map.get(transportType).addSeedNodeAddresses(seedNodeAddresses);
+        });
     }
 
     public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,
