@@ -38,6 +38,7 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -91,9 +92,7 @@ public class StorageService {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             String directory = subPath + File.separator + authStoreName;
             if (new File(directory).exists()) {
-                FileUtils.listFilesInDirectory(directory, 1)
-                        .stream()
-                        .filter(fileName -> !fileName.startsWith(".")) // on OSX a .DS_Store might be in the directory
+                getProtobufFilesInDirectory(directory)
                         .forEach(fileName -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, fileName);
                             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
@@ -113,7 +112,7 @@ public class StorageService {
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
             directory = subPath + File.separator + mailboxStoreName;
             if (new File(directory).exists()) {
-                FileUtils.listFilesInDirectory(directory, 1)
+                getProtobufFilesInDirectory(directory)
                         .forEach(fileName -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, fileName);
                             dataStore.addListener(new MailboxDataStorageService.Listener() {
@@ -134,7 +133,7 @@ public class StorageService {
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
             directory = subPath + File.separator + appendStoreName;
             if (new File(directory).exists()) {
-                FileUtils.listFilesInDirectory(directory, 1)
+                getProtobufFilesInDirectory(directory)
                         .forEach(fileName -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, fileName);
                             dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> listener.onAdded(appendOnlyData)));
@@ -462,5 +461,14 @@ public class StorageService {
     private Stream<DataStorageService<? extends DataRequest>> getStoreByStoreName(String storeName) {
         return getAllStores()
                 .filter(store -> storeName.equals(store.getFileName()));
+    }
+
+    // We do not use the extensions in the persistence framework, so we have to remove it from the file name.
+    private Set<String> getProtobufFilesInDirectory(String directory) throws IOException {
+        return FileUtils.listFilesInDirectory(directory, 1)
+                .stream()
+                .filter(fileName -> fileName.endsWith(Persistence.EXTENSION))
+                .map(fileName -> fileName.replace(Persistence.EXTENSION, ""))
+                .collect(Collectors.toSet());
     }
 }

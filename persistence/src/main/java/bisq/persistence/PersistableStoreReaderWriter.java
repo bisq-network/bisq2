@@ -71,7 +71,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         } catch (CouldNotSerializePersistableStore e) {
             log.error("Couldn't serialize " + persistableStore, e);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Couldn't write persistable store to disk. Trying restore backup.", e);
             storeFileManager.restoreBackupFileIfCurrentFileNotExisting();
         }
@@ -98,9 +98,8 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         }
     }
 
-    private void writeStoreToTempFile(T persistableStore) throws IOException {
-        String tempFileName = "temp_" + storeFilePath.getFileName();
-        File tempFile = parentDirectoryPath.resolve(tempFileName).toFile();
+    private void writeStoreToTempFile(T persistableStore) {
+        File tempFile = storeFileManager.getTempFilePath().toFile();
         writeStoreToFile(persistableStore, tempFile);
     }
 
