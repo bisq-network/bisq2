@@ -90,7 +90,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             FileUtils.backupCorruptedFile(
                     parentDirectoryPath.toAbsolutePath().toString(),
                     storeFilePath.toFile(),
-                    storeFilePath.getFileName().toAbsolutePath().toString(),
+                    storeFilePath.getFileName().toString(),
                     "corruptedFilesAtRead"
             );
         } catch (IOException e) {
