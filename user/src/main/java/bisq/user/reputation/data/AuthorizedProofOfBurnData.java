@@ -17,13 +17,13 @@
 
 package bisq.user.reputation.data;
 
-import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -31,17 +31,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
+public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
-    // The pubKeys which are authorized for publishing that data.
-    // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> authorizedPublicKeys = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -91,15 +87,6 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
-        } else {
-            return authorizedPublicKeys;
-        }
     }
 
     @Override

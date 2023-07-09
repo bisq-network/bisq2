@@ -17,7 +17,12 @@
 
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
+import java.util.Set;
 
-public interface AuthorizedDistributedData extends DistributedData {
+/**
+ * Marker interface for AuthorizedDistributedData which provide statically the authorized pub keys,
+ */
+public interface StaticallyAuthorizedPublicKeyValidation {
+    // The statically provided authorized pub keys. 
+    Set<String> getAuthorizedPublicKeys();
 }

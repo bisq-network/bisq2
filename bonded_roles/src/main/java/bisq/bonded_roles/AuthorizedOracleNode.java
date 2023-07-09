@@ -24,6 +24,8 @@ import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
+import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,11 +38,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedOracleNode implements AuthorizedDistributedData {
+public final class AuthorizedOracleNode implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation, StaticallyAuthorizedPublicKeyValidation {
     public final static long TTL = TimeUnit.DAYS.toMillis(30);
-    // The pubKeys which are authorized for publishing that data.
+
     // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> authorizedPublicKeys = Set.of();
+    private static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -98,7 +100,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return authorizedPublicKeys;
+            return AUTHORIZED_PUBLIC_KEYS;
         }
     }
 

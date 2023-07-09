@@ -26,6 +26,8 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
+import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,11 +43,11 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedRole implements AuthorizedDistributedData {
+public final class AuthorizedBondedRole implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation, StaticallyAuthorizedPublicKeyValidation {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
-    // The pubKeys which are authorized for publishing that data.
+    
     // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> authorizedPublicKeys = Set.of();
+    private static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -117,12 +119,11 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         return false;
     }
 
-    @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return authorizedPublicKeys;
+            return AUTHORIZED_PUBLIC_KEYS;
         }
     }
 }

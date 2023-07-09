@@ -96,9 +96,28 @@ public final class AuthorizedData extends AuthenticatedData {
     public boolean isDataInvalid(byte[] ownerPubKeyHash) {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            return authorizedDistributedData.isDataInvalid(ownerPubKeyHash) ||
-                    !authorizedDistributedData.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
-                    !SignatureUtil.verify(distributedData.serialize(), signature, authorizedPublicKey);
+            if (authorizedDistributedData.isDataInvalid(ownerPubKeyHash)) {
+                return true;
+            }
+            if (!SignatureUtil.verify(distributedData.serialize(), signature, authorizedPublicKey)) {
+                return true;
+            }
+
+            boolean isStaticallyAuthorizedPublicKeyValidation = authorizedDistributedData instanceof StaticallyAuthorizedPublicKeyValidation;
+            boolean isDeferredAuthorizedPublicKeyValidation = authorizedDistributedData instanceof DeferredAuthorizedPublicKeyValidation;
+            // The authorizedDistributedData must implement at least one of those interfaces
+            if (!isStaticallyAuthorizedPublicKeyValidation && !isDeferredAuthorizedPublicKeyValidation) {
+                log.warn("The authorizedDistributedData must implement StaticallyAuthorizedPublicKeyValidation or DeferredAuthorizedPublicKeyValidation (or both)");
+                return true;
+            }
+
+            // We could have authorizedDistributedData implementing both interfaces.
+            // We only verify if it's StaticallyAuthorizedPublicKeyValidation but not DeferredAuthorizedPublicKeyValidation
+            if (isStaticallyAuthorizedPublicKeyValidation && !isDeferredAuthorizedPublicKeyValidation) {
+                StaticallyAuthorizedPublicKeyValidation data = (StaticallyAuthorizedPublicKeyValidation) authorizedDistributedData;
+                return !data.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
+            }
+            return false;
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return true;

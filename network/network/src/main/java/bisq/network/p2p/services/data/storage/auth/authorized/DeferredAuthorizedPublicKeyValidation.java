@@ -17,7 +17,9 @@
 
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
-
-public interface AuthorizedDistributedData extends DistributedData {
+/**
+ * Marker interface for AuthorizedDistributedData which skip the validation with statically provided authorized pub keys,
+ * as they will get validated at a higher layer (e.g. using bonded roles data).
+ */
+public interface DeferredAuthorizedPublicKeyValidation {
 }
