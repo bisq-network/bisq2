@@ -29,7 +29,6 @@ import java.nio.file.Path;
 @Slf4j
 public class PersistableStoreFileManager {
 
-    public static final String BACKUP_FILE_PREFIX = "backup_";
     public static final String BACKUP_DIR = "backup";
     public static final String TEMP_FILE_PREFIX = "temp_";
 
@@ -105,10 +104,9 @@ public class PersistableStoreFileManager {
     }
 
     private Path createBackupFilePath() {
-        String backupFileName = BACKUP_FILE_PREFIX + storeFilePath.getFileName();
         Path dirPath = Path.of(parentDirectoryPath.toString(), BACKUP_DIR);
         dirPath.toFile().mkdirs();
-        return dirPath.resolve(backupFileName);
+        return dirPath.resolve(storeFilePath.getFileName());
     }
 
     private Path createTempFilePath() {
