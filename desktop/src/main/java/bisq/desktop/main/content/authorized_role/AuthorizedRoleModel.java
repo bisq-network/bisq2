@@ -38,7 +38,7 @@ public class AuthorizedRoleModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return authorizedBondedRoles.isEmpty() ?
-                NavigationTarget.NONE :
+                NavigationTarget.MEDIATOR :
                 NavigationTarget.valueOf(authorizedBondedRoles.get(0).name());
     }
 }

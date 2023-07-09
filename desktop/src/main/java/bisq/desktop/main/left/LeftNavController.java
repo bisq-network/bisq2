@@ -27,6 +27,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.presentation.notifications.NotificationsService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class LeftNavController implements Controller {
     private final NotificationsService notificationsService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
-    private Pin bondedRoleSetPin;
+    private Pin bondedRoleSetPin, selectedUserIdentityPin;
     private Subscription tradeAppsSubMenuExpandedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
@@ -64,15 +65,14 @@ public class LeftNavController implements Controller {
                 tradeAppsSubMenuExpanded ->
                         notificationsService.getNotConsumedNotificationIds().forEach(this::updateNumNotifications));
 
-        bondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(() -> {
-            model.getAuthorizedRoleVisible().set(authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                    .anyMatch(bondedRole -> userIdentityService.findUserIdentity(bondedRole.getProfileId()).isPresent()));
-        });
+        bondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(this::updateAuthorizedRoleVisible);
+        selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> updateAuthorizedRoleVisible());
     }
 
     @Override
     public void onDeactivate() {
         bondedRoleSetPin.unbind();
+        selectedUserIdentityPin.unbind();
         tradeAppsSubMenuExpandedPin.unsubscribe();
         notificationsService.removeListener(this::updateNumNotifications);
     }
@@ -147,6 +147,15 @@ public class LeftNavController implements Controller {
         return model.getLeftNavButtons().stream()
                 .filter(leftNavButton -> navigationTarget == leftNavButton.getNavigationTarget())
                 .findAny();
+    }
+
+    private void updateAuthorizedRoleVisible() {
+        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+        log.error("selectedUserIdentity " + selectedUserIdentity);
+        boolean authorizedRoleVisible = selectedUserIdentity != null &&
+                authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                        .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
+        model.getAuthorizedRoleVisible().set(authorizedRoleVisible);
     }
 
     private void updateNumNotifications(String notificationId) {

@@ -30,6 +30,7 @@ import bisq.network.NetworkService;
 import bisq.security.KeyGeneration;
 import bisq.support.alert.AuthorizedAlertData;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -100,10 +101,13 @@ public class SecurityManagerService implements Service {
     }
 
     private Optional<NetworkIdWithKeyPair> findMyNodeIdAndKeyPair() {
+        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         return authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                .filter(r -> r.getBondedRoleType() == BondedRoleType.SECURITY_MANAGER)
-                .flatMap(r -> userIdentityService.findUserIdentity(r.getProfileId()).stream())
-                .map(userIdentity -> userIdentity.getNodeIdAndKeyPair()).findAny();
+                .filter(bondedRole -> bondedRole.getBondedRoleType() == BondedRoleType.SECURITY_MANAGER)
+                .filter(bondedRole -> selectedUserIdentity != null)
+                .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+                .map(bondedRole -> selectedUserIdentity.getNodeIdAndKeyPair())
+                .findAny();
     }
 
 

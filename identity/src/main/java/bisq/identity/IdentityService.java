@@ -21,7 +21,6 @@ package bisq.identity;
 import bisq.common.application.Service;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -108,13 +107,11 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      *
      * @return A future with the identity
      */
-    public CompletableFuture<Identity> createAndInitializeDefaultIdentity() {
-        String keyId = KeyPairService.DEFAULT;
+    public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String nodeId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        String nodeId = Node.DEFAULT;
         return networkService.getInitializedNetworkId(nodeId, pubKey)
-                .thenApply(networkId -> new Identity(DEFAULT, networkId, keyPair));
+                .thenApply(networkId -> new Identity(identityTag, networkId, keyPair));
     }
 
     /**

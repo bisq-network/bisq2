@@ -18,15 +18,18 @@
 package bisq.desktop.main.content.authorized_role;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class AuthorizedRoleView extends TabView<AuthorizedRoleModel, AuthorizedRoleController> {
 
     private final Map<BondedRoleType, TabButton> tabButtonByBondedRoleType = new HashMap<>();
@@ -62,6 +65,19 @@ public class AuthorizedRoleView extends TabView<AuthorizedRoleModel, AuthorizedR
             boolean isVisible = model.getAuthorizedBondedRoles().contains(bondedRoleType);
             tabButton.setVisible(isVisible);
             tabButton.setManaged(isVisible);
+
+            if (isVisible) {
+                model.getSelectedTabButton().set(tabButton);
+            }
         });
+
+        for (BondedRoleType bondedRoleType : model.getBondedRoleTypes()) {
+            TabButton tabButton = tabButtonByBondedRoleType.get(bondedRoleType);
+            if (tabButton.isVisible()) {
+                model.getSelectedTabButton().set(tabButton);
+                break;
+            }
+        }
+        Navigation.navigateTo(model.getSelectedTabButton().get().getNavigationTarget());
     }
 }

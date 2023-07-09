@@ -28,6 +28,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
@@ -81,6 +82,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     private final Bisq1BridgeHttpService httpService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
+    private final String keyId;
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
     @Nullable
@@ -91,11 +93,13 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                               PersistenceService persistenceService,
                               IdentityService identityService,
                               PrivateKey authorizedPrivateKey,
-                              PublicKey authorizedPublicKey) {
+                              PublicKey authorizedPublicKey,
+                              String keyId) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
+        this.keyId = keyId;
 
         Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
@@ -181,7 +185,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
 
     public CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return identityService.createAndInitializeDefaultIdentity()
+        return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
                 .thenCompose(identity -> networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,

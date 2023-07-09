@@ -25,6 +25,7 @@ import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
+import bisq.network.p2p.node.Node;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
@@ -46,25 +47,26 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class OracleNodeService implements Service {
-
-
     @Getter
     public static class Config {
         private final String privateKey;
         private final String publicKey;
         private final String bondUserName;
         private final String signatureBase64;
+        private final String keyId;
         private final com.typesafe.config.Config bisq1Bridge;
 
         public Config(String privateKey,
                       String publicKey,
                       String bondUserName,
                       String signatureBase64,
+                      String keyId,
                       com.typesafe.config.Config bisq1Bridge) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
             this.bondUserName = bondUserName;
             this.signatureBase64 = signatureBase64;
+            this.keyId = keyId;
             this.bisq1Bridge = bisq1Bridge;
         }
 
@@ -73,6 +75,7 @@ public class OracleNodeService implements Service {
                     config.getString("publicKey"),
                     config.getString("bondUserName"),
                     config.getString("signatureBase64"),
+                    config.getString("keyId"),
                     config.getConfig("bisq1Bridge"));
         }
     }
@@ -90,6 +93,8 @@ public class OracleNodeService implements Service {
     private final TimestampService timestampService;
     private final String bondUserName;
     private final String signatureBase64;
+    private final String keyId;
+
     @Nullable
     private Scheduler startupScheduler, scheduler;
 
@@ -105,8 +110,10 @@ public class OracleNodeService implements Service {
 
         bondUserName = config.getBondUserName();
         signatureBase64 = config.getSignatureBase64();
+        keyId = config.getKeyId();
         checkArgument(StringUtils.isNotEmpty(bondUserName));
         checkArgument(StringUtils.isNotEmpty(signatureBase64));
+        checkArgument(StringUtils.isNotEmpty(keyId));
 
         String privateKey = config.getPrivateKey();
         String publicKey = config.getPublicKey();
@@ -122,7 +129,8 @@ public class OracleNodeService implements Service {
                 persistenceService,
                 identityService,
                 authorizedPrivateKey,
-                authorizedPublicKey);
+                authorizedPublicKey,
+                keyId);
 
         timestampService = new TimestampService(persistenceService,
                 identityService,
@@ -168,7 +176,7 @@ public class OracleNodeService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<AuthorizedOracleNode> createMyAuthorizedOracleNode() {
-        return identityService.createAndInitializeDefaultIdentity()
+        return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
                 .thenApply(identity -> {
                     AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64);
                     // Repeat 3 times at startup to republish to ensure the data gets well distributed
