@@ -5,8 +5,38 @@ option java_multiple_files = true;
 import "common.proto";
 import "network.proto";
 
+enum BondedRoleType {
+  MEDIATOR = 0;
+  ARBITRATOR = 1;
+  MODERATOR = 2;
+  SECURITY_MANAGER = 3;
+  RELEASE_MANAGER = 4;
+  SEED_NODE = 10;
+  ORACLE_NODE = 11;
+  EXPLORER_NODE = 12;
+  MARKET_PRICE_NODE = 13;
+}
 message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
+  string bondUserName = 2;
+  string signature = 3;
+}
+
+message BondedRoleRegistrationRequest {
+  string profileId = 1;
+  BondedRoleType bondedRoleType = 2;
+  string bondUserName = 3;
+  string signatureBase64 = 4;
+  map<string, network.Address> addressByNetworkType = 5;
+}
+
+message AuthorizedBondedRole {
+  string profileId = 1;
+  BondedRoleType bondedRoleType = 2;
+  string bondUserName = 3;
+  string signature = 4;
+  map<string, network.Address> addressByNetworkType = 5;
+  AuthorizedOracleNode oracleNode = 6;
 }
 
 message AuthorizedProofOfBurnData {
@@ -52,6 +82,7 @@ message AuthorizeSignedWitnessRequest {
 message AuthorizeTimestampRequest {
   string profileId = 1;
 }
+
 
 message AuthorizedTimestampData {
   string profileId = 1;

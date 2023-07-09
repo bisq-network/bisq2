@@ -54,7 +54,7 @@ public abstract class BaseState {
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-            marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+            marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
 
             model = createModel(bisqEasyTrade, channel);
             view = createView();

@@ -108,7 +108,6 @@ public class MaterialTextField extends Pane {
 
         helpLabel.setLayoutX(16);
         helpLabel.getStyleClass().add("material-text-field-help");
-        // helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\";");
         helpLabel.setMouseTransparent(true);
         if (StringUtils.isNotEmpty(help)) {
             helpLabel.setText(help);
@@ -219,6 +218,7 @@ public class MaterialTextField extends Pane {
     public final StringProperty promptTextProperty() {
         return textInputControl.promptTextProperty();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Help
@@ -447,7 +447,7 @@ public class MaterialTextField extends Pane {
     }
 
     protected double getFieldLayoutY() {
-        return 18;
+        return 19;
     }
 
     @Override

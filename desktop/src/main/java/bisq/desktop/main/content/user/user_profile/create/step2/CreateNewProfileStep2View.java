@@ -121,7 +121,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nickName.textProperty().bind(model.getNickName());
         nym.textProperty().bind(model.getNym());
         terms.textProperty().bindBidirectional(model.getTerms());
-        statement.textProperty().bindBidirectional(model.getBio());
+        statement.textProperty().bindBidirectional(model.getStatement());
         saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> controller.onCancel());
 
@@ -139,7 +139,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nickName.textProperty().unbind();
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());
-        statement.textProperty().unbindBidirectional(model.getBio());
+        statement.textProperty().unbindBidirectional(model.getStatement());
         if (rootScene != null) {
             rootScene.setOnKeyReleased(null);
         }

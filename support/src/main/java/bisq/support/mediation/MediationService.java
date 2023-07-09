@@ -17,6 +17,9 @@
 
 package bisq.support.mediation;
 
+import bisq.bonded_roles.registration.BondedRoleRegistrationService;
+import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -35,35 +38,28 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.role.AuthorizedRoleRegistrationData;
-import bisq.user.role.RoleRegistrationService;
-import bisq.user.role.RoleType;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class MediationService implements Service, DataService.Listener, MessageListener {
     private final NetworkService networkService;
-    private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();
+    /*  private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();*/
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    private final RoleRegistrationService roleRegistrationService;
+    private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
 
     public MediationService(NetworkService networkService,
                             ChatService chatService,
-                            UserService userService) {
+                            UserService userService, BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
-        roleRegistrationService = userService.getRoleRegistrationService();
+        bondedRoleRegistrationService = bondedRolesService.getBondedRoleRegistrationService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
     }
 
@@ -99,12 +95,12 @@ public class MediationService implements Service, DataService.Listener, MessageL
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
             AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
             if (data.getRoleType() == RoleType.MEDIATOR) {
                 mediators.remove(data);
             }
-        }
+        }*/
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,12 +134,13 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
-        return selectMediator(mediators, makersUserProfileId, takersUserProfileId);
+        return null; //todo
+        /// return selectMediator(mediators, makersUserProfileId, takersUserProfileId);
     }
 
     // This method can be used for verification when taker provides mediators list.
     // If mediator list was not matching the expected one present in the network it might have been a manipulation attempt.
-    public Optional<UserProfile> selectMediator(Set<AuthorizedRoleRegistrationData> mediators, String makersProfileId, String takersProfileId) {
+  /*  public Optional<UserProfile> selectMediator(Set<AuthorizedRoleRegistrationData> mediators, String makersProfileId, String takersProfileId) {
         if (mediators.isEmpty()) {
             return Optional.empty();
         } else if (mediators.size() == 1 && mediators.iterator().hasNext()) {
@@ -153,19 +150,19 @@ public class MediationService implements Service, DataService.Listener, MessageL
             int index = new BigInteger(concat.getBytes(StandardCharsets.UTF_8)).mod(BigInteger.valueOf(mediators.size())).intValue();
             return Optional.of(new ArrayList<>(mediators).get(index).getUserProfile());
         }
-    }
+    }*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
+       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
             AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
             if (data.getRoleType() == RoleType.MEDIATOR) {
                 mediators.add(data);
             }
-        }
+        }*/
     }
 
     private void processMediationRequest(MediationRequest mediationRequest) {
@@ -214,9 +211,10 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return roleRegistrationService.getMyRoleRegistrations().stream()
-                .filter(data -> data.getRoleType() == RoleType.MEDIATOR)
-                .flatMap(data -> userIdentityService.findUserIdentity(data.getUserProfile().getId()).stream())
+        return bondedRoleRegistrationService.getAuthorizedBondedRoleSet().stream()
+                .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
+                .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
+                .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream())
                 .findAny();
     }
 }

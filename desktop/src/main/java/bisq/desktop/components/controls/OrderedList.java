@@ -32,7 +32,7 @@ public class OrderedList extends TextList {
     }
 
     public OrderedList(String text, @Nullable String style, double gap, double vSpacing) {
-        super(text, style, gap, vSpacing, REGEX, MARK);
+        super(text, style, gap, vSpacing, REGEX, null);
     }
 
     @Override

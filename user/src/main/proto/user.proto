@@ -82,35 +82,3 @@ message ProfileAgeStore {
   repeated string profileIds = 1;
   sint64 lastRequested = 2;
 }
-
-enum RoleType {
-  MEDIATOR = 0;
-  ARBITRATOR = 1;
-  MODERATOR = 2;
-  SECURITY_MANAGER = 3;
-  RELEASE_MANAGER = 4;
-}
-message AuthorizedRoleRegistrationData {
-  UserProfile userProfile = 1;
-  RoleType roleType = 2;
-  string publicKeyAsHex = 3;
-}
-message RoleRegistrationServiceStore {
-  repeated AuthorizedRoleRegistrationData myRoleRegistrations = 1;
-}
-
-enum NodeType {
-  SEED_NODE = 0;
-  ORACLE_NODE = 1;
-  EXPLORER_NODE = 2;
-  MARKET_PRICE_NODE = 3;
-}
-message AuthorizedNodeRegistrationData {
-  UserProfile userProfile = 1;
-  NodeType nodeType = 2;
-  string publicKeyAsHex = 3;
-  map<string, network.Address> addressByNetworkType = 4;
-}
-message NodeRegistrationServiceStore {
-  repeated AuthorizedNodeRegistrationData myNodeRegistrations = 1;
-}

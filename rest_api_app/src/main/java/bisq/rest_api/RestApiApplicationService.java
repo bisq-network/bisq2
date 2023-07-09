@@ -19,7 +19,7 @@ package bisq.rest_api;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
-import bisq.bonded_roles.service.OracleService;
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -74,7 +74,7 @@ public class RestApiApplicationService extends ApplicationService {
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final OracleService oracleService;
+    private final BondedRolesService bondedRolesService;
     private final AccountService accountService;
     private final OfferService offerService;
     private final ContractService contractService;
@@ -115,7 +115,7 @@ public class RestApiApplicationService extends ApplicationService {
                 securityService,
                 networkService);
 
-        oracleService = new OracleService(OracleService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
+        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
 
         accountService = new AccountService(persistenceService);
 
@@ -142,10 +142,10 @@ public class RestApiApplicationService extends ApplicationService {
                 settingsService,
                 notificationsService);
 
-        supportService = new SupportService(networkService, chatService, userService);
+        supportService = new SupportService(networkService, chatService, userService, bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, oracleService);
+                contractService, supportService, chatService, bondedRolesService);
     }
 
     @Override
@@ -178,7 +178,7 @@ public class RestApiApplicationService extends ApplicationService {
                     }
                 })
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> oracleService.initialize())
+                .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
@@ -217,7 +217,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
                 .thenCompose(result -> accountService.shutdown())
-                .thenCompose(result -> oracleService.shutdown())
+                .thenCompose(result -> bondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> {

@@ -49,7 +49,7 @@ public class TakeOfferAmountController implements Controller {
 
     public TakeOfferAmountController(ServiceProvider serviceProvider) {
         model = new TakeOfferAmountModel();
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         amountComponent = new AmountComponent(serviceProvider, true);
         view = new TakeOfferAmountView(model, this, amountComponent.getView().getRoot());
     }

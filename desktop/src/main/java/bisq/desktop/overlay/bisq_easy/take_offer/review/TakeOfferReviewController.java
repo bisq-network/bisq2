@@ -80,10 +80,10 @@ public class TakeOfferReviewController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatService = serviceProvider.getChatService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
-        priceInput = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
+        priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
         model = new TakeOfferReviewModel();
         view = new TakeOfferReviewView(model, this);

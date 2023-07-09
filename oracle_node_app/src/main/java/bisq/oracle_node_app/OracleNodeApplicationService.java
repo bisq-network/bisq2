@@ -56,11 +56,13 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService
         );
 
+
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,
                 identityService,
                 networkService,
-                persistenceService);
+                persistenceService,
+                securityService);
     }
 
     @Override

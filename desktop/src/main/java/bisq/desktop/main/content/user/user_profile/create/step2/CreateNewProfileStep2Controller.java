@@ -100,7 +100,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @Override
     public void onActivate() {
         model.getTerms().set("");
-        model.getBio().set("");
+        model.getStatement().set("");
     }
 
     @Override
@@ -127,7 +127,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
                             keyPairAndId.getKeyPair(),
                             model.getProofOfWork().orElseThrow(),
                             model.getTerms().get(),
-                            model.getBio().get())
+                            model.getStatement().get())
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
                         if (throwable == null) {
                             model.getCreateProfileProgress().set(0);
@@ -143,7 +143,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
                     model.getNickName().get(),
                     model.getProofOfWork().orElseThrow(),
                     model.getTerms().get(),
-                    model.getBio().get());
+                    model.getStatement().get());
             model.getCreateProfileProgress().set(0);
             close();
         }

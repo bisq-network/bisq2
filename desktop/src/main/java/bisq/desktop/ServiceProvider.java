@@ -23,7 +23,7 @@ package bisq.desktop;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
-import bisq.bonded_roles.service.OracleService;
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
 import bisq.desktop.common.application.ShotDownHandler;
@@ -51,7 +51,7 @@ public class ServiceProvider {
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final OracleService oracleService;
+    private final BondedRolesService bondedRolesService;
     private final AccountService accountService;
     private final OfferService offerService;
     private final ContractService contractService;
@@ -69,7 +69,7 @@ public class ServiceProvider {
                            Optional<WalletService> walletService,
                            NetworkService networkService,
                            IdentityService identityService,
-                           OracleService oracleService,
+                           BondedRolesService bondedRolesService,
                            AccountService accountService,
                            OfferService offerService,
                            ContractService contractService,
@@ -85,7 +85,7 @@ public class ServiceProvider {
         this.walletService = walletService;
         this.networkService = networkService;
         this.identityService = identityService;
-        this.oracleService = oracleService;
+        this.bondedRolesService = bondedRolesService;
         this.accountService = accountService;
         this.offerService = offerService;
         this.contractService = contractService;

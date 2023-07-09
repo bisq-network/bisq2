@@ -54,9 +54,9 @@ public class TakeOfferPriceController implements Controller {
     private Subscription priceInputPin;
 
     public TakeOfferPriceController(ServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
-        priceInput = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
+        priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         model = new TakeOfferPriceModel();
         view = new TakeOfferPriceView(model, this, priceInput);
     }

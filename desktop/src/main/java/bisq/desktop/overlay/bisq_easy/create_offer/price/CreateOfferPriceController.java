@@ -50,9 +50,9 @@ public class CreateOfferPriceController implements Controller {
     private Subscription priceInputPin;
 
     public CreateOfferPriceController(ServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
-        priceInput = new PriceInput(serviceProvider.getOracleService().getMarketPriceService());
+        priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         model = new CreateOfferPriceModel();
         view = new CreateOfferPriceView(model, this, priceInput);
     }

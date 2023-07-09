@@ -82,13 +82,13 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
 
-        Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
-        Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
         checkArgument(takersContract.getBaseSideAmount() >= baseSideMinAmount.getValue());
         checkArgument(takersContract.getBaseSideAmount() <= baseSideMaxAmount.getValue());
 
-        Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
-        Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getOracleService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
         checkArgument(takersContract.getQuoteSideAmount() >= quoteSideMinAmount.getValue());
         checkArgument(takersContract.getQuoteSideAmount() <= quoteSideMaxAmount.getValue());
 

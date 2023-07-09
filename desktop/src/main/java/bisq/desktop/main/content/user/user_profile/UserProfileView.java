@@ -68,7 +68,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         createNewProfileButton = new Button(Res.get("user.userProfile.createNewProfile"));
         createNewProfileButton.getStyleClass().addAll("outlined-button");
 
-        comboBox = new AutoCompleteComboBox<>(model.getUserIdentities(), Res.get("user.userProfile.select"));
+        comboBox = new AutoCompleteComboBox<>(model.getUserIdentities(), Res.get("user.bondedRoles.userProfile.select"));
         comboBox.setPrefWidth(300);
         comboBox.setConverter(new StringConverter<>() {
             @Override

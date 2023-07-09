@@ -17,7 +17,7 @@
 
 package bisq.trade;
 
-import bisq.bonded_roles.service.OracleService;
+import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
@@ -43,7 +43,7 @@ public class TradeService implements Service, ServiceProvider {
     private final ContractService contractService;
     private final SupportService supportService;
     private final ChatService chatService;
-    private final OracleService oracleService;
+    private final BondedRolesService bondedRolesService;
 
     public TradeService(NetworkService networkService,
                         IdentityService identityService,
@@ -52,7 +52,7 @@ public class TradeService implements Service, ServiceProvider {
                         ContractService contractService,
                         SupportService supportService,
                         ChatService chatService,
-                        OracleService oracleService) {
+                        BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -60,7 +60,7 @@ public class TradeService implements Service, ServiceProvider {
         this.contractService = contractService;
         this.supportService = supportService;
         this.chatService = chatService;
-        this.oracleService = oracleService;
+        this.bondedRolesService = bondedRolesService;
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
     }

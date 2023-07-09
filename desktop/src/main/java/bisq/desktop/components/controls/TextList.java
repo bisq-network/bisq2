@@ -50,8 +50,8 @@ public abstract class TextList extends VBox {
             i++;
             textContent = textContent.stripTrailing();
             MultiLineLabel content = new MultiLineLabel(textContent);
-            mark = mark == null ? getMark(i) : mark;
-            Text markText = new Text(mark);
+            String markString = mark == null ? getMark(i) : mark;
+            Text markText = new Text(markString);
             if (style != null) {
                 markText.getStyleClass().add(style);
                 content.getStyleClass().add(style);

@@ -86,7 +86,7 @@ public class CreateOfferReviewOfferController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        marketPriceService = serviceProvider.getOracleService().getMarketPriceService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         this.resetHandler = resetHandler;
 
         model = new CreateOfferReviewOfferModel();
