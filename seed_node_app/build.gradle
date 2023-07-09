@@ -18,6 +18,7 @@ run {
 dependencies {
     implementation project(':persistence')
     implementation project(':security')
+    implementation project(':bonded_roles')
     implementation project(':application')
 
     implementation 'network:network'

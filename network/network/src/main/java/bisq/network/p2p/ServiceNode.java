@@ -175,6 +175,10 @@ public class ServiceNode {
         peerGroupService.ifPresent(PeerGroupService::initialize);
     }
 
+    public void addSeedNodeAddress(Address seedNodeAddress) {
+        peerGroupService.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
+    }
+
     public ConfidentialMessageService.Result confidentialSend(NetworkMessage networkMessage,
                                                               Address address,
                                                               PubKey receiverPubKey,

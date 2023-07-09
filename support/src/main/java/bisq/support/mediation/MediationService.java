@@ -17,9 +17,9 @@
 
 package bisq.support.mediation;
 
+import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.registration.BondedRoleType;
-import bisq.bonded_roles.service.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;

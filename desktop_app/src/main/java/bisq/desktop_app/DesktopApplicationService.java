@@ -18,7 +18,7 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
-import bisq.bonded_roles.service.BondedRolesService;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -109,7 +109,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 securityService,
                 networkService);
 
-        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
+        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bonded_roles")), config.getVersion(), networkService);
 
         accountService = new AccountService(persistenceService);
 
