@@ -17,14 +17,16 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.support.alert.AlertService;
 import bisq.support.alert.AlertType;
 import bisq.support.alert.AuthorizedAlertData;
 import bisq.support.security_manager.SecurityManagerService;
@@ -47,12 +49,15 @@ public class SecurityManagerController implements Controller {
     private final SecurityManagerModel model;
     private final UserIdentityService userIdentityService;
     private final SecurityManagerService securityManagerService;
+    private final AlertService alertService;
     private Pin userIdentityPin;
     private Subscription messagePin, requireVersionForTradingPin, minVersionPin, bannedRoleProfileIdPin;
+    private Pin alertsPin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        alertService = serviceProvider.getSupportService().getAlertService();
         model = new SecurityManagerModel();
         view = new SecurityManagerView(model, this);
     }
@@ -67,6 +72,10 @@ public class SecurityManagerController implements Controller {
         requireVersionForTradingPin = EasyBind.subscribe(model.getRequireVersionForTrading(), e -> updateSendButtonDisabled());
         minVersionPin = EasyBind.subscribe(model.getMinVersion(), e -> updateSendButtonDisabled());
         bannedRoleProfileIdPin = EasyBind.subscribe(model.getBannedRoleProfileId(), e -> updateSendButtonDisabled());
+
+        alertsPin = FxBindings.<AuthorizedData, SecurityManagerView.AlertListItem>bind(model.getBondedRolesListItems())
+                .map(SecurityManagerView.AlertListItem::new)
+                .to(alertService.getAuthorizedDataSet());
     }
 
     @Override
@@ -76,6 +85,7 @@ public class SecurityManagerController implements Controller {
         requireVersionForTradingPin.unsubscribe();
         minVersionPin.unsubscribe();
         bannedRoleProfileIdPin.unsubscribe();
+        alertsPin.unbind();
     }
 
     void onSelectAlertType(AlertType alertType) {
@@ -103,17 +113,15 @@ public class SecurityManagerController implements Controller {
                 StringUtils.toOptional(model.getBannedRoleProfileId().get()));
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
-        String privateKey = Hex.encode(keyPair.getPrivate().getEncoded());
-        String publicKey = Hex.encode(keyPair.getPublic().getEncoded());
+        securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair(),
+                authorizedAlertData,
+                keyPair.getPrivate(),
+                keyPair.getPublic());
+    }
 
-        try {
-            securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair(),
-                    authorizedAlertData,
-                    privateKey,
-                    publicKey);
-        } catch (Exception e) {
-            new Popup().error(e).show();
-        }
+    void onRemoveAlert(AuthorizedData authorizedData) {
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        securityManagerService.removeAlert(authorizedData, userIdentity.getNodeIdAndKeyPair());
     }
 
     private void applySelectAlertType(AlertType alertType) {

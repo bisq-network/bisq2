@@ -21,22 +21,18 @@ import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.security.KeyGeneration;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.support.alert.AuthorizedAlertData;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
@@ -49,15 +45,12 @@ public class SecurityManagerService implements Service {
     private final ObservableSet<AuthorizedAlertData> authorizedAlertData = new ObservableSet<>();
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private final UserProfileService userProfileService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
 
     public SecurityManagerService(NetworkService networkService,
-                                  IdentityService identityService,
                                   UserService userService,
                                   BondedRolesService bondedRolesService) {
-        this.userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
@@ -85,16 +78,17 @@ public class SecurityManagerService implements Service {
 
     public CompletableFuture<Boolean> publishAlert(NetworkIdWithKeyPair networkIdWithKeyPair,
                                                    AuthorizedAlertData authorizedAlertData,
-                                                   String privateKey,
-                                                   String publicKey) throws GeneralSecurityException {
-        PrivateKey authorizedPrivateKey = KeyGeneration.generatePrivate(Hex.decode(privateKey));
-        PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(publicKey));
-
-
+                                                   PrivateKey privateKey,
+                                                   PublicKey publicKey) {
         return networkService.publishAuthorizedData(authorizedAlertData,
                         networkIdWithKeyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+                        privateKey,
+                        publicKey)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> removeAlert(AuthorizedData authorizedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+        return networkService.removeAuthorizedData(authorizedData, ownerNetworkIdWithKeyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -106,16 +100,5 @@ public class SecurityManagerService implements Service {
                 .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
                 .map(bondedRole -> selectedUserIdentity.getNodeIdAndKeyPair())
                 .findAny();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private void updateHasNotificationSenderIdentity() {
-       /* hasNotificationSenderIdentity.set(notificationSenders.stream()
-                .anyMatch(data -> userProfileService.findUserProfile(data.getUserProfile().getId()).isPresent()));*/
     }
 }

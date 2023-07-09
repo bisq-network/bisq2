@@ -47,4 +47,5 @@ message SettingsStore {
   bool tradeRulesConfirmed = 8;
   ChatNotificationType chatNotificationType = 9;
   bool isTacAccepted = 10;
+  repeated string consumedAlertIds = 11;
 }

@@ -45,7 +45,7 @@ public class SupportService implements Service {
                           BondedRolesService bondedRolesService) {
         mediationService = new MediationService(networkService, chatService, userService, bondedRolesService);
         alertService = new AlertService(networkService, userService, bondedRolesService);
-        securityManagerService = new SecurityManagerService(networkService, identityService, userService, bondedRolesService);
+        securityManagerService = new SecurityManagerService(networkService, userService, bondedRolesService);
     }
 
 

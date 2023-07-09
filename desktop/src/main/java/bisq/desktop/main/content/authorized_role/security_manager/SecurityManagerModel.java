@@ -22,6 +22,7 @@ import bisq.support.alert.AlertType;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +38,8 @@ public class SecurityManagerModel implements Model {
     private final StringProperty bannedRoleProfileId = new SimpleStringProperty();
     private final BooleanProperty haltTrading = new SimpleBooleanProperty();
     private final BooleanProperty requireVersionForTrading = new SimpleBooleanProperty();
+    private final ObservableList<SecurityManagerView.AlertListItem> bondedRolesListItems = FXCollections.observableArrayList();
+    private final SortedList<SecurityManagerView.AlertListItem> sortedList = new SortedList<>(bondedRolesListItems);
 
     public SecurityManagerModel() {
     }

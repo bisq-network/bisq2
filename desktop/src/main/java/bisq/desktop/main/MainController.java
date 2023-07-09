@@ -28,6 +28,8 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.settings.SettingsService;
 import bisq.support.alert.AlertService;
 import bisq.support.alert.AuthorizedAlertData;
 import lombok.Getter;
@@ -44,12 +46,14 @@ public class MainController extends NavigationController {
     private final ServiceProvider serviceProvider;
     private final LeftNavController leftNavController;
     private final AlertService alertService;
+    private final SettingsService settingsService;
     private Pin alertsPin;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
 
         this.serviceProvider = serviceProvider;
+        settingsService = serviceProvider.getSettingsService();
 
         alertService = serviceProvider.getSupportService().getAlertService();
 
@@ -64,25 +68,32 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
-        alertsPin = alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
+        alertsPin = alertService.getAuthorizedDataSet().addListener(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData alertData) {
-                if (alertData.getAlertType() == null) {
+            public void add(AuthorizedData authorizedData) {
+                if (authorizedData == null) {
                     return;
                 }
                 UIThread.run(() -> {
-                    switch (alertData.getAlertType()) {
-                        case INFO:
-                            new Popup().attention(alertData.getMessage().orElse("NA")).show();
-                            break;
-                        case WARN:
-                            new Popup().warning(alertData.getMessage().orElseThrow()).show();
-                            break;
-                        case EMERGENCY:
-                            new Popup().warning(alertData.getMessage().orElseThrow()).show();
-                            break;
-                        case BAN:
-                            break;
+                    if (authorizedData.getDistributedData() instanceof AuthorizedAlertData) {
+                        AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getDistributedData();
+                        if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
+                            return;
+                        }
+                        settingsService.addConsumedAlertId(authorizedAlertData.getId());
+                        switch (authorizedAlertData.getAlertType()) {
+                            case INFO:
+                                new Popup().attention(authorizedAlertData.getMessage().orElseThrow()).show();
+                                break;
+                            case WARN:
+                                new Popup().warning(authorizedAlertData.getMessage().orElseThrow()).show();
+                                break;
+                            case EMERGENCY:
+                                new Popup().warning(authorizedAlertData.getMessage().orElseThrow()).show();
+                                break;
+                            case BAN:
+                                break;
+                        }
                     }
                 });
             }

@@ -27,8 +27,8 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,14 +38,12 @@ import java.util.concurrent.CompletableFuture;
 public class AlertService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
-    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private final UserProfileService userProfileService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     public AlertService(NetworkService networkService, UserService userService, BondedRolesService bondedRolesService) {
-        this.userProfileService = userService.getUserProfileService();
         this.networkService = networkService;
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
     }
@@ -58,7 +56,7 @@ public class AlertService implements Service, DataService.Listener {
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload().forEach(this::processAuthenticatedData));
+        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload().forEach(this::processAddedAuthenticatedData));
         return CompletableFuture.completedFuture(true);
     }
 
@@ -75,16 +73,18 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
+        processAddedAuthenticatedData(authenticatedData);
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (authorizedBondedRolesService.isAuthorizedByBondedRole(authenticatedData, BondedRoleType.SECURITY_MANAGER) &&
-                distributedData instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
-            authorizedAlertDataSet.remove(authorizedAlertData);
+        if (authenticatedData instanceof AuthorizedData) {
+            AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+            DistributedData distributedData = authorizedData.getDistributedData();
+            if (authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    distributedData instanceof AuthorizedAlertData) {
+                authorizedDataSet.remove(authorizedData);
+            }
         }
     }
 
@@ -93,12 +93,14 @@ public class AlertService implements Service, DataService.Listener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (authorizedBondedRolesService.isAuthorizedByBondedRole(authenticatedData, BondedRoleType.SECURITY_MANAGER) &&
-                distributedData instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
-            authorizedAlertDataSet.add(authorizedAlertData);
+    private void processAddedAuthenticatedData(AuthenticatedData authenticatedData) {
+        if (authenticatedData instanceof AuthorizedData) {
+            AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+            DistributedData distributedData = authorizedData.getDistributedData();
+            if (authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    distributedData instanceof AuthorizedAlertData) {
+                authorizedDataSet.add(authorizedData);
+            }
         }
     }
 }

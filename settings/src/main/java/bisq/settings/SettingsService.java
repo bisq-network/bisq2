@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -114,6 +115,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public boolean isTacAccepted() {
         return persistableStore.isTacAccepted;
+    }
+
+    public void addConsumedAlertId(String alertId) {
+        persistableStore.consumedAlertIds.add(alertId);
+        persist();
+    }
+
+    public Set<String> getConsumedAlertIds() {
+        return persistableStore.consumedAlertIds;
     }
 
     public void setCookie(CookieKey key, boolean value) {

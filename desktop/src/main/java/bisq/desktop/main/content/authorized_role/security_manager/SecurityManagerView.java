@@ -21,19 +21,30 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.presentation.formatters.BooleanFormatter;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.support.alert.AlertType;
+import bisq.support.alert.AuthorizedAlertData;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Comparator;
 
 @Slf4j
 public class SecurityManagerView extends View<VBox, SecurityManagerModel, SecurityManagerController> {
@@ -43,6 +54,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     private final AutoCompleteComboBox<AlertType> alertTypeSelection;
     private final CheckBox haltTradingCheckBox, requireVersionForTradingCheckBox;
     private final HBox requireVersionForTradingHBox;
+    private final BisqTableView<AlertListItem> tableView;
     private Subscription selectedAlertTypePin;
 
 
@@ -74,9 +86,10 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         requireVersionForTradingCheckBox = new CheckBox(Res.get("authorizedRole.securityManager.emergency.requireVersionForTrading"));
         minVersion = new MaterialTextField(Res.get("authorizedRole.securityManager.emergency.requireVersionForTrading.version"),
                 Res.get("authorizedRole.securityManager.emergency.requireVersionForTrading.version.prompt"));
-        minVersion.setMinWidth(200);
-        HBox.setMargin(requireVersionForTradingCheckBox, new Insets(35, 0, 0, 0));
+        minVersion.setMinWidth(300);
+
         requireVersionForTradingHBox = new HBox(20, requireVersionForTradingCheckBox, minVersion);
+        requireVersionForTradingHBox.setAlignment(Pos.CENTER_LEFT);
 
         bannedRoleProfileId = new MaterialTextField(Res.get("authorizedRole.securityManager.ban.profileId"));
 
@@ -84,12 +97,23 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         actionButton.setDefaultButton(true);
         actionButton.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        Label tableHeadline = new Label(Res.get("authorizedRole.securityManager.alert.table.headline"));
+        tableHeadline.getStyleClass().add("bisq-text-headline-2");
+
+        tableView = new BisqTableView<>(model.getSortedList());
+        tableView.setMinHeight(200);
+        tableView.getStyleClass().add("user-bonded-roles-table-view");
+        configTableView();
+
+        VBox.setMargin(alertTypeSelection, new Insets(40, 0, 0, 0));
         VBox.setMargin(actionButton, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, alertTypeSelection, message,
+        VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
+        VBox.setMargin(tableView, new Insets(30, 0, 0, 0));
+        root.getChildren().addAll(alertTypeSelection, message,
                 haltTradingCheckBox, requireVersionForTradingHBox,
                 bannedRoleProfileId,
-                actionButton);
+                actionButton,
+                tableHeadline, tableView);
     }
 
     @Override
@@ -153,5 +177,109 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         actionButton.setOnAction(null);
 
         selectedAlertTypePin.unsubscribe();
+    }
+
+    protected void configTableView() {
+        BisqTableColumn<AlertListItem> date = new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.date"))
+                .isFirst()
+                .minWidth(150)
+                .comparator(Comparator.comparing(AlertListItem::getDate).reversed())
+                .valueSupplier(AlertListItem::getDateString)
+                .build();
+        tableView.getColumns().add(date);
+        tableView.getSortOrder().add(date);
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.alertType"))
+                .minWidth(150)
+                .comparator(Comparator.comparing(AlertListItem::getAlertType))
+                .valueSupplier(AlertListItem::getAlertType)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.message"))
+                .minWidth(200)
+                .comparator(Comparator.comparing(AlertListItem::getMessage))
+                .valueSupplier(AlertListItem::getMessage)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.haltTrading"))
+                .minWidth(120)
+                .comparator(Comparator.comparing(AlertListItem::getHaltTrading))
+                .valueSupplier(AlertListItem::getHaltTrading)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.requireVersionForTrading"))
+                .minWidth(120)
+                .comparator(Comparator.comparing(AlertListItem::getRequireVersionForTrading))
+                .valueSupplier(AlertListItem::getRequireVersionForTrading)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.minVersion"))
+                .minWidth(120)
+                .comparator(Comparator.comparing(AlertListItem::getMinVersion))
+                .valueSupplier(AlertListItem::getMinVersion)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.bannedRoleProfileId"))
+                .minWidth(150)
+                .comparator(Comparator.comparing(AlertListItem::getBannedRoleProfileId))
+                .valueSupplier(AlertListItem::getBannedRoleProfileId)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .isSortable(false)
+                .minWidth(200)
+                .isLast()
+                .setCellFactory(getRemoveAlertCellFactory())
+                .build());
+
+    }
+
+    private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getRemoveAlertCellFactory() {
+        return column -> new TableCell<>() {
+            private final Button button = new Button(Res.get("authorizedRole.securityManager.alert.table.remove"));
+
+            @Override
+            public void updateItem(final AlertListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    button.setOnAction(e -> controller.onRemoveAlert(item.getAuthorizedData()));
+                    setGraphic(button);
+                } else {
+                    button.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    @EqualsAndHashCode
+    @Getter
+    @ToString
+    public static class AlertListItem implements TableItem {
+        private final AuthorizedData authorizedData;
+        private final AuthorizedAlertData alert;
+        private final String dateString;
+        private final String alertType;
+        private final String message;
+        private final String haltTrading;
+        private final String requireVersionForTrading;
+        private final String minVersion;
+        private final String bannedRoleProfileId;
+        private final long date;
+
+        public AlertListItem(AuthorizedData authorizedData) {
+            this.authorizedData = authorizedData;
+            this.alert = (AuthorizedAlertData) authorizedData.getDistributedData();
+            date = alert.getDate();
+            dateString = DateFormatter.formatDateTime(date);
+            alertType = Res.get("authorizedRole.securityManager.alertType." + alert.getAlertType().name());
+            message = alert.getMessage().orElse("");
+            bannedRoleProfileId = alert.getBannedRoleProfileId().orElse("");
+            minVersion = alert.getMinVersion().orElse("");
+            haltTrading = BooleanFormatter.toYesNo(alert.isHaltTrading());
+            requireVersionForTrading = BooleanFormatter.toYesNo(alert.isRequireVersionForTrading());
+        }
     }
 }
