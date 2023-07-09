@@ -15,115 +15,90 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.data;
+package bisq.bonded_roles.registration;
 
-import bisq.bonded_roles.registration.BondedRoleType;
-import bisq.common.application.DevMode;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.ExternalNetworkMessage;
+import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Slf4j
+@Getter
 @ToString
 @EqualsAndHashCode
-@Getter
-public final class AuthorizedBondedRole implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(100);
-    // The pubKeys which are authorized for publishing that data.
-    // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> authorizedPublicKeys = Set.of();
-
-    private final MetaData metaData = new MetaData(TTL,
+public final class BondedRoleRegistrationRequest implements MailboxMessage {
+    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
             100000,
-            AuthorizedBondedRole.class.getSimpleName());
+            BondedRoleRegistrationRequest.class.getSimpleName());
 
     private final String profileId;
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
-    private final String signature;
+    private final String signatureBase64;
     private final Map<Transport.Type, Address> addressByNetworkType;
-    private final AuthorizedOracleNode oracleNode;
 
-    public AuthorizedBondedRole(String profileId,
-                                BondedRoleType bondedRoleType,
-                                String bondUserName,
-                                String signature,
-                                Map<Transport.Type, Address> addressByNetworkType,
-                                AuthorizedOracleNode oracleNode) {
+    public BondedRoleRegistrationRequest(String profileId,
+                                         BondedRoleType bondedRoleType,
+                                         String bondUserName,
+                                         String signatureBase64,
+                                         Map<Transport.Type, Address> addressByNetworkType) {
         this.profileId = profileId;
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
-        this.signature = signature;
+        this.signatureBase64 = signatureBase64;
         this.addressByNetworkType = addressByNetworkType;
-        this.oracleNode = oracleNode;
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto() {
-        return bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
-                .setProfileId(profileId)
-                .setBondedRoleType(bondedRoleType.toProto())
-                .setBondUserName(bondUserName)
-                .setSignature(signature)
-                .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
-                .setOracleNode(oracleNode.toProto())
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder()
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
+                        .setAny(Any.pack(toAuthorizeRoleRegistrationRequestProto())))
                 .build();
     }
 
-    public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
+    public bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest toAuthorizeRoleRegistrationRequestProto() {
+        return bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest.newBuilder()
+                .setProfileId(profileId)
+                .setBondedRoleType(bondedRoleType.toProto())
+                .setBondUserName(bondUserName)
+                .setSignatureBase64(signatureBase64)
+                .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
+                .build();
+    }
+
+    public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto) {
         Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
-        return new AuthorizedBondedRole(proto.getProfileId(),
+        return new BondedRoleRegistrationRequest(proto.getProfileId(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
-                proto.getSignature(),
-                addressByNetworkType,
-                AuthorizedOracleNode.fromProto(proto.getOracleNode()));
+                proto.getSignatureBase64(), addressByNetworkType);
     }
 
-    public static ProtoResolver<DistributedData> getResolver() {
+    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedBondedRole.class));
+                bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto = any.unpack(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest.class);
+                return BondedRoleRegistrationRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
-        } else {
-            return authorizedPublicKeys;
-        }
     }
 }

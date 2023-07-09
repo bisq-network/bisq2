@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles.nodes.tabs.registration;
 
-import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRolesRegistrationModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

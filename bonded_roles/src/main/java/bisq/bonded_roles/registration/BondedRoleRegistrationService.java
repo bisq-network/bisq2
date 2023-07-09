@@ -17,33 +17,28 @@
 
 package bisq.bonded_roles.registration;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
-import bisq.bonded_roles.node.bisq1_bridge.requests.BondedRoleRegistrationRequest;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
+import bisq.bonded_roles.AuthorizedOracleNode;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class BondedRoleRegistrationService implements Service, DataService.Listener {
+public class BondedRoleRegistrationService implements Service {
     private final NetworkService networkService;
-    @Getter
-    private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
-    @Getter
-    private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
-    public BondedRoleRegistrationService(NetworkService networkService) {
+    public BondedRoleRegistrationService(NetworkService networkService, AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.networkService = networkService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
 
@@ -53,36 +48,13 @@ public class BondedRoleRegistrationService implements Service, DataService.Liste
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
-                        .forEach(this::processAuthenticatedData));
-        networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
-    }
-
-    @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            //todo
-            // authorizedDataSetOfRoleRegistrationData.remove((AuthorizedData) authenticatedData);
-        }*/
     }
 
 
@@ -96,34 +68,18 @@ public class BondedRoleRegistrationService implements Service, DataService.Liste
                                                  String signatureBase64,
                                                  Map<Transport.Type, Address> addressByNetworkType,
                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        try {
-            if (authorizedOracleNodes.isEmpty()) {
-                log.warn("authorizedOracleNodes is empty");
-                return false;
-            }
-            BondedRoleRegistrationRequest request = new BondedRoleRegistrationRequest(profileId,
-                    bondedRoleType,
-                    bondUserName,
-                    signatureBase64,
-                    addressByNetworkType);
-            authorizedOracleNodes.forEach(oracleNode ->
-                    networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair));
-            return true;
-        } catch (Exception e) {
-            log.error("Error at requestAuthorization", e);
+        ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
+        if (authorizedOracleNodes.isEmpty()) {
+            log.warn("authorizedOracleNodes is empty");
             return false;
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.add((AuthorizedOracleNode) authenticatedData.getDistributedData());
-        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
-            authorizedBondedRoleSet.add((AuthorizedBondedRole) authenticatedData.getDistributedData());
-        }
+        BondedRoleRegistrationRequest request = new BondedRoleRegistrationRequest(profileId,
+                bondedRoleType,
+                bondUserName,
+                signatureBase64,
+                addressByNetworkType);
+        authorizedOracleNodes.forEach(oracleNode ->
+                networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair));
+        return true;
     }
 }

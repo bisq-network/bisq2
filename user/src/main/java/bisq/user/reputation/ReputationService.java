@@ -17,6 +17,7 @@
 
 package bisq.user.reputation;
 
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
@@ -46,25 +47,31 @@ public class ReputationService implements Service {
     public ReputationService(PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             UserProfileService userProfileService) {
+                             UserProfileService userProfileService,
+                             AuthorizedBondedRolesService authorizedBondedRolesService) {
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                authorizedBondedRolesService);
         bondedReputationService = new BondedReputationService(networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                authorizedBondedRolesService);
         accountAgeService = new AccountAgeService(persistenceService,
                 networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                authorizedBondedRolesService);
         signedWitnessService = new SignedWitnessService(persistenceService,
                 networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                authorizedBondedRolesService);
         profileAgeService = new ProfileAgeService(persistenceService,
                 networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                authorizedBondedRolesService);
 
         proofOfBurnService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
         bondedReputationService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);

@@ -17,8 +17,7 @@
 
 package bisq.user.reputation;
 
-import bisq.bonded_roles.node.timestamp.AuthorizeTimestampRequest;
-import bisq.bonded_roles.node.timestamp.AuthorizedTimestampData;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
@@ -29,6 +28,8 @@ import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.data.AuthorizedTimestampData;
+import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,8 +55,9 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     public ProfileAgeService(PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             UserProfileService userProfileService) {
-        super(networkService, userIdentityService, userProfileService);
+                             UserProfileService userProfileService,
+                             AuthorizedBondedRolesService authorizedBondedRolesService) {
+        super(networkService, userIdentityService, userProfileService, authorizedBondedRolesService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -92,7 +94,6 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
     @Override
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        super.processAuthenticatedData(authenticatedData);
         if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
             processData((AuthorizedTimestampData) authenticatedData.getDistributedData());
         }
@@ -135,15 +136,9 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     private boolean requestTimestamp(String profileId) {
-        if (daoBridgeServiceProviders.isEmpty()) {
-            return false;
-
-        }
         return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
                     AuthorizeTimestampRequest request = new AuthorizeTimestampRequest(profileId);
-                    daoBridgeServiceProviders.forEach(receiverNetworkId ->
-                            networkService.confidentialSend(request, receiverNetworkId, userIdentity.getNodeIdAndKeyPair()));
-                    return true;
+                    return send(userIdentity, request);
                 })
                 .orElse(false);
     }

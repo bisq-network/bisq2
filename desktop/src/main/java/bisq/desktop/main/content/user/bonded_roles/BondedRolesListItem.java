@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.bonded_roles;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
-import bisq.bonded_roles.registration.BondedRoleType;
+import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedOracleNode;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.Address;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.timestamp;
+package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -51,20 +51,20 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
                 .build();
     }
 
-    private bisq.bonded_roles.protobuf.AuthorizeTimestampRequest toAuthorizeTimestampRequestProto() {
-        return bisq.bonded_roles.protobuf.AuthorizeTimestampRequest.newBuilder()
+    private bisq.user.protobuf.AuthorizeTimestampRequest toAuthorizeTimestampRequestProto() {
+        return bisq.user.protobuf.AuthorizeTimestampRequest.newBuilder()
                 .setProfileId(profileId)
                 .build();
     }
 
-    public static AuthorizeTimestampRequest fromProto(bisq.bonded_roles.protobuf.AuthorizeTimestampRequest proto) {
+    public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto) {
         return new AuthorizeTimestampRequest(proto.getProfileId());
     }
 
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.bonded_roles.protobuf.AuthorizeTimestampRequest proto = any.unpack(bisq.bonded_roles.protobuf.AuthorizeTimestampRequest.class);
+                bisq.user.protobuf.AuthorizeTimestampRequest proto = any.unpack(bisq.user.protobuf.AuthorizeTimestampRequest.class);
                 return AuthorizeTimestampRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

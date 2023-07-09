@@ -17,8 +17,7 @@
 
 package bisq.user.reputation;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedAccountAgeData;
-import bisq.bonded_roles.node.bisq1_bridge.requests.AuthorizeAccountAgeRequest;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
@@ -29,6 +28,8 @@ import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.data.AuthorizedAccountAgeData;
+import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -80,8 +81,9 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     public AccountAgeService(PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             UserProfileService userProfileService) {
-        super(networkService, userIdentityService, userProfileService);
+                             UserProfileService userProfileService,
+                             AuthorizedBondedRolesService authorizedBondedRolesService) {
+        super(networkService, userIdentityService, userProfileService, authorizedBondedRolesService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -115,7 +117,6 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
 
     @Override
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        super.processAuthenticatedData(authenticatedData);
         if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
             processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
         }
@@ -156,20 +157,13 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         try {
             AccountAgeWitnessDto dto = new Gson().fromJson(json, AccountAgeWitnessDto.class);
             String profileId = dto.getProfileId();
-            if (daoBridgeServiceProviders.isEmpty()) {
-                log.warn("daoBridgeServiceProviders is empty");
-                return false;
-
-            }
             return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
-                        AuthorizeAccountAgeRequest networkMessage = new AuthorizeAccountAgeRequest(profileId,
+                        AuthorizeAccountAgeRequest request = new AuthorizeAccountAgeRequest(profileId,
                                 dto.getHashAsHex(),
                                 dto.getDate(),
                                 dto.getPubKeyBase64(),
                                 dto.getSignatureBase64());
-                        daoBridgeServiceProviders.forEach(receiverNetworkId ->
-                                networkService.confidentialSend(networkMessage, receiverNetworkId, userIdentity.getNodeIdAndKeyPair()));
-                        return true;
+                        return send(userIdentity, request);
                     })
                     .orElse(false);
         } catch (Exception e) {

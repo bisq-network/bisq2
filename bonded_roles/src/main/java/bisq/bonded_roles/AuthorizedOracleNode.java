@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.data;
+package bisq.bonded_roles;
 
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;

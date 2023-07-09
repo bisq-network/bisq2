@@ -17,15 +17,16 @@
 
 package bisq.user.reputation;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
-import bisq.network.NetworkId;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -37,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 
@@ -52,20 +52,22 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
+    protected final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
     protected final Map<ByteArray, Set<T>> dataSetByHash = new ConcurrentHashMap<>();
     @Getter
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
     protected final Observable<String> userProfileIdOfUpdatedScore = new Observable<>();
-    protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
     public SourceReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
-                                   UserProfileService userProfileService) {
+                                   UserProfileService userProfileService,
+                                   AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -88,12 +90,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         processAuthenticatedData(authenticatedData);
     }
 
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
-            AuthorizedOracleNode data = (AuthorizedOracleNode) authenticatedData.getDistributedData();
-            daoBridgeServiceProviders.add(data.getNetworkId());
-        }
-    }
+    protected abstract void processAuthenticatedData(AuthenticatedData authenticatedData);
 
     protected void processData(T data) {
         ByteArray providedHash = getDataKey(data);
@@ -123,6 +120,15 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();
         scoreByUserProfileId.put(userProfileId, score);
         userProfileIdOfUpdatedScore.set(userProfileId);
+    }
+
+    protected boolean send(UserIdentity userIdentity, NetworkMessage request) {
+        if (authorizedBondedRolesService.getAuthorizedOracleNodes().isEmpty()) {
+            return false;
+        }
+        authorizedBondedRolesService.getAuthorizedOracleNodes().forEach(oracleNode ->
+                networkService.confidentialSend(request, oracleNode.getNetworkId(), userIdentity.getNodeIdAndKeyPair()));
+        return true;
     }
 
     public long getScore(String userProfileId) {

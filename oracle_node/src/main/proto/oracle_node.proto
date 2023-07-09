@@ -4,7 +4,7 @@ option java_package = "bisq.oracle_node.protobuf";
 option java_multiple_files = true;
 import "common.proto";
 import "network.proto";
-import "bonded_roles.proto";
+import "user.proto";
 
 
 message TimestampStore {
@@ -12,6 +12,6 @@ message TimestampStore {
 }
 
 message Bisq1BridgeStore {
-  repeated bonded_roles.AuthorizeAccountAgeRequest accountAgeRequests = 1;
-  repeated bonded_roles.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
+  repeated user.AuthorizeAccountAgeRequest accountAgeRequests = 1;
+  repeated user.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
 }

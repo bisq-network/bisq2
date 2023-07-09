@@ -15,19 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto.dao;
+package bisq.oracle_node.bisq1_bridge.dto.dao;
 
 import lombok.Data;
 
-import javax.annotation.Nullable;
-import java.util.List;
-
 @Data
-public final class PubKeyScript {
-    private int reqSigs;
-    private ScriptType scriptType;
-    @Nullable
-    private List<String> addresses;
-    private String asm;
-    private String hex;
+public final class TxOutputKey {
+    private String txId;
+    private int index;
+
+    @Override
+    public String toString() {
+        return txId + ":" + index;
+    }
 }

@@ -17,9 +17,6 @@
 
 package bisq.bonded_roles;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedBondedRole;
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
-import bisq.bonded_roles.registration.BondedRoleType;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;

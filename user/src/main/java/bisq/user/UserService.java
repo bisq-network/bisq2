@@ -17,11 +17,11 @@
 
 package bisq.user;
 
+import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
@@ -55,9 +55,9 @@ public class UserService implements Service {
 
     public UserService(Config config,
                        PersistenceService persistenceService,
-                       KeyPairService keyPairService,
                        IdentityService identityService,
                        NetworkService networkService,
+                       BondedRolesService bondedRolesService,
                        ProofOfWorkService proofOfWorkService) {
         userProfileService = new UserProfileService(persistenceService, networkService, proofOfWorkService);
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
@@ -68,7 +68,8 @@ public class UserService implements Service {
         reputationService = new ReputationService(persistenceService,
                 networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                bondedRolesService.getAuthorizedBondedRolesService());
     }
 
 

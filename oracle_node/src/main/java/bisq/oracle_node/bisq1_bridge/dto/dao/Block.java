@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.dto;
+package bisq.oracle_node.bisq1_bridge.dto.dao;
 
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
-/**
- * Minimal data for the reputation use case.
- * Need to be in sync with the Bisq 1 BondedReputationDto class.
- */
-@Slf4j
+import javax.annotation.Nullable;
+import java.util.List;
+
 @Data
-public class BondedReputationDto {
-    private long amount;
-    private long time;
+public final class Block {
+    private List<Tx> txs;
+    private int height;
+    private long time; // in ms
     private String hash;
-    private int blockHeight;
-    private int lockTime;
+    @Nullable // in case of first block in the blockchain
+    private String previousBlockHash;
 }

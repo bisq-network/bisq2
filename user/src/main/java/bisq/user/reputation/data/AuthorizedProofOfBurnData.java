@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.node.bisq1_bridge.data;
+package bisq.user.reputation.data;
 
-import bisq.bonded_roles.node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
+public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
@@ -46,50 +45,38 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedBondedReputationData.class.getSimpleName());
+            AuthorizedProofOfBurnData.class.getSimpleName());
 
     private final long amount;
-    private final long lockTime;
     private final long time;
     private final byte[] hash;
 
-    public static AuthorizedBondedReputationData from(BondedReputationDto dto) {
-        return new AuthorizedBondedReputationData(
-                dto.getAmount(),
-                dto.getTime(),
-                Hex.decode(dto.getHash()),
-                dto.getLockTime());
-    }
-
-    public AuthorizedBondedReputationData(long amount, long time, byte[] hash, long lockTime) {
+    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash) {
         this.amount = amount;
         this.time = time;
         this.hash = hash;
-        this.lockTime = lockTime;
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedBondedReputationData toProto() {
-        return bisq.bonded_roles.protobuf.AuthorizedBondedReputationData.newBuilder()
+    public bisq.user.protobuf.AuthorizedProofOfBurnData toProto() {
+        return bisq.user.protobuf.AuthorizedProofOfBurnData.newBuilder()
                 .setAmount(amount)
-                .setLockTime(lockTime)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
                 .build();
     }
 
-    public static AuthorizedBondedReputationData fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedReputationData proto) {
-        return new AuthorizedBondedReputationData(
+    public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {
+        return new AuthorizedProofOfBurnData(
                 proto.getAmount(),
                 proto.getTime(),
-                proto.getHash().toByteArray(),
-                proto.getLockTime());
+                proto.getHash().toByteArray());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedBondedReputationData.class));
+                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedProofOfBurnData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -117,11 +104,10 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
 
     @Override
     public String toString() {
-        return "AuthorizedBondedReputationData{" +
+        return "AuthorizedProofOfBurnData{" +
                 ",\r\n     amount=" + amount +
                 ",\r\n     time=" + new Date(time) +
                 ",\r\n     hash=" + Hex.encode(hash) +
-                ",\r\n     lockTime=" + lockTime +
                 "\r\n}";
     }
 }

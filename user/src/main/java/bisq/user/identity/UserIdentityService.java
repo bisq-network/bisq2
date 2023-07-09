@@ -17,7 +17,7 @@
 
 package bisq.user.identity;
 
-import bisq.bonded_roles.node.bisq1_bridge.data.AuthorizedOracleNode;
+import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
