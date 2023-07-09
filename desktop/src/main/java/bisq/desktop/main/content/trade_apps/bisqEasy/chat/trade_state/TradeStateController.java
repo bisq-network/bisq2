@@ -171,7 +171,7 @@ public class TradeStateController implements Controller {
     @Override
     public void onActivate() {
         model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_ASSISTANT_COLLAPSED).orElse(false));
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> applyVisibility());
+        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> UIThread.run(this::applyVisibility));
         isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> applyVisibility());
     }
 

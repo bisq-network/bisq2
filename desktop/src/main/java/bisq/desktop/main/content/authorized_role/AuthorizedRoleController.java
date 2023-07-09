@@ -22,6 +22,7 @@ import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -110,13 +111,13 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
     }
 
     private void updateAuthorizedBondedRoles() {
-        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                .filter(bondedRole -> selectedUserIdentity != null)
-                .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
-                .map(AuthorizedBondedRole::getBondedRoleType)
-                .collect(Collectors.toSet()));
-
-        // onTabSelected()
+        UIThread.run(() -> {
+            UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                    .filter(bondedRole -> selectedUserIdentity != null)
+                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+                    .map(AuthorizedBondedRole::getBondedRoleType)
+                    .collect(Collectors.toSet()));
+        });
     }
 }

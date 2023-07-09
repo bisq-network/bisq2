@@ -26,7 +26,11 @@ enum AlertType {
 
 message AuthorizedAlertData {
   string id = 1;
-  string message = 2;
-  sint64 date = 3;
-  AlertType alertType = 4;
+  sint64 date = 2;
+  AlertType alertType = 3;
+  optional string message = 4;
+  optional string minVersion = 5;
+  optional string bannedRoleProfileId = 6;
+  bool haltTrading = 7;
+  bool requireVersionForTrading = 8;
 }

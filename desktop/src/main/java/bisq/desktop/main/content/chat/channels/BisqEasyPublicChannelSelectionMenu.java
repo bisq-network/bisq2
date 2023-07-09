@@ -29,6 +29,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
@@ -117,7 +118,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
             model.getSortedChannels().setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
 
-            numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
+            numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> UIThread.run(this::applyPredicate));
 
             model.filteredMarketsList.setPredicate(item -> {
                 Market market = item.getMarket();

@@ -19,23 +19,24 @@ package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.desktop.common.view.Model;
 import bisq.support.alert.AlertType;
-import bisq.user.identity.UserIdentity;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class SecurityManagerModel implements Model {
-    private final StringProperty message = new SimpleStringProperty();
-    private final BooleanProperty sendButtonDisabled = new SimpleBooleanProperty();
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
-    @Setter
-    private UserIdentity userIdentity;
+    private final StringProperty actionButtonText = new SimpleStringProperty();
+    private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
+    private final StringProperty message = new SimpleStringProperty();
+    private final StringProperty minVersion = new SimpleStringProperty();
+    private final StringProperty bannedRoleProfileId = new SimpleStringProperty();
+    private final BooleanProperty haltTrading = new SimpleBooleanProperty();
+    private final BooleanProperty requireVersionForTrading = new SimpleBooleanProperty();
 
     public SecurityManagerModel() {
     }

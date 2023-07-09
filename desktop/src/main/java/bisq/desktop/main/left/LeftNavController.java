@@ -150,12 +150,14 @@ public class LeftNavController implements Controller {
     }
 
     private void updateAuthorizedRoleVisible() {
-        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        log.error("selectedUserIdentity " + selectedUserIdentity);
-        boolean authorizedRoleVisible = selectedUserIdentity != null &&
-                authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                        .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
-        model.getAuthorizedRoleVisible().set(authorizedRoleVisible);
+        UIThread.run(() -> {
+            UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+            log.error("selectedUserIdentity " + selectedUserIdentity);
+            boolean authorizedRoleVisible = selectedUserIdentity != null &&
+                    authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                            .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
+            model.getAuthorizedRoleVisible().set(authorizedRoleVisible);
+        });
     }
 
     private void updateNumNotifications(String notificationId) {

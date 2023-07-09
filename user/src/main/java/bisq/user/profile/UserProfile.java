@@ -128,7 +128,7 @@ public final class UserProfile implements DistributedData {
     }
 
     public String getPubKeyAsHex() {
-        return Hex.encode(getPubKeyHash());
+        return Hex.encode(networkId.getPubKey().getPublicKey().getEncoded());
     }
 
     public String getId() {

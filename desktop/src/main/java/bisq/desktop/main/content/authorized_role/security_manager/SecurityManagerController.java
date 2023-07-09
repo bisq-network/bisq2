@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -47,7 +48,7 @@ public class SecurityManagerController implements Controller {
     private final UserIdentityService userIdentityService;
     private final SecurityManagerService securityManagerService;
     private Pin userIdentityPin;
-    private Subscription messagePin;
+    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, bannedRoleProfileIdPin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
@@ -58,35 +59,54 @@ public class SecurityManagerController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getSelectedAlertType().set(AlertType.INFO);
+        applySelectAlertType(AlertType.INFO);
         model.getAlertTypes().setAll(AlertType.values());
 
-        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
-            model.setUserIdentity(userIdentity);
-            updateSendButtonDisabled();
-        });
-        messagePin = EasyBind.subscribe(model.getMessage(), message -> updateSendButtonDisabled());
+        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updateSendButtonDisabled));
+        messagePin = EasyBind.subscribe(model.getMessage(), e -> updateSendButtonDisabled());
+        requireVersionForTradingPin = EasyBind.subscribe(model.getRequireVersionForTrading(), e -> updateSendButtonDisabled());
+        minVersionPin = EasyBind.subscribe(model.getMinVersion(), e -> updateSendButtonDisabled());
+        bannedRoleProfileIdPin = EasyBind.subscribe(model.getBannedRoleProfileId(), e -> updateSendButtonDisabled());
     }
 
     @Override
     public void onDeactivate() {
         userIdentityPin.unbind();
         messagePin.unsubscribe();
+        requireVersionForTradingPin.unsubscribe();
+        minVersionPin.unsubscribe();
+        bannedRoleProfileIdPin.unsubscribe();
+    }
+
+    void onSelectAlertType(AlertType alertType) {
+        if (alertType != null) {
+            applySelectAlertType(alertType);
+        }
     }
 
     void onSendAlert() {
+        AlertType alertType = model.getSelectedAlertType().get();
         String message = model.getMessage().get();
-        if (message.length() > AuthorizedAlertData.MAX_MESSAGE_LENGTH) {
+        //todo use validation framework instead (not impl yet)
+        if (message != null && message.length() > AuthorizedAlertData.MAX_MESSAGE_LENGTH) {
             new Popup().warning(Res.get("authorizedRole.securityManager.alert.message.tooLong")).show();
             return;
         }
+
+        AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
+                new Date().getTime(),
+                alertType,
+                StringUtils.toOptional(model.getMessage().get()),
+                model.getHaltTrading().get(),
+                model.getRequireVersionForTrading().get(),
+                StringUtils.toOptional(model.getMinVersion().get()),
+                StringUtils.toOptional(model.getBannedRoleProfileId().get()));
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
+        String privateKey = Hex.encode(keyPair.getPrivate().getEncoded());
+        String publicKey = Hex.encode(keyPair.getPublic().getEncoded());
+
         try {
-            AlertType alertType = model.getSelectedAlertType().get();
-            AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(), message, new Date().getTime(), alertType);
-            UserIdentity userIdentity = checkNotNull(model.getUserIdentity());
-            KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
-            String privateKey = Hex.encode(keyPair.getPrivate().getEncoded());
-            String publicKey = Hex.encode(keyPair.getPublic().getEncoded());
             securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair(),
                     authorizedAlertData,
                     privateKey,
@@ -96,8 +116,49 @@ public class SecurityManagerController implements Controller {
         }
     }
 
+    private void applySelectAlertType(AlertType alertType) {
+        model.getSelectedAlertType().set(alertType);
+        switch (alertType) {
+            case INFO:
+            case WARN:
+                model.getHaltTrading().set(false);
+                model.getRequireVersionForTrading().set(false);
+                model.getMinVersion().set(null);
+                model.getBannedRoleProfileId().set(null);
+                break;
+            case EMERGENCY:
+                model.getBannedRoleProfileId().set(null);
+                break;
+            case BAN:
+                model.getHaltTrading().set(false);
+                model.getRequireVersionForTrading().set(false);
+                model.getMinVersion().set(null);
+                model.getMessage().set(null);
+                break;
+        }
+        model.getActionButtonText().set(Res.get("authorizedRole.securityManager.actionButton." + alertType.name()));
+    }
+
     private void updateSendButtonDisabled() {
-        model.getSendButtonDisabled().set(model.getUserIdentity() == null ||
-                StringUtils.isEmpty(model.getMessage().get()));
+        AlertType alertType = model.getSelectedAlertType().get();
+        boolean value = userIdentityService.getSelectedUserIdentity() == null || alertType == null;
+        if (value) {
+            model.getActionButtonDisabled().set(value);
+            return;
+        }
+        boolean isMessageEmpty = StringUtils.isEmpty(model.getMessage().get());
+        switch (alertType) {
+            case INFO:
+            case WARN:
+                model.getActionButtonDisabled().set(isMessageEmpty);
+                break;
+            case EMERGENCY:
+                boolean isMinVersionNeededAndEmpty = model.getRequireVersionForTrading().get() && StringUtils.isEmpty(model.getMinVersion().get());
+                model.getActionButtonDisabled().set(isMessageEmpty || isMinVersionNeededAndEmpty);
+                break;
+            case BAN:
+                model.getActionButtonDisabled().set(StringUtils.isEmpty(model.getBannedRoleProfileId().get()));
+                break;
+        }
     }
 }

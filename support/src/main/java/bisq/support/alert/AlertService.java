@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 public class AlertService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
-    private final ObservableSet<AuthorizedAlertData> authorizedAlertData = new ObservableSet<>();
+    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final UserProfileService userProfileService;
@@ -80,16 +80,11 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
-            if (data.getRoleType() == RoleType.SECURITY_MANAGER) {
-                notificationSenders.remove(data);
-                updateHasNotificationSenderIdentity();
-            }
-        } else*/
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAlertData) {
-            AuthorizedAlertData data = (AuthorizedAlertData) authenticatedData.getDistributedData();
-            authorizedAlertData.remove(data);
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (authorizedBondedRolesService.isAuthorizedByBondedRole(authenticatedData, BondedRoleType.SECURITY_MANAGER) &&
+                distributedData instanceof AuthorizedAlertData) {
+            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
+            authorizedAlertDataSet.remove(authorizedAlertData);
         }
     }
 
@@ -103,12 +98,7 @@ public class AlertService implements Service, DataService.Listener {
         if (authorizedBondedRolesService.isAuthorizedByBondedRole(authenticatedData, BondedRoleType.SECURITY_MANAGER) &&
                 distributedData instanceof AuthorizedAlertData) {
             AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
-            this.authorizedAlertData.add(authorizedAlertData);
+            authorizedAlertDataSet.add(authorizedAlertData);
         }
-    }
-
-    private void updateHasNotificationSenderIdentity() {
-       /* hasNotificationSenderIdentity.set(notificationSenders.stream()
-                .anyMatch(data -> userProfileService.findUserProfile(data.getUserProfile().getId()).isPresent()));*/
     }
 }

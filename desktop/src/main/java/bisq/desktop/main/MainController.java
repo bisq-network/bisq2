@@ -20,6 +20,7 @@ package bisq.desktop.main;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -63,20 +64,35 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
-        alertsPin = alertService.getAuthorizedAlertData().addListener(new CollectionObserver<>() {
+        alertsPin = alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData element) {
-                new Popup().attention(element.getMessage()).show();
+            public void add(AuthorizedAlertData alertData) {
+                if (alertData.getAlertType() == null) {
+                    return;
+                }
+                UIThread.run(() -> {
+                    switch (alertData.getAlertType()) {
+                        case INFO:
+                            new Popup().attention(alertData.getMessage().orElse("NA")).show();
+                            break;
+                        case WARN:
+                            new Popup().warning(alertData.getMessage().orElseThrow()).show();
+                            break;
+                        case EMERGENCY:
+                            new Popup().warning(alertData.getMessage().orElseThrow()).show();
+                            break;
+                        case BAN:
+                            break;
+                    }
+                });
             }
 
             @Override
             public void remove(Object element) {
-
             }
 
             @Override
             public void clear() {
-
             }
         });
     }

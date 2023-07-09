@@ -23,17 +23,22 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
+import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAlertData implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation {
+public final class AuthorizedAlertData implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation, StaticallyAuthorizedPublicKeyValidation {
     public final static int MAX_MESSAGE_LENGTH = 1000;
     public final static long TTL = TimeUnit.DAYS.toMillis(15);
 
@@ -42,33 +47,57 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
             AuthorizedAlertData.class.getSimpleName());
 
     private final String id;
-    private final String message;
     private final long date;
     private final AlertType alertType;
+    private final Optional<String> message;
+    private final boolean haltTrading;
+    private final boolean requireVersionForTrading;
+    private final Optional<String> minVersion;
+    private final Optional<String> bannedRoleProfileId;
 
-    public AuthorizedAlertData(String id, String message, long date, AlertType alertType) {
+    public AuthorizedAlertData(String id,
+                               long date,
+                               AlertType alertType,
+                               Optional<String> message,
+                               boolean haltTrading,
+                               boolean requireVersionForTrading,
+                               Optional<String> minVersion,
+                               Optional<String> bannedRoleProfileId) {
         this.id = id;
-        this.message = message;
         this.date = date;
         this.alertType = alertType;
+        this.message = message;
+        this.haltTrading = haltTrading;
+        this.requireVersionForTrading = requireVersionForTrading;
+        this.minVersion = minVersion;
+        this.bannedRoleProfileId = bannedRoleProfileId;
     }
 
     @Override
     public bisq.support.protobuf.AuthorizedAlertData toProto() {
-        return bisq.support.protobuf.AuthorizedAlertData.newBuilder()
+        bisq.support.protobuf.AuthorizedAlertData.Builder builder = bisq.support.protobuf.AuthorizedAlertData.newBuilder()
                 .setId(id)
-                .setMessage(message)
                 .setDate(date)
                 .setAlertType(alertType.toProto())
+                .setHaltTrading(haltTrading)
+                .setRequireVersionForTrading(requireVersionForTrading);
+        message.ifPresent(builder::setMessage);
+        minVersion.ifPresent(builder::setMinVersion);
+        bannedRoleProfileId.ifPresent(builder::setBannedRoleProfileId);
+
+        return builder
                 .build();
     }
 
     public static AuthorizedAlertData fromProto(bisq.support.protobuf.AuthorizedAlertData proto) {
-        return new AuthorizedAlertData(
-                proto.getId(),
-                proto.getMessage(),
+        return new AuthorizedAlertData(proto.getId(),
                 proto.getDate(),
-                AlertType.fromProto(proto.getAlertType()));
+                AlertType.fromProto(proto.getAlertType()),
+                proto.hasMessage() ? Optional.of(proto.getMessage()) : Optional.empty(),
+                proto.getHaltTrading(),
+                proto.getRequireVersionForTrading(),
+                proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
+                proto.hasBannedRoleProfileId() ? Optional.of(proto.getBannedRoleProfileId()) : Optional.empty());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -88,16 +117,11 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
-        return message.length() > MAX_MESSAGE_LENGTH;
+        return message.orElse("").length() > MAX_MESSAGE_LENGTH;
     }
 
     @Override
-    public String toString() {
-        return "AuthorizedAlertData{" +
-                ",\r\n     id='" + id + '\'' +
-                ",\r\n     message='" + message + '\'' +
-                ",\r\n     date=" + date +
-                ",\r\n     alertType=" + alertType +
-                "\r\n}";
+    public Set<String> getAuthorizedPublicKeys() {
+        return Set.of("3056301006072a8648ce3d020106052b8104000a034200049f256a94ec762254e6de1ce97649ce16d757a7a15b7e383a7163a56d89c354888d21ac73d7378feaac83371fca1207502ff708a13afdf81b4a7c4cd600a8d96e");
     }
 }

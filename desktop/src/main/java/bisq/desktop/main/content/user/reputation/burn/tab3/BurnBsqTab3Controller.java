@@ -21,6 +21,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -52,8 +53,12 @@ public class BurnBsqTab3Controller implements Controller {
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 chatUserIdentity -> {
-                    model.getSelectedChatUserIdentity().set(chatUserIdentity);
-                    model.getPubKeyHash().set(chatUserIdentity.getId());
+                    UIThread.run(() -> {
+                        model.getSelectedChatUserIdentity().set(chatUserIdentity);
+                        if (chatUserIdentity != null) {
+                            model.getPubKeyHash().set(chatUserIdentity.getId());
+                        }
+                    });
                 }
         );
     }

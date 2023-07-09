@@ -276,8 +276,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                     if (inMediationPin != null) {
                         inMediationPin.unbind();
                     }
-                    inMediationPin = privateChatChannel.isInMediationObservable().addObserver(e ->
-                    {
+                    inMediationPin = privateChatChannel.isInMediationObservable().addObserver(e -> {
                         UIThread.run(() -> {
                             hBox.getChildren().clear();
                             hBox.getChildren().add(roboIcon);

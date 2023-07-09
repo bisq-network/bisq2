@@ -87,11 +87,9 @@ public class SecurityManagerService implements Service {
                                                    AuthorizedAlertData authorizedAlertData,
                                                    String privateKey,
                                                    String publicKey) throws GeneralSecurityException {
-        //     checkArgument(notificationSenders.stream().anyMatch(data -> data.getUserProfile().getNetworkId().equals(networkIdWithKeyPair.getNetworkId())));
         PrivateKey authorizedPrivateKey = KeyGeneration.generatePrivate(Hex.decode(privateKey));
         PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(publicKey));
 
-        Optional<NetworkIdWithKeyPair> rr = findMyNodeIdAndKeyPair();
 
         return networkService.publishAuthorizedData(authorizedAlertData,
                         networkIdWithKeyPair,

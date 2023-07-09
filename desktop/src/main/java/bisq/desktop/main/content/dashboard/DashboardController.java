@@ -61,8 +61,7 @@ public class DashboardController implements Controller {
         marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> updateMarketPrice());
 
         userProfileUpdateFlagPin = userProfileService.getUserProfilesUpdateFlag().addObserver(__ ->
-                UIThread.run(() ->
-                        model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
+                UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
         // We listen on all channels, also hidden ones and use a weak reference listener
         bisqEasyPublicChatChannelService.getChannels().forEach(publicTradeChannel ->

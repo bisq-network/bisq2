@@ -31,10 +31,10 @@ import java.util.Collection;
 
 @Slf4j
 public class PaymentAccountsModel implements Model {
-    private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
     private final StringProperty accountData = new SimpleStringProperty("");
     private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
+    private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
     private final ObservableList<Account<?, ? extends PaymentMethod<?>>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<?, ? extends PaymentMethod<?>>> sortedAccounts = new SortedList<>(accounts);
 
