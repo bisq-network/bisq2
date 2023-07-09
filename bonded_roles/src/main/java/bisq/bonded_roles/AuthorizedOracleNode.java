@@ -24,7 +24,6 @@ import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedOracleNode implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation, StaticallyAuthorizedPublicKeyValidation {
+public final class AuthorizedOracleNode implements AuthorizedDistributedData, StaticallyAuthorizedPublicKeyValidation {
     public final static long TTL = TimeUnit.DAYS.toMillis(30);
 
     // todo Production key not set yet - we use devMode key only yet

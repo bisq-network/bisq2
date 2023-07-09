@@ -24,6 +24,7 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.user.identity.UserIdentity;
 import javafx.beans.property.*;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -39,6 +40,8 @@ public abstract class BondedRolesRegistrationModel implements Model {
     protected final StringProperty signature = new SimpleStringProperty();
     protected final BooleanProperty requestRegistrationButtonDisabled = new SimpleBooleanProperty();
     protected final Map<Transport.Type, Address> addressByNetworkType = new HashMap<>();
+    @Setter
+    protected String authorizedPublicKey;
 
     public BondedRolesRegistrationModel(BondedRoleType bondedRoleType) {
         this.bondedRoleType = bondedRoleType;

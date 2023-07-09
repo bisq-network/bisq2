@@ -18,6 +18,7 @@
 package bisq.user.profile;
 
 import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
@@ -124,6 +125,10 @@ public final class UserProfile implements DistributedData {
 
     public byte[] getPubKeyHash() {
         return networkId.getPubKey().getHash();
+    }
+
+    public String getPubKeyAsHex() {
+        return Hex.encode(getPubKeyHash());
     }
 
     public String getId() {

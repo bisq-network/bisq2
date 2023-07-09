@@ -17,17 +17,21 @@
 
 package bisq.desktop.main.left;
 
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.presentation.notifications.NotificationsService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 import java.util.Set;
@@ -39,11 +43,16 @@ public class LeftNavController implements Controller {
     private final LeftNavView view;
     private final ChatNotificationService chatNotificationService;
     private final NotificationsService notificationsService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final UserIdentityService userIdentityService;
+    private Pin bondedRoleSetPin;
+    private Subscription tradeAppsSubMenuExpandedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         notificationsService = serviceProvider.getNotificationsService();
-
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         model = new LeftNavModel(serviceProvider);
         view = new LeftNavView(model, this);
     }
@@ -51,13 +60,20 @@ public class LeftNavController implements Controller {
     @Override
     public void onActivate() {
         notificationsService.addListener(this::updateNumNotifications);
-        EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
+        tradeAppsSubMenuExpandedPin = EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
                 tradeAppsSubMenuExpanded ->
                         notificationsService.getNotConsumedNotificationIds().forEach(this::updateNumNotifications));
+
+        bondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(() -> {
+            model.getAuthorizedRoleVisible().set(authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                    .anyMatch(bondedRole -> userIdentityService.findUserIdentity(bondedRole.getProfileId()).isPresent()));
+        });
     }
 
     @Override
     public void onDeactivate() {
+        bondedRoleSetPin.unbind();
+        tradeAppsSubMenuExpandedPin.unsubscribe();
         notificationsService.removeListener(this::updateNumNotifications);
     }
 

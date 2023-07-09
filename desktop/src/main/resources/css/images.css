@@ -194,6 +194,18 @@
     -fx-image: url("/images/navigation/nav-settings-hover.png");
 }
 
+#nav-authorized-role {
+    -fx-image: url("/images/navigation/nav-authorized-role.png");
+}
+
+#nav-authorized-role-active {
+    -fx-image: url("/images/navigation/nav-authorized-role-active.png");
+}
+
+#nav-authorized-role-hover {
+    -fx-image: url("/images/navigation/nav-authorized-role-hover.png");
+}
+
 #nav-user {
     -fx-image: url("/images/navigation/nav-user.png");
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.notifications;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.desktop.common.view.Model;
 import bisq.support.alert.AlertType;
@@ -27,23 +27,16 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
-
 @Slf4j
 @Getter
-public class SendNotificationModel implements Model {
-    private final StringProperty selectedProfileUserName = new SimpleStringProperty();
-    private final StringProperty privateKey = new SimpleStringProperty();
-    private final StringProperty publicKey = new SimpleStringProperty();
+public class SecurityManagerModel implements Model {
     private final StringProperty message = new SimpleStringProperty();
     private final BooleanProperty sendButtonDisabled = new SimpleBooleanProperty();
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
     @Setter
     private UserIdentity userIdentity;
-    @Setter
-    private KeyPair keyPair;
 
-    public SendNotificationModel() {
+    public SecurityManagerModel() {
     }
 }

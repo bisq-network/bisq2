@@ -63,7 +63,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Region selectionMarker;
     private final VBox mainMenuItems;
     private final int menuTop;
-    private final LeftNavButton tradeAppsButton, learnButton;
+    private final LeftNavButton tradeAppsButton, learnButton, authorizedRole;
     private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, tradeAppsSubMenuExpandedPin, learnsSubMenuExpandedPin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
@@ -129,12 +129,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         //todo lower priority menu add design
 
-        LeftNavButton settings = createNavigationButton(Res.get("navigation.settings"),
-                "nav-settings",
-                NavigationTarget.SETTINGS, false);
         LeftNavButton user = createNavigationButton(Res.get("navigation.userOptions"),
                 "nav-user",
                 NavigationTarget.USER, false);
+        LeftNavButton settings = createNavigationButton(Res.get("navigation.settings"),
+                "nav-settings",
+                NavigationTarget.SETTINGS, false);
+
+
+        authorizedRole = createNavigationButton(Res.get("navigation.authorizedRole"),
+                "nav-authorized-role",
+                NavigationTarget.AUTHORIZED_ROLE, false);
 
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
@@ -172,7 +177,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.getChildren().addAll(dashBoard, tradeAppsButton, tradeSubMenuItems,
                 learnButton, learnSubMenuItems,
                 chat, events, support,
-                user, settings);
+                user, settings, authorizedRole);
         if (model.isWalletEnabled()) {
             mainMenuItems.getChildren().add(3, wallet);
         }
@@ -183,6 +188,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewAttached() {
+        authorizedRole.visibleProperty().bind(model.getAuthorizedRoleVisible());
+        authorizedRole.managedProperty().bind(model.getAuthorizedRoleVisible());
+
         horizontalExpandIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
         horizontalCollapseIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
         navigationTargetSubscription = EasyBind.subscribe(model.getSelectedNavigationTarget(), navigationTarget -> {
@@ -280,6 +288,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewDetached() {
+        authorizedRole.visibleProperty().unbind();
+        authorizedRole.managedProperty().unbind();
         horizontalExpandIcon.setOnMouseClicked(null);
         horizontalCollapseIcon.setOnMouseClicked(null);
         navigationTargetSubscription.unsubscribe();

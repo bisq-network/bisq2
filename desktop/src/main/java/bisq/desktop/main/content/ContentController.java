@@ -30,6 +30,7 @@ import bisq.desktop.main.content.academy.foss.FossAcademyController;
 import bisq.desktop.main.content.academy.privacy.PrivacyAcademyController;
 import bisq.desktop.main.content.academy.security.SecurityAcademyController;
 import bisq.desktop.main.content.academy.wallets.WalletsAcademyController;
+import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
@@ -160,8 +161,13 @@ public class ContentController extends NavigationController {
             case SETTINGS: {
                 return Optional.of(new SettingsController(serviceProvider));
             }
+
             case WALLET: {
                 return Optional.of(new WalletController(serviceProvider));
+            }
+
+            case AUTHORIZED_ROLE: {
+                return Optional.of(new AuthorizedRoleController(serviceProvider));
             }
             default: {
                 return Optional.empty();

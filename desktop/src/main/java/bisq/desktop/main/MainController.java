@@ -63,7 +63,7 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
-        alertsPin = alertService.getAlerts().addListener(new CollectionObserver<>() {
+        alertsPin = alertService.getAuthorizedAlertData().addListener(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData element) {
                 new Popup().attention(element.getMessage()).show();

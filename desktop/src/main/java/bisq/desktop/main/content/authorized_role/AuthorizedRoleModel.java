@@ -15,20 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user;
+package bisq.desktop.main.content.authorized_role;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
-public class UserModel extends TabModel {
-    private final BooleanProperty alertSenderTabButtonVisible = new SimpleBooleanProperty();
+public class AuthorizedRoleModel extends TabModel {
+    private final List<BondedRoleType> bondedRoleTypes;
+    private final ObservableList<BondedRoleType> authorizedBondedRoles = FXCollections.observableArrayList();
+
+    public AuthorizedRoleModel(List<BondedRoleType> bondedRoleTypes) {
+        this.bondedRoleTypes = bondedRoleTypes;
+    }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+        return authorizedBondedRoles.isEmpty() ?
+                NavigationTarget.NONE :
+                NavigationTarget.valueOf(authorizedBondedRoles.get(0).name());
     }
 }

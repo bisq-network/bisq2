@@ -63,6 +63,7 @@ public class BondedRoleRegistrationService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean requestBondedRoleRegistration(String profileId,
+                                                 String authorizedPublicKey,
                                                  BondedRoleType bondedRoleType,
                                                  String bondUserName,
                                                  String signatureBase64,
@@ -74,6 +75,7 @@ public class BondedRoleRegistrationService implements Service {
             return false;
         }
         BondedRoleRegistrationRequest request = new BondedRoleRegistrationRequest(profileId,
+                authorizedPublicKey,
                 bondedRoleType,
                 bondUserName,
                 signatureBase64,

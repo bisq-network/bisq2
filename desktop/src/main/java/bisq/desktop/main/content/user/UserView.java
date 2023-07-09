@@ -26,8 +26,8 @@ import org.fxmisc.easybind.Subscription;
 
 public class UserView extends TabView<UserModel, UserController> {
 
-    private final TabButton sendNotificationTabButton;
-    private Subscription sendNotificationTabButtonVisiblePin;
+    private final TabButton alertSenderTabButton;
+    private Subscription alertSenderTabButtonVisiblePin;
 
     public UserView(UserModel model, UserController controller) {
         super(model, controller);
@@ -38,22 +38,22 @@ public class UserView extends TabView<UserModel, UserController> {
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
         addTab(Res.get("user.nodes"), NavigationTarget.NODES);
-        sendNotificationTabButton = addTab(Res.get("user.sendNotification"), NavigationTarget.SEND_NOTIFICATION);
+        alertSenderTabButton = addTab(Res.get("user.alertSender"), NavigationTarget.SECURITY_MANAGER);
         headLine.setText(Res.get("user.headline"));
     }
 
     @Override
     protected void onViewAttached() {
-        sendNotificationTabButtonVisiblePin = EasyBind.subscribe(model.getSendNotificationTabButtonVisible(),
+        alertSenderTabButtonVisiblePin = EasyBind.subscribe(model.getAlertSenderTabButtonVisible(),
                 value -> {
-                    sendNotificationTabButton.setVisible(value);
-                    sendNotificationTabButton.setManaged(value);
+                    alertSenderTabButton.setVisible(value);
+                    alertSenderTabButton.setManaged(value);
                     maybeAnimateMark();
                 });
     }
 
     @Override
     protected void onViewDetached() {
-        sendNotificationTabButtonVisiblePin.unsubscribe();
+        alertSenderTabButtonVisiblePin.unsubscribe();
     }
 }

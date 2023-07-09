@@ -15,12 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.notifications;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextArea;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,40 +28,33 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SendNotificationView extends View<VBox, SendNotificationModel, SendNotificationController> {
+public class SecurityManagerView extends View<VBox, SecurityManagerModel, SecurityManagerController> {
     private final Button sendButton;
-    private final MaterialTextField publicKey;
-    private final MaterialPasswordField privateKey;
     private final MaterialTextArea message;
 
 
-    public SendNotificationView(SendNotificationModel model,
-                                SendNotificationController controller) {
+    public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("user.sendAlert.headline"));
+        Label headline = new Label(Res.get("authorizedRole.securityManager.alert.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
         // List<String> collect = List.of(AlertType.values()).stream().map(e -> Res.get("user.sendNotification." + e.name())).collect(Collectors.toList());
-        privateKey = new MaterialPasswordField(Res.get("user.sendAlert.privateKey"));
-        publicKey = new MaterialTextField(Res.get("user.sendAlert.publicKey"));
-        message = new MaterialTextArea(Res.get("user.sendAlert.message"));
+        message = new MaterialTextArea(Res.get("authorizedRole.securityManager.alert.message"));
 
-        sendButton = new Button(Res.get("user.sendAlert.sendAlert"));
+        sendButton = new Button(Res.get("authorizedRole.securityManager.alert.sendAlert"));
         sendButton.setDefaultButton(true);
         sendButton.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(sendButton, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, privateKey, publicKey, message, sendButton);
+        root.getChildren().addAll(headline, message, sendButton);
     }
 
     @Override
     protected void onViewAttached() {
-        privateKey.textProperty().bindBidirectional(model.getPrivateKey());
-        publicKey.textProperty().bindBidirectional(model.getPublicKey());
         message.textProperty().bindBidirectional(model.getMessage());
         sendButton.disableProperty().bind(model.getSendButtonDisabled());
 
@@ -72,8 +63,6 @@ public class SendNotificationView extends View<VBox, SendNotificationModel, Send
 
     @Override
     protected void onViewDetached() {
-        privateKey.textProperty().unbindBidirectional(model.getPrivateKey());
-        publicKey.textProperty().unbindBidirectional(model.getPublicKey());
         message.textProperty().unbindBidirectional(model.getMessage());
         sendButton.disableProperty().unbind();
 

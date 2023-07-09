@@ -18,10 +18,15 @@
 package bisq.bonded_roles;
 
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
+import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +81,43 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             //todo
             // authorizedDataSetOfRoleRegistrationData.remove((AuthorizedData) authenticatedData);
         }*/
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isAuthorizedByBondedRole(AuthenticatedData authenticatedData, BondedRoleType bondedRoleType) {
+        if (!(authenticatedData instanceof AuthorizedData)) {
+            return false;
+        }
+        AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+
+        DistributedData distributedData = authorizedData.getDistributedData();
+        if (!(distributedData instanceof DeferredAuthorizedPublicKeyValidation) &&
+                distributedData instanceof StaticallyAuthorizedPublicKeyValidation) {
+            // In case the distributedData has not implemented DeferredAuthorizedPublicKeyValidation the hardcoded key-set is used for 
+            // verification at the p2p network layer.
+            return true;
+        }
+
+        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+        boolean isStaticallyAuthorizedKey = false;
+        if (distributedData instanceof StaticallyAuthorizedPublicKeyValidation) {
+            StaticallyAuthorizedPublicKeyValidation data = (StaticallyAuthorizedPublicKeyValidation) distributedData;
+            isStaticallyAuthorizedKey = data.getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+        }
+
+        boolean isAuthorized = isStaticallyAuthorizedKey ||
+                authorizedBondedRoleSet.stream()
+                        .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
+                        .map(AuthorizedBondedRole::getAuthorizedPublicKey)
+                        .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey));
+        if (!isAuthorized) {
+            log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
+        }
+        return isAuthorized;
     }
 
 

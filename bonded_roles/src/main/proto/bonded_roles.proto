@@ -24,18 +24,20 @@ message AuthorizedOracleNode {
 
 message BondedRoleRegistrationRequest {
   string profileId = 1;
-  BondedRoleType bondedRoleType = 2;
-  string bondUserName = 3;
-  string signatureBase64 = 4;
-  map<string, network.Address> addressByNetworkType = 5;
+  string authorizedPublicKey = 2;
+  BondedRoleType bondedRoleType = 3;
+  string bondUserName = 4;
+  string signatureBase64 = 5;
+  map<string, network.Address> addressByNetworkType = 6;
 }
 
 message AuthorizedBondedRole {
   string profileId = 1;
-  BondedRoleType bondedRoleType = 2;
-  string bondUserName = 3;
-  string signature = 4;
-  map<string, network.Address> addressByNetworkType = 5;
-  AuthorizedOracleNode oracleNode = 6;
+  string authorizedPublicKey = 2;
+  BondedRoleType bondedRoleType = 3;
+  string bondUserName = 4;
+  string signature = 5;
+  map<string, network.Address> addressByNetworkType = 6;
+  AuthorizedOracleNode oracleNode = 7;
 }
 

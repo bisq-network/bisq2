@@ -15,27 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.alert;
+package bisq.support.security_manager;
 
 import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.security.KeyGeneration;
+import bisq.support.alert.AuthorizedAlertData;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class AlertService implements Service, DataService.Listener {
+public class SecurityManagerService implements Service {
     private final NetworkService networkService;
     @Getter
     private final ObservableSet<AuthorizedAlertData> authorizedAlertData = new ObservableSet<>();
@@ -43,9 +50,14 @@ public class AlertService implements Service, DataService.Listener {
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final UserProfileService userProfileService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final UserIdentityService userIdentityService;
 
-    public AlertService(NetworkService networkService, UserService userService, BondedRolesService bondedRolesService) {
+    public SecurityManagerService(NetworkService networkService,
+                                  IdentityService identityService,
+                                  UserService userService,
+                                  BondedRolesService bondedRolesService) {
         this.userProfileService = userService.getUserProfileService();
+        userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
     }
@@ -57,40 +69,41 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload().forEach(this::processAuthenticatedData));
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
+    public CompletableFuture<Boolean> publishAlert(NetworkIdWithKeyPair networkIdWithKeyPair,
+                                                   AuthorizedAlertData authorizedAlertData,
+                                                   String privateKey,
+                                                   String publicKey) throws GeneralSecurityException {
+        //     checkArgument(notificationSenders.stream().anyMatch(data -> data.getUserProfile().getNetworkId().equals(networkIdWithKeyPair.getNetworkId())));
+        PrivateKey authorizedPrivateKey = KeyGeneration.generatePrivate(Hex.decode(privateKey));
+        PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(publicKey));
+
+        Optional<NetworkIdWithKeyPair> rr = findMyNodeIdAndKeyPair();
+
+        return networkService.publishAuthorizedData(authorizedAlertData,
+                        networkIdWithKeyPair,
+                        authorizedPrivateKey,
+                        authorizedPublicKey)
+                .thenApply(broadCastDataResult -> true);
     }
 
-    @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
-            if (data.getRoleType() == RoleType.SECURITY_MANAGER) {
-                notificationSenders.remove(data);
-                updateHasNotificationSenderIdentity();
-            }
-        } else*/
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAlertData) {
-            AuthorizedAlertData data = (AuthorizedAlertData) authenticatedData.getDistributedData();
-            authorizedAlertData.remove(data);
-        }
+    private Optional<NetworkIdWithKeyPair> findMyNodeIdAndKeyPair() {
+        return authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                .filter(r -> r.getBondedRoleType() == BondedRoleType.SECURITY_MANAGER)
+                .flatMap(r -> userIdentityService.findUserIdentity(r.getProfileId()).stream())
+                .map(userIdentity -> userIdentity.getNodeIdAndKeyPair()).findAny();
     }
 
 
@@ -98,14 +111,6 @@ public class AlertService implements Service, DataService.Listener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (authorizedBondedRolesService.isAuthorizedByBondedRole(authenticatedData, BondedRoleType.SECURITY_MANAGER) &&
-                distributedData instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
-            this.authorizedAlertData.add(authorizedAlertData);
-        }
-    }
 
     private void updateHasNotificationSenderIdentity() {
        /* hasNotificationSenderIdentity.set(notificationSenders.stream()

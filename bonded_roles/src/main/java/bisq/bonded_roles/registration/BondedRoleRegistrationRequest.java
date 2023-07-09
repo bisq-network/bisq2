@@ -45,17 +45,20 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
             BondedRoleRegistrationRequest.class.getSimpleName());
 
     private final String profileId;
+    private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signatureBase64;
     private final Map<Transport.Type, Address> addressByNetworkType;
 
     public BondedRoleRegistrationRequest(String profileId,
+                                         String authorizedPublicKey,
                                          BondedRoleType bondedRoleType,
                                          String bondUserName,
                                          String signatureBase64,
                                          Map<Transport.Type, Address> addressByNetworkType) {
         this.profileId = profileId;
+        this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
         this.signatureBase64 = signatureBase64;
@@ -73,6 +76,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
     public bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest toAuthorizeRoleRegistrationRequestProto() {
         return bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest.newBuilder()
                 .setProfileId(profileId)
+                .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
@@ -86,6 +90,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
         return new BondedRoleRegistrationRequest(proto.getProfileId(),
+                proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignatureBase64(), addressByNetworkType);

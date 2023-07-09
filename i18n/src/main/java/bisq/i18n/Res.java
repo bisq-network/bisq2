@@ -42,6 +42,7 @@ public class Res {
                 ResourceBundle.getBundle("bisq_easy", locale),
                 ResourceBundle.getBundle("academy", locale),
                 ResourceBundle.getBundle("user", locale),
+                ResourceBundle.getBundle("authorized_role", locale),
                 ResourceBundle.getBundle("settings", locale)
         ));
     }

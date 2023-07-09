@@ -26,7 +26,6 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -43,9 +42,9 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedRole implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation, StaticallyAuthorizedPublicKeyValidation {
+public final class AuthorizedBondedRole implements AuthorizedDistributedData, StaticallyAuthorizedPublicKeyValidation {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
-    
+
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of();
 
@@ -54,36 +53,40 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, De
             AuthorizedBondedRole.class.getSimpleName());
 
     private final String profileId;
+    private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signature;
     private final Map<Transport.Type, Address> addressByNetworkType;
-    private final AuthorizedOracleNode oracleNode;
+    private final AuthorizedOracleNode authorizedOracleNode;
 
     public AuthorizedBondedRole(String profileId,
+                                String authorizedPublicKey,
                                 BondedRoleType bondedRoleType,
                                 String bondUserName,
                                 String signature,
                                 Map<Transport.Type, Address> addressByNetworkType,
-                                AuthorizedOracleNode oracleNode) {
+                                AuthorizedOracleNode authorizedOracleNode) {
         this.profileId = profileId;
+        this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
         this.signature = signature;
         this.addressByNetworkType = addressByNetworkType;
-        this.oracleNode = oracleNode;
+        this.authorizedOracleNode = authorizedOracleNode;
     }
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto() {
         return bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
                 .setProfileId(profileId)
+                .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignature(signature)
                 .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
-                .setOracleNode(oracleNode.toProto())
+                .setOracleNode(authorizedOracleNode.toProto())
                 .build();
     }
 
@@ -92,6 +95,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, De
                 .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
         return new AuthorizedBondedRole(proto.getProfileId(),
+                proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignature(),
@@ -119,6 +123,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, De
         return false;
     }
 
+    @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;

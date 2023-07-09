@@ -200,7 +200,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                         .forEach(authenticatedData -> {
                             if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
                                 AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) authenticatedData.getDistributedData();
-                                if (authorizedBondedRole.getOracleNode().equals(authorizedOracleNode)) {
+                                if (authorizedBondedRole.getAuthorizedOracleNode().equals(authorizedOracleNode)) {
                                     publishAuthorizedData(authorizedBondedRole);
                                 }
 
@@ -315,6 +315,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                     if (throwable == null) {
                         if (bondedRoleVerificationDto.getErrorMessage() == null) {
                             AuthorizedBondedRole data = new AuthorizedBondedRole(profileId,
+                                    request.getAuthorizedPublicKey(),
                                     bondedRoleType,
                                     bondUserName,
                                     signatureBase64,
