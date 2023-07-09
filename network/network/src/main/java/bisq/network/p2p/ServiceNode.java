@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -109,7 +108,7 @@ public class ServiceNode {
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
-                       List<Address> seedNodeAddresses,
+                       Set<Address> seedNodeAddresses,
                        Transport.Type transportType) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
