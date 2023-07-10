@@ -129,6 +129,13 @@ public class ServiceNodesByTransport {
         });
     }
 
+    public void removeSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
+        supportedTransportTypes.forEach(transportType -> {
+            Address seedNodeAddress = seedNodeAddressesByTransport.get(transportType);
+            map.get(transportType).removeSeedNodeAddress(seedNodeAddress);
+        });
+    }
+
     public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,
                                                              NetworkId receiverNetworkId,
                                                              KeyPair senderKeyPair,

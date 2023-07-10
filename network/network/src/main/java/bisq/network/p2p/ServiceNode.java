@@ -179,6 +179,10 @@ public class ServiceNode {
         peerGroupService.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
     }
 
+    public void removeSeedNodeAddress(Address seedNodeAddress) {
+        peerGroupService.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
+    }
+
     public ConfidentialMessageService.Result confidentialSend(NetworkMessage networkMessage,
                                                               Address address,
                                                               PubKey receiverPubKey,

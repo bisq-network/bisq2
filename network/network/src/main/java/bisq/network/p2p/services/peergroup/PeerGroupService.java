@@ -223,11 +223,15 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Add seed nodes
+    // Seed nodes
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
         peerGroup.addSeedNodeAddress(seedNodeAddress);
+    }
+
+    public void removeSeedNodeAddress(Address seedNodeAddress) {
+        peerGroup.removeSeedNodeAddress(seedNodeAddress);
     }
 
 
