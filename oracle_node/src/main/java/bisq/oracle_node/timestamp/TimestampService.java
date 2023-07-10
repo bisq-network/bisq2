@@ -19,7 +19,7 @@ package bisq.oracle_node.timestamp;
 
 import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.common.application.Service;
-import bisq.identity.IdentityService;
+import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -46,19 +46,18 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter
     private final Persistence<TimestampStore> persistence;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
+    @Setter
+    private Identity identity;
 
     public TimestampService(PersistenceService persistenceService,
-                            IdentityService identityService,
                             NetworkService networkService,
                             PrivateKey authorizedPrivateKey,
                             PublicKey authorizedPublicKey) {
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -75,7 +74,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload()
+        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedData()
                 .filter(data -> data.getDistributedData() instanceof AuthorizedTimestampData)
                 .map(data -> (AuthorizedTimestampData) data.getDistributedData())
                 .forEach(this::processAuthorizedTimestampData));
@@ -122,11 +121,10 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                .thenCompose(identity -> networkService.publishAuthorizedData(data,
+        return networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,
-                        authorizedPublicKey))
+                        authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
     }
 

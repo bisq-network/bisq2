@@ -17,6 +17,9 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.alert.AlertType;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -28,8 +31,6 @@ import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.support.alert.AlertType;
-import bisq.support.alert.AuthorizedAlertData;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -52,10 +53,11 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     private final MaterialTextArea message;
     private final MaterialTextField minVersion, bannedRoleProfileId;
     private final AutoCompleteComboBox<AlertType> alertTypeSelection;
+    private final AutoCompleteComboBox<BondedRoleType> bondedRoleTypeSelection;
     private final CheckBox haltTradingCheckBox, requireVersionForTradingCheckBox;
     private final HBox requireVersionForTradingHBox;
     private final BisqTableView<AlertListItem> tableView;
-    private Subscription selectedAlertTypePin;
+    private Subscription selectedAlertTypePin, selectedBondedRoleTypePin;
 
 
     public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller) {
@@ -76,6 +78,20 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
             @Override
             public AlertType fromString(String string) {
+                return null;
+            }
+        });
+
+        bondedRoleTypeSelection = new AutoCompleteComboBox<>(model.getBondedRoleTypes(), Res.get("authorizedRole.securityManager.selectBondedRoleTypes"));
+        bondedRoleTypeSelection.setPrefWidth(300);
+        bondedRoleTypeSelection.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(BondedRoleType bondedRoleType) {
+                return bondedRoleType != null ? Res.get("user.bondedRoles.type." + bondedRoleType.name()) : "";
+            }
+
+            @Override
+            public BondedRoleType fromString(String string) {
                 return null;
             }
         });
@@ -105,13 +121,14 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         tableView.getStyleClass().add("user-bonded-roles-table-view");
         configTableView();
 
-        VBox.setMargin(alertTypeSelection, new Insets(40, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(30, 0, 10, 0));
         VBox.setMargin(actionButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
-        VBox.setMargin(tableView, new Insets(30, 0, 0, 0));
-        root.getChildren().addAll(alertTypeSelection, message,
+        VBox.setMargin(tableHeadline, new Insets(30, 0, 10, 0));
+        root.getChildren().addAll(headline,
+                alertTypeSelection, message,
                 haltTradingCheckBox, requireVersionForTradingHBox,
-                bannedRoleProfileId,
+                bondedRoleTypeSelection, bannedRoleProfileId,
                 actionButton,
                 tableHeadline, tableView);
     }
@@ -128,6 +145,8 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         bannedRoleProfileId.textProperty().bindBidirectional(model.getBannedRoleProfileId());
         bannedRoleProfileId.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.BAN));
         bannedRoleProfileId.managedProperty().bind(bannedRoleProfileId.visibleProperty());
+        bondedRoleTypeSelection.visibleProperty().bind(bannedRoleProfileId.visibleProperty());
+        bondedRoleTypeSelection.managedProperty().bind(bannedRoleProfileId.visibleProperty());
 
         message.textProperty().bindBidirectional(model.getMessage());
         message.visibleProperty().bind(bannedRoleProfileId.visibleProperty().not());
@@ -143,12 +162,21 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             }
             controller.onSelectAlertType(alertTypeSelection.getSelectionModel().getSelectedItem());
         });
+        bondedRoleTypeSelection.setOnChangeConfirmed(e -> {
+            if (bondedRoleTypeSelection.getSelectionModel().getSelectedItem() == null) {
+                bondedRoleTypeSelection.getSelectionModel().select(model.getSelectedBondedRoleType().get());
+                return;
+            }
+            controller.onSelectBondedRoleType(bondedRoleTypeSelection.getSelectionModel().getSelectedItem());
+        });
         actionButton.setOnAction(e -> controller.onSendAlert());
         haltTradingCheckBox.selectedProperty().bindBidirectional(model.getHaltTrading());
         requireVersionForTradingCheckBox.selectedProperty().bindBidirectional(model.getRequireVersionForTrading());
 
         selectedAlertTypePin = EasyBind.subscribe(model.getSelectedAlertType(),
                 alertType -> alertTypeSelection.getSelectionModel().select(alertType));
+        selectedBondedRoleTypePin = EasyBind.subscribe(model.getSelectedBondedRoleType(),
+                bondedRoleType -> bondedRoleTypeSelection.getSelectionModel().select(bondedRoleType));
     }
 
     @Override
@@ -163,6 +191,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         bannedRoleProfileId.textProperty().unbindBidirectional(model.getBannedRoleProfileId());
         bannedRoleProfileId.visibleProperty().unbind();
         bannedRoleProfileId.managedProperty().unbind();
+        bondedRoleTypeSelection.visibleProperty().unbind();
+        bondedRoleTypeSelection.managedProperty().unbind();
+
 
         message.textProperty().unbindBidirectional(model.getMessage());
         message.visibleProperty().unbind();
@@ -174,9 +205,12 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         requireVersionForTradingCheckBox.selectedProperty().unbindBidirectional(model.getRequireVersionForTrading());
 
         alertTypeSelection.setOnChangeConfirmed(null);
+        bondedRoleTypeSelection.setOnChangeConfirmed(null);
+
         actionButton.setOnAction(null);
 
         selectedAlertTypePin.unsubscribe();
+        selectedBondedRoleTypePin.unsubscribe();
     }
 
     protected void configTableView() {
@@ -227,6 +261,12 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .valueSupplier(AlertListItem::getBannedRoleProfileId)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.bannedBondedRoleType"))
+                .minWidth(150)
+                .comparator(Comparator.comparing(AlertListItem::getBannedBondedRoleType))
+                .valueSupplier(AlertListItem::getBannedBondedRoleType)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .isSortable(false)
                 .minWidth(200)
                 .isLast()
@@ -268,6 +308,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         private final String minVersion;
         private final String bannedRoleProfileId;
         private final long date;
+        private final String bannedBondedRoleType;
 
         public AlertListItem(AuthorizedData authorizedData) {
             this.authorizedData = authorizedData;
@@ -280,6 +321,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             minVersion = alert.getMinVersion().orElse("");
             haltTrading = BooleanFormatter.toYesNo(alert.isHaltTrading());
             requireVersionForTrading = BooleanFormatter.toYesNo(alert.isRequireVersionForTrading());
+            bannedBondedRoleType = alert.getBannedBondedRoleType()
+                    .map(bondedRoleType -> Res.get("user.bondedRoles.type." + bondedRoleType.name()))
+                    .orElse("");
         }
     }
 }

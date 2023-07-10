@@ -25,11 +25,11 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.identity.IdentityService;
+import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
@@ -78,25 +78,25 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     @Getter
     private final Persistence<Bisq1BridgeStore> persistence;
     private final NetworkService networkService;
-    private final IdentityService identityService;
     private final Bisq1BridgeHttpService httpService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     private final String keyId;
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
+    @Setter
+    private Identity identity;
+
     @Nullable
     private Scheduler requestDoaDataScheduler, republishAuthorizedBondedRolesScheduler;
 
-    public Bisq1BridgeService(Bisq1BridgeService.Config config,
+    public Bisq1BridgeService(Config config,
                               NetworkService networkService,
                               PersistenceService persistenceService,
-                              IdentityService identityService,
                               PrivateKey authorizedPrivateKey,
                               PublicKey authorizedPublicKey,
                               String keyId) {
         this.networkService = networkService;
-        this.identityService = identityService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
         this.keyId = keyId;
@@ -134,6 +134,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         return httpService.shutdown();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,18 +152,18 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
+    private CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
         return httpService.requestProofOfBurnTxs();
     }
 
-    public CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
+    private CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
         return httpService.requestBondedReputations();
     }
 
-    public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
+    private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         return CompletableFutureUtils.allOf(proofOfBurnList.stream()
                         .map(dto -> new AuthorizedProofOfBurnData(
                                 dto.getAmount(),
@@ -172,7 +173,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                 .thenApply(results -> !results.contains(false));
     }
 
-    public CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
+    private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         return CompletableFutureUtils.allOf(bondedReputationList.stream()
                         .map(dto -> new AuthorizedBondedReputationData(
                                 dto.getAmount(),
@@ -183,31 +184,24 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                 .thenApply(results -> !results.contains(false));
     }
 
-
-    public CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
-                .thenCompose(identity -> networkService.publishAuthorizedData(data,
+    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        return networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,
-                        authorizedPublicKey))
+                        authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
     private void republishAuthorizedBondedRoles() {
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
-                        .forEach(authenticatedData -> {
-                            if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
-                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) authenticatedData.getDistributedData();
+                .ifPresent(dataService -> dataService.getAllAuthorizedData()
+                        .forEach(authorizedData -> {
+                            DistributedData distributedData = authorizedData.getDistributedData();
+                            if (distributedData instanceof AuthorizedBondedRole) {
+                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) distributedData;
                                 if (authorizedBondedRole.getAuthorizedOracleNode().equals(authorizedOracleNode)) {
                                     publishAuthorizedData(authorizedBondedRole);
                                 }
-
                             }
                         }));
     }

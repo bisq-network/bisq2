@@ -17,26 +17,31 @@
 
 package bisq.bonded_roles;
 
+import bisq.bonded_roles.alert.AlertType;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
     private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
     @Getter
     private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
 
@@ -52,8 +57,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
-                        .forEach(this::processAuthenticatedData));
+                .ifPresent(dataService -> dataService.getAllAuthorizedData()
+                        .forEach(this::processAddedAuthorizedData));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -71,16 +76,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        processAddedAuthorizedData(authorizedData);
     }
 
     @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            //todo
-            // authorizedDataSetOfRoleRegistrationData.remove((AuthorizedData) authenticatedData);
-        }*/
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        processRemovedAuthorizedData(authorizedData);
     }
 
 
@@ -88,12 +90,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isAuthorizedByBondedRole(AuthenticatedData authenticatedData, BondedRoleType bondedRoleType) {
-        if (!(authenticatedData instanceof AuthorizedData)) {
-            return false;
-        }
-        AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
-
+    public boolean isAuthorizedByBondedRole(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
         DistributedData distributedData = authorizedData.getDistributedData();
         if (!(distributedData instanceof DeferredAuthorizedPublicKeyValidation) &&
                 distributedData instanceof StaticallyAuthorizedPublicKeyValidation) {
@@ -120,18 +117,61 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         return isAuthorized;
     }
 
+    public Set<AuthorizedBondedRole> getAuthorizedBondedRoles(BondedRoleType bondedRoleType) {
+        return getAuthorizedBondedRoleSet().stream()
+                .filter(e -> e.getBondedRoleType() == bondedRoleType)
+                .collect(Collectors.toSet());
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.add((AuthorizedOracleNode) authenticatedData.getDistributedData());
-        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
-            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) authenticatedData.getDistributedData();
+    private void processAddedAuthorizedData(AuthorizedData authorizedData) {
+        DistributedData distributedData = authorizedData.getDistributedData();
+        if (distributedData instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) distributedData;
+            authorizedOracleNodes.add(authorizedOracleNode);
+            authorizedDataSet.add(authorizedData);
+        } else if (distributedData instanceof AuthorizedBondedRole) {
+            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) distributedData;
             authorizedBondedRoleSet.add(authorizedBondedRole);
+            authorizedDataSet.add(authorizedData);
             if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                 networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
+            }
+        } else if (distributedData instanceof AuthorizedAlertData) {
+            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
+            if (authorizedAlertData.getAlertType() == AlertType.BAN &&
+                    isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    authorizedAlertData.getBannedRoleProfileId().isPresent() &&
+                    authorizedAlertData.getBannedBondedRoleType().isPresent()) {
+                String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
+                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedBondedRoleType().get();
+                authorizedBondedRoleSet.stream()
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
+                        .forEach(bannedRole -> {
+                            authorizedBondedRoleSet.remove(bannedRole);
+                            authorizedDataSet.remove(authorizedData);
+                        });
+            }
+        }
+    }
+
+    private void processRemovedAuthorizedData(AuthorizedData authorizedData) {
+        DistributedData distributedData = authorizedData.getDistributedData();
+        if (distributedData instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) distributedData;
+            authorizedOracleNodes.remove(authorizedOracleNode);
+            authorizedDataSet.remove(authorizedData);
+        } else if (distributedData instanceof AuthorizedBondedRole) {
+            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) distributedData;
+            authorizedBondedRoleSet.remove(authorizedBondedRole);
+            authorizedDataSet.remove(authorizedData);
+            if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
             }
         }
     }

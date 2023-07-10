@@ -17,22 +17,25 @@
 
 package bisq.oracle_node;
 
+import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyGeneration;
-import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,6 +50,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class OracleNodeService implements Service {
+
+
     @Getter
     public static class Config {
         private final String privateKey;
@@ -82,8 +87,7 @@ public class OracleNodeService implements Service {
 
     private final IdentityService identityService;
     private final NetworkService networkService;
-    private final KeyPairService keyPairService;
-    private final ProofOfWorkService proofOfWorkService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
@@ -94,19 +98,21 @@ public class OracleNodeService implements Service {
     private final String bondUserName;
     private final String signatureBase64;
     private final String keyId;
+    private AuthorizedOracleNode authorizedOracleNode;
+    private Identity identity;
 
     @Nullable
     private Scheduler startupScheduler, scheduler;
 
-    public OracleNodeService(OracleNodeService.Config config,
+    public OracleNodeService(Config config,
                              IdentityService identityService,
                              NetworkService networkService,
                              PersistenceService persistenceService,
-                             SecurityService securityService) {
+                             SecurityService securityService,
+                             AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.identityService = identityService;
         this.networkService = networkService;
-        keyPairService = securityService.getKeyPairService();
-        proofOfWorkService = securityService.getProofOfWorkService();
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
 
         bondUserName = config.getBondUserName();
         signatureBase64 = config.getSignatureBase64();
@@ -127,13 +133,11 @@ public class OracleNodeService implements Service {
         bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
                 networkService,
                 persistenceService,
-                identityService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 keyId);
 
         timestampService = new TimestampService(persistenceService,
-                identityService,
                 networkService,
                 authorizedPrivateKey,
                 authorizedPublicKey);
@@ -146,15 +150,38 @@ public class OracleNodeService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return createMyAuthorizedOracleNode()
-                .thenCompose(authorizedOracleNode -> {
+        return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
+                .thenCompose(identity -> {
+                    this.identity = identity;
+                    bisq1BridgeService.setIdentity(identity);
+                    timestampService.setIdentity(identity);
+
+                    authorizedOracleNode = createMyAuthorizedOracleNode();
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
                     timestampService.setAuthorizedOracleNode(authorizedOracleNode);
+
+                    authorizedBondedRolesService.getAuthorizedDataSet().addListener(new CollectionObserver<>() {
+                        @Override
+                        public void add(AuthorizedData element) {
+                        }
+
+                        @Override
+                        public void remove(Object element) {
+                            if (element instanceof AuthorizedData) {
+                                AuthorizedData authorizedData = (AuthorizedData) element;
+                                if (authorizedData.getDistributedData() instanceof AuthorizedBondedRole) {
+                                    networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void clear() {
+                        }
+                    });
+
                     return bisq1BridgeService.initialize()
-                            .thenCompose(result -> {
-                                timestampService.setAuthorizedOracleNode(authorizedOracleNode);
-                                return timestampService.initialize();
-                            });
+                            .thenCompose(result -> timestampService.initialize());
                 });
     }
 
@@ -175,20 +202,17 @@ public class OracleNodeService implements Service {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<AuthorizedOracleNode> createMyAuthorizedOracleNode() {
-        return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
-                .thenApply(identity -> {
-                    AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64);
-                    // Repeat 3 times at startup to republish to ensure the data gets well distributed
-                    startupScheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair()))
-                            .repeated(1, 10, TimeUnit.SECONDS, 3);
+    private AuthorizedOracleNode createMyAuthorizedOracleNode() {
+        AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64);
+        // Repeat 3 times at startup to republish to ensure the data gets well distributed
+        startupScheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair()))
+                .repeated(1, 10, TimeUnit.SECONDS, 3);
 
-                    // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
-                    scheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair()))
-                            .periodically(25, TimeUnit.DAYS);
+        // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
+        scheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair()))
+                .periodically(25, TimeUnit.DAYS);
 
-                    return authorizedOracleNode;
-                });
+        return authorizedOracleNode;
     }
 
     private CompletableFuture<Boolean> publishAuthorizedOracleNode(AuthorizedOracleNode authorizedOracleNode, NetworkIdWithKeyPair nodeIdAndKeyPair) {

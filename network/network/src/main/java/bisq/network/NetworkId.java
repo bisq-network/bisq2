@@ -26,6 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@EqualsAndHashCode
 @Getter
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
@@ -67,6 +67,49 @@ public final class NetworkId implements Proto {
         return new NetworkId(addressByNetworkType, PubKey.fromProto(proto.getPubKey()), proto.getNodeId());
     }
 
+    public String getId() {
+        return pubKey.getId();
+    }
+
+    private List<AddressTransportTypeTuple> getAddressByNetworkTypeAsList() {
+        return addressByNetworkType.entrySet().stream()
+                .map(e -> new AddressTransportTypeTuple(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(AddressTransportTypeTuple::getAddress))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NetworkId networkId = (NetworkId) o;
+
+        if (pubKey != null ? !pubKey.equals(networkId.pubKey) : networkId.pubKey != null) return false;
+        if (nodeId != null ? !nodeId.equals(networkId.nodeId) : networkId.nodeId != null) return false;
+        List<AddressTransportTypeTuple> list1 = getAddressByNetworkTypeAsList();
+        List<AddressTransportTypeTuple> list2 = networkId.getAddressByNetworkTypeAsList();
+        return list1 != null ? list1.equals(list2) : list2 == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = pubKey != null ? pubKey.hashCode() : 0;
+        result = 31 * result + (nodeId != null ? nodeId.hashCode() : 0);
+        List<AddressTransportTypeTuple> list = getAddressByNetworkTypeAsList();
+        result = 31 * result + (list != null ? list.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkId{" +
+                "\r\n     pubKey=" + pubKey +
+                ",\r\n     nodeId='" + nodeId + '\'' +
+                ",\r\n     addressByNetworkType=" + addressByNetworkType +
+                "\r\n}";
+    }
+
     @Getter
     @ToString
     @EqualsAndHashCode
@@ -90,18 +133,5 @@ public final class NetworkId implements Proto {
             Transport.Type transportType = ProtobufUtils.enumFromProto(Transport.Type.class, proto.getTransportType());
             return new AddressTransportTypeTuple(transportType, Address.fromProto(proto.getAddress()));
         }
-    }
-
-    public String getId() {
-        return pubKey.getId();
-    }
-
-    @Override
-    public String toString() {
-        return "NetworkId{" +
-                "\r\n     pubKey=" + pubKey +
-                ",\r\n     nodeId='" + nodeId + '\'' +
-                ",\r\n     addressByNetworkType=" + addressByNetworkType +
-                "\r\n}";
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.alert;
+package bisq.bonded_roles.alert;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
@@ -27,11 +27,11 @@ public enum AlertType implements ProtoEnum {
     BAN;
 
     @Override
-    public bisq.support.protobuf.AlertType toProto() {
-        return bisq.support.protobuf.AlertType.valueOf(name());
+    public bisq.bonded_roles.protobuf.AlertType toProto() {
+        return bisq.bonded_roles.protobuf.AlertType.valueOf(name());
     }
 
-    public static AlertType fromProto(bisq.support.protobuf.AlertType proto) {
+    public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) {
         return ProtobufUtils.enumFromProto(AlertType.class, proto.name());
     }
 }

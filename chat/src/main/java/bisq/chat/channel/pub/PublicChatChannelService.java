@@ -61,7 +61,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
+                dataService.getAllAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
 
         return CompletableFuture.completedFuture(true);
     }

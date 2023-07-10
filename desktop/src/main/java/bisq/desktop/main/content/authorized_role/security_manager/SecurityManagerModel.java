@@ -17,8 +17,9 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.alert.AlertType;
 import bisq.desktop.common.view.Model;
-import bisq.support.alert.AlertType;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityManagerModel implements Model {
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
+    private final ObjectProperty<BondedRoleType> selectedBondedRoleType = new SimpleObjectProperty<>();
+    private final ObservableList<BondedRoleType> bondedRoleTypes = FXCollections.observableArrayList();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty message = new SimpleStringProperty();

@@ -17,6 +17,10 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.alert.AlertService;
+import bisq.bonded_roles.alert.AlertType;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -26,9 +30,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.support.alert.AlertService;
-import bisq.support.alert.AlertType;
-import bisq.support.alert.AuthorizedAlertData;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -39,6 +40,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
 import java.util.Date;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -51,13 +53,13 @@ public class SecurityManagerController implements Controller {
     private final SecurityManagerService securityManagerService;
     private final AlertService alertService;
     private Pin userIdentityPin;
-    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, bannedRoleProfileIdPin;
+    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, bannedRoleProfileIdPin, selectedBondedRoleTypePin;
     private Pin alertsPin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        alertService = serviceProvider.getSupportService().getAlertService();
+        alertService = serviceProvider.getBondedRolesService().getAlertService();
         model = new SecurityManagerModel();
         view = new SecurityManagerView(model, this);
     }
@@ -66,12 +68,14 @@ public class SecurityManagerController implements Controller {
     public void onActivate() {
         applySelectAlertType(AlertType.INFO);
         model.getAlertTypes().setAll(AlertType.values());
+        model.getBondedRoleTypes().setAll(BondedRoleType.values());
 
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updateSendButtonDisabled));
         messagePin = EasyBind.subscribe(model.getMessage(), e -> updateSendButtonDisabled());
         requireVersionForTradingPin = EasyBind.subscribe(model.getRequireVersionForTrading(), e -> updateSendButtonDisabled());
         minVersionPin = EasyBind.subscribe(model.getMinVersion(), e -> updateSendButtonDisabled());
         bannedRoleProfileIdPin = EasyBind.subscribe(model.getBannedRoleProfileId(), e -> updateSendButtonDisabled());
+        selectedBondedRoleTypePin = EasyBind.subscribe(model.getSelectedBondedRoleType(), e -> updateSendButtonDisabled());
 
         alertsPin = FxBindings.<AuthorizedData, SecurityManagerView.AlertListItem>bind(model.getBondedRolesListItems())
                 .map(SecurityManagerView.AlertListItem::new)
@@ -85,12 +89,19 @@ public class SecurityManagerController implements Controller {
         requireVersionForTradingPin.unsubscribe();
         minVersionPin.unsubscribe();
         bannedRoleProfileIdPin.unsubscribe();
+        selectedBondedRoleTypePin.unsubscribe();
         alertsPin.unbind();
     }
 
     void onSelectAlertType(AlertType alertType) {
         if (alertType != null) {
             applySelectAlertType(alertType);
+        }
+    }
+
+    public void onSelectBondedRoleType(BondedRoleType bondedRoleType) {
+        if (bondedRoleType != null) {
+            model.getSelectedBondedRoleType().set(bondedRoleType);
         }
     }
 
@@ -110,7 +121,8 @@ public class SecurityManagerController implements Controller {
                 model.getHaltTrading().get(),
                 model.getRequireVersionForTrading().get(),
                 StringUtils.toOptional(model.getMinVersion().get()),
-                StringUtils.toOptional(model.getBannedRoleProfileId().get()));
+                StringUtils.toOptional(model.getBannedRoleProfileId().get()),
+                Optional.ofNullable(model.getSelectedBondedRoleType().get()));
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
         securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair(),
@@ -133,9 +145,11 @@ public class SecurityManagerController implements Controller {
                 model.getRequireVersionForTrading().set(false);
                 model.getMinVersion().set(null);
                 model.getBannedRoleProfileId().set(null);
+                model.getSelectedBondedRoleType().set(null);
                 break;
             case EMERGENCY:
                 model.getBannedRoleProfileId().set(null);
+                model.getSelectedBondedRoleType().set(null);
                 break;
             case BAN:
                 model.getHaltTrading().set(false);
@@ -165,7 +179,8 @@ public class SecurityManagerController implements Controller {
                 model.getActionButtonDisabled().set(isMessageEmpty || isMinVersionNeededAndEmpty);
                 break;
             case BAN:
-                model.getActionButtonDisabled().set(StringUtils.isEmpty(model.getBannedRoleProfileId().get()));
+                model.getActionButtonDisabled().set(StringUtils.isEmpty(model.getBannedRoleProfileId().get()) ||
+                        model.getSelectedBondedRoleType().get() == null);
                 break;
         }
     }

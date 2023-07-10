@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.alert;
+package bisq.bonded_roles.alert;
 
 import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
-import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
@@ -28,10 +27,10 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -43,9 +42,9 @@ public class AlertService implements Service, DataService.Listener {
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
-    public AlertService(NetworkService networkService, UserService userService, BondedRolesService bondedRolesService) {
+    public AlertService(NetworkService networkService, AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.networkService = networkService;
-        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
 
@@ -56,7 +55,7 @@ public class AlertService implements Service, DataService.Listener {
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload().forEach(this::processAddedAuthenticatedData));
+        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedData().forEach(this::processAddedAuthenticatedData));
         return CompletableFuture.completedFuture(true);
     }
 
@@ -78,14 +77,7 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData instanceof AuthorizedData) {
-            AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
-            DistributedData distributedData = authorizedData.getDistributedData();
-            if (authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
-                    distributedData instanceof AuthorizedAlertData) {
-                authorizedDataSet.remove(authorizedData);
-            }
-        }
+        processRemovedAuthenticatedData(authenticatedData);
     }
 
 
@@ -94,13 +86,22 @@ public class AlertService implements Service, DataService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAddedAuthenticatedData(AuthenticatedData authenticatedData) {
+        findAuthorizedDataOfAlertData(authenticatedData).ifPresent(authorizedDataSet::add);
+    }
+
+    private void processRemovedAuthenticatedData(AuthenticatedData authenticatedData) {
+        findAuthorizedDataOfAlertData(authenticatedData).ifPresent(authorizedDataSet::remove);
+    }
+
+    private Optional<AuthorizedData> findAuthorizedDataOfAlertData(AuthenticatedData authenticatedData) {
         if (authenticatedData instanceof AuthorizedData) {
             AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
             DistributedData distributedData = authorizedData.getDistributedData();
             if (authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
                     distributedData instanceof AuthorizedAlertData) {
-                authorizedDataSet.add(authorizedData);
+                return Optional.of(authorizedData);
             }
         }
+        return Optional.empty();
     }
 }

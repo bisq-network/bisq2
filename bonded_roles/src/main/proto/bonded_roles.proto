@@ -41,3 +41,21 @@ message AuthorizedBondedRole {
   AuthorizedOracleNode oracleNode = 7;
 }
 
+enum AlertType {
+  INFO = 0;
+  WARN = 1;
+  EMERGENCY = 2;
+  BAN = 3;
+}
+
+message AuthorizedAlertData {
+  string id = 1;
+  sint64 date = 2;
+  AlertType alertType = 3;
+  optional string message = 4;
+  bool haltTrading = 5;
+  bool requireVersionForTrading = 6;
+  optional string minVersion = 7;
+  optional string bannedRoleProfileId = 8;
+  optional BondedRoleType bannedBondedRoleType = 9;
+}

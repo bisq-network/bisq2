@@ -28,7 +28,7 @@ import java.util.StringTokenizer;
 
 @EqualsAndHashCode
 @Getter
-public final class Address implements Proto {
+public final class Address implements Proto, Comparable<Address> {
     public static Address localHost(int port) {
         return new Address("127.0.0.1", port);
     }
@@ -98,5 +98,10 @@ public final class Address implements Proto {
 
     private String maybeConvertLocalHost(String host) {
         return host.equals("localhost") ? "127.0.0.1" : host;
+    }
+
+    @Override
+    public int compareTo(Address o) {
+        return getFullAddress().compareTo(o.getFullAddress());
     }
 }

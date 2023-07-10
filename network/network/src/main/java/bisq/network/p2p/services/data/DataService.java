@@ -32,6 +32,7 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
@@ -70,13 +71,19 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public interface Listener {
+        default void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        }
+
+        default void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        }
+
         default void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         }
 
-        default void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
+        default void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         }
 
-        default void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        default void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
         }
 
         default void onMailboxDataAdded(MailboxData mailboxData) {
@@ -165,8 +172,14 @@ public class DataService implements DataNetworkService.Listener {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedData> getAllAuthenticatedPayload() {
+    public Stream<AuthenticatedData> getAllAuthenticatedData() {
         return storageService.getAllAuthenticatedPayload();
+    }
+
+    public Stream<AuthorizedData> getAllAuthorizedData() {
+        return getAllAuthenticatedData()
+                .filter(authenticatedData -> authenticatedData instanceof AuthorizedData)
+                .map(authorizedData -> (AuthorizedData) authorizedData);
     }
 
     public Stream<AuthenticatedData> getAuthenticatedPayloadStreamByStoreName(String storeName) {

@@ -17,6 +17,8 @@
 
 package bisq.desktop.main;
 
+import bisq.bonded_roles.alert.AlertService;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -30,8 +32,6 @@ import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.settings.SettingsService;
-import bisq.support.alert.AlertService;
-import bisq.support.alert.AuthorizedAlertData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +55,7 @@ public class MainController extends NavigationController {
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
 
-        alertService = serviceProvider.getSupportService().getAlertService();
+        alertService = serviceProvider.getBondedRolesService().getAlertService();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
