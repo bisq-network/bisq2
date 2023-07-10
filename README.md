@@ -1,5 +1,7 @@
 # Bisq v2
 
+Hello world
+
 Bisq v2 (fka Misq) will be the successor to [Bisq v1](https://github.com/bisq-network/bisq).
 
 Contents:
