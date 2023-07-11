@@ -149,7 +149,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         Set<String> myProfileIds = userIdentityService.getUserIdentities().stream()
                 .map(userIdentity -> userIdentity.getUserProfile().getId())
                 .collect(Collectors.toSet());
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedData().forEach(authenticatedData -> {
+        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData().forEach(authenticatedData -> {
             if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
                 AuthorizedTimestampData data = (AuthorizedTimestampData) authenticatedData.getDistributedData();
                 myProfileIds.remove(data.getProfileId());

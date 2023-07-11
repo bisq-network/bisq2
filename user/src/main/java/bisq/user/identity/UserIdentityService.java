@@ -100,7 +100,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         log.info("initialize");
 
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedData()
+                .ifPresent(dataService -> dataService.getAuthenticatedData()
                         .forEach(this::processAuthenticatedData));
         networkService.addDataServiceListener(this);
 

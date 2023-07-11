@@ -56,7 +56,7 @@ public class OfferMessageService implements Service, DataService.Listener {
         log.info("initialize");
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAllAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
+                dataService.getAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
         return CompletableFuture.completedFuture(true);
     }
 

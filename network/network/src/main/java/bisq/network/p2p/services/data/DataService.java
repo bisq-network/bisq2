@@ -176,18 +176,18 @@ public class DataService implements DataNetworkService.Listener {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedData> getAllAuthenticatedData() {
-        return storageService.getAllAuthenticatedPayload();
+    public Stream<AuthenticatedData> getAuthenticatedData() {
+        return storageService.getAuthenticatedData();
     }
 
-    public Stream<AuthorizedData> getAllAuthorizedData() {
-        return getAllAuthenticatedData()
+    public Stream<AuthorizedData> getAuthorizedData() {
+        return getAuthenticatedData()
                 .filter(authenticatedData -> authenticatedData instanceof AuthorizedData)
                 .map(authenticatedData -> (AuthorizedData) authenticatedData);
     }
 
     public Stream<AuthenticatedData> getAuthenticatedPayloadStreamByStoreName(String storeName) {
-        return storageService.getAuthenticatedPayloadStream(storeName);
+        return storageService.getAuthenticatedData(storeName);
     }
 
 

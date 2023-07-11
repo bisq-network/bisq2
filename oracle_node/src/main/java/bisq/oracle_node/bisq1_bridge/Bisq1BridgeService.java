@@ -194,7 +194,7 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
 
     private void republishAuthorizedBondedRoles() {
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthorizedData()
+                .ifPresent(dataService -> dataService.getAuthorizedData()
                         .forEach(authorizedData -> {
                             DistributedData distributedData = authorizedData.getDistributedData();
                             if (distributedData instanceof AuthorizedBondedRole) {

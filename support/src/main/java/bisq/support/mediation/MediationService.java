@@ -78,7 +78,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedData().forEach(this::processAuthenticatedData));
+        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData().forEach(this::processAuthenticatedData));
         return CompletableFuture.completedFuture(true);
     }
 

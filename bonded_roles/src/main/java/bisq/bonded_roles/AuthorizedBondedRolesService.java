@@ -57,7 +57,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthorizedData()
+                .ifPresent(dataService -> dataService.getAuthorizedData()
                         .forEach(this::processAddedAuthorizedData));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);

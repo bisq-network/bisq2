@@ -73,7 +73,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedData()
+                .ifPresent(dataService -> dataService.getAuthenticatedData()
                         .forEach(this::processAuthenticatedData));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);

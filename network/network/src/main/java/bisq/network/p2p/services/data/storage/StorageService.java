@@ -164,19 +164,19 @@ public class StorageService {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedData> getAllAuthenticatedPayload() {
-        return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedPayloadStream);
+    public Stream<AuthenticatedData> getAuthenticatedData() {
+        return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedData);
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedPayloadStream(String storeName) {
-        return getAuthenticatedPayloadStream(getStoreByStoreName(storeName));
+    public Stream<AuthenticatedData> getAuthenticatedData(String storeName) {
+        return getAuthenticatedData(getStoreByStoreName(storeName));
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedPayloadStream(Stream<DataStorageService<? extends DataRequest>> stores) {
-        return stores.flatMap(this::getAuthenticatedPayloadStream);
+    public Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
+        return stores.flatMap(this::getAuthenticatedData);
     }
 
-    private Stream<AuthenticatedData> getAuthenticatedPayloadStream(DataStorageService<? extends DataRequest> store) {
+    private Stream<AuthenticatedData> getAuthenticatedData(DataStorageService<? extends DataRequest> store) {
         return store.getPersistableStore().getClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)

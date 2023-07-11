@@ -74,7 +74,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedData()
+        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData()
                 .filter(data -> data.getDistributedData() instanceof AuthorizedTimestampData)
                 .map(data -> (AuthorizedTimestampData) data.getDistributedData())
                 .forEach(this::processAuthorizedTimestampData));

@@ -55,7 +55,7 @@ public class AlertService implements Service, DataService.Listener {
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedData().forEach(this::processAddedAuthenticatedData));
+        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData().forEach(this::processAddedAuthenticatedData));
         return CompletableFuture.completedFuture(true);
     }
 
