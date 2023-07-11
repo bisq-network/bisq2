@@ -78,7 +78,13 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof UserProfile) {
-            processUserProfileAdded((UserProfile) distributedData);
+            UserProfile userProfile = (UserProfile) distributedData;
+            Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
+            if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
+                getUserProfileById().put(userProfile.getId(), userProfile);
+                notifyObservers();
+                persist();
+            }
         }
     }
 
@@ -86,7 +92,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof UserProfile) {
-            processUserProfileRemoved((UserProfile) distributedData);
+            UserProfile userProfile = (UserProfile) distributedData;
+            getUserProfileById().remove(userProfile.getId());
+            notifyObservers();
+            persist();
         }
     }
 
@@ -150,23 +159,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     public Map<String, UserProfile> getUserProfileById() {
         return persistableStore.getUserProfileById();
-    }
-
-    private void processUserProfileAdded(UserProfile userProfile) {
-        Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
-        if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
-            log.info("We got a new or edited userProfile {}", userProfile);
-            getUserProfileById().put(userProfile.getId(), userProfile);
-            notifyObservers();
-            persist();
-        }
-    }
-
-    private void processUserProfileRemoved(UserProfile userProfile) {
-        log.info("Remove userProfile {}", userProfile);
-        getUserProfileById().remove(userProfile.getId());
-        notifyObservers();
-        persist();
     }
 
     private void notifyObservers() {

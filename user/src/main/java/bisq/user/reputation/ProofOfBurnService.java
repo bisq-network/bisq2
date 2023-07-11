@@ -20,7 +20,7 @@ package bisq.user.reputation;
 import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -28,6 +28,7 @@ import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Getter
@@ -46,10 +47,10 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData) {
-            processData((AuthorizedProofOfBurnData) authenticatedData.getDistributedData());
-        }
+    protected Optional<AuthorizedProofOfBurnData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
+        return authorizedDistributedData instanceof AuthorizedProofOfBurnData ?
+                Optional.of((AuthorizedProofOfBurnData) authorizedDistributedData) :
+                Optional.empty();
     }
 
     @Override

@@ -21,7 +21,8 @@ import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -78,10 +79,10 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
-            AuthorizedTimestampData data = (AuthorizedTimestampData) authenticatedData.getDistributedData();
-            String userProfileId = data.getProfileId();
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
+            AuthorizedTimestampData timestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
+            String userProfileId = timestampData.getProfileId();
             userProfileService.findUserProfile(userProfileId)
                     .map(this::getUserProfileKey)
                     .ifPresent(dataSetByHash::remove);
@@ -93,10 +94,10 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
-            processData((AuthorizedTimestampData) authenticatedData.getDistributedData());
-        }
+    protected Optional<AuthorizedTimestampData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
+        return authorizedDistributedData instanceof AuthorizedTimestampData ?
+                Optional.of((AuthorizedTimestampData) authorizedDistributedData) :
+                Optional.empty();
     }
 
     @Override
@@ -144,24 +145,32 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     private void maybeRequestAgain() {
-        // We check if we have some userProfiles which have not been timestamped yet (using the p2p network data).
-        // If so, we request timestamping of the missing one.
-        Set<String> myProfileIds = userIdentityService.getUserIdentities().stream()
-                .map(userIdentity -> userIdentity.getUserProfile().getId())
-                .collect(Collectors.toSet());
-        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData().forEach(authenticatedData -> {
-            if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
-                AuthorizedTimestampData data = (AuthorizedTimestampData) authenticatedData.getDistributedData();
-                myProfileIds.remove(data.getProfileId());
-            }
-        }));
-        myProfileIds.forEach(this::requestTimestamp);
+        boolean didRequestForAllProfileIds = requestForAllProfileIdsBeforeExpired();
+        if (!didRequestForAllProfileIds) {
+            // We check if we have some userProfiles which have not been timestamped yet.
+            // If so, we request timestamping of the missing one.
+            var timeStamped = networkService.getDataService()
+                    .map(service -> service.getAuthorizedData()
+                            .filter(authorizedData -> authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData)
+                            .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
+                            .map(AuthorizedTimestampData::getProfileId)
+                            .collect(Collectors.toSet()));
+            userIdentityService.getUserIdentities().stream()
+                    .map(userIdentity -> userIdentity.getUserProfile().getId())
+                    .filter(profileId -> timeStamped.isEmpty() || !timeStamped.get().contains(profileId))
+                    .forEach(this::requestTimestamp);
+        }
+    }
 
+    private boolean requestForAllProfileIdsBeforeExpired() {
         // Before timeout gets triggered we request 
         long now = System.currentTimeMillis();
         if (now - persistableStore.getLastRequested() > AuthorizedTimestampData.TTL / 2) {
             persistableStore.getProfileIds().forEach(this::requestTimestamp);
             persistableStore.setLastRequested(now);
+            persist();
+            return true;
         }
+        return false;
     }
 }

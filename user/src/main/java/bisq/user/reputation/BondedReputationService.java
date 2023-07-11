@@ -20,13 +20,15 @@ package bisq.user.reputation;
 import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.data.AuthorizedBondedReputationData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -42,10 +44,10 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedBondedReputationData) {
-            processData((AuthorizedBondedReputationData) authenticatedData.getDistributedData());
-        }
+    protected Optional<AuthorizedBondedReputationData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
+        return authorizedDistributedData instanceof AuthorizedBondedReputationData ?
+                Optional.of((AuthorizedBondedReputationData) authorizedDistributedData) :
+                Optional.empty();
     }
 
     @Override

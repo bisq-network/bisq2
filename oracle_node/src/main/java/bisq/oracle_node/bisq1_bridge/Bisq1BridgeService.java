@@ -29,7 +29,6 @@ import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
@@ -196,9 +195,9 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         networkService.getDataService()
                 .ifPresent(dataService -> dataService.getAuthorizedData()
                         .forEach(authorizedData -> {
-                            DistributedData distributedData = authorizedData.getDistributedData();
-                            if (distributedData instanceof AuthorizedBondedRole) {
-                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) distributedData;
+                            AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+                            if (data instanceof AuthorizedBondedRole) {
+                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
                                 if (authorizedBondedRole.getAuthorizedOracleNode().equals(authorizedOracleNode)) {
                                     publishAuthorizedData(authorizedBondedRole);
                                 }

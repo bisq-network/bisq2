@@ -169,7 +169,7 @@ public class OracleNodeService implements Service {
                         public void remove(Object element) {
                             if (element instanceof AuthorizedData) {
                                 AuthorizedData authorizedData = (AuthorizedData) element;
-                                if (authorizedData.getDistributedData() instanceof AuthorizedBondedRole) {
+                                if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole) {
                                     networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair());
                                 }
                             }

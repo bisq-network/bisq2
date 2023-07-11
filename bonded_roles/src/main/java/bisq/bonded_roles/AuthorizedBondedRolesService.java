@@ -24,8 +24,8 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import lombok.Getter;
@@ -58,7 +58,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public CompletableFuture<Boolean> initialize() {
         networkService.getDataService()
                 .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .forEach(this::processAddedAuthorizedData));
+                        .forEach(this::onAuthorizedDataAdded));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -77,72 +77,20 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        processAddedAuthorizedData(authorizedData);
-    }
-
-    @Override
-    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        processRemovedAuthorizedData(authorizedData);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public boolean isAuthorizedByBondedRole(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
-        DistributedData distributedData = authorizedData.getDistributedData();
-        if (!(distributedData instanceof DeferredAuthorizedPublicKeyValidation) &&
-                distributedData instanceof StaticallyAuthorizedPublicKeyValidation) {
-            // In case the distributedData has not implemented DeferredAuthorizedPublicKeyValidation the hardcoded key-set is used for 
-            // verification at the p2p network layer.
-            return true;
-        }
-
-        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
-        boolean isStaticallyAuthorizedKey = false;
-        if (distributedData instanceof StaticallyAuthorizedPublicKeyValidation) {
-            StaticallyAuthorizedPublicKeyValidation data = (StaticallyAuthorizedPublicKeyValidation) distributedData;
-            isStaticallyAuthorizedKey = data.getAuthorizedPublicKeys().contains(authorizedDataPubKey);
-        }
-
-        boolean isAuthorized = isStaticallyAuthorizedKey ||
-                authorizedBondedRoleSet.stream()
-                        .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
-                        .map(AuthorizedBondedRole::getAuthorizedPublicKey)
-                        .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey));
-        if (!isAuthorized) {
-            log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
-        }
-        return isAuthorized;
-    }
-
-    public Set<AuthorizedBondedRole> getAuthorizedBondedRoles(BondedRoleType bondedRoleType) {
-        return getAuthorizedBondedRoleSet().stream()
-                .filter(e -> e.getBondedRoleType() == bondedRoleType)
-                .collect(Collectors.toSet());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void processAddedAuthorizedData(AuthorizedData authorizedData) {
-        DistributedData distributedData = authorizedData.getDistributedData();
-        if (distributedData instanceof AuthorizedOracleNode) {
-            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) distributedData;
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (data instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) data;
             authorizedOracleNodes.add(authorizedOracleNode);
             authorizedDataSet.add(authorizedData);
-        } else if (distributedData instanceof AuthorizedBondedRole) {
-            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) distributedData;
+        } else if (data instanceof AuthorizedBondedRole) {
+            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
             authorizedBondedRoleSet.add(authorizedBondedRole);
             authorizedDataSet.add(authorizedData);
             if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                 networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
             }
-        } else if (distributedData instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) distributedData;
+        } else if (data instanceof AuthorizedAlertData) {
+            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
                     isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
                     authorizedAlertData.getBannedRoleProfileId().isPresent() &&
@@ -160,19 +108,57 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
     }
 
-    private void processRemovedAuthorizedData(AuthorizedData authorizedData) {
-        DistributedData distributedData = authorizedData.getDistributedData();
-        if (distributedData instanceof AuthorizedOracleNode) {
-            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) distributedData;
+    @Override
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (data instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) data;
             authorizedOracleNodes.remove(authorizedOracleNode);
             authorizedDataSet.remove(authorizedData);
-        } else if (distributedData instanceof AuthorizedBondedRole) {
-            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) distributedData;
+        } else if (data instanceof AuthorizedBondedRole) {
+            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
             authorizedBondedRoleSet.remove(authorizedBondedRole);
             authorizedDataSet.remove(authorizedData);
             if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                 networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
             }
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isAuthorizedByBondedRole(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (!(data instanceof DeferredAuthorizedPublicKeyValidation) &&
+                data instanceof StaticallyAuthorizedPublicKeyValidation) {
+            // In case the data has not implemented DeferredAuthorizedPublicKeyValidation the hardcoded key-set is used for 
+            // verification at the p2p network layer.
+            return true;
+        }
+
+        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+        boolean isStaticallyAuthorizedKey = false;
+        if (data instanceof StaticallyAuthorizedPublicKeyValidation) {
+            isStaticallyAuthorizedKey = ((StaticallyAuthorizedPublicKeyValidation) data).getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+        }
+
+        boolean isAuthorized = isStaticallyAuthorizedKey ||
+                authorizedBondedRoleSet.stream()
+                        .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
+                        .map(AuthorizedBondedRole::getAuthorizedPublicKey)
+                        .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey));
+        if (!isAuthorized) {
+            log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
+        }
+        return isAuthorized;
+    }
+
+    public Set<AuthorizedBondedRole> getAuthorizedBondedRoles(BondedRoleType bondedRoleType) {
+        return getAuthorizedBondedRoleSet().stream()
+                .filter(e -> e.getBondedRoleType() == bondedRoleType)
+                .collect(Collectors.toSet());
     }
 }

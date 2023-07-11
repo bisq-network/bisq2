@@ -24,7 +24,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -74,10 +74,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData()
-                .filter(data -> data.getDistributedData() instanceof AuthorizedTimestampData)
-                .map(data -> (AuthorizedTimestampData) data.getDistributedData())
-                .forEach(this::processAuthorizedTimestampData));
+        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
 
         persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value)));
 
@@ -109,9 +106,15 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
-            processAuthorizedTimestampData((AuthorizedTimestampData) authenticatedData.getDistributedData());
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
+            AuthorizedTimestampData authorizedTimestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
+            // We might get data published from other oracle nodes and put it into our local store.
+            String profileId = authorizedTimestampData.getProfileId();
+            if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
+                persistableStore.getTimestampsByProfileId().put(profileId, authorizedTimestampData.getDate());
+                persist();
+            }
         }
     }
 
@@ -140,15 +143,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
             // to republish it.
             long date = persistableStore.getTimestampsByProfileId().get(profileId);
             publishAuthorizedData(new AuthorizedTimestampData(profileId, date));
-        }
-    }
-
-    private void processAuthorizedTimestampData(AuthorizedTimestampData data) {
-        // We might get data published from other oracle nodes and put it into our local store.
-        String profileId = data.getProfileId();
-        if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
-            persistableStore.getTimestampsByProfileId().put(profileId, data.getDate());
-            persist();
         }
     }
 }

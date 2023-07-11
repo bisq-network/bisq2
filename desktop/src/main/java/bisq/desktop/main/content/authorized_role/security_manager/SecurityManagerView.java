@@ -312,7 +312,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
         public AlertListItem(AuthorizedData authorizedData) {
             this.authorizedData = authorizedData;
-            this.alert = (AuthorizedAlertData) authorizedData.getDistributedData();
+            this.alert = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
             date = alert.getDate();
             dateString = DateFormatter.formatDateTime(date);
             alertType = Res.get("authorizedRole.securityManager.alertType." + alert.getAlertType().name());

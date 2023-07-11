@@ -24,7 +24,7 @@ import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,9 +73,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthenticatedData()
-                        .forEach(this::processAuthenticatedData));
+        networkService.getDataService().ifPresent(dataService -> dataService.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -86,26 +85,25 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     }
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
-    }
-
-    protected abstract void processAuthenticatedData(AuthenticatedData authenticatedData);
-
-    protected void processData(T data) {
-        ByteArray providedHash = getDataKey(data);
-        userProfileService.getUserProfileById().values().stream()
-                .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
-                .forEach(userProfile -> {
-                    ByteArray hash = getUserProfileKey(userProfile);
-                    if (!dataSetByHash.containsKey(hash)) {
-                        dataSetByHash.put(hash, new HashSet<>());
-                    }
-                    Set<T> dataSet = dataSetByHash.get(hash);
-                    addToDataSet(dataSet, data);
-                    putScore(userProfile.getId(), dataSet);
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        findRelevantData(authorizedData.getAuthorizedDistributedData())
+                .ifPresent(data -> {
+                    ByteArray providedHash = getDataKey(data);
+                    userProfileService.getUserProfileById().values().stream()
+                            .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
+                            .forEach(userProfile -> {
+                                ByteArray hash = getUserProfileKey(userProfile);
+                                if (!dataSetByHash.containsKey(hash)) {
+                                    dataSetByHash.put(hash, new HashSet<>());
+                                }
+                                Set<T> dataSet = dataSetByHash.get(hash);
+                                addToDataSet(dataSet, data);
+                                putScore(userProfile.getId(), dataSet);
+                            });
                 });
     }
+
+    protected abstract Optional<T> findRelevantData(AuthorizedDistributedData authorizedDistributedData);
 
     // Some services don't support multiple entries and will override that method
     protected void addToDataSet(Set<T> dataSet, T data) {

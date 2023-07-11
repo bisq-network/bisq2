@@ -24,9 +24,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +54,7 @@ public class AlertService implements Service, DataService.Listener {
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData().forEach(this::processAddedAuthenticatedData));
+        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
         return CompletableFuture.completedFuture(true);
     }
 
@@ -71,36 +70,24 @@ public class AlertService implements Service, DataService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAddedAuthenticatedData(authenticatedData);
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedDataSet::add);
     }
 
     @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        processRemovedAuthenticatedData(authenticatedData);
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedDataSet::remove);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processAddedAuthenticatedData(AuthenticatedData authenticatedData) {
-        findAuthorizedDataOfAlertData(authenticatedData).ifPresent(authorizedDataSet::add);
-    }
-
-    private void processRemovedAuthenticatedData(AuthenticatedData authenticatedData) {
-        findAuthorizedDataOfAlertData(authenticatedData).ifPresent(authorizedDataSet::remove);
-    }
-
-    private Optional<AuthorizedData> findAuthorizedDataOfAlertData(AuthenticatedData authenticatedData) {
-        if (authenticatedData instanceof AuthorizedData) {
-            AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
-            DistributedData distributedData = authorizedData.getDistributedData();
-            if (authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
-                    distributedData instanceof AuthorizedAlertData) {
-                return Optional.of(authorizedData);
-            }
+    private Optional<AuthorizedData> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (data instanceof AuthorizedAlertData &&
+                authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
+            return Optional.of(authorizedData);
         }
         return Optional.empty();
     }

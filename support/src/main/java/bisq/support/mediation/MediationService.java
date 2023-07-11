@@ -31,8 +31,6 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.security.DigestUtil;
 import bisq.user.UserService;
@@ -51,7 +49,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class MediationService implements Service, DataService.Listener, MessageListener {
+public class MediationService implements Service, MessageListener {
     private final NetworkService networkService;
     /*  private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();*/
     private final UserIdentityService userIdentityService;
@@ -77,37 +75,15 @@ public class MediationService implements Service, DataService.Listener, MessageL
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAuthenticatedData().forEach(this::processAuthenticatedData));
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeMessageListener(this);
-        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
-    }
-
-    @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
-            if (data.getRoleType() == RoleType.MEDIATOR) {
-                mediators.remove(data);
-            }
-        }*/
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
@@ -162,20 +138,11 @@ public class MediationService implements Service, DataService.Listener, MessageL
         list.sort(Comparator.comparing(AuthorizedBondedRole::getProfileId));
         return userProfileService.findUserProfile(list.get(index).getProfileId());
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            AuthorizedRoleRegistrationData data = (AuthorizedRoleRegistrationData) authenticatedData.getDistributedData();
-            if (data.getRoleType() == RoleType.MEDIATOR) {
-                mediators.add(data);
-            }
-        }*/
-    }
 
     private void processMediationRequest(MediationRequest mediationRequest) {
         findMyMediatorUserIdentity().ifPresent(myUserIdentity -> {

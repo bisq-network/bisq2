@@ -17,7 +17,6 @@
 
 package bisq.user.identity;
 
-import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -25,11 +24,9 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -48,14 +45,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service, DataService.Listener {
+public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service {
     @Getter
     @ToString
     public static final class Config {
@@ -84,7 +80,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Observable<Integer> userIdentityChangedFlag = new Observable<>(0);
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
-    protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
@@ -99,11 +94,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthenticatedData()
-                        .forEach(this::processAuthenticatedData));
-        networkService.addDataServiceListener(this);
-
         // We delay publishing to be better bootstrapped 
         Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
                         maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair())))
@@ -112,26 +102,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
-    }
-
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
-            AuthorizedOracleNode data = (AuthorizedOracleNode) authenticatedData.getDistributedData();
-            daoBridgeServiceProviders.add(data.getNetworkId());
-        }
     }
 
 

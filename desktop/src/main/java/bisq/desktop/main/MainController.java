@@ -75,8 +75,8 @@ public class MainController extends NavigationController {
                     return;
                 }
                 UIThread.run(() -> {
-                    if (authorizedData.getDistributedData() instanceof AuthorizedAlertData) {
-                        AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getDistributedData();
+                    if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
+                        AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
                         if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
                             return;
                         }
