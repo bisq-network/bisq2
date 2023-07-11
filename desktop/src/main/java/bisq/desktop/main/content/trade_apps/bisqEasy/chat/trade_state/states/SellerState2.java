@@ -20,9 +20,12 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.BisqText;
+import bisq.desktop.components.controls.WaitingAnimation;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,6 +78,7 @@ public class SellerState2 extends BaseState {
 
         private final BisqText infoHeadline;
         private final Label infoLabel;
+        private final WaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -82,9 +86,14 @@ public class SellerState2 extends BaseState {
             infoHeadline = new BisqText("");
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
             infoLabel = FormUtils.getLabel("");
+
+            waitingAnimation = new WaitingAnimation();
+            VBox.setMargin(waitingAnimation, new Insets(20, 0, 0, 20));
+
             root.getChildren().addAll(
                     infoHeadline,
-                    infoLabel
+                    infoLabel,
+                    waitingAnimation
             );
         }
 
@@ -94,11 +103,15 @@ public class SellerState2 extends BaseState {
 
             infoHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.headline", model.getQuoteCode()));
             infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.info", model.getFormattedQuoteAmount()));
+
+            waitingAnimation.play();
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
+
+            waitingAnimation.stop();
         }
     }
 }
