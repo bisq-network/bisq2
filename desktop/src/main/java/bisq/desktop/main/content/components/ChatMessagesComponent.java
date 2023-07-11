@@ -172,7 +172,7 @@ public class ChatMessagesComponent {
             //todo
             //model.mentionableChatChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
-            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> applyUserProfileOrChannelChange());
+            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> UIThread.run(this::applyUserProfileOrChannelChange));
             ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
             selectedChannelPin = chatChannelSelectionService.getSelectedChannel()
                     .addObserver(this::selectedChannelChanged);
@@ -212,8 +212,7 @@ public class ChatMessagesComponent {
                         inMediationPin.unbind();
                     }
                     inMediationPin = privateChannel.isInMediationObservable().addObserver(isInMediation ->
-                            model.getOpenDisputeButtonVisible().set(!isInMediation &&
-                                    !privateChannel.isMediator()));
+                            UIThread.run(() -> model.getOpenDisputeButtonVisible().set(!isInMediation && !privateChannel.isMediator())));
                 } else if (isTwoPartyPrivateChatChannel) {
                     chatMessagesPin = chatChannel.getChatMessages().addListener(() -> updateLeaveChannelButtonState((TwoPartyPrivateChatChannel) chatChannel));
                 }

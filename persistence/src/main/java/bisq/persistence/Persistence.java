@@ -29,6 +29,8 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
+    public static final String EXTENSION = ".protobuf";
+
     private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence-io-pool");
 
     @Getter
@@ -37,7 +39,7 @@ public class Persistence<T extends PersistableStore<T>> {
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
     public Persistence(String directory, String fileName) {
-        storePath = Path.of(directory, fileName);
+        storePath = Path.of(directory, fileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }

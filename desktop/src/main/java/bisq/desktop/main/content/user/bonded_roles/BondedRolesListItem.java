@@ -46,24 +46,24 @@ public class BondedRolesListItem implements TableItem {
     private final String signature;
     private final String userProfileId;
     private final String userName;
-    private final AuthorizedOracleNode oracleNode;
+    private final AuthorizedOracleNode authorizedOracleNode;
     private final String oracleNodeUserName;
     private final BondedRoleType bondedRoleType;
     private final String address;
     private final String addressInfoJson;
 
-    public BondedRolesListItem(AuthorizedBondedRole bondedRoleData, UserService userService) {
-        oracleNode = bondedRoleData.getOracleNode();
-        oracleNodeUserName = oracleNode.getBondUserName();
-        userProfile = userService.getUserProfileService().findUserProfile(bondedRoleData.getProfileId()).orElseThrow();
+    public BondedRolesListItem(AuthorizedBondedRole authorizedBondedRoleData, UserService userService) {
+        authorizedOracleNode = authorizedBondedRoleData.getAuthorizedOracleNode();
+        oracleNodeUserName = authorizedOracleNode.getBondUserName();
+        userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId()).orElseThrow();
         userProfileId = userProfile.getId();
         userName = userProfile.getUserName();
-        bondUserName = bondedRoleData.getBondUserName();
-        signature = bondedRoleData.getSignature();
-        bondedRoleType = bondedRoleData.getBondedRoleType();
+        bondUserName = authorizedBondedRoleData.getBondUserName();
+        signature = authorizedBondedRoleData.getSignature();
+        bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         roleTypeString = Res.get("user.bondedRoles.type." + bondedRoleType);
 
-        Map<Transport.Type, Address> addressByNetworkType = bondedRoleData.getAddressByNetworkType();
+        Map<Transport.Type, Address> addressByNetworkType = authorizedBondedRoleData.getAddressByNetworkType();
         List<String> list = addressByNetworkType.entrySet().stream()
                 .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
                 .collect(Collectors.toList());

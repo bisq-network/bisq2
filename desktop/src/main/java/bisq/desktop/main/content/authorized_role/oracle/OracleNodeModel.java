@@ -15,23 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.alert;
+package bisq.desktop.main.content.authorized_role.oracle;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.desktop.common.view.Model;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public enum AlertType implements ProtoEnum {
-    INFO,
-    WARN,
-    EMERGENCY,
-    BAN;
-
-    @Override
-    public bisq.support.protobuf.AlertType toProto() {
-        return bisq.support.protobuf.AlertType.valueOf(name());
-    }
-
-    public static AlertType fromProto(bisq.support.protobuf.AlertType proto) {
-        return ProtobufUtils.enumFromProto(AlertType.class, proto.name());
-    }
+@Slf4j
+@Getter
+public class OracleNodeModel implements Model {
 }

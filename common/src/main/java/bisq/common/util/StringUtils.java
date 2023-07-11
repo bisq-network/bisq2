@@ -20,8 +20,10 @@ package bisq.common.util;
 import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,7 +114,20 @@ public class StringUtils {
     }
 
     public static boolean isNotEmpty(String value) {
-        return value != null && !value.isEmpty();
+        return !isEmpty(value);
+    }
+
+    public static boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
+    }
+
+    @Nullable
+    public static String toNullIfEmpty(String value) {
+        return isEmpty(value) ? null : value;
+    }
+
+    public static Optional<String> toOptional(String value) {
+        return Optional.ofNullable(toNullIfEmpty(value));
     }
 
     public static String snakeCaseToCamelCase(String value) {

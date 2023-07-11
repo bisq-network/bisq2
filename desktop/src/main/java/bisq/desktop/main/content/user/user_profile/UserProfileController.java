@@ -71,7 +71,10 @@ public class UserProfileController implements Controller {
 
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 userIdentity -> {
-                    if (userIdentity != null) {
+                    if (userIdentity == null) {
+                        return;
+                    }
+                    UIThread.run(() -> {
                         model.getSelectedUserIdentity().set(userIdentity);
 
                         UserProfile userProfile = userIdentity.getUserProfile();
@@ -85,10 +88,10 @@ public class UserProfileController implements Controller {
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
                                 .map(TimeFormatter::formatAgeInDays)
                                 .orElse(Res.get("data.na")));
-                    }
+                    });
                 }
         );
-        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> applyReputationScore());
+        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
 
         statementPin = EasyBind.subscribe(model.getStatement(),
                 statement -> updateSaveButtonState());

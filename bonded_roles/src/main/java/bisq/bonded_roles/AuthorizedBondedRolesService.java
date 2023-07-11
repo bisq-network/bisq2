@@ -17,21 +17,31 @@
 
 package bisq.bonded_roles;
 
+import bisq.bonded_roles.alert.AlertType;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
+import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
     private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
     @Getter
     private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
 
@@ -47,8 +57,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
-                        .forEach(this::processAuthenticatedData));
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .forEach(this::onAuthorizedDataAdded));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -66,32 +76,89 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        processAuthenticatedData(authenticatedData);
-    }
-
-    @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-       /* if (authenticatedData.getDistributedData() instanceof AuthorizedRoleRegistrationData) {
-            //todo
-            // authorizedDataSetOfRoleRegistrationData.remove((AuthorizedData) authenticatedData);
-        }*/
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.add((AuthorizedOracleNode) authenticatedData.getDistributedData());
-        } else if (authenticatedData.getDistributedData() instanceof AuthorizedBondedRole) {
-            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) authenticatedData.getDistributedData();
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (data instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) data;
+            authorizedOracleNodes.add(authorizedOracleNode);
+            authorizedDataSet.add(authorizedData);
+        } else if (data instanceof AuthorizedBondedRole) {
+            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
             authorizedBondedRoleSet.add(authorizedBondedRole);
+            authorizedDataSet.add(authorizedData);
             if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                 networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
             }
+        } else if (data instanceof AuthorizedAlertData) {
+            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
+            if (authorizedAlertData.getAlertType() == AlertType.BAN &&
+                    isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    authorizedAlertData.getBannedRoleProfileId().isPresent() &&
+                    authorizedAlertData.getBannedBondedRoleType().isPresent()) {
+                String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
+                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedBondedRoleType().get();
+                authorizedBondedRoleSet.stream()
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
+                        .forEach(bannedRole -> {
+                            authorizedBondedRoleSet.remove(bannedRole);
+                            authorizedDataSet.remove(authorizedData);
+                        });
+            }
         }
+    }
+
+    @Override
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (data instanceof AuthorizedOracleNode) {
+            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) data;
+            authorizedOracleNodes.remove(authorizedOracleNode);
+            authorizedDataSet.remove(authorizedData);
+        } else if (data instanceof AuthorizedBondedRole) {
+            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
+            authorizedBondedRoleSet.remove(authorizedBondedRole);
+            authorizedDataSet.remove(authorizedData);
+            if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isAuthorizedByBondedRole(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (!(data instanceof DeferredAuthorizedPublicKeyValidation) &&
+                data instanceof StaticallyAuthorizedPublicKeyValidation) {
+            // In case the data has not implemented DeferredAuthorizedPublicKeyValidation the hardcoded key-set is used for 
+            // verification at the p2p network layer.
+            return true;
+        }
+
+        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+        boolean isStaticallyAuthorizedKey = false;
+        if (data instanceof StaticallyAuthorizedPublicKeyValidation) {
+            isStaticallyAuthorizedKey = ((StaticallyAuthorizedPublicKeyValidation) data).getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+        }
+
+        boolean isAuthorized = isStaticallyAuthorizedKey ||
+                authorizedBondedRoleSet.stream()
+                        .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
+                        .map(AuthorizedBondedRole::getAuthorizedPublicKey)
+                        .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey));
+        if (!isAuthorized) {
+            log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
+        }
+        return isAuthorized;
+    }
+
+    public Set<AuthorizedBondedRole> getAuthorizedBondedRoles(BondedRoleType bondedRoleType) {
+        return getAuthorizedBondedRoleSet().stream()
+                .filter(e -> e.getBondedRoleType() == bondedRoleType)
+                .collect(Collectors.toSet());
     }
 }

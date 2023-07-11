@@ -25,6 +25,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Overlay;
@@ -64,9 +65,14 @@ public abstract class BondedRolesRegistrationController implements Controller {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
-                chatUserIdentity -> {
-                    model.getSelectedChatUserIdentity().set(chatUserIdentity);
-                    model.getProfileId().set(chatUserIdentity.getId());
+                userIdentity -> {
+                    UIThread.run(() -> {
+                        model.getSelectedChatUserIdentity().set(userIdentity);
+                        if (userIdentity != null) {
+                            model.getProfileId().set(userIdentity.getId());
+                            model.setAuthorizedPublicKey(userIdentity.getUserProfile().getPubKeyAsHex());
+                        }
+                    });
                 }
         );
 
@@ -81,7 +87,10 @@ public abstract class BondedRolesRegistrationController implements Controller {
 
     public void onRequestAuthorization() {
         checkNotNull(userIdentityService.getSelectedUserIdentity());
+        checkNotNull(model.getProfileId().get());
+        checkNotNull(model.getAuthorizedPublicKey());
         boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(model.getProfileId().get(),
+                model.getAuthorizedPublicKey(),
                 model.getBondedRoleType(),
                 model.getBondUserName().get(),
                 model.getSignature().get(),

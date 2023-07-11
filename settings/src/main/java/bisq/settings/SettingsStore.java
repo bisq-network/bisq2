@@ -46,6 +46,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> offersOnly = new Observable<>(true);
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
+    final Set<String> consumedAlertIds;
     boolean isTacAccepted;
 
     public SettingsStore() {
@@ -58,7 +59,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 true,
                 false,
                 ChatNotificationType.MENTION,
-                false);
+                false,
+                new HashSet<>());
     }
 
     public SettingsStore(Cookie cookie,
@@ -70,8 +72,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean offersOnly,
                          boolean tradeRulesConfirmed,
                          ChatNotificationType chatNotificationType,
-                         boolean isTacAccepted) {
+                         boolean isTacAccepted,
+                         Set<String> consumedAlertIds) {
         this.cookie = cookie;
+        this.consumedAlertIds = consumedAlertIds;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.markets.setAll(markets);
@@ -96,6 +100,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProto())
                 .setIsTacAccepted(isTacAccepted)
+                .addAllConsumedAlertIds(consumedAlertIds)
                 .build();
     }
 
@@ -110,7 +115,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getOffersOnly(),
                 proto.getTradeRulesConfirmed(),
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
-                proto.getIsTacAccepted());
+                proto.getIsTacAccepted(),
+                new HashSet<>(proto.getConsumedAlertIdsList()));
     }
 
     @Override
@@ -135,7 +141,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
                 chatNotificationType.get(),
-                isTacAccepted);
+                isTacAccepted,
+                consumedAlertIds);
     }
 
     @Override
@@ -151,5 +158,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
         chatNotificationType.set(persisted.chatNotificationType.get());
         isTacAccepted = persisted.isTacAccepted;
+        consumedAlertIds.clear();
+        consumedAlertIds.addAll(persisted.consumedAlertIds);
     }
 }

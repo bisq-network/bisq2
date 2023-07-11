@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.confidential;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
@@ -247,7 +248,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedNetworkMessage)), DISPATCHER);
                         return true;
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error(ExceptionUtil.print(e));
                         throw new RuntimeException(e);
                     }
                 }, ExecutorFactory.WORKER_POOL))

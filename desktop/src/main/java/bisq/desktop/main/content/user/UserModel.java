@@ -25,7 +25,7 @@ import lombok.Getter;
 
 @Getter
 public class UserModel extends TabModel {
-    private final BooleanProperty sendNotificationTabButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty alertSenderTabButtonVisible = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

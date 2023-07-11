@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles;
 
+import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.service.explorer.ExplorerService;
 import bisq.bonded_roles.service.market_price.MarketPriceService;
@@ -30,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class BondedRolesService implements Service {
+
 
     @Getter
     public static class Config {
@@ -52,6 +54,7 @@ public class BondedRolesService implements Service {
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final MarketPriceService marketPriceService;
     private final ExplorerService explorerService;
+    private final AlertService alertService;
 
     public BondedRolesService(Config config, String applicationVersion, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
@@ -62,6 +65,8 @@ public class BondedRolesService implements Service {
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
                 networkService,
                 applicationVersion);
+
+        alertService = new AlertService(networkService, authorizedBondedRolesService);
     }
 
 
@@ -74,7 +79,8 @@ public class BondedRolesService implements Service {
         return authorizedBondedRolesService.initialize()
                 .thenCompose(result -> bondedRoleRegistrationService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
-                .thenCompose(result -> explorerService.initialize());
+                .thenCompose(result -> explorerService.initialize())
+                .thenCompose(result -> alertService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -82,6 +88,7 @@ public class BondedRolesService implements Service {
         return authorizedBondedRolesService.shutdown()
                 .thenCompose(result -> bondedRoleRegistrationService.shutdown())
                 .thenCompose(result -> marketPriceService.shutdown())
-                .thenCompose(result -> explorerService.shutdown());
+                .thenCompose(result -> explorerService.shutdown())
+                .thenCompose(result -> alertService.shutdown());
     }
 }

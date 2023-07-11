@@ -19,12 +19,12 @@ package bisq.oracle_node.timestamp;
 
 import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.common.application.Service;
-import bisq.identity.IdentityService;
+import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -46,19 +46,18 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter
     private final Persistence<TimestampStore> persistence;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
+    @Setter
+    private Identity identity;
 
     public TimestampService(PersistenceService persistenceService,
-                            IdentityService identityService,
                             NetworkService networkService,
                             PrivateKey authorizedPrivateKey,
                             PublicKey authorizedPublicKey) {
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -75,10 +74,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public CompletableFuture<Boolean> initialize() {
         networkService.addMessageListener(this);
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload()
-                .filter(data -> data.getDistributedData() instanceof AuthorizedTimestampData)
-                .map(data -> (AuthorizedTimestampData) data.getDistributedData())
-                .forEach(this::processAuthorizedTimestampData));
+        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
 
         persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value)));
 
@@ -110,9 +106,15 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
-            processAuthorizedTimestampData((AuthorizedTimestampData) authenticatedData.getDistributedData());
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
+            AuthorizedTimestampData authorizedTimestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
+            // We might get data published from other oracle nodes and put it into our local store.
+            String profileId = authorizedTimestampData.getProfileId();
+            if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
+                persistableStore.getTimestampsByProfileId().put(profileId, authorizedTimestampData.getDate());
+                persist();
+            }
         }
     }
 
@@ -122,11 +124,10 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                .thenCompose(identity -> networkService.publishAuthorizedData(data,
+        return networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,
-                        authorizedPublicKey))
+                        authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -142,15 +143,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
             // to republish it.
             long date = persistableStore.getTimestampsByProfileId().get(profileId);
             publishAuthorizedData(new AuthorizedTimestampData(profileId, date));
-        }
-    }
-
-    private void processAuthorizedTimestampData(AuthorizedTimestampData data) {
-        // We might get data published from other oracle nodes and put it into our local store.
-        String profileId = data.getProfileId();
-        if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
-            persistableStore.getTimestampsByProfileId().put(profileId, data.getDate());
-            persist();
         }
     }
 }

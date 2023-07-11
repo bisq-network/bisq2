@@ -17,9 +17,12 @@
 
 package bisq.desktop.main;
 
+import bisq.bonded_roles.alert.AlertService;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -27,8 +30,8 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
-import bisq.support.alert.AlertService;
-import bisq.support.alert.AuthorizedAlertData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,14 +46,16 @@ public class MainController extends NavigationController {
     private final ServiceProvider serviceProvider;
     private final LeftNavController leftNavController;
     private final AlertService alertService;
+    private final SettingsService settingsService;
     private Pin alertsPin;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
 
         this.serviceProvider = serviceProvider;
+        settingsService = serviceProvider.getSettingsService();
 
-        alertService = serviceProvider.getSupportService().getAlertService();
+        alertService = serviceProvider.getBondedRolesService().getAlertService();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
@@ -63,20 +68,42 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
-        alertsPin = alertService.getAlerts().addListener(new CollectionObserver<>() {
+        alertsPin = alertService.getAuthorizedDataSet().addListener(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData element) {
-                new Popup().attention(element.getMessage()).show();
+            public void add(AuthorizedData authorizedData) {
+                if (authorizedData == null) {
+                    return;
+                }
+                UIThread.run(() -> {
+                    if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
+                        AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
+                        if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
+                            return;
+                        }
+                        settingsService.addConsumedAlertId(authorizedAlertData.getId());
+                        switch (authorizedAlertData.getAlertType()) {
+                            case INFO:
+                                new Popup().attention(authorizedAlertData.getMessage().orElseThrow()).show();
+                                break;
+                            case WARN:
+                                new Popup().warning(authorizedAlertData.getMessage().orElseThrow()).show();
+                                break;
+                            case EMERGENCY:
+                                new Popup().warning(authorizedAlertData.getMessage().orElseThrow()).show();
+                                break;
+                            case BAN:
+                                break;
+                        }
+                    }
+                });
             }
 
             @Override
             public void remove(Object element) {
-
             }
 
             @Override
             public void clear() {
-
             }
         });
     }

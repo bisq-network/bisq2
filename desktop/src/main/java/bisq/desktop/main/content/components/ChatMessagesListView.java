@@ -173,50 +173,52 @@ public class ChatMessagesListView {
         public void onActivate() {
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
-            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> applyPredicate());
+            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
 
             selectedChannelPin = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).getSelectedChannel().addObserver(channel -> {
-                model.selectedChannel.set(channel);
-                model.allowEditing.set(channel instanceof PublicChatChannel);
+                UIThread.run(() -> {
+                    model.selectedChannel.set(channel);
+                    model.allowEditing.set(channel instanceof PublicChatChannel);
 
-                if (chatMessagesPin != null) {
-                    chatMessagesPin.unbind();
-                }
+                    if (chatMessagesPin != null) {
+                        chatMessagesPin.unbind();
+                    }
 
-                if (channel instanceof BisqEasyPublicChatChannel) {
-                    chatMessagesPin = bindChatMessages((BisqEasyPublicChatChannel) channel);
-                } else if (channel instanceof BisqEasyPrivateTradeChatChannel) {
-                    chatMessagesPin = bindChatMessages((BisqEasyPrivateTradeChatChannel) channel);
-                } else if (channel instanceof CommonPublicChatChannel) {
-                    chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
-                } else if (channel instanceof TwoPartyPrivateChatChannel) {
-                    chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
-                } else if (channel == null) {
-                    model.chatMessages.clear();
-                }
+                    if (channel instanceof BisqEasyPublicChatChannel) {
+                        chatMessagesPin = bindChatMessages((BisqEasyPublicChatChannel) channel);
+                    } else if (channel instanceof BisqEasyPrivateTradeChatChannel) {
+                        chatMessagesPin = bindChatMessages((BisqEasyPrivateTradeChatChannel) channel);
+                    } else if (channel instanceof CommonPublicChatChannel) {
+                        chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
+                    } else if (channel instanceof TwoPartyPrivateChatChannel) {
+                        chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
+                    } else if (channel == null) {
+                        model.chatMessages.clear();
+                    }
 
-                if (focusSubscription != null) {
-                    focusSubscription.unsubscribe();
-                }
-                if (selectedChannelSubscription != null) {
-                    selectedChannelSubscription.unsubscribe();
-                }
-                if (channel != null) {
-                    // ChatChannelService<?, ?, ?> chatChannelService = chatService.findChatChannelService(channel).orElseThrow();
-                    focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
-                            focused -> {
-                                if (focused && model.getSelectedChannel().get() != null) {
-                                    chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
-                                }
-                            });
+                    if (focusSubscription != null) {
+                        focusSubscription.unsubscribe();
+                    }
+                    if (selectedChannelSubscription != null) {
+                        selectedChannelSubscription.unsubscribe();
+                    }
+                    if (channel != null) {
+                        // ChatChannelService<?, ?, ?> chatChannelService = chatService.findChatChannelService(channel).orElseThrow();
+                        focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
+                                focused -> {
+                                    if (focused && model.getSelectedChannel().get() != null) {
+                                        chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
+                                    }
+                                });
 
-                    selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
-                            selectedChannel -> {
-                                if (selectedChannel != null) {
-                                    chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
-                                }
-                            });
-                }
+                        selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
+                                selectedChannel -> {
+                                    if (selectedChannel != null) {
+                                        chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
+                                    }
+                                });
+                    }
+                });
             });
         }
 

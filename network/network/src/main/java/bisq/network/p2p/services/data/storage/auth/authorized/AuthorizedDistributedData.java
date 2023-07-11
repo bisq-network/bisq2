@@ -19,9 +19,5 @@ package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 
-import java.util.Set;
-
 public interface AuthorizedDistributedData extends DistributedData {
-    // The key need to be provided as static (hard coded) set not as instance fields as that would not be secure.
-    Set<String> getAuthorizedPublicKeys();
 }

@@ -20,9 +20,10 @@ package bisq.support;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.support.alert.AlertService;
 import bisq.support.mediation.MediationService;
+import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +34,15 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class SupportService implements Service {
     private final MediationService mediationService;
-    private final AlertService alertService;
+    private final SecurityManagerService securityManagerService;
 
-    public SupportService(NetworkService networkService, ChatService chatService, UserService userService, BondedRolesService bondedRolesService) {
+    public SupportService(NetworkService networkService,
+                          IdentityService identityService,
+                          ChatService chatService,
+                          UserService userService,
+                          BondedRolesService bondedRolesService) {
         mediationService = new MediationService(networkService, chatService, userService, bondedRolesService);
-        alertService = new AlertService(networkService, userService, bondedRolesService);
+        securityManagerService = new SecurityManagerService(networkService, userService, bondedRolesService);
     }
 
 
@@ -48,12 +53,12 @@ public class SupportService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return mediationService.initialize()
-                .thenCompose(result -> alertService.initialize());
+                .thenCompose(result -> securityManagerService.initialize());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return mediationService.shutdown()
-                .thenCompose(result -> alertService.shutdown());
+                .thenCompose(result -> securityManagerService.shutdown());
     }
 }

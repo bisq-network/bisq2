@@ -119,7 +119,7 @@ public abstract class ChannelSelectionMenu<
                     .to(chatChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    this::handleSelectedChannelChange);
+                    channel -> UIThread.run(() -> handleSelectedChannelChange(channel)));
 
             chatChannelService.getChannels().forEach(this::addNotificationsListenerForChannel);
         }

@@ -56,6 +56,7 @@ public class LeftNavModel implements Model {
     private final BooleanProperty menuHorizontalExpanded = new SimpleBooleanProperty(true);
     private final BooleanProperty tradeAppsSubMenuExpanded = new SimpleBooleanProperty(false);
     private final BooleanProperty learnsSubMenuExpanded = new SimpleBooleanProperty(false);
+    private final BooleanProperty authorizedRoleVisible = new SimpleBooleanProperty(false);
 
 
     public LeftNavModel(ServiceProvider serviceProvider) {

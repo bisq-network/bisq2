@@ -20,6 +20,7 @@ package bisq.persistence;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -28,6 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PersistableStoreFileManagerTests {
+    private static final String BACKUP_DIR = "backup" + File.separator;
+
     @Test
     void createParentDirIfExisting(@TempDir Path tempDir) {
         Path storePath = tempDir.resolve("store");
@@ -54,7 +57,7 @@ public class PersistableStoreFileManagerTests {
         var storeFileManager = new PersistableStoreFileManager(storePath);
         storeFileManager.tryToBackupCurrentStoreFile();
 
-        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        Path backupFilePath = tempDir.resolve(BACKUP_DIR + "store");
         assertThat(backupFilePath).exists();
     }
 
@@ -64,7 +67,7 @@ public class PersistableStoreFileManagerTests {
         createEmptyFile(storePath);
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
-        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        Path backupFilePath = tempDir.resolve(BACKUP_DIR + "store");
         boolean isSuccess = backupFilePath.toFile().createNewFile();
         assertThat(isSuccess).isTrue();
 
@@ -77,7 +80,7 @@ public class PersistableStoreFileManagerTests {
         Path storePath = tempDir.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
-        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        Path backupFilePath = tempDir.resolve(BACKUP_DIR + "store");
         createEmptyFile(backupFilePath);
 
         storeFileManager.tryToBackupCurrentStoreFile();
@@ -90,7 +93,7 @@ public class PersistableStoreFileManagerTests {
         Path storePath = tempDir.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
-        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        Path backupFilePath = tempDir.resolve(BACKUP_DIR + "store");
         boolean isSuccess = backupFilePath.toFile().createNewFile();
         assertThat(isSuccess).isTrue();
 
@@ -105,7 +108,7 @@ public class PersistableStoreFileManagerTests {
         createEmptyFile(storePath);
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
-        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        Path backupFilePath = tempDir.resolve(BACKUP_DIR + "store");
         boolean isSuccess = backupFilePath.toFile().createNewFile();
         assertThat(isSuccess).isTrue();
 

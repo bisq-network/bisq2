@@ -171,6 +171,10 @@ public class PeerGroup {
         this.seedNodeAddresses.add(seedNodeAddress);
     }
 
+    public void removeSeedNodeAddress(Address seedNodeAddress) {
+        this.seedNodeAddresses.remove(seedNodeAddress);
+    }
+
     public Stream<Address> getAllConnectedPeerAddresses() {
         return getAllConnectedPeers().map(Peer::getAddress);
     }

@@ -21,7 +21,8 @@ import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -95,9 +97,9 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     }
 
     @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
-            AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authenticatedData.getDistributedData();
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAccountAgeData) {
+            AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authorizedData.getAuthorizedDistributedData();
             String userProfileId = data.getProfileId();
             userProfileService.findUserProfile(userProfileId)
                     .map(this::getUserProfileKey)
@@ -109,17 +111,11 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         }
     }
 
-    public boolean requestAuthorization(String json) {
-        persistableStore.getJsonRequests().add(json);
-        persist();
-        return doRequestAuthorization(json);
-    }
-
     @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
-            processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
-        }
+    protected Optional<AuthorizedAccountAgeData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
+        return authorizedDistributedData instanceof AuthorizedAccountAgeData ?
+                Optional.of((AuthorizedAccountAgeData) authorizedDistributedData) :
+                Optional.empty();
     }
 
     @Override
@@ -151,6 +147,12 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     @Override
     public long calculateScore(AuthorizedAccountAgeData data) {
         return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
+    }
+
+    public boolean requestAuthorization(String json) {
+        persistableStore.getJsonRequests().add(json);
+        persist();
+        return doRequestAuthorization(json);
     }
 
     private boolean doRequestAuthorization(String json) {

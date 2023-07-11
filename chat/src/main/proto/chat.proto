@@ -33,9 +33,10 @@ enum ChatMessageType {
 }
 
 enum ChatChannelNotificationType {
-  ALL = 0;
-  MENTION = 1;
-  NEVER = 2;
+  GLOBAL_DEFAULT = 0;
+  ALL = 1;
+  MENTION = 2;
+  NEVER = 3;
 }
 
 enum ChatChannelDomain {

@@ -21,7 +21,7 @@ import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -108,10 +109,10 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
     }
 
     @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedSignedWitnessData) {
-            processData((AuthorizedSignedWitnessData) authenticatedData.getDistributedData());
-        }
+    protected Optional<AuthorizedSignedWitnessData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
+        return authorizedDistributedData instanceof AuthorizedSignedWitnessData ?
+                Optional.of((AuthorizedSignedWitnessData) authorizedDistributedData) :
+                Optional.empty();
     }
 
     @Override

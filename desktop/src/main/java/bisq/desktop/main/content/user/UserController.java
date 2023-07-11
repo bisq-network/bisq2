@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user;
 
-import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -25,11 +24,9 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.user.accounts.PaymentAccountsController;
 import bisq.desktop.main.content.user.bonded_roles.nodes.NodesController;
 import bisq.desktop.main.content.user.bonded_roles.roles.RolesController;
-import bisq.desktop.main.content.user.notifications.SendNotificationController;
 import bisq.desktop.main.content.user.password.PasswordController;
 import bisq.desktop.main.content.user.reputation.ReputationController;
 import bisq.desktop.main.content.user.user_profile.UserProfileController;
-import bisq.support.alert.AlertService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,30 +37,21 @@ public class UserController extends TabController<UserModel> {
     private final ServiceProvider serviceProvider;
     @Getter
     private final UserView view;
-    private final AlertService alertService;
-    private Pin hasNotificationSenderIdentityPin;
 
     public UserController(ServiceProvider serviceProvider) {
         super(new UserModel(), NavigationTarget.USER);
 
         this.serviceProvider = serviceProvider;
-        alertService = serviceProvider.getSupportService().getAlertService();
 
         view = new UserView(model, this);
     }
 
     @Override
     public void onActivate() {
-        hasNotificationSenderIdentityPin = alertService.getHasNotificationSenderIdentity().addObserver(value -> {
-            if (value != null) {
-                model.getSendNotificationTabButtonVisible().set(value);
-            }
-        });
     }
 
     @Override
     public void onDeactivate() {
-        hasNotificationSenderIdentityPin.unbind();
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -85,9 +73,6 @@ public class UserController extends TabController<UserModel> {
             }
             case NODES: {
                 return Optional.of(new NodesController(serviceProvider));
-            }
-            case SEND_NOTIFICATION: {
-                return Optional.of(new SendNotificationController(serviceProvider));
             }
             default: {
                 return Optional.empty();

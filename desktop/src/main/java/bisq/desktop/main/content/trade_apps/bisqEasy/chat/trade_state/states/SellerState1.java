@@ -22,6 +22,7 @@ import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqText;
@@ -95,11 +96,13 @@ public class SellerState1 extends BaseState {
                 maybeSelectFirstAccount();
             });
             selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account -> {
-                if (account instanceof UserDefinedFiatAccount) {
-                    UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
-                    model.selectedAccountProperty().set(userDefinedFiatAccount);
-                    model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
-                }
+                UIThread.run(() -> {
+                    if (account instanceof UserDefinedFiatAccount) {
+                        UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
+                        model.selectedAccountProperty().set(userDefinedFiatAccount);
+                        model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
+                    }
+                });
             });
 
             model.getButtonDisabled().bind(model.getPaymentAccountData().isEmpty());
