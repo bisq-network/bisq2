@@ -17,14 +17,20 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import bisq.common.fsm.Event;
+import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
+import bisq.trade.protocol.events.SendTradeMessageHandler;
 
-@ToString(callSuper = true)
-@Getter
-@EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmFiatSentEvent extends BisqEasyTradeEvent {
-    public BisqEasyConfirmFiatSentEvent() {
+public class BisqEasyConfirmFiatReceivedEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+
+    public BisqEasyConfirmFiatReceivedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+        super(serviceProvider, model);
+    }
+
+    @Override
+    public void handle(Event event) {
+        sendMessage(new BisqEasyConfirmFiatReceiptMessage(trade.getId(), trade.getMyIdentity().getNetworkId()));
     }
 }

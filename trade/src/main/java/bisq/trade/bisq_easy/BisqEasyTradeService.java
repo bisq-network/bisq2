@@ -97,6 +97,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
         } else if (networkMessage instanceof BisqEasyConfirmFiatSentMessage) {
             onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) networkMessage);
+        } else if (networkMessage instanceof BisqEasyBtcAddressMessage) {
+            onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) networkMessage);
+        } else if (networkMessage instanceof BisqEasyConfirmFiatReceiptMessage) {
+            onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) networkMessage);
         } else if (networkMessage instanceof BisqEasyConfirmBtcSentMessage) {
             onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) networkMessage);
         }
@@ -163,6 +167,28 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         });
     }
 
+    private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
+        findProtocol(message.getTradeId()).ifPresent(protocol -> {
+            try {
+                protocol.handle(message);
+                persist();
+            } catch (TradeException e) {
+                log.error("Error at processing message " + message, e);
+            }
+        });
+    }
+
+    private void onBisqEasyConfirmFiatReceiptMessage(BisqEasyConfirmFiatReceiptMessage message) {
+        findProtocol(message.getTradeId()).ifPresent(protocol -> {
+            try {
+                protocol.handle(message);
+                persist();
+            } catch (TradeException e) {
+                log.error("Error at processing message " + message, e);
+            }
+        });
+    }
+
     private void onBisqEasyConfirmBtcSentMessage(BisqEasyConfirmBtcSentMessage message) {
         findProtocol(message.getTradeId()).ifPresent(protocol -> {
             try {
@@ -214,9 +240,21 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         persist();
     }
 
-    public void buyerConfirmFiatSent(BisqEasyTrade tradeModel, String buyersBtcAddress) throws TradeException {
+    public void buyerConfirmFiatSent(BisqEasyTrade tradeModel) throws TradeException {
         BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyConfirmFiatSentEvent(buyersBtcAddress));
+        protocol.handle(new BisqEasyConfirmFiatSentEvent());
+        persist();
+    }
+
+    public void buyerSendBtcAddress(BisqEasyTrade tradeModel, String buyersBtcAddress) throws TradeException {
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
+        protocol.handle(new BisqEasySendBtcAddressEvent(buyersBtcAddress));
+        persist();
+    }
+
+    public void sellerConfirmFiatReceipt(BisqEasyTrade tradeModel) throws TradeException {
+        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
+        protocol.handle(new BisqEasyConfirmFiatReceiptEvent());
         persist();
     }
 

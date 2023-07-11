@@ -20,11 +20,20 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.BisqText;
+import bisq.desktop.components.controls.WaitingAnimation;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.geometry.Insets;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BuyerState3 extends BaseState {
@@ -56,6 +65,7 @@ public class BuyerState3 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+            model.getFiatReceiptConfirmed().set(model.getBisqEasyTrade().getState() == BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION);
         }
 
         @Override
@@ -66,6 +76,8 @@ public class BuyerState3 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        private final BooleanProperty fiatReceiptConfirmed = new SimpleBooleanProperty();
+
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             super(bisqEasyTrade, channel);
         }
@@ -74,28 +86,57 @@ public class BuyerState3 extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
 
         private final Label infoLabel;
+        private final WaitingAnimation waitingAnimation;
+        private final CheckBox fiatReceiptConfirmedCheckBox;
+        private final BisqText infoHeadline;
+        private Subscription fiatReceiptConfirmedPin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase3.headline"));
+            infoHeadline = new BisqText();
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
             infoLabel = FormUtils.getLabel("");
+
+            fiatReceiptConfirmedCheckBox = new CheckBox();
+            fiatReceiptConfirmedCheckBox.setMouseTransparent(true);
+            fiatReceiptConfirmedCheckBox.setSelected(true);
+
+            waitingAnimation = new WaitingAnimation();
+            VBox.setMargin(waitingAnimation, new Insets(30, 0, 0, 20));
             root.getChildren().addAll(
                     infoHeadline,
-                    infoLabel);
+                    infoLabel,
+                    fiatReceiptConfirmedCheckBox,
+                    waitingAnimation);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            infoLabel.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3.info", model.getQuoteCode()));
+            waitingAnimation.play();
+
+            fiatReceiptConfirmedPin = EasyBind.subscribe(model.getFiatReceiptConfirmed(), fiatPaymentConfirmed -> {
+                fiatReceiptConfirmedCheckBox.setVisible(fiatPaymentConfirmed);
+                fiatReceiptConfirmedCheckBox.setManaged(fiatPaymentConfirmed);
+                if (fiatPaymentConfirmed) {
+                    infoHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
+                    infoLabel.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.info"));
+                    fiatReceiptConfirmedCheckBox.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3.fiatReceiptConfirmedCheckBox", model.getFormattedQuoteAmount()));
+                } else {
+                    infoHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline", model.getFormattedQuoteAmount()));
+                    infoLabel.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", model.getQuoteCode()));
+                }
+            });
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
+            waitingAnimation.stop();
+
+            fiatReceiptConfirmedPin.unsubscribe();
         }
     }
 }

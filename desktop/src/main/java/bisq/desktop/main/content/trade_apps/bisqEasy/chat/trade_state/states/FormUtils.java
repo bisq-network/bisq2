@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.MultiLineLabel;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
@@ -33,6 +34,7 @@ public class FormUtils {
         label.getStyleClass().add("bisq-easy-trade-state-info-text");
         label.setWrapText(true);
         VBox.setMargin(label, new Insets(10, 0, 0, 0));
+        VBox.setVgrow(label, Priority.ALWAYS);
         return label;
     }
 
@@ -41,6 +43,7 @@ public class FormUtils {
         label.getStyleClass().add("bisq-easy-trade-state-info-help-text");
         label.setWrapText(true);
         VBox.setMargin(label, new Insets(10, 0, 0, 0));
+        VBox.setVgrow(label, Priority.ALWAYS);
         return label;
     }
 

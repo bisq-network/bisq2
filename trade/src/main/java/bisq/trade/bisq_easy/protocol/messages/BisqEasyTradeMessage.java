@@ -53,8 +53,14 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
             case BISQEASYCONFIRMFIATSENTMESSAGE: {
                 return BisqEasyConfirmFiatSentMessage.fromProto(proto);
             }
+            case BISQEASYBTCADDRESSMESSAGE: {
+                return BisqEasyBtcAddressMessage.fromProto(proto);
+            }
             case BISQEASYCONFIRMBTCSENTMESSAGE: {
                 return BisqEasyConfirmBtcSentMessage.fromProto(proto);
+            }
+            case BISQEASYCONFIRMFIATRECEIPTMESSAGE: {
+                return BisqEasyConfirmFiatReceiptMessage.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {
