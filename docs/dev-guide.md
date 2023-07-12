@@ -140,7 +140,8 @@ There is also a TabNavigationController for supporting tab navigation use cases.
 - Use Lombok annotations for Getter/Setter/ToString/EqualsAndHashCode. Be cautious with using more advanced Lombok features.
 - Use the most narrow visibility scope.
 - Use clear variable names, not one letter variables (except in loops). Using the type as variable name is mostly a good choice and helps with refactoring and search.
-- Set organize imports and reformat code at the commit screen in IDE. It helps to reduce formatting diffs
+- Set organize imports and reformat code at the commit screen in IDE. It helps to reduce formatting diffs.
+- The style convention is to follow the autoformatting rules provided by IntelliJ by default. Hence, there is no need to customize the IntelliJ settings in any way, and you can simply use it as-is out of the box.
 - Use curly brackets even in one-liners. It's a common source for bugs when later code gets added and, it improves readability.
 - Don't use the final keyword in local scope or with arguments, only in class fields
 - Try to use final class fields and avoid nullable values.
