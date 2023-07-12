@@ -61,7 +61,7 @@ public class BondedRolesListItem implements TableItem {
         bondUserName = authorizedBondedRoleData.getBondUserName();
         signature = authorizedBondedRoleData.getSignature();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
-        roleTypeString = Res.get("user.bondedRoles.type." + bondedRoleType);
+        roleTypeString = Res.get("user.bondedRoles.type." + bondedRoleType.name());
 
         Map<Transport.Type, Address> addressByNetworkType = authorizedBondedRoleData.getAddressByNetworkType();
         List<String> list = addressByNetworkType.entrySet().stream()

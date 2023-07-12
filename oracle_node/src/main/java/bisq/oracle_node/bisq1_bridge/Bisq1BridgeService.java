@@ -18,8 +18,11 @@
 package bisq.oracle_node.bisq1_bridge;
 
 import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.alert.AlertType;
+import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
@@ -28,13 +31,16 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
@@ -57,8 +63,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public class Bisq1BridgeService implements Service, MessageListener, PersistenceClient<Bisq1BridgeStore> {
+public class Bisq1BridgeService implements Service, ConfidentialMessageListener, DataService.Listener, PersistenceClient<Bisq1BridgeStore> {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config httpService;
@@ -78,9 +86,10 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     private final Persistence<Bisq1BridgeStore> persistence;
     private final NetworkService networkService;
     private final Bisq1BridgeHttpService httpService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
-    private final String keyId;
+    private final boolean ignoreSecurityManager;
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
     @Setter
@@ -92,13 +101,15 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
     public Bisq1BridgeService(Config config,
                               NetworkService networkService,
                               PersistenceService persistenceService,
+                              AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
                               PublicKey authorizedPublicKey,
-                              String keyId) {
+                              boolean ignoreSecurityManager) {
         this.networkService = networkService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
-        this.keyId = keyId;
+        this.ignoreSecurityManager = ignoreSecurityManager;
 
         Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
@@ -115,7 +126,11 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         log.info("initialize");
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
-                    networkService.addMessageListener(this);
+                    networkService.addConfidentialMessageListener(this);
+                    networkService.getDataService()
+                            .ifPresent(dataService -> dataService.getAuthorizedData()
+                                    .forEach(this::onAuthorizedDataAdded));
+                    networkService.addDataServiceListener(this);
                     requestDoaDataScheduler = Scheduler.run(this::requestDoaData).periodically(0, 5, TimeUnit.SECONDS);
                     republishAuthorizedBondedRolesScheduler = Scheduler.run(this::republishAuthorizedBondedRoles).after(5, TimeUnit.SECONDS);
                 });
@@ -129,24 +144,63 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         if (republishAuthorizedBondedRolesScheduler != null) {
             republishAuthorizedBondedRolesScheduler.stop();
         }
-        networkService.removeMessageListener(this);
+        networkService.removeDataServiceListener(this);
+        networkService.removeConfidentialMessageListener(this);
         return httpService.shutdown();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener
+    // ConfidentialMessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
+    public void onMessage(NetworkMessage networkMessage, PublicKey senderPublicKey) {
         if (networkMessage instanceof AuthorizeAccountAgeRequest) {
             processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) networkMessage);
         } else if (networkMessage instanceof AuthorizeSignedWitnessRequest) {
             processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) networkMessage);
         } else if (networkMessage instanceof BondedRoleRegistrationRequest) {
-            processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) networkMessage);
+            processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) networkMessage, senderPublicKey);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        if (data instanceof AuthorizedAlertData) {
+            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
+            if (authorizedAlertData.getAlertType() == AlertType.BAN &&
+                    authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    authorizedAlertData.getBannedRoleProfileId().isPresent() &&
+                    authorizedAlertData.getBannedBondedRoleType().isPresent()) {
+                String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
+                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedBondedRoleType().get();
+                authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
+                        .forEach(bannedRole -> {
+                            if (ignoreSecurityManager) {
+                                log.warn("We received an alert message from the security manager to ban a bonded role but " +
+                                                "you have set ignoreSecurityManager to true, so we do not remove the role data from the network.\n" +
+                                                "bannedRole={}\nauthorizedData sent by security manager={}",
+                                        bannedRole, authorizedData);
+                            } else {
+                                //todo
+                                //removeAuthorizedData(...);
+                            }
+                        });
+            }
+        }
+    }
+
+    @Override
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
     }
 
 
@@ -188,6 +242,11 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,
                         authorizedPublicKey)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    private CompletableFuture<Boolean> removeAuthorizedData(AuthorizedData authorizedData) {
+        return networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair())
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -301,11 +360,16 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
         }
     }
 
-    private void processBondedRoleRegistrationRequest(BondedRoleRegistrationRequest request) {
+    private void processBondedRoleRegistrationRequest(BondedRoleRegistrationRequest request, PublicKey senderPublicKey) {
+        String profileId = request.getProfileId();
+
+        // Verify if message sender is owner of the profileId
+        String sendersProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
+        checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
+
         BondedRoleType bondedRoleType = request.getBondedRoleType();
         String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
         String bondUserName = request.getBondUserName();
-        String profileId = request.getProfileId();
         String signatureBase64 = request.getSignatureBase64();
         httpService.requestBondedRoleVerification(bondUserName, bisq1RoleTypeName, profileId, signatureBase64)
                 .whenComplete((bondedRoleVerificationDto, throwable) -> {
@@ -318,7 +382,13 @@ public class Bisq1BridgeService implements Service, MessageListener, Persistence
                                     signatureBase64,
                                     request.getAddressByNetworkType(),
                                     authorizedOracleNode);
-                            publishAuthorizedData(data);
+                            if (request.isCancellationRequest()) {
+                                authorizedBondedRolesService.getAuthorizedDataSet().stream()
+                                        .filter(authorizedData -> authorizedData.getAuthorizedDistributedData().equals(data))
+                                        .forEach(this::removeAuthorizedData);
+                            } else {
+                                publishAuthorizedData(data);
+                            }
                         } else {
                             log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());
                         }

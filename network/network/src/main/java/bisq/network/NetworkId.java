@@ -56,7 +56,7 @@ public final class NetworkId implements Proto {
     }
 
     public static NetworkId fromProto(bisq.network.protobuf.NetworkId proto) {
-        return new NetworkId(AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
+        return new NetworkId(AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
                 PubKey.fromProto(proto.getPubKey()),
                 proto.getNodeId());
     }
@@ -136,7 +136,7 @@ public final class NetworkId implements Proto {
                     .collect(Collectors.toList());
         }
 
-        public static Map<Transport.Type, Address> protoListToMap(List<bisq.network.protobuf.AddressTransportTypeTuple> addressNetworkTypeTupleList) {
+        public static Map<Transport.Type, Address> mapFromProtoList(List<bisq.network.protobuf.AddressTransportTypeTuple> addressNetworkTypeTupleList) {
             return addressNetworkTypeTupleList.stream()
                     .map(AddressTransportTypeTuple::fromProto)
                     .collect(Collectors.toMap(AddressTransportTypeTuple::getTransportType, AddressTransportTypeTuple::getAddress));

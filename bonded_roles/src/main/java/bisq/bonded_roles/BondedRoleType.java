@@ -20,7 +20,9 @@ package bisq.bonded_roles;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString
 public enum BondedRoleType implements ProtoEnum {
     MEDIATOR,
     ARBITRATOR,

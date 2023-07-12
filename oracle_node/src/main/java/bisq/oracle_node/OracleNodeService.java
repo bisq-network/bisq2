@@ -56,6 +56,7 @@ public class OracleNodeService implements Service {
     public static class Config {
         private final String privateKey;
         private final String publicKey;
+        private final boolean ignoreSecurityManager;
         private final String bondUserName;
         private final String signatureBase64;
         private final String keyId;
@@ -63,12 +64,14 @@ public class OracleNodeService implements Service {
 
         public Config(String privateKey,
                       String publicKey,
+                      boolean ignoreSecurityManager,
                       String bondUserName,
                       String signatureBase64,
                       String keyId,
                       com.typesafe.config.Config bisq1Bridge) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
+            this.ignoreSecurityManager = ignoreSecurityManager;
             this.bondUserName = bondUserName;
             this.signatureBase64 = signatureBase64;
             this.keyId = keyId;
@@ -78,6 +81,7 @@ public class OracleNodeService implements Service {
         public static OracleNodeService.Config from(com.typesafe.config.Config config) {
             return new OracleNodeService.Config(config.getString("privateKey"),
                     config.getString("publicKey"),
+                    config.getBoolean("ignoreSecurityManager"),
                     config.getString("bondUserName"),
                     config.getString("signatureBase64"),
                     config.getString("keyId"),
@@ -117,6 +121,7 @@ public class OracleNodeService implements Service {
         bondUserName = config.getBondUserName();
         signatureBase64 = config.getSignatureBase64();
         keyId = config.getKeyId();
+        boolean ignoreSecurityManager = config.isIgnoreSecurityManager();
         checkArgument(StringUtils.isNotEmpty(bondUserName));
         checkArgument(StringUtils.isNotEmpty(signatureBase64));
         checkArgument(StringUtils.isNotEmpty(keyId));
@@ -133,9 +138,10 @@ public class OracleNodeService implements Service {
         bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
                 networkService,
                 persistenceService,
+                authorizedBondedRolesService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
-                keyId);
+                ignoreSecurityManager);
 
         timestampService = new TimestampService(persistenceService,
                 networkService,

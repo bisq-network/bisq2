@@ -21,15 +21,19 @@ import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BondedRoleRegistrationService implements Service {
@@ -68,18 +72,24 @@ public class BondedRoleRegistrationService implements Service {
                                                  String bondUserName,
                                                  String signatureBase64,
                                                  Map<Transport.Type, Address> addressByNetworkType,
-                                                 NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
+                                                 NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
+                                                 boolean isCancellationRequest) {
         ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
         if (authorizedOracleNodes.isEmpty()) {
             log.warn("authorizedOracleNodes is empty");
             return false;
         }
+
+        String sendersProfileId = Hex.encode(DigestUtil.hash(senderNetworkIdWithKeyPair.getNetworkId().getPubKey().getPublicKey().getEncoded()));
+        checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
+
         BondedRoleRegistrationRequest request = new BondedRoleRegistrationRequest(profileId,
                 authorizedPublicKey,
                 bondedRoleType,
                 bondUserName,
                 signatureBase64,
-                addressByNetworkType);
+                addressByNetworkType,
+                isCancellationRequest);
         authorizedOracleNodes.forEach(oracleNode ->
                 networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair));
         return true;

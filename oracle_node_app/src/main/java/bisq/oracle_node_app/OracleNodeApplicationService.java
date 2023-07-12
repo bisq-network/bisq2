@@ -58,7 +58,8 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService
         );
 
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
+        com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,

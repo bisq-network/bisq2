@@ -55,7 +55,8 @@ public class SeedNodeApplicationService extends ApplicationService {
                 securityService.getKeyPairService(),
                 securityService.getProofOfWorkService());
 
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
+        com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
     }
 
     @Override

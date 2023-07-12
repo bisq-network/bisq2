@@ -92,33 +92,11 @@ public abstract class BondedRolesRegistrationController implements Controller {
     }
 
     public void onRequestAuthorization() {
-        checkNotNull(userIdentityService.getSelectedUserIdentity());
-        checkNotNull(model.getProfileId().get());
-        checkNotNull(model.getAuthorizedPublicKey());
-        boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(model.getProfileId().get(),
-                model.getAuthorizedPublicKey(),
-                model.getBondedRoleType(),
-                model.getBondUserName().get(),
-                model.getSignature().get(),
-                model.getAddressByNetworkType(),
-                checkNotNull(userIdentityService.getSelectedUserIdentity()).getNodeIdAndKeyPair());
-        if (success) {
-            model.getBondUserName().set("");
-            model.getSignature().set("");
-            new Popup().information(Res.get("user.bondedRoles.registration.success"))
-                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
-                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                    .show();
-        } else {
-            new Popup().warning(Res.get("user.bondedRoles.registration.failed", StringUtils.truncate(model.getSignature().get())))
-                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
-                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                    .show();
-        }
+        requestBondedRoleRegistration(false);
     }
 
     public void onRequestCancellation() {
-        //todo
+        requestBondedRoleRegistration(true);
     }
 
     public void onLearnMore() {
@@ -138,5 +116,38 @@ public abstract class BondedRolesRegistrationController implements Controller {
                 authorizedBondedRolesService.getAuthorizedBondedRoles(model.getBondedRoleType()).stream()
                         .anyMatch(e -> userIdentityService.getSelectedUserIdentity() != null &&
                                 userIdentityService.getSelectedUserIdentity().getUserProfile().getId().equals(e.getProfileId())));
+    }
+
+    protected void requestBondedRoleRegistration(boolean isCancellationRequest) {
+        checkNotNull(userIdentityService.getSelectedUserIdentity());
+        checkNotNull(model.getProfileId().get());
+        checkNotNull(model.getAuthorizedPublicKey());
+        boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(model.getProfileId().get(),
+                model.getAuthorizedPublicKey(),
+                model.getBondedRoleType(),
+                model.getBondUserName().get(),
+                model.getSignature().get(),
+                model.getAddressByNetworkType(),
+                checkNotNull(userIdentityService.getSelectedUserIdentity()).getNodeIdAndKeyPair(),
+                isCancellationRequest);
+        if (success) {
+            model.getBondUserName().set("");
+            model.getSignature().set("");
+            String successMessage = isCancellationRequest ?
+                    Res.get("user.bondedRoles.cancellation.success") :
+                    Res.get("user.bondedRoles.registration.success");
+            new Popup().information(successMessage)
+                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                    .show();
+        } else {
+            String warnMessage = isCancellationRequest ?
+                    Res.get("user.bondedRoles.cancellation.failed", StringUtils.truncate(model.getSignature().get())) :
+                    Res.get("user.bondedRoles.registration.failed", StringUtils.truncate(model.getSignature().get()));
+            new Popup().warning(warnMessage)
+                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                    .show();
+        }
     }
 }

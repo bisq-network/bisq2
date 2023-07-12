@@ -20,7 +20,7 @@ package bisq.bonded_roles.registration;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.ProtobufUtils;
+import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -34,7 +34,6 @@ import lombok.ToString;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Getter
 @ToString
@@ -49,6 +48,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signatureBase64;
+    private final boolean isCancellationRequest;
     private final Map<Transport.Type, Address> addressByNetworkType;
 
     public BondedRoleRegistrationRequest(String profileId,
@@ -56,13 +56,15 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                                          BondedRoleType bondedRoleType,
                                          String bondUserName,
                                          String signatureBase64,
-                                         Map<Transport.Type, Address> addressByNetworkType) {
+                                         Map<Transport.Type, Address> addressByNetworkType,
+                                         boolean isCancellationRequest) {
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
         this.signatureBase64 = signatureBase64;
         this.addressByNetworkType = addressByNetworkType;
+        this.isCancellationRequest = isCancellationRequest;
     }
 
     @Override
@@ -80,20 +82,19 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
-                .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
+                .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
+                .setIsCancellationRequest(isCancellationRequest)
                 .build();
     }
 
     public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto) {
-        Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
-                .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
-                        e -> Address.fromProto(e.getValue())));
         return new BondedRoleRegistrationRequest(proto.getProfileId(),
                 proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
-                proto.getSignatureBase64(), addressByNetworkType);
+                proto.getSignatureBase64(),
+                NetworkId.AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
+                proto.getIsCancellationRequest());
     }
 
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {

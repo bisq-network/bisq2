@@ -20,7 +20,7 @@ package bisq.bonded_roles;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.ProtobufUtils;
+import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @ToString
@@ -84,22 +83,18 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, St
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignature(signature)
-                .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
+                .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
                 .setOracleNode(authorizedOracleNode.toProto())
                 .build();
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
-        Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
-                .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
-                        e -> Address.fromProto(e.getValue())));
         return new AuthorizedBondedRole(proto.getProfileId(),
                 proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignature(),
-                addressByNetworkType,
+                NetworkId.AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
                 AuthorizedOracleNode.fromProto(proto.getOracleNode()));
     }
 

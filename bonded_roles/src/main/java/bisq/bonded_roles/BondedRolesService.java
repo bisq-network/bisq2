@@ -31,22 +31,25 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class BondedRolesService implements Service {
-
-
     @Getter
     public static class Config {
         private final com.typesafe.config.Config marketPrice;
         private final com.typesafe.config.Config blockchainExplorer;
+        private final boolean ignoreSecurityManager;
 
         public Config(com.typesafe.config.Config marketPrice,
-                      com.typesafe.config.Config blockchainExplorer) {
+                      com.typesafe.config.Config blockchainExplorer,
+                      boolean ignoreSecurityManager) {
             this.marketPrice = marketPrice;
             this.blockchainExplorer = blockchainExplorer;
+            this.ignoreSecurityManager = ignoreSecurityManager;
+
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getConfig("marketPrice"),
-                    config.getConfig("blockchainExplorer"));
+                    config.getConfig("blockchainExplorer"),
+                    config.getBoolean("ignoreSecurityManager"));
         }
     }
 
@@ -57,7 +60,7 @@ public class BondedRolesService implements Service {
     private final AlertService alertService;
 
     public BondedRolesService(Config config, String applicationVersion, NetworkService networkService) {
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.ignoreSecurityManager);
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,

@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
     private final NetworkService networkService;
+    private final boolean ignoreSecurityManager;
     @Getter
     private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
     @Getter
@@ -45,8 +46,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Getter
     private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
 
-    public AuthorizedBondedRolesService(NetworkService networkService) {
+    public AuthorizedBondedRolesService(NetworkService networkService, boolean ignoreSecurityManager) {
         this.networkService = networkService;
+        this.ignoreSecurityManager = ignoreSecurityManager;
     }
 
 
@@ -101,8 +103,15 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                         .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
                         .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
                         .forEach(bannedRole -> {
-                            authorizedBondedRoleSet.remove(bannedRole);
-                            authorizedDataSet.remove(authorizedData);
+                            if (ignoreSecurityManager) {
+                                log.warn("We received an alert message from the security manager to ban a bonded role but " +
+                                                "you have set ignoreSecurityManager to true, so this will have no effect.\n" +
+                                                "bannedRole={}\nauthorizedData sent by security manager={}",
+                                        bannedRole, authorizedData);
+                            } else {
+                                authorizedBondedRoleSet.remove(bannedRole);
+                                authorizedDataSet.remove(authorizedData);
+                            }
                         });
             }
         }
