@@ -28,7 +28,7 @@ public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
     default CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message, ServiceProvider serviceProvider, M model) {
         return serviceProvider.getNetworkService().confidentialSend(message, model.getPeer().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
-                    System.out.println("sendMessage " + message + ". result=" + result);
+                    // System.out.println("sendMessage " + message + ". result=" + result);
                     //todo store info if message arrive or stored in mailbox
                 });
     }

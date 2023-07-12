@@ -20,8 +20,11 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.BisqText;
+import bisq.desktop.components.controls.WaitingAnimation;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,6 +74,7 @@ public class BuyerState1 extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
+        private final WaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -78,19 +82,26 @@ public class BuyerState1 extends BaseState {
             BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
+            waitingAnimation = new WaitingAnimation();
+            VBox.setMargin(waitingAnimation, new Insets(20, 0, 0, 20));
             root.getChildren().addAll(
                     infoHeadline,
-                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase1.info")));
+                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase1.info")),
+                    waitingAnimation);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
+
+            waitingAnimation.play();
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
+
+            waitingAnimation.stop();
         }
     }
 }

@@ -15,29 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.protocol.messages;
+package bisq.trade.bisq_easy.protocol.events;
 
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
-import lombok.extern.slf4j.Slf4j;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
+import bisq.trade.protocol.events.SendTradeMessageHandler;
 
-@Slf4j
-public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
+public class BisqEasySendBtcAddressEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 
-    public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+    public BisqEasySendBtcAddressEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void handle(Event event) {
-        BisqEasyConfirmFiatSentMessage message = (BisqEasyConfirmFiatSentMessage) event;
-        verifyMessage(message);
+        BisqEasySendBtcAddressEvent bisqEasySendBtcAddressEvent = (BisqEasySendBtcAddressEvent) event;
+        String btcAddress = bisqEasySendBtcAddressEvent.getBtcAddress();
+        commitToModel(btcAddress);
+        sendMessage(new BisqEasyBtcAddressMessage(trade.getId(), trade.getMyIdentity().getNetworkId(), btcAddress));
     }
 
-    @Override
-    protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
-        super.verifyMessage(message);
+    private void commitToModel(String btcAddress) {
+        trade.getBtcAddress().set(btcAddress);
     }
 }

@@ -21,25 +21,29 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.MultiLineLabel;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class FormUtils {
     public static Label getLabel(String text) {
-        Label label = new Label(text);
+        MultiLineLabel label = new MultiLineLabel(text);
         label.getStyleClass().add("bisq-easy-trade-state-info-text");
         label.setWrapText(true);
         VBox.setMargin(label, new Insets(10, 0, 0, 0));
+        VBox.setVgrow(label, Priority.ALWAYS);
         return label;
     }
 
-    public static Label getHelpLabel(String text) {
-        Label label = new Label(text);
+    public static MultiLineLabel getHelpLabel(String text) {
+        MultiLineLabel label = new MultiLineLabel(text);
         label.getStyleClass().add("bisq-easy-trade-state-info-help-text");
         label.setWrapText(true);
         VBox.setMargin(label, new Insets(10, 0, 0, 0));
+        VBox.setVgrow(label, Priority.ALWAYS);
         return label;
     }
 

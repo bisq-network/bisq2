@@ -16,6 +16,16 @@
     -fx-font-size: 1.5em;
 }
 
+/*******************************************************************************
+ * Welcome                                                              *
+ ******************************************************************************/
+
+.bisq-easy-trade-state-welcome-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.3em;
+}
 
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *

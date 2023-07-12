@@ -89,7 +89,9 @@ message BisqEasyTradeMessage {
     BisqEasyTakeOfferResponse bisqEasyTakeOfferResponse = 21;
     BisqEasyAccountDataMessage bisqEasyAccountDataMessage = 22;
     BisqEasyConfirmFiatSentMessage bisqEasyConfirmFiatSentMessage = 23;
-    BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 24;
+    BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = 24;
+    BisqEasyConfirmFiatReceiptMessage bisqEasyConfirmFiatReceiptMessage = 25;
+    BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 26;
   }
 }
 message BisqEasyTakeOfferRequest {
@@ -103,7 +105,11 @@ message BisqEasyAccountDataMessage {
   string paymentAccountData = 1;
 }
 message BisqEasyConfirmFiatSentMessage {
+}
+message BisqEasyBtcAddressMessage {
   string btcAddress = 1;
+}
+message BisqEasyConfirmFiatReceiptMessage {
 }
 message BisqEasyConfirmBtcSentMessage {
   string txId = 1;

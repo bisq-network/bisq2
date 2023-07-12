@@ -770,6 +770,33 @@ public class Transitions {
         }
     }
 
+    public static Timeline pulse(Node node, double duration, double delay,
+                                 double fromOpacity,
+                                 double midOpacity,
+                                 double toOpacity,
+                                 double fromScale, double toScale) {
+        Timeline timeline = new Timeline();
+        if (getUseAnimations()) {
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.opacityProperty(), fromOpacity, Interpolator.LINEAR),
+                    new KeyValue(node.scaleXProperty(), fromScale, Interpolator.LINEAR),
+                    new KeyValue(node.scaleYProperty(), fromScale, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration / 2),
+                    new KeyValue(node.opacityProperty(), midOpacity, Interpolator.EASE_OUT)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.opacityProperty(), toOpacity, Interpolator.EASE_OUT),
+                    new KeyValue(node.scaleXProperty(), toScale, Interpolator.EASE_OUT),
+                    new KeyValue(node.scaleYProperty(), toScale, Interpolator.EASE_OUT)
+            ));
+            timeline.setDelay(Duration.millis(delay));
+            timeline.play();
+        }
+        return timeline;
+    }
+
     private static boolean getUseAnimations() {
         return settingsService.getUseAnimations().get();
     }

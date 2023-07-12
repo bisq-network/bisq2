@@ -120,16 +120,24 @@ public class TradeStateController implements Controller {
                             model.getStateInfoVBox().set(new BuyerState1(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         }
                         break;
+
                     case SELLER_SENT_ACCOUNT_DATA:
+                    case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                         model.getStateInfoVBox().set(new SellerState2(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
+
                     case BUYER_RECEIVED_ACCOUNT_DATA:
+                    case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                         model.getStateInfoVBox().set(new BuyerState2(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
-                    case BUYER_SENT_FIAT_SENT_CONFIRMATION:
+
+                    case BUYER_SENT_BTC_ADDRESS:
+                    case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
                         model.getStateInfoVBox().set(new BuyerState3(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
-                    case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
+
+                    case SELLER_RECEIVED_BTC_ADDRESS:
+                    case SELLER_CONFIRMED_FIAT_RECEIPT:
                         model.getStateInfoVBox().set(new SellerState3(serviceProvider, bisqEasyTrade, channel).getView().getRoot());
                         break;
                     case SELLER_SENT_BTC_SENT_CONFIRMATION:

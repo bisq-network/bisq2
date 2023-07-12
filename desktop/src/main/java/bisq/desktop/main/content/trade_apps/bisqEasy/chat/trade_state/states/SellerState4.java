@@ -184,6 +184,7 @@ public class SellerState4 extends BaseState {
             txId.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
             btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.balance"), "", false);
             btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help.explorerLookup"));
+            btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase4.balance.prompt"));
 
             button = new Button(Res.get("bisqEasy.tradeState.info.phase4.buttonText"));
 

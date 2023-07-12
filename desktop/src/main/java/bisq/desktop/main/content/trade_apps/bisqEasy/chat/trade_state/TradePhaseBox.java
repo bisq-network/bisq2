@@ -31,6 +31,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -97,11 +98,11 @@ class TradePhaseBox {
                     Res.get("bisqEasy.tradeState.phase.buyer.phase1").toUpperCase() :
                     Res.get("bisqEasy.tradeState.phase.seller.phase1").toUpperCase());
             model.getPhase2Info().set(isBuyer ?
-                    Res.get("bisqEasy.tradeState.phase.buyer.phase2").toUpperCase() :
-                    Res.get("bisqEasy.tradeState.phase.seller.phase2").toUpperCase());
+                    Res.get("bisqEasy.tradeState.phase.buyer.phase2a").toUpperCase() :
+                    Res.get("bisqEasy.tradeState.phase.seller.phase2a").toUpperCase());
             model.getPhase3Info().set(isBuyer ?
-                    Res.get("bisqEasy.tradeState.phase.buyer.phase3").toUpperCase() :
-                    Res.get("bisqEasy.tradeState.phase.seller.phase3").toUpperCase());
+                    Res.get("bisqEasy.tradeState.phase.buyer.phase3a").toUpperCase() :
+                    Res.get("bisqEasy.tradeState.phase.seller.phase3a").toUpperCase());
             model.getPhase4Info().set(isBuyer ?
                     Res.get("bisqEasy.tradeState.phase.buyer.phase4").toUpperCase() :
                     Res.get("bisqEasy.tradeState.phase.seller.phase4").toUpperCase());
@@ -120,24 +121,42 @@ class TradePhaseBox {
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
                             model.getPhaseIndex().set(0);
                             break;
+
                         case SELLER_SENT_ACCOUNT_DATA:
                         case BUYER_RECEIVED_ACCOUNT_DATA:
-                            model.getPhaseIndex().set(1);
-                            break;
                         case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                         case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
+                            model.getPhaseIndex().set(1);
+                            break;
+                        case BUYER_SENT_BTC_ADDRESS:
+                        case SELLER_RECEIVED_BTC_ADDRESS:
+                        case SELLER_CONFIRMED_FIAT_RECEIPT:
+                        case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
                             model.getPhaseIndex().set(2);
                             break;
+
                         case SELLER_SENT_BTC_SENT_CONFIRMATION:
                         case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(3);
                             break;
+
                         case BTC_CONFIRMED:
                             model.getPhaseIndex().set(4);
                             break;
                     }
                     int phaseIndex = model.getPhaseIndex().get();
                     model.getDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
+
+                    if (state.ordinal() >= BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION.ordinal()) {
+                        model.getPhase2Info().set(isBuyer ?
+                                Res.get("bisqEasy.tradeState.phase.buyer.phase2b").toUpperCase() :
+                                Res.get("bisqEasy.tradeState.phase.seller.phase2b").toUpperCase());
+                    }
+                    if (state.ordinal() >= BisqEasyTradeState.SELLER_CONFIRMED_FIAT_RECEIPT.ordinal()) {
+                        model.getPhase3Info().set(isBuyer ?
+                                Res.get("bisqEasy.tradeState.phase.buyer.phase3b").toUpperCase() :
+                                Res.get("bisqEasy.tradeState.phase.seller.phase3b").toUpperCase());
+                    }
                 });
             });
         }

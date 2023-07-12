@@ -83,8 +83,10 @@ public class MultiLineLabel extends Label {
 
     private void onHeightChanged(double height) {
         if (height > 0) {
-            heightProperty().removeListener(heightListener);
-            widthProperty().removeListener(widthListener);
+            UIThread.runOnNextRenderFrame(() -> {
+                heightProperty().removeListener(heightListener);
+                widthProperty().removeListener(widthListener);
+            });
             initialHeight = height;
             adjustMinHeight();
         }

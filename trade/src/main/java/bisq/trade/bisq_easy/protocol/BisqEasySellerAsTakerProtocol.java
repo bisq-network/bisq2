@@ -20,10 +20,7 @@ package bisq.trade.bisq_easy.protocol;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.events.*;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessageHandler;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponseHandler;
+import bisq.trade.bisq_easy.protocol.messages.*;
 
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.*;
 
@@ -60,6 +57,18 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
 
         addTransition()
                 .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
+                .on(BisqEasyBtcAddressMessage.class)
+                .run(BisqEasyBtcAddressMessageHandler.class)
+                .to(SELLER_RECEIVED_BTC_ADDRESS);
+
+        addTransition()
+                .from(SELLER_RECEIVED_BTC_ADDRESS)
+                .on(BisqEasyConfirmFiatReceiptEvent.class)
+                .run(BisqEasyConfirmFiatReceivedEventHandler.class)
+                .to(SELLER_CONFIRMED_FIAT_RECEIPT);
+
+        addTransition()
+                .from(SELLER_CONFIRMED_FIAT_RECEIPT)
                 .on(BisqEasyConfirmBtcSentEvent.class)
                 .run(BisqEasyConfirmBtcSentEventHandler.class)
                 .to(SELLER_SENT_BTC_SENT_CONFIRMATION);

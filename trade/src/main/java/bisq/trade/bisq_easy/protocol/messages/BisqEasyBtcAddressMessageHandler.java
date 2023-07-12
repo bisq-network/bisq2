@@ -18,26 +18,39 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class BisqEasyConfirmFiatSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmFiatSentMessage> {
+import static com.google.common.base.Preconditions.checkArgument;
 
-    public BisqEasyConfirmFiatSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+@Slf4j
+public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
+
+    public BisqEasyBtcAddressMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void handle(Event event) {
-        BisqEasyConfirmFiatSentMessage message = (BisqEasyConfirmFiatSentMessage) event;
+        BisqEasyBtcAddressMessage message = (BisqEasyBtcAddressMessage) event;
         verifyMessage(message);
+
+        commitToModel(message.getBtcAddress());
     }
 
     @Override
-    protected void verifyMessage(BisqEasyConfirmFiatSentMessage message) {
+    protected void verifyMessage(BisqEasyBtcAddressMessage message) {
         super.verifyMessage(message);
+
+        checkArgument(StringUtils.isNotEmpty(message.getBtcAddress()));
+        // We leave it flexible so that users can use other than a BTC address data as btcAddress
+        checkArgument(message.getBtcAddress().length() <= 100);
+    }
+
+    private void commitToModel(String btcAddress) {
+        trade.getBtcAddress().set(btcAddress);
     }
 }

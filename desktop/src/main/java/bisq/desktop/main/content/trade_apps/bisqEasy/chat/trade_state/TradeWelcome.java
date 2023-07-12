@@ -19,11 +19,14 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,17 +77,21 @@ class TradeWelcome {
 
         public View(Model model, Controller controller) {
             super(new VBox(), model, controller);
-            Label welcomeHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.headline"));
-            welcomeHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
 
-            Label infoHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.info"));
+            root.setAlignment(Pos.CENTER);
+
+            Label welcomeHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.headline"));
+            welcomeHeadline.getStyleClass().add("bisq-easy-trade-state-welcome-headline");
+
+            MultiLineLabel infoHeadline = new MultiLineLabel(Res.get("bisqEasy.tradeState.welcome.info"));
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-text");
+            infoHeadline.setTextAlignment(TextAlignment.CENTER);
 
             openTradeGuideButton = new Button(Res.get("bisqEasy.tradeState.openTradeGuide"));
             openTradeGuideButton.setDefaultButton(true);
 
             VBox.setMargin(welcomeHeadline, new Insets(20, 0, 20, 0));
-            VBox.setMargin(openTradeGuideButton, new Insets(20, 0, 10, 0));
+            VBox.setMargin(openTradeGuideButton, new Insets(30, 0, 20, 0));
             root.getChildren().addAll(welcomeHeadline, infoHeadline, openTradeGuideButton);
         }
 

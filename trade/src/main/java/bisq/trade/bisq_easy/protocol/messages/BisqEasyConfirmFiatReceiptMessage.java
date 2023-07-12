@@ -30,14 +30,17 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
+public class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
-    public BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender) {
-        this(tradeId, sender, new MetaData(TTL, 100000, BisqEasyConfirmFiatSentMessage.class.getSimpleName()));
+
+    public BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender) {
+        this(tradeId,
+                sender,
+                new MetaData(TTL, 100000, BisqEasyConfirmFiatReceiptMessage.class.getSimpleName()));
     }
 
-    private BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender, MetaData metaData) {
+    private BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender, MetaData metaData) {
         super(tradeId, sender, metaData);
     }
 
@@ -45,13 +48,13 @@ public class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
     protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
         return getTradeMessageBuilder()
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyConfirmFiatSentMessage(
-                                bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.newBuilder()))
+                        .setBisqEasyConfirmFiatReceiptMessage(
+                                bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage.newBuilder()))
                 .build();
     }
 
-    public static BisqEasyConfirmFiatSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        return new BisqEasyConfirmFiatSentMessage(
+    public static BisqEasyConfirmFiatReceiptMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        return new BisqEasyConfirmFiatReceiptMessage(
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
                 MetaData.fromProto(proto.getMetaData()));

@@ -30,30 +30,40 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
+public class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
-    public BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender) {
-        this(tradeId, sender, new MetaData(TTL, 100000, BisqEasyConfirmFiatSentMessage.class.getSimpleName()));
+    private final String btcAddress;
+
+    public BisqEasyBtcAddressMessage(String tradeId, NetworkId sender, String btcAddress) {
+        this(tradeId,
+                sender,
+                btcAddress,
+                new MetaData(TTL, 100000, BisqEasyBtcAddressMessage.class.getSimpleName()));
     }
 
-    private BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender, MetaData metaData) {
+    private BisqEasyBtcAddressMessage(String tradeId, NetworkId sender, String btcAddress, MetaData metaData) {
         super(tradeId, sender, metaData);
+
+        this.btcAddress = btcAddress;
     }
 
     @Override
     protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
         return getTradeMessageBuilder()
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyConfirmFiatSentMessage(
-                                bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.newBuilder()))
+                        .setBisqEasyBtcAddressMessage(
+                                bisq.trade.protobuf.BisqEasyBtcAddressMessage.newBuilder()
+                                        .setBtcAddress(btcAddress)))
                 .build();
     }
 
-    public static BisqEasyConfirmFiatSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        return new BisqEasyConfirmFiatSentMessage(
+    public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyConfirmFiatSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
+        return new BisqEasyBtcAddressMessage(
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
+                bisqEasyConfirmFiatSentMessage.getBtcAddress(),
                 MetaData.fromProto(proto.getMetaData()));
     }
 }
