@@ -97,6 +97,8 @@ public abstract class BondedRolesRegistrationController implements Controller {
                 model.getAddressByNetworkType(),
                 checkNotNull(userIdentityService.getSelectedUserIdentity()).getNodeIdAndKeyPair());
         if (success) {
+            model.getBondUserName().set("");
+            model.getSignature().set("");
             new Popup().information(Res.get("user.bondedRoles.registration.success"))
                     .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
                     .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
