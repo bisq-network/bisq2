@@ -21,7 +21,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -59,8 +58,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
 
         pubKeyHash = new MaterialTextField(Res.get("user.reputation.pubKeyHash"), "");
         pubKeyHash.setEditable(false);
-        pubKeyHash.setIcon(AwesomeIcon.COPY);
-        pubKeyHash.setIconTooltip(Res.get("action.copyToClipboard"));
+        pubKeyHash.showCopyIcon();
 
         backButton = new Button(Res.get("action.back"));
 

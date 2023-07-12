@@ -24,7 +24,6 @@ import bisq.desktop.components.controls.OrderedList;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -109,7 +108,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
     protected Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem, BondedRolesListItem>> getUserProfileIdCellFactory() {
         return column -> new TableCell<>() {
             private final Label userProfileId = new Label();
-            private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.COPY);
+            private final Button icon = BisqIconButton.createCopyIconButton();
             private final HBox hBox = new HBox(userProfileId, icon);
 
             {
@@ -145,7 +144,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
     protected Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem, BondedRolesListItem>> getSignatureCellFactory() {
         return column -> new TableCell<>() {
             private final Label signature = new Label();
-            private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.COPY);
+            private final Button icon = BisqIconButton.createCopyIconButton();
             private final HBox hBox = new HBox(signature, icon);
 
             {
@@ -166,9 +165,6 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                     signature.setTooltip(tooltip);
 
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getSignature()));
-                    Tooltip tooltip2 = new BisqTooltip(Res.get("action.copyToClipboard"));
-                    tooltip2.getStyleClass().add("dark-tooltip");
-                    icon.setTooltip(tooltip2);
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);

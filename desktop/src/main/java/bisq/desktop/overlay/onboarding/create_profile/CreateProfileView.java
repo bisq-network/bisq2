@@ -19,6 +19,7 @@ package bisq.desktop.overlay.onboarding.create_profile;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
@@ -70,7 +71,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         int size = 120;
         roboIconView.setFitWidth(size);
         roboIconView.setFitHeight(size);
-        Tooltip.install(roboIconView, new Tooltip(Res.get("onboarding.createProfile.regenerate")));
+        Tooltip.install(roboIconView, new BisqTooltip(Res.get("onboarding.createProfile.regenerate")));
 
         int indicatorSize = size / 2;
         powProgressIndicator = new ProgressIndicator();

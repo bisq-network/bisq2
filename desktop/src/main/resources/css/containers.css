@@ -8,6 +8,19 @@
     -fx-background-color: -bisq-grey-2;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * BisqPopupMenu                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-popup-menu {
+    -fx-background-color: -bisq-grey-4;
+    -fx-background-radius: 6px;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 5, 5);
+}
+
 
 /*******************************************************************************
  * List based                                                                  *
@@ -650,3 +663,4 @@ tree-table-view:focused {
     -fx-background-insets: 25;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.75), 40, 0.5, 0, 0);
 }
+

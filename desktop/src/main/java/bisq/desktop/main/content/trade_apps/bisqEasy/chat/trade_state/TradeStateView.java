@@ -21,6 +21,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -67,7 +68,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         headerHBox = new HBox(headline, Spacer.fillHBox(), collapseButton, expandButton);
         headerHBox.setCursor(Cursor.HAND);
 
-        Tooltip tooltip = new Tooltip(Res.get("bisqEasy.tradeState.header.expandCollapse.tooltip"));
+        BisqTooltip tooltip = new BisqTooltip(Res.get("bisqEasy.tradeState.header.expandCollapse.tooltip"));
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 

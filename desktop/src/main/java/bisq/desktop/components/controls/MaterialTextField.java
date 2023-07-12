@@ -274,6 +274,11 @@ public class MaterialTextField extends Pane {
                 ClipboardUtil.copyToClipboard(getText())).get());
     }
 
+    public void showEditIcon() {
+        setIcon(AwesomeIcon.EDIT);
+        setIconTooltip(Res.get("action.editable"));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Focus

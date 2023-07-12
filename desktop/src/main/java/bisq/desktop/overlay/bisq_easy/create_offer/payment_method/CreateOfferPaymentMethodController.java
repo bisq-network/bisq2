@@ -22,6 +22,7 @@ import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.currency.Market;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -29,6 +30,7 @@ import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import com.google.common.base.Joiner;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +60,18 @@ public class CreateOfferPaymentMethodController implements Controller {
         return model.getSelectedFiatPaymentMethods();
     }
 
+    public boolean getCustomFiatPaymentMethodNameNotEmpty() {
+        return StringUtils.isNotEmpty(model.getCustomFiatPaymentMethodName().get());
+    }
+
+    public void showCustomMethodNotEmptyWarning() {
+        model.getShowCustomMethodNotEmptyWarning().set(true);
+    }
+
+    public ReadOnlyBooleanProperty getShowCustomMethodNotEmptyWarning() {
+        return model.getShowCustomMethodNotEmptyWarning();
+    }
+
     public void setMarket(Market market) {
         if (market == null) {
             return;
@@ -76,6 +90,8 @@ public class CreateOfferPaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getCustomFiatPaymentMethodName().set("");
+        model.getShowCustomMethodNotEmptyWarning().set(false);
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
                 .ifPresent(names -> {
@@ -121,6 +137,10 @@ public class CreateOfferPaymentMethodController implements Controller {
             return;
         }
         maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(model.getCustomFiatPaymentMethodName().get()));
+    }
+
+    void onCloseOverlay() {
+        model.getShowCustomMethodNotEmptyWarning().set(false);
     }
 
     private void maybeAddFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {

@@ -185,7 +185,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
+                final Label leaveChannelIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Label label = new Label();
                 final HBox hBox = new HBox(10);
                 final Badge numMessagesBadge = new Badge();
@@ -218,11 +218,14 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
                     numMessagesBadge.setPosition(Pos.CENTER);
 
-                    removeIcon.setCursor(Cursor.HAND);
-                    removeIcon.setId("icon-label-grey");
-                    HBox.setMargin(removeIcon, new Insets(0, 12, 0, -20));
+                    leaveChannelIcon.setCursor(Cursor.HAND);
+                    leaveChannelIcon.setId("icon-label-grey");
+                    Tooltip leaveChannelIconTooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.private.leave"));
+                    leaveChannelIconTooltip.getStyleClass().add("dark-tooltip");
+                    leaveChannelIcon.setTooltip(leaveChannelIconTooltip);
+                    HBox.setMargin(leaveChannelIcon, new Insets(0, 12, 0, -20));
 
-                    iconAndBadge.getChildren().addAll(numMessagesBadge, removeIcon);
+                    iconAndBadge.getChildren().addAll(numMessagesBadge, leaveChannelIcon);
                     iconAndBadge.setAlignment(Pos.CENTER);
                     HBox.setMargin(iconAndBadge, new Insets(0, 12, 0, 0));
 
@@ -239,7 +242,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
                     if (item == null || empty) {
                         label.setGraphic(null);
-                        removeIcon.setOnMouseClicked(null);
+                        leaveChannelIcon.setOnMouseClicked(null);
                         setOnMouseClicked(null);
                         setOnMouseEntered(null);
                         setOnMouseExited(null);
@@ -256,7 +259,11 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                             inMediationPin.unbind();
                             inMediationPin = null;
                         }
-                        Tooltip.install(this, null);
+                        Tooltip.uninstall(roboIcon, tooltip);
+                        Tooltip.uninstall(label, tooltip);
+                        if (secondaryRoboIcon.getImage() != null) {
+                            Tooltip.uninstall(secondaryRoboIcon, tooltip);
+                        }
                         setGraphic(null);
                         return;
                     }
@@ -270,7 +277,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                     List<ImageView> icons = new ArrayList<>();
                     UserProfile peer = privateChatChannel.getPeer();
                     roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                    Tooltip.install(this, tooltip);
+                    Tooltip.install(roboIcon, tooltip);
+                    Tooltip.install(label, tooltip);
                     icons.add(roboIcon);
 
                     if (inMediationPin != null) {
@@ -299,6 +307,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                                             Res.get("bisqEasy.mediator") + ":\n" + mediator.getTooltipString());
                                 }
                                 hBox.getChildren().add(secondaryRoboIcon);
+                                Tooltip.install(secondaryRoboIcon, tooltip);
                                 icons.add(secondaryRoboIcon);
                             } else {
                                 tooltip.setText(peer.getTooltipString());
@@ -321,16 +330,16 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                             });
                         });
                     });
-                    removeIcon.setOpacity(0);
-                    removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
-                    setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
+                    leaveChannelIcon.setOpacity(0);
+                    leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
+                    setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
                     setOnMouseEntered(e -> {
-                        Transitions.fadeIn(removeIcon);
+                        Transitions.fadeIn(leaveChannelIcon);
                         Transitions.fadeOut(numMessagesBadge);
                         applyEffect(icons, item.isSelected(), true);
                     });
                     setOnMouseExited(e -> {
-                        Transitions.fadeOut(removeIcon);
+                        Transitions.fadeOut(leaveChannelIcon);
                         Transitions.fadeIn(numMessagesBadge);
                         applyEffect(icons, item.isSelected(), false);
                     });

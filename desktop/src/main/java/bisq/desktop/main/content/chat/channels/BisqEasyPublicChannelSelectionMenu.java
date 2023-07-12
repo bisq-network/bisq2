@@ -32,6 +32,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -47,6 +48,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -229,6 +231,9 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             addChannelIcon.setOpacity(0.5);
             addChannelIcon.setCursor(Cursor.HAND);
             addChannelIcon.setPadding(new Insets(24, 12, 0, 0));
+            Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.public.addMarketChannel"));
+            tooltip.getStyleClass().add("dark-tooltip");
+            addChannelIcon.setTooltip(tooltip);
             headerBox.getChildren().add(addChannelIcon);
         }
 
@@ -297,7 +302,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                final Label leaveChannelIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
+                final Label removeChannelIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Badge numMessagesBadge;
                 final StackPane iconAndBadge = new StackPane();
                 final Label label = new Label();
@@ -317,7 +322,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     numMessagesBadge = new Badge();
                     numMessagesBadge.setPosition(Pos.CENTER);
 
-                    iconAndBadge.getChildren().addAll(numMessagesBadge, leaveChannelIcon);
+                    iconAndBadge.getChildren().addAll(numMessagesBadge, removeChannelIcon);
                     iconAndBadge.setAlignment(Pos.CENTER);
 
                     label.getStyleClass().add("bisq-text-8");
@@ -326,8 +331,11 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
                     HBox.setMargin(iconAndBadge, new Insets(0, 12, 0, 0));
 
-                    leaveChannelIcon.setCursor(Cursor.HAND);
-                    leaveChannelIcon.setId("icon-label-grey");
+                    removeChannelIcon.setCursor(Cursor.HAND);
+                    removeChannelIcon.setId("icon-label-grey");
+                    Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.public.removeMarketChannel"));
+                    tooltip.getStyleClass().add("dark-tooltip");
+                    removeChannelIcon.setTooltip(tooltip);
 
                     nonSelectedEffect.setSaturation(-0.4);
                     nonSelectedEffect.setBrightness(-0.6);
@@ -359,16 +367,16 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                             }
                         });
 
-                        leaveChannelIcon.setOpacity(0);
-                        leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyPublicChatChannel));
-                        setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
+                        removeChannelIcon.setOpacity(0);
+                        removeChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyPublicChatChannel));
+                        setOnMouseClicked(e -> Transitions.fadeIn(removeChannelIcon));
                         setOnMouseEntered(e -> {
-                            Transitions.fadeIn(leaveChannelIcon);
+                            Transitions.fadeIn(removeChannelIcon);
                             Transitions.fadeOut(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), true);
                         });
                         setOnMouseExited(e -> {
-                            Transitions.fadeOut(leaveChannelIcon);
+                            Transitions.fadeOut(removeChannelIcon);
                             Transitions.fadeIn(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), false);
                         });
@@ -381,7 +389,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                         setGraphic(hBox);
                     } else {
                         label.setGraphic(null);
-                        leaveChannelIcon.setOnMouseClicked(null);
+                        removeChannelIcon.setOnMouseClicked(null);
                         setOnMouseClicked(null);
                         setOnMouseEntered(null);
                         setOnMouseExited(null);

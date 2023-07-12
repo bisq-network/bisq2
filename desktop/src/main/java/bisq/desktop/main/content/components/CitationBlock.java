@@ -27,7 +27,6 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -144,7 +143,7 @@ public class CitationBlock {
             headline.setStyle("-fx-text-fill: -bisq-grey-10");
             headline.getStyleClass().addAll("font-light", "font-size-11");
 
-            closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
+            closeButton = BisqIconButton.createDeleteIconButton();
             closeButton.setOpacity(0.5);
             HBox.setMargin(headline, new Insets(0, 0, 5, 0));
             HBox.setMargin(closeButton, new Insets(0, -22, 0, 0));

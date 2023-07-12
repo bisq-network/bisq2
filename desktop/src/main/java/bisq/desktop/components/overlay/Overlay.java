@@ -104,20 +104,20 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public enum Type {
-        Undefined(AnimationType.ScaleFromCenter),
+        UNDEFINED(AnimationType.ScaleFromCenter),
 
-        Notification(AnimationType.SlideFromRightTop),
+        NOTIFICATION(AnimationType.SlideFromRightTop),
 
-        BackgroundInfo(AnimationType.SlideDownFromCenterTop),
-        Feedback(AnimationType.SlideDownFromCenterTop),
+        BACKGROUND_INFO(AnimationType.SlideDownFromCenterTop),
+        FEEDBACK(AnimationType.SlideDownFromCenterTop),
 
-        Information(AnimationType.FadeInAtCenter),
-        Instruction(AnimationType.ScaleFromCenter),
-        Attention(AnimationType.ScaleFromCenter),
-        Confirmation(AnimationType.ScaleYFromCenter),
+        INFORMATION(AnimationType.FadeInAtCenter),
+        INSTRUCTION(AnimationType.ScaleFromCenter),
+        ATTENTION(AnimationType.ScaleFromCenter),
+        CONFIRMATION(AnimationType.ScaleYFromCenter),
 
-        Warning(AnimationType.ScaleDownToCenter),
-        Error(AnimationType.ScaleDownToCenter);
+        WARNING(AnimationType.ScaleDownToCenter),
+        ERROR(AnimationType.ScaleDownToCenter);
 
         public final AnimationType animationType;
         private final Transitions.Type transitionsType;
@@ -177,7 +177,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected ChangeListener<Number> positionListener;
 
     protected UIScheduler centerTime;
-    protected Type type = Type.Undefined;
+    protected Type type = Type.UNDEFINED;
     protected AnimationType animationType;
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
@@ -301,7 +301,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T instruction(String message) {
-        type = Type.Instruction;
+        type = Type.INSTRUCTION;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.instruction");
         processMessage(message);
@@ -309,7 +309,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T attention(String message) {
-        type = Type.Attention;
+        type = Type.ATTENTION;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.attention");
         processMessage(message);
@@ -317,7 +317,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T backgroundInfo(String message) {
-        type = Type.BackgroundInfo;
+        type = Type.BACKGROUND_INFO;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.backgroundInfo");
         processMessage(message);
@@ -325,7 +325,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T feedback(String message) {
-        type = Type.Feedback;
+        type = Type.FEEDBACK;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.feedback");
         processMessage(message);
@@ -353,7 +353,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T confirmation(String message) {
-        type = Type.Confirmation;
+        type = Type.CONFIRMATION;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.confirmation");
         processMessage(message);
@@ -361,7 +361,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T information(String message) {
-        type = Type.Information;
+        type = Type.INFORMATION;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.information");
         processMessage(message);
@@ -369,7 +369,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T warning(String message) {
-        type = Type.Warning;
+        type = Type.WARNING;
 
         if (headLine == null)
             this.headLine = Res.get("popup.headline.warning");
@@ -386,7 +386,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     private T error(String message) {
-        type = Type.Error;
+        type = Type.ERROR;
         showReportErrorButtons();
         width = 1100;
         if (headLine == null)
@@ -774,23 +774,23 @@ public abstract class Overlay<T extends Overlay<T>> {
             headlineIcon.setManaged(true);
             headlineIcon.setVisible(true);
             switch (type) {
-                case Information:
-                case BackgroundInfo:
-                case Instruction:
-                case Confirmation:
-                case Feedback:
-                case Notification:
-                case Attention:
+                case INFORMATION:
+                case BACKGROUND_INFO:
+                case INSTRUCTION:
+                case CONFIRMATION:
+                case FEEDBACK:
+                case NOTIFICATION:
+                case ATTENTION:
                     Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.8em");
                     headLineLabel.getStyleClass().add("overlay-headline-information");
                     headlineIcon.getStyleClass().add("overlay-icon-information");
                     break;
-                case Warning:
+                case WARNING:
                     Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, headlineIcon, "1.5em");
                     headLineLabel.getStyleClass().add("overlay-headline-warning");
                     headlineIcon.getStyleClass().add("overlay-icon-warning");
                     break;
-                case Error:
+                case ERROR:
                     Icons.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
                     headLineLabel.getStyleClass().add("overlay-headline-error");
                     headlineIcon.getStyleClass().add("overlay-icon-error");

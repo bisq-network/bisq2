@@ -21,7 +21,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -59,8 +58,7 @@ public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, Si
 
         pubKeyHash = new MaterialTextField(Res.get("user.reputation.pubKeyHash"), "");
         pubKeyHash.setEditable(false);
-        pubKeyHash.setIcon(AwesomeIcon.COPY);
-        pubKeyHash.setIconTooltip(Res.get("action.copyToClipboard"));
+        pubKeyHash.showCopyIcon();
 
         requestCertificateButton = new Button(Res.get("user.reputation.request"));
         requestCertificateButton.getStyleClass().add("outlined-button");

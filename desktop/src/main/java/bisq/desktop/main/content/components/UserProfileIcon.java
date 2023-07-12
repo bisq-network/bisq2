@@ -32,7 +32,7 @@ public class UserProfileIcon extends ImageView {
 
     public void setUserProfile(UserProfile userProfile) {
         BisqTooltip tooltip = new BisqTooltip(userProfile.getTooltipString());
-        tooltip.setId("proof-of-burn-tooltip");
+        tooltip.getStyleClass().add("medium-dark-tooltip");
         Tooltip.install(this, tooltip);
         setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
     }

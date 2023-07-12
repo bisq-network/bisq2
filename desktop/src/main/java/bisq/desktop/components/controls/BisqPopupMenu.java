@@ -27,6 +27,8 @@ public class BisqPopupMenu extends BisqPopup {
     public BisqPopupMenu(List<BisqPopupMenuItem> items, Runnable onClose) {
         super();
 
+        getStyleClass().add("bisq-popup-menu");
+
         VBox box = new VBox();
         box.setSpacing(5);
         box.setPadding(new Insets(10));

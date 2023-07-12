@@ -43,8 +43,6 @@ import java.util.Optional;
 
 @Slf4j
 public class CreateOfferController extends NavigationController implements InitWithDataController<CreateOfferController.InitData> {
-
-
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -69,7 +67,7 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferReviewOfferController createOfferReviewOfferController;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
-            isMinAmountEnabledPin, priceSpecPin;
+            isMinAmountEnabledPin, priceSpecPin, showCustomMethodNotEmptyWarningPin;
 
     public CreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_OFFER);
@@ -133,6 +131,14 @@ public class CreateOfferController extends NavigationController implements InitW
             createOfferReviewOfferController.setPriceSpec(priceSpec);
         });
 
+        showCustomMethodNotEmptyWarningPin = EasyBind.subscribe(createOfferPaymentMethodController.getShowCustomMethodNotEmptyWarning(),
+                showCustomMethodNotEmptyWarning -> {
+                    if (model.getSelectedChildTarget().get() == NavigationTarget.CREATE_OFFER_PAYMENT_METHOD) {
+                        model.getNextButtonVisible().set(!showCustomMethodNotEmptyWarning);
+                        model.getBackButtonVisible().set(!showCustomMethodNotEmptyWarning);
+                    }
+                });
+
         handlePaymentMethodsUpdate();
         createOfferPaymentMethodController.getFiatPaymentMethods().addListener(paymentMethodsListener);
     }
@@ -144,6 +150,7 @@ public class CreateOfferController extends NavigationController implements InitW
         amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
+        showCustomMethodNotEmptyWarningPin.unsubscribe();
         createOfferPaymentMethodController.getFiatPaymentMethods().removeListener(paymentMethodsListener);
     }
 
@@ -185,6 +192,11 @@ public class CreateOfferController extends NavigationController implements InitW
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
+            if (model.getSelectedChildTarget().get() == NavigationTarget.CREATE_OFFER_PAYMENT_METHOD &&
+                    createOfferPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
+                createOfferPaymentMethodController.showCustomMethodNotEmptyWarning();
+                return;
+            }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);

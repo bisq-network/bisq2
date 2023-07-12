@@ -178,7 +178,7 @@ public class ChatMessagesListView {
             selectedChannelPin = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).getSelectedChannel().addObserver(channel -> {
                 UIThread.run(() -> {
                     model.selectedChannel.set(channel);
-                    model.allowEditing.set(channel instanceof PublicChatChannel);
+                    model.isPublicChannel.set(channel instanceof PublicChatChannel);
 
                     if (chatMessagesPin != null) {
                         chatMessagesPin.unbind();
@@ -430,7 +430,7 @@ public class ChatMessagesListView {
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
-        private final BooleanProperty allowEditing = new SimpleBooleanProperty();
+        private final BooleanProperty isPublicChannel = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
         private final ChatChannelDomain chatChannelDomain;
         @Setter
@@ -558,18 +558,13 @@ public class ChatMessagesListView {
                             messageBgHBox.setAlignment(Pos.CENTER_LEFT);
 
                             // Reactions box
-                            replyIcon = Icons.getIcon(AwesomeIcon.REPLY);
-                            replyIcon.setCursor(Cursor.HAND);
-                            pmIcon = Icons.getIcon(AwesomeIcon.COMMENT_ALT);
-                            pmIcon.setCursor(Cursor.HAND);
-                            editIcon = Icons.getIcon(AwesomeIcon.EDIT);
-                            editIcon.setCursor(Cursor.HAND);
-                            copyIcon = Icons.getIcon(AwesomeIcon.COPY);
-                            copyIcon.setCursor(Cursor.HAND);
-                            deleteIcon = Icons.getIcon(AwesomeIcon.REMOVE_SIGN);
-                            deleteIcon.setCursor(Cursor.HAND);
-                            moreOptionsIcon = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
-                            moreOptionsIcon.setCursor(Cursor.HAND);
+                            replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
+                            pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
+                            editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
+                            copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
+                            deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
+                            moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
+
                             reactionsHBox = new HBox(20);
 
                             // reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
@@ -788,11 +783,19 @@ public class ChatMessagesListView {
                         private void handleReactionsBox(ChatMessageListItem<? extends ChatMessage> item) {
                             ChatMessage chatMessage = item.getChatMessage();
                             boolean isMyMessage = model.isMyMessage(chatMessage);
-                            boolean allowEditing = model.allowEditing.get();
+
+                            boolean isPublicChannel = model.isPublicChannel.get();
+                            boolean allowEditing = isPublicChannel;
+                            if (chatMessage instanceof BisqEasyPublicChatMessage) {
+                                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
+                                allowEditing = allowEditing && bisqEasyPublicChatMessage.getBisqEasyOffer().isEmpty();
+                            }
                             if (isMyMessage) {
                                 copyIcon.setOnMouseClicked(e -> controller.onCopyMessage(chatMessage));
                                 if (allowEditing) {
                                     editIcon.setOnMouseClicked(e -> onEditMessage(item));
+                                }
+                                if (isPublicChannel) {
                                     deleteIcon.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
                                 }
                             } else {
@@ -812,10 +815,10 @@ public class ChatMessagesListView {
 
                             editIcon.setVisible(isMyMessage && allowEditing);
                             editIcon.setManaged(isMyMessage && allowEditing);
-                            deleteIcon.setVisible(isMyMessage && allowEditing);
-                            deleteIcon.setManaged(isMyMessage && allowEditing);
-                            removeOfferButton.setVisible(isMyMessage && allowEditing);
-                            removeOfferButton.setManaged(isMyMessage && allowEditing);
+                            deleteIcon.setVisible(isMyMessage && isPublicChannel);
+                            deleteIcon.setManaged(isMyMessage && isPublicChannel);
+                            removeOfferButton.setVisible(isMyMessage && isPublicChannel);
+                            removeOfferButton.setManaged(isMyMessage && isPublicChannel);
 
                             setOnMouseEntered(e -> {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() != null || editInputField.isVisible()) {
@@ -898,6 +901,15 @@ public class ChatMessagesListView {
                             editInputField.setOnKeyPressed(null);
                         }
                     };
+                }
+
+                private Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
+                    Label iconLabel = Icons.getIcon(icon);
+                    iconLabel.setCursor(Cursor.HAND);
+                    Tooltip tooltip = new BisqTooltip(tooltipString);
+                    tooltip.getStyleClass().add("dark-tooltip");
+                    iconLabel.setTooltip(tooltip);
+                    return iconLabel;
                 }
             };
         }

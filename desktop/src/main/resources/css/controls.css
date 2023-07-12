@@ -595,10 +595,18 @@
     -fx-font-size: 1em;
 }
 
-.tooltip.dark-tooltip {
+.tooltip .dark-tooltip {
     -fx-text-fill: -bisq-grey-11;
     -fx-background-color: -bisq-grey-2;
 }
+
+.tooltip .medium-dark-tooltip {
+    -fx-background: -bisq-grey-5;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-background-color: -bisq-grey-5;
+    -fx-font-size: 0.85em;
+}
+
 
 /*******************************************************************************
  *                                                                             *
