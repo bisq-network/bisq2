@@ -155,7 +155,8 @@ public class LeftNavController implements Controller {
             boolean authorizedRoleVisible = selectedUserIdentity != null &&
                     authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
                             .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
-            if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible) {
+            if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible &&
+                    model.getSelectedNavigationTarget().get() == NavigationTarget.AUTHORIZED_ROLE) {
                 UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
             }
             model.getAuthorizedRoleVisible().set(authorizedRoleVisible);
