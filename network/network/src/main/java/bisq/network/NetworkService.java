@@ -52,6 +52,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -171,7 +172,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Map<Transport.Type, CompletableFuture<Void>> initializeNode(String nodeId, PubKey pubKey) {
-        return initializeNode(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
+        return initializeNode(getOrCreatePortByTransport(nodeId, pubKey), nodeId, pubKey);
     }
 
     private Map<Transport.Type, CompletableFuture<Void>> initializeNode(Map<Transport.Type, Integer> portByTransport,
@@ -209,7 +210,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         // Once the node of the last transport is completed we are expected to be able to create the networkId
         // as all addresses of all transports are available.
         return CompletableFutureUtils.allOf(futures)
-                .thenApply(list -> findNetworkId(nodeId)
+                .thenApply(list -> findNetworkId(nodeId, pubKey)
                         .or(() -> createNetworkId(nodeId, pubKey))
                         .orElseThrow(() -> {
                             String errorMsg = "Unexpected case. No networkId available after all initializeNode calls are completed.";
@@ -359,12 +360,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 
     private Map<Transport.Type, Integer> getDefaultPortByTransport() {
-        return getOrCreatePortByTransport(Node.DEFAULT);
+        return getOrCreatePortByTransport(Node.DEFAULT, null);
     }
 
-    //todo
-    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId) {
-        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId);
+    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, @Nullable PubKey pubKey) {
+        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
         // If we have a persisted networkId we take that port otherwise we take random system port.  
         Map<Transport.Type, Integer> persistedOrRandomPortByTransport = supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
@@ -424,6 +424,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.findAddress(transport, nodeId);
     }
 
+    public Optional<NetworkId> findNetworkId(String nodeId, @Nullable PubKey pubKey) {
+        return findNetworkId(nodeId)
+                .filter(networkId -> pubKey == null || networkId.getPubKey().equals(pubKey)).stream()
+                .findAny();
+    }
+
     public Optional<NetworkId> findNetworkId(String nodeId) {
         return Optional.ofNullable(persistableStore.getNetworkIdByNodeId().get(nodeId));
     }
@@ -458,7 +464,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     // If not persisted we try to create the networkId and persist if available.
     private Optional<NetworkId> maybePersistNewNetworkId(String nodeId, PubKey pubKey) {
-        return findNetworkId(nodeId)
+        return findNetworkId(nodeId, pubKey)
                 .or(() -> createNetworkId(nodeId, pubKey)
                         .map(networkId -> {
                             persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
