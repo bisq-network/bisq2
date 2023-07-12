@@ -26,7 +26,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,23 +48,19 @@ public final class NetworkId implements Proto {
     }
 
     public bisq.network.protobuf.NetworkId toProto() {
-        List<bisq.network.protobuf.AddressTransportTypeTuple> tuple = addressByNetworkType.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(e -> new AddressTransportTypeTuple(e.getKey(), e.getValue()).toProto())
-                .collect(Collectors.toList());
         return bisq.network.protobuf.NetworkId.newBuilder()
-                .addAllAddressNetworkTypeTuple(tuple)
+                .addAllAddressNetworkTypeTuple(AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
                 .setPubKey(pubKey.toProto())
                 .setNodeId(nodeId)
                 .build();
     }
 
     public static NetworkId fromProto(bisq.network.protobuf.NetworkId proto) {
-        Map<Transport.Type, Address> addressByNetworkType = proto.getAddressNetworkTypeTupleList().stream()
-                .map(AddressTransportTypeTuple::fromProto)
-                .collect(Collectors.toMap(e -> e.transportType, e -> e.address));
-        return new NetworkId(addressByNetworkType, PubKey.fromProto(proto.getPubKey()), proto.getNodeId());
+        return new NetworkId(AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
+                PubKey.fromProto(proto.getPubKey()),
+                proto.getNodeId());
     }
+
 
     public String getId() {
         return pubKey.getId();
@@ -73,8 +68,8 @@ public final class NetworkId implements Proto {
 
     private List<AddressTransportTypeTuple> getAddressByNetworkTypeAsList() {
         return addressByNetworkType.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
                 .map(e -> new AddressTransportTypeTuple(e.getKey(), e.getValue()))
-                .sorted(Comparator.comparing(AddressTransportTypeTuple::getAddress))
                 .collect(Collectors.toList());
     }
 
@@ -113,11 +108,11 @@ public final class NetworkId implements Proto {
     @Getter
     @ToString
     @EqualsAndHashCode
-    private static final class AddressTransportTypeTuple implements Proto {
+    public static final class AddressTransportTypeTuple implements Proto {
         private final Transport.Type transportType;
         private final Address address;
 
-        private AddressTransportTypeTuple(Transport.Type transportType, Address address) {
+        public AddressTransportTypeTuple(Transport.Type transportType, Address address) {
             this.transportType = transportType;
             this.address = address;
         }
@@ -133,5 +128,19 @@ public final class NetworkId implements Proto {
             Transport.Type transportType = ProtobufUtils.enumFromProto(Transport.Type.class, proto.getTransportType());
             return new AddressTransportTypeTuple(transportType, Address.fromProto(proto.getAddress()));
         }
+
+        public static List<bisq.network.protobuf.AddressTransportTypeTuple> mapToProtoList(Map<Transport.Type, Address> addressByNetworkType) {
+            return addressByNetworkType.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(e -> new AddressTransportTypeTuple(e.getKey(), e.getValue()).toProto())
+                    .collect(Collectors.toList());
+        }
+
+        public static Map<Transport.Type, Address> protoListToMap(List<bisq.network.protobuf.AddressTransportTypeTuple> addressNetworkTypeTupleList) {
+            return addressNetworkTypeTupleList.stream()
+                    .map(AddressTransportTypeTuple::fromProto)
+                    .collect(Collectors.toMap(AddressTransportTypeTuple::getTransportType, AddressTransportTypeTuple::getAddress));
+        }
+
     }
 }
