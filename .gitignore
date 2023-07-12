@@ -28,7 +28,6 @@ hs_err_pid*
 .idea
 !.idea/copyright/bisq_Affero_GPLv3.xml
 !.idea/copyright/profiles_settings.xml
-!.idea/codeStyleSettings.xml
 *.iml
 *.spvchain
 *.wallet
