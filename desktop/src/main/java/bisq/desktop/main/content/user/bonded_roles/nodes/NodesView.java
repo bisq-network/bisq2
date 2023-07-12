@@ -24,7 +24,6 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.main.content.user.bonded_roles.BondedRolesListItem;
 import bisq.desktop.main.content.user.bonded_roles.BondedRolesView;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -104,7 +103,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
     private Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem, BondedRolesListItem>> getAddressCellFactory() {
         return column -> new TableCell<>() {
             private final Label address = new Label();
-            private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
+            private final Button icon = BisqIconButton.createInfoIconButton(Res.get("user.bondedRoles.table.columns.node.address.openPopup"));
             private final HBox hBox = new HBox(address, icon);
 
             {
@@ -128,9 +127,6 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                             .headLine(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
                             .message(item.getAddressInfoJson())
                             .show());
-                    Tooltip tooltip2 = new BisqTooltip(Res.get("user.bondedRoles.table.columns.node.address.openPopup"));
-                    tooltip2.getStyleClass().add("dark-tooltip");
-                    icon.setTooltip(tooltip2);
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);

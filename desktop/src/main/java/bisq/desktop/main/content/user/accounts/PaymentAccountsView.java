@@ -24,7 +24,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
@@ -74,7 +73,7 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
 
         accountData = addTextArea(Res.get("user.paymentAccounts.accountData"), Res.get("user.paymentAccounts.createAccount.accountData.prompt"));
         accountData.setEditable(true);
-        accountData.setIcon(AwesomeIcon.EDIT);
+        accountData.showEditIcon();
         accountData.getIconButton().setOpacity(0.2);
         accountData.getIconButton().setMouseTransparent(true);
         accountData.setFixedHeight(300);

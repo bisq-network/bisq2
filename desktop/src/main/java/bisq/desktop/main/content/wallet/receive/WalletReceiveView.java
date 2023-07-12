@@ -20,7 +20,6 @@ package bisq.desktop.main.content.wallet.receive;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
@@ -39,8 +38,7 @@ public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletRece
 
         address = new MaterialTextField(Res.get("wallet.receive.address"));
         address.setEditable(false);
-        address.setIcon(AwesomeIcon.COPY);
-
+        address.showCopyIcon();
         copyButton = new Button(Res.get("wallet.receive.copy"));
         copyButton.setDefaultButton(true);
 

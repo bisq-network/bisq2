@@ -38,7 +38,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import lombok.Getter;
@@ -150,14 +149,16 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         horizontalExpandIcon.setLayoutY(menuTop - 3);
         horizontalExpandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         horizontalExpandIcon.setOpacity(0);
-        Tooltip.install(horizontalExpandIcon, new BisqTooltip(Res.get("navigation.expandIcon.tooltip")));
+        BisqTooltip tooltip = new BisqTooltip(Res.get("navigation.expandIcon.tooltip"));
+        horizontalExpandIcon.setTooltip(tooltip);
 
         horizontalCollapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
         horizontalCollapseIcon.setCursor(Cursor.HAND);
         horizontalCollapseIcon.setLayoutY(menuTop - 3);
         horizontalCollapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         horizontalCollapseIcon.setOpacity(0);
-        Tooltip.install(horizontalCollapseIcon, new BisqTooltip(Res.get("navigation.collapseIcon.tooltip")));
+        BisqTooltip tooltip2 = new BisqTooltip(Res.get("navigation.collapseIcon.tooltip"));
+        horizontalCollapseIcon.setTooltip(tooltip2);
 
         logoExpanded = ImageUtil.getImageViewById("logo-grey");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));

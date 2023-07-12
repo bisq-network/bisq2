@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.scene.control.Button;
@@ -28,6 +29,33 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 public class BisqIconButton extends Button {
+    public static Button createCopyIconButton() {
+        Button button = AwesomeDude.createIconButton(AwesomeIcon.COPY);
+        button.getStyleClass().add("icon-button");
+        BisqTooltip tooltip = new BisqTooltip(Res.get("action.copyToClipboard"));
+        tooltip.getStyleClass().add("dark-tooltip");
+        button.setTooltip(tooltip);
+        return button;
+    }
+
+    public static Button createDeleteIconButton() {
+        Button button = AwesomeDude.createIconButton(AwesomeIcon.REMOVE_SIGN);
+        button.getStyleClass().add("icon-button");
+        BisqTooltip tooltip = new BisqTooltip(Res.get("action.delete"));
+        tooltip.getStyleClass().add("dark-tooltip");
+        button.setTooltip(tooltip);
+        return button;
+    }
+
+    public static Button createInfoIconButton(String tooltipText) {
+        Button button = AwesomeDude.createIconButton(AwesomeIcon.INFO);
+        button.getStyleClass().add("icon-button");
+        BisqTooltip tooltip = new BisqTooltip(tooltipText);
+        tooltip.getStyleClass().add("dark-tooltip");
+        button.setTooltip(tooltip);
+        return button;
+    }
+
     public static Button createIconButton(AwesomeIcon icon) {
         Button button = AwesomeDude.createIconButton(icon);
         button.getStyleClass().add("icon-button");

@@ -42,6 +42,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -521,6 +522,9 @@ public class ChatMessagesComponent {
             sendButton.setPadding(new Insets(5));
             sendButton.setMinWidth(31);
             sendButton.setMaxWidth(31);
+            BisqTooltip tooltip = new BisqTooltip(Res.get("chat.message.input.send"));
+            tooltip.getStyleClass().add("dark-tooltip");
+            sendButton.setTooltip(tooltip);
 
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);

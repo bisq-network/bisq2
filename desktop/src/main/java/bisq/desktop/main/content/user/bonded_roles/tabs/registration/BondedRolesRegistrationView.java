@@ -25,7 +25,6 @@ import bisq.desktop.components.controls.OrderedList;
 import bisq.desktop.main.content.components.MaterialUserProfileSelection;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -76,8 +75,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
 
         profileId = new MaterialTextField(Res.get("user.bondedRoles.registration.profileId"), "");
         profileId.setEditable(false);
-        profileId.setIcon(AwesomeIcon.COPY);
-        profileId.setIconTooltip(Res.get("action.copyToClipboard"));
+        profileId.showCopyIcon();
 
         bondHolderName = new MaterialTextField(Res.get("user.bondedRoles.registration.bondHolderName"), Res.get("user.bondedRoles.registration.bondHolderName.prompt"));
         signature = new MaterialTextField(Res.get("user.bondedRoles.registration.signature"), Res.get("user.bondedRoles.registration.signature.prompt"));

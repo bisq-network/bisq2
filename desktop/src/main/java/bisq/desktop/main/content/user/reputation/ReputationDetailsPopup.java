@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.reputation;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -108,8 +109,8 @@ public class ReputationDetailsPopup extends VBox {
 
         Label userName = new Label(userProfile.getNickName());
         userName.setId("chat-user-name");
-        Tooltip tooltip = new Tooltip(userProfile.getUserName());
-        tooltip.setId("proof-of-burn-tooltip");
+        Tooltip tooltip = new BisqTooltip(userProfile.getUserName());
+        tooltip.getStyleClass().add("medium-dark-tooltip");
         userName.setTooltip(tooltip);
 
         HBox row1 = new HBox(20, userProfileIcon, userName);

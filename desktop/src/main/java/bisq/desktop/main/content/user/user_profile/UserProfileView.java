@@ -25,7 +25,6 @@ import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
@@ -98,15 +97,13 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         statement = addField(Res.get("user.userProfile.statement"), Res.get("user.userProfile.statement.prompt"));
         statement.setEditable(true);
-        statement.setIcon(AwesomeIcon.EDIT);
+        statement.showEditIcon();
         statement.getIconButton().setOpacity(0.3);
-        statement.getIconButton().setMouseTransparent(true);
 
         terms = addTextArea(Res.get("user.userProfile.terms"), Res.get("user.userProfile.terms.prompt"));
         terms.setEditable(true);
-        terms.setIcon(AwesomeIcon.EDIT);
-        terms.getIconButton().setOpacity(0.2);
-        terms.getIconButton().setMouseTransparent(true);
+        terms.showEditIcon();
+        terms.getIconButton().setOpacity(0.3);
 
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);

@@ -21,6 +21,7 @@ import bisq.chat.ChatService;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -36,7 +37,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -243,12 +243,12 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
-            nym.setTooltip(new Tooltip(model.nym.get()));
+            nym.setTooltip(new BisqTooltip(model.nym.get()));
 
             userProfileId = new Label();
             userProfileId.getStyleClass().addAll("bisq-text-7");
             userProfileId.setAlignment(Pos.CENTER);
-            userProfileId.setTooltip(new Tooltip(model.userProfileId.get()));
+            userProfileId.setTooltip(new BisqTooltip(model.userProfileId.get()));
             VBox.setMargin(userProfileId, new Insets(0, 0, 25, 0));
 
             privateMsgButton = new Button(Res.get("chat.sideBar.userProfile.sendPrivateMessage"));

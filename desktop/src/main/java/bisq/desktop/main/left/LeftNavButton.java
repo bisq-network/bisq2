@@ -24,16 +24,13 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -71,7 +68,7 @@ class LeftNavButton extends Pane implements Toggle {
     @Nullable
     protected final ImageView iconHover;
     @Nullable
-    private Node verticalExpandIcon, verticalCollapseIcon;
+    private Button verticalExpandIcon, verticalCollapseIcon;
     @Nullable
     private VBox verticalExpandCollapseIcon;
     protected final Badge numMessagesBadge = new Badge();
@@ -119,7 +116,13 @@ class LeftNavButton extends Pane implements Toggle {
 
         if (hasSubmenu) {
             verticalExpandIcon = BisqIconButton.createIconButton("nav-arrow-right");
+            BisqTooltip tooltip = new BisqTooltip(Res.get("navigation.vertical.expandIcon.tooltip"));
+            verticalExpandIcon.setTooltip(tooltip);
+
             verticalCollapseIcon = BisqIconButton.createIconButton("nav-arrow-down");
+            BisqTooltip tooltip2 = new BisqTooltip(Res.get("navigation.vertical.collapseIcon.tooltip"));
+            verticalCollapseIcon.setTooltip(tooltip2);
+
             verticalExpandIcon.setOnMouseClicked(e -> setVerticalExpanded(true));
             verticalCollapseIcon.setOnMouseClicked(e -> setVerticalExpanded(false));
 
