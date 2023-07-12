@@ -18,6 +18,7 @@
 package bisq.desktop.overlay.bisq_easy.create_offer.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -26,13 +27,16 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.overlay.bisq_easy.create_offer.CreateOfferView;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -40,17 +44,27 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
+public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
 
     private final MaterialTextField custom;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
     private final BisqIconButton addButton;
+    private final VBox content;
+    private final VBox overlay;
     private Subscription addCustomMethodIconEnabledPin;
+    private Subscription showCustomMethodNotEmptyWarning;
+    private Button closeOverlayButton;
 
     public CreateOfferPaymentMethodView(CreateOfferPaymentMethodModel model, CreateOfferPaymentMethodController controller) {
-        super(new VBox(10), model, controller);
+        super(new StackPane(), model, controller);
+        // super(new VBox(10), model, controller);
+
+        root.setAlignment(Pos.CENTER);
+
+        content = new VBox(10);
+        content.setAlignment(Pos.TOP_CENTER);
 
         root.setAlignment(Pos.TOP_CENTER);
 
@@ -86,7 +100,13 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
 
         VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
         VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
+
+        overlay = new VBox(20);
+        setupOverlay();
+
+        StackPane.setMargin(overlay, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        root.getChildren().addAll(content, overlay);
 
         paymentMethodListener = c -> {
             c.next();
@@ -105,11 +125,27 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
         addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
 
         addButton.setOnAction(e -> controller.onAddCustomMethod());
-
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
         addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getIsAddCustomMethodIconEnabled(), enabled -> {
             custom.setIcon(enabled ? "add" : "add-white");
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
+
+        showCustomMethodNotEmptyWarning = EasyBind.subscribe(model.getShowCustomMethodNotEmptyWarning(),
+                showReputationInfo -> {
+                    if (showReputationInfo) {
+                        overlay.setVisible(true);
+                        overlay.setOpacity(1);
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(overlay, 450);
+                    } else {
+                        Transitions.removeEffect(content);
+                        if (overlay.isVisible()) {
+                            Transitions.fadeOut(overlay, Transitions.DEFAULT_DURATION / 2,
+                                    () -> overlay.setVisible(false));
+                        }
+                    }
+                });
 
         model.getFiatPaymentMethods().addListener(paymentMethodListener);
         fillPaymentMethods();
@@ -132,6 +168,7 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
 
         addCustomMethodIconEnabledPin.unsubscribe();
+        showCustomMethodNotEmptyWarning.unsubscribe();
 
         model.getFiatPaymentMethods().removeListener(paymentMethodListener);
     }
@@ -168,5 +205,34 @@ public class CreateOfferPaymentMethodView extends View<VBox, CreateOfferPaymentM
                             });
             flowPane.getChildren().add(chipButton);
         }
+    }
+
+    private void setupOverlay() {
+        double width = 700;
+        VBox contentBox = new VBox(20);
+        contentBox.setAlignment(Pos.TOP_CENTER);
+        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.setPadding(new Insets(30));
+        contentBox.setMaxWidth(width);
+
+        // We don't use setManaged as the transition would not work as expected if set to false
+        overlay.setVisible(false);
+        overlay.setAlignment(Pos.TOP_CENTER);
+        Label headLineLabel = new Label(Res.get("popup.headline.warning"));
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headLineLabel.setTextAlignment(TextAlignment.CENTER);
+        headLineLabel.setAlignment(Pos.CENTER);
+        headLineLabel.setMaxWidth(width - 60);
+
+        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.warn.customMethodNotEmpty"));
+        subtitleLabel.setMaxWidth(width - 60);
+        subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+
+        closeOverlayButton = new Button(Res.get("action.close"));
+        closeOverlayButton.setDefaultButton(true);
+        VBox.setMargin(closeOverlayButton, new Insets(30, 0, 0, 0));
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, closeOverlayButton);
+        overlay.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 }
