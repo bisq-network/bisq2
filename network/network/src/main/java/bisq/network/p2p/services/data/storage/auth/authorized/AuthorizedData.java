@@ -88,6 +88,15 @@ public final class AuthorizedData extends AuthenticatedData {
         }
     }
 
+    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+    @Override
+    public byte[] serialize() {
+        return getAuthenticatedDataBuilder().setAuthorizedData(
+                        bisq.network.protobuf.AuthorizedData.newBuilder()
+                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
+                .build().toByteArray();
+    }
+
     public AuthorizedDistributedData getAuthorizedDistributedData() {
         return (AuthorizedDistributedData) distributedData;
     }
@@ -127,9 +136,9 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public String toString() {
         return "AuthorizedData{" +
-                "\r\n     signature=" + Hex.encode(signature) +
-                ",\r\n     authorizedPublicKeyBytes=" + Hex.encode(authorizedPublicKeyBytes) +
-                ",\r\n     distributedData=" + distributedData +
+                "\r\n               signature=" + Hex.encode(signature) +
+                ",\r\n               authorizedPublicKeyBytes=" + Hex.encode(authorizedPublicKeyBytes) +
+                ",\r\n               distributedData=" + distributedData +
                 "\r\n} ";
     }
 }

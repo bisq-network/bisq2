@@ -106,8 +106,8 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, St
     @Override
     public String toString() {
         return "AuthorizedOracleNode{" +
-                "\r\n     metaData=" + metaData +
-                ",\r\n     networkId=" + networkId +
+                "\r\n                    networkId=" + networkId +
+                ",\r\n                    metaData=" + metaData +
                 "\r\n}";
     }
 }

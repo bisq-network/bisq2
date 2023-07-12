@@ -168,9 +168,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public String toString() {
         return "AddAuthenticatedDataRequest{" +
-                "\r\n     authenticatedSequentialData=" + authenticatedSequentialData +
-                ",\r\n     signature=" + Hex.encode(signature) +
+                "\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ", \r\n     authenticatedSequentialData=" + authenticatedSequentialData +
                 "\r\n}";
     }
 }

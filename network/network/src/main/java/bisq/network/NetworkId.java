@@ -98,11 +98,11 @@ public final class NetworkId implements Proto {
 
     @Override
     public String toString() {
-        return "NetworkId{" +
-                "\r\n     pubKey=" + pubKey +
-                ",\r\n     nodeId='" + nodeId + '\'' +
-                ",\r\n     addressByNetworkType=" + addressByNetworkType +
-                "\r\n}";
+        return "NetworkId(" +
+                "nodeId='" + nodeId + '\'' +
+                ", addressByNetworkType=" + addressByNetworkType +
+                ", pubKey=" + pubKey +
+                ")";
     }
 
     @Getter

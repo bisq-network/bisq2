@@ -86,8 +86,8 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData,
     @Override
     public String toString() {
         return "AuthorizedTimestampData{" +
-                ",\r\n     profileId=" + profileId +
-                ",\r\n     date=" + new Date(date) +
+                ",\r\n                    profileId=" + profileId +
+                ",\r\n                    date=" + new Date(date) +
                 "\r\n}";
     }
 }
