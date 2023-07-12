@@ -38,7 +38,8 @@ public abstract class BondedRolesRegistrationModel implements Model {
     protected final StringProperty profileId = new SimpleStringProperty();
     protected final StringProperty bondUserName = new SimpleStringProperty();
     protected final StringProperty signature = new SimpleStringProperty();
-    protected final BooleanProperty requestRegistrationButtonDisabled = new SimpleBooleanProperty();
+    protected final BooleanProperty requestButtonDisabled = new SimpleBooleanProperty();
+    protected final BooleanProperty requestCancellationButtonVisible = new SimpleBooleanProperty();
     protected final Map<Transport.Type, Address> addressByNetworkType = new HashMap<>();
     @Setter
     protected String authorizedPublicKey;

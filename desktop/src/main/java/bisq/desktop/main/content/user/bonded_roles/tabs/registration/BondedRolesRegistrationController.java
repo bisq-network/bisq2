@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles.tabs.registration;
 
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.common.observable.Pin;
@@ -46,11 +47,13 @@ public abstract class BondedRolesRegistrationController implements Controller {
     protected final BondedRoleRegistrationService bondedRoleRegistrationService;
     protected final ServiceProvider serviceProvider;
     protected final BondedRoleType bondedRoleType;
-    protected Pin selectedUserProfilePin;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    protected Pin selectedUserProfilePin, authorizedBondedRoleSetPin;
 
     public BondedRolesRegistrationController(ServiceProvider serviceProvider, BondedRoleType bondedRoleType) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         bondedRoleRegistrationService = serviceProvider.getBondedRolesService().getBondedRoleRegistrationService();
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         this.serviceProvider = serviceProvider;
         this.bondedRoleType = bondedRoleType;
 
@@ -72,17 +75,20 @@ public abstract class BondedRolesRegistrationController implements Controller {
                             model.getProfileId().set(userIdentity.getId());
                             model.setAuthorizedPublicKey(userIdentity.getUserProfile().getPubKeyAsHex());
                         }
+                        applyRequestCancellationButtonVisible();
                     });
                 }
         );
+        authorizedBondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
 
-        setRequestRegistrationButtonDisabledBinding();
+        applyRequestRegistrationButtonDisabledBinding();
     }
 
     @Override
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
-        model.getRequestRegistrationButtonDisabled().unbind();
+        authorizedBondedRoleSetPin.unbind();
+        model.getRequestButtonDisabled().unbind();
     }
 
     public void onRequestAuthorization() {
@@ -111,6 +117,10 @@ public abstract class BondedRolesRegistrationController implements Controller {
         }
     }
 
+    public void onRequestCancellation() {
+        //todo
+    }
+
     public void onLearnMore() {
         Browser.open("https://bisq.wiki/bisq2/roles/" + model.getBondedRoleType().name().toLowerCase());
     }
@@ -119,7 +129,14 @@ public abstract class BondedRolesRegistrationController implements Controller {
         ClipboardUtil.copyToClipboard(model.getProfileId().get());
     }
 
-    protected void setRequestRegistrationButtonDisabledBinding() {
-        model.getRequestRegistrationButtonDisabled().bind(model.getBondUserName().isEmpty().or(model.getSignature().isEmpty()));
+    protected void applyRequestRegistrationButtonDisabledBinding() {
+        model.getRequestButtonDisabled().bind(model.getBondUserName().isEmpty().or(model.getSignature().isEmpty()));
+    }
+
+    protected void applyRequestCancellationButtonVisible() {
+        model.getRequestCancellationButtonVisible().set(
+                authorizedBondedRolesService.getAuthorizedBondedRoles(model.getBondedRoleType()).stream()
+                        .anyMatch(e -> userIdentityService.getSelectedUserIdentity() != null &&
+                                userIdentityService.getSelectedUserIdentity().getUserProfile().getId().equals(e.getProfileId())));
     }
 }

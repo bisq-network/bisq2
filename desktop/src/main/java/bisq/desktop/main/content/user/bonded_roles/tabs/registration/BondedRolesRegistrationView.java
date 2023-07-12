@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrationModel, C extends BondedRolesRegistrationController> extends View<VBox, M, C> {
     protected final Hyperlink learnMore;
     protected final MaterialTextField bondHolderName, profileId, signature;
-    protected final Button requestRegistrationButton;
+    protected final Button requestRegistrationButton, requestCancellationButton;
     protected final HBox buttons;
 
     public BondedRolesRegistrationView(M model,
@@ -83,9 +83,11 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         requestRegistrationButton = new Button(Res.get("user.bondedRoles.registration.requestRegistration"));
         requestRegistrationButton.setDefaultButton(true);
 
+        requestCancellationButton = new Button(Res.get("user.bondedRoles.registration.requestCancellation"));
+
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        buttons = new HBox(20, requestRegistrationButton, Spacer.fillHBox(), learnMore);
+        buttons = new HBox(20, requestRegistrationButton, requestCancellationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(aboutHeadline, new Insets(10, 0, 0, 0));
@@ -105,11 +107,15 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         bondHolderName.textProperty().bindBidirectional(model.getBondUserName());
         signature.textProperty().bindBidirectional(model.getSignature());
         profileId.textProperty().bind(model.getProfileId());
-        requestRegistrationButton.disableProperty().bind(model.getRequestRegistrationButtonDisabled());
+        requestRegistrationButton.disableProperty().bind(model.getRequestButtonDisabled());
+        requestCancellationButton.disableProperty().bind(model.getRequestButtonDisabled());
+        requestCancellationButton.visibleProperty().bind(model.getRequestCancellationButtonVisible());
+        requestCancellationButton.managedProperty().bind(model.getRequestCancellationButtonVisible());
 
         profileId.getIconButton().setOnAction(e -> controller.onCopyToClipboard());
         learnMore.setOnAction(e -> controller.onLearnMore());
         requestRegistrationButton.setOnAction(e -> controller.onRequestAuthorization());
+        requestCancellationButton.setOnAction(e -> controller.onRequestCancellation());
     }
 
     @Override
@@ -118,9 +124,13 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         signature.textProperty().unbindBidirectional(model.getSignature());
         profileId.textProperty().unbind();
         requestRegistrationButton.disableProperty().unbind();
+        requestCancellationButton.disableProperty().unbind();
+        requestCancellationButton.visibleProperty().unbind();
+        requestCancellationButton.managedProperty().unbind();
 
         profileId.getIconButton().setOnAction(null);
         learnMore.setOnAction(null);
         requestRegistrationButton.setOnAction(null);
+        requestCancellationButton.setOnAction(null);
     }
 }

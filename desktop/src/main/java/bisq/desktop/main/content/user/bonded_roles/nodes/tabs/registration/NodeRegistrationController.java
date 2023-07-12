@@ -95,8 +95,8 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
     }
 
     @Override
-    protected void setRequestRegistrationButtonDisabledBinding() {
-        model.getRequestRegistrationButtonDisabled().bind(model.getBondUserName().isEmpty()
+    protected void applyRequestRegistrationButtonDisabledBinding() {
+        model.getRequestButtonDisabled().bind(model.getBondUserName().isEmpty()
                 .or(getNodesRegistrationModel().getAddressInfoJson().isEmpty())
                 .or(model.getSignature().isEmpty())
                 .or(getNodesRegistrationModel().getJsonValid().not()));
