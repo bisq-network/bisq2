@@ -45,7 +45,8 @@ message KeyPair {
 }
 
 message KeyPairStore {
-  map<string, KeyPair > keyPairsById = 1;
+  string defaultKeyId = 1;
+  map<string, KeyPair > keyPairsById = 2;
 }
 message ProofOfWorkStore {
 }
