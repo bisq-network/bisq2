@@ -89,7 +89,9 @@ public class SecurityManagerService implements Service {
     }
 
     public CompletableFuture<Boolean> removeAlert(AuthorizedData authorizedData, KeyPair ownerKeyPair) {
-        return networkService.removeAuthorizedData(authorizedData, ownerKeyPair)
+        return networkService.removeAuthorizedData(authorizedData.getAuthorizedDistributedData(),
+                        ownerKeyPair,
+                        authorizedData.getAuthorizedPublicKey())
                 .thenApply(broadCastDataResult -> true);
     }
 

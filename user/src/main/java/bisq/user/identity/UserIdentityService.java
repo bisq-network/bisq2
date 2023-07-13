@@ -95,7 +95,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
         // We delay publishing to be better bootstrapped 
         Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
-                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair())))
+                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair().getKeyPair())))
                 .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }

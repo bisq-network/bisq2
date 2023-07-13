@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Optional;
 
 /**
  * Used for verifying if data publisher is authorized to publish this data (e.g. ProofOfBurnData, Filter, Alert, DisputeAgent...).
@@ -39,18 +40,23 @@ import java.security.PublicKey;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
-    private final byte[] signature;
+    private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                          byte[] signature,
+                          PublicKey authorizedPublicKey) {
+        this(authorizedDistributedData, Optional.empty(), authorizedPublicKey, authorizedPublicKey.getEncoded());
+    }
+
+    public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                          Optional<byte[]> signature,
                           PublicKey authorizedPublicKey) {
         this(authorizedDistributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
     }
 
     private AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                           byte[] signature,
+                           Optional<byte[]> signature,
                            PublicKey authorizedPublicKey,
                            byte[] authorizedPublicKeyBytes) {
         super(authorizedDistributedData);
@@ -60,11 +66,10 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     public bisq.network.protobuf.AuthenticatedData toProto() {
-        return getAuthenticatedDataBuilder().setAuthorizedData(
-                        bisq.network.protobuf.AuthorizedData.newBuilder()
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
-                .build();
+        bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
+                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
+        signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
+        return getAuthenticatedDataBuilder().setAuthorizedData(builder).build();
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
@@ -74,8 +79,11 @@ public final class AuthorizedData extends AuthenticatedData {
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
             DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
             if (distributedData instanceof AuthorizedDistributedData) {
+                Optional<byte[]> signature = authorizedDataProto.hasSignature() ?
+                        Optional.of(authorizedDataProto.getSignature().toByteArray()) :
+                        Optional.empty();
                 return new AuthorizedData((AuthorizedDistributedData) distributedData,
-                        authorizedDataProto.getSignature().toByteArray(),
+                        signature,
                         authorizedPublicKey,
                         authorizedPublicKeyBytes
                 );
@@ -108,7 +116,9 @@ public final class AuthorizedData extends AuthenticatedData {
             if (authorizedDistributedData.isDataInvalid(ownerPubKeyHash)) {
                 return true;
             }
-            if (!SignatureUtil.verify(distributedData.serialize(), signature, authorizedPublicKey)) {
+
+            // We get called only when used for adding data. In that case the signature must be present.
+            if (!SignatureUtil.verify(distributedData.serialize(), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 
@@ -136,7 +146,7 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public String toString() {
         return "AuthorizedData{" +
-                "\r\n               signature=" + Hex.encode(signature) +
+                "\r\n               signature=" + signature.map(Hex::encode).orElse("null") +
                 ",\r\n               authorizedPublicKeyBytes=" + Hex.encode(authorizedPublicKeyBytes) +
                 ",\r\n               distributedData=" + distributedData +
                 "\r\n} ";

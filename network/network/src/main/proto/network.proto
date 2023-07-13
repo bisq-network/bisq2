@@ -161,7 +161,7 @@ message MetaData {
   string fileName = 3;
 }
 message AuthorizedData {
-  bytes signature = 1;
+  optional bytes signature = 1;
   bytes authorizedPublicKeyBytes = 2;
 }
 message DefaultAuthenticatedData {

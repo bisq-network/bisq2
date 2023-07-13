@@ -276,7 +276,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         try {
             byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
-            AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, signature, authorizedPublicKey);
+            AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, Optional.of(signature), authorizedPublicKey);
             return dataService.get().addAuthorizedData(authorizedData, keyPair);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
@@ -284,8 +284,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData, KeyPair ownerKeyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                       KeyPair ownerKeyPair,
+                                                                       PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        // When removing data the signature is not used.
+        AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, authorizedPublicKey);
         return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
 
