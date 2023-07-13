@@ -18,7 +18,6 @@
 package bisq.support.mediation;
 
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
-import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -32,7 +31,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -57,7 +56,7 @@ public final class MediationRequest implements MailboxMessage {
         this.chatMessages = chatMessages;
 
         // We need to sort deterministically as the data is used in the proof of work check
-        this.chatMessages.sort(Comparator.comparing((BisqEasyPrivateTradeChatMessage e) -> new ByteArray(e.serialize())));
+        Collections.sort(this.chatMessages);
     }
 
     @Override

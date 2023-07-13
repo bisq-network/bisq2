@@ -35,6 +35,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class ChatMessage implements Proto {
+public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
     public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
     protected final String id;
@@ -182,5 +183,10 @@ public abstract class ChatMessage implements Proto {
 
     public boolean isMyMessage(UserIdentityService userIdentityService) {
         return userIdentityService.isUserIdentityPresent(authorUserProfileId);
+    }
+
+    @Override
+    public int compareTo(@Nonnull ChatMessage o) {
+        return id.compareTo(o.getId());
     }
 }

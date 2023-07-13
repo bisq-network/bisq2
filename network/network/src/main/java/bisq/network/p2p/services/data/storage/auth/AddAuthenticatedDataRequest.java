@@ -28,7 +28,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -68,8 +67,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     private final byte[] signature;         // 256 bytes
     @Getter
     private final byte[] ownerPublicKeyBytes; // 294 bytes
-    @Nullable
-    transient private PublicKey ownerPublicKey;
+    private transient final PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {
         this(authenticatedSequentialData,

@@ -24,7 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +39,7 @@ public final class Capability implements Proto {
         this.address = address;
         this.supportedTransportTypes = supportedTransportTypes;
         // We need to sort deterministically as the data is used in the proof of work check
-        this.supportedTransportTypes.sort(Comparator.comparing(Enum::ordinal));
+        Collections.sort(this.supportedTransportTypes);
     }
 
     public bisq.network.protobuf.Capability toProto() {

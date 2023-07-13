@@ -317,7 +317,7 @@ public class StorageService {
                 .filter(mapEntry -> !dataFilter.getFilterEntries().contains(getFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
-        return new Inventory(result, entrySet.size() - result.size());
+        return new Inventory(result, entrySet.size());
     }
 
 

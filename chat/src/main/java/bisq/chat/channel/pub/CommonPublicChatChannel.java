@@ -60,7 +60,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         this.channelAdminId = channelAdminId;
         this.channelModeratorIds = channelModeratorIds;
         // We need to sort deterministically as the data is used in the proof of work check
-        Collections.sort(channelModeratorIds);
+        Collections.sort(this.channelModeratorIds);
         description = Res.get(id + ".description");
     }
 

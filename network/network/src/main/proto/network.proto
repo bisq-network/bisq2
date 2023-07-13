@@ -46,7 +46,7 @@ message DataFilter {
 
 message Inventory {
   repeated DataRequest entries = 1;
-  sint32 numDropped = 2;
+  sint32 peersNumEntries = 2;
 }
 
 message Peer {

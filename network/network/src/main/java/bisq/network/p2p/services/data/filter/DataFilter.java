@@ -18,13 +18,12 @@
 package bisq.network.p2p.services.data.filter;
 
 
-import bisq.common.data.ByteArray;
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +36,7 @@ public final class DataFilter implements Proto {
     public DataFilter(List<FilterEntry> filterEntries) {
         this.filterEntries = filterEntries;
         // We need to sort deterministically as the data is used in the proof of work check
-        this.filterEntries.sort(Comparator.comparing((FilterEntry e) -> new ByteArray(e.serialize())));
+        Collections.sort(filterEntries);
     }
 
     public bisq.network.protobuf.DataFilter toProto() {

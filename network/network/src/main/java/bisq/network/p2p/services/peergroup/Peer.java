@@ -25,12 +25,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nonnull;
 import java.util.Date;
 
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public final class Peer implements Proto {
+public final class Peer implements Proto, Comparable<Peer> {
     @EqualsAndHashCode.Include
     private final Capability capability;
     private final Load load;
@@ -74,5 +75,10 @@ public final class Peer implements Proto {
 
     public long getAge() {
         return new Date().getTime() - created;
+    }
+
+    @Override
+    public int compareTo(@Nonnull Peer o) {
+        return Long.compare(created, o.getCreated());
     }
 }
