@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
 import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.offer_details;
 
-import bisq.bonded_roles.service.market_price.MarketPriceService;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;

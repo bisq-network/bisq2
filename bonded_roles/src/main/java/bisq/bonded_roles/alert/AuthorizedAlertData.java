@@ -17,7 +17,7 @@
 
 package bisq.bonded_roles.alert;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;

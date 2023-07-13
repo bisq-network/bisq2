@@ -18,7 +18,7 @@
 package bisq.oracle_node_app;
 
 import bisq.application.ApplicationService;
-import bisq.bonded_roles.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;

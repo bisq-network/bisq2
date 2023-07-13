@@ -17,10 +17,10 @@
 
 package bisq.support.security_manager;
 
-import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkIdWithKeyPair;

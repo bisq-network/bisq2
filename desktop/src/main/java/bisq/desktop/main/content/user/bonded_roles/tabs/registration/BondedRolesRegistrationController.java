@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.bonded_roles.tabs.registration;
 
-import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;

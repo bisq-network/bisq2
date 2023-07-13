@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles;
+package bisq.bonded_roles.bonded_role;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;

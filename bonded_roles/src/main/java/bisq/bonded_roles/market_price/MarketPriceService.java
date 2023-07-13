@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.service.market_price;
+package bisq.bonded_roles.market_price;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;

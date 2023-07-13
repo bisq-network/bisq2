@@ -17,9 +17,9 @@
 
 package bisq.application;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
-import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.chat.message.ChatMessage;
 import bisq.network.p2p.message.NetworkMessageResolver;

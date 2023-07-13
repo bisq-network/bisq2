@@ -17,9 +17,9 @@
 
 package bisq.oracle_node;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
-import bisq.bonded_roles.AuthorizedBondedRolesService;
-import bisq.bonded_roles.AuthorizedOracleNode;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.CollectionObserver;

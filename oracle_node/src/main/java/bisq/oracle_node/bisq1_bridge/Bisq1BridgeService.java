@@ -17,12 +17,12 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
-import bisq.bonded_roles.AuthorizedBondedRolesService;
-import bisq.bonded_roles.AuthorizedOracleNode;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;

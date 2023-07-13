@@ -17,7 +17,7 @@
 
 package bisq.oracle_node.timestamp;
 
-import bisq.bonded_roles.AuthorizedOracleNode;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;

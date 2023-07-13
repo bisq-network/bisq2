@@ -17,8 +17,8 @@
 
 package bisq.desktop.overlay.bisq_easy.take_offer.review;
 
-import bisq.bonded_roles.service.market_price.MarketPrice;
-import bisq.bonded_roles.service.market_price.MarketPriceService;
+import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannelDomain;
