@@ -214,7 +214,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         }
         persist();
 
-        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair())
+        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair())
                 .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair()));
     }
 
@@ -239,7 +239,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
         identityService.retireActiveIdentity(userIdentity.getIdentity().getTag());
         return networkService.removeAuthenticatedData(userIdentity.getUserProfile(),
-                userIdentity.getIdentity().getNodeIdAndKeyPair());
+                userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
     }
 
     public CompletableFuture<Boolean> maybePublicUserProfile(UserProfile userProfile,

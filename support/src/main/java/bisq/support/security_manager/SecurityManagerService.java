@@ -33,6 +33,7 @@ import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
@@ -87,8 +88,8 @@ public class SecurityManagerService implements Service {
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeAlert(AuthorizedData authorizedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
-        return networkService.removeAuthorizedData(authorizedData, ownerNetworkIdWithKeyPair)
+    public CompletableFuture<Boolean> removeAlert(AuthorizedData authorizedData, KeyPair ownerKeyPair) {
+        return networkService.removeAuthorizedData(authorizedData, ownerKeyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 

@@ -246,7 +246,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
     }
 
     private CompletableFuture<Boolean> removeAuthorizedData(AuthorizedData authorizedData) {
-        return networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair())
+        return networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair().getKeyPair())
                 .thenApply(broadCastDataResult -> true);
     }
 

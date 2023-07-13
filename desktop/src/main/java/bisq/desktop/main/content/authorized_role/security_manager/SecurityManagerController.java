@@ -133,7 +133,7 @@ public class SecurityManagerController implements Controller {
 
     void onRemoveAlert(AuthorizedData authorizedData) {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        securityManagerService.removeAlert(authorizedData, userIdentity.getNodeIdAndKeyPair());
+        securityManagerService.removeAlert(authorizedData, userIdentity.getNodeIdAndKeyPair().getKeyPair());
     }
 
     private void applySelectAlertType(AlertType alertType) {

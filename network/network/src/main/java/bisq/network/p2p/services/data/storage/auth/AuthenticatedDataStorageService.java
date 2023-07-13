@@ -115,7 +115,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.warn("Signature is invalid at add. request={}", request);
                 return new Result(false).signatureInvalid();
             }
-            log.error("ADD {}: {}", byteArray, request);
             map.put(byteArray, request);
         }
 

@@ -265,11 +265,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
-        return dataService.get().removeAuthenticatedData(authenticatedData, keyPair);
+        return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }
 
     public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
@@ -281,17 +280,16 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         try {
             byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
             AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, signature, authorizedPublicKey);
-            return dataService.get().addAuthenticatedData(authorizedData, keyPair);
+            return dataService.get().addAuthorizedData(authorizedData, keyPair);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return CompletableFuture.failedFuture(e);
         }
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData,
-                                                                       NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData, KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        return dataService.get().removeAuthenticatedData(authorizedData, ownerNetworkIdWithKeyPair.getKeyPair());
+        return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
 
     public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {

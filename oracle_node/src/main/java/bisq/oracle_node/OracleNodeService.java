@@ -176,7 +176,7 @@ public class OracleNodeService implements Service {
                             if (element instanceof AuthorizedData) {
                                 AuthorizedData authorizedData = (AuthorizedData) element;
                                 if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole) {
-                                    networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair());
+                                    networkService.removeAuthorizedData(authorizedData, identity.getNodeIdAndKeyPair().getKeyPair());
                                 }
                             }
                         }
