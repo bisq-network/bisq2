@@ -179,7 +179,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                     authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
                     authorizedAlertData.getAuthorizedBondedRole().isPresent()) {
                 BondedRoleType bannedBondedRoleType = authorizedAlertData.getAuthorizedBondedRole().get().getBondedRoleType();
-                authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                         .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
                         .forEach(bannedRole -> {
                             if (ignoreSecurityManager) {
@@ -382,7 +382,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     request.getAddressByNetworkType(),
                                     authorizedOracleNode);
                             if (request.isCancellationRequest()) {
-                                authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                                         .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
                                         .forEach(this::removeAuthorizedData);
                             } else {

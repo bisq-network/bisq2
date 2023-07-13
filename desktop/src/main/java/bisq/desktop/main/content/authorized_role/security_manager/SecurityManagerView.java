@@ -19,7 +19,7 @@ package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -309,12 +309,12 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     @Getter
     @EqualsAndHashCode
     public static class BondedRoleListItem {
-        private final AuthorizedBondedRole authorizedBondedRole;
+        private final BondedRole bondedRole;
         private final String displayString;
 
-        public BondedRoleListItem(AuthorizedBondedRole authorizedBondedRole, SecurityManagerController controller) {
-            this.authorizedBondedRole = authorizedBondedRole;
-            displayString = controller.getBondedRoleShortDisplayString(authorizedBondedRole);
+        public BondedRoleListItem(BondedRole bondedRole, SecurityManagerController controller) {
+            this.bondedRole = bondedRole;
+            displayString = controller.getBondedRoleShortDisplayString(bondedRole);
         }
     }
 }

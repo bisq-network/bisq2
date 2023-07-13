@@ -48,7 +48,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
     protected final ServiceProvider serviceProvider;
     protected final BondedRoleType bondedRoleType;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    protected Pin selectedUserProfilePin, authorizedBondedRoleSetPin;
+    protected Pin selectedUserProfilePin, bondedRoleSetPin;
 
     public BondedRolesRegistrationController(ServiceProvider serviceProvider, BondedRoleType bondedRoleType) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -79,7 +79,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
                     });
                 }
         );
-        authorizedBondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
+        bondedRoleSetPin = authorizedBondedRolesService.getBondedRoles().addListener(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
 
         applyRequestRegistrationButtonDisabledBinding();
     }
@@ -87,7 +87,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
     @Override
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
-        authorizedBondedRoleSetPin.unbind();
+        bondedRoleSetPin.unbind();
         model.getRequestButtonDisabled().unbind();
     }
 

@@ -190,7 +190,7 @@ public class MediationService implements Service, MessageListener {
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                 .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream())

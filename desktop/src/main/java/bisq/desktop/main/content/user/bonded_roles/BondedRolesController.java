@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.bonded_roles;
 
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -38,7 +38,7 @@ public abstract class BondedRolesController implements Controller {
     protected final AuthorizedBondedRolesService authorizedBondedRolesService;
     protected final ServiceProvider serviceProvider;
     protected final UserService userService;
-    protected Pin bondedRoleDataPin;
+    protected Pin bondedRolesPin;
 
     public BondedRolesController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -57,16 +57,16 @@ public abstract class BondedRolesController implements Controller {
 
     @Override
     public void onActivate() {
-        bondedRoleDataPin = FxBindings.<AuthorizedBondedRole, BondedRolesListItem>bind(model.getBondedRolesListItems())
+        bondedRolesPin = FxBindings.<BondedRole, BondedRolesListItem>bind(model.getBondedRolesListItems())
                 .map(data -> new BondedRolesListItem(data, userService))
-                .to(authorizedBondedRolesService.getAuthorizedBondedRoleSet());
+                .to(authorizedBondedRolesService.getBondedRoles());
 
         model.getFilteredList().setPredicate(getPredicate());
     }
 
     @Override
     public void onDeactivate() {
-        bondedRoleDataPin.unbind();
+        bondedRolesPin.unbind();
     }
 
     public void onCopyPublicKeyAsHex(String publicKeyAsHex) {

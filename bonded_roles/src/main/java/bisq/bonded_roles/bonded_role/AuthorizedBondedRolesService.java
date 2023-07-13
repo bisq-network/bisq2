@@ -37,13 +37,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
     private final NetworkService networkService;
     private final boolean ignoreSecurityManager;
     @Getter
-    private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
+    private final ObservableSet<BondedRole> bondedRoles = new ObservableSet<>();
     @Getter
     private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
     @Getter
@@ -87,7 +88,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             authorizedOracleNodes.add((AuthorizedOracleNode) data);
         } else if (data instanceof AuthorizedBondedRole) {
             validate(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                authorizedBondedRoleSet.add(authorizedBondedRole);
+                bondedRoles.add(new BondedRole(authorizedBondedRole));
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
                 }
@@ -106,7 +107,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             authorizedOracleNodes.remove((AuthorizedOracleNode) data);
         } else if (data instanceof AuthorizedBondedRole) {
             validate(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                authorizedBondedRoleSet.remove(authorizedBondedRole);
+                Optional<BondedRole> toRemove = bondedRoles.stream().filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedBondedRole)).findAny();
+                toRemove.ifPresent(bondedRoles::remove);
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
                 }
@@ -120,6 +122,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream() {
+        return bondedRoles.stream()
+                .filter(BondedRole::isNotBanned)
+                .map(BondedRole::getAuthorizedBondedRole);
+    }
 
     public boolean isAuthorizedByBondedRole(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
@@ -137,7 +145,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
 
         boolean isAuthorized = isStaticallyAuthorizedKey ||
-                authorizedBondedRoleSet.stream()
+                bondedRoles.stream()
+                        .map(BondedRole::getAuthorizedBondedRole)
                         .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
                         .map(AuthorizedBondedRole::getAuthorizedPublicKey)
                         .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey));
@@ -148,7 +157,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     }
 
     public Set<AuthorizedBondedRole> getAuthorizedBondedRoles(BondedRoleType bondedRoleType) {
-        return getAuthorizedBondedRoleSet().stream()
+        return getBondedRoles().stream()
+                .map(BondedRole::getAuthorizedBondedRole)
                 .filter(e -> e.getBondedRoleType() == bondedRoleType)
                 .collect(Collectors.toSet());
     }
@@ -202,7 +212,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                                                 "bannedRole={}\nauthorizedData sent by security manager={}",
                                         authorizedBondedRole, authorizedData);
                             } else {
-                                authorizedBondedRoleSet.remove(authorizedBondedRole);
+                                bondedRoles.remove(authorizedBondedRole);
                             }
                         }));
 
@@ -215,6 +225,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                         authorizedAlertData.getAuthorizedBondedRole().isPresent())
                 .collect(Collectors.toSet());
     }
+
+   
 
    /* private void applyAuthorizedAlertData(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData) {
         if (authorizedAlertData.getAlertType() == AlertType.BAN &&

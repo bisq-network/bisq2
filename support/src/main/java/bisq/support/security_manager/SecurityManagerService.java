@@ -17,16 +17,13 @@
 
 package bisq.support.security_manager;
 
-import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -89,15 +85,5 @@ public class SecurityManagerService implements Service {
                         ownerKeyPair,
                         ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
-    }
-
-    private Optional<NetworkIdWithKeyPair> findMyNodeIdAndKeyPair() {
-        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        return authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                .filter(bondedRole -> bondedRole.getBondedRoleType() == BondedRoleType.SECURITY_MANAGER)
-                .filter(bondedRole -> selectedUserIdentity != null)
-                .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
-                .map(bondedRole -> selectedUserIdentity.getNodeIdAndKeyPair())
-                .findAny();
     }
 }

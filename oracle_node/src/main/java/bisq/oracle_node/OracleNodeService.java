@@ -17,8 +17,8 @@
 
 package bisq.oracle_node;
 
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
@@ -165,16 +165,16 @@ public class OracleNodeService implements Service {
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
                     timestampService.setAuthorizedOracleNode(authorizedOracleNode);
 
-                    authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(new CollectionObserver<>() {
+                    authorizedBondedRolesService.getBondedRoles().addListener(new CollectionObserver<>() {
                         @Override
-                        public void add(AuthorizedBondedRole element) {
+                        public void add(BondedRole element) {
                         }
 
                         @Override
                         public void remove(Object element) {
-                            if (element instanceof AuthorizedBondedRole) {
-                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) element;
-                                networkService.removeAuthorizedData(authorizedBondedRole,
+                            if (element instanceof BondedRole) {
+                                BondedRole bondedRole = (BondedRole) element;
+                                networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
                                         identity.getNodeIdAndKeyPair().getKeyPair(),
                                         authorizedPublicKey);
                             }
