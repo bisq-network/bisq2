@@ -334,7 +334,7 @@ public class StorageService {
     }
 
     private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
-        return stores.flatMap(store -> store.getPersistableStore().getClone().getMap().entrySet().stream())
+        return stores.flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream())
                 .map(this::getFilterEntry)
                 .collect(Collectors.toSet());
     }
