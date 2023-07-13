@@ -17,7 +17,8 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.AuthorizedBondedRole;
+import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
@@ -29,16 +30,19 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Date;
 import java.util.Optional;
 
@@ -52,14 +56,17 @@ public class SecurityManagerController implements Controller {
     private final UserIdentityService userIdentityService;
     private final SecurityManagerService securityManagerService;
     private final AlertService alertService;
-    private Pin userIdentityPin;
-    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, bannedRoleProfileIdPin, selectedBondedRoleTypePin;
-    private Pin alertsPin;
+    private final UserProfileService userProfileService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private Pin userIdentityPin, alertListItemsPin, bondedRoleListItemsPin;
+    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         model = new SecurityManagerModel();
         view = new SecurityManagerView(model, this);
     }
@@ -68,29 +75,31 @@ public class SecurityManagerController implements Controller {
     public void onActivate() {
         applySelectAlertType(AlertType.INFO);
         model.getAlertTypes().setAll(AlertType.values());
-        model.getBondedRoleTypes().setAll(BondedRoleType.values());
 
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updateSendButtonDisabled));
         messagePin = EasyBind.subscribe(model.getMessage(), e -> updateSendButtonDisabled());
         requireVersionForTradingPin = EasyBind.subscribe(model.getRequireVersionForTrading(), e -> updateSendButtonDisabled());
         minVersionPin = EasyBind.subscribe(model.getMinVersion(), e -> updateSendButtonDisabled());
-        bannedRoleProfileIdPin = EasyBind.subscribe(model.getBannedRoleProfileId(), e -> updateSendButtonDisabled());
-        selectedBondedRoleTypePin = EasyBind.subscribe(model.getSelectedBondedRoleType(), e -> updateSendButtonDisabled());
+        selectedBondedRolePin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(), e -> updateSendButtonDisabled());
 
-        alertsPin = FxBindings.<AuthorizedData, SecurityManagerView.AlertListItem>bind(model.getBondedRolesListItems())
-                .map(SecurityManagerView.AlertListItem::new)
-                .to(alertService.getAuthorizedDataSet());
+        alertListItemsPin = FxBindings.<AuthorizedAlertData, SecurityManagerView.AlertListItem>bind(model.getAlertListItems())
+                .map(authorizedBondedRole -> new SecurityManagerView.AlertListItem(authorizedBondedRole, this))
+                .to(alertService.getAuthorizedAlertDataSet());
+
+        bondedRoleListItemsPin = FxBindings.<AuthorizedBondedRole, SecurityManagerView.BondedRoleListItem>bind(model.getBondedRoleListItems())
+                .map(authorizedBondedRole -> new SecurityManagerView.BondedRoleListItem(authorizedBondedRole, this))
+                .to(authorizedBondedRolesService.getAuthorizedBondedRoleSet());
     }
 
     @Override
     public void onDeactivate() {
         userIdentityPin.unbind();
+        bondedRoleListItemsPin.unbind();
         messagePin.unsubscribe();
         requireVersionForTradingPin.unsubscribe();
         minVersionPin.unsubscribe();
-        bannedRoleProfileIdPin.unsubscribe();
-        selectedBondedRoleTypePin.unsubscribe();
-        alertsPin.unbind();
+        selectedBondedRolePin.unsubscribe();
+        alertListItemsPin.unbind();
     }
 
     void onSelectAlertType(AlertType alertType) {
@@ -99,9 +108,9 @@ public class SecurityManagerController implements Controller {
         }
     }
 
-    public void onSelectBondedRoleType(BondedRoleType bondedRoleType) {
-        if (bondedRoleType != null) {
-            model.getSelectedBondedRoleType().set(bondedRoleType);
+    void onBondedRoleListItem(SecurityManagerView.BondedRoleListItem bondedRoleListItem) {
+        if (bondedRoleListItem != null) {
+            model.getSelectedBondedRoleListItem().set(bondedRoleListItem);
         }
     }
 
@@ -113,7 +122,8 @@ public class SecurityManagerController implements Controller {
             new Popup().warning(Res.get("authorizedRole.securityManager.alert.message.tooLong")).show();
             return;
         }
-
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        String profileId = userIdentity.getId();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
                 alertType,
@@ -121,19 +131,46 @@ public class SecurityManagerController implements Controller {
                 model.getHaltTrading().get(),
                 model.getRequireVersionForTrading().get(),
                 StringUtils.toOptional(model.getMinVersion().get()),
-                StringUtils.toOptional(model.getBannedRoleProfileId().get()),
-                Optional.ofNullable(model.getSelectedBondedRoleType().get()));
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+                Optional.ofNullable(model.getSelectedBondedRoleListItem().get().getAuthorizedBondedRole()),
+                profileId);
+
         KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
+        PublicKey authorizedPublicKey = keyPair.getPublic();
+        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair().getKeyPair(),
                 authorizedAlertData,
-                keyPair.getPrivate(),
-                keyPair.getPublic());
+                authorizedPrivateKey,
+                authorizedPublicKey);
     }
 
-    void onRemoveAlert(AuthorizedData authorizedData) {
+    boolean isRemoveButtonVisible(AuthorizedAlertData authorizedAlertData) {
+        if (userIdentityService.getSelectedUserIdentity() == null) {
+            return false;
+        }
+        return userIdentityService.getSelectedUserIdentity().getId().equals(authorizedAlertData.getSecurityManagerProfileId());
+    }
+
+    void onRemoveAlert(AuthorizedAlertData authorizedAlertData) {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        securityManagerService.removeAlert(authorizedData, userIdentity.getNodeIdAndKeyPair().getKeyPair());
+        securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNodeIdAndKeyPair().getKeyPair());
+    }
+
+    String getBondedRoleShortDisplayString(AuthorizedBondedRole authorizedBondedRole) {
+        String roleType = Res.get("user.bondedRoles.type." + authorizedBondedRole.getBondedRoleType().name());
+        String profileId = authorizedBondedRole.getProfileId();
+        String nickName = userProfileService.findUserProfile(profileId)
+                .map(UserProfile::getNickName)
+                .orElse(Res.get("data.na"));
+        return Res.get("authorizedRole.securityManager.selectedBondedRole", nickName, roleType, profileId);
+    }
+
+    String getBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
+        String roleType = Res.get("user.bondedRoles.type." + authorizedBondedRole.getBondedRoleType().name());
+        String profileId = authorizedBondedRole.getProfileId();
+        String nickName = userProfileService.findUserProfile(profileId)
+                .map(UserProfile::getNickName)
+                .orElse(Res.get("data.na"));
+        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", nickName, roleType, profileId);
     }
 
     private void applySelectAlertType(AlertType alertType) {
@@ -144,12 +181,10 @@ public class SecurityManagerController implements Controller {
                 model.getHaltTrading().set(false);
                 model.getRequireVersionForTrading().set(false);
                 model.getMinVersion().set(null);
-                model.getBannedRoleProfileId().set(null);
-                model.getSelectedBondedRoleType().set(null);
+                model.getSelectedBondedRoleListItem().set(null);
                 break;
             case EMERGENCY:
-                model.getBannedRoleProfileId().set(null);
-                model.getSelectedBondedRoleType().set(null);
+                model.getSelectedBondedRoleListItem().set(null);
                 break;
             case BAN:
                 model.getHaltTrading().set(false);
@@ -179,8 +214,7 @@ public class SecurityManagerController implements Controller {
                 model.getActionButtonDisabled().set(isMessageEmpty || isMinVersionNeededAndEmpty);
                 break;
             case BAN:
-                model.getActionButtonDisabled().set(StringUtils.isEmpty(model.getBannedRoleProfileId().get()) ||
-                        model.getSelectedBondedRoleType().get() == null);
+                model.getActionButtonDisabled().set(model.getSelectedBondedRoleListItem().get() == null);
                 break;
         }
     }

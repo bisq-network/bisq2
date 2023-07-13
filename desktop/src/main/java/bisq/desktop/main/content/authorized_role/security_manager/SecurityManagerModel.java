@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.alert.AlertType;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
@@ -32,17 +31,16 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityManagerModel implements Model {
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
-    private final ObjectProperty<BondedRoleType> selectedBondedRoleType = new SimpleObjectProperty<>();
-    private final ObservableList<BondedRoleType> bondedRoleTypes = FXCollections.observableArrayList();
+    private final ObjectProperty<SecurityManagerView.BondedRoleListItem> selectedBondedRoleListItem = new SimpleObjectProperty<>();
+    private final ObservableList<SecurityManagerView.BondedRoleListItem> bondedRoleListItems = FXCollections.observableArrayList();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty message = new SimpleStringProperty();
     private final StringProperty minVersion = new SimpleStringProperty();
-    private final StringProperty bannedRoleProfileId = new SimpleStringProperty();
     private final BooleanProperty haltTrading = new SimpleBooleanProperty();
     private final BooleanProperty requireVersionForTrading = new SimpleBooleanProperty();
-    private final ObservableList<SecurityManagerView.AlertListItem> bondedRolesListItems = FXCollections.observableArrayList();
-    private final SortedList<SecurityManagerView.AlertListItem> sortedList = new SortedList<>(bondedRolesListItems);
+    private final ObservableList<SecurityManagerView.AlertListItem> alertListItems = FXCollections.observableArrayList();
+    private final SortedList<SecurityManagerView.AlertListItem> sortedAlertListItems = new SortedList<>(alertListItems);
 
     public SecurityManagerModel() {
     }

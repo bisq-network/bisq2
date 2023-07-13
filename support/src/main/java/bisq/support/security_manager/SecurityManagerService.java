@@ -23,10 +23,8 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -42,8 +40,6 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SecurityManagerService implements Service {
     private final NetworkService networkService;
-    @Getter
-    private final ObservableSet<AuthorizedAlertData> authorizedAlertData = new ObservableSet<>();
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -79,19 +75,19 @@ public class SecurityManagerService implements Service {
 
     public CompletableFuture<Boolean> publishAlert(KeyPair ownerKeyPair,
                                                    AuthorizedAlertData authorizedAlertData,
-                                                   PrivateKey privateKey,
-                                                   PublicKey publicKey) {
+                                                   PrivateKey authorizedPrivateKey,
+                                                   PublicKey authorizedPublicKey) {
         return networkService.publishAuthorizedData(authorizedAlertData,
                         ownerKeyPair,
-                        privateKey,
-                        publicKey)
+                        authorizedPrivateKey,
+                        authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeAlert(AuthorizedData authorizedData, KeyPair ownerKeyPair) {
-        return networkService.removeAuthorizedData(authorizedData.getAuthorizedDistributedData(),
+    public CompletableFuture<Boolean> removeAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
+        return networkService.removeAuthorizedData(authorizedAlertData,
                         ownerKeyPair,
-                        authorizedData.getAuthorizedPublicKey())
+                        ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
     }
 

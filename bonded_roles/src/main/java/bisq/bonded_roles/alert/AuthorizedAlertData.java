@@ -17,7 +17,7 @@
 
 package bisq.bonded_roles.alert;
 
-import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.AuthorizedBondedRole;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -52,8 +52,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
     private final boolean haltTrading;
     private final boolean requireVersionForTrading;
     private final Optional<String> minVersion;
-    private final Optional<String> bannedRoleProfileId;
-    private final Optional<BondedRoleType> bannedBondedRoleType;
+    private final Optional<AuthorizedBondedRole> authorizedBondedRole;
+    private final String securityManagerProfileId;
 
     public AuthorizedAlertData(String id,
                                long date,
@@ -62,8 +62,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                                boolean haltTrading,
                                boolean requireVersionForTrading,
                                Optional<String> minVersion,
-                               Optional<String> bannedRoleProfileId,
-                               Optional<BondedRoleType> bannedBondedRoleType) {
+                               Optional<AuthorizedBondedRole> authorizedBondedRole,
+                               String securityManagerProfileId) {
         this.id = id;
         this.date = date;
         this.alertType = alertType;
@@ -71,8 +71,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
         this.haltTrading = haltTrading;
         this.requireVersionForTrading = requireVersionForTrading;
         this.minVersion = minVersion;
-        this.bannedRoleProfileId = bannedRoleProfileId;
-        this.bannedBondedRoleType = bannedBondedRoleType;
+        this.authorizedBondedRole = authorizedBondedRole;
+        this.securityManagerProfileId = securityManagerProfileId;
     }
 
     @Override
@@ -82,12 +82,11 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                 .setDate(date)
                 .setAlertType(alertType.toProto())
                 .setHaltTrading(haltTrading)
-                .setRequireVersionForTrading(requireVersionForTrading);
+                .setRequireVersionForTrading(requireVersionForTrading)
+                .setSecurityManagerProfileId(securityManagerProfileId);
         message.ifPresent(builder::setMessage);
         minVersion.ifPresent(builder::setMinVersion);
-        bannedRoleProfileId.ifPresent(builder::setBannedRoleProfileId);
-        bannedBondedRoleType.ifPresent(bannedBondedRoleType -> builder.setBannedBondedRoleType(bannedBondedRoleType.toProto()));
-
+        authorizedBondedRole.ifPresent(authorizedBondedRole -> builder.setAuthorizedBondedRole(authorizedBondedRole.toProto()));
         return builder.build();
     }
 
@@ -99,8 +98,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                 proto.getHaltTrading(),
                 proto.getRequireVersionForTrading(),
                 proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
-                proto.hasBannedRoleProfileId() ? Optional.of(proto.getBannedRoleProfileId()) : Optional.empty(),
-                proto.hasBannedBondedRoleType() ? Optional.of(BondedRoleType.fromProto(proto.getBannedBondedRoleType())) : Optional.empty());
+                proto.hasAuthorizedBondedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getAuthorizedBondedRole())) : Optional.empty(),
+                proto.getSecurityManagerProfileId());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

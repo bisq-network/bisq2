@@ -177,13 +177,10 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
             AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
                     authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
-                    authorizedAlertData.getBannedRoleProfileId().isPresent() &&
-                    authorizedAlertData.getBannedBondedRoleType().isPresent()) {
-                String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
-                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedBondedRoleType().get();
+                    authorizedAlertData.getAuthorizedBondedRole().isPresent()) {
+                BondedRoleType bannedBondedRoleType = authorizedAlertData.getAuthorizedBondedRole().get().getBondedRoleType();
                 authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
                         .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
                         .forEach(bannedRole -> {
                             if (ignoreSecurityManager) {
                                 log.warn("We received an alert message from the security manager to ban a bonded role but " +
@@ -385,9 +382,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     request.getAddressByNetworkType(),
                                     authorizedOracleNode);
                             if (request.isCancellationRequest()) {
-                                authorizedBondedRolesService.getAuthorizedDataSet().stream()
-                                        .filter(authorizedData -> authorizedData.getAuthorizedDistributedData().equals(data))
-                                        .map(AuthorizedData::getAuthorizedDistributedData)
+                                authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                                        .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
                                         .forEach(this::removeAuthorizedData);
                             } else {
                                 publishAuthorizedData(data);

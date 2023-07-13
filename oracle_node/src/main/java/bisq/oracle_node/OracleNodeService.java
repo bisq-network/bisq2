@@ -29,7 +29,6 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
@@ -166,20 +165,18 @@ public class OracleNodeService implements Service {
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
                     timestampService.setAuthorizedOracleNode(authorizedOracleNode);
 
-                    authorizedBondedRolesService.getAuthorizedDataSet().addListener(new CollectionObserver<>() {
+                    authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(new CollectionObserver<>() {
                         @Override
-                        public void add(AuthorizedData element) {
+                        public void add(AuthorizedBondedRole element) {
                         }
 
                         @Override
                         public void remove(Object element) {
-                            if (element instanceof AuthorizedData) {
-                                AuthorizedData authorizedData = (AuthorizedData) element;
-                                if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole) {
-                                    networkService.removeAuthorizedData(authorizedData.getAuthorizedDistributedData(),
-                                            identity.getNodeIdAndKeyPair().getKeyPair(),
-                                            authorizedPublicKey);
-                                }
+                            if (element instanceof AuthorizedBondedRole) {
+                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) element;
+                                networkService.removeAuthorizedData(authorizedBondedRole,
+                                        identity.getNodeIdAndKeyPair().getKeyPair(),
+                                        authorizedPublicKey);
                             }
                         }
 

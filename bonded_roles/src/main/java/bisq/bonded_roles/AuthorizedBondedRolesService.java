@@ -31,6 +31,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthoriz
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -42,9 +43,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Getter
     private final ObservableSet<AuthorizedBondedRole> authorizedBondedRoleSet = new ObservableSet<>();
     @Getter
-    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
-    @Getter
     private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
 
     public AuthorizedBondedRolesService(NetworkService networkService, boolean ignoreSecurityManager) {
         this.networkService = networkService;
@@ -81,56 +82,35 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedOracleNode) {
-            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) data;
-            authorizedOracleNodes.add(authorizedOracleNode);
-            authorizedDataSet.add(authorizedData);
+            authorizedOracleNodes.add((AuthorizedOracleNode) data);
         } else if (data instanceof AuthorizedBondedRole) {
-            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
-            authorizedBondedRoleSet.add(authorizedBondedRole);
-            authorizedDataSet.add(authorizedData);
-            if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
-            }
+            validate(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
+                authorizedBondedRoleSet.add(authorizedBondedRole);
+                if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                    networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
+                }
+            });
         } else if (data instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
-            if (authorizedAlertData.getAlertType() == AlertType.BAN &&
-                    isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
-                    authorizedAlertData.getBannedRoleProfileId().isPresent() &&
-                    authorizedAlertData.getBannedBondedRoleType().isPresent()) {
-                String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
-                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedBondedRoleType().get();
-                authorizedBondedRoleSet.stream()
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
-                        .forEach(bannedRole -> {
-                            if (ignoreSecurityManager) {
-                                log.warn("We received an alert message from the security manager to ban a bonded role but " +
-                                                "you have set ignoreSecurityManager to true, so this will have no effect.\n" +
-                                                "bannedRole={}\nauthorizedData sent by security manager={}",
-                                        bannedRole, authorizedData);
-                            } else {
-                                authorizedBondedRoleSet.remove(bannedRole);
-                                authorizedDataSet.remove(authorizedData);
-                            }
-                        });
-            }
+            validate(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::add);
         }
     }
 
+
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedOracleNode) {
-            AuthorizedOracleNode authorizedOracleNode = (AuthorizedOracleNode) data;
-            authorizedOracleNodes.remove(authorizedOracleNode);
-            authorizedDataSet.remove(authorizedData);
+            authorizedOracleNodes.remove((AuthorizedOracleNode) data);
         } else if (data instanceof AuthorizedBondedRole) {
-            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
-            authorizedBondedRoleSet.remove(authorizedBondedRole);
-            authorizedDataSet.remove(authorizedData);
-            if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
-            }
+            validate(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
+                authorizedBondedRoleSet.remove(authorizedBondedRole);
+                if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                    networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
+                }
+            });
+        } else if (data instanceof AuthorizedAlertData) {
+            validate(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::remove);
         }
     }
 
@@ -170,4 +150,90 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 .filter(e -> e.getBondedRoleType() == bondedRoleType)
                 .collect(Collectors.toSet());
     }
+
+    private Optional<AuthorizedBondedRole> validate(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
+        //todo
+
+      /*  getBanAlerts().stream()
+                .filter(alert->alert.getBannedBondedRoleType().orElseThrow()==authorizedBondedRole.getBondedRoleType())
+                .*/
+
+        if (!isBanned(authorizedData, authorizedBondedRole)) {
+            return Optional.of(authorizedBondedRole);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<AuthorizedAlertData> validate(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData) {
+        if (isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
+            return Optional.of(authorizedAlertData);
+        }
+        return Optional.empty();
+    }
+
+    private boolean isBanned(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
+        if (networkService.getDataService().isEmpty()) {
+            return true;
+        }
+
+        Set<AuthorizedAlertData> banAlerts = getBanAlerts();
+
+        Set<String> securityManagerProfileIds = banAlerts.stream()
+                .map(AuthorizedAlertData::getSecurityManagerProfileId)
+                .collect(Collectors.toSet());
+
+
+        networkService.getDataService()
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(data -> data.getAuthorizedDistributedData() instanceof AuthorizedAlertData)
+                        .map(data -> (AuthorizedAlertData) data.getAuthorizedDistributedData())
+                        .filter(authorizedAlertData -> authorizedAlertData.getAlertType() == AlertType.BAN &&
+                                /*isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&*/
+                                authorizedAlertData.getAuthorizedBondedRole().isPresent())
+                        /* .filter(authorizedAlertData ->
+                                 authorizedBondedRole.getBondedRoleType() == authorizedAlertData.getAuthorizedBondedRole().get() &&
+                                         authorizedBondedRole.getProfileId().equals(authorizedAlertData.getBannedRoleProfileId().get()))*/
+                        .forEach(authorizedAlertData -> {
+                            if (ignoreSecurityManager) {
+                                log.warn("We received an alert message from the security manager to ban a bonded role but " +
+                                                "you have set ignoreSecurityManager to true, so this will have no effect.\n" +
+                                                "bannedRole={}\nauthorizedData sent by security manager={}",
+                                        authorizedBondedRole, authorizedData);
+                            } else {
+                                authorizedBondedRoleSet.remove(authorizedBondedRole);
+                            }
+                        }));
+
+        return false;
+    }
+
+    private Set<AuthorizedAlertData> getBanAlerts() {
+        return authorizedAlertDataSet.stream()
+                .filter(authorizedAlertData -> authorizedAlertData.getAlertType() == AlertType.BAN &&
+                        authorizedAlertData.getAuthorizedBondedRole().isPresent())
+                .collect(Collectors.toSet());
+    }
+
+   /* private void applyAuthorizedAlertData(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData) {
+        if (authorizedAlertData.getAlertType() == AlertType.BAN &&
+                isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                authorizedAlertData.getBannedRoleProfileId().isPresent() &&
+                authorizedAlertData.getAuthorizedBondedRole().isPresent()) {
+            String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
+            BondedRoleType bannedBondedRoleType = authorizedAlertData.getAuthorizedBondedRole().get();
+            authorizedBondedRoleSet.stream()
+                    .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
+                    .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
+                    .forEach(bannedRole -> {
+                        if (ignoreSecurityManager) {
+                            log.warn("We received an alert message from the security manager to ban a bonded role but " +
+                                            "you have set ignoreSecurityManager to true, so this will have no effect.\n" +
+                                            "bannedRole={}\nauthorizedData sent by security manager={}",
+                                    bannedRole, authorizedData);
+                        } else {
+                            authorizedBondedRoleSet.remove(bannedRole);
+                        }
+                    });
+        }
+    }*/
 }
