@@ -18,6 +18,7 @@
 package bisq.bonded_roles.bonded_role;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
@@ -89,12 +90,26 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
                 }
+
+                networkService.getDataService().orElseThrow().getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedAlertData)
+                        .forEach(e -> onAuthorizedAlertData(e, (AuthorizedAlertData) e.getAuthorizedDistributedData(), true));
             });
         } else if (data instanceof AuthorizedAlertData) {
-            validateAlert(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::add);
+            onAuthorizedAlertData(authorizedData, (AuthorizedAlertData) data, true);
         }
     }
 
+    private void onAuthorizedAlertData(AuthorizedData authorizedData, AuthorizedAlertData data, boolean isAdded) {
+        validateAlert(authorizedData, data).ifPresent(alertData -> {
+            if (isAdded) {
+                authorizedAlertDataSet.add(alertData);
+            } else {
+                authorizedAlertDataSet.remove(alertData);
+            }
+            maybeApplyBannedState(alertData, isAdded);
+        });
+    }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
@@ -108,9 +123,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
                 }
+
+                networkService.getDataService().orElseThrow().getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedAlertData)
+                        .forEach(e -> onAuthorizedAlertData(e, (AuthorizedAlertData) e.getAuthorizedDistributedData(), false));
             });
         } else if (data instanceof AuthorizedAlertData) {
-            validateAlert(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::remove);
+            onAuthorizedAlertData(authorizedData, (AuthorizedAlertData) data, false);
         }
     }
 
@@ -178,4 +197,14 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
         return Optional.empty();
     }
+
+    private void maybeApplyBannedState(AuthorizedAlertData alertData, boolean value) {
+        if (alertData.getAlertType() == AlertType.BAN) {
+            bondedRoles.stream()
+                    .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(alertData.getAuthorizedBondedRole().orElseThrow()))
+                    .findAny()
+                    .ifPresent(bondedRole -> bondedRole.setIsBanned(value));
+        }
+    }
+
 }

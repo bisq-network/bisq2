@@ -52,10 +52,11 @@ public class BondedRolesListItem implements TableItem {
     private final BondedRoleType bondedRoleType;
     private final String address;
     private final String addressInfoJson;
+    private final String isBanned;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
-        bondedRole.isNotBanned();
+        isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
         authorizedOracleNode = authorizedBondedRoleData.getAuthorizedOracleNode();
         oracleNodeUserName = authorizedOracleNode.getBondUserName();
         userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId()).orElseThrow();

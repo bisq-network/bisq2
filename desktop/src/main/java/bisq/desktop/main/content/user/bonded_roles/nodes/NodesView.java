@@ -94,9 +94,15 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.oracleNode"))
                 .minWidth(200)
-                .isLast()
                 .comparator(Comparator.comparing(BondedRolesListItem::getOracleNodeUserName))
                 .valueSupplier(BondedRolesListItem::getOracleNodeUserName)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+                .title(Res.get("user.bondedRoles.table.columns.isBanned"))
+                .isLast()
+                .minWidth(80)
+                .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
+                .valueSupplier(BondedRolesListItem::getIsBanned)
                 .build());
     }
 
