@@ -32,6 +32,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -112,10 +113,11 @@ public abstract class BondedRolesRegistrationController implements Controller {
     }
 
     protected void applyRequestCancellationButtonVisible() {
+        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         model.getRequestCancellationButtonVisible().set(
-                authorizedBondedRolesService.getAuthorizedBondedRoles(model.getBondedRoleType()).stream()
-                        .anyMatch(e -> userIdentityService.getSelectedUserIdentity() != null &&
-                                userIdentityService.getSelectedUserIdentity().getUserProfile().getId().equals(e.getProfileId())));
+                selectedUserIdentity != null && authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                        .filter(bondedRole -> bondedRole.getBondedRoleType() == model.getBondedRoleType())
+                        .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId())));
     }
 
     protected void requestBondedRoleRegistration(boolean isCancellationRequest) {

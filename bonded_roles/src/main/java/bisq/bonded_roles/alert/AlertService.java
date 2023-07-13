@@ -87,7 +87,7 @@ public class AlertService implements Service, DataService.Listener {
     private Optional<AuthorizedAlertData> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedAlertData &&
-                authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
+                authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
             return Optional.of((AuthorizedAlertData) data);
         }
         return Optional.empty();

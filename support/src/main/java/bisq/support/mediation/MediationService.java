@@ -47,6 +47,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class MediationService implements Service, MessageListener {
@@ -116,7 +117,9 @@ public class MediationService implements Service, MessageListener {
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
-        Set<AuthorizedBondedRole> mediators = authorizedBondedRolesService.getAuthorizedBondedRoles(BondedRoleType.MEDIATOR);
+        Set<AuthorizedBondedRole> mediators = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                .filter(role -> role.getBondedRoleType() == BondedRoleType.MEDIATOR)
+                .collect(Collectors.toSet());
         return selectMediator(mediators, makersUserProfileId, takersUserProfileId);
     }
 
@@ -191,7 +194,6 @@ public class MediationService implements Service, MessageListener {
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
         return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream())
                 .findAny();

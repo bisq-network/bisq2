@@ -18,7 +18,6 @@
 package bisq.bonded_roles.bonded_role;
 
 import bisq.bonded_roles.BondedRoleType;
-import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
@@ -34,9 +33,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -87,26 +84,25 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         if (data instanceof AuthorizedOracleNode) {
             authorizedOracleNodes.add((AuthorizedOracleNode) data);
         } else if (data instanceof AuthorizedBondedRole) {
-            validate(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
+            validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
                 bondedRoles.add(new BondedRole(authorizedBondedRole));
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
                 }
             });
         } else if (data instanceof AuthorizedAlertData) {
-            validate(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::add);
+            validateAlert(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::add);
         }
     }
 
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedOracleNode) {
             authorizedOracleNodes.remove((AuthorizedOracleNode) data);
         } else if (data instanceof AuthorizedBondedRole) {
-            validate(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
+            validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
                 Optional<BondedRole> toRemove = bondedRoles.stream().filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedBondedRole)).findAny();
                 toRemove.ifPresent(bondedRoles::remove);
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
@@ -114,7 +110,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 }
             });
         } else if (data instanceof AuthorizedAlertData) {
-            validate(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::remove);
+            validateAlert(authorizedData, (AuthorizedAlertData) data).ifPresent(authorizedAlertDataSet::remove);
         }
     }
 
@@ -125,129 +121,61 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream() {
         return bondedRoles.stream()
-                .filter(BondedRole::isNotBanned)
+                .filter(bondedRole -> ignoreSecurityManager || bondedRole.isNotBanned())
                 .map(BondedRole::getAuthorizedBondedRole);
     }
 
-    public boolean isAuthorizedByBondedRole(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
+    public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (!(data instanceof DeferredAuthorizedPublicKeyValidation) &&
-                data instanceof StaticallyAuthorizedPublicKeyValidation) {
-            // In case the data has not implemented DeferredAuthorizedPublicKeyValidation the hardcoded key-set is used for 
-            // verification at the p2p network layer.
-            return true;
-        }
-
         String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
-        boolean isStaticallyAuthorizedKey = false;
+        log.info("hasAuthorizedPubKey authorizedData={}, bondedRoleType={}", authorizedData, bondedRoleType);
         if (data instanceof StaticallyAuthorizedPublicKeyValidation) {
-            isStaticallyAuthorizedKey = ((StaticallyAuthorizedPublicKeyValidation) data).getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+            if (data instanceof DeferredAuthorizedPublicKeyValidation) {
+                // If it is a DeferredAuthorizedPublicKeyValidation we skipped validation at p2p network layer. 
+                // We need to verify pub key is in the hard coded key list.
+                boolean hasKey = ((StaticallyAuthorizedPublicKeyValidation) data).getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+                if (!hasKey) {
+                    log.warn("authorizedPublicKey is matching statically provided pub keys. We try with keys from boned roles.");
+                } else {
+                    return true;
+                }
+            } else {
+                // In case the data has not implemented DeferredAuthorizedPublicKeyValidation the verification 
+                // was already done at the p2p network layer.
+                return true;
+            }
         }
 
-        boolean isAuthorized = isStaticallyAuthorizedKey ||
-                bondedRoles.stream()
-                        .map(BondedRole::getAuthorizedBondedRole)
-                        .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
-                        .map(AuthorizedBondedRole::getAuthorizedPublicKey)
-                        .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey));
-        if (!isAuthorized) {
-            log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
+        if (data instanceof DeferredAuthorizedPublicKeyValidation) {
+            if (getAuthorizedBondedRoleStream()
+                    .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
+                    .map(AuthorizedBondedRole::getAuthorizedPublicKey)
+                    .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey))) {
+                return true;
+            } else {
+                log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
+                return false;
+            }
+        } else {
+            throw new RuntimeException("Invalid state. AuthorizedDistributedData has not implemented " +
+                    "StaticallyAuthorizedPublicKeyValidation nor DeferredAuthorizedPublicKeyValidation");
         }
-        return isAuthorized;
     }
 
-    public Set<AuthorizedBondedRole> getAuthorizedBondedRoles(BondedRoleType bondedRoleType) {
-        return getBondedRoles().stream()
-                .map(BondedRole::getAuthorizedBondedRole)
-                .filter(e -> e.getBondedRoleType() == bondedRoleType)
-                .collect(Collectors.toSet());
-    }
-
-    private Optional<AuthorizedBondedRole> validate(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
-        //todo
-
-      /*  getBanAlerts().stream()
-                .filter(alert->alert.getBannedBondedRoleType().orElseThrow()==authorizedBondedRole.getBondedRoleType())
-                .*/
-
-        if (!isBanned(authorizedData, authorizedBondedRole)) {
-            return Optional.of(authorizedBondedRole);
-        }
-        return Optional.empty();
-    }
-
-    private Optional<AuthorizedAlertData> validate(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData) {
-        if (isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
+    private Optional<AuthorizedAlertData> validateAlert(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData) {
+        if (hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
             return Optional.of(authorizedAlertData);
         }
         return Optional.empty();
     }
 
-    private boolean isBanned(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
-        if (networkService.getDataService().isEmpty()) {
-            return true;
+    private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
+        // AuthorizedBondedRoles are published only by an oracle node. The oracle node use either a hard coded pubKey
+        // or has been authorized by another already authorized oracle node. There need to be at least one root node 
+        // with a hard coded pubKey.
+        if (hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
+            return Optional.of(authorizedBondedRole);
         }
-
-        Set<AuthorizedAlertData> banAlerts = getBanAlerts();
-
-        Set<String> securityManagerProfileIds = banAlerts.stream()
-                .map(AuthorizedAlertData::getSecurityManagerProfileId)
-                .collect(Collectors.toSet());
-
-
-        networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .filter(data -> data.getAuthorizedDistributedData() instanceof AuthorizedAlertData)
-                        .map(data -> (AuthorizedAlertData) data.getAuthorizedDistributedData())
-                        .filter(authorizedAlertData -> authorizedAlertData.getAlertType() == AlertType.BAN &&
-                                /*isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&*/
-                                authorizedAlertData.getAuthorizedBondedRole().isPresent())
-                        /* .filter(authorizedAlertData ->
-                                 authorizedBondedRole.getBondedRoleType() == authorizedAlertData.getAuthorizedBondedRole().get() &&
-                                         authorizedBondedRole.getProfileId().equals(authorizedAlertData.getBannedRoleProfileId().get()))*/
-                        .forEach(authorizedAlertData -> {
-                            if (ignoreSecurityManager) {
-                                log.warn("We received an alert message from the security manager to ban a bonded role but " +
-                                                "you have set ignoreSecurityManager to true, so this will have no effect.\n" +
-                                                "bannedRole={}\nauthorizedData sent by security manager={}",
-                                        authorizedBondedRole, authorizedData);
-                            } else {
-                                bondedRoles.remove(authorizedBondedRole);
-                            }
-                        }));
-
-        return false;
+        return Optional.empty();
     }
-
-    private Set<AuthorizedAlertData> getBanAlerts() {
-        return authorizedAlertDataSet.stream()
-                .filter(authorizedAlertData -> authorizedAlertData.getAlertType() == AlertType.BAN &&
-                        authorizedAlertData.getAuthorizedBondedRole().isPresent())
-                .collect(Collectors.toSet());
-    }
-
-   
-
-   /* private void applyAuthorizedAlertData(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData) {
-        if (authorizedAlertData.getAlertType() == AlertType.BAN &&
-                isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
-                authorizedAlertData.getBannedRoleProfileId().isPresent() &&
-                authorizedAlertData.getAuthorizedBondedRole().isPresent()) {
-            String bannedRoleProfileId = authorizedAlertData.getBannedRoleProfileId().get();
-            BondedRoleType bannedBondedRoleType = authorizedAlertData.getAuthorizedBondedRole().get();
-            authorizedBondedRoleSet.stream()
-                    .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
-                    .filter(authorizedBondedRole -> authorizedBondedRole.getProfileId().equals(bannedRoleProfileId))
-                    .forEach(bannedRole -> {
-                        if (ignoreSecurityManager) {
-                            log.warn("We received an alert message from the security manager to ban a bonded role but " +
-                                            "you have set ignoreSecurityManager to true, so this will have no effect.\n" +
-                                            "bannedRole={}\nauthorizedData sent by security manager={}",
-                                    bannedRole, authorizedData);
-                        } else {
-                            authorizedBondedRoleSet.remove(bannedRole);
-                        }
-                    });
-        }
-    }*/
 }

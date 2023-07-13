@@ -176,7 +176,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
         if (data instanceof AuthorizedAlertData) {
             AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
-                    authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
                     authorizedAlertData.getAuthorizedBondedRole().isPresent()) {
                 BondedRoleType bannedBondedRoleType = authorizedAlertData.getAuthorizedBondedRole().get().getBondedRoleType();
                 authorizedBondedRolesService.getAuthorizedBondedRoleStream()
@@ -235,6 +235,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        log.info("publishAuthorizedData {}", data);
         return networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair().getKeyPair(),
                         authorizedPrivateKey,
@@ -370,6 +371,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
         String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
         String bondUserName = request.getBondUserName();
         String signatureBase64 = request.getSignatureBase64();
+        log.info("Received BondedRoleRegistrationRequest {}", request);
         httpService.requestBondedRoleVerification(bondUserName, bisq1RoleTypeName, profileId, signatureBase64)
                 .whenComplete((bondedRoleVerificationDto, throwable) -> {
                     if (throwable == null) {

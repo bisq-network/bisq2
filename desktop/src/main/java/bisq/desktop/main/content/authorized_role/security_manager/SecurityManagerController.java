@@ -88,7 +88,7 @@ public class SecurityManagerController implements Controller {
                 .to(alertService.getAuthorizedAlertDataSet());
 
         bondedRoleSetPin = FxBindings.<BondedRole, SecurityManagerView.BondedRoleListItem>bind(model.getBondedRoleListItems())
-                .map(bondedRole -> new BondedRoleListItemBuilder().setBondedRole(bondedRole).setController(this).createBondedRoleListItem())
+                .map(bondedRole -> new SecurityManagerView.BondedRoleListItem(bondedRole, this))
                 .to(authorizedBondedRolesService.getBondedRoles());
     }
 
@@ -166,8 +166,7 @@ public class SecurityManagerController implements Controller {
         return Res.get("authorizedRole.securityManager.selectedBondedRole", nickName, roleType, profileId);
     }
 
-    String getBondedRoleDisplayString(BondedRole bondedRole) {
-        AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
+    String getBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
         String roleType = Res.get("user.bondedRoles.type." + authorizedBondedRole.getBondedRoleType().name());
         String profileId = authorizedBondedRole.getProfileId();
         String nickName = userProfileService.findUserProfile(profileId)

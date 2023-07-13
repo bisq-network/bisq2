@@ -26,7 +26,7 @@ import lombok.Getter;
 public class BondedRole {
     @Getter
     private final AuthorizedBondedRole authorizedBondedRole;
-    private final Observable<Boolean> isBannedObservable = new Observable<>();
+    private final Observable<Boolean> isBannedObservable = new Observable<>(false);
 
     public BondedRole(AuthorizedBondedRole authorizedBondedRole) {
         this.authorizedBondedRole = authorizedBondedRole;

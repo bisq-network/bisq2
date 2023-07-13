@@ -57,6 +57,7 @@ public class OracleNodeService implements Service {
         private final String publicKey;
         private final boolean ignoreSecurityManager;
         private final String bondUserName;
+        private final String profileId;
         private final String signatureBase64;
         private final String keyId;
         private final com.typesafe.config.Config bisq1Bridge;
@@ -65,6 +66,7 @@ public class OracleNodeService implements Service {
                       String publicKey,
                       boolean ignoreSecurityManager,
                       String bondUserName,
+                      String profileId,
                       String signatureBase64,
                       String keyId,
                       com.typesafe.config.Config bisq1Bridge) {
@@ -72,6 +74,7 @@ public class OracleNodeService implements Service {
             this.publicKey = publicKey;
             this.ignoreSecurityManager = ignoreSecurityManager;
             this.bondUserName = bondUserName;
+            this.profileId = profileId;
             this.signatureBase64 = signatureBase64;
             this.keyId = keyId;
             this.bisq1Bridge = bisq1Bridge;
@@ -82,6 +85,7 @@ public class OracleNodeService implements Service {
                     config.getString("publicKey"),
                     config.getBoolean("ignoreSecurityManager"),
                     config.getString("bondUserName"),
+                    config.getString("profileId"),
                     config.getString("signatureBase64"),
                     config.getString("keyId"),
                     config.getConfig("bisq1Bridge"));
