@@ -23,7 +23,6 @@ import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.PersistableStore;
@@ -89,9 +88,9 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(M chatMessage,
                                                                                  UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, nodeIdAndKeyPair));
+        KeyPair keyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
+        return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), keyPair)
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, keyPair));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(M originalChatMessage,

@@ -190,7 +190,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
 
     public CompletableFuture<BroadCastDataResult> addToNetwork(PocOffer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
-                .thenCompose(identity -> networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair()));
+                .thenCompose(identity -> networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair()));
     }
 
     public CompletableFuture<BroadCastDataResult> removeFromNetwork(PocOffer offer) {

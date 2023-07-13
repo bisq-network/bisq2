@@ -27,7 +27,6 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -41,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.CompletableFuture;
@@ -211,19 +211,19 @@ public class OracleNodeService implements Service {
     private AuthorizedOracleNode createMyAuthorizedOracleNode() {
         AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64);
         // Repeat 3 times at startup to republish to ensure the data gets well distributed
-        startupScheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair()))
+        startupScheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair().getKeyPair()))
                 .repeated(1, 10, TimeUnit.SECONDS, 3);
 
         // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
-        scheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair()))
+        scheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair().getKeyPair()))
                 .periodically(25, TimeUnit.DAYS);
 
         return authorizedOracleNode;
     }
 
-    private CompletableFuture<Boolean> publishAuthorizedOracleNode(AuthorizedOracleNode authorizedOracleNode, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+    private CompletableFuture<Boolean> publishAuthorizedOracleNode(AuthorizedOracleNode authorizedOracleNode, KeyPair ownerKeyPair) {
         return networkService.publishAuthorizedData(authorizedOracleNode,
-                        nodeIdAndKeyPair,
+                        ownerKeyPair,
                         authorizedPrivateKey,
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);

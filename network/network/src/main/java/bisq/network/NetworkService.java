@@ -257,10 +257,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData,
-                                                                           NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
@@ -272,11 +270,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                        NetworkIdWithKeyPair ownerNetworkIdWithKeyPair,
+                                                                        KeyPair keyPair,
                                                                         PrivateKey authorizedPrivateKey,
                                                                         PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         try {
             byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
             AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, signature, authorizedPublicKey);

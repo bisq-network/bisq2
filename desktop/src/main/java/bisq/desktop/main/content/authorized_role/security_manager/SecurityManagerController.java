@@ -125,7 +125,7 @@ public class SecurityManagerController implements Controller {
                 Optional.ofNullable(model.getSelectedBondedRoleType().get()));
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
-        securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair(),
+        securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair().getKeyPair(),
                 authorizedAlertData,
                 keyPair.getPrivate(),
                 keyPair.getPublic());

@@ -77,12 +77,12 @@ public class SecurityManagerService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> publishAlert(NetworkIdWithKeyPair networkIdWithKeyPair,
+    public CompletableFuture<Boolean> publishAlert(KeyPair ownerKeyPair,
                                                    AuthorizedAlertData authorizedAlertData,
                                                    PrivateKey privateKey,
                                                    PublicKey publicKey) {
         return networkService.publishAuthorizedData(authorizedAlertData,
-                        networkIdWithKeyPair,
+                        ownerKeyPair,
                         privateKey,
                         publicKey)
                 .thenApply(broadCastDataResult -> true);
