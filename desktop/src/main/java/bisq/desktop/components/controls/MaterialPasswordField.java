@@ -24,7 +24,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.skin.TextFieldSkin;
 
@@ -72,7 +71,7 @@ public class MaterialPasswordField extends MaterialTextField {
 
     @Override
     protected TextInputControl createTextInputControl() {
-        PasswordField passwordField = new PasswordField();
+        PasswordFieldWithCopyEnabled passwordField = new PasswordFieldWithCopyEnabled();
         passwordField.setSkin(new VisiblePasswordFieldSkin(passwordField, this));
         return passwordField;
     }
@@ -93,11 +92,11 @@ public class MaterialPasswordField extends MaterialTextField {
     }
 
     static class VisiblePasswordFieldSkin extends TextFieldSkin {
-        private final PasswordField textField;
+        private final PasswordFieldWithCopyEnabled textField;
         private final BisqIconButton iconButton;
         private final MaterialPasswordField materialPasswordField;
 
-        public VisiblePasswordFieldSkin(PasswordField textField, MaterialPasswordField materialPasswordField) {
+        public VisiblePasswordFieldSkin(PasswordFieldWithCopyEnabled textField, MaterialPasswordField materialPasswordField) {
             super(textField);
 
             this.textField = textField;

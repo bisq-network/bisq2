@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.bonded_roles.nodes.tabs.registration;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.common.encoding.Hex;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.FileUtils;
 import bisq.common.util.StringUtils;
@@ -30,6 +31,7 @@ import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRoles
 import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRolesRegistrationView;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.user.identity.UserIdentity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ import org.fxmisc.easybind.Subscription;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,6 +69,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
     @Override
     public void onActivate() {
         super.onActivate();
+
         addressInfoPin = EasyBind.subscribe(getNodesRegistrationModel().getAddressInfoJson(), addressInfo -> {
             model.getAddressByNetworkType().clear();
             if (addressInfo != null) {
@@ -77,6 +81,10 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
     @Override
     public void onDeactivate() {
         super.onDeactivate();
+
+        getNodesRegistrationModel().getPubKey().set(null);
+        getNodesRegistrationModel().getPrivKey().set(null);
+        getNodesRegistrationModel().getShowKeyPair().set(false);
         addressInfoPin.unsubscribe();
     }
 
@@ -92,6 +100,17 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
                 new Popup().error(e).show();
             }
         }
+    }
+
+    void onShowKeyPair() {
+        getNodesRegistrationModel().getPubKey().set(null);
+        getNodesRegistrationModel().getPrivKey().set(null);
+
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentityObservable().get();
+        KeyPair keyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
+        getNodesRegistrationModel().getPubKey().set(Hex.encode(keyPair.getPublic().getEncoded()));
+        getNodesRegistrationModel().getPrivKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
+        getNodesRegistrationModel().getShowKeyPair().set(true);
     }
 
     @Override
