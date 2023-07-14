@@ -17,20 +17,42 @@
 
 package bisq.oracle_node_app;
 
+import bisq.common.util.FileUtils;
+import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.Transport;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
 
 @Slf4j
 public class OracleNodeApp {
     public static void main(String[] args) {
         OracleNodeApplicationService applicationService = new OracleNodeApplicationService(args);
         applicationService.readAllPersisted()
-                .thenCompose(result -> applicationService.initialize());
+                .thenCompose(result -> applicationService.initialize())
+                .whenComplete((result, throwable) -> {
+                    Map<Transport.Type, Address> addressByNetworkType = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
+                    String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
+                    Path path = Path.of(applicationService.getConfig().getBaseDir(), "default_node_address.json");
+                    try {
+                        FileUtils.writeToFile(json, path.toFile());
+                    } catch (IOException e) {
+                        log.error("Error at write json", e);
+                    }
+                });
 
+        keepRunning();
+    }
+
+    private static void keepRunning() {
         try {
-            // Keep running
+            // block and wait shut down signal, like CTRL+C
             Thread.currentThread().join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ignore) {
         }
     }
 }
