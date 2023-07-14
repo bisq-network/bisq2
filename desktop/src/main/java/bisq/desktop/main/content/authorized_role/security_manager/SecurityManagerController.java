@@ -41,10 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Date;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -116,34 +112,33 @@ public class SecurityManagerController implements Controller {
     }
 
     void onSendAlert() {
-        AlertType alertType = model.getSelectedAlertType().get();
         String message = model.getMessage().get();
         //todo use validation framework instead (not impl yet)
         if (message != null && message.length() > AuthorizedAlertData.MAX_MESSAGE_LENGTH) {
             new Popup().warning(Res.get("authorizedRole.securityManager.alert.message.tooLong")).show();
             return;
         }
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        String profileId = userIdentity.getId();
-        // todo support hard coded security manager
-        AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
-                new Date().getTime(),
-                alertType,
-                StringUtils.toOptional(model.getMessage().get()),
-                model.getHaltTrading().get(),
-                model.getRequireVersionForTrading().get(),
-                StringUtils.toOptional(model.getMinVersion().get()),
-                Optional.ofNullable(model.getSelectedBondedRoleListItem().get().getBondedRole().getAuthorizedBondedRole()),
-                profileId,
-                false);
-
-        KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
-        securityManagerService.publishAlert(userIdentity.getNodeIdAndKeyPair().getKeyPair(),
-                authorizedAlertData,
-                authorizedPrivateKey,
-                authorizedPublicKey);
+        SecurityManagerView.BondedRoleListItem bondedRoleListItem = model.getSelectedBondedRoleListItem().get();
+        Optional<AuthorizedBondedRole> bannedRole = bondedRoleListItem == null ? Optional.empty() :
+                Optional.ofNullable(bondedRoleListItem.getBondedRole().getAuthorizedBondedRole());
+        securityManagerService.publishAlert(model.getSelectedAlertType().get(),
+                        StringUtils.toOptional(model.getMessage().get()),
+                        model.getHaltTrading().get(),
+                        model.getRequireVersionForTrading().get(),
+                        StringUtils.toOptional(model.getMinVersion().get()),
+                        bannedRole)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        new Popup().error(throwable).show();
+                    } else {
+                        model.getSelectedAlertType().set(null);
+                        model.getMessage().set(null);
+                        model.getHaltTrading().set(false);
+                        model.getRequireVersionForTrading().set(false);
+                        model.getMinVersion().set(null);
+                        model.getSelectedBondedRoleListItem().set(null);
+                    }
+                });
     }
 
     boolean isRemoveButtonVisible(AuthorizedAlertData authorizedAlertData) {
@@ -174,7 +169,7 @@ public class SecurityManagerController implements Controller {
         String nickName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)
                 .orElse(Res.get("data.na"));
-        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", nickName, roleType, profileId);
+        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickName, profileId);
     }
 
     private void applySelectAlertType(AlertType alertType) {

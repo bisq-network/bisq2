@@ -190,7 +190,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private void maybeApplyBannedState(AuthorizedAlertData alertData, boolean value) {
         if (alertData.getAlertType() == AlertType.BAN) {
             bondedRoles.stream()
-                    .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(alertData.getAuthorizedBondedRole().orElseThrow()))
+                    .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(alertData.getBannedRole().orElseThrow()))
                     .findAny()
                     .ifPresent(bondedRole -> bondedRole.setIsBanned(value));
         }

@@ -52,6 +52,7 @@ public class BondedRolesListItem implements TableItem {
     private final BondedRoleType bondedRoleType;
     private final String address;
     private final String addressInfoJson;
+    @EqualsAndHashCode.Exclude
     private final String isBanned;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService) {

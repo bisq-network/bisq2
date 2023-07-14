@@ -136,7 +136,11 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 settingsService,
                 notificationsService);
 
-        supportService = new SupportService(networkService, identityService, chatService, userService, bondedRolesService);
+        supportService = new SupportService(SupportService.Config.from(getConfig("support")),
+                networkService,
+                chatService,
+                userService,
+                bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService);

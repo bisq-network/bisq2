@@ -18,12 +18,16 @@
 package bisq.support.security_manager;
 
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.alert.AlertType;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,22 +35,44 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SecurityManagerService implements Service {
+    @Getter
+    public static class Config {
+        private final boolean staticPublicKeysProvided;
+
+        public Config(boolean staticPublicKeysProvided) {
+            this.staticPublicKeysProvided = staticPublicKeysProvided;
+        }
+
+        public static SecurityManagerService.Config from(com.typesafe.config.Config config) {
+            return new SecurityManagerService.Config(config.getBoolean("staticPublicKeysProvided"));
+        }
+    }
+
     private final NetworkService networkService;
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final Config config;
     private final UserIdentityService userIdentityService;
+    private final boolean staticPublicKeysProvided;
 
-    public SecurityManagerService(NetworkService networkService,
+    public SecurityManagerService(Config config,
+                                  NetworkService networkService,
                                   UserService userService,
                                   BondedRolesService bondedRolesService) {
+        this.config = config;
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
+        staticPublicKeysProvided = config.isStaticPublicKeysProvided();
     }
 
 
@@ -69,12 +95,29 @@ public class SecurityManagerService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> publishAlert(KeyPair ownerKeyPair,
-                                                   AuthorizedAlertData authorizedAlertData,
-                                                   PrivateKey authorizedPrivateKey,
-                                                   PublicKey authorizedPublicKey) {
+    public CompletableFuture<Boolean> publishAlert(AlertType alertType,
+                                                   Optional<String> message,
+                                                   boolean haltTrading,
+                                                   boolean requireVersionForTrading,
+                                                   Optional<String> minVersion,
+                                                   Optional<AuthorizedBondedRole> bannedRole) {
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        String profileId = userIdentity.getId();
+        KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
+        PublicKey authorizedPublicKey = keyPair.getPublic();
+        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
+        AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
+                new Date().getTime(),
+                alertType,
+                message,
+                haltTrading,
+                requireVersionForTrading,
+                minVersion,
+                bannedRole,
+                profileId,
+                staticPublicKeysProvided);
         return networkService.publishAuthorizedData(authorizedAlertData,
-                        ownerKeyPair,
+                        keyPair,
                         authorizedPrivateKey,
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);

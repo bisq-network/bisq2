@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.oracle;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -38,9 +39,6 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(30);
-
-    // todo Production key not set yet - we use devMode key only yet
-    public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of("3056301006072a8648ce3d020106052b8104000a03420004b9f698d9644d01193eaa2e7a823570aeea50e4f96749305db523c010e998b3a8f2ef0a567bb9282e80ff66b6de8f0df39d242f609728def1dbaa6f1862429188");
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -103,7 +101,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AUTHORIZED_PUBLIC_KEYS;
+            return AuthorizedPubKeys.KEYS;
         }
     }
 

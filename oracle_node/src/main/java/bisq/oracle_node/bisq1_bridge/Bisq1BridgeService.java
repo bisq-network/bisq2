@@ -180,8 +180,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
             AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
                     authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
-                    authorizedAlertData.getAuthorizedBondedRole().isPresent()) {
-                BondedRoleType bannedBondedRoleType = authorizedAlertData.getAuthorizedBondedRole().get().getBondedRoleType();
+                    authorizedAlertData.getBannedRole().isPresent()) {
+                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedRole().get().getBondedRoleType();
                 authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                         .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
                         .forEach(bannedRole -> {

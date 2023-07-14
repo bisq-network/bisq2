@@ -20,12 +20,12 @@ package bisq.support;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.support.mediation.MediationService;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.UserService;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -36,13 +36,30 @@ public class SupportService implements Service {
     private final MediationService mediationService;
     private final SecurityManagerService securityManagerService;
 
-    public SupportService(NetworkService networkService,
-                          IdentityService identityService,
+    @Getter
+    @ToString
+    public static final class Config {
+        private final com.typesafe.config.Config securityManagerConfig;
+
+        public Config(com.typesafe.config.Config securityManagerConfig) {
+            this.securityManagerConfig = securityManagerConfig;
+        }
+
+        public static SupportService.Config from(com.typesafe.config.Config typeSafeConfig) {
+            return new SupportService.Config(typeSafeConfig.getConfig("securityManager"));
+        }
+    }
+
+    public SupportService(SupportService.Config config,
+                          NetworkService networkService,
                           ChatService chatService,
                           UserService userService,
                           BondedRolesService bondedRolesService) {
         mediationService = new MediationService(networkService, chatService, userService, bondedRolesService);
-        securityManagerService = new SecurityManagerService(networkService, userService, bondedRolesService);
+        securityManagerService = new SecurityManagerService(SecurityManagerService.Config.from(config.getSecurityManagerConfig()),
+                networkService,
+                userService,
+                bondedRolesService);
     }
 
 

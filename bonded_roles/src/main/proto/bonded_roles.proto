@@ -59,7 +59,7 @@ message AuthorizedAlertData {
   bool haltTrading = 5;
   bool requireVersionForTrading = 6;
   optional string minVersion = 7;
-  optional AuthorizedBondedRole authorizedBondedRole = 8;
+  optional AuthorizedBondedRole bannedRole = 8;
   string securityManagerProfileId = 9;
   bool staticPublicKeysProvided = 10;
 }

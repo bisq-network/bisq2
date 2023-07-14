@@ -18,6 +18,7 @@
 package bisq.desktop.components.overlay;
 
 import bisq.common.locale.LanguageRepository;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
@@ -378,11 +379,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T error(Throwable throwable) {
-        if (throwable.getMessage() != null) {
-            return error(throwable.getMessage());
-        } else {
-            return error(throwable.toString());
-        }
+        return error(ExceptionUtil.print(throwable));
     }
 
     private T error(String message) {

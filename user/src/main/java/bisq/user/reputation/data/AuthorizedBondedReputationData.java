@@ -17,7 +17,7 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -104,7 +104,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AuthorizedOracleNode.AUTHORIZED_PUBLIC_KEYS;
+            return AuthorizedPubKeys.KEYS;
         }
     }
 
