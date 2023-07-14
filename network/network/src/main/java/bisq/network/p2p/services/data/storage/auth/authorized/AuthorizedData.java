@@ -109,38 +109,27 @@ public final class AuthorizedData extends AuthenticatedData {
         return (AuthorizedDistributedData) distributedData;
     }
 
-    @Override
-    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
+    public boolean isNotAuthorized() {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            if (authorizedDistributedData.isDataInvalid(ownerPubKeyHash)) {
-                return true;
-            }
-
-            // We get called only when used for adding data. In that case the signature must be present.
             if (!SignatureUtil.verify(distributedData.serialize(), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 
-            boolean isStaticallyAuthorizedPublicKeyValidation = authorizedDistributedData instanceof StaticallyAuthorizedPublicKeyValidation;
-            boolean isDeferredAuthorizedPublicKeyValidation = authorizedDistributedData instanceof DeferredAuthorizedPublicKeyValidation;
-            // The authorizedDistributedData must implement at least one of those interfaces
-            if (!isStaticallyAuthorizedPublicKeyValidation && !isDeferredAuthorizedPublicKeyValidation) {
-                log.warn("The authorizedDistributedData must implement StaticallyAuthorizedPublicKeyValidation or DeferredAuthorizedPublicKeyValidation (or both)");
-                return true;
+            if (authorizedDistributedData.staticPublicKeysProvided()) {
+                return !authorizedDistributedData.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
             }
 
-            // We could have authorizedDistributedData implementing both interfaces.
-            // We only verify if it's StaticallyAuthorizedPublicKeyValidation but not DeferredAuthorizedPublicKeyValidation
-            if (isStaticallyAuthorizedPublicKeyValidation && !isDeferredAuthorizedPublicKeyValidation) {
-                StaticallyAuthorizedPublicKeyValidation data = (StaticallyAuthorizedPublicKeyValidation) authorizedDistributedData;
-                return !data.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
-            }
             return false;
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return true;
         }
+    }
+
+    @Override
+    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
+        return distributedData.isDataInvalid(ownerPubKeyHash);
     }
 
     @Override

@@ -46,6 +46,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter
     private final Persistence<TimestampStore> persistence;
+    private final boolean staticPublicKeysProvided;
     private final NetworkService networkService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
@@ -57,12 +58,14 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public TimestampService(PersistenceService persistenceService,
                             NetworkService networkService,
                             PrivateKey authorizedPrivateKey,
-                            PublicKey authorizedPublicKey) {
+                            PublicKey authorizedPublicKey,
+                            boolean staticPublicKeysProvided) {
         this.networkService = networkService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
 
@@ -76,7 +79,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
 
-        persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value)));
+        persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value, staticPublicKeysProvided)));
 
         return CompletableFuture.completedFuture(true);
     }
@@ -133,16 +136,16 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
     private void processAuthorizeTimestampRequest(AuthorizeTimestampRequest request) {
         String profileId = request.getProfileId();
+        long date;
         if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
-            long now = new Date().getTime();
-            persistableStore.getTimestampsByProfileId().put(profileId, now);
+            date = new Date().getTime();
+            persistableStore.getTimestampsByProfileId().put(profileId, date);
             persist();
-            publishAuthorizedData(new AuthorizedTimestampData(profileId, now));
         } else {
             // If we got requested again from the user it might be because TTL is running out, and we need 
             // to republish it.
-            long date = persistableStore.getTimestampsByProfileId().get(profileId);
-            publishAuthorizedData(new AuthorizedTimestampData(profileId, date));
+            date = persistableStore.getTimestampsByProfileId().get(profileId);
         }
+        publishAuthorizedData(new AuthorizedTimestampData(profileId, date, staticPublicKeysProvided));
     }
 }

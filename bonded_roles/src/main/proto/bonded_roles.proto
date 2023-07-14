@@ -20,6 +20,7 @@ message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
   string bondUserName = 2;
   string signature = 3;
+  bool staticPublicKeysProvided = 4;
 }
 
 message BondedRoleRegistrationRequest {
@@ -40,6 +41,7 @@ message AuthorizedBondedRole {
   string signature = 5;
   repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
   AuthorizedOracleNode oracleNode = 7;
+  bool staticPublicKeysProvided = 8;
 }
 
 enum AlertType {
@@ -59,4 +61,5 @@ message AuthorizedAlertData {
   optional string minVersion = 7;
   optional AuthorizedBondedRole authorizedBondedRole = 8;
   string securityManagerProfileId = 9;
+  bool staticPublicKeysProvided = 10;
 }

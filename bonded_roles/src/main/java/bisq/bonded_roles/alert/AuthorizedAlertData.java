@@ -18,12 +18,13 @@
 package bisq.bonded_roles.alert;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,13 +32,14 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAlertData implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation {
+public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
     public final static long TTL = TimeUnit.DAYS.toMillis(15);
 
@@ -54,6 +56,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
     private final Optional<String> minVersion;
     private final Optional<AuthorizedBondedRole> authorizedBondedRole;
     private final String securityManagerProfileId;
+    private final boolean staticPublicKeysProvided;
 
     public AuthorizedAlertData(String id,
                                long date,
@@ -63,7 +66,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                                boolean requireVersionForTrading,
                                Optional<String> minVersion,
                                Optional<AuthorizedBondedRole> authorizedBondedRole,
-                               String securityManagerProfileId) {
+                               String securityManagerProfileId,
+                               boolean staticPublicKeysProvided) {
         this.id = id;
         this.date = date;
         this.alertType = alertType;
@@ -73,6 +77,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
         this.minVersion = minVersion;
         this.authorizedBondedRole = authorizedBondedRole;
         this.securityManagerProfileId = securityManagerProfileId;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
@@ -83,7 +88,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                 .setAlertType(alertType.toProto())
                 .setHaltTrading(haltTrading)
                 .setRequireVersionForTrading(requireVersionForTrading)
-                .setSecurityManagerProfileId(securityManagerProfileId);
+                .setSecurityManagerProfileId(securityManagerProfileId)
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
         message.ifPresent(builder::setMessage);
         minVersion.ifPresent(builder::setMinVersion);
         authorizedBondedRole.ifPresent(authorizedBondedRole -> builder.setAuthorizedBondedRole(authorizedBondedRole.toProto()));
@@ -99,7 +105,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                 proto.getRequireVersionForTrading(),
                 proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
                 proto.hasAuthorizedBondedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getAuthorizedBondedRole())) : Optional.empty(),
-                proto.getSecurityManagerProfileId());
+                proto.getSecurityManagerProfileId(),
+                proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -110,6 +117,20 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData, Def
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public Set<String> getAuthorizedPublicKeys() {
+        if (DevMode.isDevMode()) {
+            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+        } else {
+            return AuthorizedOracleNode.AUTHORIZED_PUBLIC_KEYS;
+        }
+    }
+
+    @Override
+    public boolean staticPublicKeysProvided() {
+        return staticPublicKeysProvided;
     }
 
     @Override

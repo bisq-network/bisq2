@@ -28,8 +28,6 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
-import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -146,38 +144,29 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
         log.info("hasAuthorizedPubKey authorizedData={}, bondedRoleType={}", authorizedData, bondedRoleType);
-        if (data instanceof StaticallyAuthorizedPublicKeyValidation) {
-            if (data instanceof DeferredAuthorizedPublicKeyValidation) {
-                // If it is a DeferredAuthorizedPublicKeyValidation we skipped validation at p2p network layer. 
-                // We need to verify pub key is in the hard coded key list.
-                boolean hasKey = ((StaticallyAuthorizedPublicKeyValidation) data).getAuthorizedPublicKeys().contains(authorizedDataPubKey);
-                if (!hasKey) {
-                    log.warn("authorizedPublicKey is matching statically provided pub keys. We try with keys from boned roles.");
-                } else {
-                    return true;
-                }
-            } else {
-                // In case the data has not implemented DeferredAuthorizedPublicKeyValidation the verification 
-                // was already done at the p2p network layer.
-                return true;
-            }
-        }
-
-        if (data instanceof DeferredAuthorizedPublicKeyValidation) {
-            if (getAuthorizedBondedRoleStream()
+        if (data.staticPublicKeysProvided()) {
+            // The verification was already done at the p2p network layer.
+            return true;
+        } else {
+            String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+            boolean matchFound = getAuthorizedBondedRoleStream()
                     .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
-                    .map(AuthorizedBondedRole::getAuthorizedPublicKey)
-                    .anyMatch(pubKey -> pubKey.equals(authorizedDataPubKey))) {
-                return true;
+                    .map(bondedRole -> {
+                        boolean match = bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey);
+                        if (match) {
+                            log.info("Found a matching authorizedPublicKey from {} ", bondedRole);
+                        }
+                        return match;
+                    })
+                    .findAny()
+                    .isPresent();
+            if (matchFound) {
+                log.info("authorizedPublicKey provided by a bonded role");
             } else {
                 log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
-                return false;
             }
-        } else {
-            throw new RuntimeException("Invalid state. AuthorizedDistributedData has not implemented " +
-                    "StaticallyAuthorizedPublicKeyValidation nor DeferredAuthorizedPublicKeyValidation");
+            return matchFound;
         }
     }
 

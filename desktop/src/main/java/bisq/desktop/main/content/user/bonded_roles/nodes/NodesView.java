@@ -70,7 +70,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.node.address"))
-                .minWidth(200)
+                .minWidth(250)
                 .setCellFactory(getAddressCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()

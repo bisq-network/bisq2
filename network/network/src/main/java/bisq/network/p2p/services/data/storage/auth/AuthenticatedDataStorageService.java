@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
@@ -102,8 +103,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (authenticatedData.isDataInvalid(authenticatedSequentialData.getPubKeyHash())) {
-                log.warn("Data is invalid at add. request={}", request);
+                log.warn("AuthenticatedData is invalid at add. request={}", request);
                 return new Result(false).dataInvalid();
+            }
+
+            if (authenticatedData instanceof AuthorizedData) {
+                AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+                if (authorizedData.isNotAuthorized()) {
+                    log.warn("AuthorizedData is not authorized. request={}", request);
+                    return new Result(false).isNotAuthorized();
+                }
             }
 
             if (request.isPublicKeyInvalid()) {

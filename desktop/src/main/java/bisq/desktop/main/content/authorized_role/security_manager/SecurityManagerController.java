@@ -125,6 +125,7 @@ public class SecurityManagerController implements Controller {
         }
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         String profileId = userIdentity.getId();
+        // todo support hard coded security manager
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
                 alertType,
@@ -133,7 +134,8 @@ public class SecurityManagerController implements Controller {
                 model.getRequireVersionForTrading().get(),
                 StringUtils.toOptional(model.getMinVersion().get()),
                 Optional.ofNullable(model.getSelectedBondedRoleListItem().get().getBondedRole().getAuthorizedBondedRole()),
-                profileId);
+                profileId,
+                false);
 
         KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
         PublicKey authorizedPublicKey = keyPair.getPublic();

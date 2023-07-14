@@ -17,14 +17,13 @@
 
 package bisq.user.reputation.data;
 
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
-import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,12 +36,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData, StaticallyAuthorizedPublicKeyValidation, DeferredAuthorizedPublicKeyValidation {
+public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(15);
-
-    // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of("3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63");
-
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -50,10 +45,12 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
 
     private final String profileId;
     private final long witnessSignDate;
+    private final boolean staticPublicKeysProvided;
 
-    public AuthorizedSignedWitnessData(String profileId, long witnessSignDate) {
+    public AuthorizedSignedWitnessData(String profileId, long witnessSignDate, boolean staticPublicKeysProvided) {
         this.profileId = profileId;
         this.witnessSignDate = witnessSignDate;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
@@ -61,13 +58,15 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         return bisq.user.protobuf.AuthorizedSignedWitnessData.newBuilder()
                 .setProfileId(profileId)
                 .setWitnessSignDate(witnessSignDate)
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
     }
 
     public static AuthorizedSignedWitnessData fromProto(bisq.user.protobuf.AuthorizedSignedWitnessData proto) {
         return new AuthorizedSignedWitnessData(
                 proto.getProfileId(),
-                proto.getWitnessSignDate());
+                proto.getWitnessSignDate(),
+                proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -95,15 +94,22 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AUTHORIZED_PUBLIC_KEYS;
+            return AuthorizedOracleNode.AUTHORIZED_PUBLIC_KEYS;
         }
+    }
+
+    @Override
+    public boolean staticPublicKeysProvided() {
+        return staticPublicKeysProvided;
     }
 
     @Override
     public String toString() {
         return "AuthorizedSignedWitnessData{" +
-                ",\r\n     profileId=" + profileId +
-                ",\r\n     witnessSignAge=" + new Date(witnessSignDate) +
+                ",\r\n                    profileId=" + profileId +
+                ",\r\n                    witnessSignAge=" + new Date(witnessSignDate) +
+                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
 }

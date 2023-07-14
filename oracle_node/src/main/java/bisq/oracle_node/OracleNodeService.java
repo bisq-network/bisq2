@@ -17,6 +17,8 @@
 
 package bisq.oracle_node;
 
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
@@ -25,7 +27,6 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Node;
@@ -49,8 +50,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class OracleNodeService implements Service {
-
-
     @Getter
     public static class Config {
         private final String privateKey;
@@ -61,6 +60,7 @@ public class OracleNodeService implements Service {
         private final String signatureBase64;
         private final String keyId;
         private final com.typesafe.config.Config bisq1Bridge;
+        private final boolean staticPublicKeysProvided;
 
         public Config(String privateKey,
                       String publicKey,
@@ -69,6 +69,7 @@ public class OracleNodeService implements Service {
                       String profileId,
                       String signatureBase64,
                       String keyId,
+                      boolean staticPublicKeysProvided,
                       com.typesafe.config.Config bisq1Bridge) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
@@ -77,6 +78,7 @@ public class OracleNodeService implements Service {
             this.profileId = profileId;
             this.signatureBase64 = signatureBase64;
             this.keyId = keyId;
+            this.staticPublicKeysProvided = staticPublicKeysProvided;
             this.bisq1Bridge = bisq1Bridge;
         }
 
@@ -88,6 +90,7 @@ public class OracleNodeService implements Service {
                     config.getString("profileId"),
                     config.getString("signatureBase64"),
                     config.getString("keyId"),
+                    config.getBoolean("staticPublicKeysProvided"),
                     config.getConfig("bisq1Bridge"));
         }
     }
@@ -105,9 +108,10 @@ public class OracleNodeService implements Service {
     private final String bondUserName;
     private final String signatureBase64;
     private final String keyId;
+    private final String profileId;
+    private final boolean staticPublicKeysProvided;
+    private AuthorizedBondedRole authorizedBondedRole;
     private AuthorizedOracleNode authorizedOracleNode;
-    private Identity identity;
-
     @Nullable
     private Scheduler startupScheduler, scheduler;
 
@@ -124,10 +128,14 @@ public class OracleNodeService implements Service {
         bondUserName = config.getBondUserName();
         signatureBase64 = config.getSignatureBase64();
         keyId = config.getKeyId();
+        staticPublicKeysProvided = config.isStaticPublicKeysProvided();
+        profileId = config.getProfileId();
+
         boolean ignoreSecurityManager = config.isIgnoreSecurityManager();
         checkArgument(StringUtils.isNotEmpty(bondUserName));
         checkArgument(StringUtils.isNotEmpty(signatureBase64));
         checkArgument(StringUtils.isNotEmpty(keyId));
+        checkArgument(StringUtils.isNotEmpty(profileId));
 
         String privateKey = config.getPrivateKey();
         String publicKey = config.getPublicKey();
@@ -144,12 +152,14 @@ public class OracleNodeService implements Service {
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
-                ignoreSecurityManager);
+                ignoreSecurityManager,
+                staticPublicKeysProvided);
 
         timestampService = new TimestampService(persistenceService,
                 networkService,
                 authorizedPrivateKey,
-                authorizedPublicKey);
+                authorizedPublicKey,
+                staticPublicKeysProvided);
     }
 
 
@@ -161,13 +171,31 @@ public class OracleNodeService implements Service {
     public CompletableFuture<Boolean> initialize() {
         return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
                 .thenCompose(identity -> {
-                    this.identity = identity;
                     bisq1BridgeService.setIdentity(identity);
                     timestampService.setIdentity(identity);
 
-                    authorizedOracleNode = createMyAuthorizedOracleNode();
+                    authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64, staticPublicKeysProvided);
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
                     timestampService.setAuthorizedOracleNode(authorizedOracleNode);
+
+                    authorizedBondedRole = new AuthorizedBondedRole(profileId,
+                            Hex.encode(authorizedPublicKey.getEncoded()),
+                            BondedRoleType.ORACLE_NODE,
+                            bondUserName,
+                            signatureBase64,
+                            networkService.getAddressByNetworkType(Node.DEFAULT),
+                            authorizedOracleNode,
+                            staticPublicKeysProvided);
+
+                    KeyPair keyPair = identity.getNodeIdAndKeyPair().getKeyPair();
+
+                    // Repeat 3 times at startup to republish to ensure the data gets well distributed
+                    startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                            .repeated(1, 10, TimeUnit.SECONDS, 3);
+
+                    // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
+                    scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                            .periodically(25, TimeUnit.DAYS);
 
                     authorizedBondedRolesService.getBondedRoles().addListener(new CollectionObserver<>() {
                         @Override
@@ -179,7 +207,7 @@ public class OracleNodeService implements Service {
                             if (element instanceof BondedRole) {
                                 BondedRole bondedRole = (BondedRole) element;
                                 networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
-                                        identity.getNodeIdAndKeyPair().getKeyPair(),
+                                        keyPair,
                                         authorizedPublicKey);
                             }
                         }
@@ -211,25 +239,17 @@ public class OracleNodeService implements Service {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private AuthorizedOracleNode createMyAuthorizedOracleNode() {
-        AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64);
-        // Repeat 3 times at startup to republish to ensure the data gets well distributed
-        startupScheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair().getKeyPair()))
-                .repeated(1, 10, TimeUnit.SECONDS, 3);
-
-        // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
-        scheduler = Scheduler.run(() -> publishAuthorizedOracleNode(authorizedOracleNode, identity.getNodeIdAndKeyPair().getKeyPair()))
-                .periodically(25, TimeUnit.DAYS);
-
-        return authorizedOracleNode;
-    }
-
-    private CompletableFuture<Boolean> publishAuthorizedOracleNode(AuthorizedOracleNode authorizedOracleNode, KeyPair ownerKeyPair) {
-        return networkService.publishAuthorizedData(authorizedOracleNode,
-                        ownerKeyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
-                .thenApply(broadCastDataResult -> true);
+    private void publishMyAuthorizedData(AuthorizedOracleNode authorizedOracleNode,
+                                         AuthorizedBondedRole authorizedBondedRole,
+                                         KeyPair keyPair) {
+        networkService.publishAuthorizedData(authorizedBondedRole,
+                keyPair,
+                authorizedPrivateKey,
+                authorizedPublicKey);
+        networkService.publishAuthorizedData(authorizedOracleNode,
+                keyPair,
+                authorizedPrivateKey,
+                authorizedPublicKey);
     }
 
     private static PublicKey getAuthorizedPublicKey(String publicKey) {

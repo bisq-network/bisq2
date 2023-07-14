@@ -17,6 +17,7 @@
 
 package bisq.user.reputation.data;
 
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -24,8 +25,6 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
-import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -39,12 +38,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, StaticallyAuthorizedPublicKeyValidation, DeferredAuthorizedPublicKeyValidation {
+public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
-
-    // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of("3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63");
-
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -53,11 +48,13 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     private final long amount;
     private final long time;
     private final byte[] hash;
+    private final boolean staticPublicKeysProvided;
 
-    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash) {
+    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash, boolean staticPublicKeysProvided) {
         this.amount = amount;
         this.time = time;
         this.hash = hash;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
@@ -66,6 +63,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
                 .setAmount(amount)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
     }
 
@@ -73,7 +71,8 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return new AuthorizedProofOfBurnData(
                 proto.getAmount(),
                 proto.getTime(),
-                proto.getHash().toByteArray());
+                proto.getHash().toByteArray(),
+                proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -101,16 +100,23 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AUTHORIZED_PUBLIC_KEYS;
+            return AuthorizedOracleNode.AUTHORIZED_PUBLIC_KEYS;
         }
+    }
+
+    @Override
+    public boolean staticPublicKeysProvided() {
+        return staticPublicKeysProvided;
     }
 
     @Override
     public String toString() {
         return "AuthorizedProofOfBurnData{" +
-                ",\r\n     amount=" + amount +
-                ",\r\n     time=" + new Date(time) +
-                ",\r\n     hash=" + Hex.encode(hash) +
+                ",\r\n                    amount=" + amount +
+                ",\r\n                    time=" + new Date(time) +
+                ",\r\n                    hash=" + Hex.encode(hash) +
+                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
 }

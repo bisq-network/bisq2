@@ -90,6 +90,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     private final boolean ignoreSecurityManager;
+    private final boolean staticPublicKeysProvided;
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
     @Setter
@@ -104,12 +105,14 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
                               PublicKey authorizedPublicKey,
-                              boolean ignoreSecurityManager) {
+                              boolean ignoreSecurityManager,
+                              boolean staticPublicKeysProvided) {
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
         this.ignoreSecurityManager = ignoreSecurityManager;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
@@ -218,7 +221,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                         .map(dto -> new AuthorizedProofOfBurnData(
                                 dto.getAmount(),
                                 dto.getTime(),
-                                Hex.decode(dto.getHash())))
+                                Hex.decode(dto.getHash()),
+                                staticPublicKeysProvided))
                         .map(this::publishAuthorizedData))
                 .thenApply(results -> !results.contains(false));
     }
@@ -229,7 +233,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                 dto.getAmount(),
                                 dto.getTime(),
                                 Hex.decode(dto.getHash()),
-                                dto.getLockTime()))
+                                dto.getLockTime(),
+                                staticPublicKeysProvided))
                         .map(this::publishAuthorizedData))
                 .thenApply(results -> !results.contains(false));
     }
@@ -293,7 +298,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     if (date == requestDate) {
                                         persistableStore.getAccountAgeRequests().add(request);
                                         persist();
-                                        AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(profileId, requestDate);
+                                        AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(profileId, requestDate, staticPublicKeysProvided);
                                         publishAuthorizedData(data);
                                     } else {
                                         log.warn("Date of account age for {} is not matching the date from the users request. " +
@@ -338,7 +343,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     if (date == witnessSignDate) {
                                         persistableStore.getSignedWitnessRequests().add(request);
                                         persist();
-                                        AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(request.getProfileId(), request.getWitnessSignDate());
+                                        AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(request.getProfileId(), request.getWitnessSignDate(), staticPublicKeysProvided);
                                         publishAuthorizedData(data);
                                     } else {
                                         log.warn("Date of signed witness for {} is not matching the date from the users request. " +
@@ -382,7 +387,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     bondUserName,
                                     signatureBase64,
                                     request.getAddressByNetworkType(),
-                                    authorizedOracleNode);
+                                    authorizedOracleNode,
+                                    staticPublicKeysProvided);
                             if (request.isCancellationRequest()) {
                                 authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                                         .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
