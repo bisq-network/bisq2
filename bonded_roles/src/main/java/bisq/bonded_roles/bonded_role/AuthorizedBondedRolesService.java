@@ -145,25 +145,23 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data.staticPublicKeysProvided()) {
-            // The verification was already done at the p2p network layer.
+            log.info("The verification was already done at the p2p network layer. data={}", data);
             return true;
         } else {
             String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
             boolean matchFound = getAuthorizedBondedRoleStream()
                     .filter(bondedRole -> bondedRole.getBondedRoleType() == bondedRoleType)
-                    .map(bondedRole -> {
+                    .anyMatch(bondedRole -> {
                         boolean match = bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey);
                         if (match) {
-                            log.info("Found a matching authorizedPublicKey from {} ", bondedRole);
+                            log.info("Found a matching authorizedPublicKey from bondedRole: {}. data={}", bondedRole, data);
                         }
                         return match;
-                    })
-                    .findAny()
-                    .isPresent();
+                    });
             if (matchFound) {
-                log.info("authorizedPublicKey provided by a bonded role");
+                log.info("authorizedPublicKey provided by a bonded role. data={}", data);
             } else {
-                log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key");
+                log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key. data={}", data);
             }
             return matchFound;
         }

@@ -94,7 +94,7 @@ public class SeedNodeService implements Service {
             PublicKey authorizedPublicKey = KeyGeneration.getPublicKeyFromHex(config.getPublicKey());
             AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(config.getProfileId(),
                     Hex.encode(authorizedPublicKey.getEncoded()),
-                    BondedRoleType.ORACLE_NODE,
+                    BondedRoleType.SEED_NODE,
                     config.getBondUserName(),
                     config.getSignatureBase64(),
                     networkService.getAddressByNetworkType(Node.DEFAULT),
@@ -126,7 +126,6 @@ public class SeedNodeService implements Service {
     }
 
     private void publishMyBondedRole(AuthorizedBondedRole authorizedBondedRole, KeyPair keyPair, PrivateKey authorizedPrivateKey, PublicKey authorizedPublicKey) {
-        log.info("publishMyBondedRole {}", authorizedBondedRole);
         networkService.publishAuthorizedData(authorizedBondedRole,
                 keyPair,
                 authorizedPrivateKey,

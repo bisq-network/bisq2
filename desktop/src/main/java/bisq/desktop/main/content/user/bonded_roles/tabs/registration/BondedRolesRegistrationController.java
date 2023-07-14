@@ -85,8 +85,10 @@ public abstract class BondedRolesRegistrationController implements Controller {
                 }
         );
         bondedRoleSetPin = authorizedBondedRolesService.getBondedRoles().addListener(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
-        model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.BONDED_ROLES_COLLAPSED).orElse(false));
         applyRequestRegistrationButtonDisabledBinding();
+
+        // Issue with height of MultiLine text so lets wait until the component is fixed
+        // model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.BONDED_ROLES_COLLAPSED).orElse(false));
     }
 
     @Override

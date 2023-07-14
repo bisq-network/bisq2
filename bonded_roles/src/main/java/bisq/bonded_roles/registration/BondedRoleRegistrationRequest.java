@@ -93,7 +93,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignatureBase64(),
-                NetworkId.AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
+                NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
                 proto.getIsCancellationRequest());
     }
 

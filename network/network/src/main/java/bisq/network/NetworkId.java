@@ -22,6 +22,7 @@ import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
+import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,7 +30,9 @@ import lombok.ToString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -56,7 +59,7 @@ public final class NetworkId implements Proto {
     }
 
     public static NetworkId fromProto(bisq.network.protobuf.NetworkId proto) {
-        return new NetworkId(AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
+        return new NetworkId(AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
                 PubKey.fromProto(proto.getPubKey()),
                 proto.getNodeId());
     }
@@ -117,6 +120,20 @@ public final class NetworkId implements Proto {
             this.address = address;
         }
 
+        public static String addressByNetworkTypeToString(Map<Transport.Type, Address> addressByNetworkType) {
+            Set<String> addressByTypeSet = addressByNetworkType.entrySet().stream()
+                    .map(e -> e.getKey().name() + "#" + e.getValue().getFullAddress())
+                    .collect(Collectors.toSet());
+            return Joiner.on("|").join(addressByTypeSet);
+        }
+
+        public static Map<Transport.Type, Address> setToAddressesByTypeMap(String addressAsString) {
+            return Stream.of(addressAsString.split("\\|"))
+                    .map(e -> List.of(e.split("#")))
+                    .collect(Collectors.toMap(tokens -> Transport.Type.valueOf(tokens.get(0)),
+                            list -> new Address(list.get(1))));
+        }
+
         public bisq.network.protobuf.AddressTransportTypeTuple toProto() {
             return bisq.network.protobuf.AddressTransportTypeTuple.newBuilder()
                     .setTransportType(transportType.name())
@@ -136,7 +153,7 @@ public final class NetworkId implements Proto {
                     .collect(Collectors.toList());
         }
 
-        public static Map<Transport.Type, Address> mapFromProtoList(List<bisq.network.protobuf.AddressTransportTypeTuple> addressNetworkTypeTupleList) {
+        public static Map<Transport.Type, Address> protoListToMap(List<bisq.network.protobuf.AddressTransportTypeTuple> addressNetworkTypeTupleList) {
             return addressNetworkTypeTupleList.stream()
                     .map(AddressTransportTypeTuple::fromProto)
                     .collect(Collectors.toMap(AddressTransportTypeTuple::getTransportType, AddressTransportTypeTuple::getAddress));

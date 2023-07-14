@@ -135,6 +135,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      */
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        persistableStore.getSeedNodeAddresses().stream()
+                .map(NetworkId.AddressTransportTypeTuple::setToAddressesByTypeMap)
+                .forEach(this::addSeedNodeAddressByTransport);
+
         PubKey pubKey = keyPairService.getDefaultPubKey();
         String nodeId = Node.DEFAULT;
         Stream<CompletableFuture<Void>> futures = getDefaultPortByTransport().entrySet().stream()
@@ -463,11 +468,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
-        this.serviceNodesByTransport.addSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        serviceNodesByTransport.addSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        persistableStore.getSeedNodeAddresses().add(NetworkId.AddressTransportTypeTuple.addressByNetworkTypeToString(seedNodeAddressesByTransport));
+        persist();
     }
 
     public void removeSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
-        this.serviceNodesByTransport.removeSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        serviceNodesByTransport.removeSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        persistableStore.getSeedNodeAddresses().remove(NetworkId.AddressTransportTypeTuple.addressByNetworkTypeToString(seedNodeAddressesByTransport));
+        persist();
     }
 
     // If not persisted we try to create the networkId and persist if available.

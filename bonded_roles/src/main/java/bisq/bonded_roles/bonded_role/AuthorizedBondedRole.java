@@ -96,7 +96,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignature(),
-                NetworkId.AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
+                NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
                 proto.hasAuthorizedOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizedOracleNode())) : Optional.empty(),
                 proto.getStaticPublicKeysProvided());
     }
@@ -147,7 +147,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    addressByNetworkType=" + addressByNetworkType +
                 ",\r\n                    authorizedOracleNode=" + authorizedOracleNode +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
-                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
