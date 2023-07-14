@@ -40,6 +40,7 @@ public abstract class BondedRolesRegistrationModel implements Model {
     protected final StringProperty signature = new SimpleStringProperty();
     protected final BooleanProperty requestButtonDisabled = new SimpleBooleanProperty();
     protected final BooleanProperty requestCancellationButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
     protected final Map<Transport.Type, Address> addressByNetworkType = new HashMap<>();
     @Setter
     protected String authorizedPublicKey;

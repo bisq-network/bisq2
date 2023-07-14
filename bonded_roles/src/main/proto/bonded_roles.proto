@@ -20,7 +20,8 @@ message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
   string bondUserName = 2;
   string signature = 3;
-  bool staticPublicKeysProvided = 4;
+  string publicKeyHash = 4;
+  bool staticPublicKeysProvided = 5;
 }
 
 message BondedRoleRegistrationRequest {
@@ -40,7 +41,7 @@ message AuthorizedBondedRole {
   string bondUserName = 4;
   string signature = 5;
   repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
-  AuthorizedOracleNode oracleNode = 7;
+  optional AuthorizedOracleNode authorizedOracleNode = 7;
   bool staticPublicKeysProvided = 8;
 }
 

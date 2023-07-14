@@ -46,16 +46,19 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
 
     private final NetworkId networkId;
     private final String bondUserName;          // username from DAO proposal
-    private final String signature;   // signature created by bond with username as message
+    private final String signature;             // signature created by bond with username as message
+    private final String publicKeyHash;
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedOracleNode(NetworkId networkId,
                                 String bondUserName,
                                 String signature,
+                                String publicKeyHash,
                                 boolean staticPublicKeysProvided) {
         this.networkId = networkId;
         this.bondUserName = bondUserName;
         this.signature = signature;
+        this.publicKeyHash = publicKeyHash;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
@@ -65,6 +68,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
                 .setNetworkId(networkId.toProto())
                 .setBondUserName(bondUserName)
                 .setSignature(signature)
+                .setPublicKeyHash(publicKeyHash)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
     }
@@ -73,6 +77,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         return new AuthorizedOracleNode(NetworkId.fromProto(proto.getNetworkId()),
                 proto.getBondUserName(),
                 proto.getSignature(),
+                proto.getPublicKeyHash(),
                 proto.getStaticPublicKeysProvided());
     }
 
@@ -110,12 +115,14 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         return staticPublicKeysProvided;
     }
 
-    @Override
     public String toString() {
         return "AuthorizedOracleNode{" +
                 "\r\n                    networkId=" + networkId +
                 ",\r\n                    metaData=" + metaData +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    bondUserName='" + bondUserName + '\'' +
+                ",\r\n                    signature='" + signature + '\'' +
+                ",\r\n                    publicKeyAsHex='" + publicKeyHash + '\'' +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

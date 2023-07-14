@@ -35,6 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +55,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final String bondUserName;
     private final String signature;
     private final Map<Transport.Type, Address> addressByNetworkType;
-    private final AuthorizedOracleNode authorizedOracleNode;
+    private final Optional<AuthorizedOracleNode> authorizedOracleNode;
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedBondedRole(String profileId,
@@ -63,7 +64,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 String bondUserName,
                                 String signature,
                                 Map<Transport.Type, Address> addressByNetworkType,
-                                AuthorizedOracleNode authorizedOracleNode,
+                                Optional<AuthorizedOracleNode> authorizedOracleNode,
                                 boolean staticPublicKeysProvided) {
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -77,16 +78,16 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto() {
-        return bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
+        bisq.bonded_roles.protobuf.AuthorizedBondedRole.Builder builder = bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
                 .setProfileId(profileId)
                 .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignature(signature)
                 .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
-                .setOracleNode(authorizedOracleNode.toProto())
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+        authorizedOracleNode.ifPresent(oracleNode -> builder.setAuthorizedOracleNode(oracleNode.toProto()));
+        return builder.build();
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
@@ -96,7 +97,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 proto.getBondUserName(),
                 proto.getSignature(),
                 NetworkId.AddressTransportTypeTuple.mapFromProtoList(proto.getAddressNetworkTypeTupleList()),
-                AuthorizedOracleNode.fromProto(proto.getOracleNode()),
+                proto.hasAuthorizedOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizedOracleNode())) : Optional.empty(),
                 proto.getStaticPublicKeysProvided());
     }
 
@@ -146,7 +147,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    addressByNetworkType=" + addressByNetworkType +
                 ",\r\n                    authorizedOracleNode=" + authorizedOracleNode +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

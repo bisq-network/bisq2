@@ -108,7 +108,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         return "AuthorizedSignedWitnessData{" +
                 ",\r\n                    profileId=" + profileId +
                 ",\r\n                    witnessSignAge=" + new Date(witnessSignDate) +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

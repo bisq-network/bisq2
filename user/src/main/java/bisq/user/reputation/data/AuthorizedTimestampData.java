@@ -108,7 +108,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         return "AuthorizedTimestampData{" +
                 ",\r\n                    profileId=" + profileId +
                 ",\r\n                    date=" + new Date(date) +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

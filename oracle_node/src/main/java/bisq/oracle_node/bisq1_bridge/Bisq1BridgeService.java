@@ -60,6 +60,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -387,7 +388,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     bondUserName,
                                     signatureBase64,
                                     request.getAddressByNetworkType(),
-                                    authorizedOracleNode,
+                                    Optional.of(authorizedOracleNode),
                                     staticPublicKeysProvided);
                             if (request.isCancellationRequest()) {
                                 authorizedBondedRolesService.getAuthorizedBondedRoleStream()

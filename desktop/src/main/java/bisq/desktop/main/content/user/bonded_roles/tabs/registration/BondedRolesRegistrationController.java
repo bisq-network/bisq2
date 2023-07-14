@@ -32,6 +32,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -49,12 +51,14 @@ public abstract class BondedRolesRegistrationController implements Controller {
     protected final ServiceProvider serviceProvider;
     protected final BondedRoleType bondedRoleType;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final SettingsService settingsService;
     protected Pin selectedUserProfilePin, bondedRoleSetPin;
 
     public BondedRolesRegistrationController(ServiceProvider serviceProvider, BondedRoleType bondedRoleType) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         bondedRoleRegistrationService = serviceProvider.getBondedRolesService().getBondedRoleRegistrationService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
+        settingsService = serviceProvider.getSettingsService();
         this.serviceProvider = serviceProvider;
         this.bondedRoleType = bondedRoleType;
 
@@ -81,7 +85,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
                 }
         );
         bondedRoleSetPin = authorizedBondedRolesService.getBondedRoles().addListener(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
-
+        model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.BONDED_ROLES_COLLAPSED).orElse(false));
         applyRequestRegistrationButtonDisabledBinding();
     }
 
@@ -106,6 +110,23 @@ public abstract class BondedRolesRegistrationController implements Controller {
 
     public void onCopyToClipboard() {
         ClipboardUtil.copyToClipboard(model.getProfileId().get());
+    }
+
+    void onExpand() {
+        setIsCollapsed(false);
+    }
+
+    void onCollapse() {
+        setIsCollapsed(true);
+    }
+
+    void onHeaderClicked() {
+        setIsCollapsed(!model.getIsCollapsed().get());
+    }
+
+    private void setIsCollapsed(boolean value) {
+        model.getIsCollapsed().set(value);
+        settingsService.setCookie(CookieKey.BONDED_ROLES_COLLAPSED, value);
     }
 
     protected void applyRequestRegistrationButtonDisabledBinding() {

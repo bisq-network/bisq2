@@ -20,7 +20,6 @@ package bisq.desktop.main.content.user.bonded_roles;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
-import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.Address;
@@ -47,19 +46,18 @@ public class BondedRolesListItem implements TableItem {
     private final String signature;
     private final String userProfileId;
     private final String userName;
-    private final AuthorizedOracleNode authorizedOracleNode;
-    private final String oracleNodeUserName;
     private final BondedRoleType bondedRoleType;
     private final String address;
     private final String addressInfoJson;
     @EqualsAndHashCode.Exclude
     private final String isBanned;
 
+  /*  @EqualsAndHashCode.Exclude
+    private final String oracleNodePublicKeyHash;*/
+
     public BondedRolesListItem(BondedRole bondedRole, UserService userService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
-        authorizedOracleNode = authorizedBondedRoleData.getAuthorizedOracleNode();
-        oracleNodeUserName = authorizedOracleNode.getBondUserName();
         userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId()).orElseThrow();
         userProfileId = userProfile.getId();
         userName = userProfile.getUserName();
@@ -74,5 +72,7 @@ public class BondedRolesListItem implements TableItem {
                 .collect(Collectors.toList());
         address = Joiner.on("\n").join(list);
         addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
+
+        // oracleNodePublicKeyHash = authorizedBondedRoleData.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElseGet(() -> Res.get("data.na"));
     }
 }

@@ -33,16 +33,16 @@ import bisq.network.p2p.node.Node;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
-import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -119,7 +119,6 @@ public class OracleNodeService implements Service {
                              IdentityService identityService,
                              NetworkService networkService,
                              PersistenceService persistenceService,
-                             SecurityService securityService,
                              AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.identityService = identityService;
         this.networkService = networkService;
@@ -142,8 +141,8 @@ public class OracleNodeService implements Service {
         checkArgument(StringUtils.isNotEmpty(privateKey));
         checkArgument(StringUtils.isNotEmpty(publicKey));
 
-        authorizedPrivateKey = getAuthorizedPrivateKey(privateKey);
-        authorizedPublicKey = getAuthorizedPublicKey(publicKey);
+        authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
+        authorizedPublicKey = KeyGeneration.getPublicKeyFromHex(publicKey);
 
         Bisq1BridgeService.Config bisq1BridgeConfig = Bisq1BridgeService.Config.from(config.getBisq1Bridge());
         bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
@@ -174,17 +173,19 @@ public class OracleNodeService implements Service {
                     bisq1BridgeService.setIdentity(identity);
                     timestampService.setIdentity(identity);
 
-                    authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64, staticPublicKeysProvided);
+                    String publicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
+                    authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
                     timestampService.setAuthorizedOracleNode(authorizedOracleNode);
 
+                    Optional<AuthorizedOracleNode> oracleNode = staticPublicKeysProvided ? Optional.of(authorizedOracleNode) : Optional.empty();
                     authorizedBondedRole = new AuthorizedBondedRole(profileId,
                             Hex.encode(authorizedPublicKey.getEncoded()),
                             BondedRoleType.ORACLE_NODE,
                             bondUserName,
                             signatureBase64,
                             networkService.getAddressByNetworkType(Node.DEFAULT),
-                            authorizedOracleNode,
+                            oracleNode,
                             staticPublicKeysProvided);
 
                     KeyPair keyPair = identity.getNodeIdAndKeyPair().getKeyPair();
@@ -250,21 +251,5 @@ public class OracleNodeService implements Service {
                 keyPair,
                 authorizedPrivateKey,
                 authorizedPublicKey);
-    }
-
-    private static PublicKey getAuthorizedPublicKey(String publicKey) {
-        try {
-            return KeyGeneration.generatePublic(Hex.decode(publicKey));
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static PrivateKey getAuthorizedPrivateKey(String privateKey) {
-        try {
-            return KeyGeneration.generatePrivate(Hex.decode(privateKey));
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

@@ -66,7 +66,6 @@ public class OracleNodeApplicationService extends ApplicationService {
                 identityService,
                 networkService,
                 persistenceService,
-                securityService,
                 authorizedBondedRolesService);
     }
 

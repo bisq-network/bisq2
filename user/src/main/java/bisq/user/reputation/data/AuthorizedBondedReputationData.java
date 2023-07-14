@@ -120,7 +120,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
                 ",\r\n                    time=" + new Date(time) +
                 ",\r\n                    hash=" + Hex.encode(hash) +
                 ",\r\n                    lockTime=" + lockTime +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

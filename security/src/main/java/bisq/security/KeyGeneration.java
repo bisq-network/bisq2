@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.common.encoding.Hex;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.ECPointUtil;
@@ -80,5 +81,21 @@ public class KeyGeneration {
 
     public static byte[] encodePublicKey(PublicKey publicKey) {
         return new X509EncodedKeySpec(publicKey.getEncoded()).getEncoded();
+    }
+
+    public static PublicKey getPublicKeyFromHex(String publicKey) {
+        try {
+            return KeyGeneration.generatePublic(Hex.decode(publicKey));
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static PrivateKey getPrivateKeyFromHex(String privateKey) {
+        try {
+            return KeyGeneration.generatePrivate(Hex.decode(privateKey));
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

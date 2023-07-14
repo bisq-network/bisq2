@@ -44,7 +44,6 @@ public class BondedRolesService implements Service {
             this.marketPrice = marketPrice;
             this.blockchainExplorer = blockchainExplorer;
             this.ignoreSecurityManager = ignoreSecurityManager;
-
         }
 
         public static Config from(com.typesafe.config.Config config) {
@@ -61,7 +60,7 @@ public class BondedRolesService implements Service {
     private final AlertService alertService;
 
     public BondedRolesService(Config config, String applicationVersion, NetworkService networkService) {
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.ignoreSecurityManager);
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,

@@ -77,16 +77,16 @@ public class RolesView extends BondedRolesView<RolesModel, RolesController> {
                 .comparator(Comparator.comparing(BondedRolesListItem::getSignature))
                 .setCellFactory(getSignatureCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+     /*   tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.oracleNode"))
                 .minWidth(200)
-                .comparator(Comparator.comparing(BondedRolesListItem::getOracleNodeUserName))
-                .valueSupplier(BondedRolesListItem::getOracleNodeUserName)
-                .build());
+                .comparator(Comparator.comparing(BondedRolesListItem::getPublicKeyHash))
+                .valueSupplier(BondedRolesListItem::getPublicKeyHash)
+                .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
                 .isLast()
-                .minWidth(80)
+                .fixWidth(80)
                 .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
                 .valueSupplier(BondedRolesListItem::getIsBanned)
                 .build());

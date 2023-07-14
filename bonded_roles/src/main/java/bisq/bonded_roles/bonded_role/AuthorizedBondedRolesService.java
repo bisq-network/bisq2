@@ -144,7 +144,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType bondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        log.info("hasAuthorizedPubKey authorizedData={}, bondedRoleType={}", authorizedData, bondedRoleType);
         if (data.staticPublicKeysProvided()) {
             // The verification was already done at the p2p network layer.
             return true;

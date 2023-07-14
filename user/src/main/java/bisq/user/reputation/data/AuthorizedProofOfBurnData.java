@@ -115,7 +115,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
                 ",\r\n                    amount=" + amount +
                 ",\r\n                    time=" + new Date(time) +
                 ",\r\n                    hash=" + Hex.encode(hash) +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

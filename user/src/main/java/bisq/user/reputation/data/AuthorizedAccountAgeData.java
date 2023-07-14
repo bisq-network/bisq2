@@ -108,7 +108,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         return "AuthorizedAccountAgeData{" +
                 ",\r\n                    profileId=" + profileId +
                 ",\r\n                    time=" + new Date(date) +
-                ",\r\n                    verifyStaticPublicKeys=" + staticPublicKeysProvided() +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
