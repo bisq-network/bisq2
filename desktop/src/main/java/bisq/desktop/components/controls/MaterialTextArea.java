@@ -25,7 +25,9 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class MaterialTextArea extends MaterialTextField {
-    private double height = 100;
+    private static final double DEFAULT_HEIGHT = 128;
+
+    private double height;
 
     public MaterialTextArea() {
         this(null, null, null);
@@ -42,10 +44,8 @@ public class MaterialTextArea extends MaterialTextField {
     public MaterialTextArea(@Nullable String description, @Nullable String prompt, @Nullable String help) {
         super(description, prompt, help);
 
-        textInputControl.setMinHeight(height);
-        textInputControl.setMaxHeight(height);
         ((TextArea) textInputControl).setWrapText(true);
-        setFixedHeight(128);
+        setFixedHeight(DEFAULT_HEIGHT);
     }
 
     @Override

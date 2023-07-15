@@ -18,25 +18,20 @@
 package bisq.desktop.main.content.authorized_role.moderator;
 
 import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ModeratorView extends View<VBox, ModeratorModel, ModeratorController> {
 
-    public ModeratorView(ModeratorModel model, ModeratorController controller) {
+    public ModeratorView(ModeratorModel model, ModeratorController controller, Pane roleInfo) {
         super(new VBox(10), model, controller);
 
-        root.setAlignment(Pos.TOP_LEFT);
+        this.root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(this.getClass().getSimpleName());
-        headline.getStyleClass().add("bisq-text-headline-2");
-
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline);
+        this.root.getChildren().add(roleInfo);
     }
 
     @Override

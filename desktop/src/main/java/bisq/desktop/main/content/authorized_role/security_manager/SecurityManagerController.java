@@ -30,6 +30,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.i18n.Res;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.identity.UserIdentity;
@@ -64,8 +65,9 @@ public class SecurityManagerController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
+        RoleInfo roleInfo = new RoleInfo(serviceProvider);
         model = new SecurityManagerModel();
-        view = new SecurityManagerView(model, this);
+        view = new SecurityManagerView(model, this, roleInfo.getRoot());
     }
 
     @Override
@@ -128,16 +130,18 @@ public class SecurityManagerController implements Controller {
                         StringUtils.toOptional(model.getMinVersion().get()),
                         bannedRole)
                 .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        new Popup().error(throwable).show();
-                    } else {
-                        model.getSelectedAlertType().set(null);
-                        model.getMessage().set(null);
-                        model.getHaltTrading().set(false);
-                        model.getRequireVersionForTrading().set(false);
-                        model.getMinVersion().set(null);
-                        model.getSelectedBondedRoleListItem().set(null);
-                    }
+                    UIThread.run(() -> {
+                        if (throwable != null) {
+                            new Popup().error(throwable).show();
+                        } else {
+                            model.getSelectedAlertType().set(null);
+                            model.getMessage().set(null);
+                            model.getHaltTrading().set(false);
+                            model.getRequireVersionForTrading().set(false);
+                            model.getMinVersion().set(null);
+                            model.getSelectedBondedRoleListItem().set(null);
+                        }
+                    });
                 });
     }
 
@@ -155,7 +159,7 @@ public class SecurityManagerController implements Controller {
 
     String getBondedRoleShortDisplayString(BondedRole bondedRole) {
         AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
-        String roleType = Res.get("user.bondedRoles.type." + authorizedBondedRole.getBondedRoleType().name());
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
         String profileId = authorizedBondedRole.getProfileId();
         String nickName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)
@@ -164,7 +168,7 @@ public class SecurityManagerController implements Controller {
     }
 
     String getBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
-        String roleType = Res.get("user.bondedRoles.type." + authorizedBondedRole.getBondedRoleType().name());
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
         String profileId = authorizedBondedRole.getProfileId();
         String nickName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)

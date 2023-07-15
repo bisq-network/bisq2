@@ -10,6 +10,7 @@ repositories {
 dependencies {
     implementation project(':persistence')
     implementation project(':security')
+    implementation project(':i18n')
     implementation project(':identity')
 
     implementation 'network:network'

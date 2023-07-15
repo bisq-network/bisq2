@@ -17,11 +17,16 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
+@Setter
 public class ModeratorModel implements Model {
+
+    private BondedRole bondedRole;
 }

@@ -34,6 +34,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -58,11 +59,10 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     private final BisqTableView<AlertListItem> tableView;
     private Subscription selectedAlertTypePin, selectedBondedRolListItemePin;
 
-
-    public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller) {
+    public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller, Pane roleInfo) {
         super(new VBox(10), model, controller);
 
-        root.setAlignment(Pos.TOP_LEFT);
+        this.root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("authorizedRole.securityManager.alert.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
@@ -122,12 +122,14 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         VBox.setMargin(actionButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
         VBox.setMargin(tableHeadline, new Insets(30, 0, 10, 0));
-        root.getChildren().addAll(headline,
+        VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
+        this.root.getChildren().addAll(headline,
                 alertTypeSelection, message,
                 haltTradingCheckBox, requireVersionForTradingHBox,
                 bondedRoleSelection,
                 actionButton,
-                tableHeadline, tableView);
+                tableHeadline, tableView,
+                roleInfo);
     }
 
     @Override
@@ -208,7 +210,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         BisqTableColumn<AlertListItem> date = new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.date"))
                 .isFirst()
-                .minWidth(150)
+                .minWidth(180)
                 .comparator(Comparator.comparing(AlertListItem::getDate).reversed())
                 .valueSupplier(AlertListItem::getDateString)
                 .build();
