@@ -19,10 +19,13 @@ package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
@@ -161,8 +164,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         }
 
         void onReportUser() {
-            // todo open popup for editing reason
-            model.chatService.reportUserProfile(model.userProfile, "");
+            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(model.userProfile));
         }
 
         void onClose() {
@@ -277,7 +279,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             ignore = new Hyperlink();
             report = new Hyperlink(Res.get("chat.sideBar.userProfile.report"));
             //todo report is not implemented yet so we hide it
-            optionsBox = new VBox(5, optionsLabel, mention, ignore/*, report*/);
+            optionsBox = new VBox(5, optionsLabel, mention, ignore, report);
             optionsBox.setAlignment(Pos.CENTER_LEFT);
             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
 

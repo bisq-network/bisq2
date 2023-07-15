@@ -98,86 +98,86 @@ public class RoleInfo {
                         model.setAuthorizedPublicKeys(Joiner.on(", ").join(authorizedBondedRole.getAuthorizedPublicKeys()));
                     });
         }
+    }
 
-        @Slf4j
-        @Getter
-        @Setter
-        private static class Model implements bisq.desktop.common.view.Model {
-            private String profileId;
-            private String authorizedPublicKey;
-            private String bondedRoleType;
-            private String bondUserName;
-            private String signature;
-            private Optional<String> addressByNetworkType;
-            private String authorizedOracleNode;
-            private String staticPublicKeysProvided;
-            private String authorizedPublicKeys;
-            private String isBanned;
+    @Slf4j
+    @Getter
+    @Setter
+    private static class Model implements bisq.desktop.common.view.Model {
+        private String profileId;
+        private String authorizedPublicKey;
+        private String bondedRoleType;
+        private String bondUserName;
+        private String signature;
+        private Optional<String> addressByNetworkType;
+        private String authorizedOracleNode;
+        private String staticPublicKeysProvided;
+        private String authorizedPublicKeys;
+        private String isBanned;
 
+    }
+
+    @Slf4j
+    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private final MaterialTextField profileId, authorizedPublicKey, bondedRoleType, bondUserName, signature,
+                addressByNetworkType, authorizedOracleNode, staticPublicKeysProvided, isBanned;
+        private final MaterialTextArea authorizedPublicKeys;
+
+
+        private View(Model model, Controller controller) {
+            super(new VBox(10), model, controller);
+
+            root.setAlignment(Pos.TOP_LEFT);
+
+            Label headline = new Label(Res.get("authorizedRole.roleInfo.headline"));
+            headline.getStyleClass().add("bisq-text-headline-2");
+            root.getChildren().add(headline);
+
+            bondedRoleType = addFields("authorizedRole.roleInfo.bondedRoleType", false);
+            bondUserName = addFields("authorizedRole.roleInfo.bondUserName", true);
+            profileId = addFields("authorizedRole.roleInfo.profileId", true);
+            signature = addFields("authorizedRole.roleInfo.signature", true);
+            addressByNetworkType = addFields("authorizedRole.roleInfo.addressByNetworkType", true);
+            isBanned = addFields("authorizedRole.roleInfo.isBanned", false);
+            authorizedPublicKey = addFields("authorizedRole.roleInfo.authorizedPublicKey", true);
+            authorizedOracleNode = addFields("authorizedRole.roleInfo.authorizedOracleNode", true);
+            staticPublicKeysProvided = addFields("authorizedRole.roleInfo.staticPublicKeysProvided", false);
+
+            authorizedPublicKeys = new MaterialTextArea(Res.get("authorizedRole.roleInfo.authorizedPublicKeys"));
+            authorizedPublicKeys.setFixedHeight(200);
+            root.getChildren().add(authorizedPublicKeys);
+            authorizedPublicKeys.showCopyIcon();
         }
 
-        @Slf4j
-        private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-            private final MaterialTextField profileId, authorizedPublicKey, bondedRoleType, bondUserName, signature,
-                    addressByNetworkType, authorizedOracleNode, staticPublicKeysProvided, isBanned;
-            private final MaterialTextArea authorizedPublicKeys;
-
-
-            private View(Model model, Controller controller) {
-                super(new VBox(10), model, controller);
-
-                root.setAlignment(Pos.TOP_LEFT);
-
-                Label headline = new Label(Res.get("authorizedRole.roleInfo.headline"));
-                headline.getStyleClass().add("bisq-text-headline-2");
-                root.getChildren().add(headline);
-
-                bondedRoleType = addFields("authorizedRole.roleInfo.bondedRoleType", false);
-                bondUserName = addFields("authorizedRole.roleInfo.bondUserName", true);
-                profileId = addFields("authorizedRole.roleInfo.profileId", true);
-                signature = addFields("authorizedRole.roleInfo.signature", true);
-                addressByNetworkType = addFields("authorizedRole.roleInfo.addressByNetworkType", true);
-                isBanned = addFields("authorizedRole.roleInfo.isBanned", false);
-                authorizedPublicKey = addFields("authorizedRole.roleInfo.authorizedPublicKey", true);
-                authorizedOracleNode = addFields("authorizedRole.roleInfo.authorizedOracleNode", true);
-                staticPublicKeysProvided = addFields("authorizedRole.roleInfo.staticPublicKeysProvided", false);
-
-                authorizedPublicKeys = new MaterialTextArea(Res.get("authorizedRole.roleInfo.authorizedPublicKeys"));
-                authorizedPublicKeys.setFixedHeight(200);
-                root.getChildren().add(authorizedPublicKeys);
-                authorizedPublicKeys.showCopyIcon();
+        private MaterialTextField addFields(String key, boolean showCopyIcon) {
+            MaterialTextField field = new MaterialTextField(Res.get(key));
+            if (showCopyIcon) {
+                field.showCopyIcon();
             }
+            root.getChildren().add(field);
+            return field;
+        }
 
-            private MaterialTextField addFields(String key, boolean showCopyIcon) {
-                MaterialTextField field = new MaterialTextField(Res.get(key));
-                if (showCopyIcon) {
-                    field.showCopyIcon();
-                }
-                root.getChildren().add(field);
-                return field;
-            }
+        @Override
+        protected void onViewAttached() {
+            profileId.setText(model.getProfileId());
+            authorizedPublicKey.setText(model.getAuthorizedPublicKey());
+            bondedRoleType.setText(model.getBondedRoleType());
+            bondUserName.setText(model.getBondUserName());
+            signature.setText(model.getSignature());
+            model.getAddressByNetworkType().ifPresentOrElse(addressByNetworkType::setText, () -> {
+                addressByNetworkType.setVisible(false);
+                addressByNetworkType.setManaged(false);
+            });
 
-            @Override
-            protected void onViewAttached() {
-                profileId.setText(model.getProfileId());
-                authorizedPublicKey.setText(model.getAuthorizedPublicKey());
-                bondedRoleType.setText(model.getBondedRoleType());
-                bondUserName.setText(model.getBondUserName());
-                signature.setText(model.getSignature());
-                model.getAddressByNetworkType().ifPresentOrElse(addressByNetworkType::setText, () -> {
-                    addressByNetworkType.setVisible(false);
-                    addressByNetworkType.setManaged(false);
-                });
+            authorizedOracleNode.setText(model.getAuthorizedOracleNode());
+            staticPublicKeysProvided.setText(model.getStaticPublicKeysProvided());
+            authorizedPublicKeys.setText(model.getAuthorizedPublicKeys());
+            isBanned.setText(model.getIsBanned());
+        }
 
-                authorizedOracleNode.setText(model.getAuthorizedOracleNode());
-                staticPublicKeysProvided.setText(model.getStaticPublicKeysProvided());
-                authorizedPublicKeys.setText(model.getAuthorizedPublicKeys());
-                isBanned.setText(model.getIsBanned());
-            }
-
-            @Override
-            protected void onViewDetached() {
-            }
+        @Override
+        protected void onViewDetached() {
         }
     }
 }

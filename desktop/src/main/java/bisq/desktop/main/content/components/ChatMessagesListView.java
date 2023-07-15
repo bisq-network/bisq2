@@ -366,7 +366,7 @@ public class ChatMessagesListView {
 
         private void onReportUser(ChatMessage chatMessage) {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author ->
-                    chatService.reportUserProfile(author, ""));
+                    Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(author)));
         }
 
         private void onIgnoreUser(ChatMessage chatMessage) {
