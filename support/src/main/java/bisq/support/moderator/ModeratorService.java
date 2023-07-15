@@ -53,6 +53,19 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageListener, DataService.Listener {
     @Getter
+    public static class Config {
+        private final boolean staticPublicKeysProvided;
+
+        public Config(boolean staticPublicKeysProvided) {
+            this.staticPublicKeysProvided = staticPublicKeysProvided;
+        }
+
+        public static ModeratorService.Config from(com.typesafe.config.Config config) {
+            return new ModeratorService.Config(config.getBoolean("staticPublicKeysProvided"));
+        }
+    }
+
+    @Getter
     private final ModeratorStore persistableStore = new ModeratorStore();
     @Getter
     private final Persistence<ModeratorStore> persistence;
@@ -63,11 +76,11 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices;
-    @javax.annotation.Nonnull
-    private final ChatService chatService;
     private final UserProfileService userProfileService;
+    private final boolean staticPublicKeysProvided;
 
-    public ModeratorService(PersistenceService persistenceService,
+    public ModeratorService(ModeratorService.Config config,
+                            PersistenceService persistenceService,
                             NetworkService networkService,
                             UserService userService,
                             BondedRolesService bondedRolesService,
@@ -78,7 +91,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         userProfileService = userService.getUserProfileService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         twoPartyPrivateChatChannelServices = chatService.getTwoPartyPrivateChatChannelServices();
-        this.chatService = chatService;
+        staticPublicKeysProvided = config.isStaticPublicKeysProvided();
     }
 
 
@@ -143,6 +156,14 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
+        return persistableStore.getReportToModeratorMessages();
+    }
+
+    public ObservableSet<BannedUserProfileData> getBannedUserProfileDataSet() {
+        return persistableStore.getBannedUserProfileDataSet();
+    }
+
     public void reportUserProfile(String reportedUserProfileId, String message, ChatChannelDomain chatChannelDomain) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
@@ -157,20 +178,11 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
                     networkService.confidentialSend(new ReportToModeratorMessage(date, reportSenderUserProfileId, reportedUserProfileId, message, chatChannelDomain),
                             bondedRole.getNetworkId(), senderNetworkIdWithKeyPair);
                 });
-
     }
 
     public void deleteReportToModeratorMessage(ReportToModeratorMessage reportToModeratorMessage) {
         getReportToModeratorMessages().remove(reportToModeratorMessage);
         persist();
-    }
-
-    public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
-        return persistableStore.getReportToModeratorMessages();
-    }
-
-    public ObservableSet<BannedUserProfileData> getBannedUserProfileDataSet() {
-        return persistableStore.getBannedUserProfileDataSet();
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> banReportedUser(ReportToModeratorMessage reportToModeratorMessage) {
@@ -179,7 +191,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
         }
         KeyPair keyPair = selectedUserIdentity.getNodeIdAndKeyPair().getKeyPair();
-        BannedUserProfileData data = new BannedUserProfileData(reportToModeratorMessage.getAccusedUserProfileId(), false);
+        BannedUserProfileData data = new BannedUserProfileData(reportToModeratorMessage.getAccusedUserProfileId(), staticPublicKeysProvided);
         return networkService.publishAuthorizedData(data, keyPair);
     }
 
@@ -206,17 +218,5 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
                                 citationMessage.map(msg -> new Citation(userProfileId, msg)),
                                 channel)))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No userProfile found for " + userProfileId)));
-    }
-
-    public void openPrivateChannel(ReportToModeratorMessage reportToModeratorMessage) {
-        ChatChannelDomain chatChannelDomain = reportToModeratorMessage.getChatChannelDomain();
-        if (twoPartyPrivateChatChannelServices.containsKey(chatChannelDomain)) {
-            String reportSenderUserProfileId = reportToModeratorMessage.getReporterUserProfileId();
-            userProfileService.findUserProfile(reportSenderUserProfileId)
-                    .ifPresent(userProfile -> chatService.createAndSelectTwoPartyPrivateChatChannel(chatChannelDomain, userProfile));
-        }
-        /*
-        return userProfileService.findUserProfile(reportSenderUserProfileId)
-                .flatMap(userProfile -> channelService.findOrCreateChannel(chatChannelDomain, userProfile)).stream().findAny();*/
     }
 }

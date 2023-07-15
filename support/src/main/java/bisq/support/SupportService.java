@@ -43,13 +43,16 @@ public class SupportService implements Service {
     @ToString
     public static final class Config {
         private final com.typesafe.config.Config securityManagerConfig;
+        private final com.typesafe.config.Config moderatorConfig;
 
-        public Config(com.typesafe.config.Config securityManagerConfig) {
+        public Config(com.typesafe.config.Config securityManagerConfig, com.typesafe.config.Config moderatorConfig) {
             this.securityManagerConfig = securityManagerConfig;
+            this.moderatorConfig = moderatorConfig;
         }
 
         public static SupportService.Config from(com.typesafe.config.Config typeSafeConfig) {
-            return new SupportService.Config(typeSafeConfig.getConfig("securityManager"));
+            return new SupportService.Config(typeSafeConfig.getConfig("securityManager"),
+                    typeSafeConfig.getConfig("moderator"));
         }
     }
 
@@ -64,7 +67,8 @@ public class SupportService implements Service {
                 networkService,
                 userService,
                 bondedRolesService);
-        moderatorService = new ModeratorService(persistenceService,
+        moderatorService = new ModeratorService(ModeratorService.Config.from(config.getModeratorConfig()),
+                persistenceService,
                 networkService,
                 userService,
                 bondedRolesService,

@@ -17,7 +17,6 @@
 
 package bisq.support.moderator;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -41,6 +40,12 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     private final MetaData metaData = new MetaData(TTL,
             100000,
             BannedUserProfileData.class.getSimpleName());
+
+    // todo Production key not set yet - we use devMode key only yet
+    public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
+
+
+    );
 
     private final String profileId;
     private final boolean staticPublicKeysProvided;
@@ -89,7 +94,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AuthorizedPubKeys.KEYS;
+            return AUTHORIZED_PUBLIC_KEYS;
         }
     }
 
