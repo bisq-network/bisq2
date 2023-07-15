@@ -18,6 +18,9 @@
 package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -63,8 +66,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                               ChatService chatService,
                               ReputationService reputationService,
                               UserProfile userProfile,
+                              ChatChannel<? extends ChatMessage> selectedChannel,
                               Runnable closeHandler) {
-        controller = new Controller(userProfileService, userIdentityService, chatService, reputationService, userProfile, closeHandler);
+        controller = new Controller(userProfileService, userIdentityService, chatService, reputationService, userProfile, selectedChannel, closeHandler);
     }
 
     public Pane getRoot() {
@@ -103,12 +107,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                            ChatService chatService,
                            ReputationService reputationService,
                            UserProfile userProfile,
+                           ChatChannel<? extends ChatMessage> selectedChannel,
                            Runnable closeHandler) {
             this.userProfileService = userProfileService;
             this.userIdentityService = userIdentityService;
             this.reputationService = reputationService;
             this.closeHandler = closeHandler;
-            model = new Model(chatService, userProfile);
+            model = new Model(chatService, userProfile, selectedChannel);
             view = new View(model, this);
         }
 
@@ -164,7 +169,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         }
 
         void onReportUser() {
-            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(model.userProfile));
+            String reportedUserProfileId = model.userProfile.getId();
+            ChatChannelDomain chatChannelDomain = model.getSelectedChannel().getChatChannelDomain();
+            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(reportedUserProfileId, chatChannelDomain));
         }
 
         void onClose() {
@@ -172,9 +179,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         }
     }
 
+    @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
         private final UserProfile userProfile;
+        private final ChatChannel<? extends ChatMessage> selectedChannel;
         private Optional<Consumer<UserProfile>> mentionUserHandler = Optional.empty();
         private Optional<Consumer<UserProfile>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
@@ -190,9 +199,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
         private final BooleanProperty isPeer = new SimpleBooleanProperty();
 
-        private Model(ChatService chatService, UserProfile userProfile) {
+        private Model(ChatService chatService, UserProfile userProfile, ChatChannel<? extends ChatMessage> selectedChannel) {
             this.chatService = chatService;
             this.userProfile = userProfile;
+            this.selectedChannel = selectedChannel;
         }
     }
 

@@ -388,6 +388,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     bondUserName,
                                     signatureBase64,
                                     request.getAddressByNetworkType(),
+                                    request.getNetworkId(),
                                     Optional.of(authorizedOracleNode),
                                     staticPublicKeysProvided);
                             if (request.isCancellationRequest()) {

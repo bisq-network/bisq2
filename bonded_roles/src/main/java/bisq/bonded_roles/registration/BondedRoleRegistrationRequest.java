@@ -48,6 +48,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signatureBase64;
+    private final NetworkId networkId;
     private final boolean isCancellationRequest;
     private final Map<Transport.Type, Address> addressByNetworkType;
 
@@ -57,6 +58,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                                          String bondUserName,
                                          String signatureBase64,
                                          Map<Transport.Type, Address> addressByNetworkType,
+                                         NetworkId networkId,
                                          boolean isCancellationRequest) {
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -64,6 +66,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
         this.bondUserName = bondUserName;
         this.signatureBase64 = signatureBase64;
         this.addressByNetworkType = addressByNetworkType;
+        this.networkId = networkId;
         this.isCancellationRequest = isCancellationRequest;
     }
 
@@ -83,6 +86,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
+                .setNetworkId(networkId.toProto())
                 .setIsCancellationRequest(isCancellationRequest)
                 .build();
     }
@@ -94,6 +98,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 proto.getBondUserName(),
                 proto.getSignatureBase64(),
                 NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
+                NetworkId.fromProto(proto.getNetworkId()),
                 proto.getIsCancellationRequest());
     }
 

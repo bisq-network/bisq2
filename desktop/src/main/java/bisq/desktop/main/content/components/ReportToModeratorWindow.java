@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.ChatService;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -25,7 +25,7 @@ import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
-import bisq.user.profile.UserProfile;
+import bisq.support.moderator.ModeratorService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -47,10 +47,12 @@ public class ReportToModeratorWindow {
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final UserProfile userProfile;
+        private final String reportedUserProfileId;
+        private final ChatChannelDomain chatChannelDomain;
 
-        public InitData(UserProfile userProfile) {
-            this.userProfile = userProfile;
+        public InitData(String reportedUserProfileId, ChatChannelDomain chatChannelDomain) {
+            this.reportedUserProfileId = reportedUserProfileId;
+            this.chatChannelDomain = chatChannelDomain;
         }
     }
 
@@ -66,17 +68,18 @@ public class ReportToModeratorWindow {
         @Getter
         private final View view;
         private final Model model;
-        private final ChatService chatService;
+        private final ModeratorService moderatorService;
 
         private Controller(ServiceProvider serviceProvider) {
-            chatService = serviceProvider.getChatService();
+            moderatorService = serviceProvider.getSupportService().getModeratorService();
             model = new Model();
             view = new View(model, this);
         }
 
         @Override
         public void initWithData(ReportToModeratorWindow.InitData initData) {
-            model.setUserProfile(initData.getUserProfile());
+            model.setReportedUserProfileId(initData.getReportedUserProfileId());
+            model.setChatChannelDomain(initData.getChatChannelDomain());
         }
 
         @Override
@@ -88,11 +91,11 @@ public class ReportToModeratorWindow {
         public void onDeactivate() {
             model.getReportButtonDisabled().unbind();
             model.getMessage().set("");
-            model.setUserProfile(null);
+            model.setReportedUserProfileId(null);
         }
 
         private void onReport() {
-            chatService.reportUserProfile(model.getUserProfile(), model.getMessage().get());
+            moderatorService.reportUserProfile(model.getReportedUserProfileId(), model.getMessage().get(), model.getChatChannelDomain());
             onCancel();
         }
 
@@ -107,7 +110,10 @@ public class ReportToModeratorWindow {
         public StringProperty message = new SimpleStringProperty("");
         public BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
         @Setter
-        private UserProfile userProfile;
+        private String reportedUserProfileId;
+        @Setter
+        private ChatChannelDomain chatChannelDomain;
+
     }
 
     @Slf4j

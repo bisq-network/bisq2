@@ -223,7 +223,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 Res.get("offer.buyer");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(peer)
-                .isFirst()
+                .left()
                 .minWidth(100)
                 .setCellFactory(new Callback<>() {
                     @Override
@@ -308,7 +308,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                     takeOfferButton.setMinWidth(BUTTON_WIDTH);
                     takeOfferButton.setMaxWidth(BUTTON_WIDTH);
                 })
-                .isLast()
+                .right()
                 .build();
         tableView.getColumns().add(takeOffer);
 

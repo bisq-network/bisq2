@@ -143,7 +143,7 @@ public class RestApiApplicationService extends ApplicationService {
                 notificationsService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
-                networkService, chatService, userService, bondedRolesService);
+                persistenceService, networkService, chatService, userService, bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService);

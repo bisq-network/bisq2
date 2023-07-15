@@ -146,6 +146,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                 chatService,
                 reputationService,
                 userProfile,
+                model.getSelectedChannel(),
                 () -> {
                     onCloseSideBar();
                     chatMessagesComponent.resetSelectedChatMessage();

@@ -382,7 +382,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         return error(ExceptionUtil.print(throwable));
     }
 
-    private T error(String message) {
+    public T error(String message) {
         type = Type.ERROR;
         showReportErrorButtons();
         width = 1100;

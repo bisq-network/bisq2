@@ -275,6 +275,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                        KeyPair keyPair) {
+        return publishAuthorizedData(authorizedDistributedData, keyPair, keyPair.getPrivate(), keyPair.getPublic());
+    }
+
+    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                                                                         KeyPair keyPair,
                                                                         PrivateKey authorizedPrivateKey,
                                                                         PublicKey authorizedPublicKey) {
@@ -287,6 +292,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
             e.printStackTrace();
             return CompletableFuture.failedFuture(e);
         }
+    }
+
+    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                       KeyPair keyPair) {
+        return removeAuthorizedData(authorizedDistributedData, keyPair, keyPair.getPublic());
     }
 
     public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,

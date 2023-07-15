@@ -38,7 +38,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class RoleInfo {
     private final Controller controller;
@@ -85,14 +85,16 @@ public class RoleInfo {
                     .ifPresent(bondedRole -> {
                         model.setIsBanned(BooleanFormatter.toYesNo(bondedRole.isBanned()));
                         AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
+                        String addressByNetworkType = Joiner.on(", ")
+                                .join(authorizedBondedRole.getNetworkId().getAddressByNetworkType().entrySet().stream()
+                                        .map(e -> e.getKey() + ": " + e.getValue().getFullAddress())
+                                        .collect(Collectors.toList()));
+                        model.setAddressByNetworkType(addressByNetworkType);
                         model.setProfileId(authorizedBondedRole.getProfileId());
                         model.setAuthorizedPublicKey(authorizedBondedRole.getAuthorizedPublicKey());
                         model.setBondedRoleType(authorizedBondedRole.getBondedRoleType().getDisplayString());
                         model.setBondUserName(authorizedBondedRole.getBondUserName());
                         model.setSignature(authorizedBondedRole.getSignature());
-                        model.setAddressByNetworkType(authorizedBondedRole.getAddressByNetworkType().isEmpty() ?
-                                Optional.empty() :
-                                Optional.of(authorizedBondedRole.getAddressByNetworkType().toString()));
                         model.setAuthorizedOracleNode(authorizedBondedRole.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElse(Res.get("data.na")));
                         model.setStaticPublicKeysProvided(BooleanFormatter.toYesNo(authorizedBondedRole.isStaticPublicKeysProvided()));
                         model.setAuthorizedPublicKeys(Joiner.on(", ").join(authorizedBondedRole.getAuthorizedPublicKeys()));
@@ -109,7 +111,7 @@ public class RoleInfo {
         private String bondedRoleType;
         private String bondUserName;
         private String signature;
-        private Optional<String> addressByNetworkType;
+        private String addressByNetworkType;
         private String authorizedOracleNode;
         private String staticPublicKeysProvided;
         private String authorizedPublicKeys;
@@ -165,11 +167,7 @@ public class RoleInfo {
             bondedRoleType.setText(model.getBondedRoleType());
             bondUserName.setText(model.getBondUserName());
             signature.setText(model.getSignature());
-            model.getAddressByNetworkType().ifPresentOrElse(addressByNetworkType::setText, () -> {
-                addressByNetworkType.setVisible(false);
-                addressByNetworkType.setManaged(false);
-            });
-
+            addressByNetworkType.setText(model.getAddressByNetworkType());
             authorizedOracleNode.setText(model.getAuthorizedOracleNode());
             staticPublicKeysProvided.setText(model.getStaticPublicKeysProvided());
             authorizedPublicKeys.setText(model.getAuthorizedPublicKeys());

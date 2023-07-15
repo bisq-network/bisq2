@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.reputation.data;
+package bisq.support.moderator;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
@@ -29,50 +29,45 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedTimestampData implements AuthorizedDistributedData {
+public final class BannedUserProfileData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(15);
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedTimestampData.class.getSimpleName());
+            BannedUserProfileData.class.getSimpleName());
 
     private final String profileId;
-    private final long date;
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedTimestampData(String profileId, long date, boolean staticPublicKeysProvided) {
+    public BannedUserProfileData(String profileId, boolean staticPublicKeysProvided) {
         this.profileId = profileId;
-        this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedTimestampData toProto() {
-        return bisq.user.protobuf.AuthorizedTimestampData.newBuilder()
+    public bisq.support.protobuf.BannedUserProfileData toProto() {
+        return bisq.support.protobuf.BannedUserProfileData.newBuilder()
                 .setProfileId(profileId)
-                .setDate(date)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
     }
 
-    public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {
-        return new AuthorizedTimestampData(
+    public static BannedUserProfileData fromProto(bisq.support.protobuf.BannedUserProfileData proto) {
+        return new BannedUserProfileData(
                 proto.getProfileId(),
-                proto.getDate(),
                 proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedTimestampData.class));
+                return fromProto(any.unpack(bisq.support.protobuf.BannedUserProfileData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -105,9 +100,8 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
 
     @Override
     public String toString() {
-        return "AuthorizedTimestampData{" +
+        return "BannedUserProfileData{" +
                 ",\r\n                    profileId=" + profileId +
-                ",\r\n                    date=" + new Date(date) +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

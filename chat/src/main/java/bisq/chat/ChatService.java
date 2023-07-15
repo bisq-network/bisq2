@@ -188,11 +188,6 @@ public class ChatService implements Service {
         }
     }
 
-    public void reportUserProfile(UserProfile userProfile, String reason) {
-        //todo report user to admin and moderators, add reason
-        log.info("called reportChatUser {} {}", userProfile, reason);
-    }
-
     public void createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
         TwoPartyPrivateChatChannelService chatChannelService = twoPartyPrivateChatChannelServices.get(chatChannelDomain);
         chatChannelService.findOrCreateChannel(chatChannelDomain, peer)

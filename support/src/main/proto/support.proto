@@ -13,6 +13,22 @@ message MediationRequest {
   repeated chat.ChatMessage chatMessages = 4;
 }
 
+message ReportToModeratorMessage {
+  sint64 date = 1;
+  string reportSenderUserProfileId = 2;
+  string reportedUserProfileId = 3;
+  string message = 4;
+  chat.ChatChannelDomain chatChannelDomain = 5;
+}
 message MediationResponse {
   offer.Offer bisqEasyOffer = 1;
+}
+
+message BannedUserProfileData {
+  string profileId = 1;
+  bool staticPublicKeysProvided = 2;
+}
+message ModeratorStore {
+  repeated ReportToModeratorMessage reportToModeratorMessages = 1;
+  repeated BannedUserProfileData bannedUserProfileDataSet = 2;
 }

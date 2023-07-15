@@ -209,7 +209,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     protected void configTableView() {
         BisqTableColumn<AlertListItem> date = new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.date"))
-                .isFirst()
+                .left()
                 .minWidth(180)
                 .comparator(Comparator.comparing(AlertListItem::getDate).reversed())
                 .valueSupplier(AlertListItem::getDateString)
@@ -256,10 +256,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .isSortable(false)
                 .minWidth(200)
-                .isLast()
+                .right()
                 .setCellFactory(getRemoveAlertCellFactory())
                 .build());
-
     }
 
     private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getRemoveAlertCellFactory() {

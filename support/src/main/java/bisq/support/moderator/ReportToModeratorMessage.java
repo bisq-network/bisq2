@@ -1,0 +1,95 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.support.moderator;
+
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.ExternalNetworkMessage;
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.util.concurrent.TimeUnit;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ReportToModeratorMessage implements MailboxMessage {
+    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
+            100000,
+            ReportToModeratorMessage.class.getSimpleName());
+    private final long date;
+    private final String reporterUserProfileId;
+    private final String accusedUserProfileId;
+    private final String message;
+    private final ChatChannelDomain chatChannelDomain;
+
+    public ReportToModeratorMessage(long date,
+                                    String reporterUserProfileId,
+                                    String accusedUserProfileId,
+                                    String message,
+                                    ChatChannelDomain chatChannelDomain) {
+        this.date = date;
+        this.reporterUserProfileId = reporterUserProfileId;
+        this.accusedUserProfileId = accusedUserProfileId;
+        this.message = message;
+        this.chatChannelDomain = chatChannelDomain;
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder()
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
+                        .setAny(Any.pack(toReportToModeratorMessageProto())))
+                .build();
+    }
+
+    public bisq.support.protobuf.ReportToModeratorMessage toReportToModeratorMessageProto() {
+        return bisq.support.protobuf.ReportToModeratorMessage.newBuilder()
+                .setDate(date)
+                .setReportSenderUserProfileId(reporterUserProfileId)
+                .setReportedUserProfileId(accusedUserProfileId)
+                .setMessage(message)
+                .setChatChannelDomain(chatChannelDomain.toProto())
+                .build();
+    }
+
+    public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto) {
+        return new ReportToModeratorMessage(proto.getDate(),
+                proto.getReportSenderUserProfileId(),
+                proto.getReportedUserProfileId(),
+                proto.getMessage(),
+                ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
+    }
+
+    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+        return any -> {
+            try {
+                bisq.support.protobuf.ReportToModeratorMessage proto = any.unpack(bisq.support.protobuf.ReportToModeratorMessage.class);
+                return ReportToModeratorMessage.fromProto(proto);
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+}

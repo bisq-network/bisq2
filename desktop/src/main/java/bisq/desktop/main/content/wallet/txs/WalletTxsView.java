@@ -60,7 +60,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .minWidth(200)
                 .valueSupplier(WalletTransactionListItem::getDateAsString)
                 .isSortable(true)
-                .isFirst()
+                .left()
                 .build();
         column.setComparator(Comparator.comparing(WalletTransactionListItem::getDateAsString));
         column.setSortType(TableColumn.SortType.DESCENDING);
@@ -89,7 +89,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .minWidth(120)
                 .valueSupplier(WalletTransactionListItem::getConfirmationsAsString)
                 .isSortable(true)
-                .isLast()
+                .right()
                 .build();
         column.setComparator(Comparator.comparing(WalletTransactionListItem::getConfirmations));
         column.setSortType(TableColumn.SortType.DESCENDING);

@@ -147,7 +147,8 @@ public abstract class BondedRolesRegistrationController implements Controller {
         checkNotNull(userIdentityService.getSelectedUserIdentity());
         checkNotNull(model.getProfileId().get());
         checkNotNull(model.getAuthorizedPublicKey());
-        boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(model.getProfileId().get(),
+        boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(
+                model.getProfileId().get(),
                 model.getAuthorizedPublicKey(),
                 model.getBondedRoleType(),
                 model.getBondUserName().get(),

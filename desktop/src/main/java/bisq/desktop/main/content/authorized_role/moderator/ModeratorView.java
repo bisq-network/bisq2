@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.authorized_role.moderator;
 
 import bisq.desktop.common.view.View;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -26,12 +27,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ModeratorView extends View<VBox, ModeratorModel, ModeratorController> {
 
-    public ModeratorView(ModeratorModel model, ModeratorController controller, Pane roleInfo) {
-        super(new VBox(10), model, controller);
+    public ModeratorView(ModeratorModel model, ModeratorController controller, Pane reportToModeratorTable, Pane bannedUserProfileTable, Pane roleInfo) {
+        super(new VBox(30), model, controller);
 
-        this.root.setAlignment(Pos.TOP_LEFT);
+        root.setAlignment(Pos.TOP_LEFT);
+        root.setPadding(new Insets(20, 0, 0, 0));
 
-        this.root.getChildren().add(roleInfo);
+        root.getChildren().addAll(reportToModeratorTable, bannedUserProfileTable, roleInfo);
     }
 
     @Override

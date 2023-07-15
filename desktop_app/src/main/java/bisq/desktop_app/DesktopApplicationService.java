@@ -137,6 +137,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 notificationsService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
+                persistenceService,
                 networkService,
                 chatService,
                 userService,

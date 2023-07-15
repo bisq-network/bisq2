@@ -44,7 +44,7 @@ import static java.util.concurrent.CompletableFuture.*;
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
 
     public enum State {
-        SENT,
+        ARRIVED,
         ADDED_TO_MAILBOX,
         FAILED
     }
@@ -186,7 +186,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNodeId);
             nodesById.send(senderNodeId, confidentialMessage, connection);
-            return new Result(State.SENT);
+            return new Result(State.ARRIVED);
         } catch (Throwable throwable) {
             if (networkMessage instanceof MailboxMessage) {
                 return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);

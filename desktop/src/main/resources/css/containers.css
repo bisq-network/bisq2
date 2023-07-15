@@ -197,21 +197,21 @@ tree-table-view:focused {
     -fx-label-padding: 0 10 0 10;
 }
 
-/* first */
-.table-view .column-header.first .label {
+/* left */
+.table-view .column-header.left .label {
     -fx-alignment: center-left;
 }
 
-.table-view .table-cell.first {
+.table-view .table-cell.left {
     -fx-alignment: center-left;
 }
 
-/* last */
-.table-view .column-header.last .label {
+/* right */
+.table-view .column-header.right .label {
     -fx-alignment: center-right;
 }
 
-.table-view .table-cell.last {
+.table-view .table-cell.right {
     -fx-alignment: center-right;
 }
 

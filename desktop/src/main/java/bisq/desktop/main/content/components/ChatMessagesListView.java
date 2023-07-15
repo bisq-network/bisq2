@@ -365,8 +365,9 @@ public class ChatMessagesListView {
         }
 
         private void onReportUser(ChatMessage chatMessage) {
-            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author ->
-                    Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(author)));
+            String reportedUserProfileId = chatMessage.getAuthorUserProfileId();
+            ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
+            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(reportedUserProfileId, chatChannelDomain));
         }
 
         private void onIgnoreUser(ChatMessage chatMessage) {

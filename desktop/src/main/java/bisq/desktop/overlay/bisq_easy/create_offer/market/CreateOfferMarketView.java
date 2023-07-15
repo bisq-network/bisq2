@@ -108,7 +108,7 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .title(Res.get("bisqEasy.createOffer.market.columns.name"))
-                .isFirst()
+                .left()
                 .minWidth(100)
                 .comparator(Comparator.comparing(MarketListItem::getMarketCodes))
                 .setCellFactory(getNameCellFactory())
