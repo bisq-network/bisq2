@@ -29,8 +29,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MultiLineLabel;
-import bisq.desktop.main.content.components.ChatUserOverview;
 import bisq.i18n.Res;
+import bisq.support.moderator.ModeratorService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.property.*;
@@ -91,6 +91,7 @@ public class ChannelSidebar {
         private final Consumer<UserProfile> openUserProfileSidebarHandler;
         private final NotificationsSidebar notificationsSidebar;
         private final ChatService chatService;
+        private final ModeratorService moderatorService;
 
         @Nullable
         private Pin userProfileIdsOfParticipantsPin;
@@ -103,6 +104,7 @@ public class ChannelSidebar {
 
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             chatService = serviceProvider.getChatService();
+            moderatorService = serviceProvider.getSupportService().getModeratorService();
             notificationsSidebar = new NotificationsSidebar(chatService);
 
             model = new Model();
@@ -147,10 +149,10 @@ public class ChannelSidebar {
             userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfParticipants().addListener(new CollectionObserver<>() {
                 @Override
                 public void add(String userProfileId) {
+                    boolean ignored = ignoredChatUserIds.contains(userProfileId);
                     UIThread.run(() ->
                             userProfileService.findUserProfile(userProfileId)
-                                    .ifPresent(userProfile -> model.participantList.add(new ChatUserOverview(userProfile,
-                                            ignoredChatUserIds.contains(userProfileId)))));
+                                    .ifPresent(userProfile -> model.participantList.add(new ChannelSidebarUserProfile(moderatorService, userProfile, ignored))));
                 }
 
                 @Override
@@ -176,12 +178,12 @@ public class ChannelSidebar {
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = commonPublicChatChannel.getChannelAdminId()
-                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(ChatUserOverview::new))
+                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(userProfile -> new ChannelSidebarUserProfile(moderatorService, userProfile)))
                         .stream()
                         .findAny();
                 model.moderators.setAll(commonPublicChatChannel.getChannelModeratorIds().stream()
                         .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                        .map(ChatUserOverview::new)
+                        .map(userProfile -> new ChannelSidebarUserProfile(moderatorService, userProfile))
                         .sorted()
                         .collect(Collectors.toList()));
             } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
@@ -208,7 +210,7 @@ public class ChannelSidebar {
             closeHandler.run();
         }
 
-        public void onOpenUserProfileSidebar(UserProfile userProfile) {
+        void onOpenUserProfileSidebar(UserProfile userProfile) {
             openUserProfileSidebarHandler.accept(userProfile);
         }
     }
@@ -219,10 +221,10 @@ public class ChannelSidebar {
         private final StringProperty channelTitle = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
-        private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
-        private Optional<ChatUserOverview> adminProfile = Optional.empty();
-        private final ObservableList<ChatUserOverview> participantList = FXCollections.observableArrayList();
-        private final SortedList<ChatUserOverview> sortedListParticipantList = new SortedList<>(participantList);
+        private final ObservableList<ChannelSidebarUserProfile> moderators = FXCollections.observableArrayList();
+        private Optional<ChannelSidebarUserProfile> adminProfile = Optional.empty();
+        private final ObservableList<ChannelSidebarUserProfile> participantList = FXCollections.observableArrayList();
+        private final SortedList<ChannelSidebarUserProfile> sortedListParticipantList = new SortedList<>(participantList);
         private Optional<Runnable> undoIgnoreChatUserHandler = Optional.empty();
 
         private Model() {
@@ -231,7 +233,7 @@ public class ChannelSidebar {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ListView<ChatUserOverview> participants;
+        private final ListView<ChannelSidebarUserProfile> participants;
         private final Label headline;
         private final MultiLineLabel descriptionText;
         private final Button closeButton;
@@ -240,7 +242,7 @@ public class ChannelSidebar {
             super(new VBox(), model, controller);
 
             root.setSpacing(15);
-            root.setMinWidth(260);
+            root.setMinWidth(270);
             root.setPadding(new Insets(0, 20, 20, 20));
 
             closeButton = BisqIconButton.createIconButton("close");
@@ -285,15 +287,15 @@ public class ChannelSidebar {
             closeButton.setOnAction(null);
         }
 
-        private Callback<ListView<ChatUserOverview>, ListCell<ChatUserOverview>> getCellFactory(Controller controller) {
+        private Callback<ListView<ChannelSidebarUserProfile>, ListCell<ChannelSidebarUserProfile>> getCellFactory(Controller controller) {
             return new Callback<>() {
                 @Override
-                public ListCell<ChatUserOverview> call(ListView<ChatUserOverview> list) {
+                public ListCell<ChannelSidebarUserProfile> call(ListView<ChannelSidebarUserProfile> list) {
                     return new ListCell<>() {
                         Pane chatUser;
                         private ImageView roboIcon;
                         final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
-                        final HBox hBox = new HBox();
+                        final HBox hBox = new HBox(10);
 
                         {
                             hBox.setAlignment(Pos.CENTER_LEFT);
@@ -303,23 +305,23 @@ public class ChannelSidebar {
                         }
 
                         @Override
-                        public void updateItem(ChatUserOverview chatUserOverview, boolean empty) {
-                            super.updateItem(chatUserOverview, empty);
-                            if (chatUserOverview != null && !empty) {
+                        public void updateItem(ChannelSidebarUserProfile channelSidebarUserProfile, boolean empty) {
+                            super.updateItem(channelSidebarUserProfile, empty);
+                            if (channelSidebarUserProfile != null && !empty) {
                                 undoIgnoreUserButton.setOnAction(e -> {
-                                    controller.onUndoIgnoreUser(chatUserOverview.getUserProfile());
+                                    controller.onUndoIgnoreUser(channelSidebarUserProfile.getUserProfile());
                                     participants.refresh();
                                 });
-                                undoIgnoreUserButton.setVisible(chatUserOverview.isIgnored());
-                                undoIgnoreUserButton.setManaged(chatUserOverview.isIgnored());
+                                undoIgnoreUserButton.setVisible(channelSidebarUserProfile.isIgnored());
+                                undoIgnoreUserButton.setManaged(channelSidebarUserProfile.isIgnored());
 
-                                chatUser = chatUserOverview.getRoot();
-                                chatUser.setOpacity(chatUserOverview.isIgnored() ? 0.4 : 1);
+                                chatUser = channelSidebarUserProfile.getRoot();
+                                chatUser.setOpacity(channelSidebarUserProfile.isIgnored() ? 0.4 : 1);
                                 // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
-                                chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(chatUserOverview.getUserProfile()));
+                                chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
 
-                                roboIcon = chatUserOverview.getRoboIcon();
-                                roboIcon.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(chatUserOverview.getUserProfile()));
+                                roboIcon = channelSidebarUserProfile.getRoboIcon();
+                                roboIcon.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
 
                                 hBox.getChildren().setAll(chatUser, Spacer.fillHBox(), undoIgnoreUserButton);
 

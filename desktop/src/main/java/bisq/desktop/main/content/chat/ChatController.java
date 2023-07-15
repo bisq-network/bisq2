@@ -141,10 +141,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         onCloseSideBar();
         model.getSideBarVisible().set(true);
 
-        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
-                userIdentityService,
-                chatService,
-                reputationService,
+        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(serviceProvider,
                 userProfile,
                 model.getSelectedChannel(),
                 () -> {

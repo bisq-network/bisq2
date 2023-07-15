@@ -114,7 +114,7 @@
 
 #chat-sidebar-text {
     -fx-text-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
+    -fx-fill: -fx-light-text-color;
     -fx-font-size: 1.05em;
     -fx-font-family: "IBM Plex Sans Light";
 }

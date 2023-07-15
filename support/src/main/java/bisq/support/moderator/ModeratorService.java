@@ -164,6 +164,10 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return persistableStore.getBannedUserProfileDataSet();
     }
 
+    public boolean isUserProfileBanned(String userProfileId) {
+        return getBannedUserProfileDataSet().stream().anyMatch(e -> e.getProfileId().equals(userProfileId));
+    }
+
     public void reportUserProfile(String reportedUserProfileId, String message, ChatChannelDomain chatChannelDomain) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {

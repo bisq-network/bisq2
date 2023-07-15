@@ -21,6 +21,7 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,6 +33,7 @@ import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.support.moderator.ModeratorService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -61,14 +63,11 @@ import java.util.function.Consumer;
 public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     private final Controller controller;
 
-    public UserProfileSidebar(UserProfileService userProfileService,
-                              UserIdentityService userIdentityService,
-                              ChatService chatService,
-                              ReputationService reputationService,
+    public UserProfileSidebar(ServiceProvider serviceProvider,
                               UserProfile userProfile,
                               ChatChannel<? extends ChatMessage> selectedChannel,
                               Runnable closeHandler) {
-        controller = new Controller(userProfileService, userIdentityService, chatService, reputationService, userProfile, selectedChannel, closeHandler);
+        controller = new Controller(serviceProvider, userProfile, selectedChannel, closeHandler);
     }
 
     public Pane getRoot() {
@@ -100,20 +99,19 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final UserIdentityService userIdentityService;
         private final ReputationService reputationService;
         private final Runnable closeHandler;
+        private final ModeratorService moderatorService;
 
 
-        private Controller(UserProfileService userProfileService,
-                           UserIdentityService userIdentityService,
-                           ChatService chatService,
-                           ReputationService reputationService,
+        private Controller(ServiceProvider serviceProvider,
                            UserProfile userProfile,
                            ChatChannel<? extends ChatMessage> selectedChannel,
                            Runnable closeHandler) {
-            this.userProfileService = userProfileService;
-            this.userIdentityService = userIdentityService;
-            this.reputationService = reputationService;
+            this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            this.userProfileService = serviceProvider.getUserService().getUserProfileService();
+            this.reputationService = serviceProvider.getUserService().getReputationService();
+            moderatorService = serviceProvider.getSupportService().getModeratorService();
             this.closeHandler = closeHandler;
-            model = new Model(chatService, userProfile, selectedChannel);
+            model = new Model(serviceProvider.getChatService(), userProfile, selectedChannel);
             view = new View(model, this);
         }
 
@@ -124,9 +122,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 return;
             }
 
-            model.nickName.set(userProfile.getNickName());
+            String nickName = userProfile.getNickName();
+            model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
             model.nym.set(Res.get("chat.sideBar.userProfile.nym", userProfile.getNym()));
-            model.userProfileId.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
+            model.userProfileIdString.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
             model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
 
             model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.ignore"));
@@ -177,6 +176,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         void onClose() {
             closeHandler.run();
         }
+
+        boolean isUserProfileBanned() {
+            return moderatorService.isUserProfileBanned(model.getUserProfile().getId());
+        }
     }
 
     @Getter
@@ -190,7 +193,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty nym = new SimpleStringProperty();
-        private final StringProperty userProfileId = new SimpleStringProperty();
+        private final StringProperty userProfileIdString = new SimpleStringProperty();
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
@@ -245,6 +248,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             nickName = new Label();
             nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
+            if (controller.isUserProfileBanned()) {
+                nickName.getStyleClass().add("error");
+            }
             nickName.setAlignment(Pos.CENTER);
             VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
 
@@ -260,7 +266,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             userProfileId = new Label();
             userProfileId.getStyleClass().addAll("bisq-text-7");
             userProfileId.setAlignment(Pos.CENTER);
-            userProfileId.setTooltip(new BisqTooltip(model.userProfileId.get()));
+            userProfileId.setTooltip(new BisqTooltip(model.userProfileIdString.get()));
             VBox.setMargin(userProfileId, new Insets(0, 0, 25, 0));
 
             privateMsgButton = new Button(Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
@@ -309,8 +315,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             nickName.textProperty().bind(model.nickName);
             nym.textProperty().bind(model.nym);
             nym.getTooltip().textProperty().bind(model.nym);
-            userProfileId.textProperty().bind(model.userProfileId);
-            userProfileId.getTooltip().textProperty().bind(model.userProfileId);
+            userProfileId.textProperty().bind(model.userProfileIdString);
+            userProfileId.getTooltip().textProperty().bind(model.userProfileIdString);
             statement.textProperty().bind(model.statement);
             statementBox.visibleProperty().bind(model.statement.isEmpty().not());
             statementBox.managedProperty().bind(model.statement.isEmpty().not());
