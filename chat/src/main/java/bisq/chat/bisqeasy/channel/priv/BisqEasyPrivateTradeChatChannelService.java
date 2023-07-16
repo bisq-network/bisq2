@@ -37,6 +37,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -141,23 +142,38 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
 
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(BisqEasyPrivateTradeChatChannel channel) {
+        return sendMessage(null, Optional.empty(), ChatMessageType.TAKE_BISQ_EASY_OFFER, channel);
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendSystemMessage(String text,
+                                                                                 BisqEasyPrivateTradeChatChannel channel) {
+        return sendMessage(text, Optional.empty(), ChatMessageType.SYSTEM_MESSAGE, channel);
+    }
+
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Citation> citation,
                                                                                BisqEasyPrivateTradeChatChannel channel) {
+        return sendMessage(text, citation, ChatMessageType.TEXT, channel);
+    }
 
+    private CompletableFuture<NetworkService.SendMessageResult> sendMessage(@Nullable String text,
+                                                                            Optional<Citation> citation,
+                                                                            ChatMessageType chatMessageType,
+                                                                            BisqEasyPrivateTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
         long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getTraders().stream()
-                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, ChatMessageType.TEXT, date))
+                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, chatMessageType, date))
                     .collect(Collectors.toList());
             channel.getMediator()
-                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, ChatMessageType.TEXT, date))
+                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0));
         } else {
-            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), ChatMessageType.TEXT, date);
+            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), chatMessageType, date);
         }
     }
 
@@ -185,7 +201,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     public void addMediatorsResponseMessage(BisqEasyPrivateTradeChatChannel channel, String text) {
         setIsInMediation(channel, true);
         checkArgument(channel.getMediator().isPresent());
-        BisqEasyPrivateTradeChatMessage mediatorsPseudoMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
+        BisqEasyPrivateTradeChatMessage systemMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
                 channel.getId(),
                 channel.getMediator().get(),
                 channel.getMyUserIdentity().getUserProfile().getId(),
@@ -194,9 +210,9 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 new Date().getTime(),
                 false,
                 channel.getMediator(),
-                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                ChatMessageType.SYSTEM_MESSAGE,
                 Optional.empty());
-        channel.addChatMessage(mediatorsPseudoMessage);
+        channel.addChatMessage(systemMessage);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +234,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                                 BisqEasyPrivateTradeChatChannel channel,
                                                                                 UserProfile sender,
                                                                                 String receiverUserProfileId,
-                                                                                String text,
+                                                                                @Nullable String text,
                                                                                 Optional<Citation> citation,
                                                                                 long time,
                                                                                 boolean wasEdited,

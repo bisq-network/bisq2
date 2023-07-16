@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -45,7 +46,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  String channelId,
                                  UserProfile sender,
                                  String receiverUserProfileId,
-                                 String text,
+                                 @Nullable String text,
                                  Optional<Citation> citation,
                                  long date,
                                  boolean wasEdited,
@@ -56,7 +57,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 channelId,
                 sender,
                 receiverUserProfileId,
-                Optional.of(text),
+                Optional.ofNullable(text),
                 citation,
                 date,
                 wasEdited,

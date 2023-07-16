@@ -32,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            String channelId,
                                            UserProfile sender,
                                            String receiverUserProfileId,
-                                           String text,
+                                           @Nullable String text,
                                            Optional<Citation> citation,
                                            long date,
                                            boolean wasEdited,
@@ -76,7 +77,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             String channelId,
                                             UserProfile sender,
                                             String receiverUserProfileId,
-                                            String text,
+                                            @Nullable String text,
                                             Optional<Citation> citation,
                                             long date,
                                             boolean wasEdited,

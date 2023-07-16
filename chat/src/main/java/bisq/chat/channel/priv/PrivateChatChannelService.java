@@ -37,6 +37,7 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -84,7 +85,7 @@ public abstract class PrivateChatChannelService<
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(String messageId,
-                                                                              String text,
+                                                                              @Nullable String text,
                                                                               Optional<Citation> citation,
                                                                               C channel,
                                                                               UserProfile receiver,
