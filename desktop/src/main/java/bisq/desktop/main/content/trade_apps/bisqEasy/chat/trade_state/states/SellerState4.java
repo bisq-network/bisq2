@@ -145,7 +145,7 @@ public class SellerState4 extends BaseState {
 
         private void onConfirmed() {
             model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase4.balance.help.confirmed"));
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.phase4.chatBotMessage", model.getFormattedBaseAmount(), model.btcAddress));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.phase4.systemMessage", model.getFormattedBaseAmount(), model.btcAddress));
             try {
                 bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
             } catch (TradeException e) {

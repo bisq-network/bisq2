@@ -84,7 +84,7 @@ public class BuyerState2 extends BaseState {
 
         private void onConfirmFiatSent() {
             model.getFiatPaymentConfirmed().set(true);
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2a.chatBotMessage", model.getQuoteCode()));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2a.systemMessage", model.getQuoteCode()));
             try {
                 bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTrade());
             } catch (TradeException e) {
@@ -93,7 +93,7 @@ public class BuyerState2 extends BaseState {
         }
 
         private void onSendBtcAddress() {
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2b.chatBotMessage", model.getBtcAddress().get()));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2b.systemMessage", model.getBtcAddress().get()));
             try {
                 bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBtcAddress().get());
             } catch (TradeException e) {
