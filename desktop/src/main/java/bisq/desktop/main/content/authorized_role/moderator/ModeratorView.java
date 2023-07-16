@@ -33,6 +33,7 @@ public class ModeratorView extends View<VBox, ModeratorModel, ModeratorControlle
         root.setAlignment(Pos.TOP_LEFT);
         root.setPadding(new Insets(20, 0, 0, 0));
 
+        VBox.setMargin(roleInfo, new Insets(-20, 0, 0, 0));
         root.getChildren().addAll(reportToModeratorTable, bannedUserProfileTable, roleInfo);
     }
 

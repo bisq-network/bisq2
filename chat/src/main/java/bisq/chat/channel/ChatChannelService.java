@@ -79,7 +79,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     }
 
     protected boolean canHandleChannelDomain(M message) {
-        return message.getChatChannelDomain() != chatChannelDomain;
+        return message.getChatChannelDomain() == chatChannelDomain;
     }
 
     public Optional<C> findChannel(ChatMessage chatMessage) {

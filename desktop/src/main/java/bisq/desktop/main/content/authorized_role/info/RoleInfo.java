@@ -30,6 +30,7 @@ import bisq.presentation.formatters.BooleanFormatter;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import com.google.common.base.Joiner;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 
 public class RoleInfo {
+    @Getter
     private final Controller controller;
 
     public RoleInfo(ServiceProvider serviceProvider) {
@@ -130,6 +132,7 @@ public class RoleInfo {
             super(new VBox(10), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
+            root.setPadding(new Insets(20, 0, 0, 0));
 
             Label headline = new Label(Res.get("authorizedRole.roleInfo.headline"));
             headline.getStyleClass().add("bisq-text-headline-2");

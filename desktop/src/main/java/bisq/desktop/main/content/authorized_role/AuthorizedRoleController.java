@@ -26,14 +26,11 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.authorized_role.explorer.ExplorerNodeController;
-import bisq.desktop.main.content.authorized_role.market_price.MarketPriceNodeController;
+import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.desktop.main.content.authorized_role.mediator.MediatorController;
 import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
-import bisq.desktop.main.content.authorized_role.oracle.OracleNodeController;
 import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManagerController;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerController;
-import bisq.desktop.main.content.authorized_role.seed_node.SeedNodeController;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -77,36 +74,21 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case MEDIATOR: {
+            case MEDIATOR:
                 return Optional.of(new MediatorController(serviceProvider));
-            }
-           /* case ARBITRATOR: {
-                return Optional.of(new SecurityManagerController(serviceProvider)); //todo
-            }*/
-            case MODERATOR: {
+            case MODERATOR:
                 return Optional.of(new ModeratorController(serviceProvider));
-            }
-            case SECURITY_MANAGER: {
+            case SECURITY_MANAGER:
                 return Optional.of(new SecurityManagerController(serviceProvider));
-            }
-            case RELEASE_MANAGER: {
+            case RELEASE_MANAGER:
                 return Optional.of(new ReleaseManagerController(serviceProvider));
-            }
-            case SEED_NODE: {
-                return Optional.of(new SeedNodeController(serviceProvider));
-            }
-            case ORACLE_NODE: {
-                return Optional.of(new OracleNodeController(serviceProvider));
-            }
-            case EXPLORER_NODE: {
-                return Optional.of(new ExplorerNodeController(serviceProvider));
-            }
-            case MARKET_PRICE_NODE: {
-                return Optional.of(new MarketPriceNodeController(serviceProvider));
-            }
-            default: {
+            case SEED_NODE:
+            case ORACLE_NODE:
+            case EXPLORER_NODE:
+            case MARKET_PRICE_NODE:
+                return Optional.of(new RoleInfo(serviceProvider).getController());
+            default:
                 return Optional.empty();
-            }
         }
     }
 
