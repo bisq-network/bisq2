@@ -23,7 +23,8 @@ import bisq.common.util.ProtobufUtils;
 public enum ChatMessageType implements ProtoEnum {
     TEXT,
     LEAVE,
-    TAKE_BISQ_EASY_OFFER;
+    TAKE_BISQ_EASY_OFFER,
+    SYSTEM_MESSAGE;
 
     @Override
     public bisq.chat.protobuf.ChatMessageType toProto() {
