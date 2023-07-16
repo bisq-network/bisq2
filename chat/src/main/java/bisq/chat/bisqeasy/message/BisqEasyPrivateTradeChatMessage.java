@@ -99,14 +99,16 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 sender,
                 receiverUserProfileId,
                 mediator,
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
                 bisqEasyOffer);
     }
 
-    private BisqEasyPrivateTradeChatMessage(String channelId,
-                                            UserProfile sender,
-                                            String receiverUserProfileId,
-                                            Optional<UserProfile> mediator,
-                                            BisqEasyOffer bisqEasyOffer) {
+    public BisqEasyPrivateTradeChatMessage(String channelId,
+                                           UserProfile sender,
+                                           String receiverUserProfileId,
+                                           Optional<UserProfile> mediator,
+                                           ChatMessageType chatMessageType,
+                                           BisqEasyOffer bisqEasyOffer) {
         super(StringUtils.createShortUid(),
                 ChatChannelDomain.BISQ_EASY,
                 channelId,
@@ -116,7 +118,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 Optional.empty(),
                 new Date().getTime(),
                 false,
-                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                chatMessageType,
                 new MetaData(TTL, 100000, BisqEasyPrivateTradeChatMessage.class.getSimpleName()));
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
