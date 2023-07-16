@@ -244,7 +244,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                                 }
                                 if (item != null && !empty) {
                                     userName.setText(item.getUserName());
-                                    item.getAuthorUserProfileId().ifPresent(userProfile ->
+                                    item.getAuthorUserProfile().ifPresent(userProfile ->
                                             roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash())));
                                     setGraphic(hBox);
                                 } else {
@@ -355,7 +355,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
     @EqualsAndHashCode
     @Getter
     static class ListItem implements TableItem {
-        private final Optional<UserProfile> authorUserProfileId;
+        private final Optional<UserProfile> authorUserProfile;
         private final String userName;
         private final String amountDisplayString;
         private final String priceDisplayString;
@@ -370,13 +370,13 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                         ReputationService reputationService,
                         MarketPriceService marketPriceService) {
             this.bisqEasyOffer = bisqEasyOffer;
-            authorUserProfileId = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
-            userName = authorUserProfileId.map(UserProfile::getUserName).orElse("");
+            authorUserProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
+            userName = authorUserProfile.map(UserProfile::getUserName).orElse("");
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
             amountAsLong = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).map(Monetary::getValue).orElse(0L);
             amountDisplayString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
-            reputationScore = authorUserProfileId.flatMap(reputationService::findReputationScore)
+            reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }
     }

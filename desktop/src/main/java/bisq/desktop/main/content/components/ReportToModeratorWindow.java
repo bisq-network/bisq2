@@ -19,6 +19,7 @@ package bisq.desktop.main.content.components;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MultiLineLabel;
@@ -26,12 +27,15 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.support.moderator.ModeratorService;
+import bisq.user.profile.UserProfile;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -47,11 +51,11 @@ public class ReportToModeratorWindow {
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final String reportedUserProfileId;
         private final ChatChannelDomain chatChannelDomain;
+        private final UserProfile accusedUserProfile;
 
-        public InitData(String reportedUserProfileId, ChatChannelDomain chatChannelDomain) {
-            this.reportedUserProfileId = reportedUserProfileId;
+        public InitData(UserProfile accusedUserProfile, ChatChannelDomain chatChannelDomain) {
+            this.accusedUserProfile = accusedUserProfile;
             this.chatChannelDomain = chatChannelDomain;
         }
     }
@@ -69,16 +73,18 @@ public class ReportToModeratorWindow {
         private final View view;
         private final Model model;
         private final ModeratorService moderatorService;
+        private final ServiceProvider serviceProvider;
 
         private Controller(ServiceProvider serviceProvider) {
             moderatorService = serviceProvider.getSupportService().getModeratorService();
+            this.serviceProvider = serviceProvider;
             model = new Model();
             view = new View(model, this);
         }
 
         @Override
         public void initWithData(ReportToModeratorWindow.InitData initData) {
-            model.setReportedUserProfileId(initData.getReportedUserProfileId());
+            model.setAccusedUserProfile(initData.getAccusedUserProfile());
             model.setChatChannelDomain(initData.getChatChannelDomain());
         }
 
@@ -91,16 +97,20 @@ public class ReportToModeratorWindow {
         public void onDeactivate() {
             model.getReportButtonDisabled().unbind();
             model.getMessage().set("");
-            model.setReportedUserProfileId(null);
+            model.setAccusedUserProfile(null);
         }
 
-        private void onReport() {
-            moderatorService.reportUserProfile(model.getReportedUserProfileId(), model.getMessage().get(), model.getChatChannelDomain());
+        void onReport() {
+            moderatorService.reportUserProfile(model.getAccusedUserProfile(), model.getMessage().get(), model.getChatChannelDomain());
             onCancel();
         }
 
-        public void onCancel() {
+        void onCancel() {
             OverlayController.hide();
+        }
+
+        void onQuit() {
+            serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
         }
     }
 
@@ -110,16 +120,16 @@ public class ReportToModeratorWindow {
         public StringProperty message = new SimpleStringProperty("");
         public BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
         @Setter
-        private String reportedUserProfileId;
-        @Setter
         private ChatChannelDomain chatChannelDomain;
-
+        @Setter
+        private UserProfile accusedUserProfile;
     }
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Button reportButton, cancelButton;
         private final MaterialTextArea message;
+        private Scene rootScene;
 
         private View(Model model, Controller controller) {
             super(new VBox(20), model, controller);
@@ -145,10 +155,18 @@ public class ReportToModeratorWindow {
 
         @Override
         protected void onViewAttached() {
+            rootScene = root.getScene();
+
             message.textProperty().bindBidirectional(model.getMessage());
             reportButton.disableProperty().bind(model.getReportButtonDisabled());
             reportButton.setOnAction(e -> controller.onReport());
             cancelButton.setOnAction(e -> controller.onCancel());
+
+            // Replace the key handler of OverlayView as we do not support escape/enter at this popup
+            rootScene.setOnKeyReleased(keyEvent -> {
+                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+                KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
+            });
         }
 
         @Override
@@ -157,7 +175,7 @@ public class ReportToModeratorWindow {
             reportButton.disableProperty().unbind();
             reportButton.setOnAction(null);
             cancelButton.setOnAction(null);
+            rootScene.setOnKeyReleased(null);
         }
     }
-
 }

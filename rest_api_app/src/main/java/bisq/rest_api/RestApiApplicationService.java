@@ -137,8 +137,7 @@ public class RestApiApplicationService extends ApplicationService {
         chatService = new ChatService(persistenceService,
                 securityService.getProofOfWorkService(),
                 networkService,
-                userService.getUserIdentityService(),
-                userService.getUserProfileService(),
+                userService,
                 settingsService,
                 notificationsService);
 
@@ -146,7 +145,7 @@ public class RestApiApplicationService extends ApplicationService {
                 persistenceService, networkService, chatService, userService, bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService);
+                contractService, supportService, chatService, bondedRolesService, userService);
     }
 
     @Override

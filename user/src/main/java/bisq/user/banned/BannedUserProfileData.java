@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.moderator;
+package bisq.user.banned;
 
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,32 +46,32 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
     );
 
-    private final String profileId;
+    private final UserProfile userProfile;
     private final boolean staticPublicKeysProvided;
 
-    public BannedUserProfileData(String profileId, boolean staticPublicKeysProvided) {
-        this.profileId = profileId;
+    public BannedUserProfileData(UserProfile userProfile, boolean staticPublicKeysProvided) {
+        this.userProfile = userProfile;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
-    public bisq.support.protobuf.BannedUserProfileData toProto() {
-        return bisq.support.protobuf.BannedUserProfileData.newBuilder()
-                .setProfileId(profileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+    public bisq.user.protobuf.BannedUserProfileData toProto() {
+        bisq.user.protobuf.BannedUserProfileData.Builder builder = bisq.user.protobuf.BannedUserProfileData.newBuilder()
+                .setUserProfile(userProfile.toProto())
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+        return builder.build();
     }
 
-    public static BannedUserProfileData fromProto(bisq.support.protobuf.BannedUserProfileData proto) {
+    public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto) {
         return new BannedUserProfileData(
-                proto.getProfileId(),
+                UserProfile.fromProto(proto.getUserProfile()),
                 proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.support.protobuf.BannedUserProfileData.class));
+                return fromProto(any.unpack(bisq.user.protobuf.BannedUserProfileData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -104,7 +105,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     @Override
     public String toString() {
         return "BannedUserProfileData{" +
-                ",\r\n                    profileId=" + profileId +
+                ",\r\n                    userProfile=" + userProfile +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

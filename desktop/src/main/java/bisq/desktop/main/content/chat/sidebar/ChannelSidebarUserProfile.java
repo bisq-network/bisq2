@@ -20,7 +20,7 @@ package bisq.desktop.main.content.chat.sidebar;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.support.moderator.ModeratorService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -42,12 +42,12 @@ import org.fxmisc.easybind.Subscription;
 public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserProfile> {
     private final Controller controller;
 
-    public ChannelSidebarUserProfile(ModeratorService moderatorService, UserProfile userProfile) {
-        this(moderatorService, userProfile, false);
+    public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile) {
+        this(bannedUserService, userProfile, false);
     }
 
-    public ChannelSidebarUserProfile(ModeratorService moderatorService, UserProfile userProfile, boolean ignored) {
-        controller = new Controller(userProfile, moderatorService);
+    public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile, boolean ignored) {
+        controller = new Controller(userProfile, bannedUserService);
         controller.model.ignored = ignored;
     }
 
@@ -74,12 +74,12 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
-        private final ModeratorService moderatorService;
+        private final BannedUserService bannedUserService;
         @Getter
         private final View view;
 
-        private Controller(UserProfile userProfile, ModeratorService moderatorService) {
-            this.moderatorService = moderatorService;
+        private Controller(UserProfile userProfile, BannedUserService bannedUserService) {
+            this.bannedUserService = bannedUserService;
             model = new Model(userProfile);
             view = new View(model, this);
         }
@@ -101,7 +101,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         }
 
         public boolean isUserProfileBanned() {
-            return moderatorService.isUserProfileBanned(model.userProfile.getId());
+            return bannedUserService.isUserProfileBanned(model.userProfile);
         }
     }
 

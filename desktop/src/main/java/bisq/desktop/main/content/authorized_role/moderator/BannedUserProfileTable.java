@@ -32,9 +32,10 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.support.moderator.BannedUserProfileData;
 import bisq.support.moderator.ModeratorService;
 import bisq.support.moderator.ReportToModeratorMessage;
+import bisq.user.banned.BannedUserProfileData;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -72,12 +73,12 @@ public class BannedUserProfileTable {
         @Getter
         private final View view;
         private final Model model;
-        private final ServiceProvider serviceProvider;
+        private final BannedUserService bannedUserService;
         private final ModeratorService moderatorService;
         private Pin bannedUserListItemsPin;
 
         private Controller(ServiceProvider serviceProvider) {
-            this.serviceProvider = serviceProvider;
+            bannedUserService = serviceProvider.getUserService().getBannedUserService();
             moderatorService = serviceProvider.getSupportService().getModeratorService();
 
             model = new Model();
@@ -87,8 +88,8 @@ public class BannedUserProfileTable {
         @Override
         public void onActivate() {
             bannedUserListItemsPin = FxBindings.<BannedUserProfileData, View.ListItem>bind(model.getListItems())
-                    .map(message -> new View.ListItem(message, serviceProvider))
-                    .to(moderatorService.getBannedUserProfileDataSet());
+                    .map(View.ListItem::new)
+                    .to(bannedUserService.getBannedUserProfileDataSet());
         }
 
         @Override
@@ -99,8 +100,7 @@ public class BannedUserProfileTable {
         void onContactUser(BannedUserProfileData data) {
             ChatChannelDomain chatChannelDomain = ChatChannelDomain.SUPPORT;
             navigateToChannel(chatChannelDomain);
-            String userProfileId = data.getProfileId();
-            moderatorService.contactUser(chatChannelDomain, userProfileId, Optional.empty())
+            moderatorService.contactUser(chatChannelDomain, data.getUserProfile(), Optional.empty())
                     .whenComplete((result, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
@@ -269,14 +269,12 @@ public class BannedUserProfileTable {
         @EqualsAndHashCode
         private static class ListItem implements TableItem {
             private final BannedUserProfileData bannedUserProfileData;
-            private final String userProfileId;
             private final UserProfile userProfile;
             private final String userName;
 
-            private ListItem(BannedUserProfileData bannedUserProfileData, ServiceProvider serviceProvider) {
+            private ListItem(BannedUserProfileData bannedUserProfileData) {
                 this.bannedUserProfileData = bannedUserProfileData;
-                userProfileId = bannedUserProfileData.getProfileId();
-                userProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(userProfileId).orElseThrow();
+                userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
             }
         }

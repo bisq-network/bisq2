@@ -100,10 +100,10 @@ public class ReportToModeratorTable {
             reportListItemsPin.unbind();
         }
 
-        void onContactUser(ReportToModeratorMessage message, String userProfileId) {
+        void onContactUser(ReportToModeratorMessage message, UserProfile userProfile) {
             ChatChannelDomain chatChannelDomain = message.getChatChannelDomain();
             navigateToChannel(chatChannelDomain);
-            moderatorService.contactUser(chatChannelDomain, userProfileId, Optional.of(message.getMessage()))
+            moderatorService.contactUser(chatChannelDomain, userProfile, Optional.of(message.getMessage()))
                     .whenComplete((result, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
@@ -260,7 +260,7 @@ public class ReportToModeratorTable {
                         userNameLabel.setText(userName);
                         userProfileIcon.setUserProfile(userProfile);
                         button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(userName, 8));
-                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile.getId()));
+                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile));
                         setGraphic(hBox);
                     } else {
                         button.setOnAction(null);
@@ -289,13 +289,13 @@ public class ReportToModeratorTable {
                 public void updateItem(final ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
-                    if (item != null && !empty && item.getAccusedUserProfile().isPresent()) {
+                    if (item != null && !empty) {
                         String userName = item.getAccusedUserName();
-                        UserProfile userProfile = item.getAccusedUserProfile().get();
+                        UserProfile userProfile = item.getAccusedUserProfile();
                         userNameLabel.setText(userName);
                         userProfileIcon.setUserProfile(userProfile);
                         button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(userName, 8));
-                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile.getId()));
+                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile));
                         setGraphic(hBox);
                     } else {
                         button.setOnAction(null);
@@ -324,6 +324,7 @@ public class ReportToModeratorTable {
 
                     if (item != null && !empty) {
                         message.setText(item.getMessage());
+                        message.setMaxHeight(30);
                         Tooltip tooltip = new BisqTooltip(item.getMessage());
                         tooltip.getStyleClass().add("dark-tooltip");
                         message.setTooltip(tooltip);
@@ -386,8 +387,9 @@ public class ReportToModeratorTable {
         private static class ReportListItem implements TableItem {
             private final ReportToModeratorMessage reportToModeratorMessage;
             private final long date;
-            private final Optional<UserProfile> reporterUserProfile, accusedUserProfile;
+            private final Optional<UserProfile> reporterUserProfile;
             private final String dateString, message, reporterUserName, accusedUserName, chatChannelDomain;
+            private final UserProfile accusedUserProfile;
 
             private ReportListItem(ReportToModeratorMessage reportToModeratorMessage, ServiceProvider serviceProvider) {
                 UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
@@ -397,9 +399,8 @@ public class ReportToModeratorTable {
                 reporterUserProfile = userProfileService.findUserProfile(reporterUserProfileId);
                 reporterUserName = reporterUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
 
-                String accusedUserProfileId = reportToModeratorMessage.getAccusedUserProfileId();
-                accusedUserProfile = userProfileService.findUserProfile(accusedUserProfileId);
-                accusedUserName = accusedUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
+                accusedUserProfile = reportToModeratorMessage.getAccusedUserProfile();
+                accusedUserName = accusedUserProfile.getUserName();
 
                 chatChannelDomain = Res.get("chat.channelDomain." + reportToModeratorMessage.getChatChannelDomain().name());
                 date = reportToModeratorMessage.getDate();

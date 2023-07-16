@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.moderator;
+package bisq.user.banned;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -29,29 +29,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class ModeratorStore implements PersistableStore<ModeratorStore> {
-    private final ObservableSet<ReportToModeratorMessage> reportToModeratorMessages = new ObservableSet<>();
+public final class BannedUserStore implements PersistableStore<BannedUserStore> {
+    private final ObservableSet<BannedUserProfileData> bannedUserProfileDataSet = new ObservableSet<>();
 
-    public ModeratorStore() {
+    public BannedUserStore() {
         this(new HashSet<>());
     }
 
-    private ModeratorStore(Set<ReportToModeratorMessage> reportToModeratorMessages) {
-        this.reportToModeratorMessages.addAll(reportToModeratorMessages);
+    private BannedUserStore(Set<BannedUserProfileData> bannedUserProfileDataSet) {
+        this.bannedUserProfileDataSet.addAll(bannedUserProfileDataSet);
     }
 
     @Override
-    public bisq.support.protobuf.ModeratorStore toProto() {
-        return bisq.support.protobuf.ModeratorStore.newBuilder()
-                .addAllReportToModeratorMessages(reportToModeratorMessages.stream()
-                        .map(ReportToModeratorMessage::toReportToModeratorMessageProto)
+    public bisq.user.protobuf.BannedUserStore toProto() {
+        return bisq.user.protobuf.BannedUserStore.newBuilder()
+                .addAllBannedUserProfileDataSet(bannedUserProfileDataSet.stream()
+                        .map(BannedUserProfileData::toProto)
                         .collect(Collectors.toList()))
                 .build();
     }
 
-    public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto) {
-        return new ModeratorStore(proto.getReportToModeratorMessagesList().stream()
-                .map(ReportToModeratorMessage::fromProto)
+    public static BannedUserStore fromProto(bisq.user.protobuf.BannedUserStore proto) {
+        return new BannedUserStore(proto.getBannedUserProfileDataSetList().stream()
+                .map(BannedUserProfileData::fromProto)
                 .collect(Collectors.toSet()));
     }
 
@@ -59,7 +59,7 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.support.protobuf.ModeratorStore.class));
+                return fromProto(any.unpack(bisq.user.protobuf.BannedUserStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -67,17 +67,17 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
     }
 
     @Override
-    public ModeratorStore getClone() {
-        return new ModeratorStore(reportToModeratorMessages);
+    public BannedUserStore getClone() {
+        return new BannedUserStore(bannedUserProfileDataSet);
     }
 
     @Override
-    public void applyPersisted(ModeratorStore persisted) {
-        reportToModeratorMessages.clear();
-        reportToModeratorMessages.addAll(persisted.getReportToModeratorMessages());
+    public void applyPersisted(BannedUserStore persisted) {
+        bannedUserProfileDataSet.clear();
+        bannedUserProfileDataSet.addAll(persisted.getBannedUserProfileDataSet());
     }
 
-    ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
-        return reportToModeratorMessages;
+    ObservableSet<BannedUserProfileData> getBannedUserProfileDataSet() {
+        return bannedUserProfileDataSet;
     }
 }

@@ -137,3 +137,11 @@ message AuthorizedTimestampData {
   sint64 date = 2;
   bool staticPublicKeysProvided = 3;
 }
+
+message BannedUserProfileData {
+  UserProfile userProfile = 1;
+  bool staticPublicKeysProvided = 2;
+}
+message BannedUserStore {
+  repeated BannedUserProfileData bannedUserProfileDataSet = 1;
+}

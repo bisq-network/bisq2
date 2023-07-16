@@ -26,10 +26,9 @@ import bisq.chat.message.PublicChatMessage;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.PersistableStore;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
@@ -42,10 +41,9 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         extends ChatChannelService<M, C, S> implements DataService.Listener {
 
     public PublicChatChannelService(NetworkService networkService,
-                                    UserIdentityService userIdentityService,
-                                    UserProfileService userProfileService,
+                                    UserService userService,
                                     ChatChannelDomain chatChannelDomain) {
-        super(networkService, userIdentityService, userProfileService, chatChannelDomain);
+        super(networkService, userService, chatChannelDomain);
     }
 
 
@@ -86,11 +84,14 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         return publishChatMessage(chatMessage, userIdentity);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(M chatMessage,
+    public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(M message,
                                                                                  UserIdentity userIdentity) {
+        if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
         KeyPair keyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
         return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, keyPair));
+                .thenCompose(result -> networkService.publishAuthenticatedData(message, keyPair));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(M originalChatMessage,
@@ -125,14 +126,18 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void processAddedMessage(M message) {
-        findChannel(message).ifPresent(channel -> addMessage(message, channel));
+        if (canHandleChannelDomain(message) && isValid(message)) {
+            findChannel(message).ifPresent(channel -> addMessage(message, channel));
+        }
     }
 
     protected void processRemovedMessage(M message) {
-        findChannel(message).ifPresent(channel -> removeMessage(message, channel));
+        if (canHandleChannelDomain(message) && isValid(message)) {
+            findChannel(message).ifPresent(channel -> removeMessage(message, channel));
+        }
     }
 
-    protected void removeMessage(M message, C channel) {
+    private void removeMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
             channel.removeChatMessage(message);
         }

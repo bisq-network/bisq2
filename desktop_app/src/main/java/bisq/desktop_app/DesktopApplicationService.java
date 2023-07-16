@@ -131,8 +131,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
         chatService = new ChatService(persistenceService,
                 securityService.getProofOfWorkService(),
                 networkService,
-                userService.getUserIdentityService(),
-                userService.getUserProfileService(),
+                userService,
                 settingsService,
                 notificationsService);
 
@@ -144,7 +143,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService);
+                contractService, supportService, chatService, bondedRolesService, userService);
 
         serviceProvider = new ServiceProvider(this::shutdown,
                 getConfig(),

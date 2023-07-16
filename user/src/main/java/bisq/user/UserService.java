@@ -23,6 +23,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -35,6 +36,8 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class UserService implements Service {
+    private final BannedUserService bannedUserService;
+
     @Getter
     @ToString
     public static final class Config {
@@ -59,7 +62,11 @@ public class UserService implements Service {
                        NetworkService networkService,
                        BondedRolesService bondedRolesService,
                        ProofOfWorkService proofOfWorkService) {
-        userProfileService = new UserProfileService(persistenceService, networkService, proofOfWorkService);
+
+        bannedUserService = new BannedUserService(persistenceService, networkService);
+
+        userProfileService = new UserProfileService(persistenceService, networkService);
+
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,
                 identityService,
@@ -69,6 +76,7 @@ public class UserService implements Service {
                 networkService,
                 userIdentityService,
                 userProfileService,
+                bannedUserService,
                 bondedRolesService.getAuthorizedBondedRolesService());
     }
 
@@ -81,13 +89,15 @@ public class UserService implements Service {
         log.info("initialize");
         return userProfileService.initialize()
                 .thenCompose(result -> userIdentityService.initialize())
-                .thenCompose(result -> reputationService.initialize());
+                .thenCompose(result -> reputationService.initialize())
+                .thenCompose(result -> bannedUserService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return userProfileService.shutdown()
                 .thenCompose(result -> userIdentityService.shutdown())
-                .thenCompose(result -> reputationService.shutdown());
+                .thenCompose(result -> reputationService.shutdown())
+                .thenCompose(result -> bannedUserService.shutdown());
     }
 }

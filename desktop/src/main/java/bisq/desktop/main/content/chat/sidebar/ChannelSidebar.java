@@ -30,7 +30,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
-import bisq.support.moderator.ModeratorService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.property.*;
@@ -91,7 +91,7 @@ public class ChannelSidebar {
         private final Consumer<UserProfile> openUserProfileSidebarHandler;
         private final NotificationsSidebar notificationsSidebar;
         private final ChatService chatService;
-        private final ModeratorService moderatorService;
+        private final BannedUserService bannedUserService;
 
         @Nullable
         private Pin userProfileIdsOfParticipantsPin;
@@ -104,7 +104,7 @@ public class ChannelSidebar {
 
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             chatService = serviceProvider.getChatService();
-            moderatorService = serviceProvider.getSupportService().getModeratorService();
+            bannedUserService = serviceProvider.getUserService().getBannedUserService();
             notificationsSidebar = new NotificationsSidebar(chatService);
 
             model = new Model();
@@ -152,7 +152,7 @@ public class ChannelSidebar {
                     boolean ignored = ignoredChatUserIds.contains(userProfileId);
                     UIThread.run(() ->
                             userProfileService.findUserProfile(userProfileId)
-                                    .ifPresent(userProfile -> model.participantList.add(new ChannelSidebarUserProfile(moderatorService, userProfile, ignored))));
+                                    .ifPresent(userProfile -> model.participantList.add(new ChannelSidebarUserProfile(bannedUserService, userProfile, ignored))));
                 }
 
                 @Override
@@ -178,12 +178,12 @@ public class ChannelSidebar {
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = commonPublicChatChannel.getChannelAdminId()
-                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(userProfile -> new ChannelSidebarUserProfile(moderatorService, userProfile)))
+                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile)))
                         .stream()
                         .findAny();
                 model.moderators.setAll(commonPublicChatChannel.getChannelModeratorIds().stream()
                         .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                        .map(userProfile -> new ChannelSidebarUserProfile(moderatorService, userProfile))
+                        .map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile))
                         .sorted()
                         .collect(Collectors.toList()));
             } else if (chatChannel instanceof BisqEasyPublicChatChannel) {

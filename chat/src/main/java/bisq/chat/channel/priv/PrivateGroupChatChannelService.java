@@ -23,8 +23,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.PersistableStore;
 import bisq.security.pow.ProofOfWorkService;
-import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfileService;
+import bisq.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,10 +35,9 @@ public abstract class PrivateGroupChatChannelService<
         extends PrivateChatChannelService<M, C, S> implements MessageListener {
 
     public PrivateGroupChatChannelService(NetworkService networkService,
-                                          UserIdentityService userIdentityService,
-                                          UserProfileService userProfileService,
+                                          UserService userService,
                                           ProofOfWorkService proofOfWorkService,
                                           ChatChannelDomain chatChannelDomain) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, chatChannelDomain);
+        super(networkService, userService, proofOfWorkService, chatChannelDomain);
     }
 }

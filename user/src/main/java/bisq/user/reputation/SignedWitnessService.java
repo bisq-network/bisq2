@@ -25,6 +25,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -86,8 +87,9 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
                                 UserProfileService userProfileService,
+                                BannedUserService bannedUserService,
                                 AuthorizedBondedRolesService authorizedBondedRolesService) {
-        super(networkService, userIdentityService, userProfileService, authorizedBondedRolesService);
+        super(networkService, userIdentityService, userProfileService, bannedUserService, authorizedBondedRolesService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

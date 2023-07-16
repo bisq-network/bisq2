@@ -33,7 +33,7 @@ import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.support.moderator.ModeratorService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -99,7 +99,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final UserIdentityService userIdentityService;
         private final ReputationService reputationService;
         private final Runnable closeHandler;
-        private final ModeratorService moderatorService;
+        private final BannedUserService bannedUserService;
 
 
         private Controller(ServiceProvider serviceProvider,
@@ -109,7 +109,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             this.userProfileService = serviceProvider.getUserService().getUserProfileService();
             this.reputationService = serviceProvider.getUserService().getReputationService();
-            moderatorService = serviceProvider.getSupportService().getModeratorService();
+            bannedUserService = serviceProvider.getUserService().getBannedUserService();
             this.closeHandler = closeHandler;
             model = new Model(serviceProvider.getChatService(), userProfile, selectedChannel);
             view = new View(model, this);
@@ -168,9 +168,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         }
 
         void onReportUser() {
-            String reportedUserProfileId = model.userProfile.getId();
             ChatChannelDomain chatChannelDomain = model.getSelectedChannel().getChatChannelDomain();
-            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(reportedUserProfileId, chatChannelDomain));
+            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR, new ReportToModeratorWindow.InitData(model.userProfile, chatChannelDomain));
         }
 
         void onClose() {
@@ -178,7 +177,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         }
 
         boolean isUserProfileBanned() {
-            return moderatorService.isUserProfileBanned(model.getUserProfile().getId());
+            return bannedUserService.isUserProfileBanned(model.getUserProfile());
         }
     }
 

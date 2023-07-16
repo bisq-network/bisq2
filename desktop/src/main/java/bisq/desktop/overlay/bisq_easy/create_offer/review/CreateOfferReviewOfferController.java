@@ -47,6 +47,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -75,6 +76,7 @@ public class CreateOfferReviewOfferController implements Controller {
     private final UserProfileService userProfileService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
+    private final BannedUserService bannedUserService;
 
     public CreateOfferReviewOfferController(ServiceProvider serviceProvider,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
@@ -87,6 +89,7 @@ public class CreateOfferReviewOfferController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
         this.resetHandler = resetHandler;
 
         model = new CreateOfferReviewOfferModel();
@@ -211,6 +214,12 @@ public class CreateOfferReviewOfferController implements Controller {
     }
 
     void onTakeOffer(CreateOfferReviewOfferView.ListItem listItem) {
+        UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        if (bannedUserService.isNetworkIdBanned(listItem.getBisqEasyOffer().getMakerNetworkId()) ||
+                bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
+            return;
+        }
+
         OverlayController.hide(() -> {
                     TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
                             Optional.of(model.getAmountSpec()),
@@ -245,10 +254,10 @@ public class CreateOfferReviewOfferController implements Controller {
         return item ->
         {
             try {
-                if (item.getAuthorUserProfileId().isEmpty()) {
+                if (item.getAuthorUserProfile().isEmpty()) {
                     return false;
                 }
-                UserProfile authorUserProfile = item.getAuthorUserProfileId().get();
+                UserProfile authorUserProfile = item.getAuthorUserProfile().get();
                 if (userProfileService.isChatUserIgnored(authorUserProfile)) {
                     return false;
                 }

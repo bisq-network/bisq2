@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -40,18 +41,18 @@ public final class ReportToModeratorMessage implements MailboxMessage {
             ReportToModeratorMessage.class.getSimpleName());
     private final long date;
     private final String reporterUserProfileId;
-    private final String accusedUserProfileId;
+    private final UserProfile accusedUserProfile;
     private final String message;
     private final ChatChannelDomain chatChannelDomain;
 
     public ReportToModeratorMessage(long date,
                                     String reporterUserProfileId,
-                                    String accusedUserProfileId,
+                                    UserProfile accusedUserProfile,
                                     String message,
                                     ChatChannelDomain chatChannelDomain) {
         this.date = date;
         this.reporterUserProfileId = reporterUserProfileId;
-        this.accusedUserProfileId = accusedUserProfileId;
+        this.accusedUserProfile = accusedUserProfile;
         this.message = message;
         this.chatChannelDomain = chatChannelDomain;
     }
@@ -65,19 +66,19 @@ public final class ReportToModeratorMessage implements MailboxMessage {
     }
 
     public bisq.support.protobuf.ReportToModeratorMessage toReportToModeratorMessageProto() {
-        return bisq.support.protobuf.ReportToModeratorMessage.newBuilder()
+        bisq.support.protobuf.ReportToModeratorMessage.Builder builder = bisq.support.protobuf.ReportToModeratorMessage.newBuilder()
                 .setDate(date)
-                .setReportSenderUserProfileId(reporterUserProfileId)
-                .setReportedUserProfileId(accusedUserProfileId)
+                .setReporterUserProfileId(reporterUserProfileId)
+                .setAccusedUserProfile(accusedUserProfile.toProto())
                 .setMessage(message)
-                .setChatChannelDomain(chatChannelDomain.toProto())
-                .build();
+                .setChatChannelDomain(chatChannelDomain.toProto());
+        return builder.build();
     }
 
     public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto) {
         return new ReportToModeratorMessage(proto.getDate(),
-                proto.getReportSenderUserProfileId(),
-                proto.getReportedUserProfileId(),
+                proto.getReporterUserProfileId(),
+                UserProfile.fromProto(proto.getAccusedUserProfile()),
                 proto.getMessage(),
                 ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
     }

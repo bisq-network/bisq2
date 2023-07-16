@@ -31,9 +31,8 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.user.identity.UserIdentityService;
+import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,9 +53,8 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
     public BisqEasyPublicChatChannelService(PersistenceService persistenceService,
                                             NetworkService networkService,
-                                            UserIdentityService userIdentityService,
-                                            UserProfileService userProfileService) {
-        super(networkService, userIdentityService, userProfileService, ChatChannelDomain.BISQ_EASY);
+                                            UserService userService) {
+        super(networkService, userService, ChatChannelDomain.BISQ_EASY);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
 
         getVisibleChannelIds().addListener(() -> {
@@ -71,17 +69,12 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     public void joinChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().add(channel.getId());
         persist();
-
-        //todo send join msg
     }
 
     @Override
     public void leaveChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().remove(channel.getId());
         persist();
-
-
-        //todo send leave msg
     }
 
     public boolean isVisible(BisqEasyPublicChatChannel channel) {
