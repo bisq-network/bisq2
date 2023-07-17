@@ -317,7 +317,7 @@ public class StorageService {
                 .filter(mapEntry -> !dataFilter.getFilterEntries().contains(getFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
-        return new Inventory(result, entrySet.size() - result.size());
+        return new Inventory(result, entrySet.size());
     }
 
 
@@ -334,7 +334,7 @@ public class StorageService {
     }
 
     private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
-        return stores.flatMap(store -> store.getPersistableStore().getClone().getMap().entrySet().stream())
+        return stores.flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream())
                 .map(this::getFilterEntry)
                 .collect(Collectors.toSet());
     }

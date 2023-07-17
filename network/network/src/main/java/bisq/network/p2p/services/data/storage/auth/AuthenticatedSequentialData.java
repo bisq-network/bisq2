@@ -81,10 +81,10 @@ public final class AuthenticatedSequentialData implements Proto {
     @Override
     public String toString() {
         return "AuthenticatedSequentialData{" +
-                "\r\n     authenticatedData=" + authenticatedData +
-                ",\r\n     sequenceNumber=" + sequenceNumber +
-                ",\r\n     created=" + created +
-                ",\r\n     pubKeyHash=" + Hex.encode(pubKeyHash) +
+                "\r\n          sequenceNumber=" + sequenceNumber +
+                ",\r\n          created=" + created +
+                ",\r\n          pubKeyHash=" + Hex.encode(pubKeyHash) +
+                ",\r\n          authenticatedData=" + authenticatedData +
                 "\r\n}";
     }
 }

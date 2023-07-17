@@ -17,14 +17,13 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
-import bisq.common.data.ByteArray;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +38,7 @@ public final class PeerExchangeRequest implements NetworkMessage {
         this.nonce = nonce;
         this.peers = peers;
         // We need to sort deterministically as the data is used in the proof of work check
-        this.peers.sort(Comparator.comparing((Peer e) -> new ByteArray(e.serialize())));
+        Collections.sort(this.peers);
     }
 
     @Override

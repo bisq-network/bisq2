@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.top;
 
-import bisq.bonded_roles.service.market_price.MarketPrice;
-import bisq.bonded_roles.service.market_price.MarketPriceService;
+import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;

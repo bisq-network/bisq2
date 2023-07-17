@@ -17,8 +17,8 @@
 
 package bisq.bonded_roles.alert;
 
-import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
@@ -36,7 +36,8 @@ import java.util.concurrent.CompletableFuture;
 public class AlertService implements Service, DataService.Listener {
     private final NetworkService networkService;
     @Getter
-    private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
+
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -71,23 +72,23 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedDataSet::add);
+        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedAlertDataSet::add);
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedDataSet::remove);
+        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedAlertDataSet::remove);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Optional<AuthorizedData> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
+    private Optional<AuthorizedAlertData> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedAlertData &&
-                authorizedBondedRolesService.isAuthorizedByBondedRole(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
-            return Optional.of(authorizedData);
+                authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
+            return Optional.of((AuthorizedAlertData) data);
         }
         return Optional.empty();
     }

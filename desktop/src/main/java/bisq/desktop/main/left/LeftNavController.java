@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.left;
 
-import bisq.bonded_roles.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
@@ -46,7 +46,7 @@ public class LeftNavController implements Controller {
     private final NotificationsService notificationsService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
-    private Pin bondedRoleSetPin, selectedUserIdentityPin;
+    private Pin bondedRolesPin, selectedUserIdentityPin;
     private Subscription tradeAppsSubMenuExpandedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
@@ -65,13 +65,13 @@ public class LeftNavController implements Controller {
                 tradeAppsSubMenuExpanded ->
                         notificationsService.getNotConsumedNotificationIds().forEach(this::updateNumNotifications));
 
-        bondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(this::updateAuthorizedRoleVisible);
-        selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> updateAuthorizedRoleVisible());
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
+        selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
     }
 
     @Override
     public void onDeactivate() {
-        bondedRoleSetPin.unbind();
+        bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
         tradeAppsSubMenuExpandedPin.unsubscribe();
         notificationsService.removeListener(this::updateNumNotifications);
@@ -149,13 +149,14 @@ public class LeftNavController implements Controller {
                 .findAny();
     }
 
-    private void updateAuthorizedRoleVisible() {
+    private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
             boolean authorizedRoleVisible = selectedUserIdentity != null &&
-                    authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
+                    authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                             .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
-            if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible) {
+            if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible &&
+                    model.getSelectedNavigationTarget().get() == NavigationTarget.AUTHORIZED_ROLE) {
                 UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
             }
             model.getAuthorizedRoleVisible().set(authorizedRoleVisible);

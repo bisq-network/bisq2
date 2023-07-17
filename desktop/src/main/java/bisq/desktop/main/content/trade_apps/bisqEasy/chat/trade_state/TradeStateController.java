@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
-import bisq.bonded_roles.service.market_price.MarketPriceService;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;

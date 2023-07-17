@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state.states;
 
-import bisq.bonded_roles.service.explorer.ExplorerService;
+import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;

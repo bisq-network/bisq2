@@ -15,38 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles;
+package bisq.bonded_roles.bonded_role;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.ProtobufUtils;
+import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.StaticallyAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
-@ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedRole implements AuthorizedDistributedData, StaticallyAuthorizedPublicKeyValidation {
+public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
-
-    // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
@@ -58,7 +55,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, St
     private final String bondUserName;
     private final String signature;
     private final Map<Transport.Type, Address> addressByNetworkType;
-    private final AuthorizedOracleNode authorizedOracleNode;
+    private final Optional<AuthorizedOracleNode> authorizedOracleNode;
+    private final boolean staticPublicKeysProvided;
 
     public AuthorizedBondedRole(String profileId,
                                 String authorizedPublicKey,
@@ -66,7 +64,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, St
                                 String bondUserName,
                                 String signature,
                                 Map<Transport.Type, Address> addressByNetworkType,
-                                AuthorizedOracleNode authorizedOracleNode) {
+                                Optional<AuthorizedOracleNode> authorizedOracleNode,
+                                boolean staticPublicKeysProvided) {
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
@@ -74,33 +73,32 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, St
         this.signature = signature;
         this.addressByNetworkType = addressByNetworkType;
         this.authorizedOracleNode = authorizedOracleNode;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto() {
-        return bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
+        bisq.bonded_roles.protobuf.AuthorizedBondedRole.Builder builder = bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
                 .setProfileId(profileId)
                 .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignature(signature)
-                .putAllAddressByNetworkType(addressByNetworkType.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().name(), e -> e.getValue().toProto())))
-                .setOracleNode(authorizedOracleNode.toProto())
-                .build();
+                .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+        authorizedOracleNode.ifPresent(oracleNode -> builder.setAuthorizedOracleNode(oracleNode.toProto()));
+        return builder.build();
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
-        Map<Transport.Type, Address> addressByNetworkType = proto.getAddressByNetworkTypeMap().entrySet().stream()
-                .collect(Collectors.toMap(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e.getKey()),
-                        e -> Address.fromProto(e.getValue())));
         return new AuthorizedBondedRole(proto.getProfileId(),
                 proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignature(),
-                addressByNetworkType,
-                AuthorizedOracleNode.fromProto(proto.getOracleNode()));
+                NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
+                proto.hasAuthorizedOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizedOracleNode())) : Optional.empty(),
+                proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -128,7 +126,28 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData, St
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AUTHORIZED_PUBLIC_KEYS;
+            return AuthorizedPubKeys.KEYS;
         }
+    }
+
+    @Override
+    public boolean staticPublicKeysProvided() {
+        return staticPublicKeysProvided;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthorizedBondedRole{" +
+                "\r\n                    metaData=" + metaData +
+                ",\r\n                    profileId='" + profileId + '\'' +
+                ",\r\n                    authorizedPublicKey='" + authorizedPublicKey + '\'' +
+                ",\r\n                    bondedRoleType=" + bondedRoleType +
+                ",\r\n                    bondUserName='" + bondUserName + '\'' +
+                ",\r\n                    signature='" + signature + '\'' +
+                ",\r\n                    addressByNetworkType=" + addressByNetworkType +
+                ",\r\n                    authorizedOracleNode=" + authorizedOracleNode +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
+                ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
+                "\r\n}";
     }
 }

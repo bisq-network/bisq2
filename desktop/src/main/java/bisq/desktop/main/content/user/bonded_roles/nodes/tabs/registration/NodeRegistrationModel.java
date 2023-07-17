@@ -30,6 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class NodeRegistrationModel extends BondedRolesRegistrationModel {
     private final StringProperty addressInfoJson = new SimpleStringProperty();
+    private final StringProperty pubKey = new SimpleStringProperty();
+    private final StringProperty privKey = new SimpleStringProperty();
+    private final BooleanProperty showKeyPair = new SimpleBooleanProperty();
     private final BooleanProperty importButtonVisible = new SimpleBooleanProperty();
     protected final BooleanProperty jsonValid = new SimpleBooleanProperty();
 

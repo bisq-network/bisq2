@@ -46,7 +46,7 @@ message DataFilter {
 
 message Inventory {
   repeated DataRequest entries = 1;
-  sint32 numDropped = 2;
+  sint32 peersNumEntries = 2;
 }
 
 message Peer {
@@ -161,7 +161,7 @@ message MetaData {
   string fileName = 3;
 }
 message AuthorizedData {
-  bytes signature = 1;
+  optional bytes signature = 1;
   bytes authorizedPublicKeyBytes = 2;
 }
 message DefaultAuthenticatedData {
@@ -277,6 +277,7 @@ message DataStore {
 
 message NetworkServiceStore {
   map<string, NetworkId> networkIdByNodeId = 1;
+  repeated string seedNodeAddresses = 2;
 }
 
 message PeerGroupStore {

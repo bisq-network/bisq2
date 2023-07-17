@@ -17,13 +17,14 @@
 
 package bisq.user.reputation.data;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -31,12 +32,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedReputationData implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation {
+public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
     private final MetaData metaData = new MetaData(TTL,
@@ -45,14 +47,16 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
 
     private final long amount;
     private final long lockTime;
+    private final boolean staticPublicKeysProvided;
     private final long time;
     private final byte[] hash;
 
-    public AuthorizedBondedReputationData(long amount, long time, byte[] hash, long lockTime) {
+    public AuthorizedBondedReputationData(long amount, long time, byte[] hash, long lockTime, boolean staticPublicKeysProvided) {
         this.amount = amount;
         this.time = time;
         this.hash = hash;
         this.lockTime = lockTime;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
@@ -62,6 +66,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
                 .setLockTime(lockTime)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
     }
 
@@ -70,7 +75,8 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
                 proto.getAmount(),
                 proto.getTime(),
                 proto.getHash().toByteArray(),
-                proto.getLockTime());
+                proto.getLockTime(),
+                proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -94,12 +100,28 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     }
 
     @Override
+    public Set<String> getAuthorizedPublicKeys() {
+        if (DevMode.isDevMode()) {
+            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+        } else {
+            return AuthorizedPubKeys.KEYS;
+        }
+    }
+
+    @Override
+    public boolean staticPublicKeysProvided() {
+        return staticPublicKeysProvided;
+    }
+
+    @Override
     public String toString() {
         return "AuthorizedBondedReputationData{" +
-                ",\r\n     amount=" + amount +
-                ",\r\n     time=" + new Date(time) +
-                ",\r\n     hash=" + Hex.encode(hash) +
-                ",\r\n     lockTime=" + lockTime +
+                ",\r\n                    amount=" + amount +
+                ",\r\n                    time=" + new Date(time) +
+                ",\r\n                    hash=" + Hex.encode(hash) +
+                ",\r\n                    lockTime=" + lockTime +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
+                ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
 }

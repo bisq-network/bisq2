@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataNetworkService;
@@ -217,6 +218,14 @@ public class ServiceNode {
 
     public void removeMessageListener(MessageListener messageListener) {
         confidentialMessageService.ifPresent(service -> service.removeMessageListener(messageListener));
+    }
+
+    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+        confidentialMessageService.ifPresent(service -> service.addConfidentialMessageListener(listener));
+    }
+
+    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+        confidentialMessageService.ifPresent(service -> service.removeConfidentialMessageListener(listener));
     }
 
     public void addListener(Listener listener) {

@@ -109,7 +109,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 securityService,
                 networkService);
 
-        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bonded_roles")), config.getVersion(), networkService);
+        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")), config.getVersion(), networkService);
 
         accountService = new AccountService(persistenceService);
 
@@ -136,7 +136,11 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 settingsService,
                 notificationsService);
 
-        supportService = new SupportService(networkService, identityService, chatService, userService, bondedRolesService);
+        supportService = new SupportService(SupportService.Config.from(getConfig("support")),
+                networkService,
+                chatService,
+                userService,
+                bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService);

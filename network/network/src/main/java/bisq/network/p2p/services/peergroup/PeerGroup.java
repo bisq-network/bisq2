@@ -33,7 +33,6 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class PeerGroup {
-
     @Getter
     public static class Config {
         private final int minNumConnectedPeers;

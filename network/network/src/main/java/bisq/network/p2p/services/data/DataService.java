@@ -219,6 +219,10 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
+    public CompletableFuture<BroadCastDataResult> addAuthorizedData(AuthorizedData authorizedData, KeyPair keyPair) {
+        return addAuthenticatedData(authorizedData, keyPair);
+    }
+
     public CompletableFuture<BroadCastDataResult> addAppendOnlyData(AppendOnlyData appendOnlyData) {
         return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
                 .thenApply(store -> {
@@ -262,8 +266,7 @@ public class DataService implements DataNetworkService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData,
-                                                                          KeyPair keyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
                 .thenApply(store -> {
                     try {
@@ -285,6 +288,10 @@ public class DataService implements DataNetworkService.Listener {
                         throw new CompletionException(e);
                     }
                 });
+    }
+
+    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData, KeyPair keyPair) {
+        return removeAuthenticatedData(authorizedData, keyPair);
     }
 
     public CompletableFuture<BroadCastDataResult> removeMailboxData(MailboxData mailboxData, KeyPair keyPair) {

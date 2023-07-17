@@ -20,7 +20,6 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
@@ -39,13 +38,13 @@ import java.util.Arrays;
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements DataRequest {
     public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
-                                                       StorageData storageData,
+                                                       AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(storageData.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RefreshAuthenticatedDataRequest(storageData.getMetaData(),
+        return new RefreshAuthenticatedDataRequest(authenticatedData.getMetaData(),
                 hash,
                 keyPair.getPublic(),
                 newSequenceNumber,

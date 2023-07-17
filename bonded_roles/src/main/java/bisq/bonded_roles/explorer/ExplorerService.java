@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.service.explorer;
+package bisq.bonded_roles.explorer;
 
-import bisq.bonded_roles.service.explorer.dto.Tx;
+import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;

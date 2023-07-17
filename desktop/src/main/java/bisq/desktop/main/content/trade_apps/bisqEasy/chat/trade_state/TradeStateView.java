@@ -68,7 +68,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         headerHBox = new HBox(headline, Spacer.fillHBox(), collapseButton, expandButton);
         headerHBox.setCursor(Cursor.HAND);
 
-        BisqTooltip tooltip = new BisqTooltip(Res.get("bisqEasy.tradeState.header.expandCollapse.tooltip"));
+        BisqTooltip tooltip = new BisqTooltip(Res.get("action.expandOrCollapse"));
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 

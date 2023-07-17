@@ -17,7 +17,7 @@
 
 package bisq.user.reputation;
 
-import bisq.bonded_roles.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;

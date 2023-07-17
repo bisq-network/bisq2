@@ -83,7 +83,6 @@ message ProfileAgeStore {
   sint64 lastRequested = 2;
 }
 
-
 message AuthorizeAccountAgeRequest {
   string profileId = 1;
   string hashAsHex = 2;
@@ -110,6 +109,7 @@ message AuthorizedProofOfBurnData {
   sint64 amount = 1;
   sint64 time = 2;
   bytes hash = 3;
+  bool staticPublicKeysProvided = 4;
 }
 
 message AuthorizedBondedReputationData {
@@ -117,19 +117,23 @@ message AuthorizedBondedReputationData {
   sint64 time = 2;
   bytes hash = 3;
   sint64 lockTime = 4;
+  bool staticPublicKeysProvided = 5;
 }
 
 message AuthorizedAccountAgeData {
   string profileId = 1;
   sint64 date = 2;
+  bool staticPublicKeysProvided = 3;
 }
 
 message AuthorizedSignedWitnessData {
   string profileId = 1;
   sint64 witnessSignDate = 2;
+  bool staticPublicKeysProvided = 3;
 }
 
 message AuthorizedTimestampData {
   string profileId = 1;
   sint64 date = 2;
+  bool staticPublicKeysProvided = 3;
 }

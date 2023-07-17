@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage.auth.authorized;
+package bisq.network.p2p.services.confidential;
 
-/**
- * Marker interface for AuthorizedDistributedData which skip the validation with statically provided authorized pub keys,
- * as they will get validated at a higher layer (e.g. using bonded roles data).
- */
-public interface DeferredAuthorizedPublicKeyValidation {
+import bisq.network.p2p.message.NetworkMessage;
+
+import java.security.PublicKey;
+
+public interface ConfidentialMessageListener {
+    void onMessage(NetworkMessage networkMessage, PublicKey senderPublicKey);
 }

@@ -24,7 +24,6 @@ import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -32,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
  * We use Any for wrapping the external implementation of the distributedData instance (e.g. Offer).
  */
 @Slf4j
-@ToString
 @EqualsAndHashCode
 public abstract class AuthenticatedData implements StorageData {
     @Getter
@@ -68,5 +66,12 @@ public abstract class AuthenticatedData implements StorageData {
     @Override
     public MetaData getMetaData() {
         return distributedData.getMetaData();
+    }
+
+    @Override
+    public String toString() {
+        return "AuthenticatedData{" +
+                "\r\n               distributedData=" + distributedData +
+                "\r\n}";
     }
 }

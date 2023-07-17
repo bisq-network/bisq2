@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.authorized_role;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
-import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -50,7 +50,7 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
     private final AuthorizedRoleView view;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
-    private Pin bondedRoleSetPin, selectedUserIdentityPin;
+    private Pin bondedRolesPin, selectedUserIdentityPin;
 
     public AuthorizedRoleController(ServiceProvider serviceProvider) {
         super(new AuthorizedRoleModel(List.of(BondedRoleType.values())), NavigationTarget.AUTHORIZED_ROLE);
@@ -60,18 +60,18 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         view = new AuthorizedRoleView(model, this);
 
-        updateAuthorizedBondedRoles();
+        onBondedRolesChanged();
     }
 
     @Override
     public void onActivate() {
-        bondedRoleSetPin = authorizedBondedRolesService.getAuthorizedBondedRoleSet().addListener(this::updateAuthorizedBondedRoles);
-        selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> updateAuthorizedBondedRoles());
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
+        selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
     }
 
     @Override
     public void onDeactivate() {
-        bondedRoleSetPin.unbind();
+        bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
     }
 
@@ -110,12 +110,11 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
         }
     }
 
-    private void updateAuthorizedBondedRoles() {
+    private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                    .filter(bondedRole -> selectedUserIdentity != null)
-                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                    .filter(bondedRole -> selectedUserIdentity != null && selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
                     .map(AuthorizedBondedRole::getBondedRoleType)
                     .collect(Collectors.toSet()));
         });

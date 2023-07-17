@@ -17,6 +17,7 @@
 
 package bisq.security.pow;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -38,8 +39,8 @@ public final class ProofOfWork implements Proto {
     private final byte[] solution;
 
     public ProofOfWork(byte[] payload,
-                       byte[] challenge,
-                       @Nullable double difficulty,
+                       @Nullable byte[] challenge,
+                       double difficulty,
                        byte[] solution) {
         this.payload = payload;
         this.challenge = challenge;
@@ -74,8 +75,11 @@ public final class ProofOfWork implements Proto {
 
     @Override
     public String toString() {
-        return "ProofOfWork{" +
-                ",\r\n     difficulty=" + difficulty +
-                "\r\n}";
+        return "ProofOfWork(" +
+                "payload=" + Hex.encode(payload) +
+                ", challenge=" + (challenge == null ? "null" : Hex.encode(challenge)) +
+                ", difficulty=" + difficulty +
+                ", solution=" + Hex.encode(solution) +
+                ")";
     }
 }

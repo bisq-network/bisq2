@@ -17,10 +17,10 @@
 
 package bisq.support.mediation;
 
-import bisq.bonded_roles.AuthorizedBondedRole;
-import bisq.bonded_roles.AuthorizedBondedRolesService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -47,6 +47,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class MediationService implements Service, MessageListener {
@@ -116,7 +117,9 @@ public class MediationService implements Service, MessageListener {
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
-        Set<AuthorizedBondedRole> mediators = authorizedBondedRolesService.getAuthorizedBondedRoles(BondedRoleType.MEDIATOR);
+        Set<AuthorizedBondedRole> mediators = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                .filter(role -> role.getBondedRoleType() == BondedRoleType.MEDIATOR)
+                .collect(Collectors.toSet());
         return selectMediator(mediators, makersUserProfileId, takersUserProfileId);
     }
 
@@ -190,8 +193,7 @@ public class MediationService implements Service, MessageListener {
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
-        return authorizedBondedRolesService.getAuthorizedBondedRoleSet().stream()
-                .filter(data -> userIdentityService.findUserIdentity(data.getProfileId()).isPresent())
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream())
                 .findAny();

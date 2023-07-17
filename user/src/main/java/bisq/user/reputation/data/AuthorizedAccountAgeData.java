@@ -17,24 +17,26 @@
 
 package bisq.user.reputation.data;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.DeferredAuthorizedPublicKeyValidation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountAgeData implements AuthorizedDistributedData, DeferredAuthorizedPublicKeyValidation {
+public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(15);
 
     private final MetaData metaData = new MetaData(TTL,
@@ -43,10 +45,12 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     private final String profileId;
     private final long date;
+    private final boolean staticPublicKeysProvided;
 
-    public AuthorizedAccountAgeData(String profileId, long date) {
+    public AuthorizedAccountAgeData(String profileId, long date, boolean staticPublicKeysProvided) {
         this.profileId = profileId;
         this.date = date;
+        this.staticPublicKeysProvided = staticPublicKeysProvided;
     }
 
     @Override
@@ -54,13 +58,15 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         return bisq.user.protobuf.AuthorizedAccountAgeData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
     }
 
     public static AuthorizedAccountAgeData fromProto(bisq.user.protobuf.AuthorizedAccountAgeData proto) {
         return new AuthorizedAccountAgeData(
                 proto.getProfileId(),
-                proto.getDate());
+                proto.getDate(),
+                proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -84,10 +90,26 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     }
 
     @Override
+    public Set<String> getAuthorizedPublicKeys() {
+        if (DevMode.isDevMode()) {
+            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+        } else {
+            return AuthorizedPubKeys.KEYS;
+        }
+    }
+
+    @Override
+    public boolean staticPublicKeysProvided() {
+        return staticPublicKeysProvided;
+    }
+
+    @Override
     public String toString() {
         return "AuthorizedAccountAgeData{" +
-                ",\r\n     profileId=" + profileId +
-                ",\r\n     time=" + new Date(date) +
+                ",\r\n                    profileId=" + profileId +
+                ",\r\n                    time=" + new Date(date) +
+                ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
+                ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
 }

@@ -24,7 +24,6 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.Persistence;
@@ -96,7 +95,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
         // We delay publishing to be better bootstrapped 
         Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
-                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair())))
+                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair().getKeyPair())))
                 .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
@@ -165,7 +164,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         String tag = getTag(nickName, proofOfWork);
         Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, "", "", identity);
-        publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
+        publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
         return userIdentity;
     }
 
@@ -177,7 +176,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         String tag = getTag(nickName, proofOfWork);
         Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, statement, identity);
-        publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
+        publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
         return userIdentity;
     }
 
@@ -191,7 +190,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return identityService.createNewActiveIdentity(tag, keyId, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
                 .thenApply(userIdentity -> {
-                    publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
+                    publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
                     return userIdentity;
                 });
     }
@@ -214,8 +213,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         }
         persist();
 
-        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair())
-                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair()));
+        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair())
+                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
@@ -239,15 +238,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
         identityService.retireActiveIdentity(userIdentity.getIdentity().getTag());
         return networkService.removeAuthenticatedData(userIdentity.getUserProfile(),
-                userIdentity.getIdentity().getNodeIdAndKeyPair());
+                userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
     }
 
-    public CompletableFuture<Boolean> maybePublicUserProfile(UserProfile userProfile,
-                                                             NetworkIdWithKeyPair nodeIdAndKeyPair) {
+    public CompletableFuture<Boolean> maybePublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
         long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(userProfile.getId())).orElse(0L);
         long passed = System.currentTimeMillis() - lastPublished;
         if (passed > config.getRepublishUserProfileDelay()) {
-            return publishPublicUserProfile(userProfile, nodeIdAndKeyPair).thenApply(result -> true);
+            return publishPublicUserProfile(userProfile, keyPair).thenApply(result -> true);
         } else {
             return CompletableFuture.completedFuture(false);
         }
@@ -312,10 +310,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return userIdentity;
     }
 
-    private CompletableFuture<DataService.BroadCastDataResult> publishPublicUserProfile(UserProfile userProfile,
-                                                                                        NetworkIdWithKeyPair nodeIdAndKeyPair) {
+    private CompletableFuture<DataService.BroadCastDataResult> publishPublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
         publishTimeByChatUserId.put(userProfile.getId(), System.currentTimeMillis());
-        return networkService.publishAuthenticatedData(userProfile, nodeIdAndKeyPair);
+        return networkService.publishAuthenticatedData(userProfile, keyPair);
     }
 
     private String getTag(String nickName, ProofOfWork proofOfWork) {

@@ -152,4 +152,8 @@ public abstract class ApplicationService {
     protected com.typesafe.config.Config getConfig(String path) {
         return typesafeAppConfig.getConfig(path);
     }
+
+    protected boolean hasConfig(String path) {
+        return typesafeAppConfig.hasPath(path);
+    }
 }

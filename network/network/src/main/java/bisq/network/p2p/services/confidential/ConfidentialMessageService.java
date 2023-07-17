@@ -25,15 +25,13 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.security.ConfidentialData;
-import bisq.security.HybridEncryption;
-import bisq.security.KeyPairService;
-import bisq.security.PubKey;
+import bisq.security.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -78,6 +76,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
+
+
     private final NodesById nodesById;
     private final KeyPairService keyPairService;
     private final Optional<DataService> dataService;
@@ -95,6 +96,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
+        confidentialMessageListeners.clear();
         return completedFuture(true);
     }
 
@@ -203,6 +205,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         listeners.remove(messageListener);
     }
 
+    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+        confidentialMessageListeners.add(listener);
+    }
+
+    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+        confidentialMessageListeners.remove(listener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -245,7 +255,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         byte[] decryptedBytes = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
                         bisq.network.protobuf.NetworkMessage decryptedProto = bisq.network.protobuf.NetworkMessage.parseFrom(decryptedBytes);
                         NetworkMessage decryptedNetworkMessage = NetworkMessage.fromProto(decryptedProto);
-                        runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedNetworkMessage)), DISPATCHER);
+                        PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
+                        runAsync(() -> {
+                            listeners.forEach(l -> l.onMessage(decryptedNetworkMessage));
+                            confidentialMessageListeners.forEach(l -> l.onMessage(decryptedNetworkMessage, senderPublicKey));
+                        }, DISPATCHER);
                         return true;
                     } catch (Exception e) {
                         log.error(ExceptionUtil.print(e));

@@ -23,7 +23,6 @@ import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.PersistableStore;
@@ -33,6 +32,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -88,16 +88,16 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(M chatMessage,
                                                                                  UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, nodeIdAndKeyPair));
+        KeyPair keyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
+        return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), keyPair)
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, keyPair));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(M originalChatMessage,
                                                                                        String editedText,
                                                                                        UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
+        KeyPair ownerKeyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
+        return networkService.removeAuthenticatedData(originalChatMessage, ownerKeyPair)
                 .thenCompose(result -> {
                     M chatMessage = createEditedChatMessage(originalChatMessage, editedText, userIdentity.getUserProfile());
                     return publishChatMessage(chatMessage, userIdentity);
@@ -106,7 +106,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteChatMessage(M chatMessage,
                                                                                 UserIdentity userIdentity) {
-        return networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
+        return networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair().getKeyPair());
     }
 
     public Collection<C> getMentionableChannels() {

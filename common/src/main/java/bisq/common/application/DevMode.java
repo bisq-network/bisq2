@@ -17,7 +17,6 @@
 
 package bisq.common.application;
 
-import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Set;
@@ -38,8 +37,11 @@ import java.util.Set;
  */
 public class DevMode {
     @Setter
-    @Getter
     private static boolean isDevMode;
+
+    public static boolean isDevMode() {
+        return isDevMode;
+    }
 
     public static final Set<String> AUTHORIZED_DEV_PUBLIC_KEYS = Set.of(
             "3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091", "3056301006072a8648ce3d020106052b8104000a034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e", "3056301006072a8648ce3d020106052b8104000a03420004fbbd94944049f0904d4a92d4dd13dcdce602d676eeafa0049f0181c1815fea24c01226f3a204c985132069dbac92ecadb454ead8c8f2059f7f60a0c3767a5b83", "3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63"

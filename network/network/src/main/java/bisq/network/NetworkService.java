@@ -32,6 +32,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
@@ -52,6 +53,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -133,6 +135,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      */
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        persistableStore.getSeedNodeAddresses().stream()
+                .map(NetworkId.AddressTransportTypeTuple::setToAddressesByTypeMap)
+                .forEach(this::addSeedNodeAddressByTransport);
+
         PubKey pubKey = keyPairService.getDefaultPubKey();
         String nodeId = Node.DEFAULT;
         Stream<CompletableFuture<Void>> futures = getDefaultPortByTransport().entrySet().stream()
@@ -171,7 +178,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Map<Transport.Type, CompletableFuture<Void>> initializeNode(String nodeId, PubKey pubKey) {
-        return initializeNode(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
+        return initializeNode(getOrCreatePortByTransport(nodeId, pubKey), nodeId, pubKey);
     }
 
     private Map<Transport.Type, CompletableFuture<Void>> initializeNode(Map<Transport.Type, Integer> portByTransport,
@@ -209,7 +216,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         // Once the node of the last transport is completed we are expected to be able to create the networkId
         // as all addresses of all transports are available.
         return CompletableFutureUtils.allOf(futures)
-                .thenApply(list -> findNetworkId(nodeId)
+                .thenApply(list -> findNetworkId(nodeId, pubKey)
                         .or(() -> createNetworkId(nodeId, pubKey))
                         .orElseThrow(() -> {
                             String errorMsg = "Unexpected case. No networkId available after all initializeNode calls are completed.";
@@ -255,41 +262,40 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData,
-                                                                           NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
-        return dataService.get().removeAuthenticatedData(authenticatedData, keyPair);
+        return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }
 
     public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                        NetworkIdWithKeyPair ownerNetworkIdWithKeyPair,
+                                                                        KeyPair keyPair,
                                                                         PrivateKey authorizedPrivateKey,
                                                                         PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         try {
             byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
-            AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, signature, authorizedPublicKey);
-            return dataService.get().addAuthenticatedData(authorizedData, keyPair);
+            AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, Optional.of(signature), authorizedPublicKey);
+            return dataService.get().addAuthorizedData(authorizedData, keyPair);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return CompletableFuture.failedFuture(e);
         }
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData,
-                                                                       NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                       KeyPair ownerKeyPair,
+                                                                       PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        return dataService.get().removeAuthenticatedData(authorizedData, ownerNetworkIdWithKeyPair.getKeyPair());
+        // When removing data the signature is not used.
+        AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, authorizedPublicKey);
+        return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
 
     public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
@@ -316,6 +322,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public void removeMessageListener(MessageListener messageListener) {
         serviceNodesByTransport.removeMessageListener(messageListener);
+    }
+
+    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+        serviceNodesByTransport.addConfidentialMessageListener(listener);
+    }
+
+    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+        serviceNodesByTransport.removeConfidentialMessageListener(listener);
     }
 
     public void addDefaultNodeListener(Node.Listener nodeListener) {
@@ -359,12 +373,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 
     private Map<Transport.Type, Integer> getDefaultPortByTransport() {
-        return getOrCreatePortByTransport(Node.DEFAULT);
+        return getOrCreatePortByTransport(Node.DEFAULT, null);
     }
 
-    //todo
-    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId) {
-        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId);
+    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, @Nullable PubKey pubKey) {
+        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
         // If we have a persisted networkId we take that port otherwise we take random system port.  
         Map<Transport.Type, Integer> persistedOrRandomPortByTransport = supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
@@ -424,6 +437,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.findAddress(transport, nodeId);
     }
 
+    public Optional<NetworkId> findNetworkId(String nodeId, @Nullable PubKey pubKey) {
+        return findNetworkId(nodeId)
+                .filter(networkId -> pubKey == null || networkId.getPubKey().equals(pubKey)).stream()
+                .findAny();
+    }
+
     public Optional<NetworkId> findNetworkId(String nodeId) {
         return Optional.ofNullable(persistableStore.getNetworkIdByNodeId().get(nodeId));
     }
@@ -449,16 +468,20 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
-        this.serviceNodesByTransport.addSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        serviceNodesByTransport.addSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        persistableStore.getSeedNodeAddresses().add(NetworkId.AddressTransportTypeTuple.addressByNetworkTypeToString(seedNodeAddressesByTransport));
+        persist();
     }
 
     public void removeSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
-        this.serviceNodesByTransport.removeSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        serviceNodesByTransport.removeSeedNodeAddressByTransport(seedNodeAddressesByTransport);
+        persistableStore.getSeedNodeAddresses().remove(NetworkId.AddressTransportTypeTuple.addressByNetworkTypeToString(seedNodeAddressesByTransport));
+        persist();
     }
 
     // If not persisted we try to create the networkId and persist if available.
     private Optional<NetworkId> maybePersistNewNetworkId(String nodeId, PubKey pubKey) {
-        return findNetworkId(nodeId)
+        return findNetworkId(nodeId, pubKey)
                 .or(() -> createNetworkId(nodeId, pubKey)
                         .map(networkId -> {
                             persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);

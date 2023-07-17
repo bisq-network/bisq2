@@ -32,7 +32,6 @@ import com.google.common.base.Charsets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -42,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Publicly shared user profile (from other peers or mine).
  */
-@ToString
 @EqualsAndHashCode
 @Slf4j
 @Getter
@@ -178,5 +176,19 @@ public final class UserProfile implements DistributedData {
 
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
+    }
+
+    @Override
+    public String toString() {
+        return "UserProfile{" +
+                "\r\n                    nickName='" + nickName + '\'' +
+                ",\r\n                    proofOfWork=" + proofOfWork +
+                ",\r\n                    networkId=" + networkId +
+                ",\r\n                    terms='" + terms + '\'' +
+                ",\r\n                    statement='" + statement + '\'' +
+                ",\r\n                    nym='" + nym + '\'' +
+                ",\r\n                    proofOfBurnHash=" + proofOfBurnHash +
+                ",\r\n                    bondedReputationHash=" + bondedReputationHash +
+                "\r\n}";
     }
 }

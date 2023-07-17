@@ -20,6 +20,8 @@ message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
   string bondUserName = 2;
   string signature = 3;
+  string publicKeyHash = 4;
+  bool staticPublicKeysProvided = 5;
 }
 
 message BondedRoleRegistrationRequest {
@@ -28,7 +30,8 @@ message BondedRoleRegistrationRequest {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  map<string, network.Address> addressByNetworkType = 6;
+  repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
+  bool isCancellationRequest = 7;
 }
 
 message AuthorizedBondedRole {
@@ -37,8 +40,9 @@ message AuthorizedBondedRole {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signature = 5;
-  map<string, network.Address> addressByNetworkType = 6;
-  AuthorizedOracleNode oracleNode = 7;
+  repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
+  optional AuthorizedOracleNode authorizedOracleNode = 7;
+  bool staticPublicKeysProvided = 8;
 }
 
 enum AlertType {
@@ -56,6 +60,7 @@ message AuthorizedAlertData {
   bool haltTrading = 5;
   bool requireVersionForTrading = 6;
   optional string minVersion = 7;
-  optional string bannedRoleProfileId = 8;
-  optional BondedRoleType bannedBondedRoleType = 9;
+  optional AuthorizedBondedRole bannedRole = 8;
+  string securityManagerProfileId = 9;
+  bool staticPublicKeysProvided = 10;
 }

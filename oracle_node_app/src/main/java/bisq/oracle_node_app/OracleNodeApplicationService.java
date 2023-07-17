@@ -18,7 +18,7 @@
 package bisq.oracle_node_app;
 
 import bisq.application.ApplicationService;
-import bisq.bonded_roles.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -58,14 +58,14 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService
         );
 
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService);
+        com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,
                 identityService,
                 networkService,
                 persistenceService,
-                securityService,
                 authorizedBondedRolesService);
     }
 

@@ -43,7 +43,6 @@ import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class KeyPairService implements PersistenceClient<KeyPairStore> {
-    public static final String DEFAULT = "default";
     @Getter
     private final KeyPairStore persistableStore = new KeyPairStore();
     @Getter
@@ -54,7 +53,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        return getOrCreateKeyPairAsync(DEFAULT).thenApply(r -> true);
+        return getOrCreateKeyPairAsync(persistableStore.getDefaultKeyId()).thenApply(r -> true);
     }
 
     public Optional<KeyPair> findKeyPair(String keyId) {
@@ -106,7 +105,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     }
 
     public PubKey getDefaultPubKey() {
-        String keyId = KeyPairService.DEFAULT;
+        String keyId = persistableStore.getDefaultKeyId();
         PublicKey publicKey = getOrCreateKeyPair(keyId).getPublic();
         return new PubKey(publicKey, keyId);
     }

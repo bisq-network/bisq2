@@ -23,10 +23,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FilterEntry implements Proto {
+public final class FilterEntry implements Proto, Comparable<FilterEntry> {
     private final byte[] hash;
     private final int sequenceNumber;
 
@@ -44,5 +47,10 @@ public final class FilterEntry implements Proto {
 
     public static FilterEntry fromProto(bisq.network.protobuf.FilterEntry proto) {
         return new FilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
+    }
+
+    @Override
+    public int compareTo(@Nonnull FilterEntry o) {
+        return Arrays.compare(hash, o.getHash());
     }
 }

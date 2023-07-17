@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.service.explorer.dto;
+package bisq.bonded_roles.explorer.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,18 +23,25 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder({"scriptpubkey", "scriptpubkey_asm", "scriptpubkey_type", "scriptpubkey_address", "value"})
-public class Output {
-    @JsonProperty("scriptpubkey")
-    private String scriptPubKey;
-    @JsonProperty("scriptpubkey_asm")
-    private String scriptPubKeyAsm;
-    @JsonProperty("scriptpubkey_type")
-    private String scriptPubKeyType;
-    @JsonProperty("scriptpubkey_address")
-    private String address;
-    private long value;
+@JsonPropertyOrder({"txid", "version", "locktime", "vin", "vout", "size", "weight", "fee", "status"})
+public class Tx {
+    @JsonProperty("txid")
+    private String txId;
+    private Integer version;
+    @JsonProperty("locktime")
+    private Long lockTime;
+    @JsonProperty("vin")
+    private List<Input> inputs;
+    @JsonProperty("vout")
+    private List<Output> outputs;
+    private int size;
+    private int weight;
+    private int fee;
+    private Status status;
+
 }

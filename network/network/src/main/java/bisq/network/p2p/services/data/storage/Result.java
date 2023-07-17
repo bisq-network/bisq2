@@ -25,7 +25,7 @@ import lombok.ToString;
 public class Result {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
-            dataInvalid, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure;
+            dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure;
     private StorageData removedData;
 
     public Result(boolean success) {
@@ -71,6 +71,12 @@ public class Result {
 
     public Result dataInvalid() {
         dataInvalid = true;
+        isSevereFailure = true;
+        return this;
+    }
+
+    public Result isNotAuthorized() {
+        isNotAuthorized = true;
         isSevereFailure = true;
         return this;
     }
