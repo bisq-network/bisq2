@@ -27,19 +27,19 @@ jobs:
           distribution: 'zulu'
 
       - name: Gradle Build Action (root)
-        uses: gradle/gradle-build-action@v2.5.1
+        uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: build --scan
 
       - name: Gradle Build Action (network)
-        uses: gradle/gradle-build-action@v2.5.1
+        uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: build --scan
           build-root-directory: network
           gradle-executable: ./gradlew
 
       - name: Gradle Build Action (wallets)
-        uses: gradle/gradle-build-action@v2.5.1
+        uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: build --scan
           build-root-directory: wallets
