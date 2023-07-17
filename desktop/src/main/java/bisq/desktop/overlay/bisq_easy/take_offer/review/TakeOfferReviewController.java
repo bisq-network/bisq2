@@ -52,6 +52,7 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -74,6 +75,7 @@ public class TakeOfferReviewController implements Controller {
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyTradeService bisqEasyTradeService;
+    private final BannedUserService bannedUserService;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider, Consumer<Boolean> mainButtonsVisibleHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
@@ -82,6 +84,7 @@ public class TakeOfferReviewController implements Controller {
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
@@ -157,18 +160,22 @@ public class TakeOfferReviewController implements Controller {
 
     public void doTakeOffer() {
         try {
-            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
             UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-            BisqEasyTrade bisqEasyTradeModel = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
+            if (bannedUserService.isNetworkIdBanned(model.getBisqEasyOffer().getMakerNetworkId()) ||
+                    bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
+                return;
+            }
+            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+            BisqEasyTrade bisqEasyTrade = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
                     bisqEasyOffer,
                     model.getTakersBaseSideAmount(),
                     model.getTakersQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
                     model.getFiatPaymentMethodSpec());
 
-            model.setBisqEasyTradeModel(bisqEasyTradeModel);
+            model.setBisqEasyTradeModel(bisqEasyTrade);
 
-            BisqEasyContract contract = bisqEasyTradeModel.getContract();
+            BisqEasyContract contract = bisqEasyTrade.getContract();
             bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
                     .thenAccept(result -> UIThread.run(() -> {
                         ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);

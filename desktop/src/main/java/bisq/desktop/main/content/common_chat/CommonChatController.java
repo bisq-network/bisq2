@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonChatController extends PublicChatController<CommonChatView, CommonChatModel> implements Controller {
+
     public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
         super(serviceProvider, chatChannelDomain, NavigationTarget.NONE);
     }

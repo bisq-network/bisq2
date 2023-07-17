@@ -40,8 +40,7 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.setSpacing(25);
-        root.setPadding(new Insets(10, 30, 10, 30));
+        root.setPadding(new Insets(50, 30, 10, 30));
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
@@ -69,7 +68,6 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         skipButton.getStyleClass().add("outlined-button");
         HBox buttons = new HBox(20, setPasswordButton, skipButton);
         buttons.setAlignment(Pos.CENTER);
-        VBox.setMargin(headline, new Insets(40, 0, 0, 0));
         root.getChildren().setAll(headline, subtitleLabel, password, confirmedPassword, buttons);
     }
 

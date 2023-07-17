@@ -15,16 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components;
+package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -32,22 +33,21 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class ChatUserOverview implements Comparable<ChatUserOverview> {
+public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserProfile> {
     private final Controller controller;
 
-    public ChatUserOverview(UserProfile userProfile) {
-        this(userProfile, false);
+    public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile) {
+        this(bannedUserService, userProfile, false);
     }
 
-    public ChatUserOverview(UserProfile userProfile, boolean ignored) {
-        controller = new Controller(userProfile);
+    public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile, boolean ignored) {
+        controller = new Controller(userProfile, bannedUserService);
         controller.model.ignored = ignored;
     }
 
@@ -68,16 +68,18 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
     }
 
     @Override
-    public int compareTo(ChatUserOverview o) {
+    public int compareTo(ChannelSidebarUserProfile o) {
         return controller.model.userProfile.getUserName().compareTo(o.controller.model.userProfile.getUserName());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
+        private final BannedUserService bannedUserService;
         @Getter
         private final View view;
 
-        private Controller(UserProfile userProfile) {
+        private Controller(UserProfile userProfile, BannedUserService bannedUserService) {
+            this.bannedUserService = bannedUserService;
             model = new Model(userProfile);
             view = new View(model, this);
         }
@@ -89,22 +91,25 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
                 return;
             }
 
-            model.id.set(userProfile.getId());
-            model.userName.set(userProfile.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
+            String userName = userProfile.getUserName();
+            model.userName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
+            model.roboHashImage.set(RoboHash.getImage(userProfile.getPubKeyHash()));
         }
 
         @Override
         public void onDeactivate() {
+        }
+
+        public boolean isUserProfileBanned() {
+            return bannedUserService.isUserProfileBanned(model.userProfile);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final UserProfile userProfile;
         private boolean ignored;
-        private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
-        private final StringProperty id = new SimpleStringProperty();
 
         private Model(UserProfile userProfile) {
             this.userProfile = userProfile;
@@ -115,7 +120,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         @Getter
         private final ImageView roboIcon;
-        private final Label userName, id;
+        private final Label userName;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -124,42 +129,47 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
+            boolean isUserProfileBanned = controller.isUserProfileBanned();
+
             userName = new Label();
             userName.setMaxWidth(100);
-            Tooltip.install(userName, new BisqTooltip(model.userProfile.getTooltipString()));
+            if (isUserProfileBanned) {
+                userName.getStyleClass().add("error");
+            }
+
+            String banPrefix = isUserProfileBanned ? Res.get("user.userProfile.tooltip.banned") + "\n" : "";
+            String tooltipString = banPrefix + model.userProfile.getTooltipString();
+            Tooltip.install(userName, new BisqTooltip(tooltipString));
 
             roboIcon = new ImageView();
             roboIcon.setFitWidth(37.5);
             roboIcon.setFitHeight(37.5);
-            Tooltip.install(roboIcon, new BisqTooltip(model.userProfile.getTooltipString()));
+            Tooltip.install(roboIcon, new BisqTooltip(tooltipString));
+            if (isUserProfileBanned) {
+                // coloring icon red
+                /*Blend blush = new Blend(BlendMode.MULTIPLY,
+                        new ColorAdjust(),
+                        new ColorInput(0,
+                                0,
+                                37.5,
+                                37.5,
+                                Color.RED));
+                roboIcon.setClip(new Circle(18.75, 18.75, 18.75));
+                roboIcon.setEffect(blush);*/
+            }
 
             HBox hBox = new HBox(15, roboIcon, userName);
             hBox.setAlignment(Pos.CENTER_LEFT);
 
-            ImageView trust = new ImageView();
-            trust.setId("trust");
-            trust.setX(20);
-            trust.setY(20);
-
-            StackPane icons = new StackPane();
-            icons.getChildren().addAll(roboIcon, trust);
-
-            root.getChildren().addAll(icons, userName);
-
-            // todo add tooltip overlay for id and entitlements
-            id = new Label();
-            id.getStyleClass().add("offer-label-small");
-            id.setPadding(new Insets(-5, 0, 0, 0));
+            root.getChildren().addAll(roboIcon, userName);
         }
 
         @Override
         protected void onViewAttached() {
             userName.textProperty().bind(model.userName);
-            id.textProperty().bind(model.id);
-
-            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
-                if (roboIcon != null) {
-                    this.roboIcon.setImage(roboIcon);
+            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashImage, image -> {
+                if (image != null) {
+                    this.roboIcon.setImage(image);
                 }
             });
         }
@@ -167,7 +177,6 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         @Override
         protected void onViewDetached() {
             userName.textProperty().unbind();
-            id.textProperty().unbind();
             roboHashNodeSubscription.unsubscribe();
         }
     }

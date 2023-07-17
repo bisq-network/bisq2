@@ -34,6 +34,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.security.DigestUtil;
 import bisq.user.UserService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -49,21 +50,25 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class MediationService implements Service, MessageListener {
     private final NetworkService networkService;
-    /*  private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();*/
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final BannedUserService bannedUserService;
 
     public MediationService(NetworkService networkService,
                             ChatService chatService,
-                            UserService userService, BondedRolesService bondedRolesService) {
+                            UserService userService,
+                            BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
+        bannedUserService = userService.getBannedUserService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
     }
@@ -107,6 +112,8 @@ public class MediationService implements Service, MessageListener {
     public void requestMediation(BisqEasyPrivateTradeChatChannel privateTradeChannel) {
         BisqEasyOffer bisqEasyOffer = privateTradeChannel.getBisqEasyOffer();
         UserIdentity myUserIdentity = privateTradeChannel.getMyUserIdentity();
+        checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
+
         UserProfile peer = privateTradeChannel.getPeer();
         UserProfile mediator = privateTradeChannel.getMediator().orElseThrow();
         MediationRequest networkMessage = new MediationRequest(bisqEasyOffer,
@@ -148,6 +155,11 @@ public class MediationService implements Service, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void processMediationRequest(MediationRequest mediationRequest) {
+        if (bannedUserService.isUserProfileBanned(mediationRequest.getRequester())) {
+            log.warn("Message ignored as sender is banned");
+            return;
+        }
+
         findMyMediatorUserIdentity().ifPresent(myUserIdentity -> {
             BisqEasyOffer bisqEasyOffer = mediationRequest.getBisqEasyOffer();
             BisqEasyPrivateTradeChatChannel channel = bisqEasyPrivateTradeChatChannelService.mediatorFindOrCreatesChannel(

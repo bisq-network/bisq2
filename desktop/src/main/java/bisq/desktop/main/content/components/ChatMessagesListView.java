@@ -52,6 +52,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -138,6 +139,7 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatNotificationService chatNotificationService;
         private final BisqEasyTradeService bisqEasyTradeService;
+        private final BannedUserService bannedUserService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
@@ -153,6 +155,7 @@ public class ChatMessagesListView {
             reputationService = serviceProvider.getUserService().getReputationService();
             settingsService = serviceProvider.getSettingsService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+            bannedUserService = serviceProvider.getUserService().getBannedUserService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -271,6 +274,12 @@ public class ChatMessagesListView {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void onTakeOffer(BisqEasyPublicChatMessage chatMessage, boolean canTakeOffer) {
+            if (userIdentityService.getSelectedUserIdentity() == null ||
+                    bannedUserService.isUserProfileBanned(chatMessage.getAuthorUserProfileId()) ||
+                    bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile())) {
+                return;
+            }
+
             if (!canTakeOffer) {
                 new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
                 return;
@@ -365,8 +374,16 @@ public class ChatMessagesListView {
         }
 
         private void onReportUser(ChatMessage chatMessage) {
-            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author ->
-                    chatService.reportUserProfile(author, ""));
+            ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
+            if (chatMessage instanceof PrivateChatMessage) {
+                PrivateChatMessage privateChatMessage = (PrivateChatMessage) chatMessage;
+                Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+                        new ReportToModeratorWindow.InitData(privateChatMessage.getSender(), chatChannelDomain));
+            } else {
+                userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
+                        .ifPresent(accusedUserProfile -> Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+                                new ReportToModeratorWindow.InitData(accusedUserProfile, chatChannelDomain)));
+            }
         }
 
         private void onIgnoreUser(ChatMessage chatMessage) {
@@ -390,6 +407,15 @@ public class ChatMessagesListView {
         private void applyPredicate() {
             boolean offerOnly = settingsService.getOffersOnly().get();
             Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
+                Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
+                if (senderUserProfile.isEmpty()) {
+                    return false;
+                }
+                if (bannedUserService.isUserProfileBanned(item.getChatMessage().getAuthorUserProfileId()) ||
+                        bannedUserService.isUserProfileBanned(senderUserProfile.get())) {
+                    return false;
+                }
+
                 boolean offerOnlyPredicate = true;
                 if (item.getChatMessage() instanceof BisqEasyPublicChatMessage) {
                     BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) item.getChatMessage();
@@ -402,9 +428,8 @@ public class ChatMessagesListView {
                 }
 
                 return offerOnlyPredicate &&
-                        item.getSenderUserProfile().isPresent() &&
-                        !userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().get().getId()) &&
-                        userProfileService.findUserProfile(item.getSenderUserProfile().get().getId()).isPresent();
+                        !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId()) &&
+                        userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
             };
             model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item) && predicate.test(item));
         }

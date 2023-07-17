@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
+import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
@@ -76,10 +77,12 @@ class TradePhaseBox {
         @Getter
         private final View view;
         private final MediationService mediationService;
+        private final ChatService chatService;
         private Pin bisqEasyTradeStatePin;
 
         private Controller(ServiceProvider serviceProvider) {
             mediationService = serviceProvider.getSupportService().getMediationService();
+            chatService = serviceProvider.getChatService();
 
             model = new Model();
             view = new View(model, this);
@@ -181,10 +184,14 @@ class TradePhaseBox {
                         .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                         .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                         .onAction(() -> {
+                            //String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage");
+                            // chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(systemMessage, channel);
+
                             channel.setIsInMediation(true);
                             mediationService.requestMediation(channel);
                             new Popup().headLine(Res.get("bisqEasy.mediation.request.feedback.headline"))
-                                    .feedback(Res.get("bisqEasy.mediation.request.feedback.msg")).show();
+                                    .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
+                                    .show();
                         })
                         .closeButtonText(Res.get("action.cancel"))
                         .show();

@@ -27,7 +27,9 @@ import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.OfferMessage;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationResponse;
+import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.protocol.messages.TradeMessage;
+import bisq.user.banned.BannedUserProfileData;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.data.*;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -48,6 +50,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
         DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
+        DistributedDataResolver.addResolver("user.BannedUserProfileData", BannedUserProfileData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
@@ -57,6 +60,7 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationResponse", MediationResponse.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
     }
 }

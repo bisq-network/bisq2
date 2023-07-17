@@ -22,6 +22,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.BisqEasyGuideController;
 import bisq.desktop.main.content.trade_apps.bisqEasy.chat.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
@@ -152,6 +153,9 @@ public class OverlayController extends NavigationController {
             }
             case SIGNED_WITNESS: {
                 return Optional.of(new SignedWitnessController(serviceProvider));
+            }
+            case REPORT_TO_MODERATOR: {
+                return Optional.of(new ReportToModeratorWindow(serviceProvider).getController());
             }
             default: {
                 return Optional.empty();

@@ -21,6 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -42,8 +43,9 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     public ProofOfBurnService(NetworkService networkService,
                               UserIdentityService userIdentityService,
                               UserProfileService userProfileService,
+                              BannedUserService bannedUserService,
                               AuthorizedBondedRolesService authorizedBondedRolesService) {
-        super(networkService, userIdentityService, userProfileService, authorizedBondedRolesService);
+        super(networkService, userIdentityService, userProfileService, bannedUserService, authorizedBondedRolesService);
     }
 
     @Override

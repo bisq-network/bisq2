@@ -21,7 +21,9 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
+import bisq.persistence.PersistenceService;
 import bisq.support.mediation.MediationService;
+import bisq.support.moderator.ModeratorService;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.UserService;
 import lombok.Getter;
@@ -35,22 +37,27 @@ import java.util.concurrent.CompletableFuture;
 public class SupportService implements Service {
     private final MediationService mediationService;
     private final SecurityManagerService securityManagerService;
+    private final ModeratorService moderatorService;
 
     @Getter
     @ToString
     public static final class Config {
         private final com.typesafe.config.Config securityManagerConfig;
+        private final com.typesafe.config.Config moderatorConfig;
 
-        public Config(com.typesafe.config.Config securityManagerConfig) {
+        public Config(com.typesafe.config.Config securityManagerConfig, com.typesafe.config.Config moderatorConfig) {
             this.securityManagerConfig = securityManagerConfig;
+            this.moderatorConfig = moderatorConfig;
         }
 
         public static SupportService.Config from(com.typesafe.config.Config typeSafeConfig) {
-            return new SupportService.Config(typeSafeConfig.getConfig("securityManager"));
+            return new SupportService.Config(typeSafeConfig.getConfig("securityManager"),
+                    typeSafeConfig.getConfig("moderator"));
         }
     }
 
     public SupportService(SupportService.Config config,
+                          PersistenceService persistenceService,
                           NetworkService networkService,
                           ChatService chatService,
                           UserService userService,
@@ -60,6 +67,12 @@ public class SupportService implements Service {
                 networkService,
                 userService,
                 bondedRolesService);
+        moderatorService = new ModeratorService(ModeratorService.Config.from(config.getModeratorConfig()),
+                persistenceService,
+                networkService,
+                userService,
+                bondedRolesService,
+                chatService);
     }
 
 
@@ -70,12 +83,14 @@ public class SupportService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return mediationService.initialize()
+                .thenCompose(result -> moderatorService.initialize())
                 .thenCompose(result -> securityManagerService.initialize());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return mediationService.shutdown()
+                .thenCompose(result -> moderatorService.shutdown())
                 .thenCompose(result -> securityManagerService.shutdown());
     }
 }

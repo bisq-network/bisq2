@@ -52,7 +52,6 @@ public class NetworkUtils {
     }
 
     public static boolean isPortInUse(String host, int port) {
-
         try (var tmp = new Socket(host, port)) {
             // Successful connection means the port is taken
             tmp.close();
@@ -61,7 +60,5 @@ public class NetworkUtils {
             // Could not connect
             return false;
         }
-
     }
-
 }

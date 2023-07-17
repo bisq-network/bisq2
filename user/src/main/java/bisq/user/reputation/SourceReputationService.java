@@ -26,6 +26,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -41,6 +42,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 
 @Slf4j
 public abstract class SourceReputationService<T extends AuthorizedDistributedData> implements DataService.Listener, Service {
@@ -53,6 +56,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
+    private final BannedUserService bannedUserService;
     protected final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
     protected final Map<ByteArray, Set<T>> dataSetByHash = new ConcurrentHashMap<>();
@@ -64,10 +68,12 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public SourceReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
                                    UserProfileService userProfileService,
+                                   BannedUserService bannedUserService,
                                    AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
+        this.bannedUserService = bannedUserService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
@@ -121,6 +127,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     }
 
     protected boolean send(UserIdentity userIdentity, NetworkMessage request) {
+        checkArgument(!bannedUserService.isUserProfileBanned(userIdentity.getUserProfile()));
         if (authorizedBondedRolesService.getAuthorizedOracleNodes().isEmpty()) {
             return false;
         }

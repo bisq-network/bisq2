@@ -35,6 +35,7 @@ import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
 import bisq.trade.protocol.Protocol;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,10 +59,12 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    private final BannedUserService bannedUserService;
 
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
         this.serviceProvider = serviceProvider;
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
     }
 
 
@@ -89,22 +92,29 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof BisqEasyTakeOfferRequest) {
-            onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) networkMessage);
-        } else if (networkMessage instanceof BisqEasyTakeOfferResponse) {
-            onBisqEasyTakeOfferResponse((BisqEasyTakeOfferResponse) networkMessage);
-        } else if (networkMessage instanceof BisqEasyAccountDataMessage) {
-            onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
-        } else if (networkMessage instanceof BisqEasyConfirmFiatSentMessage) {
-            onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) networkMessage);
-        } else if (networkMessage instanceof BisqEasyBtcAddressMessage) {
-            onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) networkMessage);
-        } else if (networkMessage instanceof BisqEasyConfirmFiatReceiptMessage) {
-            onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) networkMessage);
-        } else if (networkMessage instanceof BisqEasyConfirmBtcSentMessage) {
-            onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) networkMessage);
-        }
+        if (networkMessage instanceof BisqEasyTradeMessage) {
+            BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) networkMessage;
+            if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
+                log.warn("Message ignored as sender is banned");
+                return;
+            }
 
+            if (networkMessage instanceof BisqEasyTakeOfferRequest) {
+                onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) networkMessage);
+            } else if (networkMessage instanceof BisqEasyTakeOfferResponse) {
+                onBisqEasyTakeOfferResponse((BisqEasyTakeOfferResponse) networkMessage);
+            } else if (networkMessage instanceof BisqEasyAccountDataMessage) {
+                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
+            } else if (networkMessage instanceof BisqEasyConfirmFiatSentMessage) {
+                onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) networkMessage);
+            } else if (networkMessage instanceof BisqEasyBtcAddressMessage) {
+                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) networkMessage);
+            } else if (networkMessage instanceof BisqEasyConfirmFiatReceiptMessage) {
+                onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) networkMessage);
+            } else if (networkMessage instanceof BisqEasyConfirmBtcSentMessage) {
+                onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) networkMessage);
+            }
+        }
     }
 
 

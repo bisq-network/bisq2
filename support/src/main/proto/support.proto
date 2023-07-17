@@ -5,6 +5,7 @@ option java_multiple_files = true;
 import "user.proto";
 import "chat.proto";
 import "offer.proto";
+import "network.proto";
 
 message MediationRequest {
   offer.Offer bisqEasyOffer = 1;
@@ -13,6 +14,17 @@ message MediationRequest {
   repeated chat.ChatMessage chatMessages = 4;
 }
 
+message ReportToModeratorMessage {
+  sint64 date = 1;
+  string reporterUserProfileId = 2;
+  user.UserProfile accusedUserProfile = 3;
+  string message = 4;
+  chat.ChatChannelDomain chatChannelDomain = 5;
+}
 message MediationResponse {
   offer.Offer bisqEasyOffer = 1;
+}
+
+message ModeratorStore {
+  repeated ReportToModeratorMessage reportToModeratorMessages = 1;
 }

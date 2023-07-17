@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -48,29 +49,35 @@ public class ReputationService implements Service {
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
                              UserProfileService userProfileService,
+                             BannedUserService bannedUserService,
                              AuthorizedBondedRolesService authorizedBondedRolesService) {
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService,
+                bannedUserService,
                 authorizedBondedRolesService);
         bondedReputationService = new BondedReputationService(networkService,
                 userIdentityService,
                 userProfileService,
+                bannedUserService,
                 authorizedBondedRolesService);
         accountAgeService = new AccountAgeService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
+                bannedUserService,
                 authorizedBondedRolesService);
         signedWitnessService = new SignedWitnessService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
+                bannedUserService,
                 authorizedBondedRolesService);
         profileAgeService = new ProfileAgeService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
+                bannedUserService,
                 authorizedBondedRolesService);
 
         proofOfBurnService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);

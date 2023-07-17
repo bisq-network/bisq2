@@ -85,7 +85,7 @@ public class SellerState3 extends BaseState {
 
         private void onConfirmFiatReceipt() {
             model.getFiatReceived().set(true);
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3a.chatBotMessage", model.getFormattedQuoteAmount()));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase3a.systemMessage", model.getFormattedQuoteAmount()));
             try {
                 bisqEasyTradeService.sellerConfirmFiatReceipt(model.getBisqEasyTrade());
             } catch (TradeException e) {
@@ -95,7 +95,7 @@ public class SellerState3 extends BaseState {
 
         private void onBtcSent() {
             String txId = model.getTxId().get();
-            sendChatBotMessage(Res.get("bisqEasy.tradeState.info.seller.phase3b.chatBotMessage", txId));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase3b.systemMessage", txId));
             try {
                 bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), txId);
             } catch (TradeException e) {

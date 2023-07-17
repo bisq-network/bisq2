@@ -19,8 +19,7 @@ package bisq.desktop.main.content.authorized_role.moderator;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.support.security_manager.SecurityManagerService;
-import bisq.user.identity.UserIdentityService;
+import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,14 +28,13 @@ public class ModeratorController implements Controller {
     @Getter
     private final ModeratorView view;
     private final ModeratorModel model;
-    private final UserIdentityService userIdentityService;
-    private final SecurityManagerService securityManagerService;
 
     public ModeratorController(ServiceProvider serviceProvider) {
-        securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        ReportToModeratorTable reportToModeratorTable = new ReportToModeratorTable(serviceProvider);
+        BannedUserProfileTable bannedUserProfileTable = new BannedUserProfileTable(serviceProvider);
+        RoleInfo roleInfo = new RoleInfo(serviceProvider);
         model = new ModeratorModel();
-        view = new ModeratorView(model, this);
+        view = new ModeratorView(model, this, reportToModeratorTable.getRoot(), bannedUserProfileTable.getRoot(), roleInfo.getRoot());
     }
 
     @Override

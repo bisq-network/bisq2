@@ -103,6 +103,8 @@
     -fx-dark-text-color: -bisq-black;
     -fx-mid-text-color: -bisq-grey-dimmed;
     -fx-light-text-color: -bisq-white;
+
+    -bisq-error: -bisq-red;
 }
 
 

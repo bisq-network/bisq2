@@ -21,12 +21,20 @@ import bisq.network.NetworkService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.user.banned.BannedUserService;
 
 import java.util.concurrent.CompletableFuture;
 
 public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
-    default CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message, ServiceProvider serviceProvider, M model) {
-        return serviceProvider.getNetworkService().confidentialSend(message, model.getPeer().getNetworkId(), model.getMyIdentity().getNodeIdAndKeyPair())
+    default CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message, ServiceProvider serviceProvider, M trade) {
+        BannedUserService bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        // If one of the twt traders is banned we block any trade message sending
+        if (bannedUserService.isNetworkIdBanned(message.getSender()) ||
+                bannedUserService.isNetworkIdBanned(trade.getPeer().getNetworkId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+
+        return serviceProvider.getNetworkService().confidentialSend(message, trade.getPeer().getNetworkId(), trade.getMyIdentity().getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
                     // System.out.println("sendMessage " + message + ". result=" + result);
                     //todo store info if message arrive or stored in mailbox

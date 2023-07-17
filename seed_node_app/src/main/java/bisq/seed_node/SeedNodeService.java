@@ -92,12 +92,14 @@ public class SeedNodeService implements Service {
             String privateKey = config.getPrivateKey();
             PrivateKey authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
             PublicKey authorizedPublicKey = KeyGeneration.getPublicKeyFromHex(config.getPublicKey());
+
             AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(config.getProfileId(),
                     Hex.encode(authorizedPublicKey.getEncoded()),
                     BondedRoleType.SEED_NODE,
                     config.getBondUserName(),
                     config.getSignatureBase64(),
                     networkService.getAddressByNetworkType(Node.DEFAULT),
+                    networkService.findNetworkId(Node.DEFAULT).orElseThrow(),
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
             KeyPair keyPair = keyPairService.getOrCreateKeyPair(config.keyId);

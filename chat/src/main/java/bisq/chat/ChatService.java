@@ -39,6 +39,7 @@ import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.settings.SettingsService;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -56,6 +57,7 @@ public class ChatService implements Service {
     private final PersistenceService persistenceService;
     private final ProofOfWorkService proofOfWorkService;
     private final NetworkService networkService;
+    private final UserService userService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ChatNotificationService chatNotificationService;
@@ -68,15 +70,15 @@ public class ChatService implements Service {
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
-                       UserIdentityService userIdentityService,
-                       UserProfileService userProfileService,
+                       UserService userService,
                        SettingsService settingsService,
                        NotificationsService notificationsService) {
         this.persistenceService = persistenceService;
         this.proofOfWorkService = proofOfWorkService;
         this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
-        this.userProfileService = userProfileService;
+        this.userService = userService;
+        this.userIdentityService = userService.getUserIdentityService();
+        this.userProfileService = userService.getUserProfileService();
 
         chatNotificationService = new ChatNotificationService(this,
                 notificationsService,
@@ -87,12 +89,10 @@ public class ChatService implements Service {
         //BISQ_EASY
         bisqEasyPublicChatChannelService = new BisqEasyPublicChatChannelService(persistenceService,
                 networkService,
-                userIdentityService,
-                userProfileService);
+                userService);
         bisqEasyPrivateTradeChatChannelService = new BisqEasyPrivateTradeChatChannelService(persistenceService,
                 networkService,
-                userIdentityService,
-                userProfileService,
+                userService,
                 proofOfWorkService);
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY);
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY, new BisqEasyChatChannelSelectionService(persistenceService,
@@ -188,11 +188,6 @@ public class ChatService implements Service {
         }
     }
 
-    public void reportUserProfile(UserProfile userProfile, String reason) {
-        //todo report user to admin and moderators, add reason
-        log.info("called reportChatUser {} {}", userProfile, reason);
-    }
-
     public void createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
         TwoPartyPrivateChatChannelService chatChannelService = twoPartyPrivateChatChannelServices.get(chatChannelDomain);
         chatChannelService.findOrCreateChannel(chatChannelDomain, peer)
@@ -211,8 +206,7 @@ public class ChatService implements Service {
         twoPartyPrivateChatChannelServices.put(chatChannelDomain,
                 new TwoPartyPrivateChatChannelService(persistenceService,
                         networkService,
-                        userIdentityService,
-                        userProfileService,
+                        userService,
                         proofOfWorkService,
                         chatChannelDomain));
     }
@@ -221,8 +215,7 @@ public class ChatService implements Service {
         commonPublicChatChannelServices.put(chatChannelDomain,
                 new CommonPublicChatChannelService(persistenceService,
                         networkService,
-                        userIdentityService,
-                        userProfileService,
+                        userService,
                         chatChannelDomain,
                         channels));
     }

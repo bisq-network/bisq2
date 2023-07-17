@@ -18,6 +18,7 @@
 package bisq.desktop.components.table;
 
 import bisq.i18n.Res;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
@@ -28,6 +29,10 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
 
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         setPlaceholder(new Label(Res.get("data.noDataAvailable")));
+    }
+
+    public BisqTableView(ObservableList<S> list) {
+        this(new SortedList<>(list));
     }
 
     public BisqTableView(SortedList<S> sortedList) {

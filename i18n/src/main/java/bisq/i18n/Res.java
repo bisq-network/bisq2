@@ -58,8 +58,8 @@ public class Res {
                     .map(bundle -> bundle.getString(key))
                     .findFirst()
                     .orElseGet(() -> {
+                        log.error("Missing resource for key: {}", key);
                         if (DevMode.isDevMode()) {
-                            log.error("Missing resource for key: {}", key);
                             return "MISSING: " + key;
                         } else {
                             return "[" + key + "!]";

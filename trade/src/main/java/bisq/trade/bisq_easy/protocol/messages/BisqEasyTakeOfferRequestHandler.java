@@ -84,13 +84,15 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
         Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
-        checkArgument(takersContract.getBaseSideAmount() >= baseSideMinAmount.getValue());
-        checkArgument(takersContract.getBaseSideAmount() <= baseSideMaxAmount.getValue());
+
+        //todo add tolerance as market price might be a bit off
+        // checkArgument(takersContract.getBaseSideAmount() >= baseSideMinAmount.getValue());
+        //  checkArgument(takersContract.getBaseSideAmount() <= baseSideMaxAmount.getValue());
 
         Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
         Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
-        checkArgument(takersContract.getQuoteSideAmount() >= quoteSideMinAmount.getValue());
-        checkArgument(takersContract.getQuoteSideAmount() <= quoteSideMaxAmount.getValue());
+        //  checkArgument(takersContract.getQuoteSideAmount() >= quoteSideMinAmount.getValue());
+        //   checkArgument(takersContract.getQuoteSideAmount() <= quoteSideMaxAmount.getValue());
 
         checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
         checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));

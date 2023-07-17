@@ -32,12 +32,12 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.PersistableStore;
 import bisq.security.pow.ProofOfWorkService;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -52,11 +52,10 @@ public abstract class PrivateChatChannelService<
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,
-                                     UserIdentityService userIdentityService,
-                                     UserProfileService userProfileService,
+                                     UserService userService,
                                      ProofOfWorkService proofOfWorkService,
                                      ChatChannelDomain chatChannelDomain) {
-        super(networkService, userIdentityService, userProfileService, chatChannelDomain);
+        super(networkService, userService, chatChannelDomain);
 
         this.proofOfWorkService = proofOfWorkService;
     }
@@ -86,13 +85,20 @@ public abstract class PrivateChatChannelService<
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(String messageId,
-                                                                              String text,
+                                                                              @Nullable String text,
                                                                               Optional<Citation> citation,
                                                                               C channel,
                                                                               UserProfile receiver,
                                                                               ChatMessageType chatMessageType,
                                                                               long date) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
+        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+        if (isPeerBanned(receiver)) {
+            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        }
+
         M chatMessage = createAndGetNewPrivateChatMessage(messageId,
                 channel,
                 myUserIdentity.getUserProfile(),
@@ -106,6 +112,10 @@ public abstract class PrivateChatChannelService<
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+    }
+
+    protected boolean isPeerBanned(UserProfile userProfile) {
+        return bannedUserService.isUserProfileBanned(userProfile);
     }
 
     @Override
@@ -138,6 +148,21 @@ public abstract class PrivateChatChannelService<
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract void processMessage(M message);
+
+    @Override
+    protected boolean isValid(M message) {
+        if (message.isMyMessage(userIdentityService)) {
+            log.warn("Sent a message to myself. This should never happen for private chat messages.");
+            return false;
+        }
+        if (bannedUserService.isNetworkIdBanned(message.getSender().getNetworkId())) {
+            log.warn("Message invalid as sender is banned");
+            return false;
+        }
+        return super.isValid(message);
+    }
 
     protected abstract C createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity);
 

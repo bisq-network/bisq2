@@ -32,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            String channelId,
                                            UserProfile sender,
                                            String receiverUserProfileId,
-                                           String text,
+                                           @Nullable String text,
                                            Optional<Citation> citation,
                                            long date,
                                            boolean wasEdited,
@@ -76,7 +77,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             String channelId,
                                             UserProfile sender,
                                             String receiverUserProfileId,
-                                            String text,
+                                            @Nullable String text,
                                             Optional<Citation> citation,
                                             long date,
                                             boolean wasEdited,
@@ -98,14 +99,16 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 sender,
                 receiverUserProfileId,
                 mediator,
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
                 bisqEasyOffer);
     }
 
-    private BisqEasyPrivateTradeChatMessage(String channelId,
-                                            UserProfile sender,
-                                            String receiverUserProfileId,
-                                            Optional<UserProfile> mediator,
-                                            BisqEasyOffer bisqEasyOffer) {
+    public BisqEasyPrivateTradeChatMessage(String channelId,
+                                           UserProfile sender,
+                                           String receiverUserProfileId,
+                                           Optional<UserProfile> mediator,
+                                           ChatMessageType chatMessageType,
+                                           BisqEasyOffer bisqEasyOffer) {
         super(StringUtils.createShortUid(),
                 ChatChannelDomain.BISQ_EASY,
                 channelId,
@@ -115,7 +118,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 Optional.empty(),
                 new Date().getTime(),
                 false,
-                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                chatMessageType,
                 new MetaData(TTL, 100000, BisqEasyPrivateTradeChatMessage.class.getSimpleName()));
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);

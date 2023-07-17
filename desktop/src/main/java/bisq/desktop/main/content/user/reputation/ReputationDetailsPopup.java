@@ -138,7 +138,7 @@ public class ReputationDetailsPopup extends VBox {
     private void configTableView() {
         BisqTableColumn<ListItem> dateColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("temporal.date"))
-                .isFirst()
+                .left()
                 .minWidth(110)
                 .comparator(Comparator.comparing(ListItem::getDate))
                 .valueSupplier(ListItem::getDateString)
@@ -148,7 +148,7 @@ public class ReputationDetailsPopup extends VBox {
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
                 .title(Res.get("user.reputation.details.table.columns.source"))
-                .isFirst()
+                .left()
                 .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getReputationSource))
                 .valueSupplier(ReputationDetailsPopup.ListItem::getSourceString)
                 .build());

@@ -30,6 +30,7 @@ enum ChatMessageType {
   TEXT = 0;
   LEAVE = 1;
   TAKE_BISQ_EASY_OFFER = 2;
+  SYSTEM_MESSAGE = 3;
 }
 
 enum ChatChannelNotificationType {

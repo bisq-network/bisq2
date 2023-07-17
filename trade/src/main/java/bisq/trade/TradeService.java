@@ -27,6 +27,7 @@ import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,6 +45,7 @@ public class TradeService implements Service, ServiceProvider {
     private final SupportService supportService;
     private final ChatService chatService;
     private final BondedRolesService bondedRolesService;
+    private final UserService userService;
 
     public TradeService(NetworkService networkService,
                         IdentityService identityService,
@@ -52,7 +54,8 @@ public class TradeService implements Service, ServiceProvider {
                         ContractService contractService,
                         SupportService supportService,
                         ChatService chatService,
-                        BondedRolesService bondedRolesService) {
+                        BondedRolesService bondedRolesService,
+                        UserService userService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -61,6 +64,7 @@ public class TradeService implements Service, ServiceProvider {
         this.supportService = supportService;
         this.chatService = chatService;
         this.bondedRolesService = bondedRolesService;
+        this.userService = userService;
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
     }

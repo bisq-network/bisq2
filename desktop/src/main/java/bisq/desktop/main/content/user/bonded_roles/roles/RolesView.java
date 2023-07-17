@@ -48,7 +48,7 @@ public class RolesView extends BondedRolesView<RolesModel, RolesController> {
     protected void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.userProfile"))
-                .isFirst()
+                .left()
                 .minWidth(150)
                 .comparator(Comparator.comparing(BondedRolesListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
@@ -85,7 +85,7 @@ public class RolesView extends BondedRolesView<RolesModel, RolesController> {
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
-                .isLast()
+                .right()
                 .fixWidth(80)
                 .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
                 .valueSupplier(BondedRolesListItem::getIsBanned)

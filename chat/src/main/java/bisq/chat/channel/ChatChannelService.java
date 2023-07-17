@@ -23,6 +23,8 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
+import bisq.user.UserService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,14 +39,15 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
     protected final ChatChannelDomain chatChannelDomain;
+    protected final BannedUserService bannedUserService;
 
     public ChatChannelService(NetworkService networkService,
-                              UserIdentityService userIdentityService,
-                              UserProfileService userProfileService,
+                              UserService userService,
                               ChatChannelDomain chatChannelDomain) {
         this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
-        this.userProfileService = userProfileService;
+        userIdentityService = userService.getUserIdentityService();
+        userProfileService = userService.getUserProfileService();
+        bannedUserService = userService.getBannedUserService();
         this.chatChannelDomain = chatChannelDomain;
     }
 
@@ -57,10 +60,26 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     }
 
     public void addMessage(M message, C channel) {
+        if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
+            log.warn("Message ignored as sender is banned");
+            return;
+        }
         synchronized (getPersistableStore()) {
             channel.addChatMessage(message);
         }
         persist();
+    }
+
+    protected boolean isValid(M message) {
+        if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
+            log.warn("Message invalid as sender is banned");
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean canHandleChannelDomain(M message) {
+        return message.getChatChannelDomain() == chatChannelDomain;
     }
 
     public Optional<C> findChannel(ChatMessage chatMessage) {

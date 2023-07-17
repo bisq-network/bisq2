@@ -23,6 +23,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
@@ -82,13 +83,14 @@ public class BondedRoleRegistrationService implements Service {
 
         String sendersProfileId = Hex.encode(DigestUtil.hash(senderNetworkIdWithKeyPair.getNetworkId().getPubKey().getPublicKey().getEncoded()));
         checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
-
+        NetworkId networkId = senderNetworkIdWithKeyPair.getNetworkId();
         BondedRoleRegistrationRequest request = new BondedRoleRegistrationRequest(profileId,
                 authorizedPublicKey,
                 bondedRoleType,
                 bondUserName,
                 signatureBase64,
                 addressByNetworkType,
+                networkId,
                 isCancellationRequest);
         authorizedOracleNodes.forEach(oracleNode ->
                 networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair));

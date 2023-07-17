@@ -28,10 +28,9 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,11 +47,10 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
     public TwoPartyPrivateChatChannelService(PersistenceService persistenceService,
                                              NetworkService networkService,
-                                             UserIdentityService userIdentityService,
-                                             UserProfileService userProfileService,
+                                             UserService userService,
                                              ProofOfWorkService proofOfWorkService,
                                              ChatChannelDomain chatChannelDomain) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, chatChannelDomain);
+        super(networkService, userService, proofOfWorkService, chatChannelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 "Private" + StringUtils.capitalize(chatChannelDomain.name()) + "ChatChannelStore",
@@ -141,29 +139,25 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
 
-    private void processMessage(TwoPartyPrivateChatMessage message) {
-        if (message.getChatChannelDomain() != chatChannelDomain) {
-            return;
+    @Override
+    protected void processMessage(TwoPartyPrivateChatMessage message) {
+        if (canHandleChannelDomain(message) && isValid(message)) {
+            findChannel(message)
+                    .or(() -> {
+                        // We prevent to send leave messages after a peer has left, but there might be still 
+                        // race conditions where that might happen, so we check at receiving the message as well, so that
+                        // in cases we would get a leave message as first message (e.g. after having closed the channel) 
+                        //  we do not create a channel.
+                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                            log.warn("We received a leave message as first message. This is not expected but might " +
+                                    "happen in some rare cases.");
+                            return Optional.empty();
+                        } else {
+                            return createAndAddChannel(message.getSender(), message.getReceiverUserProfileId());
+                        }
+                    })
+                    .ifPresent(channel -> addMessage(message, channel));
         }
-        if (message.isMyMessage(userIdentityService)) {
-            return;
-        }
-
-        findChannel(message)
-                .or(() -> {
-                    // We prevent to send leave messages after a peer has left, but there might be still 
-                    // race conditions where that might happen, so we check at receiving the message as well, so that
-                    // in cases we would get a leave message as first message (e.g. after having closed the channel) 
-                    //  we do not create a channel.
-                    if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                        log.warn("We received a leave message as first message. This is not expected but might " +
-                                "happen in some rare cases.");
-                        return Optional.empty();
-                    } else {
-                        return createAndAddChannel(message.getSender(), message.getReceiverUserProfileId());
-                    }
-                })
-                .ifPresent(channel -> addMessage(message, channel));
     }
 
     private Optional<TwoPartyPrivateChatChannel> createAndAddChannel(UserProfile peer, String myUserIdentityId) {

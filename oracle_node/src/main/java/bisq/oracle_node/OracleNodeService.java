@@ -28,6 +28,7 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
+import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Node;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
@@ -174,7 +175,8 @@ public class OracleNodeService implements Service {
                     timestampService.setIdentity(identity);
 
                     String publicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
-                    authorizedOracleNode = new AuthorizedOracleNode(identity.getNetworkId(), bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
+                    NetworkId networkId = identity.getNetworkId();
+                    authorizedOracleNode = new AuthorizedOracleNode(networkId, bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
                     timestampService.setAuthorizedOracleNode(authorizedOracleNode);
 
@@ -185,6 +187,7 @@ public class OracleNodeService implements Service {
                             bondUserName,
                             signatureBase64,
                             networkService.getAddressByNetworkType(Node.DEFAULT),
+                            networkId,
                             oracleNode,
                             staticPublicKeysProvided);
 

@@ -198,7 +198,7 @@ public class ServiceNode {
     }
 
     public void addMessageListener(MessageListener messageListener) {
-        //todo
+        //todo rename NodeListener
         nodesById.addNodeListener(new Node.Listener() {
             @Override
             public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
@@ -217,6 +217,7 @@ public class ServiceNode {
     }
 
     public void removeMessageListener(MessageListener messageListener) {
+        //todo missing nodesById.removeNodeListener ?
         confidentialMessageService.ifPresent(service -> service.removeMessageListener(messageListener));
     }
 

@@ -118,8 +118,8 @@ public class SellerState1 extends BaseState {
         }
 
         private void onSendPaymentData() {
-            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.chatBotMessage", model.getPaymentAccountData().get());
-            sendChatBotMessage(message);
+            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.systemMessage", model.getPaymentAccountData().get());
+            sendSystemMessage(message);
             try {
                 bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), model.getPaymentAccountData().get());
             } catch (TradeException e) {

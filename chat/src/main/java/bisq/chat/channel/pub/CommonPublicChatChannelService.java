@@ -27,9 +27,8 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.user.identity.UserIdentityService;
+import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,11 +46,10 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
     public CommonPublicChatChannelService(PersistenceService persistenceService,
                                           NetworkService networkService,
-                                          UserIdentityService userIdentityService,
-                                          UserProfileService userProfileService,
+                                          UserService userService,
                                           ChatChannelDomain chatChannelDomain,
                                           List<CommonPublicChatChannel> channels) {
-        super(networkService, userIdentityService, userProfileService, chatChannelDomain);
+        super(networkService, userService, chatChannelDomain);
 
         this.channels = channels;
 
