@@ -141,7 +141,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().orElseThrow().equals(offer))
                 .findAny();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected 
@@ -176,17 +176,17 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
     @Override
     protected void maybeAddDefaultChannels() {
-        if (!getChannels().isEmpty()) {
-            return;
+        if (getChannels().isEmpty()) {
+            BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
+            joinChannel(defaultChannel);
+            maybeAddPublicTradeChannel(defaultChannel);
+
+            List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
+            allMarkets.remove(MarketRepository.getDefault());
+            allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyPublicChatChannel(market)));
+        } else if (getNumVisibleChannels().get() == 0) {
+            findChannel(MarketRepository.getDefault()).ifPresent(this::joinChannel);
         }
-
-        BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
-        joinChannel(defaultChannel);
-        maybeAddPublicTradeChannel(defaultChannel);
-
-        List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
-        allMarkets.remove(MarketRepository.getDefault());
-        allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyPublicChatChannel(market)));
     }
 
     private void maybeAddPublicTradeChannel(BisqEasyPublicChatChannel channel) {

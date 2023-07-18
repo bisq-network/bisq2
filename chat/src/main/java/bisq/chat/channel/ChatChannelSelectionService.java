@@ -61,8 +61,6 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
-
         return CompletableFuture.completedFuture(true);
     }
 
