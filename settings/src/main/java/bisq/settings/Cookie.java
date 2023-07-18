@@ -60,7 +60,6 @@ public final class Cookie implements Proto {
                         CookieMapEntry::getValue)));
     }
 
-
     public Optional<String> asString(CookieKey key) {
         return Optional.ofNullable(map.get(key));
     }
