@@ -23,11 +23,16 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.offer.Direction;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreateOfferDirectionController implements Controller {
@@ -35,17 +40,22 @@ public class CreateOfferDirectionController implements Controller {
     @Getter
     private final CreateOfferDirectionView view;
     private final Runnable onNextHandler;
-    private final Consumer<Boolean> mainButtonsVisibleHandler;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
+    private final ReputationService reputationService;
+    private final UserIdentityService userIdentityService;
 
     public CreateOfferDirectionController(ServiceProvider serviceProvider,
                                           Runnable onNextHandler,
-                                          Consumer<Boolean> mainButtonsVisibleHandler) {
+                                          Consumer<Boolean> navigationButtonsVisibleHandler) {
         this.onNextHandler = onNextHandler;
-        this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        reputationService = serviceProvider.getUserService().getReputationService();
 
         model = new CreateOfferDirectionModel();
         view = new CreateOfferDirectionView(model, this);
         setDirection(Direction.BUY);
+        applyShowReputationInfo();
     }
 
     public ReadOnlyObjectProperty<Direction> getDirection() {
@@ -59,6 +69,7 @@ public class CreateOfferDirectionController implements Controller {
     @Override
     public void onActivate() {
         setDirection(Direction.BUY);
+        applyShowReputationInfo();
     }
 
     @Override
@@ -67,6 +78,7 @@ public class CreateOfferDirectionController implements Controller {
 
     void onSelectDirection(Direction direction) {
         setDirection(direction);
+        applyShowReputationInfo();
         if (direction == Direction.BUY) {
             model.getBuyButtonDisabled().set(true);
             onNextHandler.run();
@@ -75,6 +87,7 @@ public class CreateOfferDirectionController implements Controller {
 
     void onCloseReputationInfo() {
         setDirection(Direction.BUY);
+        applyShowReputationInfo();
     }
 
     void onGainReputation() {
@@ -88,8 +101,18 @@ public class CreateOfferDirectionController implements Controller {
 
     private void setDirection(Direction direction) {
         model.getDirection().set(direction);
-        boolean showReputationInfo = !model.getIgnoreShowReputationInfo().get() && direction == Direction.SELL;
-        mainButtonsVisibleHandler.accept(!showReputationInfo);
-        model.getShowReputationInfo().set(showReputationInfo);
+    }
+
+    private void applyShowReputationInfo() {
+        if (model.getDirection().get() == Direction.BUY) {
+            model.getShowReputationInfo().set(false);
+            return;
+        }
+
+        ReputationScore reputationScore = reputationService.getReputationScore(checkNotNull(userIdentityService.getSelectedUserIdentity()).getUserProfile());
+        if (reputationScore.hasReputation()) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShowReputationInfo().set(true);
+        }
     }
 }
