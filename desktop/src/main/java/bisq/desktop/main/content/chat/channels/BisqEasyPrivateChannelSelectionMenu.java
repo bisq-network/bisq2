@@ -22,7 +22,6 @@ import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -240,7 +239,87 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
 
-                    if (item == null || empty) {
+                    if (item != null && !empty && item.getChatChannel() instanceof BisqEasyPrivateTradeChatChannel) {
+                        BisqEasyPrivateTradeChatChannel privateChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
+                        List<ImageView> icons = new ArrayList<>();
+                        UserProfile peer = privateChatChannel.getPeer();
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        Tooltip.install(roboIcon, tooltip);
+                        Tooltip.install(label, tooltip);
+                        icons.add(roboIcon);
+
+                        if (inMediationPin != null) {
+                            inMediationPin.unbind();
+                        }
+                        inMediationPin = privateChatChannel.isInMediationObservable().addObserver(e -> {
+                            UIThread.run(() -> {
+                                hBox.getChildren().clear();
+                                hBox.getChildren().add(roboIcon);
+
+                                if (privateChatChannel.getMediator().isPresent() &&
+                                        privateChatChannel.isInMediation()) {
+                                    if (privateChatChannel.isMediator()) {
+                                        // We are the mediator
+                                        List<UserProfile> traders = new ArrayList<>(privateChatChannel.getTraders());
+                                        checkArgument(traders.size() == 2);
+                                        UserProfile trader1 = traders.get(0);
+                                        UserProfile trader2 = traders.get(1);
+                                        roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
+                                        secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
+                                        tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
+                                    } else {
+                                        UserProfile mediator = privateChatChannel.getMediator().get();
+                                        secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
+                                        tooltip.setText(peer.getTooltipString() + "\n\n" +
+                                                Res.get("bisqEasy.mediator") + ":\n" + mediator.getTooltipString());
+                                    }
+                                    hBox.getChildren().add(secondaryRoboIcon);
+                                    Tooltip.install(secondaryRoboIcon, tooltip);
+                                    icons.add(secondaryRoboIcon);
+                                } else {
+                                    tooltip.setText(peer.getTooltipString());
+                                }
+                                label.setText(controller.getChannelTitle(privateChatChannel));
+
+                                hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
+
+                                if (widthSubscription != null) {
+                                    widthSubscription.unsubscribe();
+                                }
+                                widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                                    if (w.doubleValue() > 0) {
+                                        if (secondaryRoboIcon.getImage() != null) {
+                                            label.setMaxWidth(getWidth() - 140);
+                                        } else {
+                                            label.setMaxWidth(getWidth() - 115);
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                        leaveChannelIcon.setOpacity(0);
+                        leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
+                        setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
+                        setOnMouseEntered(e -> {
+                            Transitions.fadeIn(leaveChannelIcon);
+                            Transitions.fadeOut(numMessagesBadge);
+                            applyEffect(icons, item.isSelected(), true);
+                        });
+                        setOnMouseExited(e -> {
+                            Transitions.fadeOut(leaveChannelIcon);
+                            Transitions.fadeIn(numMessagesBadge);
+                            applyEffect(icons, item.isSelected(), false);
+                        });
+
+
+                        applyEffect(icons, item.isSelected(), false);
+
+                        channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
+                        model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
+                        model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key, numMessagesBadge));
+
+                        setGraphic(hBox);
+                    } else {
                         label.setGraphic(null);
                         leaveChannelIcon.setOnMouseClicked(null);
                         setOnMouseClicked(null);
@@ -265,93 +344,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                             Tooltip.uninstall(secondaryRoboIcon, tooltip);
                         }
                         setGraphic(null);
-                        return;
                     }
-
-                    ChatChannel<?> chatChannel = item.getChatChannel();
-                    if (!(chatChannel instanceof PrivateChatChannel)) {
-                        return;
-                    }
-
-                    BisqEasyPrivateTradeChatChannel privateChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
-                    List<ImageView> icons = new ArrayList<>();
-                    UserProfile peer = privateChatChannel.getPeer();
-                    roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                    Tooltip.install(roboIcon, tooltip);
-                    Tooltip.install(label, tooltip);
-                    icons.add(roboIcon);
-
-                    if (inMediationPin != null) {
-                        inMediationPin.unbind();
-                    }
-                    inMediationPin = privateChatChannel.isInMediationObservable().addObserver(e -> {
-                        UIThread.run(() -> {
-                            hBox.getChildren().clear();
-                            hBox.getChildren().add(roboIcon);
-
-                            if (privateChatChannel.getMediator().isPresent() &&
-                                    privateChatChannel.isInMediation()) {
-                                if (privateChatChannel.isMediator()) {
-                                    // We are the mediator
-                                    List<UserProfile> traders = new ArrayList<>(privateChatChannel.getTraders());
-                                    checkArgument(traders.size() == 2);
-                                    UserProfile trader1 = traders.get(0);
-                                    UserProfile trader2 = traders.get(1);
-                                    roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
-                                    secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
-                                    tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
-                                } else {
-                                    UserProfile mediator = privateChatChannel.getMediator().get();
-                                    secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
-                                    tooltip.setText(peer.getTooltipString() + "\n\n" +
-                                            Res.get("bisqEasy.mediator") + ":\n" + mediator.getTooltipString());
-                                }
-                                hBox.getChildren().add(secondaryRoboIcon);
-                                Tooltip.install(secondaryRoboIcon, tooltip);
-                                icons.add(secondaryRoboIcon);
-                            } else {
-                                tooltip.setText(peer.getTooltipString());
-                            }
-                            label.setText(controller.getChannelTitle(privateChatChannel));
-
-                            hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
-
-                            if (widthSubscription != null) {
-                                widthSubscription.unsubscribe();
-                            }
-                            widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                                if (w.doubleValue() > 0) {
-                                    if (secondaryRoboIcon.getImage() != null) {
-                                        label.setMaxWidth(getWidth() - 140);
-                                    } else {
-                                        label.setMaxWidth(getWidth() - 115);
-                                    }
-                                }
-                            });
-                        });
-                    });
-                    leaveChannelIcon.setOpacity(0);
-                    leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
-                    setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
-                    setOnMouseEntered(e -> {
-                        Transitions.fadeIn(leaveChannelIcon);
-                        Transitions.fadeOut(numMessagesBadge);
-                        applyEffect(icons, item.isSelected(), true);
-                    });
-                    setOnMouseExited(e -> {
-                        Transitions.fadeOut(leaveChannelIcon);
-                        Transitions.fadeIn(numMessagesBadge);
-                        applyEffect(icons, item.isSelected(), false);
-                    });
-
-
-                    applyEffect(icons, item.isSelected(), false);
-
-                    channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
-                    model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
-                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key, numMessagesBadge));
-
-                    setGraphic(hBox);
                 }
 
                 private void applyEffect(List<ImageView> icons, boolean isSelected, boolean isHover) {
