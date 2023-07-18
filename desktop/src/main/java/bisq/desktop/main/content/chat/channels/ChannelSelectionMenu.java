@@ -283,7 +283,7 @@ public abstract class ChannelSelectionMenu<
         protected void onViewDetached() {
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
-            model.channels.removeListener(filteredListChangedListener);
+            model.filteredChannels.removeListener(filteredListChangedListener);
         }
 
         protected abstract ListCell<ChannelItem> getListCell();
