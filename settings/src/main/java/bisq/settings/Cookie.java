@@ -20,11 +20,12 @@ package bisq.settings;
 import bisq.common.proto.Proto;
 import bisq.settings.protobuf.CookieMapEntry;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Serves as flexible container for persisting UI states, layout,...
@@ -61,26 +62,28 @@ public final class Cookie implements Proto {
 
 
     public Optional<String> asString(CookieKey key) {
-        return asString(key, null);
+        return Optional.ofNullable(map.get(key));
     }
 
-    public Optional<String> asString(CookieKey key, @Nullable String subKey) {
+    public Optional<String> asString(CookieKey key, String subKey) {
+        checkNotNull(subKey, "subKey must not be null");
         return Optional.ofNullable(map.get(key))
-                .map(stringValue -> {
-
-                    var m = map;
-                    if (subKey != null && subKey.equals(key.getSubKey())) {
-                        stringValue = stringValue.replace(key.getSubKey(), "");
-                    }
-                    return stringValue;
-                });
+                .filter(value -> subKey.equals(key.getSubKey()))
+                .map(value -> value.replace(key.getSubKey(), ""));
     }
 
     public Optional<Double> asDouble(CookieKey key) {
-        return asDouble(key, null);
+        return asString(key)
+                .flatMap(stringValue -> {
+                    try {
+                        return Optional.of(Double.parseDouble(stringValue));
+                    } catch (Throwable t) {
+                        return Optional.empty();
+                    }
+                }).stream().findAny();
     }
 
-    public Optional<Double> asDouble(CookieKey key, @Nullable String subKey) {
+    public Optional<Double> asDouble(CookieKey key, String subKey) {
         return asString(key, subKey)
                 .flatMap(stringValue -> {
                     try {
@@ -92,10 +95,10 @@ public final class Cookie implements Proto {
     }
 
     public Optional<Boolean> asBoolean(CookieKey key) {
-        return asBoolean(key, null);
+        return asString(key).map(stringValue -> stringValue.equals("1"));
     }
 
-    public Optional<Boolean> asBoolean(CookieKey key, @Nullable String subKey) {
+    public Optional<Boolean> asBoolean(CookieKey key, String subKey) {
         return asString(key, subKey)
                 .map(stringValue -> stringValue.equals("1"));
     }
