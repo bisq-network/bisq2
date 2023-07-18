@@ -315,7 +315,7 @@ public class ChatMessagesListView {
 
             if (chatMessage instanceof BisqEasyPublicChatMessage) {
                 BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity)
+                chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity.getNodeIdAndKeyPair())
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
                                 log.error("We got an error at doDeleteMessage: " + throwable);
@@ -325,7 +325,7 @@ public class ChatMessagesListView {
                 CommonPublicChatChannelService commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(model.chatChannelDomain);
                 CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
                 commonPublicChatChannelService.findChannel(chatMessage)
-                        .ifPresent(channel -> commonPublicChatChannelService.deleteChatMessage(commonPublicChatMessage, userIdentity));
+                        .ifPresent(channel -> commonPublicChatChannelService.deleteChatMessage(commonPublicChatMessage, userIdentity.getNodeIdAndKeyPair()));
             }
         }
 

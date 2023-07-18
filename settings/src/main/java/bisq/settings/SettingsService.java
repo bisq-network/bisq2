@@ -56,8 +56,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         log.info("initialize");
         // If used with FxBindings.bindBiDir we need to trigger persist call
         getOffersOnly().addObserver(value -> persist());
-        getUseAnimations().addObserver(value -> persist());
         getChatNotificationType().addObserver(value -> persist());
+        getUseAnimations().addObserver(value -> persist());
+        getCloseMyOfferWhenTaken().addObserver(value -> persist());
         return CompletableFuture.completedFuture(true);
     }
 
@@ -103,18 +104,21 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.tradeRulesConfirmed;
     }
 
-
     public Observable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;
     }
 
-    public void setTacAccepted(boolean tacAccepted) {
-        persistableStore.isTacAccepted = tacAccepted;
+    public void setTacAccepted(boolean value) {
+        persistableStore.isTacAccepted = value;
         persist();
     }
 
     public boolean isTacAccepted() {
         return persistableStore.isTacAccepted;
+    }
+
+    public Observable<Boolean> getCloseMyOfferWhenTaken() {
+        return persistableStore.closeMyOfferWhenTaken;
     }
 
     public void addConsumedAlertId(String alertId) {
@@ -166,16 +170,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         setCookie(key, value);
     }
 
-    public void setRequiredTotalReputationScore(long value) {
-        persistableStore.requiredTotalReputationScore.set(value);
-        persist();
-    }
-
-    public void setUseAnimations(boolean value) {
-        persistableStore.useAnimations.set(value);
-        persist();
-    }
-
     public void setOffersOnly(boolean value) {
         persistableStore.offersOnly.set(value);
         persist();
@@ -183,11 +177,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public void setTradeRulesConfirmed(boolean value) {
         persistableStore.tradeRulesConfirmed.set(value);
-        persist();
-    }
-
-    public void setChatNotificationType(ChatNotificationType value) {
-        persistableStore.chatNotificationType.set(value);
         persist();
     }
 }

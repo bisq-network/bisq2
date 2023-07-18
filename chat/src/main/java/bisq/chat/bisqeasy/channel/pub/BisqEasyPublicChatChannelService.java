@@ -19,6 +19,7 @@ package bisq.chat.bisqeasy.channel.pub;
 
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.Citation;
 import bisq.common.currency.Market;
@@ -29,6 +30,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
@@ -36,10 +38,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -133,6 +132,16 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
                 .findAny()
                 .or(super::getDefaultChannel);
     }
+
+    public Optional<BisqEasyPublicChatMessage> findMessageByOffer(BisqEasyOffer offer) {
+        return findChannel(offer.getMarket())
+                .map(PublicChatChannel::getChatMessages).stream()
+                .flatMap(Collection::stream)
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().orElseThrow().equals(offer))
+                .findAny();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected 

@@ -143,7 +143,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
         serviceProvider = new ServiceProvider(this::shutdown,
                 getConfig(),

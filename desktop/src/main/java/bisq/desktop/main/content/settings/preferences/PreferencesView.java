@@ -33,7 +33,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
     private final Button resetDontShowAgain;
-    private final Switch useAnimations;
+    private final Switch useAnimations, closeMyOfferWhenTaken;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -46,12 +46,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Notifications
-        Label notificationsHeadline = new Label(Res.get("settings.preferences.notificationOptions"));
+        Label notificationsHeadline = new Label(Res.get("settings.preferences.notification.options"));
         notificationsHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
-        all = new RadioButton(Res.get("settings.preferences.notifications.all"));
-        mention = new RadioButton(Res.get("settings.preferences.notifications.mention"));
-        off = new RadioButton(Res.get("settings.preferences.notifications.off"));
+        all = new RadioButton(Res.get("settings.preferences.notification.option.all"));
+        mention = new RadioButton(Res.get("settings.preferences.notification.option.mention"));
+        off = new RadioButton(Res.get("settings.preferences.notification.option.off"));
 
         all.setToggleGroup(notificationsToggleGroup);
         mention.setToggleGroup(notificationsToggleGroup);
@@ -69,16 +69,22 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Display
-        Label displayHeadline = new Label(Res.get("settings.preferences.displaySettings"));
+        Label displayHeadline = new Label(Res.get("settings.preferences.display.headline"));
         displayHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
-        useAnimations = new Switch(Res.get("settings.preferences.useAnimations"));
-        resetDontShowAgain = new Button(Res.get("settings.preferences.resetDontShowAgain"));
+        useAnimations = new Switch(Res.get("settings.preferences.display.useAnimations"));
+        resetDontShowAgain = new Button(Res.get("settings.preferences.display.resetDontShowAgain"));
+
+        // Trade
+        Label tradeHeadline = new Label(Res.get("settings.preferences.trade.headline"));
+        tradeHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
 
         VBox.setMargin(notificationsHeadline, new Insets(30, 0, 0, 0));
         VBox.setMargin(displayHeadline, new Insets(15, 0, 0, 0));
         root.getChildren().addAll(notificationsHeadline, notificationsVBox,
-                displayHeadline, useAnimations, resetDontShowAgain);
+                displayHeadline, useAnimations, resetDontShowAgain,
+                tradeHeadline, closeMyOfferWhenTaken);
     }
 
     @Override
@@ -88,6 +94,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
+
+        closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
     }
 
     @Override
@@ -97,6 +105,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         resetDontShowAgain.setOnAction(null);
+
+        closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
     }
 
     private void applyChatNotificationType() {

@@ -145,7 +145,7 @@ public class RestApiApplicationService extends ApplicationService {
                 persistenceService, networkService, chatService, userService, bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService);
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService);
     }
 
     @Override

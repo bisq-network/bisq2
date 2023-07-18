@@ -18,6 +18,7 @@
 package bisq.trade;
 
 import bisq.bonded_roles.BondedRolesService;
+import bisq.settings.SettingsService;
 import bisq.user.UserService;
 
 public interface ServiceProvider {
@@ -38,4 +39,6 @@ public interface ServiceProvider {
     BondedRolesService getBondedRolesService();
 
     UserService getUserService();
+
+    SettingsService getSettingsService();
 }

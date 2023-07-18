@@ -25,6 +25,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
+import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.UserService;
@@ -46,6 +47,7 @@ public class TradeService implements Service, ServiceProvider {
     private final ChatService chatService;
     private final BondedRolesService bondedRolesService;
     private final UserService userService;
+    private final SettingsService settingsService;
 
     public TradeService(NetworkService networkService,
                         IdentityService identityService,
@@ -55,7 +57,8 @@ public class TradeService implements Service, ServiceProvider {
                         SupportService supportService,
                         ChatService chatService,
                         BondedRolesService bondedRolesService,
-                        UserService userService) {
+                        UserService userService,
+                        SettingsService settingsService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -65,6 +68,7 @@ public class TradeService implements Service, ServiceProvider {
         this.chatService = chatService;
         this.bondedRolesService = bondedRolesService;
         this.userService = userService;
+        this.settingsService = settingsService;
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
     }

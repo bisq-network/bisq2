@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.contract.ContractService;
@@ -60,6 +61,20 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
             BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(trade.getId(), trade.getMyself().getNetworkId(), makersContractSignatureData);
             sendMessage(response, serviceProvider, trade);
+
+            if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
+                BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = serviceProvider.getChatService().getBisqEasyPublicChatChannelService();
+                bisqEasyPublicChatChannelService.findMessageByOffer(trade.getOffer())
+                        .ifPresent(chatMessage -> bisqEasyPublicChatChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNodeIdAndKeyPair())
+                                .whenComplete((deleteChatMessageResult, throwable) -> {
+                                    if (throwable == null) {
+                                        log.error("Offer with ID {} removed", chatMessage.getBisqEasyOffer().orElseThrow().getId());
+                                    } else {
+                                        log.error("We got an error at doDeleteMessage: " + throwable);
+                                    }
+                                }));
+            }
+
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
