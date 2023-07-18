@@ -45,8 +45,7 @@ public class CreateOfferPaymentMethodModel implements Model {
         customFiatPaymentMethodName.set("");
         isPaymentMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
-        market.set(null);
-        customFiatPaymentMethodName.set("");
         showCustomMethodNotEmptyWarning.set(false);
+        market.set(null);
     }
 }
