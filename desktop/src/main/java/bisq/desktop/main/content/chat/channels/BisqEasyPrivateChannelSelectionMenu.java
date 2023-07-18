@@ -212,8 +212,11 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                     secondaryRoboIcon.setFitWidth(35);
                     secondaryRoboIcon.setFitHeight(35);
                     HBox.setMargin(secondaryRoboIcon, new Insets(0, 0, 0, -20));
+                    secondaryRoboIcon.setManaged(false);
+                    secondaryRoboIcon.setVisible(false);
 
                     hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.getChildren().addAll(roboIcon, secondaryRoboIcon, label, Spacer.fillHBox(), iconAndBadge);
 
                     numMessagesBadge.setPosition(Pos.CENTER);
 
@@ -253,9 +256,6 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                         }
                         inMediationPin = privateChatChannel.isInMediationObservable().addObserver(e -> {
                             UIThread.run(() -> {
-                                hBox.getChildren().clear();
-                                hBox.getChildren().add(roboIcon);
-
                                 if (privateChatChannel.getMediator().isPresent() &&
                                         privateChatChannel.isInMediation()) {
                                     if (privateChatChannel.isMediator()) {
@@ -273,15 +273,14 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                                         tooltip.setText(peer.getTooltipString() + "\n\n" +
                                                 Res.get("bisqEasy.mediator") + ":\n" + mediator.getTooltipString());
                                     }
-                                    hBox.getChildren().add(secondaryRoboIcon);
+                                    secondaryRoboIcon.setManaged(true);
+                                    secondaryRoboIcon.setVisible(true);
                                     Tooltip.install(secondaryRoboIcon, tooltip);
                                     icons.add(secondaryRoboIcon);
                                 } else {
                                     tooltip.setText(peer.getTooltipString());
                                 }
                                 label.setText(controller.getChannelTitle(privateChatChannel));
-
-                                hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
 
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
@@ -325,7 +324,6 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                         setOnMouseClicked(null);
                         setOnMouseEntered(null);
                         setOnMouseExited(null);
-                        hBox.getChildren().clear();
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
                             widthSubscription = null;
