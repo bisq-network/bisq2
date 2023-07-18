@@ -79,8 +79,7 @@ public class CreateOfferDirectionController implements Controller {
     void onSelectDirection(Direction direction) {
         setDirection(direction);
         applyShowReputationInfo();
-        if (direction == Direction.BUY) {
-            model.getBuyButtonDisabled().set(true);
+        if (direction == Direction.BUY && !model.getShowReputationInfo().get()) {
             onNextHandler.run();
         }
     }
@@ -106,11 +105,12 @@ public class CreateOfferDirectionController implements Controller {
     private void applyShowReputationInfo() {
         if (model.getDirection().get() == Direction.BUY) {
             model.getShowReputationInfo().set(false);
+            navigationButtonsVisibleHandler.accept(true);
             return;
         }
 
         ReputationScore reputationScore = reputationService.getReputationScore(checkNotNull(userIdentityService.getSelectedUserIdentity()).getUserProfile());
-        if (reputationScore.hasReputation()) {
+        if (!reputationScore.hasReputation()) {
             navigationButtonsVisibleHandler.accept(false);
             model.getShowReputationInfo().set(true);
         }

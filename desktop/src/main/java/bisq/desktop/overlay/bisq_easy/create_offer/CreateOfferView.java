@@ -134,7 +134,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         });
         priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
             if (isVisible) {
-                HBox.setMargin(priceProgressItemLine, new Insets(28, 0, 0, 0));
                 progressItemsBox.getChildren().add(5, priceProgressItemLine);
                 progressItemsBox.getChildren().add(5, priceProgressItemLabel);
                 progressLabelList.add(2, priceProgressItemLabel);
