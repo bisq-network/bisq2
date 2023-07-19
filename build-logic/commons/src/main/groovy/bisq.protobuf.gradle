@@ -8,20 +8,6 @@ dependencies {
     implementation libs.protobuf.java
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs += ['build/generated/source/main/java']
-        }
-    }
-
-    test {
-        java {
-            srcDirs += ['build/generated/source/test/java']
-        }
-    }
-}
-
 ext {
     def operatingSystem = current()
     osFamily = operatingSystem.familyName
