@@ -23,6 +23,7 @@ import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.PersistableStore;
@@ -105,9 +106,8 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 });
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> deleteChatMessage(M chatMessage,
-                                                                                UserIdentity userIdentity) {
-        return networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair().getKeyPair());
+    public CompletableFuture<DataService.BroadCastDataResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+        return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair.getKeyPair());
     }
 
     public Collection<C> getMentionableChannels() {

@@ -17,7 +17,6 @@
 
 package bisq.desktop.overlay.bisq_easy.take_offer.review;
 
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -45,8 +44,6 @@ class TakeOfferReviewModel implements Model {
     private final StringProperty fiatPaymentMethodDisplayString = new SimpleStringProperty();
     @Setter
     private List<String> paymentMethodNames;
-    @Setter
-    private BisqEasyPublicChatMessage myOfferMessage;
     @Setter
     private boolean isMinAmountEnabled;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();

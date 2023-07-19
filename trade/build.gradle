@@ -13,6 +13,7 @@ dependencies {
     implementation project(':contract')
     implementation project(':support')
     implementation project(':chat')
+    implementation project(':settings')
     implementation project(':bonded_roles')
 
     implementation("network:network")

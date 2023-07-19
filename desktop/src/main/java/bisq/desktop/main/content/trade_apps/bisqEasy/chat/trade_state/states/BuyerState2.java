@@ -71,7 +71,7 @@ public class BuyerState2 extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.getSendBtcAddressButtonDisabled().bind(model.getBtcAddress().isEmpty().and(model.getFiatPaymentConfirmed().not()));
+            model.getSendBtcAddressButtonDisabled().bind(model.getBtcAddress().isEmpty().or(model.getFiatPaymentConfirmed().not()));
             model.getFiatPaymentConfirmed().set(model.getBisqEasyTrade().getState() == BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION);
         }
 

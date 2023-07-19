@@ -33,7 +33,7 @@ public class PreferencesController implements Controller {
     private final PreferencesView view;
     private final SettingsService settingsService;
     private final PreferencesModel model;
-    private Pin useAnimationsPin, chatNotificationTypePin;
+    private Pin chatNotificationTypePin, useAnimationsPin, closeMyOfferWhenTakenPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -43,14 +43,16 @@ public class PreferencesController implements Controller {
 
     @Override
     public void onActivate() {
-        useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
+        useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
+        closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
     }
 
     @Override
     public void onDeactivate() {
-        useAnimationsPin.unbind();
         chatNotificationTypePin.unbind();
+        useAnimationsPin.unbind();
+        closeMyOfferWhenTakenPin.unbind();
     }
 
     void onResetDontShowAgain() {
