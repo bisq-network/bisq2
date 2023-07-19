@@ -21,7 +21,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.desktop.components.controls.OrderedList;
 import bisq.desktop.main.content.components.MaterialUserProfileSelection;
 import bisq.desktop.main.content.components.UserProfileSelection;
@@ -45,9 +44,8 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
     protected final Hyperlink learnMore;
     protected final MaterialTextField bondHolderName, profileId, signature;
     protected final Button requestRegistrationButton, requestCancellationButton;
-    protected final Label aboutHeadline, howHeadline;
+    protected final Label aboutHeadline, howHeadline, aboutInfo;
     protected final HBox headerHBox, buttons;
-    protected final MultiLineLabel aboutInfo;
     protected final OrderedList howInfo;
     private final Hyperlink showInfo, hideInfo;
     protected Subscription isCollapsedPin;
@@ -74,7 +72,8 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 
-        aboutInfo = new MultiLineLabel(Res.get(bondedRoleType + ".about.info"));
+        aboutInfo = new Label(Res.get(bondedRoleType + ".about.info"));
+        aboutInfo.setWrapText(true);
         aboutInfo.getStyleClass().add("user-bonded-roles-info-text");
 
 

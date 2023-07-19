@@ -28,7 +28,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -234,8 +233,7 @@ public class ChannelSidebar {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ListView<ChannelSidebarUserProfile> participants;
-        private final Label headline;
-        private final MultiLineLabel descriptionText;
+        private final Label headline, descriptionText;
         private final Button closeButton;
 
         private View(Model model, Controller controller, Pane notificationsSidebar) {
@@ -254,7 +252,8 @@ public class ChannelSidebar {
             HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
             HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
-            descriptionText = new MultiLineLabel();
+            descriptionText = new Label();
+            descriptionText.setWrapText(true);
             descriptionText.setId("chat-sidebar-text");
 
             Label participantsLabel = new Label(Res.get("chat.sideBar.channelInfo.participants"));
