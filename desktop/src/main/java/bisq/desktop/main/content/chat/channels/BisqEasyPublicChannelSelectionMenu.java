@@ -119,27 +119,22 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             super.onActivate();
 
             model.getSortedChannels().setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
-
             numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> UIThread.run(this::applyPredicate));
 
-            model.filteredMarketsList.setPredicate(item -> {
-                Market market = item.getMarket();
-                return model.filteredChannels.stream()
-                        .map(ChannelSelectionMenu.View.ChannelItem::getChatChannel)
-                        .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
-                        .map(channel -> (BisqEasyPublicChatChannel) channel)
-                        .map(channel -> !channel.getMarket().equals(market))
-                        .findAny()
-                        .isPresent();
-            });
+            List<View.MarketChannelItem> marketChannelItems = chatChannelService.getChannels().stream()
+                    .map(View.MarketChannelItem::new)
+                    .collect(Collectors.toList());
+            model.marketChannelItems.setAll(marketChannelItems);
 
-            model.sortedMarketsList.setComparator((o1, o2) -> {
-                Comparator<View.MarketListItem> byNumMessages = (left, right) -> Integer.compare(
+            updateMarketItemsPredicate();
+
+            model.sortedMarketChannelItems.setComparator((o1, o2) -> {
+                Comparator<View.MarketChannelItem> byNumMessages = (left, right) -> Integer.compare(
                         getNumMessages(right.getMarket()),
                         getNumMessages(left.getMarket()));
 
                 List<Market> majorMarkets = MarketRepository.getMajorMarkets();
-                Comparator<View.MarketListItem> byMajorMarkets = (left, right) -> {
+                Comparator<View.MarketChannelItem> byMajorMarkets = (left, right) -> {
                     int indexOfLeftMarket = majorMarkets.indexOf(left.getMarket());
                     int indexOfRightMarket = majorMarkets.indexOf(right.getMarket());
                     if (indexOfLeftMarket > -1 && indexOfRightMarket > -1) {
@@ -149,17 +144,12 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     }
                 };
 
-                Comparator<View.MarketListItem> byName = (left, right) -> left.getMarket().toString().compareTo(right.toString());
+                Comparator<View.MarketChannelItem> byName = (left, right) -> left.getMarket().toString().compareTo(right.toString());
                 return byNumMessages
                         .thenComparing(byMajorMarkets)
                         .thenComparing(byName)
                         .compare(o1, o2);
             });
-
-            List<View.MarketListItem> marketListItems = MarketRepository.getAllFiatMarkets().stream()
-                    .map(View.MarketListItem::new)
-                    .collect(Collectors.toList());
-            model.marketsList.setAll(marketListItems);
         }
 
         @Override
@@ -169,14 +159,14 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             numVisibleChannelsPin.unbind();
         }
 
-        void onJoinChannel(View.MarketListItem marketListItem) {
-            if (marketListItem != null) {
-                model.marketsList.remove(marketListItem);
-                chatChannelService.findChannel(marketListItem.getMarket())
+        void onJoinChannel(View.MarketChannelItem marketChannelItem) {
+            if (marketChannelItem != null) {
+                chatChannelService.findChannel(marketChannelItem.getMarket())
                         .ifPresent(channel -> {
                             chatChannelService.joinChannel(channel);
                             chatChannelSelectionService.selectChannel(channel);
                         });
+                updateMarketItemsPredicate();
             }
         }
 
@@ -189,7 +179,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 new Popup().warning(Res.get("bisqEasy.channelSelection.public.leave.warn")).show();
             } else {
                 doLeaveChannel(channel);
-                model.marketsList.add(new View.MarketListItem(channel.getMarket()));
+                updateMarketItemsPredicate();
             }
         }
 
@@ -208,13 +198,17 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 return chatChannelService.isVisible(channel);
             });
         }
+
+        private void updateMarketItemsPredicate() {
+            model.filteredMarketChannelItems.setPredicate(item -> !chatChannelService.isVisible(item.getChannel()));
+        }
     }
 
     @Getter
     protected static class Model extends PublicChannelSelectionMenu.Model {
-        private final ObservableList<View.MarketListItem> marketsList = FXCollections.observableArrayList();
-        private final FilteredList<View.MarketListItem> filteredMarketsList = new FilteredList<>(marketsList);
-        private final SortedList<View.MarketListItem> sortedMarketsList = new SortedList<>(filteredMarketsList);
+        private final ObservableList<View.MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
+        private final FilteredList<View.MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
+        private final SortedList<View.MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
 
         public Model() {
             super(ChatChannelDomain.BISQ_EASY);
@@ -243,7 +237,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
             addChannelIcon.setOnMouseClicked(e ->
                     new ComboBoxOverlay<>(addChannelIcon,
-                            model.sortedMarketsList,
+                            model.sortedMarketChannelItems,
                             c -> getMarketListCell(),
                             controller::onJoinChannel,
                             Res.get("bisqEasy.channelSelection.public.addMarketChannel").toUpperCase(),
@@ -264,7 +258,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             return Res.get("bisqEasy.channelSelection.public.headline");
         }
 
-        protected ListCell<View.MarketListItem> getMarketListCell() {
+        protected ListCell<MarketChannelItem> getMarketListCell() {
             return new ListCell<>() {
                 final Label label = new Label();
                 final HBox hBox = new HBox();
@@ -284,7 +278,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 }
 
                 @Override
-                protected void updateItem(View.MarketListItem item, boolean empty) {
+                protected void updateItem(MarketChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty) {
                         label.setText(item.toString());
@@ -297,7 +291,6 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 }
             };
         }
-
 
         @Override
         protected ListCell<ChannelItem> getListCell() {
@@ -422,12 +415,14 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         }
 
         @EqualsAndHashCode
-        private static class MarketListItem {
-            @Getter
+        @Getter
+        private static class MarketChannelItem {
             private final Market market;
+            private final BisqEasyPublicChatChannel channel;
 
-            public MarketListItem(Market market) {
-                this.market = market;
+            public MarketChannelItem(BisqEasyPublicChatChannel channel) {
+                this.channel = channel;
+                market = channel.getMarket();
             }
 
             @Override

@@ -53,11 +53,6 @@ public class BisqEasyChatChannelSelectionService extends ChatChannelSelectionSer
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof BisqEasyPublicChatChannel) {
-            BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
-            ((BisqEasyPublicChatChannelService) publicChatChannelService).joinChannel(bisqEasyPublicChatChannel);
-        }
-
         super.selectChannel(chatChannel);
     }
 
