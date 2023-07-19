@@ -19,7 +19,6 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -83,7 +82,8 @@ class TradeWelcome {
             Label welcomeHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.headline"));
             welcomeHeadline.getStyleClass().add("bisq-easy-trade-state-welcome-headline");
 
-            MultiLineLabel infoHeadline = new MultiLineLabel(Res.get("bisqEasy.tradeState.welcome.info"));
+            Label infoHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.info"));
+            infoHeadline.setWrapText(true);
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-text");
             infoHeadline.setTextAlignment(TextAlignment.CENTER);
 
