@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
-import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -77,12 +77,10 @@ class TradePhaseBox {
         @Getter
         private final View view;
         private final MediationService mediationService;
-        private final ChatService chatService;
-        private Pin bisqEasyTradeStatePin;
+        private Pin bisqEasyTradeStatePin, isInMediationPin;
 
         private Controller(ServiceProvider serviceProvider) {
             mediationService = serviceProvider.getSupportService().getMediationService();
-            chatService = serviceProvider.getChatService();
 
             model = new Model();
             view = new View(model, this);
@@ -90,6 +88,11 @@ class TradePhaseBox {
 
         private void setSelectedChannel(BisqEasyPrivateTradeChatChannel channel) {
             model.setSelectedChannel(channel);
+
+            if (isInMediationPin != null) {
+                isInMediationPin.unbind();
+            }
+            isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
         }
 
         private void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
@@ -170,6 +173,9 @@ class TradePhaseBox {
 
         @Override
         public void onDeactivate() {
+            if (isInMediationPin != null) {
+                isInMediationPin.unbind();
+            }
         }
 
         void onOpenTradeGuide() {
@@ -215,6 +221,7 @@ class TradePhaseBox {
         private final StringProperty phase4Info = new SimpleStringProperty();
         private final StringProperty phase5Info = new SimpleStringProperty();
         private final BooleanProperty disputeButtonVisible = new SimpleBooleanProperty();
+        private final BooleanProperty isInMediation = new SimpleBooleanProperty();
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -287,9 +294,11 @@ class TradePhaseBox {
             phase5Label.textProperty().bind(model.getPhase5Info());
             disputeButton.visibleProperty().bind(model.getDisputeButtonVisible());
             disputeButton.managedProperty().bind(model.getDisputeButtonVisible());
+            disputeButton.disableProperty().bind(model.getIsInMediation());
 
             disputeButton.setOnAction(e -> controller.onOpenDispute());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
+
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
         }
 
@@ -302,9 +311,11 @@ class TradePhaseBox {
             phase5Label.textProperty().unbind();
             disputeButton.visibleProperty().unbind();
             disputeButton.managedProperty().unbind();
+            disputeButton.disableProperty().unbind();
 
             disputeButton.setOnAction(null);
             openTradeGuide.setOnAction(null);
+
             phaseIndexPin.unsubscribe();
         }
 
