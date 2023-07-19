@@ -17,37 +17,57 @@
 
 package bisq.desktop.main;
 
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ViewTransition;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import bisq.desktop.common.view.View;
+import javafx.scene.Parent;
+import javafx.scene.layout.*;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+@Slf4j
 public class MainView extends NavigationView<HBox, MainModel, MainController> {
+    private final VBox vBox;
+    @Nullable
+    private ViewTransition viewTransition;
+
     public MainView(MainModel model,
                     MainController controller,
                     Pane leftNavView,
                     Pane topPanelView) {
         super(new HBox(), model, controller);
 
-        VBox vBox = new VBox(topPanelView);
-
+        vBox = new VBox(topPanelView);
         HBox.setHgrow(vBox, Priority.ALWAYS);
         root.getChildren().addAll(leftNavView, vBox);
 
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            VBox.setVgrow(newValue.getRoot(), Priority.ALWAYS);
-            vBox.getChildren().add(newValue.getRoot());
-            Transitions.transitContentViews(oldValue, newValue);
-        });
+        model.getView().addListener((observable, oldValue, newValue) -> onChildViewChanged(oldValue, newValue));
     }
 
     @Override
     protected void onViewAttached() {
+        onChildViewChanged(null, model.getView().get());
     }
 
     @Override
     protected void onViewDetached() {
+    }
+
+    private void onChildViewChanged(@Nullable View<? extends Parent, ? extends Model, ? extends Controller> oldValue, View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
+        if (newValue != null) {
+            Region newValueRoot = newValue.getRoot();
+            VBox.setVgrow(newValueRoot, Priority.ALWAYS);
+            if (viewTransition != null) {
+                viewTransition.stop();
+            }
+            if (!vBox.getChildren().contains(newValueRoot)) {
+                vBox.getChildren().add(newValueRoot);
+            }
+            Region oldValueRoot = oldValue != null ? oldValue.getRoot() : null;
+            viewTransition = new ViewTransition(oldValueRoot, newValue);
+        }
     }
 }

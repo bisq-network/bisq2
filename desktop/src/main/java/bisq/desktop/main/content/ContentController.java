@@ -56,6 +56,9 @@ public class ContentController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
+            case BISQ_EASY: {
+                return Optional.of(new BisqEasyController(serviceProvider));
+            }
             case DISCUSSION: {
                 return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.DISCUSSION));
             }
@@ -64,9 +67,6 @@ public class ContentController extends NavigationController {
             }
             case SUPPORT: {
                 return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.SUPPORT));
-            }
-            case BISQ_EASY: {
-                return Optional.of(new BisqEasyController(serviceProvider));
             }
             default: {
                 return Optional.empty();

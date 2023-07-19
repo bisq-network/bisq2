@@ -107,7 +107,9 @@ public abstract class NavigationController implements Controller {
             model.setNavigationTarget(model.getDefaultNavigationTarget());
         }
 
-        UIThread.runOnNextRenderFrame(() -> processNavigationTarget(model.getNavigationTarget(), Optional.empty()));
+        if (model.getNavigationTarget() != NavigationTarget.NONE) {
+            UIThread.runOnNextRenderFrame(() -> processNavigationTarget(model.getNavigationTarget(), Optional.empty()));
+        }
 
         onActivate();
     }

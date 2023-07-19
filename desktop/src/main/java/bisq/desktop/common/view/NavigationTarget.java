@@ -104,12 +104,29 @@ public enum NavigationTarget {
 
     MAIN(PRIMARY_STAGE, false),
 
+
+    //////////////////////////////////////////////////////////////////////
+    // CONTENT
+    //////////////////////////////////////////////////////////////////////
+
     CONTENT(MAIN, false),
-    SCROLLABLE_CONTENT(MAIN, false),
-
-    DASHBOARD(SCROLLABLE_CONTENT),
     DISCUSSION(CONTENT),
+    EVENTS(CONTENT),
+    SUPPORT(CONTENT),
 
+    BISQ_EASY(CONTENT),
+    BISQ_EASY_INTRO(BISQ_EASY),
+    BISQ_EASY_CHAT(BISQ_EASY),
+
+    TRADE_STATE(BISQ_EASY_CHAT, false),
+
+
+    //////////////////////////////////////////////////////////////////////
+    // SCROLLABLE_CONTENT
+    //////////////////////////////////////////////////////////////////////
+
+    SCROLLABLE_CONTENT(MAIN, false),
+    DASHBOARD(SCROLLABLE_CONTENT),
     ACADEMY_OVERVIEW(SCROLLABLE_CONTENT),
     BISQ_ACADEMY(SCROLLABLE_CONTENT, false),
     BITCOIN_ACADEMY(SCROLLABLE_CONTENT, false),
@@ -118,19 +135,9 @@ public enum NavigationTarget {
     WALLETS_ACADEMY(SCROLLABLE_CONTENT, false),
     FOSS_ACADEMY(SCROLLABLE_CONTENT, false),
 
-    EVENTS(CONTENT),
-
-    SUPPORT(CONTENT),
-
     TRADE_OVERVIEW(SCROLLABLE_CONTENT),
     TRADE_OVERVIEW_LIST(TRADE_OVERVIEW),
     TRADE_OVERVIEW_GRID(TRADE_OVERVIEW),
-
-    BISQ_EASY(CONTENT),
-    BISQ_EASY_INTRO(BISQ_EASY),
-    BISQ_EASY_CHAT(BISQ_EASY),
-
-    TRADE_STATE(BISQ_EASY_CHAT, false),
 
     MULTISIG(SCROLLABLE_CONTENT, false),
     SUBMARINE(SCROLLABLE_CONTENT, false),

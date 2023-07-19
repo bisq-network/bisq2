@@ -31,6 +31,6 @@ public class ContentModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY;
+        return NavigationTarget.NONE;
     }
 }

@@ -110,7 +110,6 @@ public class MainController extends NavigationController {
         alertsPin.unbind();
     }
 
-    @SuppressWarnings("SwitchStatementWithTooFewBranches")
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {

@@ -17,17 +17,25 @@
 
 package bisq.desktop.main.content;
 
-import bisq.desktop.common.Layout;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ViewTransition;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class ScrollableContentView extends NavigationView<ScrollPane, ScrollableContentModel, ScrollableContentController> {
+    private final StackPane stackPane;
+    @Nullable
+    private ViewTransition viewTransition;
 
     public ScrollableContentView(ScrollableContentModel model, ScrollableContentController controller) {
         super(new ScrollPane(), model, controller);
@@ -35,22 +43,33 @@ public class ScrollableContentView extends NavigationView<ScrollPane, Scrollable
         root.setFitToWidth(true);
         root.setFitToHeight(false);
 
-        Pane anchorPane = new VBox();
-        root.setContent(anchorPane);
-
-        anchorPane.setPadding(new Insets(33, 67, 67, 67));
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
-            anchorPane.getChildren().add(newValue.getRoot());
-            Transitions.transitContentViews(oldValue, newValue);
-        });
+        stackPane = new StackPane();
+        root.setContent(stackPane);
+        stackPane.setPadding(new Insets(33, 67, 67, 67));
+        model.getView().addListener((observable, oldValue, newValue) -> onChildViewChanged(oldValue, newValue));
     }
+
 
     @Override
     protected void onViewAttached() {
+        onChildViewChanged(null, model.getView().get());
     }
 
     @Override
     protected void onViewDetached() {
+    }
+
+    private void onChildViewChanged(@Nullable View<? extends Parent, ? extends Model, ? extends Controller> oldValue, View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
+        if (newValue != null) {
+            if (viewTransition != null) {
+                viewTransition.stop();
+            }
+            Region newValueRoot = newValue.getRoot();
+            if (!stackPane.getChildren().contains(newValueRoot)) {
+                stackPane.getChildren().add(newValueRoot);
+            }
+            Region oldValueRoot = oldValue != null ? oldValue.getRoot() : null;
+            viewTransition = new ViewTransition(oldValueRoot, newValue);
+        }
     }
 }
