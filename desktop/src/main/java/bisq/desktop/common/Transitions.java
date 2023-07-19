@@ -412,7 +412,7 @@ public class Transitions {
     }
 
     public static void slideInTop(Region node, int duration, Runnable onFinishedHandler) {
-        double end = 0;
+        double targetY = 0;
         if (getUseAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -422,13 +422,13 @@ public class Transitions {
                     new KeyValue(node.translateYProperty(), start, Interpolator.LINEAR)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(node.translateYProperty(), end, Interpolator.EASE_BOTH)
+                    new KeyValue(node.translateYProperty(), targetY, Interpolator.EASE_BOTH)
             ));
 
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
         } else {
-            node.setTranslateY(end);
+            node.setTranslateY(targetY);
             onFinishedHandler.run();
         }
     }
@@ -743,6 +743,9 @@ public class Transitions {
             }
         } else {
             node.setPrefWidth(targetWidth);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
         }
     }
 
@@ -767,14 +770,17 @@ public class Transitions {
             }
         } else {
             node.setLayoutY(targetY);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
         }
     }
 
     public static Timeline pulse(Node node, double duration, double delay,
                                  double fromOpacity,
                                  double midOpacity,
-                                 double toOpacity,
-                                 double fromScale, double toScale) {
+                                 double targetOpacity,
+                                 double fromScale, double targetScale) {
         Timeline timeline = new Timeline();
         if (getUseAnimations()) {
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -787,12 +793,16 @@ public class Transitions {
                     new KeyValue(node.opacityProperty(), midOpacity, Interpolator.EASE_OUT)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(node.opacityProperty(), toOpacity, Interpolator.EASE_OUT),
-                    new KeyValue(node.scaleXProperty(), toScale, Interpolator.EASE_OUT),
-                    new KeyValue(node.scaleYProperty(), toScale, Interpolator.EASE_OUT)
+                    new KeyValue(node.opacityProperty(), targetOpacity, Interpolator.EASE_OUT),
+                    new KeyValue(node.scaleXProperty(), targetScale, Interpolator.EASE_OUT),
+                    new KeyValue(node.scaleYProperty(), targetScale, Interpolator.EASE_OUT)
             ));
             timeline.setDelay(Duration.millis(delay));
             timeline.play();
+        } else {
+            node.setOpacity(targetOpacity);
+            node.setScaleX(targetScale);
+            node.setScaleY(targetScale);
         }
         return timeline;
     }
