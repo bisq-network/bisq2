@@ -1,18 +1,9 @@
-import static org.gradle.internal.os.OperatingSystem.current
-
 plugins {
     id 'com.google.protobuf'
 }
 
 dependencies {
     implementation libs.protobuf.java
-}
-
-ext {
-    def operatingSystem = current()
-    osFamily = operatingSystem.familyName
-    osArch = System.getProperty("os.arch")
-    osDescription = operatingSystem.toString()
 }
 
 protobuf {
