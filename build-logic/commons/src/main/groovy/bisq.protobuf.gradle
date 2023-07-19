@@ -1,5 +1,11 @@
 plugins {
+    id 'java'
+    id 'idea'
     id 'com.google.protobuf'
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
