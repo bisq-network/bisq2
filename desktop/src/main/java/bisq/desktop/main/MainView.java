@@ -17,8 +17,12 @@
 
 package bisq.desktop.main;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 public class MainView extends NavigationView<HBox, MainModel, MainController> {
     public MainView(MainModel model,
@@ -32,13 +36,10 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
         HBox.setHgrow(vBox, Priority.ALWAYS);
         root.getChildren().addAll(leftNavView, vBox);
 
-        model.getView().addListener((observable, oldValue, contentView) -> {
-            Region child = contentView.getRoot();
-            if (vBox.getChildren().size() == 2) {
-                vBox.getChildren().remove(1);
-            }
-            VBox.setVgrow(child, Priority.ALWAYS);
-            vBox.getChildren().add(child);
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            VBox.setVgrow(newValue.getRoot(), Priority.ALWAYS);
+            vBox.getChildren().add(newValue.getRoot());
+            Transitions.transitContentViews(oldValue, newValue);
         });
     }
 

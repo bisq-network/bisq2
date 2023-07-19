@@ -21,10 +21,8 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,24 +41,8 @@ public class ScrollableContentView extends NavigationView<ScrollPane, Scrollable
         anchorPane.setPadding(new Insets(33, 67, 67, 67));
         model.getView().addListener((observable, oldValue, newValue) -> {
             Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
-
-            Parent parent = newValue.getRoot().getParent();
-            // At fast navigation changes we might have not removed the new view and would get 
-            // an exception, so we remove it from its parent first. The instanceof check for parent only returns true 
-            // if parent is not null. 
-            try {
-                if (parent instanceof Pane) {
-                    Region root1 = newValue.getRoot();
-                    log.error("root1 {}", root1);
-                    log.error(" ((Pane) parent).getChildren() {}", ((Pane) parent).getChildren());
-                    ((Pane) parent).getChildren().remove(root1);
-                    //todo still issues with fadeout animation... need to return the transition and stop it...
-                }
-                anchorPane.getChildren().add(newValue.getRoot());
-                Transitions.transitContentViews(oldValue, newValue);
-            } catch (Exception e) {
-                log.error(e.toString());
-            }
+            anchorPane.getChildren().add(newValue.getRoot());
+            Transitions.transitContentViews(oldValue, newValue);
         });
     }
 
