@@ -18,7 +18,6 @@
 package bisq.desktop.main;
 
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 
 public class MainView extends NavigationView<HBox, MainModel, MainController> {
@@ -28,19 +27,18 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
                     Pane topPanelView) {
         super(new HBox(), model, controller);
 
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setFitToHeight(true);
-        scrollPane.setFitToWidth(true);
-
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-        VBox vBox = new VBox(topPanelView, scrollPane);
+        VBox vBox = new VBox(topPanelView);
 
         HBox.setHgrow(vBox, Priority.ALWAYS);
         root.getChildren().addAll(leftNavView, vBox);
 
         model.getView().addListener((observable, oldValue, contentView) -> {
             Region child = contentView.getRoot();
-            scrollPane.setContent(child);
+            if (vBox.getChildren().size() == 2) {
+                vBox.getChildren().remove(1);
+            }
+            VBox.setVgrow(child, Priority.ALWAYS);
+            vBox.getChildren().add(child);
         });
     }
 

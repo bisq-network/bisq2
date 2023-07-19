@@ -28,6 +28,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.ContentController;
+import bisq.desktop.main.content.ScrollableContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
 import bisq.settings.SettingsService;
@@ -115,6 +116,9 @@ public class MainController extends NavigationController {
         switch (navigationTarget) {
             case CONTENT: {
                 return Optional.of(new ContentController(serviceProvider));
+            }
+            case SCROLLABLE_CONTENT: {
+                return Optional.of(new ScrollableContentController(serviceProvider));
             }
             default: {
                 return Optional.empty();

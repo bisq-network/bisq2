@@ -24,13 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ContentModel extends NavigationModel {
+public class ScrollableContentModel extends NavigationModel {
+    private final boolean isWalletEnabled;
 
-    public ContentModel() {
+    public ScrollableContentModel(boolean isWalletEnabled) {
+        this.isWalletEnabled = isWalletEnabled;
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY;
+        return NavigationTarget.DASHBOARD;
     }
 }
