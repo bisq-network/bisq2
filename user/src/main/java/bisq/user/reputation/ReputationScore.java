@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class ReputationScore implements Comparable<ReputationScore> {
     public static final ReputationScore NONE = new ReputationScore(0, 0, 0, 0);
+    
     private final long totalScore;
     private final double relativeScore;
     private final int ranking;
@@ -49,5 +50,9 @@ public class ReputationScore implements Comparable<ReputationScore> {
     @Override
     public int compareTo(@NonNull ReputationScore o) {
         return Double.compare(totalScore, o.getTotalScore());
+    }
+
+    public boolean hasReputation() {
+        return totalScore > 0;
     }
 }

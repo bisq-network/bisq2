@@ -206,7 +206,6 @@ public class ChatMessagesListView {
                         selectedChannelSubscription.unsubscribe();
                     }
                     if (channel != null) {
-                        // ChatChannelService<?, ?, ?> chatChannelService = chatService.findChatChannelService(channel).orElseThrow();
                         focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
                                 focused -> {
                                     if (focused && model.getSelectedChannel().get() != null) {
@@ -233,8 +232,12 @@ public class ChatMessagesListView {
                 chatMessagesPin.unbind();
                 chatMessagesPin = null;
             }
-            focusSubscription.unsubscribe();
-            selectedChannelSubscription.unsubscribe();
+            if (focusSubscription != null) {
+                focusSubscription.unsubscribe();
+            }
+            if (selectedChannelSubscription != null) {
+                selectedChannelSubscription.unsubscribe();
+            }
         }
 
 

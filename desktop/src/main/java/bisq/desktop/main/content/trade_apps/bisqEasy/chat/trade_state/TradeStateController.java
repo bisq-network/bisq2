@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.trade_state;
 
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -54,7 +53,6 @@ public class TradeStateController implements Controller {
     private final TradeStateView view;
     private final TradeStateModel model;
     private final UserIdentityService userIdentityService;
-    private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ServiceProvider serviceProvider;
@@ -65,7 +63,6 @@ public class TradeStateController implements Controller {
     public TradeStateController(ServiceProvider serviceProvider, Consumer<UserProfile> openUserProfileSidebarHandler) {
         this.serviceProvider = serviceProvider;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 

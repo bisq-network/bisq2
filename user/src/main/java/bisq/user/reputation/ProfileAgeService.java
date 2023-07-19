@@ -43,11 +43,15 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * We do not apply a score for profile age as otherwise all users would have such a score after 1 day.
+ * Consider to remove inheritance from the SourceReputationService and keep it outside the reputation framework.
+ */
 @Getter
 @Slf4j
 public class ProfileAgeService extends SourceReputationService<AuthorizedTimestampData> implements PersistenceClient<ProfileAgeStore> {
-    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
-    public static final long WEIGHT = 1;
+    // private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
+    // Ïpublic static final long WEIGHT = 1;
 
     @Getter
     private final ProfileAgeStore persistableStore = new ProfileAgeStore();
@@ -129,7 +133,9 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
     @Override
     public long calculateScore(AuthorizedTimestampData data) {
-        return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
+        // We do not apply any reputation score to the profile age
+        return 0;
+        //Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
     }
 
     public Optional<Long> getProfileAge(UserProfile userProfile) {
