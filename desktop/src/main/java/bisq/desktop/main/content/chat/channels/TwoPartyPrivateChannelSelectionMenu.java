@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
@@ -144,6 +143,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), iconAndBadge);
 
                     numMessagesBadge.setPosition(Pos.CENTER);
 
@@ -169,13 +169,53 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
 
-                    if (item == null || empty) {
+                    if (item != null && !empty && item.getChatChannel() instanceof PrivateChatChannel) {
+                        PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) item.getChatChannel();
+                        UserProfile peer;
+                        List<ImageView> icons = new ArrayList<>();
+                        checkArgument(privateChatChannel instanceof TwoPartyPrivateChatChannel);
+                        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+                        peer = twoPartyPrivateChatChannel.getPeer();
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        Tooltip.install(roboIcon, tooltip);
+                        Tooltip.install(label, tooltip);
+                        icons.add(roboIcon);
+
+                        label.setText(item.getChannelTitle());
+                        tooltip.setText(peer.getTooltipString());
+                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                            if (w.doubleValue() > 0) {
+                                label.setMaxWidth(getWidth() - 115);
+                            }
+                        });
+                        leaveChannelIcon.setOpacity(0);
+                        leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
+                        setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
+                        setOnMouseEntered(e -> {
+                            Transitions.fadeIn(leaveChannelIcon);
+                            Transitions.fadeOut(numMessagesBadge);
+                            applyEffect(icons, item.isSelected(), true);
+                        });
+                        setOnMouseExited(e -> {
+                            Transitions.fadeOut(leaveChannelIcon);
+                            Transitions.fadeIn(numMessagesBadge);
+                            applyEffect(icons, item.isSelected(), false);
+                        });
+
+
+                        applyEffect(icons, item.isSelected(), false);
+
+                        channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
+                        model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
+                        model.channelIdWithNumUnseenMessagesMap.keySet().forEach(channelId -> onUnseenMessagesChanged(item, channelId, numMessagesBadge));
+
+                        setGraphic(hBox);
+                    } else {
                         label.setGraphic(null);
                         leaveChannelIcon.setOnMouseClicked(null);
                         setOnMouseClicked(null);
                         setOnMouseEntered(null);
                         setOnMouseExited(null);
-                        hBox.getChildren().clear();
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
                             widthSubscription = null;
@@ -187,56 +227,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
                         Tooltip.uninstall(roboIcon, tooltip);
                         Tooltip.uninstall(label, tooltip);
                         setGraphic(null);
-                        return;
                     }
-
-                    ChatChannel<?> chatChannel = item.getChatChannel();
-                    if (!(chatChannel instanceof PrivateChatChannel)) {
-                        return;
-                    }
-
-                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) item.getChatChannel();
-                    UserProfile peer;
-                    List<ImageView> icons = new ArrayList<>();
-                    checkArgument(privateChatChannel instanceof TwoPartyPrivateChatChannel);
-                    TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
-                    peer = twoPartyPrivateChatChannel.getPeer();
-                    roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                    Tooltip.install(roboIcon, tooltip);
-                    Tooltip.install(label, tooltip);
-                    icons.add(roboIcon);
-
-                    hBox.getChildren().clear();
-                    label.setText(item.getChannelTitle());
-                    tooltip.setText(peer.getTooltipString());
-                    hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), iconAndBadge);
-                    widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                        if (w.doubleValue() > 0) {
-                            label.setMaxWidth(getWidth() - 115);
-                        }
-                    });
-                    leaveChannelIcon.setOpacity(0);
-                    leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
-                    setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
-                    setOnMouseEntered(e -> {
-                        Transitions.fadeIn(leaveChannelIcon);
-                        Transitions.fadeOut(numMessagesBadge);
-                        applyEffect(icons, item.isSelected(), true);
-                    });
-                    setOnMouseExited(e -> {
-                        Transitions.fadeOut(leaveChannelIcon);
-                        Transitions.fadeIn(numMessagesBadge);
-                        applyEffect(icons, item.isSelected(), false);
-                    });
-
-
-                    applyEffect(icons, item.isSelected(), false);
-
-                    channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
-                    model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
-                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(channelId -> onUnseenMessagesChanged(item, channelId, numMessagesBadge));
-
-                    setGraphic(hBox);
                 }
 
                 private void applyEffect(List<ImageView> icons, boolean isSelected, boolean isHover) {
