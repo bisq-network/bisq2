@@ -1,40 +1,19 @@
-import static org.gradle.internal.os.OperatingSystem.current
-
 plugins {
+    id 'java'
+    id 'idea'
     id 'com.google.protobuf'
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
     implementation libs.protobuf.java
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs += ['build/generated/source/main/java']
-        }
-    }
-
-    test {
-        java {
-            srcDirs += ['build/generated/source/test/java']
-        }
-    }
-}
-
-ext {
-    def operatingSystem = current()
-    osFamily = operatingSystem.familyName
-    osArch = System.getProperty("os.arch")
-    osDescription = operatingSystem.toString()
-}
-
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:3.19.4"
     }
-    generateProtoTasks {
-        all()*.plugins {}
-    }
-    generatedFilesBaseDir = "$projectDir/build/generated/source"
 }
