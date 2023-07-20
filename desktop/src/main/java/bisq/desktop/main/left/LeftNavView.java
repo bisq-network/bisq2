@@ -327,7 +327,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         VBox submenu = new VBox(2);
         VBox.setMargin(submenu, new Insets(-10, 0, 0, 0));
         submenu.setPadding(new Insets(0, 0, 16, 0));
-        submenu.setMinHeight(0);
         submenu.setPrefHeight(0);
         submenu.getChildren().setAll(items);
         return submenu;
@@ -385,9 +384,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         } else {
             // Duration for animation for opening submenu is Transitions.DEFAULT_DURATION / 2.
             // We only know target position after the initial animation is done.
-            LeftNavButton finalButtonForHeight = buttonForHeight;
             UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
-                            finalButtonForHeight.getHeight(),
+                            buttonForHeight.getHeight(),
                             calculateTargetY()))
                     .after(Transitions.getDuration(Transitions.DEFAULT_DURATION / 2));
         }

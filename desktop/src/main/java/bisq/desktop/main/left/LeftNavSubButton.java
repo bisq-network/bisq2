@@ -39,7 +39,6 @@ class LeftNavSubButton extends LeftNavButton {
         super(title, null, toggleGroup, navigationTarget, false, null);
         this.fullTitle = title;
         this.parentButton = parentButton;
-        setMinHeight(0);
         EasyBind.subscribe(parentButton.getIsSubMenuExpanded(), parentSelected -> {
             setVisible(parentSelected);
             setManaged(parentSelected);
