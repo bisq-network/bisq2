@@ -58,9 +58,10 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         Label headlineLabel = new Label(Res.get("user.reputation.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-5");
 
-        Label infoLabel = new Label(Res.get("user.reputation.info"));
-        infoLabel.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
-        infoLabel.setMinHeight(220);
+        Label info = new Label(Res.get("user.reputation.info"));
+        info.setWrapText(true);
+        info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
+        info.setMinHeight(220);
 
         burnBsqButton = new Button(Res.get("user.reputation.burnBsq"));
         bsqBondButton = new Button(Res.get("user.reputation.bond"));
@@ -73,7 +74,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        VBox vBox = new VBox(16, headlineLabel, infoLabel, learnMore, buttons);
+        VBox vBox = new VBox(16, headlineLabel, info, learnMore, buttons);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30));
         vBox.setAlignment(Pos.TOP_LEFT);

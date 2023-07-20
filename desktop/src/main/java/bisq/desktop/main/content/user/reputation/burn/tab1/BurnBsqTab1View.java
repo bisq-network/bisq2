@@ -44,12 +44,14 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
         headline.getStyleClass().add("bisq-text-headline-2");
 
         Label info = new Label(Res.get("user.reputation.burnedBsq.info"));
+        info.setWrapText(true);
         info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
         Label headline2 = new Label(Res.get("user.reputation.burnedBsq.infoHeadline2"));
         headline2.getStyleClass().add("bisq-text-headline-2");
 
         Label info2 = new Label(Res.get("user.reputation.burnedBsq.info2"));
+        info2.setWrapText(true);
         info2.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
         nextButton = new Button(Res.get("action.next"));
