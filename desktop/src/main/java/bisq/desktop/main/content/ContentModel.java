@@ -33,6 +33,6 @@ public class ContentModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.DASHBOARD;
+        return NavigationTarget.NONE;
     }
 }

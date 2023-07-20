@@ -17,43 +17,24 @@
 
 package bisq.desktop.main.content;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.main.content.chat.ChatView;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContentView extends NavigationView<AnchorPane, ContentModel, ContentController> {
-
+public class ContentView extends NavigationView<StackPane, ContentModel, ContentController> {
     public ContentView(ContentModel model, ContentController controller) {
-        super(new AnchorPane(), model, controller);
+        super(new StackPane(), model, controller);
 
-        root.setPadding(new Insets(33, 67, 67, 67));
         model.getView().addListener((observable, oldValue, newValue) -> {
-            Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
-
-            Parent parent = newValue.getRoot().getParent();
-            // At fast navigation changes we might have not removed the new view and would get 
-            // an exception, so we remove it from its parent first. The instanceof check for parent only returns true 
-            // if parent is not null. 
-            try {
-                if (parent instanceof Pane) {
-                    Region root1 = newValue.getRoot();
-                    log.error("root1 {}", root1);
-                    log.error(" ((Pane) parent).getChildren() {}", ((Pane) parent).getChildren());
-                    ((Pane) parent).getChildren().remove(root1);
-                    //todo still issues with fadeout animation... need to return the transition and stop it...
-                }
-                root.getChildren().add(newValue.getRoot());
-                Transitions.transitContentViews(oldValue, newValue);
-            } catch (Exception e) {
-                log.error(e.toString());
+            if (!(newValue instanceof ChatView)) {
+                StackPane.setMargin(newValue.getRoot(), new Insets(33, 67, 67, 67));
             }
+            root.getChildren().add(newValue.getRoot());
+            Transitions.transitContentViews(oldValue, newValue);
         });
     }
 

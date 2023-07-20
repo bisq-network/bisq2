@@ -17,22 +17,22 @@
 
 package bisq.desktop.main.content.trade_apps.bisqEasy;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.AnchorPane;
+import bisq.desktop.main.content.chat.ChatView;
+import javafx.geometry.Insets;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyView extends NavigationView<AnchorPane, BisqEasyModel, BisqEasyController> {
+public class BisqEasyView extends NavigationView<StackPane, BisqEasyModel, BisqEasyController> {
 
     public BisqEasyView(BisqEasyModel model, BisqEasyController controller) {
-        super(new AnchorPane(), model, controller);
-
+        super(new StackPane(), model, controller);
         model.getView().addListener((observable, oldValue, newValue) -> {
-            Layout.pinToAnchorPane(newValue.getRoot(),  0,0,0,0);
-           
-            root.getChildren().clear();
-            root.getChildren().add(newValue.getRoot());
+            if (newValue instanceof ChatView) {
+                StackPane.setMargin(newValue.getRoot(), new Insets(-33, -67, -67, -67));
+            }
+            root.getChildren().setAll(newValue.getRoot());
         });
     }
 

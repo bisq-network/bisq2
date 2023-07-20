@@ -26,6 +26,6 @@ public class MainModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CONTENT;
+        return NavigationTarget.NONE;
     }
 }
