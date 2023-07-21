@@ -154,12 +154,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                     .anyMatch(bondedRole -> {
                         boolean match = bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey);
                         if (match) {
-                            log.info("Found a matching authorizedPublicKey from bondedRole: {}. data={}", bondedRole, data);
+                            log.debug("Found a matching authorizedPublicKey from bondedRole: {}. data={}", bondedRole, data);
                         }
                         return match;
                     });
             if (matchFound) {
-                log.info("authorizedPublicKey provided by a bonded role. data={}", data);
+                log.debug("authorizedPublicKey provided by a bonded role. data={}", data);
             } else {
                 log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key. data={}", data);
             }
