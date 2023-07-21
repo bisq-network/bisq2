@@ -45,7 +45,6 @@ public class ContentView extends NavigationView<StackPane, ContentModel, Content
             }
 
             if (!root.getChildren().contains(newValueRoot)) {
-                newValueRoot.setOpacity(0);
                 root.getChildren().add(newValueRoot);
             } else {
                 log.warn("We did not add the new child view as we still had it in out children list. " +

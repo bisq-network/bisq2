@@ -164,7 +164,6 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
     @Override
     protected void onViewDetached() {
-        MainView.setFitToHeight(false);
         channelTitle.textProperty().unbind();
         channelSidebar.visibleProperty().unbind();
         channelSidebar.managedProperty().unbind();

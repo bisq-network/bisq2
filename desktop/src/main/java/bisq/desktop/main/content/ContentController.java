@@ -23,6 +23,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.main.MainView;
 import bisq.desktop.main.content.academy.AcademyOverviewController;
 import bisq.desktop.main.content.academy.bisq.BisqAcademyController;
 import bisq.desktop.main.content.academy.bitcoin.BitcoinAcademyController;
@@ -66,6 +67,11 @@ public class ContentController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+    }
+
+    @Override
+    protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
+        MainView.setFitToHeight(false);
     }
 
     @Override
@@ -113,7 +119,6 @@ public class ContentController extends NavigationController {
             case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(serviceProvider));
             }
-
             case MULTISIG: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MULTISIG,
                         "protocol-multisig",
@@ -154,18 +159,15 @@ public class ContentController extends NavigationController {
                         "protocol-monero",
                         "https://www.monerooutreach.org/stories/monero-atomic-swaps.html"));
             }
-
             case USER: {
                 return Optional.of(new UserController(serviceProvider));
             }
             case SETTINGS: {
                 return Optional.of(new SettingsController(serviceProvider));
             }
-
             case WALLET: {
                 return Optional.of(new WalletController(serviceProvider));
             }
-
             case AUTHORIZED_ROLE: {
                 return Optional.of(new AuthorizedRoleController(serviceProvider));
             }
