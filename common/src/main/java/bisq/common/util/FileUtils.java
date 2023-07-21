@@ -26,10 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -183,6 +180,14 @@ public class FileUtils {
         } catch (IOException e) {
             log.warn("Could not write {} to file {}", string, file);
             throw e;
+        }
+    }
+
+    public static Optional<String> readFromFileIfPresent(File file) {
+        try {
+            return Optional.of(readFromFile(file));
+        } catch (FileNotFoundException e) {
+            return Optional.empty();
         }
     }
 
