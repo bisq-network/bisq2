@@ -18,9 +18,12 @@
 package bisq.common.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.util.concurrent.AtomicDouble;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
@@ -303,6 +306,26 @@ public class FileUtils {
             makeDirs(corruptedBackupDir);
             File target = new File(Paths.get(directory, backupFolderName, fileName).toString());
             renameFile(storageFile, target);
+        }
+    }
+
+    public static void downloadFile(URL url, File destination, AtomicDouble progress) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.connect();
+        int fileSize = connection.getContentLength();
+        try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
+             FileOutputStream outputStream = new FileOutputStream(destination)) {
+
+            double totalReadBytes = 0d;
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+                totalReadBytes += bytesRead;
+                progress.set(totalReadBytes / fileSize);
+            }
+        } finally {
+            connection.disconnect();
         }
     }
 }
