@@ -97,19 +97,84 @@ public class Transitions {
         fadeIn(node, duration, null);
     }
 
-    public static void fadeIn(Node node, int duration, @Nullable Runnable finishedHandler) {
+    public static FadeTransition fadeIn(Node node, int duration, @Nullable Runnable finishedHandler) {
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(getDuration(duration)), node);
         if (node == null) {
-            return;
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
+            return fadeTransition;
         }
-        FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
-        node.setOpacity(0);
-        fade.setFromValue(0);
-        fade.setToValue(1.0);
-        fade.play();
+
+        if (!getUseAnimations()) {
+            node.setOpacity(1);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
+            return fadeTransition;
+        }
+
         if (finishedHandler != null) {
-            fade.setOnFinished(actionEvent -> finishedHandler.run());
+            fadeTransition.setOnFinished(actionEvent -> finishedHandler.run());
         }
+        node.setOpacity(0);
+        fadeTransition.setFromValue(0);
+        fadeTransition.setToValue(1.0);
+        fadeTransition.setInterpolator(Interpolator.LINEAR);
+        fadeTransition.play();
+
+        return fadeTransition;
     }
+
+
+    public static Timeline slideOutRight(Region node, Runnable finishedHandler) {
+        return slideOutHorizontal(node, finishedHandler, true);
+    }
+
+    public static Timeline slideOutLeft(Region node, Runnable finishedHandler) {
+        return slideOutHorizontal(node, finishedHandler, false);
+    }
+
+    public static Timeline slideOutHorizontal(Region node, Runnable finishedHandler, boolean slideOutRight) {
+        Timeline timeline = new Timeline();
+        if (node == null) {
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
+            return timeline;
+        }
+
+        double startX = node.getTranslateX();
+        double targetX = slideOutRight ? node.getWidth() : -node.getWidth();
+        node.setOpacity(1);
+        if (!getUseAnimations()) {
+            node.setOpacity(1);
+            node.setTranslateX(startX);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
+            return timeline;
+        }
+
+
+        int duration = DEFAULT_DURATION / 2;
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        keyFrames.add(new KeyFrame(Duration.millis(0),
+                new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
+                new KeyValue(node.translateXProperty(), startX, Interpolator.LINEAR)
+        ));
+        keyFrames.add(new KeyFrame(Duration.millis(duration),
+                new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT),
+                new KeyValue(node.translateXProperty(), targetX, Interpolator.EASE_OUT)
+        ));
+        timeline.setOnFinished(e -> {
+            finishedHandler.run();
+            node.setTranslateX(startX);
+        });
+        timeline.play();
+        return timeline;
+    }
+
 
     public static void fadeIn(Node node, int duration, double targetOpacity, @Nullable Runnable finishedHandler) {
         if (node == null) {
@@ -495,44 +560,6 @@ public class Transitions {
         }
     }
 
-    public static void slideOutRight(Region node, Runnable onFinishedHandler) {
-        slideOutHorizontal(node, onFinishedHandler, true);
-    }
-
-    public static void slideOutLeft(Region node, Runnable onFinishedHandler) {
-        slideOutHorizontal(node, onFinishedHandler, false);
-    }
-
-    public static void slideOutHorizontal(Region node, Runnable onFinishedHandler, boolean slideOutRight) {
-        double start = node.getTranslateX();
-        double end = slideOutRight ?
-                node.getWidth() :
-                -node.getWidth();
-        if (getUseAnimations()) {
-            double duration = getDuration(DEFAULT_DURATION / 2);
-            Timeline timeline = new Timeline();
-            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-
-
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
-                    new KeyValue(node.translateXProperty(), start, Interpolator.LINEAR)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT),
-                    new KeyValue(node.translateXProperty(), end, Interpolator.EASE_OUT)
-            ));
-            timeline.setOnFinished(e -> {
-                onFinishedHandler.run();
-                node.setTranslateX(start);
-            });
-            timeline.play();
-        } else {
-            node.setTranslateX(start);
-            node.setOpacity(0);
-            onFinishedHandler.run();
-        }
-    }
 
     public static void slideDownFromCenterTop(Region node, Runnable onFinishedHandler) {
         double end = -node.getHeight();
@@ -807,7 +834,7 @@ public class Transitions {
         return timeline;
     }
 
-    private static boolean getUseAnimations() {
+    public static boolean getUseAnimations() {
         return settingsService.getUseAnimations().get();
     }
 }

@@ -52,9 +52,9 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
         HBox.setHgrow(vBox, Priority.ALWAYS);
         root.getChildren().addAll(leftNavView, vBox);
 
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            scrollPane.setContent(newValue.getRoot());
-        });
+        // We only get created once after splashscreen and then never get removed, so we do not need to remove the 
+        // listener.
+        model.getView().addListener((observable, oldValue, newValue) -> scrollPane.setContent(newValue.getRoot()));
     }
 
     @Override
