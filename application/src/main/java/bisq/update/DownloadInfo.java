@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay.update.service;
+package bisq.update;
 
 import bisq.common.observable.Observable;
 import lombok.EqualsAndHashCode;

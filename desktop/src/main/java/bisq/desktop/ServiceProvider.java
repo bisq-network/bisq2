@@ -35,6 +35,7 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
+import bisq.update.UpdateService;
 import bisq.user.UserService;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
@@ -61,6 +62,7 @@ public class ServiceProvider {
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
+    private final UpdateService updateService;
     private final ShotDownHandler shotDownHandler;
 
     public ServiceProvider(ShotDownHandler shotDownHandler,
@@ -78,7 +80,8 @@ public class ServiceProvider {
                            SettingsService settingsService,
                            SupportService supportService,
                            NotificationsService notificationsService,
-                           TradeService tradeService) {
+                           TradeService tradeService,
+                           UpdateService updateService) {
         this.shotDownHandler = shotDownHandler;
         this.config = config;
         this.securityService = securityService;
@@ -95,5 +98,6 @@ public class ServiceProvider {
         this.supportService = supportService;
         this.notificationsService = notificationsService;
         this.tradeService = tradeService;
+        this.updateService = updateService;
     }
 }

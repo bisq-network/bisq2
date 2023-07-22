@@ -19,12 +19,15 @@ package bisq.desktop.overlay.update;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.overlay.update.service.DownloadInfo;
-import bisq.desktop.overlay.update.service.UpdateService;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.update.DownloadInfo;
+import bisq.update.UpdateService;
+import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,43 +39,61 @@ public class UpdaterController implements Controller {
     private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
     private final UpdateService updateService;
-    private Pin listItemPin;
+    private Pin getDownloadInfoListPin, getDownloadCompletedPin, getVersionPin, getDownloadUrlPin, getReleaseNodesPin;
 
     public UpdaterController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
-        updateService = new UpdateService();
+        updateService = serviceProvider.getUpdateService();
         model = new UpdaterModel();
         view = new UpdaterView(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.setVersion("2.0.1");
-        model.setDownloadUrl("https://github.com/bisq-network/bisq/releases/2.0.1");
-        model.setReleaseNodes("Release nodes:\n\ntest line1 \ntest line2 \ntest line3 \ntest line4 \n");
-
-        listItemPin = FxBindings.<DownloadInfo, UpdaterView.ListItem>bind(model.getListItems())
+        getDownloadInfoListPin = FxBindings.<DownloadInfo, UpdaterView.ListItem>bind(model.getListItems())
                 .map(UpdaterView.ListItem::new)
                 .to(updateService.getDownloadInfoList());
+
+        getDownloadCompletedPin = FxBindings.bind(model.getRestartButtonVisible()).to(updateService.getDownloadCompleted());
+        getVersionPin = FxBindings.bind(model.getVersion()).to(updateService.getVersion());
+        getDownloadUrlPin = FxBindings.bind(model.getDownloadUrl()).to(updateService.getDownloadUrl());
+        getReleaseNodesPin = FxBindings.bind(model.getReleaseNodes()).to(updateService.getReleaseNodes());
     }
 
     @Override
     public void onDeactivate() {
-        listItemPin.unbind();
+        getDownloadInfoListPin.unbind();
+        getDownloadCompletedPin.unbind();
+        getVersionPin.unbind();
+        getDownloadUrlPin.unbind();
+        getReleaseNodesPin.unbind();
     }
 
     void onDownload() {
-        OverlayController.hide(() -> {
-        });
+        model.getTableVisible().set(true);
+        updateService.download();
     }
 
     void onDownloadLater() {
-        OverlayController.hide(() -> {
-        });
+        OverlayController.hide();
     }
 
     void onIgnore() {
-        /// settingsService.setTacAccepted(false);
+        settingsService.setCookie(CookieKey.IGNORE_VERSION, model.getVersion().get(), true);
+
+        OverlayController.hide();
+    }
+
+    void onCancel() {
+        OverlayController.hide();
+    }
+
+    void onRestart() {
+        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+    }
+
+    void onOpenUrl() {
+        Browser.open(model.getDownloadUrl().get());
     }
 }

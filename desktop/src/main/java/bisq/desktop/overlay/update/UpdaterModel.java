@@ -18,19 +18,21 @@
 package bisq.desktop.overlay.update;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class UpdaterModel implements Model {
-    @Setter
-    private String downloadUrl;
-    @Setter
-    private String version;
-    @Setter
-    private String releaseNodes;
+    private final BooleanProperty tableVisible = new SimpleBooleanProperty();
+    private final BooleanProperty restartButtonVisible = new SimpleBooleanProperty();
+    private final StringProperty version = new SimpleStringProperty();
+    private final StringProperty releaseNodes = new SimpleStringProperty();
+    private final StringProperty downloadUrl = new SimpleStringProperty();
 
     private final ObservableList<UpdaterView.ListItem> listItems = FXCollections.observableArrayList();
 }

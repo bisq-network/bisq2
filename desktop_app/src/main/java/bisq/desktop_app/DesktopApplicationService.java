@@ -35,6 +35,7 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
+import bisq.update.UpdateService;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
@@ -80,6 +81,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
+    private final UpdateService updateService;
 
     public DesktopApplicationService(String[] args) {
         super("desktop", args);
@@ -145,6 +147,8 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
+        updateService = new UpdateService(getConfig(), settingsService);
+
         serviceProvider = new ServiceProvider(this::shutdown,
                 getConfig(),
                 securityService,
@@ -160,7 +164,8 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 settingsService,
                 supportService,
                 notificationsService,
-                tradeService);
+                tradeService,
+                updateService);
     }
 
     @Override
@@ -203,6 +208,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
+                .thenCompose(result -> updateService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -223,7 +229,8 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> tradeService.shutdown()
+        return supplyAsync(() -> updateService.shutdown()
+                .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())

@@ -19,12 +19,13 @@ package bisq.desktop.overlay.update;
 
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.Switch;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.overlay.update.service.DownloadInfo;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
+import bisq.update.DownloadInfo;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,96 +38,145 @@ import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Comparator;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     private static final double PADDING = 30;
-    private final Label version, releaseNodes;
+    private final Label headline, version, releaseNotes, releaseNotesInfo, tableViewHeadline;
     private final Hyperlink downloadUrl;
-    private final Button downloadButton, downloadLaterButton, ignoreButton;
+    private final Button downloadButton, downloadLaterButton, ignoreButton, cancelButton, restartButton;
     private final BisqTableView<ListItem> tableView;
+    private Subscription isTableVisiblePin;
 
     public UpdaterView(UpdaterModel model, UpdaterController controller) {
         super(new VBox(20), model, controller);
 
-        root.setPadding(new Insets(PADDING));
-        //updater.headline=A new Bisq 2 update is available
-        //updater.version=Version {0} is available for download
-        //updater.gitHub=Please see the release notes for more details at:\n{0}
-        //updater.download=Download and verify
-        //updater.downloadLater=Download later
-        //updater.ignore=Ignore this version
-        //updater.table.file=File
-        //updater.table.downloadProgress=Download progress
-        //updater.table.verified=Verified
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPadding(new Insets(30));
+        root.setFillWidth(true);
 
-        Label headline = new Label(Res.get("updater.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        headline = new Label(Res.get("updater.headline"));
+        headline.getStyleClass().add("updater-headline");
 
         version = new Label();
+        version.getStyleClass().add("updater-sub-headline");
 
-        releaseNodes = new Label();
-        releaseNodes.setWrapText(true);
-        Label gitHub = new Label(Res.get("updater.gitHub"));
+        releaseNotes = new Label();
+        releaseNotes.setWrapText(true);
+        releaseNotes.getStyleClass().add("updater-text");
+
+        releaseNotesInfo = new Label(Res.get("updater.gitHub"));
+        releaseNotesInfo.getStyleClass().add("updater-text");
+
         downloadUrl = new Hyperlink();
-
+        downloadUrl.getStyleClass().add("updater-text");
 
         downloadButton = new Button(Res.get("updater.download"));
         downloadButton.setDefaultButton(true);
         downloadLaterButton = new Button(Res.get("updater.downloadLater"));
         downloadLaterButton.getStyleClass().add("outlined-button");
         ignoreButton = new Button(Res.get("updater.ignore"));
+        cancelButton = new Button(Res.get("updater.cancel"));
+        restartButton = new Button(Res.get("updater.restart"));
+        restartButton.setDefaultButton(true);
+        HBox buttons = new HBox(20, downloadButton, restartButton, Spacer.fillHBox(), downloadLaterButton, ignoreButton, cancelButton);
 
-        HBox buttons = new HBox(20, downloadButton, downloadLaterButton, ignoreButton);
+        tableViewHeadline = new Label(Res.get("updater.table.headline"));
+        tableViewHeadline.getStyleClass().add("updater-sub-headline");
 
         tableView = new BisqTableView<>(model.getListItems());
         tableView.setMinHeight(200);
-        //tableView.getStyleClass().add("user-bonded-roles-table-view");
+        //tableView.getStyleClass().add("updater-table-view");
         configTableView();
+
+        VBox.setMargin(releaseNotes, new Insets(0, 0, 10, 0));
+        VBox.setMargin(downloadUrl, new Insets(-20, 0, 30, -5));
         root.getChildren().addAll(headline, version,
-                releaseNodes, gitHub, downloadUrl,
-                buttons,
-                tableView);
+                releaseNotes, releaseNotesInfo, downloadUrl,
+                tableView,
+                buttons);
     }
 
     @Override
     protected void onViewAttached() {
         version.setText(Res.get("updater.version", model.getVersion()));
-        releaseNodes.setText(model.getReleaseNodes());
-        downloadUrl.setText(model.getDownloadUrl());
+        releaseNotes.setText(model.getReleaseNodes().get());
+        downloadUrl.setText(model.getDownloadUrl().get());
 
+        isTableVisiblePin = EasyBind.subscribe(model.getTableVisible(), isTableVisible -> {
+            tableViewHeadline.setVisible(isTableVisible);
+            tableViewHeadline.setManaged(isTableVisible);
+            tableView.setVisible(isTableVisible);
+            tableView.setManaged(isTableVisible);
+
+            version.setVisible(!isTableVisible);
+            version.setManaged(!isTableVisible);
+            releaseNotes.setVisible(!isTableVisible);
+            releaseNotes.setManaged(!isTableVisible);
+            releaseNotesInfo.setVisible(!isTableVisible);
+            releaseNotesInfo.setManaged(!isTableVisible);
+            downloadUrl.setVisible(!isTableVisible);
+            downloadUrl.setManaged(!isTableVisible);
+
+            downloadButton.setVisible(!isTableVisible);
+            downloadButton.setManaged(!isTableVisible);
+            downloadLaterButton.setVisible(!isTableVisible);
+            downloadLaterButton.setManaged(!isTableVisible);
+            ignoreButton.setVisible(!isTableVisible);
+            ignoreButton.setManaged(!isTableVisible);
+
+            cancelButton.setVisible(isTableVisible);
+            cancelButton.setManaged(isTableVisible);
+
+            if (isTableVisible) {
+                headline.setText(Res.get("updater.table.headline"));
+            }
+        });
+
+        restartButton.visibleProperty().bind(model.getRestartButtonVisible());
+        restartButton.managedProperty().bind(model.getRestartButtonVisible());
+
+        downloadUrl.setOnAction(e -> controller.onOpenUrl());
         downloadButton.setOnAction(e -> controller.onDownload());
         downloadLaterButton.setOnAction(e -> controller.onDownloadLater());
         ignoreButton.setOnAction(e -> controller.onIgnore());
+        restartButton.setOnAction(e -> controller.onRestart());
+        cancelButton.setOnAction(e -> controller.onCancel());
     }
 
     @Override
     protected void onViewDetached() {
+        restartButton.visibleProperty().unbind();
+        restartButton.managedProperty().unbind();
+
         downloadButton.setOnAction(null);
         downloadLaterButton.setOnAction(null);
         ignoreButton.setOnAction(null);
+        restartButton.setOnAction(null);
+        cancelButton.setOnAction(null);
+
+        isTableVisiblePin.unsubscribe();
     }
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("updater.table.file"))
-                .minWidth(150)
+                .isSortable(false)
                 .left()
-                .comparator(Comparator.comparing(ListItem::getFileName))
                 .valueSupplier(ListItem::getFileName)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("updater.table.progress"))
                 .isSortable(false)
-                .fixWidth(200)
                 .setCellFactory(getProgressCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("updater.table.verified"))
                 .isSortable(false)
-                .fixWidth(250)
                 .right()
-                .setCellFactory(getIsVerifiedellFactory())
+                .setCellFactory(getIsVerifiedCellFactory())
                 .build());
     }
 
@@ -149,9 +199,9 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getIsVerifiedellFactory() {
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getIsVerifiedCellFactory() {
         return column -> new TableCell<>() {
-            private final Switch isVerifiedIndicator = new Switch();
+            private final CheckBox isVerifiedIndicator = new CheckBox();
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
@@ -168,7 +218,6 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
             }
         };
     }
-
 
     @Getter
     @EqualsAndHashCode
