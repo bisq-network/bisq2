@@ -17,43 +17,41 @@
 
 package bisq.desktop.main.content;
 
-import bisq.desktop.common.Layout;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ViewTransition;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.main.content.chat.ChatView;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContentView extends NavigationView<AnchorPane, ContentModel, ContentController> {
+public class ContentView extends NavigationView<StackPane, ContentModel, ContentController> {
+    private ViewTransition viewTransition;
 
     public ContentView(ContentModel model, ContentController controller) {
-        super(new AnchorPane(), model, controller);
+        super(new StackPane(), model, controller);
 
-        root.setPadding(new Insets(33, 67, 67, 67));
+        // We only get created once my MainView after the splashscreen and then never get removed, 
+        // so we do not need to remove the listener.
         model.getView().addListener((observable, oldValue, newValue) -> {
-            Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
-
-            Parent parent = newValue.getRoot().getParent();
-            // At fast navigation changes we might have not removed the new view and would get 
-            // an exception, so we remove it from its parent first. The instanceof check for parent only returns true 
-            // if parent is not null. 
-            try {
-                if (parent instanceof Pane) {
-                    Region root1 = newValue.getRoot();
-                    log.error("root1 {}", root1);
-                    log.error(" ((Pane) parent).getChildren() {}", ((Pane) parent).getChildren());
-                    ((Pane) parent).getChildren().remove(root1);
-                    //todo still issues with fadeout animation... need to return the transition and stop it...
-                }
-                root.getChildren().add(newValue.getRoot());
-                Transitions.transitContentViews(oldValue, newValue);
-            } catch (Exception e) {
-                log.error(e.toString());
+            Region newValueRoot = newValue.getRoot();
+            if (!(newValue instanceof ChatView)) {
+                StackPane.setMargin(newValueRoot, new Insets(33, 67, 67, 67));
             }
+
+            if (viewTransition != null) {
+                viewTransition.stop();
+            }
+
+            if (!root.getChildren().contains(newValueRoot)) {
+                root.getChildren().add(newValueRoot);
+            } else {
+                log.warn("We did not add the new child view as we still had it in out children list. " +
+                        "This should not happen as the viewTransition.stop() call should remove any old dangling child view. New child view={}", newValue);
+            }
+            Region oldValueRoot = oldValue != null ? oldValue.getRoot() : null;
+            viewTransition = new ViewTransition(oldValueRoot, newValue);
         });
     }
 

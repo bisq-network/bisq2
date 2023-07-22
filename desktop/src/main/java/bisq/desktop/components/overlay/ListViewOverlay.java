@@ -197,7 +197,6 @@ public class ListViewOverlay<T> {
         stage.setOnCloseRequest(null);
         scene.setOnKeyPressed(null);
         listView.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
-
     }
 
     protected void layoutListView() {

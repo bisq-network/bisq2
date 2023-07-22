@@ -22,43 +22,43 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 public abstract class AcademyView<M extends Model, C extends Controller> extends View<VBox, M, C> {
-    protected final MultiLineLabel headline, subHeadline, overviewHeadline, overview, contentHeadline, content;
+    protected final Label headline, subHeadline, overviewHeadline, overview, contentHeadline, content;
     protected final Hyperlink learnMore;
 
     public AcademyView(M model, C controller) {
         super(new VBox(10), model, controller);
 
         String key = getKey();
-        headline = new MultiLineLabel(Res.get("academy.overview." + key));
+        headline = new Label(Res.get("academy.overview." + key));
         headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
         headline.getStyleClass().addAll("font-size-20", "font-light");
         headline.setGraphicTextGap(10);
         headline.setWrapText(true);
 
-        subHeadline = new MultiLineLabel(Res.get("academy." + key + ".subHeadline"));
+        subHeadline = new Label(Res.get("academy." + key + ".subHeadline"));
         subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
         subHeadline.setWrapText(true);
 
-        overviewHeadline = new MultiLineLabel(Res.get("academy.overview"));
+        overviewHeadline = new Label(Res.get("academy.overview"));
         overviewHeadline.getStyleClass().addAll("font-size-16", "font-light");
         overviewHeadline.setWrapText(true);
 
-        overview = new MultiLineLabel(Res.get("academy." + key + ".overview"));
+        overview = new Label(Res.get("academy." + key + ".overview"));
         overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         overview.setWrapText(true);
 
-        contentHeadline = new MultiLineLabel(Res.get("academy." + key + ".content.headline"));
+        contentHeadline = new Label(Res.get("academy." + key + ".content.headline"));
         contentHeadline.getStyleClass().addAll("font-size-16", "font-light");
         contentHeadline.setWrapText(true);
 
-        content = new MultiLineLabel(Res.get("academy." + key + ".content"));
+        content = new Label(Res.get("academy." + key + ".content"));
         content.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         content.setWrapText(true);
 

@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -33,7 +34,8 @@ public abstract class TextList extends VBox {
         setSpacing(vSpacing);
         List<String> list = List.of(text.split(regex));
         if (list.size() == 1 && list.get(0).equals(text)) {
-            MultiLineLabel content = new MultiLineLabel(text);
+            Label content = new Label(text);
+            content.setWrapText(true);
             if (style != null) {
                 content.getStyleClass().add(style);
             }
@@ -49,7 +51,8 @@ public abstract class TextList extends VBox {
             }
             i++;
             textContent = textContent.stripTrailing();
-            MultiLineLabel content = new MultiLineLabel(textContent);
+            Label content = new Label(textContent);
+            content.setWrapText(true);
             String markString = mark == null ? getMark(i) : mark;
             Text markText = new Text(markString);
             if (style != null) {

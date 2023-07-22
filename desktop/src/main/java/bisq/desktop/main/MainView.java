@@ -19,29 +19,42 @@ package bisq.desktop.main;
 
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MainView extends NavigationView<HBox, MainModel, MainController> {
+    private static ScrollPane scrollPane;
+
+    // Hack to adjust the fitToHeight property in case a chatView is displayed
+    public static void setFitToHeight(boolean value) {
+        scrollPane.setFitToHeight(value);
+    }
+
     public MainView(MainModel model,
                     MainController controller,
-                    Pane leftNavView,
-                    Pane topPanelView) {
+                    AnchorPane leftNavView,
+                    HBox topPanelView) {
         super(new HBox(), model, controller);
 
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setFitToHeight(true);
+        root.setFillHeight(true);
+        scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(false);
 
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
         VBox vBox = new VBox(topPanelView, scrollPane);
+        vBox.setFillWidth(true);
 
         HBox.setHgrow(vBox, Priority.ALWAYS);
         root.getChildren().addAll(leftNavView, vBox);
 
-        model.getView().addListener((observable, oldValue, contentView) -> {
-            Region child = contentView.getRoot();
-            scrollPane.setContent(child);
-        });
+        // We only get created once after splashscreen and then never get removed, so we do not need to remove the 
+        // listener.
+        model.getView().addListener((observable, oldValue, newValue) -> scrollPane.setContent(newValue.getRoot()));
     }
 
     @Override

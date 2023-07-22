@@ -19,7 +19,6 @@ package bisq.desktop.main.content.trade_apps;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -41,7 +40,8 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         headline.getStyleClass().add("trade-apps-roadmap-headline");
         headline.setGraphicTextGap(10);
 
-        MultiLineLabel subHeadline = new MultiLineLabel(Res.get("tradeApps." + name + ".subHeadline"));
+        Label subHeadline = new Label(Res.get("tradeApps." + name + ".subHeadline"));
+        subHeadline.setWrapText(true);
         subHeadline.getStyleClass().add("trade-apps-roadmap-sub-headline");
 
         Label overviewHeadline = new Label(Res.get("tradeApps.overview"));
@@ -52,7 +52,8 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         Label releaseHeadline = new Label(Res.get("tradeApps.release"));
         releaseHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        MultiLineLabel release = new MultiLineLabel(Res.get("tradeApps." + name + ".release"));
+        Label release = new Label(Res.get("tradeApps." + name + ".release"));
+        release.setWrapText(true);
         release.getStyleClass().addAll("font-size-12", "font-light");
 
         Label tradeOffsHeadline = new Label(Res.get("tradeApps.tradeOffs"));

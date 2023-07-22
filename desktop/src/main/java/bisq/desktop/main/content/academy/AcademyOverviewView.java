@@ -20,7 +20,6 @@ package bisq.desktop.main.content.academy;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -72,11 +71,13 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
     }
 
     private void addHeaderBox() {
-        Label headlineLabel = new MultiLineLabel(Res.get("academy.overview.headline"));
+        Label headlineLabel = new Label(Res.get("academy.overview.headline"));
+        headlineLabel.setWrapText(true);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
         headlineLabel.setMinHeight(55);
 
-        Label contentLabel = new MultiLineLabel(Res.get("academy.overview.content"));
+        Label contentLabel = new Label(Res.get("academy.overview.content"));
+        contentLabel.setWrapText(true);
         contentLabel.getStyleClass().add("bisq-text-16");
 
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
@@ -114,16 +115,16 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
     }
 
     private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
-        Label headlineLabel = new MultiLineLabel(headline);
+        Label headlineLabel = new Label(headline);
+        headlineLabel.setWrapText(true);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
         headlineLabel.setGraphicTextGap(15);
         headlineLabel.setMinHeight(35);
-        headlineLabel.setWrapText(true);
 
-        Label contentLabel = new MultiLineLabel(content);
-        contentLabel.getStyleClass().add("bisq-text-3");
+        Label contentLabel = new Label(content);
         contentLabel.setWrapText(true);
+        contentLabel.getStyleClass().add("bisq-text-3");
 
         Button button = new Button(buttonLabel);
         button.setMaxWidth(Double.MAX_VALUE);

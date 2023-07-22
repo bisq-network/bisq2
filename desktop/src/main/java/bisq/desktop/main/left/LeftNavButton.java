@@ -155,9 +155,7 @@ class LeftNavButton extends Pane implements Toggle {
             }
         });
 
-        EasyBind.subscribe(widthProperty(), w -> {
-            updateLayoutXNumMessagesBadge();
-        });
+        EasyBind.subscribe(widthProperty(), w -> updateLayoutXNumMessagesBadge());
         updateLayoutYNumMessagesBadge();
         getChildren().add(numMessagesBadge);
     }

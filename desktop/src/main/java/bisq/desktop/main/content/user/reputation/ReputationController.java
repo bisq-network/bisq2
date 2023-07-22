@@ -65,6 +65,8 @@ public class ReputationController implements Controller {
                 .addObserver(this::updateScore);
         signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdOfUpdatedScore()
                 .addObserver(this::updateScore);
+
+        model.getFilteredList().setPredicate(item -> item.getTotalScore() > 0);
     }
 
     @Override

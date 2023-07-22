@@ -22,7 +22,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
-import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
@@ -141,7 +140,8 @@ public class ReportToModeratorWindow {
             Label headline = new Label(Res.get("chat.reportToModerator.headline"));
             headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
-            MultiLineLabel info = new MultiLineLabel(Res.get("chat.reportToModerator.info"));
+            Label info = new Label(Res.get("chat.reportToModerator.info"));
+            info.setWrapText(true);
             info.getStyleClass().addAll("bisq-text-3");
 
             message = new MaterialTextArea(Res.get("chat.reportToModerator.message"), Res.get("chat.reportToModerator.message.prompt"));

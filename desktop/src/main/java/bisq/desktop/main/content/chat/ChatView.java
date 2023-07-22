@@ -22,6 +22,7 @@ import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.SearchBox;
+import bisq.desktop.main.MainView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,7 +34,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatController<?, ?>> {
+public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, ChatController<?, ?>> {
     private final Label channelTitle;
     private final Button helpButton, channelInfoButton;
     protected final VBox left;
@@ -56,15 +57,17 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
                     Region twoPartyPrivateChatChannelSelection,
                     Pane chatMessagesComponent,
                     Pane channelSidebar) {
-        super(new HBox(), model, controller);
+        super(new AnchorPane(), model, controller);
 
         this.twoPartyPrivateChannelSelection = twoPartyPrivateChatChannelSelection;
         this.chatMessagesComponent = chatMessagesComponent;
 
         this.channelSidebar = channelSidebar;
 
-        // Undo default padding of ContentView 
-        root.setPadding(new Insets(-34, -67, -67, -68));
+        HBox hBox = new HBox();
+        hBox.setFillHeight(true);
+        Layout.pinToAnchorPane(hBox, 0, 0, 0, 0);
+        root.getChildren().add(hBox);
 
         // Left
         left = new VBox(
@@ -75,6 +78,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         left.getStyleClass().add("bisq-grey-2-bg");
         left.setPrefWidth(210);
         left.setMinWidth(210);
+        left.setFillWidth(true);
 
         // Center toolbar
         channelTitle = new Label();
@@ -99,24 +103,27 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         centerToolbar.setMinHeight(64);
         centerToolbar.setPadding(new Insets(0, 20, 0, 25));
 
+        topSeparator = Layout.hLine();
+        centerVBox = new VBox(centerToolbar, topSeparator, chatMessagesComponent);
+        centerVBox.setFillWidth(true);
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+        chatMessagesComponent.setMinWidth(700);
+
         // sideBar
         sideBar = new VBox(channelSidebar);
         sideBar.getStyleClass().add("bisq-grey-2-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setFillWidth(true);
 
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        topSeparator = Layout.hLine();
-        centerVBox = new VBox(centerToolbar, topSeparator, chatMessagesComponent);
-        chatMessagesComponent.setMinWidth(700);
         HBox.setHgrow(left, Priority.NEVER);
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
-        root.getChildren().addAll(left, centerVBox, sideBar);
+        hBox.getChildren().addAll(left, centerVBox, sideBar);
     }
 
     @Override
     protected void onViewAttached() {
+        MainView.setFitToHeight(true);
         channelTitle.textProperty().bind(model.getChannelTitle());
         channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
         channelSidebar.managedProperty().bind(model.getChannelSidebarVisible());
