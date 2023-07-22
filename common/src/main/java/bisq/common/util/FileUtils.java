@@ -186,30 +186,42 @@ public class FileUtils {
     public static Optional<String> readFromFileIfPresent(File file) {
         try {
             return Optional.of(readFromFile(file));
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             return Optional.empty();
         }
     }
 
-    public static String readFromFile(File file) throws FileNotFoundException {
-        StringBuilder sb = new StringBuilder();
+    //readStringFromFile
+    public static String readFromFile(File file) throws IOException {
         try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                sb.append(scanner.nextLine());
-                if (scanner.hasNextLine()) {
-                    sb.append(System.lineSeparator());
-                }
+            return readFromScanner(scanner);
+        }
+    }
+
+    public static String readStringFromResource(String resourceName) throws IOException {
+        try (Scanner scanner = new Scanner(getResourceAsStream(resourceName))) {
+            return readFromScanner(scanner);
+        }
+    }
+
+    public static String readFromScanner(Scanner scanner) {
+        StringBuilder sb = new StringBuilder();
+        while (scanner.hasNextLine()) {
+            sb.append(scanner.nextLine());
+            if (scanner.hasNextLine()) {
+                sb.append(System.lineSeparator());
             }
         }
         return sb.toString();
     }
 
     public static InputStream getResourceAsStream(String fileName) throws IOException {
-        InputStream resource = FileUtils.class.getResourceAsStream(fileName);
-        if (resource == null) {
-            throw new IOException("Could not load " + fileName);
+        try (InputStream resource = FileUtils.class.getResourceAsStream(fileName)) {
+            if (resource == null) {
+                throw new IOException("Could not load " + fileName);
+            }
+            return resource;
         }
-        return resource;
     }
 
     public static void resourceToFile(File file) throws IOException {
