@@ -22,8 +22,10 @@ import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
@@ -67,6 +69,9 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
+        //todo
+        UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.UPDATER)).after(500);
+
         alertsPin = alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
