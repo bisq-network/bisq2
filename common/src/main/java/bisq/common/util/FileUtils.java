@@ -185,14 +185,13 @@ public class FileUtils {
 
     public static Optional<String> readFromFileIfPresent(File file) {
         try {
-            return Optional.of(readFromFile(file));
+            return Optional.of(readStringFromFile(file));
         } catch (IOException e) {
             return Optional.empty();
         }
     }
 
-    //readStringFromFile
-    public static String readFromFile(File file) throws IOException {
+    public static String readStringFromFile(File file) throws IOException {
         try (Scanner scanner = new Scanner(file)) {
             return readFromScanner(scanner);
         }

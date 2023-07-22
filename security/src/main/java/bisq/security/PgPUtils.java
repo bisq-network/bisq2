@@ -50,7 +50,7 @@ public class PgPUtils {
             checkIfKeyMatchesResourceKey(directory, key + EXTENSION);
         }
 
-        String signingKey = FileUtils.readFromFile(Path.of(directory, signingKeyFileName).toFile());
+        String signingKey = FileUtils.readStringFromFile(Path.of(directory, signingKeyFileName).toFile());
         log.debug("signingKey {}", signingKey);
         checkArgument(keys.contains(signingKey), "signingKey not matching any of the provided keys");
 
@@ -66,7 +66,7 @@ public class PgPUtils {
 
     private static void checkIfKeyMatchesResourceKey(String directory, String keyName) throws IOException {
         String key_4A133008FromResources = FileUtils.readStringFromResource(keyName);
-        String key_4A133008_fromDirectory = FileUtils.readFromFile(Path.of(directory, keyName).toFile());
+        String key_4A133008_fromDirectory = FileUtils.readStringFromFile(Path.of(directory, keyName).toFile());
         checkArgument(key_4A133008FromResources.equals(key_4A133008_fromDirectory), "Key from directory not matching the one from resources. keyName=" + keyName);
     }
 

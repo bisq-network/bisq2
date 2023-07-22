@@ -86,7 +86,7 @@ public class OnionServiceDataDirManager {
 
     private Optional<String> readStringFromFile(File file) {
         try {
-            String string = FileUtils.readFromFile(file);
+            String string = FileUtils.readStringFromFile(file);
             return Optional.of(string);
 
         } catch (IOException e) {
