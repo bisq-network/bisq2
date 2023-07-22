@@ -35,21 +35,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PgPUtils {
-    private static final String EXTENSION = ".asc";
-    private static final String SIGNING_KEY_FILE = "signingkey.asc";
-    private static final String SIGNATURE_FILE = "desktop.jar.asc";
-    private static final String KEY_4A133008 = "4A133008";
-    private static final String KEY_E222AA02 = "E222AA02";
+    public static final String EXTENSION = ".asc";
+    public static final String SIGNING_KEY_FILE = "signingkey.asc";
+    public static final String SIGNATURE_FILE = "desktop.jar.asc";
+    public static final String KEY_4A133008 = "4A133008";
+    public static final String KEY_E222AA02 = "E222AA02";
 
     public static void verifyDownloadedFile(String directory, String fileName) throws IOException {
         verifyDownloadedFile(directory, fileName, SIGNING_KEY_FILE, SIGNATURE_FILE, List.of(KEY_4A133008, KEY_E222AA02));
     }
 
-    public static void verifyDownloadedFile(String directory, String fileName, String signingKeyFileName, String signatureFileName, List<String> keys) throws IOException {
-        for (String key : keys) {
-            checkIfKeyMatchesResourceKey(directory, key + EXTENSION);
-        }
+    public static void verifyDownloadedFile(String directory, String fileName, List<String> keys) throws IOException {
+        verifyDownloadedFile(directory, fileName, SIGNING_KEY_FILE, fileName + EXTENSION, keys);
+    }
 
+    public static void verifyDownloadedFile(String directory, String fileName, String signingKeyFileName, String signatureFileName, List<String> keys) throws IOException {
         String signingKey = FileUtils.readStringFromFile(Path.of(directory, signingKeyFileName).toFile());
         log.debug("signingKey {}", signingKey);
         checkArgument(keys.contains(signingKey), "signingKey not matching any of the provided keys");
@@ -60,8 +60,14 @@ public class PgPUtils {
         log.debug("pubKeyFile {}", pubKeyFile);
         log.debug("sigFile {}", sigFile);
         log.debug("file {}", file);
-        checkArgument(PgPUtils.isPgPSignatureValid(pubKeyFile, sigFile, file), "Signature verification failed");
+        checkArgument(PgPUtils.isSignatureValid(pubKeyFile, sigFile, file), "Signature verification failed");
         log.info("signature verification succeeded");
+    }
+
+    public static void checkIfKeysMatchesResourceKeys(String directory, List<String> keys) throws IOException {
+        for (String key : keys) {
+            checkIfKeyMatchesResourceKey(directory, key + EXTENSION);
+        }
     }
 
     private static void checkIfKeyMatchesResourceKey(String directory, String keyName) throws IOException {
@@ -70,16 +76,12 @@ public class PgPUtils {
         checkArgument(key_4A133008FromResources.equals(key_4A133008_fromDirectory), "Key from directory not matching the one from resources. keyName=" + keyName);
     }
 
-    public static boolean isPgPSignatureValid(File pubKeyFile, File sigFile, File jarFileName) {
+    public static boolean isSignatureValid(File pubKeyFile, File sigFile, File jarFileName) {
         try {
             PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFile);
             PGPSignature pgpSignature = readPgpSignature(sigFile);
             long keyIdFromSignature = pgpSignature.getKeyID();
-            log.debug("KeyID used in signature: {}", Integer.toHexString((int) keyIdFromSignature).toUpperCase());
             PGPPublicKey publicKey = checkNotNull(pgpPublicKeyRing.getPublicKey(keyIdFromSignature), "No public key found for key ID from signature");
-            long keyIdFromPubKey = publicKey.getKeyID();
-            log.debug("The ID of the selected key is {}", Integer.toHexString((int) keyIdFromPubKey).toUpperCase());
-            checkArgument(keyIdFromSignature == keyIdFromPubKey, "Key ID from signature not matching key ID from pub Key");
             return isSignatureValid(pgpSignature, publicKey, jarFileName);
         } catch (PGPException | IOException | SignatureException e) {
             log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \njarFileName={}.\nError: {}",
@@ -117,6 +119,7 @@ public class PgPUtils {
     }
 
     public static boolean isSignatureValid(PGPSignature pgpSignature, PGPPublicKey publicKey, File dataFile) throws IOException, PGPException {
+        checkArgument(pgpSignature.getKeyID() == publicKey.getKeyID(), "Key ID from signature not matching key ID from pub Key");
         pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
         try (InputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)))) {
             byte[] buffer = new byte[1024];

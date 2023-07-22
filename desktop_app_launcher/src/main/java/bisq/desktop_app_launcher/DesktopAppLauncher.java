@@ -64,7 +64,20 @@ public class DesktopAppLauncher {
             String pathToJar = dataDir + File.separator + JAR_DIR + File.separator + version;
             String jarPath = pathToJar + File.separator + JAR_FILE_NAME;
             if (new File(jarPath).exists()) {
-                PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME);
+                boolean ignoreSignature = getOption(args, jvmArgs, "ignoreSignature", "false").equals("true");
+                if (!ignoreSignature) {
+                    // If keys are provided as: --keyList=key1,key2
+                    String keys = getOption(args, jvmArgs, "keyList", null);
+                    if (keys != null) {
+                        List<String> keyList = List.of(keys.split(","));
+                        PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME, keyList);
+                    } else {
+                        List<String> keyList = List.of(PgPUtils.KEY_4A133008, PgPUtils.KEY_E222AA02);
+                        PgPUtils.checkIfKeysMatchesResourceKeys(pathToJar, keyList);
+                        PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME, keyList);
+                    }
+                }
+
                 String javaHome = System.getProperty("java.home");
                 log.info("javaHome {}", javaHome);
                 log.info("Jar file found at {}. Start that application in a new process.", jarPath);
