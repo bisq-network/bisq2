@@ -215,21 +215,21 @@ public class FileUtils {
     }
 
     public static InputStream getResourceAsStream(String fileName) throws IOException {
-        try (InputStream resource = FileUtils.class.getResourceAsStream(fileName)) {
-            if (resource == null) {
-                throw new IOException("Could not load " + fileName);
-            }
-            return resource;
+        InputStream resource = FileUtils.class.getClassLoader().getResourceAsStream(fileName);
+        if (resource == null) {
+            throw new IOException("Could not load " + fileName);
         }
+        return resource;
     }
 
     public static void resourceToFile(File file) throws IOException {
-        InputStream resource = getResourceAsStream(FILE_SEP + file.getName());
-        if (file.exists() && !file.delete()) {
-            throw new IOException("Could not remove existing file " + file.getName());
+        try (InputStream resource = getResourceAsStream(file.getName())) {
+            if (file.exists() && !file.delete()) {
+                throw new IOException("Could not remove existing file " + file.getName());
+            }
+            OutputStream out = new FileOutputStream(file);
+            copy(resource, out);
         }
-        OutputStream out = new FileOutputStream(file);
-        copy(resource, out);
     }
 
     public static void copyFile(File source, File destination) throws IOException {
