@@ -22,6 +22,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
+import bisq.security.PgPUtils;
 import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,9 +32,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
@@ -43,12 +42,17 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class DesktopAppLauncher {
+    private static final String DEFAULT_APP_NAME = "Bisq2";
     private static final String DEFAULT_VERSION = "2.0.0";
-    private static final String JAR_PATH = "/desktop.jar";
+    private static final String VERSION_FILE = "version.txt";
+    private static final String JAR_DIR = "jar";
+    private static final String JAR_FILE_NAME = "desktop.jar";
+    private static final String BIN_PATH = "bin/java";
+
 
     public static void main(String[] args) {
         try {
-            List<String> jvmArgs = getJvmArgs();
+            List<String> jvmArgs = getBisqJvmArgs();
             String appName = getAppName(args, jvmArgs);
             String userDataDir = OsUtils.getUserDataDir().getAbsolutePath();
             String dataDir = userDataDir + File.separator + appName;
@@ -56,13 +60,15 @@ public class DesktopAppLauncher {
             LogSetup.setup(Paths.get(dataDir, "bisq").toString());
             LogSetup.setLevel(Level.INFO);
 
-            String version = getVersion(args, userDataDir);
-            String jarPath = dataDir + "/jar/" + version + JAR_PATH;
+            String version = getVersion(args, jvmArgs, userDataDir);
+            String pathToJar = dataDir + File.separator + JAR_DIR + File.separator + version;
+            String jarPath = pathToJar + File.separator + JAR_FILE_NAME;
             if (new File(jarPath).exists()) {
+                PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME);
                 String javaHome = System.getProperty("java.home");
                 log.info("javaHome {}", javaHome);
                 log.info("Jar file found at {}. Start that application in a new process.", jarPath);
-                String javaBinPath = javaHome + "/bin/java";
+                String javaBinPath = javaHome + File.separator + BIN_PATH;
                 List<String> command = new ArrayList<>();
                 command.add(javaBinPath);
                 command.addAll(jvmArgs);
@@ -84,34 +90,33 @@ public class DesktopAppLauncher {
         }
     }
 
-    private static String getVersion(String[] args, String userDataDir) {
-        Optional<String> versionFromArgs = getVersion(args);
-        String versionFilePath = userDataDir + File.separator + "version.txt";
-        return FileUtils.readFromFileIfPresent(new File(versionFilePath))
-                .or(() -> versionFromArgs)
-                .orElse(DEFAULT_VERSION);
-    }
 
-    private static Optional<String> getVersion(String[] args) {
-        return Stream.of(args)
-                .filter(e -> e.startsWith("--version="))
-                .map(e -> e.replace("--version=", ""))
-                .findAny();
+    private static String getVersion(String[] args, List<String> jvmArgs, String userDataDir) {
+        String versionFilePath = userDataDir + File.separator + VERSION_FILE;
+        return FileUtils.readFromFileIfPresent(new File(versionFilePath))
+                .orElse(getOption(args, jvmArgs, "version", DEFAULT_VERSION));
     }
 
     private static String getAppName(String[] args, List<String> jvmArgs) {
-        return jvmArgs.stream()
-                .filter(e -> e.startsWith("-Dapplication.appName="))
-                .map(e -> e.replace("-Dapplication.appName=", ""))
-                .findAny()
-                .or(() -> Arrays.stream(args)
-                        .filter(e -> e.startsWith("--appName="))
-                        .map(e -> e.replace("--appName=", ""))
-                        .findAny())
-                .orElse("Bisq2");
+        return getOption(args, jvmArgs, "appName", DEFAULT_APP_NAME);
     }
 
-    private static List<String> getJvmArgs() {
+    private static String getOption(String[] args, List<String> jvmArgs, String option, String defaultValue) {
+        String jvmOptionString = "-Dapplication." + option + "=";
+        String argsOptionString = "--" + option + "=";
+        return jvmArgs.stream()
+                .filter(e -> e.startsWith(jvmOptionString))
+                .map(e -> e.replace(jvmOptionString, ""))
+                .findAny()
+                .or(() -> Arrays.stream(args)
+                        .filter(e -> e.startsWith(argsOptionString))
+                        .map(e -> e.replace(argsOptionString, ""))
+                        .findAny())
+                .orElse(defaultValue);
+    }
+
+
+    private static List<String> getBisqJvmArgs() {
         return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
                 .filter(e -> e.startsWith("-Dapplication"))
                 .collect(Collectors.toList());
