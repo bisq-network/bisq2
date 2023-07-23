@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
@@ -32,6 +34,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class PgPUtilsTest {
+    @BeforeEach
+    void setUp() throws IOException {
+        FileUtils.makeDirs(Path.of("temp").toFile());
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        FileUtils.deleteFileOrDirectory(Path.of("temp").toFile());
+    }
+
     @Test
     public void testReadPgpPublicKeyRing() {
         try {
@@ -73,7 +85,7 @@ public class PgPUtilsTest {
     }
 
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
-        File file = Path.of("out", "test", fileName).toFile();
+        File file = Path.of("temp", fileName).toFile();
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
                 OutputStream out = new FileOutputStream(file);
@@ -86,7 +98,7 @@ public class PgPUtilsTest {
     }
 
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
-        File file = Path.of("out", "test", fileName).toFile();
+        File file = Path.of("temp", fileName).toFile();
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
                 OutputStream out = new FileOutputStream(file);
@@ -98,8 +110,8 @@ public class PgPUtilsTest {
         }
     }
 
-    private File getDataAsFile(String fileName) throws IOException, SignatureException {
-        File file = Path.of("out", "test", fileName).toFile();
+    private File getDataAsFile(String fileName) throws IOException {
+        File file = Path.of("temp", fileName).toFile();
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
                 OutputStream out = new FileOutputStream(file);
