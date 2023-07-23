@@ -33,7 +33,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
     private final Button resetDontShowAgain;
-    private final Switch useAnimations, closeMyOfferWhenTaken;
+    private final Switch useAnimations, closeMyOfferWhenTaken, notifyForPreRelease;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -67,6 +67,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notificationsToggleListener = (observable, oldValue, newValue) -> controller.onSetChatNotificationType((ChatNotificationType) newValue.getUserData());
 
+        notifyForPreRelease = new Switch(Res.get("settings.preferences.notification.notifyForPreRelease"));
 
         // Display
         Label displayHeadline = new Label(Res.get("settings.preferences.display.headline"));
@@ -82,7 +83,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         VBox.setMargin(notificationsHeadline, new Insets(30, 0, 0, 0));
         VBox.setMargin(displayHeadline, new Insets(15, 0, 0, 0));
-        root.getChildren().addAll(notificationsHeadline, notificationsVBox,
+        root.getChildren().addAll(notificationsHeadline, notificationsVBox, notifyForPreRelease,
                 displayHeadline, useAnimations, resetDontShowAgain,
                 tradeHeadline, closeMyOfferWhenTaken);
     }
@@ -92,6 +93,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notificationsToggleGroup.selectedToggleProperty().addListener(notificationsToggleListener);
         selectedNotificationTypePin = EasyBind.subscribe(model.getChatNotificationType(), selected -> applyChatNotificationType());
 
+        notifyForPreRelease.selectedProperty().bindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
 
@@ -103,6 +105,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
 
+        notifyForPreRelease.selectedProperty().unbindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         resetDontShowAgain.setOnAction(null);
 

@@ -17,8 +17,8 @@
 
 package bisq.common.util;
 
+import bisq.common.observable.Observable;
 import com.google.common.base.Charsets;
-import com.google.common.util.concurrent.AtomicDouble;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
@@ -325,13 +325,12 @@ public class FileUtils {
         }
     }
 
-    public static void downloadFile(URL url, File destination, AtomicDouble progress) throws IOException {
+    public static HttpURLConnection downloadFile(URL url, File destination, Observable<Double> progress) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.connect();
-        int fileSize = connection.getContentLength();
         try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
              FileOutputStream outputStream = new FileOutputStream(destination)) {
-
+            connection.connect();
+            int fileSize = connection.getContentLength();
             double totalReadBytes = 0d;
             byte[] buffer = new byte[1024];
             int bytesRead;
@@ -343,5 +342,6 @@ public class FileUtils {
         } finally {
             connection.disconnect();
         }
+        return connection;
     }
 }

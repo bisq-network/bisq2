@@ -23,6 +23,7 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
 import bisq.security.PgPUtils;
+import bisq.update.UpdateService;
 import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +35,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static bisq.update.UpdateService.*;
+
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
  * If there is a jar file found for the given version at the data directory we use that jar file to start a new
@@ -44,11 +47,7 @@ import java.util.stream.Collectors;
 public class DesktopAppLauncher {
     private static final String DEFAULT_APP_NAME = "Bisq2";
     private static final String DEFAULT_VERSION = "2.0.0";
-    private static final String VERSION_FILE = "version.txt";
-    private static final String JAR_DIR = "jar";
-    private static final String JAR_FILE_NAME = "desktop.jar";
     private static final String BIN_PATH = "bin/java";
-
 
     public static void main(String[] args) {
         try {
@@ -61,8 +60,8 @@ public class DesktopAppLauncher {
             LogSetup.setLevel(Level.INFO);
 
             String version = getVersion(args, jvmArgs, userDataDir);
-            String pathToJar = dataDir + File.separator + JAR_DIR + File.separator + version;
-            String jarPath = pathToJar + File.separator + JAR_FILE_NAME;
+            String directory = dataDir + File.separator + DESTINATION_DIR + File.separator + version;
+            String jarPath = directory + File.separator + DESTINATION_FILE_NAME;
             if (new File(jarPath).exists()) {
                 boolean ignoreSignature = getOption(args, jvmArgs, "ignoreSignature", "false").equals("true");
                 if (!ignoreSignature) {
@@ -70,11 +69,11 @@ public class DesktopAppLauncher {
                     String keys = getOption(args, jvmArgs, "keyList", null);
                     if (keys != null) {
                         List<String> keyList = List.of(keys.split(","));
-                        PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME, keyList);
+                        PgPUtils.verifyDownloadedFile(directory, DESTINATION_FILE_NAME, SIGNING_KEY_FILE, keyList);
                     } else {
-                        List<String> keyList = List.of(PgPUtils.KEY_4A133008, PgPUtils.KEY_E222AA02);
-                        PgPUtils.checkIfKeysMatchesResourceKeys(pathToJar, keyList);
-                        PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME, keyList);
+                        List<String> keyList = List.of(UpdateService.KEY_4A133008, UpdateService.KEY_E222AA02);
+                        PgPUtils.checkIfKeysMatchesResourceKeys(directory, keyList);
+                        PgPUtils.verifyDownloadedFile(directory, DESTINATION_FILE_NAME, SIGNING_KEY_FILE, keyList);
                     }
                 }
 
@@ -105,7 +104,7 @@ public class DesktopAppLauncher {
 
 
     private static String getVersion(String[] args, List<String> jvmArgs, String userDataDir) {
-        String versionFilePath = userDataDir + File.separator + VERSION_FILE;
+        String versionFilePath = userDataDir + File.separator + VERSION_FILE_NAME;
         return FileUtils.readFromFileIfPresent(new File(versionFilePath))
                 .orElse(getOption(args, jvmArgs, "version", DEFAULT_VERSION));
     }

@@ -50,6 +50,10 @@ public class ProgressBarWithLabel extends VBox {
     @Setter
     private boolean animateEllipsis = true;
 
+    public ProgressBarWithLabel() {
+        this("");
+    }
+
     public ProgressBarWithLabel(String text) {
         this(text, -1);
     }

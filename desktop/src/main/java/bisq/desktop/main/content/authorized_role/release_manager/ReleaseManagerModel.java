@@ -18,10 +18,26 @@
 package bisq.desktop.main.content.authorized_role.release_manager;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ReleaseManagerModel implements Model {
+    private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
+    private final StringProperty releaseNotes = new SimpleStringProperty();
+    private final StringProperty version = new SimpleStringProperty();
+    private final BooleanProperty isPreRelease = new SimpleBooleanProperty();
+    private final ObservableList<ReleaseManagerView.ReleaseNotificationListItem> listItems = FXCollections.observableArrayList();
+    private final SortedList<ReleaseManagerView.ReleaseNotificationListItem> sortedListItems = new SortedList<>(listItems);
+
+    public ReleaseManagerModel() {
+    }
 }

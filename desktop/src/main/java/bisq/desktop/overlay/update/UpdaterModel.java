@@ -15,25 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.preferences;
+package bisq.desktop.overlay.update;
 
 import bisq.desktop.common.view.Model;
-import bisq.settings.ChatNotificationType;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
-public class PreferencesModel implements Model {
-    private final ObjectProperty<ChatNotificationType> chatNotificationType = new SimpleObjectProperty<>(ChatNotificationType.MENTION);
-    private final BooleanProperty notifyForPreRelease = new SimpleBooleanProperty();
-    private final BooleanProperty useAnimations = new SimpleBooleanProperty();
-    private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
+public class UpdaterModel implements Model {
+    private final BooleanProperty tableVisible = new SimpleBooleanProperty();
+    private final BooleanProperty downloadAndVerifyCompleted = new SimpleBooleanProperty();
+    private final StringProperty version = new SimpleStringProperty();
+    private final StringProperty releaseNotes = new SimpleStringProperty();
+    private final StringProperty downloadUrl = new SimpleStringProperty();
 
-    public PreferencesModel() {
-    }
+    private final ObservableList<UpdaterView.ListItem> listItems = FXCollections.observableArrayList();
 }

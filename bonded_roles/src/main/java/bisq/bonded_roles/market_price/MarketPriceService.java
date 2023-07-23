@@ -28,6 +28,7 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
@@ -113,11 +114,11 @@ public class MarketPriceService {
     private volatile boolean shutdownStarted;
     private Scheduler scheduler;
 
-    public MarketPriceService(Config conf, NetworkService networkService, String version) {
+    public MarketPriceService(Config conf, NetworkService networkService, Version version) {
         providers = new ArrayList<>(conf.providers);
         checkArgument(!providers.isEmpty(), "providers must not be empty");
         this.networkService = networkService;
-        userAgent = "bisq-v2/" + version;
+        userAgent = "bisq-v2/" + version.toString();
     }
 
     public CompletableFuture<Boolean> initialize() {

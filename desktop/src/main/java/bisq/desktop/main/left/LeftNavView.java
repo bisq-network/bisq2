@@ -63,7 +63,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final VBox mainMenuItems;
     private final int menuTop;
     private final LeftNavButton tradeAppsButton, learnButton, authorizedRole;
-    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, tradeAppsSubMenuExpandedPin, learnsSubMenuExpandedPin;
+    private final Label version;
+    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin,
+            tradeAppsSubMenuExpandedPin, learnsSubMenuExpandedPin, newVersionAvailablePin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
@@ -74,7 +76,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         mainMenuItems = new VBox();
         mainMenuItems.setSpacing(6);
-        Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
 
         LeftNavButton dashBoard = createNavigationButton(Res.get("navigation.dashboard"),
                 "nav-community",
@@ -142,7 +143,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
-        Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
 
         horizontalExpandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
         horizontalExpandIcon.setCursor(Cursor.HAND);
@@ -184,7 +184,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         }
 
         mainMenuItems.setLayoutY(menuTop);
-        root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, horizontalExpandIcon, horizontalCollapseIcon, networkInfoBox);
+
+        version = new Label(model.getVersion());
+        version.setOpacity(0.5);
+        version.getStyleClass().add("bisq-smaller-dimmed-label");
+        version.setLayoutX(91);
+        version.setLayoutY(26.5);
+        Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
+
+        Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
+        Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
+        root.getChildren().addAll(logoAndVersion, selectionMarker, mainMenuItems, horizontalExpandIcon, horizontalCollapseIcon, networkInfoBox);
     }
 
     @Override
@@ -225,6 +235,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     });
                     logoExpanded.setVisible(true);
                     logoExpanded.setManaged(true);
+                    version.setLayoutX(91);
                 }).after(duration.get() / 2);
                 UIScheduler.run(() -> {
                     networkInfoBox.setOpacity(0);
@@ -257,6 +268,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 Transitions.fadeOut(logoExpanded, duration.get() / 2, () -> {
                     logoExpanded.setVisible(false);
                     logoExpanded.setManaged(false);
+                    version.setLayoutX(53);
                 });
                 logoCollapsed.setVisible(true);
                 logoCollapsed.setManaged(true);
@@ -285,6 +297,21 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 tradeAppsButton::setVerticalExpanded);
         learnsSubMenuExpandedPin = EasyBind.subscribe(model.getLearnsSubMenuExpanded(),
                 learnButton::setVerticalExpanded);
+
+        newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
+                newVersionAvailable -> {
+                    if (newVersionAvailable) {
+                        version.setOpacity(1);
+                        version.getStyleClass().remove("bisq-smaller-dimmed-label");
+                        version.getStyleClass().addAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setOnMouseClicked(e -> controller.onOpenUpdateWindow());
+                    } else {
+                        version.setOpacity(0.5);
+                        version.getStyleClass().add("bisq-smaller-dimmed-label");
+                        version.getStyleClass().removeAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setOnMouseClicked(null);
+                    }
+                });
     }
 
     @Override
@@ -298,6 +325,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectedNavigationButtonPin.unsubscribe();
         tradeAppsSubMenuExpandedPin.unsubscribe();
         learnsSubMenuExpandedPin.unsubscribe();
+        newVersionAvailablePin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
     }
@@ -468,14 +496,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                    BooleanProperty networkEnabled) {
 
             Label titleLabel = new Label(title);
-            titleLabel.getStyleClass().add("bisq-small-dimmed-label");
+            titleLabel.getStyleClass().add("bisq-smaller-dimmed-label");
 
             Label numConnectionsLabel = new Label();
             numConnectionsLabel.getStyleClass().add("bisq-smaller-label");
             numConnectionsLabel.textProperty().bind(numConnections);
 
             Label separator = new Label("|");
-            separator.getStyleClass().add("bisq-small-dimmed-label");
+            separator.getStyleClass().add("bisq-smaller-dimmed-label");
 
             Label numTargetConnectionsLabel = new Label();
             numTargetConnectionsLabel.getStyleClass().add("bisq-smaller-label");

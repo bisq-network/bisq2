@@ -95,6 +95,7 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
                 requireNonNull(getClass().getResource("/css/text.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/controls.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/containers.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/css/application.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/chat.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/user.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/css/bisq_easy.css")).toExternalForm(),

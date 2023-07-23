@@ -264,7 +264,6 @@ public class BannedUserProfileTable {
             };
         }
 
-
         @Getter
         @EqualsAndHashCode
         private static class ListItem implements TableItem {
@@ -278,7 +277,5 @@ public class BannedUserProfileTable {
                 userName = userProfile.getUserName();
             }
         }
-
     }
-
 }

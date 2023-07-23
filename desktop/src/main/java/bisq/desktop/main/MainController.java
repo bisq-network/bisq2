@@ -19,11 +19,11 @@ package bisq.desktop.main;
 
 import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
-import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
@@ -31,6 +31,7 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
 import bisq.settings.SettingsService;
+import bisq.update.UpdateService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +47,7 @@ public class MainController extends NavigationController {
     private final LeftNavController leftNavController;
     private final AlertService alertService;
     private final SettingsService settingsService;
-    private Pin alertsPin;
+    private final UpdateService updateService;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
@@ -55,6 +56,7 @@ public class MainController extends NavigationController {
         settingsService = serviceProvider.getSettingsService();
 
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+        updateService = serviceProvider.getUpdateService();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
@@ -67,7 +69,7 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
-        alertsPin = alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
+        alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData == null) {
@@ -102,11 +104,17 @@ public class MainController extends NavigationController {
             public void clear() {
             }
         });
+
+        updateService.getReleaseNotification().addObserver(releaseNotification -> {
+            if (releaseNotification == null) {
+                return;
+            }
+            UIThread.run(() -> Navigation.navigateTo(NavigationTarget.UPDATER));
+        });
     }
 
     @Override
     public void onDeactivate() {
-        alertsPin.unbind();
     }
 
     @SuppressWarnings("SwitchStatementWithTooFewBranches")

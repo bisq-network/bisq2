@@ -36,6 +36,7 @@ import bisq.desktop.overlay.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
+import bisq.desktop.overlay.update.UpdaterController;
 import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -120,6 +121,9 @@ public class OverlayController extends NavigationController {
             }
             case TAC: {
                 return Optional.of(new TacController(serviceProvider));
+            }
+            case UPDATER: {
+                return Optional.of(new UpdaterController(serviceProvider));
             }
             case ONBOARDING: {
                 return Optional.of(new OnboardingController(serviceProvider));

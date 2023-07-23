@@ -39,6 +39,7 @@ public enum NavigationTarget {
 
     UNLOCK(OVERLAY, false),
     TAC(OVERLAY, false),
+    UPDATER(OVERLAY, false),
 
     ONBOARDING(OVERLAY, false),
     ONBOARDING_WELCOME(ONBOARDING, false),
