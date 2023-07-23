@@ -102,7 +102,7 @@ public class TorServerSocketChannel {
 
         TorControlConnection.CreateHiddenServiceResult result;
         if (privKeyFile.exists()) {
-            String privateKey = FileUtils.readFromFile(privKeyFile);
+            String privateKey = FileUtils.readStringFromFile(privKeyFile);
             result = torController.createHiddenService(hiddenServicePort, localPort, privateKey);
         } else {
             result = torController.createHiddenService(hiddenServicePort, localPort);

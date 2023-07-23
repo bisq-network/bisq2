@@ -93,7 +93,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
         File file = FileChooserUtil.openFile(getView().getRoot().getScene(), path.toAbsolutePath().toString());
         if (file != null) {
             try {
-                String json = FileUtils.readFromFile(file);
+                String json = FileUtils.readStringFromFile(file);
                 checkArgument(StringUtils.isNotEmpty(json));
                 getNodesRegistrationModel().getAddressInfoJson().set(json);
             } catch (Exception e) {

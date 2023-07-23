@@ -38,9 +38,9 @@ public class NymIdGenerator {
     private static final String DEFAULT_SEPARATOR = "-";
 
     public static String fromHash(byte[] hash) {
-        List<String> adverbs = read("/adverbs.txt");
-        List<String> adjectives = read("/adjectives.txt");
-        List<String> nouns = read("/nouns.txt");
+        List<String> adverbs = read("adverbs.txt");
+        List<String> adjectives = read("adjectives.txt");
+        List<String> nouns = read("nouns.txt");
         return fromHash(new BigInteger(hash), adverbs, adjectives, nouns, DEFAULT_SEPARATOR);
     }
 

@@ -185,27 +185,37 @@ public class FileUtils {
 
     public static Optional<String> readFromFileIfPresent(File file) {
         try {
-            return Optional.of(readFromFile(file));
-        } catch (FileNotFoundException e) {
+            return Optional.of(readStringFromFile(file));
+        } catch (IOException e) {
             return Optional.empty();
         }
     }
 
-    public static String readFromFile(File file) throws FileNotFoundException {
-        StringBuilder sb = new StringBuilder();
+    public static String readStringFromFile(File file) throws IOException {
         try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                sb.append(scanner.nextLine());
-                if (scanner.hasNextLine()) {
-                    sb.append(System.lineSeparator());
-                }
+            return readFromScanner(scanner);
+        }
+    }
+
+    public static String readStringFromResource(String resourceName) throws IOException {
+        try (Scanner scanner = new Scanner(getResourceAsStream(resourceName))) {
+            return readFromScanner(scanner);
+        }
+    }
+
+    public static String readFromScanner(Scanner scanner) {
+        StringBuilder sb = new StringBuilder();
+        while (scanner.hasNextLine()) {
+            sb.append(scanner.nextLine());
+            if (scanner.hasNextLine()) {
+                sb.append(System.lineSeparator());
             }
         }
         return sb.toString();
     }
 
     public static InputStream getResourceAsStream(String fileName) throws IOException {
-        InputStream resource = FileUtils.class.getResourceAsStream(fileName);
+        InputStream resource = FileUtils.class.getClassLoader().getResourceAsStream(fileName);
         if (resource == null) {
             throw new IOException("Could not load " + fileName);
         }
@@ -213,12 +223,13 @@ public class FileUtils {
     }
 
     public static void resourceToFile(File file) throws IOException {
-        InputStream resource = getResourceAsStream(FILE_SEP + file.getName());
-        if (file.exists() && !file.delete()) {
-            throw new IOException("Could not remove existing file " + file.getName());
+        try (InputStream resource = getResourceAsStream(file.getName())) {
+            if (file.exists() && !file.delete()) {
+                throw new IOException("Could not remove existing file " + file.getName());
+            }
+            OutputStream out = new FileOutputStream(file);
+            copy(resource, out);
         }
-        OutputStream out = new FileOutputStream(file);
-        copy(resource, out);
     }
 
     public static void copyFile(File source, File destination) throws IOException {

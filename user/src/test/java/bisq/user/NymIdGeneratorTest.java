@@ -150,9 +150,9 @@ public class NymIdGeneratorTest {
 
         // Use truncated lists, fill a set and check if we get no duplications
         Set<String> set = new HashSet<>();
-        adverbs = read("/adverbs.txt").subList(0, 5);
-        adjectives = read("/adjectives.txt").subList(0, 5);
-        nouns = read("/nouns.txt").subList(0, 5);
+        adverbs = read("adverbs.txt").subList(0, 5);
+        adjectives = read("adjectives.txt").subList(0, 5);
+        nouns = read("nouns.txt").subList(0, 5);
         int combinations = adverbs.size() * adjectives.size() * nouns.size() * 1000;
         String first = null;
         for (int i = 0; i < combinations; i++) {

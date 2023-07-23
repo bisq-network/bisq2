@@ -18,11 +18,9 @@
 package bisq.tor.onionservice;
 
 import bisq.common.util.FileUtils;
-import bisq.tor.onionservice.CreateHiddenServiceResult;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -88,10 +86,10 @@ public class OnionServiceDataDirManager {
 
     private Optional<String> readStringFromFile(File file) {
         try {
-            String string = FileUtils.readFromFile(file);
+            String string = FileUtils.readStringFromFile(file);
             return Optional.of(string);
 
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             return Optional.empty();
         }
     }

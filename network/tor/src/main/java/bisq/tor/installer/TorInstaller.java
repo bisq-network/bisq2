@@ -50,7 +50,7 @@ public class TorInstaller {
 
     private boolean isTorUpToDate() throws IOException {
         File versionFile = torInstallationFiles.getVersionFile();
-        return versionFile.exists() && Tor.VERSION.equals(FileUtils.readFromFile(versionFile));
+        return versionFile.exists() && Tor.VERSION.equals(FileUtils.readStringFromFile(versionFile));
     }
 
     private void install() throws IOException {
