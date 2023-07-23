@@ -112,14 +112,14 @@ public class CreateProfileController implements Controller {
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
-
+        ProofOfWork proofOfWork = model.getProofOfWork().orElseThrow();
         if (model.getKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get().trim(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
-                            model.getProofOfWork().orElseThrow(),
+                            proofOfWork,
                             "",
                             "")
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
@@ -135,7 +135,7 @@ public class CreateProfileController implements Controller {
             userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
                     model.getNickName().get().trim(),
-                    model.getProofOfWork().orElseThrow());
+                    proofOfWork);
             model.getCreateProfileProgress().set(0);
             next();
         }

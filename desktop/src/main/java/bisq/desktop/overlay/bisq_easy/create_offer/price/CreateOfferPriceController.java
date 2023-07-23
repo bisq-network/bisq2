@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWithSymbol;
 import static bisq.presentation.parser.PercentageParser.parse;
 
@@ -98,8 +100,13 @@ public class CreateOfferPriceController implements Controller {
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageAsString().set("");
                 model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
-                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
-                priceInput.setQuote(priceQuote);
+                Optional<PriceQuote> marketPriceQuote = findMarketPriceQuote();
+                if (marketPriceQuote.isPresent()) {
+                    PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
+                    priceInput.setQuote(priceQuote);
+                } else {
+                    log.error("marketPriceQuote is not present");
+                }
                 applyPriceSpec();
             } catch (NumberFormatException t) {
                 new Popup().warning(Res.get("bisqEasy.price.warn.invalidPrice")).show();
@@ -140,9 +147,13 @@ public class CreateOfferPriceController implements Controller {
             applyPriceSpec();
         } else {
             new Popup().warning(Res.get("bisqEasy.price.warn.invalidPrice")).show();
-            PriceQuote marketPrice = findMarketPriceQuote();
-            priceInput.setQuote(marketPrice);
-            applyPercentageFromQuote(marketPrice);
+            Optional<PriceQuote> marketPrice = findMarketPriceQuote();
+            if (marketPrice.isPresent()) {
+                priceInput.setQuote(marketPrice.get());
+                applyPercentageFromQuote(marketPrice.get());
+            } else {
+                log.error("marketPrice is not present");
+            }
             applyPriceSpec();
         }
     }
@@ -164,11 +175,15 @@ public class CreateOfferPriceController implements Controller {
     }
 
     private double getPercentage(PriceQuote priceQuote) {
-        return PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote).orElseThrow().getPercentage();
+        Optional<Double> optionalPercentage = PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote).map(FloatPriceSpec::getPercentage);
+        if (optionalPercentage.isEmpty()) {
+            log.error("optionalPercentage not present");
+        }
+        return optionalPercentage.orElse(0d);
     }
 
-    private PriceQuote findMarketPriceQuote() {
-        return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
+    private Optional<PriceQuote> findMarketPriceQuote() {
+        return marketPriceService.findMarketPriceQuote(model.getMarket());
     }
 
     private String getCookieSubKey() {

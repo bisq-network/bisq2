@@ -93,7 +93,7 @@ public class TradeStateController implements Controller {
             new Popup().warning(Res.get("bisqEasy.tradeState.warn.noTradeFound")).show();
             return;
         }
-        BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.orElseThrow();
+        BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
 
         tradePhaseBox.setSelectedChannel(channel);
         tradePhaseBox.setBisqEasyTrade(bisqEasyTrade);

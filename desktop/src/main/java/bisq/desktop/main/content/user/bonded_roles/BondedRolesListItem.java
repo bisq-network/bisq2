@@ -34,13 +34,14 @@ import lombok.ToString;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @EqualsAndHashCode
 @Getter
 @ToString
 public class BondedRolesListItem implements TableItem {
-    private final UserProfile userProfile;
+    private final Optional<UserProfile> userProfile;
     private final String roleTypeString;
     private final String bondUserName;
     private final String signature;
@@ -52,15 +53,12 @@ public class BondedRolesListItem implements TableItem {
     @EqualsAndHashCode.Exclude
     private final String isBanned;
 
-  /*  @EqualsAndHashCode.Exclude
-    private final String oracleNodePublicKeyHash;*/
-
     public BondedRolesListItem(BondedRole bondedRole, UserService userService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
-        userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId()).orElseThrow();
-        userProfileId = userProfile.getId();
-        userName = userProfile.getUserName();
+        userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId());
+        userProfileId = userProfile.map(UserProfile::getId).orElse(Res.get("data.na"));
+        userName = userProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
         bondUserName = authorizedBondedRoleData.getBondUserName();
         signature = authorizedBondedRoleData.getSignature();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();

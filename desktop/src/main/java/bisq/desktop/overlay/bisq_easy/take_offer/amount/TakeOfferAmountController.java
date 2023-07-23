@@ -60,8 +60,14 @@ public class TakeOfferAmountController implements Controller {
         amountComponent.setDirection(bisqEasyOffer.getDirection());
         Market market = bisqEasyOffer.getMarket();
         amountComponent.setMarket(market);
-        amountComponent.setMinMaxRange(OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow(),
-                OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow());
+        Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
+        Optional<Monetary> optionalQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+        if (optionalQuoteSideMinOrFixedAmount.isPresent() && optionalQuoteSideMaxOrFixedAmount.isPresent()) {
+            amountComponent.setMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(),
+                    optionalQuoteSideMaxOrFixedAmount.get());
+        } else {
+            log.error("optionalQuoteSideMinOrFixedAmount or optionalQuoteSideMaxOrFixedAmount is not present");
+        }
 
         String direction = bisqEasyOffer.getTakersDirection().isBuy() ?
                 Res.get("offer.buy").toUpperCase() :

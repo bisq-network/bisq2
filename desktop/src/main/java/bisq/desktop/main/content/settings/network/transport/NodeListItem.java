@@ -23,6 +23,7 @@ import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -62,7 +63,7 @@ public class NodeListItem implements TableItem {
                 .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("data.na"));
         domainId = identityService.findAnyIdentityByNodeId(node.getNodeId()).map(Identity::getTag)
                 .orElse(Res.get("data.na"));
-        address = node.findMyAddress().orElseThrow().getFullAddress();
+        address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 
         numConnections.set(String.valueOf(node.getAllConnections().count()));
 

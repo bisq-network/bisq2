@@ -80,15 +80,16 @@ public class MainController extends NavigationController {
                         return;
                     }
                     settingsService.addConsumedAlertId(authorizedAlertData.getId());
+                    Optional<String> optionalMessage = authorizedAlertData.getMessage();
                     switch (authorizedAlertData.getAlertType()) {
                         case INFO:
-                            new Popup().attention(authorizedAlertData.getMessage().orElseThrow()).show();
+                            optionalMessage.ifPresentOrElse(message -> new Popup().attention(message).show(),
+                                    () -> log.warn("optionalMessage not present"));
                             break;
                         case WARN:
-                            new Popup().warning(authorizedAlertData.getMessage().orElseThrow()).show();
-                            break;
                         case EMERGENCY:
-                            new Popup().warning(authorizedAlertData.getMessage().orElseThrow()).show();
+                            optionalMessage.ifPresentOrElse(message -> new Popup().warning(message).show(),
+                                    () -> log.warn("optionalMessage not present"));
                             break;
                         case BAN:
                             break;
