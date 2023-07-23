@@ -39,7 +39,7 @@ public class UpdaterController implements Controller {
     private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
     private final UpdateService updateService;
-    private Pin getDownloadInfoListPin, getDownloadCompletedPin, getVersionPin, getDownloadUrlPin, getReleaseNodesPin;
+    private Pin getDownloadInfoListPin, getDownloadCompletedPin, getVersionPin, getDownloadUrlPin, releaseNotificationPin;
 
     public UpdaterController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -56,18 +56,22 @@ public class UpdaterController implements Controller {
                 .to(updateService.getDownloadInfoList());
 
         getDownloadCompletedPin = FxBindings.bind(model.getRestartButtonVisible()).to(updateService.getDownloadCompleted());
-        getVersionPin = FxBindings.bind(model.getVersion()).to(updateService.getVersion());
+        releaseNotificationPin = updateService.getReleaseNotification().addObserver(releaseNotification -> {
+            if (releaseNotification == null) {
+                return;
+            }
+            model.getVersion().set(releaseNotification.getVersionString());
+            model.getReleaseNotes().set(releaseNotification.getReleaseNotes());
+        });
         getDownloadUrlPin = FxBindings.bind(model.getDownloadUrl()).to(updateService.getDownloadUrl());
-        getReleaseNodesPin = FxBindings.bind(model.getReleaseNodes()).to(updateService.getReleaseNodes());
     }
 
     @Override
     public void onDeactivate() {
         getDownloadInfoListPin.unbind();
         getDownloadCompletedPin.unbind();
-        getVersionPin.unbind();
+        releaseNotificationPin.unbind();
         getDownloadUrlPin.unbind();
-        getReleaseNodesPin.unbind();
     }
 
     void onDownload() {

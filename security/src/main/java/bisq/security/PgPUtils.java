@@ -36,17 +36,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class PgPUtils {
     public static final String EXTENSION = ".asc";
-    public static final String SIGNING_KEY_FILE = "signingkey.asc";
-    public static final String SIGNATURE_FILE = "desktop.jar.asc";
-    public static final String KEY_4A133008 = "4A133008";
-    public static final String KEY_E222AA02 = "E222AA02";
 
-    public static void verifyDownloadedFile(String directory, String fileName) throws IOException {
-        verifyDownloadedFile(directory, fileName, SIGNING_KEY_FILE, SIGNATURE_FILE, List.of(KEY_4A133008, KEY_E222AA02));
-    }
-
-    public static void verifyDownloadedFile(String directory, String fileName, List<String> keys) throws IOException {
-        verifyDownloadedFile(directory, fileName, SIGNING_KEY_FILE, fileName + EXTENSION, keys);
+    public static void verifyDownloadedFile(String directory, String fileName, String signingKeyFileName, List<String> keys) throws IOException {
+        verifyDownloadedFile(directory, fileName, signingKeyFileName, fileName + EXTENSION, keys);
     }
 
     public static void verifyDownloadedFile(String directory, String fileName, String signingKeyFileName, String signatureFileName, List<String> keys) throws IOException {

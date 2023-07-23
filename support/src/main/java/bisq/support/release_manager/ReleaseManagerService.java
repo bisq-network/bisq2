@@ -15,13 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.security_manager;
+package bisq.support.release_manager;
 
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.alert.AlertType;
-import bisq.bonded_roles.alert.AuthorizedAlertData;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
@@ -36,13 +34,12 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SecurityManagerService implements Service {
+public class ReleaseManagerService implements Service {
     @Getter
     public static class Config {
         private final boolean staticPublicKeysProvided;
@@ -51,8 +48,8 @@ public class SecurityManagerService implements Service {
             this.staticPublicKeysProvided = staticPublicKeysProvided;
         }
 
-        public static SecurityManagerService.Config from(com.typesafe.config.Config config) {
-            return new SecurityManagerService.Config(config.getBoolean("staticPublicKeysProvided"));
+        public static ReleaseManagerService.Config from(com.typesafe.config.Config config) {
+            return new ReleaseManagerService.Config(config.getBoolean("staticPublicKeysProvided"));
         }
     }
 
@@ -63,10 +60,10 @@ public class SecurityManagerService implements Service {
     private final UserIdentityService userIdentityService;
     private final boolean staticPublicKeysProvided;
 
-    public SecurityManagerService(Config config,
-                                  NetworkService networkService,
-                                  UserService userService,
-                                  BondedRolesService bondedRolesService) {
+    public ReleaseManagerService(Config config,
+                                 NetworkService networkService,
+                                 UserService userService,
+                                 BondedRolesService bondedRolesService) {
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
@@ -93,36 +90,30 @@ public class SecurityManagerService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> publishAlert(AlertType alertType,
-                                                   Optional<String> message,
-                                                   boolean haltTrading,
-                                                   boolean requireVersionForTrading,
-                                                   Optional<String> minVersion,
-                                                   Optional<AuthorizedBondedRole> bannedRole) {
+    public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,
+                                                                 String releaseNotes,
+                                                                 String version) {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyPair();
         PublicKey authorizedPublicKey = keyPair.getPublic();
         PrivateKey authorizedPrivateKey = keyPair.getPrivate();
-        AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
+        ReleaseNotification releaseNotification = new ReleaseNotification(StringUtils.createUid(),
                 new Date().getTime(),
-                alertType,
-                message,
-                haltTrading,
-                requireVersionForTrading,
-                minVersion,
-                bannedRole,
+                isPreRelease,
+                releaseNotes,
+                version,
                 profileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(authorizedAlertData,
+        return networkService.publishAuthorizedData(releaseNotification,
                         keyPair,
                         authorizedPrivateKey,
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
-        return networkService.removeAuthorizedData(authorizedAlertData,
+    public CompletableFuture<Boolean> removeReleaseNotification(ReleaseNotification releaseNotification, KeyPair ownerKeyPair) {
+        return networkService.removeAuthorizedData(releaseNotification,
                         ownerKeyPair,
                         ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);

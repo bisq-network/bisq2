@@ -22,7 +22,9 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
+import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.application.Service;
+import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,18 +60,20 @@ public class BondedRolesService implements Service {
     private final MarketPriceService marketPriceService;
     private final ExplorerService explorerService;
     private final AlertService alertService;
+    private final ReleaseNotificationsService releaseNotificationsService;
 
-    public BondedRolesService(Config config, String applicationVersion, NetworkService networkService) {
+    public BondedRolesService(Config config, Version version, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,
-                applicationVersion);
+                version);
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
                 networkService,
-                applicationVersion);
+                version);
 
         alertService = new AlertService(networkService, authorizedBondedRolesService);
+        releaseNotificationsService = new ReleaseNotificationsService(networkService, authorizedBondedRolesService);
     }
 
 
@@ -83,7 +87,8 @@ public class BondedRolesService implements Service {
                 .thenCompose(result -> bondedRoleRegistrationService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> explorerService.initialize())
-                .thenCompose(result -> alertService.initialize());
+                .thenCompose(result -> alertService.initialize())
+                .thenCompose(result -> releaseNotificationsService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -92,6 +97,7 @@ public class BondedRolesService implements Service {
                 .thenCompose(result -> bondedRoleRegistrationService.shutdown())
                 .thenCompose(result -> marketPriceService.shutdown())
                 .thenCompose(result -> explorerService.shutdown())
-                .thenCompose(result -> alertService.shutdown());
+                .thenCompose(result -> alertService.shutdown())
+                .thenCompose(result -> releaseNotificationsService.shutdown());
     }
 }

@@ -22,6 +22,7 @@ import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
+import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
@@ -123,12 +124,12 @@ public class ExplorerService {
     private final String userAgent;
 
 
-    public ExplorerService(Config conf, NetworkService networkService, String version) {
+    public ExplorerService(Config conf, NetworkService networkService, Version version) {
         providers = new ArrayList<>(conf.providers);
         checkArgument(providers.size() > 0);
         selectedProvider.set(providers.get(0));
         this.networkService = networkService;
-        userAgent = "bisq-v2/" + version;
+        userAgent = "bisq-v2/" + version.toString();
     }
 
     public CompletableFuture<Boolean> initialize() {

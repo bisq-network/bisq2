@@ -20,17 +20,30 @@ package bisq.common.util;
 import lombok.Getter;
 
 public class Version implements Comparable<Version> {
-    @Getter
-    private final String version;
-
-    public Version(String version) {
-        if (version == null) {
+    public static void validate(String versionAsString) {
+        if (versionAsString == null) {
             throw new IllegalArgumentException("Version must not be null");
         }
-        if (!version.matches("[0-9]+(\\.[0-9]+)*")) {
+        if (!versionAsString.matches("[0-9]+(\\.[0-9]+)*")) {
             throw new IllegalArgumentException("Invalid version format");
         }
-        this.version = version;
+    }
+
+    public static boolean isValid(String versionAsString) {
+        try {
+            validate(versionAsString);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Getter
+    private final String versionAsString;
+
+    public Version(String versionAsString) {
+        validate(versionAsString);
+        this.versionAsString = versionAsString;
     }
 
     public boolean below(String other) {
@@ -41,13 +54,17 @@ public class Version implements Comparable<Version> {
         return compareTo(other) < 0;
     }
 
+    public boolean belowOrEqual(Version other) {
+        return compareTo(other) <= 0;
+    }
+
     @Override
     public int compareTo(Version other) {
         if (other == null) {
             return 1;
         }
-        var thisParts = getVersion().split("\\.");
-        var thatParts = other.getVersion().split("\\.");
+        var thisParts = getVersionAsString().split("\\.");
+        var thatParts = other.getVersionAsString().split("\\.");
         int length = Math.max(thisParts.length, thatParts.length);
         for (int i = 0; i < length; i++) {
             int thisPart = i < thisParts.length ?
@@ -73,4 +90,9 @@ public class Version implements Comparable<Version> {
         return compareTo((Version) that) == 0;
     }
 
+
+    @Override
+    public String toString() {
+        return versionAsString;
+    }
 }

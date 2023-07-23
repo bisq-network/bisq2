@@ -22,10 +22,13 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.settings.ChatNotificationType;
+import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PreferencesController implements Controller {
@@ -34,6 +37,7 @@ public class PreferencesController implements Controller {
     private final SettingsService settingsService;
     private final PreferencesModel model;
     private Pin chatNotificationTypePin, useAnimationsPin, closeMyOfferWhenTakenPin;
+    private Subscription notifyForPreReleasePin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -46,6 +50,10 @@ public class PreferencesController implements Controller {
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
+
+        model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
+        notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
+                notifyForPreRelease -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, notifyForPreRelease));
     }
 
     @Override
@@ -53,6 +61,7 @@ public class PreferencesController implements Controller {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
+        notifyForPreReleasePin.unsubscribe();
     }
 
     void onResetDontShowAgain() {

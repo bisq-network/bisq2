@@ -39,6 +39,9 @@
     -fx-fill: -bisq-error !important;
 }
 
+.hand-cursor {
+    -fx-cursor: hand;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -559,7 +562,7 @@
     -fx-font-size: 0.73em;
 }
 
-.bisq-small-dimmed-label {
+.bisq-smaller-dimmed-label {
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.73em;
 }

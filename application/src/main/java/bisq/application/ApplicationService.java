@@ -25,6 +25,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.LogSetup;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
+import bisq.common.util.Version;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import ch.qos.logback.classic.Level;
@@ -77,7 +78,7 @@ public abstract class ApplicationService {
 
         private final String baseDir;
         private final String appName;
-        private final String version;
+        private final Version version;
         private final boolean devMode;
 
         public Config(String baseDir,
@@ -86,7 +87,7 @@ public abstract class ApplicationService {
                       boolean devMode) {
             this.baseDir = baseDir;
             this.appName = appName;
-            this.version = version;
+            this.version = new Version(version);
             this.devMode = devMode;
         }
     }

@@ -30,6 +30,7 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import javafx.beans.property.*;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -57,7 +58,9 @@ public class LeftNavModel implements Model {
     private final BooleanProperty tradeAppsSubMenuExpanded = new SimpleBooleanProperty(false);
     private final BooleanProperty learnsSubMenuExpanded = new SimpleBooleanProperty(false);
     private final BooleanProperty authorizedRoleVisible = new SimpleBooleanProperty(false);
-
+    private final BooleanProperty newVersionAvailable = new SimpleBooleanProperty(false);
+    @Setter
+    private String version;
 
     public LeftNavModel(ServiceProvider serviceProvider) {
         isWalletEnabled = serviceProvider.getWalletService().isPresent();

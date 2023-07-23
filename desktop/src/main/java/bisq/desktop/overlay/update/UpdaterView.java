@@ -101,8 +101,8 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
 
     @Override
     protected void onViewAttached() {
-        version.setText(Res.get("updater.version", model.getVersion()));
-        releaseNotes.setText(model.getReleaseNodes().get());
+        version.setText(Res.get("updater.version", model.getVersion().get()));
+        releaseNotes.setText(model.getReleaseNotes().get());
         downloadUrl.setText(model.getDownloadUrl().get());
 
         isTableVisiblePin = EasyBind.subscribe(model.getTableVisible(), isTableVisible -> {

@@ -147,7 +147,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
-        updateService = new UpdateService(getConfig(), settingsService);
+        updateService = new UpdateService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
 
         serviceProvider = new ServiceProvider(this::shutdown,
                 getConfig(),

@@ -23,6 +23,7 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
 import bisq.security.PgPUtils;
+import bisq.update.UpdateService;
 import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,8 +62,8 @@ public class DesktopAppLauncher {
             LogSetup.setLevel(Level.INFO);
 
             String version = getVersion(args, jvmArgs, userDataDir);
-            String pathToJar = dataDir + File.separator + JAR_DIR + File.separator + version;
-            String jarPath = pathToJar + File.separator + JAR_FILE_NAME;
+            String directory = dataDir + File.separator + JAR_DIR + File.separator + version;
+            String jarPath = directory + File.separator + JAR_FILE_NAME;
             if (new File(jarPath).exists()) {
                 boolean ignoreSignature = getOption(args, jvmArgs, "ignoreSignature", "false").equals("true");
                 if (!ignoreSignature) {
@@ -70,11 +71,11 @@ public class DesktopAppLauncher {
                     String keys = getOption(args, jvmArgs, "keyList", null);
                     if (keys != null) {
                         List<String> keyList = List.of(keys.split(","));
-                        PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME, keyList);
+                        PgPUtils.verifyDownloadedFile(directory, JAR_FILE_NAME, UpdateService.SIGNING_KEY_FILE, keyList);
                     } else {
-                        List<String> keyList = List.of(PgPUtils.KEY_4A133008, PgPUtils.KEY_E222AA02);
-                        PgPUtils.checkIfKeysMatchesResourceKeys(pathToJar, keyList);
-                        PgPUtils.verifyDownloadedFile(pathToJar, JAR_FILE_NAME, keyList);
+                        List<String> keyList = List.of(UpdateService.KEY_4A133008, UpdateService.KEY_E222AA02);
+                        PgPUtils.checkIfKeysMatchesResourceKeys(directory, keyList);
+                        PgPUtils.verifyDownloadedFile(directory, JAR_FILE_NAME, UpdateService.SIGNING_KEY_FILE, keyList);
                     }
                 }
 

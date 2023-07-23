@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.support.mediation.MediationService;
 import bisq.support.moderator.ModeratorService;
+import bisq.support.release_manager.ReleaseManagerService;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.UserService;
 import lombok.Getter;
@@ -38,20 +39,26 @@ public class SupportService implements Service {
     private final MediationService mediationService;
     private final SecurityManagerService securityManagerService;
     private final ModeratorService moderatorService;
+    private final ReleaseManagerService releaseManagerService;
 
     @Getter
     @ToString
     public static final class Config {
         private final com.typesafe.config.Config securityManagerConfig;
+        private final com.typesafe.config.Config releaseManagerService;
         private final com.typesafe.config.Config moderatorConfig;
 
-        public Config(com.typesafe.config.Config securityManagerConfig, com.typesafe.config.Config moderatorConfig) {
+        public Config(com.typesafe.config.Config securityManagerConfig,
+                      com.typesafe.config.Config releaseManagerService,
+                      com.typesafe.config.Config moderatorConfig) {
             this.securityManagerConfig = securityManagerConfig;
+            this.releaseManagerService = releaseManagerService;
             this.moderatorConfig = moderatorConfig;
         }
 
         public static SupportService.Config from(com.typesafe.config.Config typeSafeConfig) {
             return new SupportService.Config(typeSafeConfig.getConfig("securityManager"),
+                    typeSafeConfig.getConfig("releaseManager"),
                     typeSafeConfig.getConfig("moderator"));
         }
     }
@@ -64,6 +71,10 @@ public class SupportService implements Service {
                           BondedRolesService bondedRolesService) {
         mediationService = new MediationService(networkService, chatService, userService, bondedRolesService);
         securityManagerService = new SecurityManagerService(SecurityManagerService.Config.from(config.getSecurityManagerConfig()),
+                networkService,
+                userService,
+                bondedRolesService);
+        releaseManagerService = new ReleaseManagerService(ReleaseManagerService.Config.from(config.getReleaseManagerService()),
                 networkService,
                 userService,
                 bondedRolesService);
@@ -84,6 +95,7 @@ public class SupportService implements Service {
     public CompletableFuture<Boolean> initialize() {
         return mediationService.initialize()
                 .thenCompose(result -> moderatorService.initialize())
+                .thenCompose(result -> releaseManagerService.initialize())
                 .thenCompose(result -> securityManagerService.initialize());
     }
 
@@ -91,6 +103,7 @@ public class SupportService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         return mediationService.shutdown()
                 .thenCompose(result -> moderatorService.shutdown())
+                .thenCompose(result -> releaseManagerService.shutdown())
                 .thenCompose(result -> securityManagerService.shutdown());
     }
 }

@@ -31,7 +31,7 @@ public class UpdaterModel implements Model {
     private final BooleanProperty tableVisible = new SimpleBooleanProperty();
     private final BooleanProperty restartButtonVisible = new SimpleBooleanProperty();
     private final StringProperty version = new SimpleStringProperty();
-    private final StringProperty releaseNodes = new SimpleStringProperty();
+    private final StringProperty releaseNotes = new SimpleStringProperty();
     private final StringProperty downloadUrl = new SimpleStringProperty();
 
     private final ObservableList<UpdaterView.ListItem> listItems = FXCollections.observableArrayList();
