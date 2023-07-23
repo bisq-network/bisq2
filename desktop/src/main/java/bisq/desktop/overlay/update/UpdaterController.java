@@ -90,6 +90,7 @@ public class UpdaterController implements Controller {
     }
 
     void onCancel() {
+        updateService.canceldDownload();
         OverlayController.hide();
     }
 

@@ -137,6 +137,12 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 .valueSupplier(ReleaseNotificationListItem::getIsPreReleaseString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+                .title(Res.get("authorizedRole.releaseManager.table.profileId"))
+                .minWidth(150)
+                .comparator(Comparator.comparing(ReleaseNotificationListItem::getReleaseManagerProfileId))
+                .valueSupplier(ReleaseNotificationListItem::getReleaseManagerProfileId)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
                 .isSortable(false)
                 .minWidth(200)
                 .right()

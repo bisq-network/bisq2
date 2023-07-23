@@ -24,6 +24,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.Version;
 import bisq.security.PgPUtils;
@@ -33,6 +34,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class UpdateService implements Service {
@@ -132,6 +134,11 @@ public class UpdateService implements Service {
     }
 
     public void download() {
+        ExecutorService downloader = ExecutorFactory.newSingleThreadExecutor("Downloader");
+        CompletableFuture.runAsync(() -> {
+
+            //FileUtils.downloadFile();
+        }, downloader);
 
         downloadInfoList.add(new DownloadInfo("test file1"));
         downloadInfoList.add(new DownloadInfo("test file 2"));
@@ -141,5 +148,9 @@ public class UpdateService implements Service {
         Scheduler.run(() -> downloadInfoList.get(0).getProgress().set(1d)).after(2000);
         Scheduler.run(() -> downloadInfoList.get(0).getIsVerified().set(true)).after(2500);
         Scheduler.run(() -> downloadCompleted.set(true)).after(4000);
+    }
+
+    public void canceldDownload() {
+
     }
 }
