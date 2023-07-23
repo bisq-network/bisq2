@@ -120,7 +120,7 @@ public abstract class ApplicationService {
         DevMode.setDevMode(config.isDevMode());
 
         Locale locale = LocaleRepository.getDefaultLocale();
-        CountryRepository.setLocale(locale);
+        CountryRepository.applyDefaultLocale(locale);
         LanguageRepository.setLocale(locale);
         FiatCurrencyRepository.setLocale(locale);
         Res.setLocale(locale);

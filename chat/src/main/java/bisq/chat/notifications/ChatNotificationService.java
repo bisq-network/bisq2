@@ -298,7 +298,7 @@ public class ChatNotificationService implements Service {
             }
             channelInfo = chatService.findChatChannelService(chatChannel)
                     .map(service -> service.getChannelTitle(chatChannel))
-                    .orElseThrow();
+                    .orElse(Res.get("data.na"));
         } else {
             channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " + Res.get("chat.notifications.privateMessage.headline");
         }

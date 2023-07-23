@@ -137,8 +137,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         return findChannel(offer.getMarket())
                 .map(PublicChatChannel::getChatMessages).stream()
                 .flatMap(Collection::stream)
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().orElseThrow().equals(offer))
+                .filter(chatMessage -> offer.equals(chatMessage.getBisqEasyOffer().orElse(null)))
                 .findAny();
     }
 
