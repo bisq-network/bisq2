@@ -71,7 +71,9 @@ public class ContentController extends NavigationController {
 
     @Override
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
-        MainView.setFitToHeight(false);
+        if (navigationTarget != NavigationTarget.BISQ_EASY_CHAT) {
+            MainView.setFitToHeight(false);
+        }
     }
 
     @Override
