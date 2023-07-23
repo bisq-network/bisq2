@@ -79,7 +79,7 @@ public class MarketPriceComponent {
 
         @Override
         public void onActivate() {
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ ->
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(updated ->
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
                                 .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))

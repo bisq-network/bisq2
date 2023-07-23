@@ -122,7 +122,7 @@ public class PriceInput {
         public void onActivate() {
             updateFromMarketPrice();
 
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(updated -> {
                 UIThread.run(() -> {
                     // We only set it initially
                     if (model.priceQuote.get() != null) return;

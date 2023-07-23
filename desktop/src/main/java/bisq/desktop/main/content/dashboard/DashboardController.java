@@ -58,9 +58,9 @@ public class DashboardController implements Controller {
     @Override
     public void onActivate() {
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
-        marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> updateMarketPrice());
+        marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(updated -> updateMarketPrice());
 
-        userProfileUpdateFlagPin = userProfileService.getUserProfilesUpdateFlag().addObserver(__ ->
+        userProfileUpdateFlagPin = userProfileService.getUserProfilesUpdateFlag().addObserver(updated ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
         // We listen on all channels, also hidden ones and use a weak reference listener

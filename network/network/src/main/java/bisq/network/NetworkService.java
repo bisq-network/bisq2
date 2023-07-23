@@ -156,7 +156,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                         }
                     }, NETWORK_IO_POOL);
                 });
-        return CompletableFutureUtils.anyOf(futures).thenApply(__ -> true);
+        return CompletableFutureUtils.anyOf(futures).thenApply(nil -> true);
     }
 
     public CompletableFuture<Boolean> shutdown() {

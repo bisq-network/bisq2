@@ -155,8 +155,8 @@ public class UpdateService implements Service {
 
         downloadDescriptorList.setAll(getDownloadDescriptorList(version, destinationDirectory, sourceFileName));
         return download(downloadDescriptorList, getExecutorService())
-                .thenCompose(__ -> verify(destinationDirectory, getExecutorService()))
-                .thenCompose(__ -> writeVersionFile(version, getExecutorService()));
+                .thenCompose(nil -> verify(destinationDirectory, getExecutorService()))
+                .thenCompose(nil -> writeVersionFile(version, getExecutorService()));
     }
 
 

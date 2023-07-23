@@ -54,7 +54,7 @@ public class ReputationController implements Controller {
     @Override
     public void onActivate() {
         userProfileChangedFlagPin = userProfileService.getUserProfilesUpdateFlag()
-                .addObserver(__ -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
+                .addObserver(updated -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
                         .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
                         .collect(Collectors.toList())));
         proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdOfUpdatedScore()
