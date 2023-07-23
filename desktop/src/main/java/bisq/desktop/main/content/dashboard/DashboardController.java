@@ -43,7 +43,7 @@ public class DashboardController implements Controller {
     private final DashboardModel model;
     private final UserProfileService userProfileService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, userProfileUpdateFlagPin;
+    private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, getNumUserProfilesPin;
     private boolean allowUpdateOffersOnline;
 
     public DashboardController(ServiceProvider serviceProvider) {
@@ -60,7 +60,7 @@ public class DashboardController implements Controller {
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
         getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts -> updateMarketPrice());
 
-        userProfileUpdateFlagPin = userProfileService.getUserProfilesUpdateFlag().addObserver(updated ->
+        getNumUserProfilesPin = userProfileService.getNumUserProfiles().addObserver(numUserProfiles ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
         // We listen on all channels, also hidden ones and use a weak reference listener
@@ -77,7 +77,7 @@ public class DashboardController implements Controller {
     public void onDeactivate() {
         selectedMarketPin.unbind();
         getMarketPriceUpdateTimestampPin.unbind();
-        userProfileUpdateFlagPin.unbind();
+        getNumUserProfilesPin.unbind();
     }
 
     public void onLearn() {
