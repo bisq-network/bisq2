@@ -43,7 +43,7 @@ public class DashboardController implements Controller {
     private final DashboardModel model;
     private final UserProfileService userProfileService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private Pin selectedMarketPin, marketPriceUpdateFlagPin, userProfileUpdateFlagPin;
+    private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, userProfileUpdateFlagPin;
     private boolean allowUpdateOffersOnline;
 
     public DashboardController(ServiceProvider serviceProvider) {
@@ -58,7 +58,7 @@ public class DashboardController implements Controller {
     @Override
     public void onActivate() {
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
-        marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(updated -> updateMarketPrice());
+        getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts -> updateMarketPrice());
 
         userProfileUpdateFlagPin = userProfileService.getUserProfilesUpdateFlag().addObserver(updated ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
@@ -76,7 +76,7 @@ public class DashboardController implements Controller {
     @Override
     public void onDeactivate() {
         selectedMarketPin.unbind();
-        marketPriceUpdateFlagPin.unbind();
+        getMarketPriceUpdateTimestampPin.unbind();
         userProfileUpdateFlagPin.unbind();
     }
 

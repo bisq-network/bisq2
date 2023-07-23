@@ -110,7 +110,7 @@ public class MarketPriceService {
     @Getter
     private final Observable<Market> selectedMarket = new Observable<>();
     @Getter
-    private final Observable<Boolean> marketPriceUpdateFlag = new Observable<>(true);
+    private final Observable<Long> marketPriceUpdateTimestamp = new Observable<>(-1L);
     private volatile boolean shutdownStarted;
     private Scheduler scheduler;
 
@@ -180,15 +180,16 @@ public class MarketPriceService {
                 log.info("Request market price from {}", httpClient.getBaseUrl());
                 String json = httpClient.get("getAllMarketPrices", Optional.of(new Pair<>("User-Agent", userAgent)));
                 Map<Market, MarketPrice> map = parseResponse(json);
+                long now = System.currentTimeMillis();
                 log.info("Market price request from {} resulted in {} items took {} ms",
-                        httpClient.getBaseUrl(), map.size(), System.currentTimeMillis() - ts);
+                        httpClient.getBaseUrl(), map.size(), now - ts);
 
                 marketPriceByCurrencyMap.clear();
                 marketPriceByCurrencyMap.putAll(map);
-                notifyObservers();
                 if (selectedMarket.get() == null) {
                     selectedMarket.set(map.get(MarketRepository.getDefault()).getMarket());
                 }
+                marketPriceUpdateTimestamp.set(now);
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {
                 if (!shutdownStarted) {
@@ -262,9 +263,5 @@ public class MarketPriceService {
         BaseHttpClient newClient = networkService.getHttpClient(provider.url, userAgent, provider.transportType);
         currentHttpClient = Optional.of(newClient);
         return newClient;
-    }
-
-    private void notifyObservers() {
-        marketPriceUpdateFlag.set(!marketPriceUpdateFlag.get());
     }
 }
