@@ -25,7 +25,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.timer.Scheduler;
+import bisq.common.util.FileUtils;
 import bisq.common.util.Version;
 import bisq.security.PgPUtils;
 import bisq.settings.CookieKey;
@@ -33,35 +33,42 @@ import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
+
+import static bisq.security.PgPUtils.EXTENSION;
 
 @Slf4j
 public class UpdateService implements Service {
-    private static final String RELEASES_URL = "https://github.com/bisq-network/bisq/releases/tag/v";
-    public static final String EXTENSION = PgPUtils.EXTENSION;
+    // For testing, we can use bisq1 url
+    public static final String RELEASES_URL = "https://github.com/bisq-network/bisq/releases/tag/v";
+    public static final String GITHUB_DOWNLOAD_URL = "https://github.com/bisq-network/bisq/releases/download/v";
     public static final String SIGNING_KEY_FILE = "signingkey.asc";
-    // public static final String FILE = "desktop.jar";
-    public static final String FILE = "Bisq-1.9.9.dmg";
-    // public static final String SIGNATURE_FILE = "Bisq-1.9.9.dmg.asc";
     public static final String KEY_4A133008 = "4A133008";
     public static final String KEY_E222AA02 = "E222AA02";
+    public static final String VERSION_FILE_NAME = "version.txt";
+    public static final String DESTINATION_DIR = "jar";
+    public static final String DESTINATION_FILE_NAME = "desktop.jar";
 
-    //https://github.com/bisq-network/bisq/releases/download/v1.9.9/Bisq-1.9.9.dmg
-    @Getter
-    private final ObservableArray<DownloadInfo> downloadInfoList = new ObservableArray<>();
-    @Getter
-    private final Observable<Boolean> downloadCompleted = new Observable<>(false);
+
+    private final Version installedVersion;
+    private final String baseDir;
+    private final SettingsService settingsService;
+    private final ReleaseNotificationsService releaseNotificationsService;
     @Getter
     private final Observable<ReleaseNotification> releaseNotification = new Observable<>();
     @Getter
-    private final Observable<String> downloadUrl = new Observable<>("");
-    private final SettingsService settingsService;
-    private final ReleaseNotificationsService releaseNotificationsService;
-    private final Version installedVersion;
+    private final ObservableArray<DownloadDescriptor> downloadDescriptorList = new ObservableArray<>();
+    private ExecutorService executorService;
 
     public UpdateService(ApplicationService.Config config, SettingsService settingsService, ReleaseNotificationsService releaseNotificationsService) {
         installedVersion = config.getVersion();
+        baseDir = config.getBaseDir();
         this.settingsService = settingsService;
         this.releaseNotificationsService = releaseNotificationsService;
     }
@@ -99,8 +106,16 @@ public class UpdateService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (executorService != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
+        }
         return CompletableFuture.completedFuture(true);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void onNewReleaseNotificationAdded(ReleaseNotification releaseNotification) {
         if (releaseNotification == null) {
@@ -130,27 +145,84 @@ public class UpdateService implements Service {
             return;
         }
         this.releaseNotification.set(releaseNotification);
-        downloadUrl.set(RELEASES_URL + newVersion);
     }
 
-    public void download() {
-        ExecutorService downloader = ExecutorFactory.newSingleThreadExecutor("Downloader");
-        CompletableFuture.runAsync(() -> {
+    public CompletableFuture<Void> downloadAndVerify() throws IOException {
+        String version = releaseNotification.get().getVersionString();
+        String sourceFileName = getSourceFileName(version);
+        String destinationDirectory = Path.of(baseDir, DESTINATION_DIR, version).toString();
+        FileUtils.makeDirs(new File(destinationDirectory));
 
-            //FileUtils.downloadFile();
-        }, downloader);
-
-        downloadInfoList.add(new DownloadInfo("test file1"));
-        downloadInfoList.add(new DownloadInfo("test file 2"));
-        downloadInfoList.add(new DownloadInfo("test file 3"));
-
-        Scheduler.run(() -> downloadInfoList.get(0).getProgress().set(0.2)).after(1000);
-        Scheduler.run(() -> downloadInfoList.get(0).getProgress().set(1d)).after(2000);
-        Scheduler.run(() -> downloadInfoList.get(0).getIsVerified().set(true)).after(2500);
-        Scheduler.run(() -> downloadCompleted.set(true)).after(4000);
+        downloadDescriptorList.setAll(getDownloadDescriptorList(version, destinationDirectory, sourceFileName));
+        return download(downloadDescriptorList, getExecutorService())
+                .thenCompose(__ -> verify(destinationDirectory, getExecutorService()))
+                .thenCompose(__ -> writeVersionFile(version, getExecutorService()));
     }
 
-    public void canceldDownload() {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private CompletableFuture<Void> download(List<DownloadDescriptor> downloadDescriptorList, ExecutorService executorService) {
+        return CompletableFuture.supplyAsync(() -> {
+            for (DownloadDescriptor downloadDescriptor : downloadDescriptorList) {
+                try {
+                    FileUtils.downloadFile(downloadDescriptor.getUrl(), downloadDescriptor.getDestination(), downloadDescriptor.getProgress());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return null;
+        }, executorService);
+    }
+
+    private CompletableFuture<Void> verify(String destinationDir, ExecutorService executorService) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                List<String> keyList = List.of(UpdateService.KEY_4A133008, UpdateService.KEY_E222AA02);
+                PgPUtils.checkIfKeysMatchesResourceKeys(destinationDir, keyList);
+                PgPUtils.verifyDownloadedFile(destinationDir, DESTINATION_FILE_NAME, UpdateService.SIGNING_KEY_FILE, keyList);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }, executorService);
+    }
+
+    private CompletionStage<Void> writeVersionFile(String version, ExecutorService executorService) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                FileUtils.writeToFile(version, new File(baseDir, VERSION_FILE_NAME));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }, executorService);
+    }
+
+    private List<DownloadDescriptor> getDownloadDescriptorList(String version, String destinationDirectory, String sourceFileName) throws IOException {
+        String baseUrl = GITHUB_DOWNLOAD_URL + version + "/";
+
+        return List.of(
+                DownloadDescriptor.create(SIGNING_KEY_FILE, baseUrl, destinationDirectory),
+                DownloadDescriptor.create(KEY_4A133008 + EXTENSION, baseUrl, destinationDirectory),
+                DownloadDescriptor.create(KEY_E222AA02 + EXTENSION, baseUrl, destinationDirectory),
+                DownloadDescriptor.create(sourceFileName + EXTENSION, DESTINATION_FILE_NAME + EXTENSION, baseUrl, destinationDirectory),
+                DownloadDescriptor.create(sourceFileName, DESTINATION_FILE_NAME, baseUrl, destinationDirectory)
+        );
+    }
+
+    private ExecutorService getExecutorService() {
+        if (executorService == null) {
+            executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
+        }
+        return executorService;
+    }
+
+    private String getSourceFileName(String version) {
+        // for testing, we can use bisq 1 installer file
+        return "Bisq-" + version + ".dmg";
+        // return "desktop_app-" + version + "-all.jar";
     }
 }

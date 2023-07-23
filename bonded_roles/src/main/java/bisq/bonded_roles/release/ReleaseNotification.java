@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public final class ReleaseNotification implements AuthorizedDistributedData {
-    public final static int MAX_MESSAGE_LENGTH = 1000;
+    public final static int MAX_MESSAGE_LENGTH = 10000;
     public final static long TTL = TimeUnit.DAYS.toMillis(180);
 
     // todo Production key not set yet - we use devMode key only yet

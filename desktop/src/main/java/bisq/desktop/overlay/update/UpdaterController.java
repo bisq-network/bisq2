@@ -21,15 +21,22 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.update.DownloadInfo;
+import bisq.update.DownloadDescriptor;
 import bisq.update.UpdateService;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.util.concurrent.CancellationException;
+
+import static bisq.update.UpdateService.RELEASES_URL;
 
 @Slf4j
 public class UpdaterController implements Controller {
@@ -39,7 +46,7 @@ public class UpdaterController implements Controller {
     private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
     private final UpdateService updateService;
-    private Pin getDownloadInfoListPin, getDownloadCompletedPin, getVersionPin, getDownloadUrlPin, releaseNotificationPin;
+    private Pin getDownloadInfoListPin, releaseNotificationPin;
 
     public UpdaterController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -51,32 +58,41 @@ public class UpdaterController implements Controller {
 
     @Override
     public void onActivate() {
-        getDownloadInfoListPin = FxBindings.<DownloadInfo, UpdaterView.ListItem>bind(model.getListItems())
+        getDownloadInfoListPin = FxBindings.<DownloadDescriptor, UpdaterView.ListItem>bind(model.getListItems())
                 .map(UpdaterView.ListItem::new)
-                .to(updateService.getDownloadInfoList());
+                .to(updateService.getDownloadDescriptorList());
 
-        getDownloadCompletedPin = FxBindings.bind(model.getRestartButtonVisible()).to(updateService.getDownloadCompleted());
         releaseNotificationPin = updateService.getReleaseNotification().addObserver(releaseNotification -> {
             if (releaseNotification == null) {
                 return;
             }
-            model.getVersion().set(releaseNotification.getVersionString());
+            String version = releaseNotification.getVersionString();
+            model.getVersion().set(version);
             model.getReleaseNotes().set(releaseNotification.getReleaseNotes());
+            model.getDownloadUrl().set(RELEASES_URL + version);
         });
-        getDownloadUrlPin = FxBindings.bind(model.getDownloadUrl()).to(updateService.getDownloadUrl());
     }
 
     @Override
     public void onDeactivate() {
         getDownloadInfoListPin.unbind();
-        getDownloadCompletedPin.unbind();
         releaseNotificationPin.unbind();
-        getDownloadUrlPin.unbind();
     }
 
     void onDownload() {
         model.getTableVisible().set(true);
-        updateService.download();
+        try {
+            updateService.downloadAndVerify()
+                    .whenComplete((__, throwable) -> {
+                        if (throwable == null) {
+                            model.getDownloadAndVerifyCompleted().set(true);
+                        } else if (!(throwable instanceof CancellationException)) {
+                            UIThread.run(() -> new Popup().error(throwable).show());
+                        }
+                    });
+        } catch (IOException e) {
+            UIThread.run(() -> new Popup().error(e).show());
+        }
     }
 
     void onDownloadLater() {
@@ -86,11 +102,6 @@ public class UpdaterController implements Controller {
     void onIgnore() {
         settingsService.setCookie(CookieKey.IGNORE_VERSION, model.getVersion().get(), true);
 
-        OverlayController.hide();
-    }
-
-    void onCancel() {
-        updateService.canceldDownload();
         OverlayController.hide();
     }
 

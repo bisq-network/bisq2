@@ -63,9 +63,9 @@ public class PgPUtils {
     }
 
     private static void checkIfKeyMatchesResourceKey(String directory, String keyName) throws IOException {
-        String key_4A133008FromResources = FileUtils.readStringFromResource(keyName);
-        String key_4A133008_fromDirectory = FileUtils.readStringFromFile(Path.of(directory, keyName).toFile());
-        checkArgument(key_4A133008FromResources.equals(key_4A133008_fromDirectory), "Key from directory not matching the one from resources. keyName=" + keyName);
+        String keyFromResources = FileUtils.readStringFromResource("keys/" + keyName);
+        String keyFromDirectory = FileUtils.readStringFromFile(Path.of(directory, keyName).toFile());
+        checkArgument(keyFromResources.equals(keyFromDirectory), "Key from directory not matching the one from resources. keyName=" + keyName);
     }
 
     public static boolean isSignatureValid(File pubKeyFile, File sigFile, File jarFileName) {
