@@ -27,7 +27,6 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.FileUtils;
 import bisq.common.util.Version;
-import bisq.security.PgPUtils;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -41,21 +40,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.security.PgPUtils.EXTENSION;
+import static bisq.update.Utils.*;
 
 @Slf4j
 public class UpdateService implements Service {
-    // For testing, we can use bisq1 url
-    public static final String RELEASES_URL = "https://github.com/bisq-network/bisq/releases/tag/v";
-    public static final String GITHUB_DOWNLOAD_URL = "https://github.com/bisq-network/bisq/releases/download/v";
-    public static final String SIGNING_KEY_FILE = "signingkey.asc";
-    public static final String KEY_4A133008 = "4A133008";
-    public static final String KEY_E222AA02 = "E222AA02";
-    public static final String VERSION_FILE_NAME = "version.txt";
-    public static final String DESTINATION_DIR = "jar";
-    public static final String DESTINATION_FILE_NAME = "desktop.jar";
-
-
     private final Version installedVersion;
     private final String baseDir;
     private final SettingsService settingsService;
@@ -63,7 +51,7 @@ public class UpdateService implements Service {
     @Getter
     private final Observable<ReleaseNotification> releaseNotification = new Observable<>();
     @Getter
-    private final ObservableArray<DownloadDescriptor> downloadDescriptorList = new ObservableArray<>();
+    private final ObservableArray<Descriptor> descriptorList = new ObservableArray<>();
     private ExecutorService executorService;
 
     public UpdateService(ApplicationService.Config config, SettingsService settingsService, ReleaseNotificationsService releaseNotificationsService) {
@@ -153,8 +141,8 @@ public class UpdateService implements Service {
         String destinationDirectory = Path.of(baseDir, DESTINATION_DIR, version).toString();
         FileUtils.makeDirs(new File(destinationDirectory));
 
-        downloadDescriptorList.setAll(getDownloadDescriptorList(version, destinationDirectory, sourceFileName));
-        return download(downloadDescriptorList, getExecutorService())
+        descriptorList.setAll(Descriptor.createDescriptorList(version, destinationDirectory, sourceFileName));
+        return download(descriptorList, getExecutorService())
                 .thenCompose(nil -> verify(destinationDirectory, getExecutorService()))
                 .thenCompose(nil -> writeVersionFile(version, getExecutorService()));
     }
@@ -164,11 +152,11 @@ public class UpdateService implements Service {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<Void> download(List<DownloadDescriptor> downloadDescriptorList, ExecutorService executorService) {
+    private CompletableFuture<Void> download(List<Descriptor> descriptorList, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
-            for (DownloadDescriptor downloadDescriptor : downloadDescriptorList) {
+            for (Descriptor descriptor : descriptorList) {
                 try {
-                    FileUtils.downloadFile(downloadDescriptor.getUrl(), downloadDescriptor.getDestination(), downloadDescriptor.getProgress());
+                    FileUtils.downloadFile(descriptor.getUrl(), descriptor.getDestination(), descriptor.getProgress());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -180,13 +168,11 @@ public class UpdateService implements Service {
     private CompletableFuture<Void> verify(String destinationDir, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                List<String> keyList = List.of(UpdateService.KEY_4A133008, UpdateService.KEY_E222AA02);
-                PgPUtils.checkIfKeysMatchesResourceKeys(destinationDir, keyList);
-                PgPUtils.verifyDownloadedFile(destinationDir, DESTINATION_FILE_NAME, UpdateService.SIGNING_KEY_FILE, keyList);
+                Verification.verifyDownloadedFile(destinationDir);
+                return null;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            return null;
         }, executorService);
     }
 
@@ -194,23 +180,11 @@ public class UpdateService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 FileUtils.writeToFile(version, new File(baseDir, VERSION_FILE_NAME));
+                return null;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            return null;
         }, executorService);
-    }
-
-    private List<DownloadDescriptor> getDownloadDescriptorList(String version, String destinationDirectory, String sourceFileName) throws IOException {
-        String baseUrl = GITHUB_DOWNLOAD_URL + version + "/";
-
-        return List.of(
-                DownloadDescriptor.create(SIGNING_KEY_FILE, baseUrl, destinationDirectory),
-                DownloadDescriptor.create(KEY_4A133008 + EXTENSION, baseUrl, destinationDirectory),
-                DownloadDescriptor.create(KEY_E222AA02 + EXTENSION, baseUrl, destinationDirectory),
-                DownloadDescriptor.create(sourceFileName + EXTENSION, DESTINATION_FILE_NAME + EXTENSION, baseUrl, destinationDirectory),
-                DownloadDescriptor.create(sourceFileName, DESTINATION_FILE_NAME, baseUrl, destinationDirectory)
-        );
     }
 
     private ExecutorService getExecutorService() {
@@ -218,11 +192,5 @@ public class UpdateService implements Service {
             executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
         }
         return executorService;
-    }
-
-    private String getSourceFileName(String version) {
-        // for testing, we can use bisq 1 installer file
-        return "Bisq-" + version + ".dmg";
-        // return "desktop_app-" + version + "-all.jar";
     }
 }

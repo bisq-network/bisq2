@@ -27,8 +27,9 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.update.DownloadDescriptor;
+import bisq.update.Descriptor;
 import bisq.update.UpdateService;
+import bisq.update.Utils;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.concurrent.CancellationException;
 
-import static bisq.update.UpdateService.RELEASES_URL;
+import static bisq.update.Utils.RELEASES_URL;
 
 @Slf4j
 public class UpdaterController implements Controller {
@@ -58,9 +59,9 @@ public class UpdaterController implements Controller {
 
     @Override
     public void onActivate() {
-        getDownloadInfoListPin = FxBindings.<DownloadDescriptor, UpdaterView.ListItem>bind(model.getListItems())
+        getDownloadInfoListPin = FxBindings.<Descriptor, UpdaterView.ListItem>bind(model.getListItems())
                 .map(UpdaterView.ListItem::new)
-                .to(updateService.getDownloadDescriptorList());
+                .to(updateService.getDescriptorList());
 
         releaseNotificationPin = updateService.getReleaseNotification().addObserver(releaseNotification -> {
             if (releaseNotification == null) {
@@ -71,6 +72,8 @@ public class UpdaterController implements Controller {
             model.getReleaseNotes().set(releaseNotification.getReleaseNotes());
             model.getDownloadUrl().set(RELEASES_URL + version);
         });
+
+        model.getFilteredList().setPredicate(e -> !e.getDescriptor().getDestination().getName().startsWith(Utils.FROM_BISQ_WEBPAGE_PREFIX));
     }
 
     @Override
@@ -101,12 +104,15 @@ public class UpdaterController implements Controller {
 
     void onIgnore() {
         settingsService.setCookie(CookieKey.IGNORE_VERSION, model.getVersion().get(), true);
-
         OverlayController.hide();
     }
 
     void onRestart() {
         serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+    }
+
+    void onClose() {
+        OverlayController.hide();
     }
 
     void onOpenUrl() {

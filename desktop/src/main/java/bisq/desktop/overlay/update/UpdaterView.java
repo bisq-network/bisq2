@@ -26,8 +26,8 @@ import bisq.desktop.components.table.TableItem;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.update.DownloadDescriptor;
-import bisq.update.UpdateService;
+import bisq.update.Descriptor;
+import bisq.update.Utils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -47,9 +47,9 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     private static final double PADDING = 30;
-    private final Label headline, releaseNotesHeadline, releaseNotesInfo, tableViewHeadline;
+    private final Label headline, releaseNotesHeadline, releaseNotesInfo, verificationInfo;
     private final Hyperlink downloadUrl;
-    private final Button downloadButton, downloadLaterButton, ignoreButton, shutDownButton;
+    private final Button downloadButton, downloadLaterButton, ignoreButton, closeButton, shutDownButton;
     private final BisqTableView<ListItem> tableView;
     private final TextArea releaseNotes;
     private Subscription isTableVisiblePin;
@@ -71,8 +71,9 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         releaseNotes = new TextArea();
         releaseNotes.setWrapText(true);
         releaseNotes.getStyleClass().add("updater-release-notes");
+        //releaseNotes.setPadding(new Insets(20,0,20,0));
         releaseNotes.setEditable(false);
-        releaseNotes.setMinHeight(210);
+        releaseNotes.setMinHeight(230);
 
         releaseNotesInfo = new Label(Res.get("updater.gitHub"));
         releaseNotesInfo.getStyleClass().add("updater-text");
@@ -82,26 +83,33 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
 
         downloadButton = new Button(Res.get("updater.download"));
         downloadButton.setDefaultButton(true);
+
         downloadLaterButton = new Button(Res.get("updater.downloadLater"));
-        downloadLaterButton.getStyleClass().add("outlined-button");
+
         ignoreButton = new Button(Res.get("updater.ignore"));
+        ignoreButton.getStyleClass().add("outlined-button");
+
         shutDownButton = new Button(Res.get("updater.shutDown"));
         shutDownButton.setDefaultButton(true);
-        HBox buttons = new HBox(20, downloadButton, Spacer.fillHBox(), downloadLaterButton, ignoreButton, shutDownButton);
 
-        tableViewHeadline = new Label(Res.get("updater.table.headline"));
-        tableViewHeadline.getStyleClass().add("updater-sub-headline");
+        closeButton = new Button(Res.get("action.close"));
 
-        tableView = new BisqTableView<>(model.getListItems());
+        HBox buttons = new HBox(20, ignoreButton, Spacer.fillHBox(), downloadLaterButton, downloadButton, closeButton, shutDownButton);
+
+        verificationInfo = new Label(Res.get("updater.downloadAndVerify.info"));
+        verificationInfo.setWrapText(true);
+        verificationInfo.getStyleClass().add("updater-text");
+
+        tableView = new BisqTableView<>(model.getSortedList());
         tableView.setPrefHeight(307);
         tableView.getStyleClass().add("updater-table-view");
         configTableView();
 
-        VBox.setMargin(releaseNotesHeadline, new Insets(0, 0, -10, 0));
-        VBox.setMargin(downloadUrl, new Insets(-20, 0, 30, -5));
+        VBox.setMargin(releaseNotes, new Insets(-10, 0, 10, 0));
+        VBox.setMargin(downloadUrl, new Insets(-20, 0, 20, -5));
         root.getChildren().addAll(headline, releaseNotesHeadline,
                 releaseNotes, releaseNotesInfo, downloadUrl,
-                tableView,
+                verificationInfo, tableView,
                 buttons);
     }
 
@@ -113,12 +121,17 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         downloadUrl.setText(model.getDownloadUrl().get());
 
         isTableVisiblePin = EasyBind.subscribe(model.getTableVisible(), isTableVisible -> {
-            tableViewHeadline.setVisible(isTableVisible);
-            tableViewHeadline.setManaged(isTableVisible);
+            verificationInfo.setVisible(isTableVisible);
+            verificationInfo.setManaged(isTableVisible);
             tableView.setVisible(isTableVisible);
             tableView.setManaged(isTableVisible);
+            verificationInfo.setVisible(isTableVisible);
+            verificationInfo.setManaged(isTableVisible);
+
             shutDownButton.setVisible(isTableVisible);
             shutDownButton.setManaged(isTableVisible);
+            closeButton.setVisible(isTableVisible);
+            closeButton.setManaged(isTableVisible);
 
             releaseNotesHeadline.setVisible(!isTableVisible);
             releaseNotesHeadline.setManaged(!isTableVisible);
@@ -137,7 +150,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
             ignoreButton.setManaged(!isTableVisible);
 
             if (isTableVisible) {
-                headline.setText(Res.get("updater.table.headline"));
+                headline.setText(Res.get("updater.downloadAndVerify.headline"));
             }
         });
 
@@ -148,16 +161,19 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         downloadLaterButton.setOnAction(e -> controller.onDownloadLater());
         ignoreButton.setOnAction(e -> controller.onIgnore());
         shutDownButton.setOnAction(e -> controller.onRestart());
+        closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
         shutDownButton.disableProperty().unbind();
 
+        downloadUrl.setOnAction(null);
         downloadButton.setOnAction(null);
         downloadLaterButton.setOnAction(null);
         ignoreButton.setOnAction(null);
         shutDownButton.setOnAction(null);
+        closeButton.setOnAction(null);
 
         isTableVisiblePin.unsubscribe();
     }
@@ -248,13 +264,15 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     @EqualsAndHashCode
     static class ListItem implements TableItem {
         private final String fileName;
+        private final Descriptor descriptor;
         private final DoubleProperty progress = new SimpleDoubleProperty();
         private final BooleanProperty showVerified = new SimpleBooleanProperty(true);
 
-        ListItem(DownloadDescriptor downloadDescriptor) {
-            fileName = downloadDescriptor.getSourceFileName();
-            FxBindings.bind(progress).to(downloadDescriptor.getProgress());
-            showVerified.set((downloadDescriptor.getDestination().getName().equals(UpdateService.DESTINATION_FILE_NAME)));
+        ListItem(Descriptor descriptor) {
+            fileName = descriptor.getDestination().getName();
+            this.descriptor = descriptor;
+            FxBindings.bind(progress).to(descriptor.getProgress());
+            showVerified.set((descriptor.getDestination().getName().equals(Utils.FILE_NAME)));
         }
     }
 }

@@ -19,23 +19,21 @@ package bisq.desktop_app_launcher;
 
 import bisq.common.logging.LogSetup;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
-import bisq.security.PgPUtils;
-import bisq.update.UpdateService;
+import bisq.update.Verification;
 import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static bisq.update.UpdateService.*;
+import static bisq.update.Utils.*;
+
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
@@ -45,56 +43,32 @@ import static bisq.update.UpdateService.*;
  */
 @Slf4j
 public class DesktopAppLauncher {
-    private static final String DEFAULT_APP_NAME = "Bisq2";
-    private static final String DEFAULT_VERSION = "2.0.0";
+    static final String VERSION = "2.0.0";
+    static final String APP_NAME = "Bisq2";
     private static final String BIN_PATH = "bin/java";
 
+    private static String[] args;
+    private static List<String> jvmArgs;
+    private static String version, directory, jarPath;
+
     public static void main(String[] args) {
+        DesktopAppLauncher.args = args;
         try {
-            List<String> jvmArgs = getBisqJvmArgs();
-            String appName = getAppName(args, jvmArgs);
+            jvmArgs = Options.getBisqJvmArgs();
+            String appName = Options.getAppName(args, jvmArgs);
             String userDataDir = OsUtils.getUserDataDir().getAbsolutePath();
             String dataDir = userDataDir + File.separator + appName;
 
             LogSetup.setup(Paths.get(dataDir, "bisq").toString());
             LogSetup.setLevel(Level.INFO);
 
-            String version = getVersion(args, jvmArgs, userDataDir);
-            String directory = dataDir + File.separator + DESTINATION_DIR + File.separator + version;
-            String jarPath = directory + File.separator + DESTINATION_FILE_NAME;
+            version = Options.getVersion(args, jvmArgs, userDataDir);
+            directory = dataDir + File.separator + DESTINATION_DIR + File.separator + version;
+            jarPath = directory + File.separator + FILE_NAME;
             if (new File(jarPath).exists()) {
-                boolean ignoreSignature = getOption(args, jvmArgs, "ignoreSignature", "false").equals("true");
-                if (!ignoreSignature) {
-                    // If keys are provided as: --keyList=key1,key2
-                    String keys = getOption(args, jvmArgs, "keyList", null);
-                    if (keys != null) {
-                        List<String> keyList = List.of(keys.split(","));
-                        PgPUtils.verifyDownloadedFile(directory, DESTINATION_FILE_NAME, SIGNING_KEY_FILE, keyList);
-                    } else {
-                        List<String> keyList = List.of(UpdateService.KEY_4A133008, UpdateService.KEY_E222AA02);
-                        PgPUtils.checkIfKeysMatchesResourceKeys(directory, keyList);
-                        PgPUtils.verifyDownloadedFile(directory, DESTINATION_FILE_NAME, SIGNING_KEY_FILE, keyList);
-                    }
-                }
-
-                String javaHome = System.getProperty("java.home");
-                log.info("javaHome {}", javaHome);
-                log.info("Jar file found at {}. Start that application in a new process.", jarPath);
-                String javaBinPath = javaHome + File.separator + BIN_PATH;
-                List<String> command = new ArrayList<>();
-                command.add(javaBinPath);
-                command.addAll(jvmArgs);
-                command.add("-jar");
-                command.add(jarPath);
-                command.addAll(Arrays.asList(args));
-                ProcessBuilder processBuilder = new ProcessBuilder(command);
-                processBuilder.environment().put("JAVA_HOME", javaHome);
-                processBuilder.inheritIO();
-                Process process = processBuilder.start();
-                int exitCode = process.waitFor();
-                log.info("Exited with code: {}", exitCode);
+                launchNewProcess();
             } else {
-                log.info("No jar file found at {}. Run default application.", jarPath);
+                log.info("No jar file found. Run default Bisq application with version Ï" + VERSION);
                 DesktopApp.main(args);
             }
         } catch (Exception e) {
@@ -102,35 +76,36 @@ public class DesktopAppLauncher {
         }
     }
 
+    private static void launchNewProcess() throws IOException, InterruptedException {
+        boolean ignoreSignatureVerification = Options.getOptionValueAsBoolean(args, jvmArgs, "ignoreSignatureVerification", "false");
+        boolean ignoreSigningKeyInResourcesCheck = Options.getOptionValueAsBoolean(args, jvmArgs, "ignoreSigningKeyInResourcesCheck", "false");
+        if (!ignoreSignatureVerification) {
+            // If keyIds are provided as: --keyIds=keyId1,keyId2
+            String keyIds = Options.getOptionValue(args, jvmArgs, "keyIds", null);
+            if (keyIds != null) {
+                List<String> keyList = List.of(keyIds.split(","));
+                Verification.verifyDownloadedFile(directory, keyList, ignoreSigningKeyInResourcesCheck);
+            } else {
+                Verification.verifyDownloadedFile(directory, List.of(KEY_4A133008, KEY_E222AA02), ignoreSigningKeyInResourcesCheck);
+            }
+        }
 
-    private static String getVersion(String[] args, List<String> jvmArgs, String userDataDir) {
-        String versionFilePath = userDataDir + File.separator + VERSION_FILE_NAME;
-        return FileUtils.readFromFileIfPresent(new File(versionFilePath))
-                .orElse(getOption(args, jvmArgs, "version", DEFAULT_VERSION));
-    }
-
-    private static String getAppName(String[] args, List<String> jvmArgs) {
-        return getOption(args, jvmArgs, "appName", DEFAULT_APP_NAME);
-    }
-
-    private static String getOption(String[] args, List<String> jvmArgs, String option, String defaultValue) {
-        String jvmOptionString = "-Dapplication." + option + "=";
-        String argsOptionString = "--" + option + "=";
-        return jvmArgs.stream()
-                .filter(e -> e.startsWith(jvmOptionString))
-                .map(e -> e.replace(jvmOptionString, ""))
-                .findAny()
-                .or(() -> Arrays.stream(args)
-                        .filter(e -> e.startsWith(argsOptionString))
-                        .map(e -> e.replace(argsOptionString, ""))
-                        .findAny())
-                .orElse(defaultValue);
-    }
-
-
-    private static List<String> getBisqJvmArgs() {
-        return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
-                .filter(e -> e.startsWith("-Dapplication"))
-                .collect(Collectors.toList());
+        String javaHome = System.getProperty("java.home");
+        log.debug("javaHome {}", javaHome);
+        log.debug("Jar file found at {}", jarPath);
+        log.info("Update found. Start Bisq v{} in a new process.", version);
+        String javaBinPath = javaHome + File.separator + BIN_PATH;
+        List<String> command = new ArrayList<>();
+        command.add(javaBinPath);
+        command.addAll(jvmArgs);
+        command.add("-jar");
+        command.add(jarPath);
+        command.addAll(Arrays.asList(args));
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.environment().put("JAVA_HOME", javaHome);
+        processBuilder.inheritIO();
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+        log.info("Exited launcher process with code: {}", exitCode);
     }
 }

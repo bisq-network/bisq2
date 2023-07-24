@@ -2,7 +2,7 @@ plugins {
     id 'bisq.java-library'
     id 'application'
     alias(libs.plugins.shadow)
-    alias(libs.plugins.jpackage)
+  /*  alias(libs.plugins.jpackage)*/
 }
 
 application {
@@ -32,7 +32,7 @@ distZip.enabled = false
 distTar.enabled = false
 shadowDistZip.enabled = false
 shadowDistTar.enabled = false
-shadowJar.enabled = true
+shadowJar.enabled = false
 
 
 tasks.jpackage {

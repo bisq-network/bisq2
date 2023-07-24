@@ -24,6 +24,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
@@ -35,4 +37,6 @@ public class UpdaterModel implements Model {
     private final StringProperty downloadUrl = new SimpleStringProperty();
 
     private final ObservableList<UpdaterView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<UpdaterView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<UpdaterView.ListItem> sortedList = new SortedList<>(filteredList);
 }

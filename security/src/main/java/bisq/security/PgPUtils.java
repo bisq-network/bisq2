@@ -18,55 +18,20 @@
 package bisq.security;
 
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.security.SignatureException;
 import java.util.Iterator;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PgPUtils {
-    public static final String EXTENSION = ".asc";
-
-    public static void verifyDownloadedFile(String directory, String fileName, String signingKeyFileName, List<String> keys) throws IOException {
-        verifyDownloadedFile(directory, fileName, signingKeyFileName, fileName + EXTENSION, keys);
-    }
-
-    public static void verifyDownloadedFile(String directory, String fileName, String signingKeyFileName, String signatureFileName, List<String> keys) throws IOException {
-        String signingKey = FileUtils.readStringFromFile(Path.of(directory, signingKeyFileName).toFile());
-        log.debug("signingKey {}", signingKey);
-        checkArgument(keys.contains(signingKey), "signingKey not matching any of the provided keys");
-
-        File pubKeyFile = Path.of(directory, signingKey + EXTENSION).toFile();
-        File sigFile = Path.of(directory, signatureFileName).toFile();
-        File file = Path.of(directory, fileName).toFile();
-        log.debug("pubKeyFile {}", pubKeyFile);
-        log.debug("sigFile {}", sigFile);
-        log.debug("file {}", file);
-        checkArgument(PgPUtils.isSignatureValid(pubKeyFile, sigFile, file), "Signature verification failed");
-        log.info("signature verification succeeded");
-    }
-
-    public static void checkIfKeysMatchesResourceKeys(String directory, List<String> keys) throws IOException {
-        for (String key : keys) {
-            checkIfKeyMatchesResourceKey(directory, key + EXTENSION);
-        }
-    }
-
-    private static void checkIfKeyMatchesResourceKey(String directory, String keyName) throws IOException {
-        String keyFromResources = FileUtils.readStringFromResource("keys/" + keyName);
-        String keyFromDirectory = FileUtils.readStringFromFile(Path.of(directory, keyName).toFile());
-        checkArgument(keyFromResources.equals(keyFromDirectory), "Key from directory not matching the one from resources. keyName=" + keyName);
-    }
 
     public static boolean isSignatureValid(File pubKeyFile, File sigFile, File jarFileName) {
         try {

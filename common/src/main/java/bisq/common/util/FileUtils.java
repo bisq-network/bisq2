@@ -327,21 +327,33 @@ public class FileUtils {
 
     public static HttpURLConnection downloadFile(URL url, File destination, Observable<Double> progress) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        int fileSize = -1;
         try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
              FileOutputStream outputStream = new FileOutputStream(destination)) {
             connection.connect();
-            int fileSize = connection.getContentLength();
+            // If server does not provide contentLength it is -1
+            fileSize = connection.getContentLength();
             double totalReadBytes = 0d;
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
-                totalReadBytes += bytesRead;
-                progress.set(totalReadBytes / fileSize);
+                if (fileSize != -1) {
+                    totalReadBytes += bytesRead;
+                    progress.set(totalReadBytes / fileSize);
+                }
+            }
+            if (fileSize == -1) {
+                progress.set(1d);
             }
         } finally {
+
             connection.disconnect();
         }
         return connection;
+    }
+
+    public static boolean hasResourceFile(String fileName) {
+        return FileUtils.class.getClassLoader().getResource(fileName) != null;
     }
 }
