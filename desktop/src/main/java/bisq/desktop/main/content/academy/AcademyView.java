@@ -30,7 +30,7 @@ import javafx.scene.layout.VBox;
 
 public abstract class AcademyView<M extends Model, C extends Controller> extends View<VBox, M, C> {
     protected final Label headline, subHeadline, overviewHeadline, overview, contentHeadline, content;
-    protected final Hyperlink learnMore;
+    protected Hyperlink learnMore;
 
     public AcademyView(M model, C controller) {
         super(new VBox(10), model, controller);
@@ -76,6 +76,26 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
 
     }
 
+    protected Label addHeadlineLabel(String headlineKey) {
+        Label label = new Label(Res.get("academy." + getKey() + "." + headlineKey));
+        label.getStyleClass().addAll("font-size-16", "font-light");
+        root.getChildren().add(label);
+        return label;
+    }
+
+    protected Label addContentLabel(String contentKey) {
+        Label label = new Label(Res.get("academy." + getKey() + "." + contentKey));
+        label.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
+        root.getChildren().add(label);
+        return label;
+    }
+
+    protected Hyperlink addLearnMoreHyperlink() {
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
+        root.getChildren().add(learnMore);
+        return learnMore;
+    }
     protected abstract String getIconId();
 
     protected abstract String getKey();

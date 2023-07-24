@@ -18,6 +18,9 @@
 package bisq.desktop.main.content.academy.bisq;
 
 import bisq.desktop.main.content.academy.AcademyView;
+import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
+import javafx.scene.control.Label;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,6 +28,19 @@ public class BisqAcademyView extends AcademyView<BisqAcademyModel, BisqAcademyCo
 
     public BisqAcademyView(BisqAcademyModel model, BisqAcademyController controller) {
         super(model, controller);
+
+        Label exchangeDecentralizedHeadline = addHeadlineLabel("exchangeDecentralizedHeadline");
+        Label exchangeDecentralizedContent = addContentLabel("exchangeDecentralizedContent");
+        Label whyBisqHeadline = addHeadlineLabel("whyBisqHeadline");
+        Label whyBisqContent = addContentLabel("whyBisqContent");
+        Label tradeSafelyHeadline = addHeadlineLabel("tradeSafelyHeadline");
+        Label tradeSafelyContent = addContentLabel("tradeSafelyContent");
+        addLearnMoreHyperlink();
+
+        VBox.setMargin(exchangeDecentralizedHeadline, new Insets(25, 0, 0, 0));
+        VBox.setMargin(whyBisqHeadline, new Insets(35, 0, 0, 0));
+        VBox.setMargin(tradeSafelyHeadline, new Insets(35, 0, 0, 0));
+        VBox.setMargin(tradeSafelyContent, new Insets(0, 0, 15, 0));
     }
 
     @Override
