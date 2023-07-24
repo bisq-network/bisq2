@@ -34,6 +34,7 @@ shadowDistZip.enabled = false
 shadowDistTar.enabled = false
 shadowJar.enabled = false
 
+/*
 
 tasks.jpackage {
     dependsOn tasks.clean // Ensure fresh buildDir for every jpackager binary build
@@ -222,4 +223,4 @@ def executeCmd(String cmd) {
         println "Command output (stderr):\n${result}"
     }
     return result
-}
+}*/
