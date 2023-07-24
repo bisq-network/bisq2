@@ -55,6 +55,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
     protected Label addHeadlineLabel(String headlineKey) {
         Label label = new Label(Res.get("academy." + getKey() + "." + headlineKey));
         label.getStyleClass().addAll("font-size-16", "font-light");
+        label.setWrapText(true);
         root.getChildren().add(label);
         return label;
     }
@@ -62,6 +63,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
     protected Label addContentLabel(String contentKey) {
         Label label = new Label(Res.get("academy." + getKey() + "." + contentKey));
         label.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
+        label.setWrapText(true);
         root.getChildren().add(label);
         return label;
     }
