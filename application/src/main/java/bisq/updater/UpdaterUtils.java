@@ -19,8 +19,10 @@ package bisq.updater;
 
 import bisq.common.util.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class UpdaterUtils {
     // For testing, we can use bisq1 url
@@ -51,6 +53,11 @@ public class UpdaterUtils {
 
     public static String getSigningKey(String directory, String signingKeyId) throws IOException {
         return FileUtils.readStringFromFile(Path.of(directory, signingKeyId + EXTENSION).toFile());
+    }
+
+    public static Optional<String> readVersionFromVersionFile(String userDataDir) {
+        String versionFilePath = userDataDir + File.separator + VERSION_FILE_NAME;
+        return FileUtils.readFromFileIfPresent(new File(versionFilePath));
     }
 
     public static boolean hasKeyInResources(String keyId) {

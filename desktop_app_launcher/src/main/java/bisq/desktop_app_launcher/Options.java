@@ -17,20 +17,16 @@
 
 package bisq.desktop_app_launcher;
 
-import bisq.common.util.FileUtils;
+import bisq.updater.UpdaterUtils;
 
-import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.updater.UpdaterUtils.VERSION_FILE_NAME;
-
 public class Options {
     static String getVersion(String[] args, List<String> jvmArgs, String userDataDir) {
-        String versionFilePath = userDataDir + File.separator + VERSION_FILE_NAME;
-        return FileUtils.readFromFileIfPresent(new File(versionFilePath))
+        return UpdaterUtils.readVersionFromVersionFile(userDataDir)
                 .orElse(getOptionValue(args, jvmArgs, "version", DesktopAppLauncher.VERSION));
     }
 
