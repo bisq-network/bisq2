@@ -31,9 +31,14 @@ import lombok.Getter;
 @Getter
 public class UpdaterModel implements Model {
     private final BooleanProperty tableVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isLauncherUpdate = new SimpleBooleanProperty();
     private final BooleanProperty downloadAndVerifyCompleted = new SimpleBooleanProperty();
+    private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty version = new SimpleStringProperty();
     private final StringProperty releaseNotes = new SimpleStringProperty();
+    private final StringProperty furtherInfo = new SimpleStringProperty();
+    private final StringProperty shutDownButtonText = new SimpleStringProperty();
+    private final StringProperty verificationInfo = new SimpleStringProperty();
     private final StringProperty downloadUrl = new SimpleStringProperty();
 
     private final ObservableList<UpdaterView.ListItem> listItems = FXCollections.observableArrayList();

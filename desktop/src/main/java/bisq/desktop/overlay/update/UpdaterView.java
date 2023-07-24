@@ -47,7 +47,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     private static final double PADDING = 30;
-    private final Label headline, releaseNotesHeadline, releaseNotesInfo, verificationInfo;
+    private final Label headline, releaseNotesHeadline, furtherInfo, verificationInfo;
     private final Hyperlink downloadUrl;
     private final Button downloadButton, downloadLaterButton, ignoreButton, closeButton, shutDownButton;
     private final BisqTableView<ListItem> tableView;
@@ -71,12 +71,11 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         releaseNotes = new TextArea();
         releaseNotes.setWrapText(true);
         releaseNotes.getStyleClass().add("updater-release-notes");
-        //releaseNotes.setPadding(new Insets(20,0,20,0));
         releaseNotes.setEditable(false);
         releaseNotes.setMinHeight(230);
 
-        releaseNotesInfo = new Label(Res.get("updater.gitHub"));
-        releaseNotesInfo.getStyleClass().add("updater-text");
+        furtherInfo = new Label();
+        furtherInfo.getStyleClass().add("updater-text");
 
         downloadUrl = new Hyperlink();
         downloadUrl.getStyleClass().add("updater-text");
@@ -89,14 +88,14 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         ignoreButton = new Button(Res.get("updater.ignore"));
         ignoreButton.getStyleClass().add("outlined-button");
 
-        shutDownButton = new Button(Res.get("updater.shutDown"));
+        shutDownButton = new Button();
         shutDownButton.setDefaultButton(true);
 
         closeButton = new Button(Res.get("action.close"));
 
         HBox buttons = new HBox(20, ignoreButton, Spacer.fillHBox(), downloadLaterButton, downloadButton, closeButton, shutDownButton);
 
-        verificationInfo = new Label(Res.get("updater.downloadAndVerify.info"));
+        verificationInfo = new Label();
         verificationInfo.setWrapText(true);
         verificationInfo.getStyleClass().add("updater-text");
 
@@ -107,18 +106,23 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
 
         VBox.setMargin(releaseNotes, new Insets(-10, 0, 10, 0));
         VBox.setMargin(downloadUrl, new Insets(-20, 0, 20, -5));
+        VBox.setMargin(verificationInfo, new Insets(-10, 0, 0, 0));
         root.getChildren().addAll(headline, releaseNotesHeadline,
-                releaseNotes, releaseNotesInfo, downloadUrl,
+                releaseNotes, furtherInfo, downloadUrl,
                 verificationInfo, tableView,
                 buttons);
     }
 
     @Override
     protected void onViewAttached() {
-        headline.setText(Res.get("updater.headline", model.getVersion().get()));
-        releaseNotesHeadline.setText(Res.get("updater.releaseNotesHeadline"));
+        releaseNotesHeadline.setText(Res.get("updater.releaseNotesHeadline", model.getVersion().get()));
         releaseNotes.setText(model.getReleaseNotes().get());
         downloadUrl.setText(model.getDownloadUrl().get());
+
+        headline.textProperty().bind(model.getHeadline());
+        furtherInfo.textProperty().bind(model.getFurtherInfo());
+        verificationInfo.textProperty().bind(model.getVerificationInfo());
+        shutDownButton.textProperty().bind(model.getShutDownButtonText());
 
         isTableVisiblePin = EasyBind.subscribe(model.getTableVisible(), isTableVisible -> {
             verificationInfo.setVisible(isTableVisible);
@@ -137,8 +141,8 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
             releaseNotesHeadline.setManaged(!isTableVisible);
             releaseNotes.setVisible(!isTableVisible);
             releaseNotes.setManaged(!isTableVisible);
-            releaseNotesInfo.setVisible(!isTableVisible);
-            releaseNotesInfo.setManaged(!isTableVisible);
+            furtherInfo.setVisible(!isTableVisible);
+            furtherInfo.setManaged(!isTableVisible);
             downloadUrl.setVisible(!isTableVisible);
             downloadUrl.setManaged(!isTableVisible);
 
@@ -148,10 +152,6 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
             downloadLaterButton.setManaged(!isTableVisible);
             ignoreButton.setVisible(!isTableVisible);
             ignoreButton.setManaged(!isTableVisible);
-
-            if (isTableVisible) {
-                headline.setText(Res.get("updater.downloadAndVerify.headline"));
-            }
         });
 
         shutDownButton.disableProperty().bind(model.getDownloadAndVerifyCompleted().not());
@@ -160,12 +160,17 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         downloadButton.setOnAction(e -> controller.onDownload());
         downloadLaterButton.setOnAction(e -> controller.onDownloadLater());
         ignoreButton.setOnAction(e -> controller.onIgnore());
-        shutDownButton.setOnAction(e -> controller.onRestart());
+        shutDownButton.setOnAction(e -> controller.onShutdown());
         closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
+        headline.textProperty().unbind();
+        furtherInfo.textProperty().unbind();
+        verificationInfo.textProperty().unbind();
+        shutDownButton.textProperty().unbind();
+
         shutDownButton.disableProperty().unbind();
 
         downloadUrl.setOnAction(null);

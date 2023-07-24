@@ -83,7 +83,7 @@ public class ReleaseManagerController implements Controller {
         Version.validate(model.getVersion().get());
 
         releaseManagerService.publishReleaseNotification(model.getIsPreRelease().get(),
-                        model.getRequireLauncherUpdate().get(),
+                        model.getIsLauncherUpdate().get(),
                         releaseNotes,
                         model.getVersion().get())
                 .whenComplete((result, throwable) -> {
@@ -92,7 +92,7 @@ public class ReleaseManagerController implements Controller {
                             new Popup().error(throwable).show();
                         } else {
                             model.getIsPreRelease().set(false);
-                            model.getRequireLauncherUpdate().set(false);
+                            model.getIsLauncherUpdate().set(false);
                             model.getReleaseNotes().set(null);
                             model.getVersion().set(null);
                         }

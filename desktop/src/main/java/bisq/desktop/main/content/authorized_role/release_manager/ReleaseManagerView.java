@@ -46,7 +46,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     private final Button sendButton;
     private final MaterialTextArea releaseNotes;
     private final MaterialTextField version;
-    private final CheckBox isPreReleaseCheckBox, requireLauncherUpdateCheckBox;
+    private final CheckBox isPreReleaseCheckBox, isLauncherUpdateCheckBox;
     private final BisqTableView<ReleaseNotificationListItem> tableView;
 
     public ReleaseManagerView(ReleaseManagerModel model, ReleaseManagerController controller, Pane roleInfo) {
@@ -60,7 +60,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         releaseNotes = new MaterialTextArea(Res.get("authorizedRole.releaseManager.releaseNotes"));
         version = new MaterialTextField(Res.get("authorizedRole.releaseManager.version"));
         isPreReleaseCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.isPreRelease"));
-        requireLauncherUpdateCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.requireLauncherUpdate"));
+        isLauncherUpdateCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.isLauncherUpdate"));
 
         sendButton = new Button(Res.get("authorizedRole.releaseManager.send"));
         sendButton.setDefaultButton(true);
@@ -83,7 +83,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 releaseNotes,
                 version,
                 isPreReleaseCheckBox,
-                requireLauncherUpdateCheckBox,
+                isLauncherUpdateCheckBox,
                 sendButton,
                 tableHeadline, tableView,
                 roleInfo);
@@ -95,7 +95,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         releaseNotes.textProperty().bindBidirectional(model.getReleaseNotes());
         sendButton.disableProperty().bind(model.getActionButtonDisabled());
         isPreReleaseCheckBox.selectedProperty().bindBidirectional(model.getIsPreRelease());
-        requireLauncherUpdateCheckBox.selectedProperty().bindBidirectional(model.getRequireLauncherUpdate());
+        isLauncherUpdateCheckBox.selectedProperty().bindBidirectional(model.getIsLauncherUpdate());
 
         sendButton.setOnAction(e -> controller.onSendReleaseNotification());
     }
@@ -106,7 +106,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         releaseNotes.textProperty().unbindBidirectional(model.getReleaseNotes());
         sendButton.disableProperty().unbind();
         isPreReleaseCheckBox.selectedProperty().unbindBidirectional(model.getIsPreRelease());
-        requireLauncherUpdateCheckBox.selectedProperty().unbindBidirectional(model.getRequireLauncherUpdate());
+        isLauncherUpdateCheckBox.selectedProperty().unbindBidirectional(model.getIsLauncherUpdate());
 
         sendButton.setOnAction(null);
     }
@@ -142,9 +142,9 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
                 .isSortable(false)
-                .title(Res.get("authorizedRole.releaseManager.table.requireLauncherUpdate"))
+                .title(Res.get("authorizedRole.releaseManager.table.isLauncherUpdate"))
                 .minWidth(120)
-                .valueSupplier(ReleaseNotificationListItem::getIsRequireLauncherUpdate)
+                .valueSupplier(ReleaseNotificationListItem::getIsLauncherUpdate)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.profileId"))
@@ -184,7 +184,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     @ToString
     public static class ReleaseNotificationListItem implements TableItem {
         private final ReleaseNotification releaseNotification;
-        private final String dateString, isRequireLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
+        private final String dateString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
         private final long date;
 
         public ReleaseNotificationListItem(ReleaseNotification releaseNotification) {
@@ -192,7 +192,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
             date = releaseNotification.getDate();
             dateString = DateFormatter.formatDateTime(date);
             isPreRelease = BooleanFormatter.toYesNo(releaseNotification.isPreRelease());
-            isRequireLauncherUpdate = BooleanFormatter.toYesNo(releaseNotification.isRequireLauncherUpdate());
+            isLauncherUpdate = BooleanFormatter.toYesNo(releaseNotification.isLauncherUpdate());
             releaseNotes = releaseNotification.getReleaseNotes();
             version = releaseNotification.getVersionString();
             releaseManagerProfileId = releaseNotification.getReleaseManagerProfileId();

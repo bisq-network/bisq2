@@ -71,7 +71,7 @@ message ReleaseNotification {
   string id = 1;
   sint64 date = 2;
   bool isPreRelease = 3;
-  bool requireLauncherUpdate = 4;
+  bool isLauncherUpdate = 4;
   string releaseNotes = 5;
   string versionString = 6;
   string releaseManagerProfileId = 7;

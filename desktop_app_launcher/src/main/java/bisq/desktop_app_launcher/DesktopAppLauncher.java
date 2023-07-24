@@ -105,6 +105,7 @@ public class DesktopAppLauncher {
         processBuilder.environment().put("JAVA_HOME", javaHome);
         processBuilder.inheritIO();
         Process process = processBuilder.start();
+        //  System.exit(0);
         int exitCode = process.waitFor();
         log.info("Exited launcher process with code: {}", exitCode);
     }

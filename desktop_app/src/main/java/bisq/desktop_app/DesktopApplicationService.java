@@ -36,7 +36,6 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.updater.UpdaterService;
-import bisq.updater.UpdaterUtils;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
@@ -87,10 +86,10 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     public DesktopApplicationService(String[] args) {
         super("desktop", args);
 
-        UpdaterUtils.readVersionFromVersionFile(config.getBaseDir())
+       /* UpdaterUtils.readVersionFromVersionFile(config.getBaseDir())
                 .ifPresent(version -> checkArgument(getConfig().getVersion().toString().equals(version),
                         "Version of application (" + getConfig().getVersion().toString() +
-                                ") does not match version from version file in data directory (" + version + ")"));
+                                ") does not match version from version file in data directory (" + version + ")"));*/
 
         securityService = new SecurityService(persistenceService);
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");

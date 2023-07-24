@@ -91,7 +91,7 @@ public class ReleaseManagerService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,
-                                                                 boolean requireLauncherUpdate,
+                                                                 boolean isLauncherUpdate,
                                                                  String releaseNotes,
                                                                  String version) {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
@@ -102,7 +102,7 @@ public class ReleaseManagerService implements Service {
         ReleaseNotification releaseNotification = new ReleaseNotification(StringUtils.createUid(),
                 new Date().getTime(),
                 isPreRelease,
-                requireLauncherUpdate,
+                isLauncherUpdate,
                 releaseNotes,
                 version,
                 profileId,

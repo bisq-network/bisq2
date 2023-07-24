@@ -55,7 +55,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String id;
     private final long date;
     private final boolean isPreRelease;
-    private final boolean requireLauncherUpdate;
+    private final boolean isLauncherUpdate;
     private final String releaseNotes;
     private final String versionString;
     private final String releaseManagerProfileId;
@@ -66,7 +66,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     public ReleaseNotification(String id,
                                long date,
                                boolean isPreRelease,
-                               boolean requireLauncherUpdate,
+                               boolean isLauncherUpdate,
                                String releaseNotes,
                                String versionString,
                                String releaseManagerProfileId,
@@ -74,7 +74,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         this.id = id;
         this.date = date;
         this.isPreRelease = isPreRelease;
-        this.requireLauncherUpdate = requireLauncherUpdate;
+        this.isLauncherUpdate = isLauncherUpdate;
         this.releaseNotes = releaseNotes;
         this.versionString = versionString;
         this.releaseManagerProfileId = releaseManagerProfileId;
@@ -89,7 +89,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 .setId(id)
                 .setDate(date)
                 .setIsPreRelease(isPreRelease)
-                .setRequireLauncherUpdate(requireLauncherUpdate)
+                .setIsLauncherUpdate(isLauncherUpdate)
                 .setReleaseNotes(releaseNotes)
                 .setVersionString(versionString)
                 .setReleaseManagerProfileId(releaseManagerProfileId)
@@ -101,7 +101,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         return new ReleaseNotification(proto.getId(),
                 proto.getDate(),
                 proto.getIsPreRelease(),
-                proto.getRequireLauncherUpdate(),
+                proto.getIsLauncherUpdate(),
                 proto.getReleaseNotes(),
                 proto.getVersionString(),
                 proto.getReleaseManagerProfileId(),

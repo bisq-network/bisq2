@@ -18,6 +18,7 @@
 package bisq.desktop.overlay.update;
 
 import bisq.common.observable.Pin;
+import bisq.common.util.OsUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
@@ -25,6 +26,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.updater.DownloadItem;
@@ -71,6 +73,22 @@ public class UpdaterController implements Controller {
             model.getVersion().set(version);
             model.getReleaseNotes().set(releaseNotification.getReleaseNotes());
             model.getDownloadUrl().set(RELEASES_URL + version);
+
+            boolean isLauncherUpdate = releaseNotification.isLauncherUpdate();
+            model.getIsLauncherUpdate().set(isLauncherUpdate);
+
+            model.getHeadline().set(isLauncherUpdate ?
+                    Res.get("updater.headline.isLauncherUpdate") :
+                    Res.get("updater.headline"));
+            model.getFurtherInfo().set(isLauncherUpdate ?
+                    Res.get("updater.furtherInfo.isLauncherUpdate") :
+                    Res.get("updater.furtherInfo"));
+            model.getVerificationInfo().set(isLauncherUpdate ?
+                    Res.get("updater.downloadAndVerify.info.isLauncherUpdate") :
+                    Res.get("updater.downloadAndVerify.info"));
+            model.getShutDownButtonText().set(isLauncherUpdate ?
+                    Res.get("updater.shutDown.isLauncherUpdate") :
+                    Res.get("updater.shutDown"));
         });
 
         model.getFilteredList().setPredicate(e -> !e.getDownloadItem().getDestination().getName().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
@@ -84,6 +102,7 @@ public class UpdaterController implements Controller {
 
     void onDownload() {
         model.getTableVisible().set(true);
+        model.getHeadline().set(Res.get("updater.downloadAndVerify.headline"));
         try {
             updaterService.downloadAndVerify()
                     .whenComplete((__, throwable) -> {
@@ -107,7 +126,10 @@ public class UpdaterController implements Controller {
         OverlayController.hide();
     }
 
-    void onRestart() {
+    void onShutdown() {
+        if (updaterService.getReleaseNotification().get().isLauncherUpdate()) {
+            OsUtils.open(OsUtils.getDownloadOfHomeDir());
+        }
         serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
     }
 

@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -127,23 +128,31 @@ public class OsUtils {
         }
     }
 
+    public static boolean browse(URI uri) {
+        return open(uri.toString());
+    }
+
+    public static boolean browse(String url) {
+        return open(url);
+    }
+
     public static boolean open(File file) {
         return open(file.getPath());
     }
 
-    public static boolean open(String fileName) {
+    public static boolean open(String target) {
         if (isLinux()) {
-            if (runCommand("kde-open", "%s", fileName)) return true;
-            if (runCommand("gnome-open", "%s", fileName)) return true;
-            if (runCommand("xdg-open", "%s", fileName)) return true;
+            if (runCommand("kde-open", "%s", target)) return true;
+            if (runCommand("gnome-open", "%s", target)) return true;
+            if (runCommand("xdg-open", "%s", target)) return true;
         }
 
         if (isMac()) {
-            if (runCommand("open", "%s", fileName)) return true;
+            if (runCommand("open", "%s", target)) return true;
         }
 
         if (isWindows()) {
-            return runCommand("explorer", "%s", "\"" + fileName + "\"");
+            return runCommand("explorer", "%s", "\"" + target + "\"");
         }
 
         return false;
