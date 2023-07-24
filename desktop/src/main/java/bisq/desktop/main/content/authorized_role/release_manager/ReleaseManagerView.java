@@ -135,10 +135,16 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 .valueSupplier(ReleaseNotificationListItem::getVersion)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+                .isSortable(false)
                 .title(Res.get("authorizedRole.releaseManager.table.isPreRelease"))
                 .minWidth(120)
-                .comparator(Comparator.comparing(ReleaseNotificationListItem::isPreRelease))
-                .valueSupplier(ReleaseNotificationListItem::getIsPreReleaseString)
+                .valueSupplier(ReleaseNotificationListItem::getIsPreRelease)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+                .isSortable(false)
+                .title(Res.get("authorizedRole.releaseManager.table.requireLauncherUpdate"))
+                .minWidth(120)
+                .valueSupplier(ReleaseNotificationListItem::getIsRequireLauncherUpdate)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.profileId"))
@@ -178,20 +184,15 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     @ToString
     public static class ReleaseNotificationListItem implements TableItem {
         private final ReleaseNotification releaseNotification;
-        private final String dateString;
-        private final String releaseNotes;
-        private final String version;
-        private final String isPreReleaseString;
+        private final String dateString, isRequireLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
         private final long date;
-        private final boolean isPreRelease;
-        private final String releaseManagerProfileId;
 
-        public ReleaseNotificationListItem(ReleaseNotification releaseNotification, ReleaseManagerController controller) {
+        public ReleaseNotificationListItem(ReleaseNotification releaseNotification) {
             this.releaseNotification = releaseNotification;
             date = releaseNotification.getDate();
             dateString = DateFormatter.formatDateTime(date);
-            isPreRelease = releaseNotification.isPreRelease();
-            isPreReleaseString = BooleanFormatter.toYesNo(isPreRelease);
+            isPreRelease = BooleanFormatter.toYesNo(releaseNotification.isPreRelease());
+            isRequireLauncherUpdate = BooleanFormatter.toYesNo(releaseNotification.isRequireLauncherUpdate());
             releaseNotes = releaseNotification.getReleaseNotes();
             version = releaseNotification.getVersionString();
             releaseManagerProfileId = releaseNotification.getReleaseManagerProfileId();

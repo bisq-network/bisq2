@@ -61,7 +61,7 @@ public class ReleaseManagerController implements Controller {
     @Override
     public void onActivate() {
         getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseManagerView.ReleaseNotificationListItem>bind(model.getListItems())
-                .map(releaseNotification -> new ReleaseManagerView.ReleaseNotificationListItem(releaseNotification, this))
+                .map(ReleaseManagerView.ReleaseNotificationListItem::new)
                 .to(releaseNotificationsService.getReleaseNotifications());
 
         model.getActionButtonDisabled().bind(model.getReleaseNotes().isEmpty().or(model.getVersion().isEmpty()));
@@ -92,6 +92,7 @@ public class ReleaseManagerController implements Controller {
                             new Popup().error(throwable).show();
                         } else {
                             model.getIsPreRelease().set(false);
+                            model.getRequireLauncherUpdate().set(false);
                             model.getReleaseNotes().set(null);
                             model.getVersion().set(null);
                         }
