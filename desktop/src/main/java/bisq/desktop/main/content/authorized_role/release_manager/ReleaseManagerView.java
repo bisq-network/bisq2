@@ -46,7 +46,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     private final Button sendButton;
     private final MaterialTextArea releaseNotes;
     private final MaterialTextField version;
-    private final CheckBox isPreReleaseCheckBox;
+    private final CheckBox isPreReleaseCheckBox, requireLauncherUpdateCheckBox;
     private final BisqTableView<ReleaseNotificationListItem> tableView;
 
     public ReleaseManagerView(ReleaseManagerModel model, ReleaseManagerController controller, Pane roleInfo) {
@@ -60,6 +60,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         releaseNotes = new MaterialTextArea(Res.get("authorizedRole.releaseManager.releaseNotes"));
         version = new MaterialTextField(Res.get("authorizedRole.releaseManager.version"));
         isPreReleaseCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.isPreRelease"));
+        requireLauncherUpdateCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.requireLauncherUpdate"));
 
         sendButton = new Button(Res.get("authorizedRole.releaseManager.send"));
         sendButton.setDefaultButton(true);
@@ -82,6 +83,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 releaseNotes,
                 version,
                 isPreReleaseCheckBox,
+                requireLauncherUpdateCheckBox,
                 sendButton,
                 tableHeadline, tableView,
                 roleInfo);
@@ -93,6 +95,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         releaseNotes.textProperty().bindBidirectional(model.getReleaseNotes());
         sendButton.disableProperty().bind(model.getActionButtonDisabled());
         isPreReleaseCheckBox.selectedProperty().bindBidirectional(model.getIsPreRelease());
+        requireLauncherUpdateCheckBox.selectedProperty().bindBidirectional(model.getRequireLauncherUpdate());
 
         sendButton.setOnAction(e -> controller.onSendReleaseNotification());
     }
@@ -103,6 +106,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         releaseNotes.textProperty().unbindBidirectional(model.getReleaseNotes());
         sendButton.disableProperty().unbind();
         isPreReleaseCheckBox.selectedProperty().unbindBidirectional(model.getIsPreRelease());
+        requireLauncherUpdateCheckBox.selectedProperty().unbindBidirectional(model.getRequireLauncherUpdate());
 
         sendButton.setOnAction(null);
     }

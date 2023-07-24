@@ -55,17 +55,18 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String id;
     private final long date;
     private final boolean isPreRelease;
+    private final boolean requireLauncherUpdate;
     private final String releaseNotes;
-
-    private transient final Version version;
-
     private final String versionString;
     private final String releaseManagerProfileId;
     private final boolean staticPublicKeysProvided;
 
+    private transient final Version version;
+
     public ReleaseNotification(String id,
                                long date,
                                boolean isPreRelease,
+                               boolean requireLauncherUpdate,
                                String releaseNotes,
                                String versionString,
                                String releaseManagerProfileId,
@@ -73,6 +74,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         this.id = id;
         this.date = date;
         this.isPreRelease = isPreRelease;
+        this.requireLauncherUpdate = requireLauncherUpdate;
         this.releaseNotes = releaseNotes;
         this.versionString = versionString;
         this.releaseManagerProfileId = releaseManagerProfileId;
@@ -87,6 +89,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 .setId(id)
                 .setDate(date)
                 .setIsPreRelease(isPreRelease)
+                .setRequireLauncherUpdate(requireLauncherUpdate)
                 .setReleaseNotes(releaseNotes)
                 .setVersionString(versionString)
                 .setReleaseManagerProfileId(releaseManagerProfileId)
@@ -98,6 +101,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         return new ReleaseNotification(proto.getId(),
                 proto.getDate(),
                 proto.getIsPreRelease(),
+                proto.getRequireLauncherUpdate(),
                 proto.getReleaseNotes(),
                 proto.getVersionString(),
                 proto.getReleaseManagerProfileId(),

@@ -83,6 +83,7 @@ public class ReleaseManagerController implements Controller {
         Version.validate(model.getVersion().get());
 
         releaseManagerService.publishReleaseNotification(model.getIsPreRelease().get(),
+                        model.getRequireLauncherUpdate().get(),
                         releaseNotes,
                         model.getVersion().get())
                 .whenComplete((result, throwable) -> {
