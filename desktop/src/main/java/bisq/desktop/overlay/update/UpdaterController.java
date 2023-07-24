@@ -27,9 +27,9 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.update.Descriptor;
-import bisq.update.UpdateService;
-import bisq.update.Utils;
+import bisq.updater.DownloadItem;
+import bisq.updater.UpdaterService;
+import bisq.updater.UpdaterUtils;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.concurrent.CancellationException;
 
-import static bisq.update.Utils.RELEASES_URL;
+import static bisq.updater.UpdaterUtils.RELEASES_URL;
 
 @Slf4j
 public class UpdaterController implements Controller {
@@ -46,24 +46,24 @@ public class UpdaterController implements Controller {
     private final UpdaterView view;
     private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
-    private final UpdateService updateService;
+    private final UpdaterService updaterService;
     private Pin getDownloadInfoListPin, releaseNotificationPin;
 
     public UpdaterController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
-        updateService = serviceProvider.getUpdateService();
+        updaterService = serviceProvider.getUpdaterService();
         model = new UpdaterModel();
         view = new UpdaterView(model, this);
     }
 
     @Override
     public void onActivate() {
-        getDownloadInfoListPin = FxBindings.<Descriptor, UpdaterView.ListItem>bind(model.getListItems())
+        getDownloadInfoListPin = FxBindings.<DownloadItem, UpdaterView.ListItem>bind(model.getListItems())
                 .map(UpdaterView.ListItem::new)
-                .to(updateService.getDescriptorList());
+                .to(updaterService.getDownloadItemList());
 
-        releaseNotificationPin = updateService.getReleaseNotification().addObserver(releaseNotification -> {
+        releaseNotificationPin = updaterService.getReleaseNotification().addObserver(releaseNotification -> {
             if (releaseNotification == null) {
                 return;
             }
@@ -73,7 +73,7 @@ public class UpdaterController implements Controller {
             model.getDownloadUrl().set(RELEASES_URL + version);
         });
 
-        model.getFilteredList().setPredicate(e -> !e.getDescriptor().getDestination().getName().startsWith(Utils.FROM_BISQ_WEBPAGE_PREFIX));
+        model.getFilteredList().setPredicate(e -> !e.getDownloadItem().getDestination().getName().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class UpdaterController implements Controller {
     void onDownload() {
         model.getTableVisible().set(true);
         try {
-            updateService.downloadAndVerify()
+            updaterService.downloadAndVerify()
                     .whenComplete((__, throwable) -> {
                         if (throwable == null) {
                             model.getDownloadAndVerifyCompleted().set(true);

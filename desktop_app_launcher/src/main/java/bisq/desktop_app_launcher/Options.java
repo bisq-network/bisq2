@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.update.Utils.VERSION_FILE_NAME;
+import static bisq.updater.UpdaterUtils.VERSION_FILE_NAME;
 
 public class Options {
     static String getVersion(String[] args, List<String> jvmArgs, String userDataDir) {

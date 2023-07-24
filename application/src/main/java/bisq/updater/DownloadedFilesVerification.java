@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.update;
+package bisq.updater;
 
 import bisq.common.util.FileUtils;
 import bisq.security.PgPUtils;
@@ -26,25 +26,25 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import static bisq.update.Utils.*;
+import static bisq.updater.UpdaterUtils.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class Verification {
-    public static void verifyDownloadedFile(String directory) throws IOException {
-        verifyDownloadedFile(directory, List.of(KEY_4A133008, KEY_E222AA02), false);
+public class DownloadedFilesVerification {
+    public static void verify(String directory) throws IOException {
+        verify(directory, List.of(KEY_4A133008, KEY_E222AA02), false);
     }
 
-    public static void verifyDownloadedFile(String directory, List<String> keyIds, boolean ignoreSigningKeyInResourcesCheck) throws IOException {
+    public static void verify(String directory, List<String> keyIds, boolean ignoreSigningKeyInResourcesCheck) throws IOException {
         String signingKeyId = getSigningKeyId(directory);
         checkArgument(keyIds.contains(signingKeyId), "signingKeyId not matching any of the provided keys");
         String signingKey = getSigningKey(directory, signingKeyId);
 
         // We require that the signing key is provided on the Bisq webpage
-        Verification.checkIfSigningKeyMatchesKeyFromWebpage(directory, signingKeyId, signingKey);
+        DownloadedFilesVerification.checkIfSigningKeyMatchesKeyFromWebpage(directory, signingKeyId, signingKey);
 
         if (!ignoreSigningKeyInResourcesCheck) {
-            Verification.checkIfSigningKeyMatchesKeyInResources(signingKeyId, signingKey);
+            DownloadedFilesVerification.checkIfSigningKeyMatchesKeyInResources(signingKeyId, signingKey);
         }
 
         File signingKeyFile = Path.of(directory, signingKeyId + EXTENSION).toFile();

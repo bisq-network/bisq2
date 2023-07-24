@@ -31,7 +31,7 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
 import bisq.settings.SettingsService;
-import bisq.update.UpdateService;
+import bisq.updater.UpdaterService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +47,7 @@ public class MainController extends NavigationController {
     private final LeftNavController leftNavController;
     private final AlertService alertService;
     private final SettingsService settingsService;
-    private final UpdateService updateService;
+    private final UpdaterService updaterService;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
@@ -56,7 +56,7 @@ public class MainController extends NavigationController {
         settingsService = serviceProvider.getSettingsService();
 
         alertService = serviceProvider.getBondedRolesService().getAlertService();
-        updateService = serviceProvider.getUpdateService();
+        updaterService = serviceProvider.getUpdaterService();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
@@ -106,7 +106,7 @@ public class MainController extends NavigationController {
             }
         });
 
-        updateService.getReleaseNotification().addObserver(releaseNotification -> {
+        updaterService.getReleaseNotification().addObserver(releaseNotification -> {
             if (releaseNotification == null) {
                 return;
             }

@@ -21,7 +21,7 @@ import bisq.common.logging.LogSetup;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
-import bisq.update.Verification;
+import bisq.updater.DownloadedFilesVerification;
 import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static bisq.update.Utils.*;
+import static bisq.updater.UpdaterUtils.*;
 
 
 /**
@@ -84,9 +84,9 @@ public class DesktopAppLauncher {
             String keyIds = Options.getOptionValue(args, jvmArgs, "keyIds", null);
             if (keyIds != null) {
                 List<String> keyList = List.of(keyIds.split(","));
-                Verification.verifyDownloadedFile(directory, keyList, ignoreSigningKeyInResourcesCheck);
+                DownloadedFilesVerification.verify(directory, keyList, ignoreSigningKeyInResourcesCheck);
             } else {
-                Verification.verifyDownloadedFile(directory, List.of(KEY_4A133008, KEY_E222AA02), ignoreSigningKeyInResourcesCheck);
+                DownloadedFilesVerification.verify(directory, List.of(KEY_4A133008, KEY_E222AA02), ignoreSigningKeyInResourcesCheck);
             }
         }
 

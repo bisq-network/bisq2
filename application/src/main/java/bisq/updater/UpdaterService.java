@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.update;
+package bisq.updater;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.release.ReleaseNotification;
@@ -40,10 +40,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.update.Utils.*;
+import static bisq.updater.UpdaterUtils.*;
 
 @Slf4j
-public class UpdateService implements Service {
+public class UpdaterService implements Service {
     private final Version installedVersion;
     private final String baseDir;
     private final SettingsService settingsService;
@@ -51,10 +51,10 @@ public class UpdateService implements Service {
     @Getter
     private final Observable<ReleaseNotification> releaseNotification = new Observable<>();
     @Getter
-    private final ObservableArray<Descriptor> descriptorList = new ObservableArray<>();
+    private final ObservableArray<DownloadItem> downloadItemList = new ObservableArray<>();
     private ExecutorService executorService;
 
-    public UpdateService(ApplicationService.Config config, SettingsService settingsService, ReleaseNotificationsService releaseNotificationsService) {
+    public UpdaterService(ApplicationService.Config config, SettingsService settingsService, ReleaseNotificationsService releaseNotificationsService) {
         installedVersion = config.getVersion();
         baseDir = config.getBaseDir();
         this.settingsService = settingsService;
@@ -141,8 +141,8 @@ public class UpdateService implements Service {
         String destinationDirectory = Path.of(baseDir, DESTINATION_DIR, version).toString();
         FileUtils.makeDirs(new File(destinationDirectory));
 
-        descriptorList.setAll(Descriptor.createDescriptorList(version, destinationDirectory, sourceFileName));
-        return download(descriptorList, getExecutorService())
+        downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirectory, sourceFileName));
+        return download(downloadItemList, getExecutorService())
                 .thenCompose(nil -> verify(destinationDirectory, getExecutorService()))
                 .thenCompose(nil -> writeVersionFile(version, getExecutorService()));
     }
@@ -152,11 +152,11 @@ public class UpdateService implements Service {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<Void> download(List<Descriptor> descriptorList, ExecutorService executorService) {
+    private CompletableFuture<Void> download(List<DownloadItem> downloadItemList, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
-            for (Descriptor descriptor : descriptorList) {
+            for (DownloadItem downloadItem : downloadItemList) {
                 try {
-                    FileUtils.downloadFile(descriptor.getUrl(), descriptor.getDestination(), descriptor.getProgress());
+                    FileUtils.downloadFile(downloadItem.getUrl(), downloadItem.getDestination(), downloadItem.getProgress());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -168,7 +168,7 @@ public class UpdateService implements Service {
     private CompletableFuture<Void> verify(String destinationDir, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Verification.verifyDownloadedFile(destinationDir);
+                DownloadedFilesVerification.verify(destinationDir);
                 return null;
             } catch (Exception e) {
                 throw new RuntimeException(e);

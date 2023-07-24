@@ -26,8 +26,8 @@ import bisq.desktop.components.table.TableItem;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PercentageFormatter;
-import bisq.update.Descriptor;
-import bisq.update.Utils;
+import bisq.updater.DownloadItem;
+import bisq.updater.UpdaterUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -264,15 +264,15 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     @EqualsAndHashCode
     static class ListItem implements TableItem {
         private final String fileName;
-        private final Descriptor descriptor;
+        private final DownloadItem downloadItem;
         private final DoubleProperty progress = new SimpleDoubleProperty();
         private final BooleanProperty showVerified = new SimpleBooleanProperty(true);
 
-        ListItem(Descriptor descriptor) {
-            fileName = descriptor.getDestination().getName();
-            this.descriptor = descriptor;
-            FxBindings.bind(progress).to(descriptor.getProgress());
-            showVerified.set((descriptor.getDestination().getName().equals(Utils.FILE_NAME)));
+        ListItem(DownloadItem downloadItem) {
+            fileName = downloadItem.getDestination().getName();
+            this.downloadItem = downloadItem;
+            FxBindings.bind(progress).to(downloadItem.getProgress());
+            showVerified.set((downloadItem.getDestination().getName().equals(UpdaterUtils.FILE_NAME)));
         }
     }
 }

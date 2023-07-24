@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.update;
+package bisq.updater;
 
 import bisq.common.util.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class Utils {
+public class UpdaterUtils {
     // For testing, we can use bisq1 url
     public static final String RELEASES_URL = "https://github.com/bisq-network/bisq/releases/tag/v";
     public static final String GITHUB_DOWNLOAD_URL = "https://github.com/bisq-network/bisq/releases/download/v";
