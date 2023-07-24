@@ -36,12 +36,12 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.updater.UpdaterService;
+import bisq.updater.UpdaterUtils;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -85,6 +86,12 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
 
     public DesktopApplicationService(String[] args) {
         super("desktop", args);
+
+        UpdaterUtils.readVersionFromVersionFile(config.getBaseDir())
+                .ifPresent(version -> checkArgument(getConfig().getVersion().toString().equals(version),
+                        "Version of application (" + getConfig().getVersion().toString() +
+                                ") does not match version from version file in data directory (" + version + ")"));
+
         securityService = new SecurityService(persistenceService);
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
@@ -253,7 +260,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     }
 
     private void setState(State newState) {
-        Preconditions.checkArgument(state.get().ordinal() < newState.ordinal(),
+        checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
