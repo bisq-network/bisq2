@@ -69,26 +69,28 @@ public class UpdaterController implements Controller {
             if (releaseNotification == null) {
                 return;
             }
-            String version = releaseNotification.getVersionString();
-            model.getVersion().set(version);
-            model.getReleaseNotes().set(releaseNotification.getReleaseNotes());
-            model.getDownloadUrl().set(RELEASES_URL + version);
+            UIThread.run(() -> {
+                String version = releaseNotification.getVersionString();
+                model.getVersion().set(version);
+                model.getReleaseNotes().set(releaseNotification.getReleaseNotes());
+                model.getDownloadUrl().set(RELEASES_URL + version);
 
-            boolean isLauncherUpdate = releaseNotification.isLauncherUpdate();
-            model.getIsLauncherUpdate().set(isLauncherUpdate);
+                boolean isLauncherUpdate = releaseNotification.isLauncherUpdate();
+                model.getIsLauncherUpdate().set(isLauncherUpdate);
 
-            model.getHeadline().set(isLauncherUpdate ?
-                    Res.get("updater.headline.isLauncherUpdate") :
-                    Res.get("updater.headline"));
-            model.getFurtherInfo().set(isLauncherUpdate ?
-                    Res.get("updater.furtherInfo.isLauncherUpdate") :
-                    Res.get("updater.furtherInfo"));
-            model.getVerificationInfo().set(isLauncherUpdate ?
-                    Res.get("updater.downloadAndVerify.info.isLauncherUpdate") :
-                    Res.get("updater.downloadAndVerify.info"));
-            model.getShutDownButtonText().set(isLauncherUpdate ?
-                    Res.get("updater.shutDown.isLauncherUpdate") :
-                    Res.get("updater.shutDown"));
+                model.getHeadline().set(isLauncherUpdate ?
+                        Res.get("updater.headline.isLauncherUpdate") :
+                        Res.get("updater.headline"));
+                model.getFurtherInfo().set(isLauncherUpdate ?
+                        Res.get("updater.furtherInfo.isLauncherUpdate") :
+                        Res.get("updater.furtherInfo"));
+                model.getVerificationInfo().set(isLauncherUpdate ?
+                        Res.get("updater.downloadAndVerify.info.isLauncherUpdate") :
+                        Res.get("updater.downloadAndVerify.info"));
+                model.getShutDownButtonText().set(isLauncherUpdate ?
+                        Res.get("updater.shutDown.isLauncherUpdate") :
+                        Res.get("updater.shutDown"));
+            });
         });
 
         model.getFilteredList().setPredicate(e -> !e.getDownloadItem().getDestination().getName().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
@@ -107,7 +109,7 @@ public class UpdaterController implements Controller {
             updaterService.downloadAndVerify()
                     .whenComplete((__, throwable) -> {
                         if (throwable == null) {
-                            model.getDownloadAndVerifyCompleted().set(true);
+                            UIThread.run(() -> model.getDownloadAndVerifyCompleted().set(true));
                         } else if (!(throwable instanceof CancellationException)) {
                             UIThread.run(() -> new Popup().error(throwable).show());
                         }

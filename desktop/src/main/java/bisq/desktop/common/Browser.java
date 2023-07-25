@@ -17,11 +17,15 @@
 
 package bisq.desktop.common;
 
+import bisq.common.util.ExceptionUtil;
+import bisq.common.util.OsUtils;
 import javafx.application.HostServices;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+@Slf4j
 public class Browser {
     @Nullable
     private static HostServices hostServices;
@@ -34,6 +38,11 @@ public class Browser {
         if (hostServices == null) {
             throw new IllegalArgumentException("hostServices must be set before open is called");
         }
-        hostServices.showDocument(uri);
+        try {
+            hostServices.showDocument(uri);
+        } catch (Exception e) {
+            log.error("Error at opening URL with hostServices.showDocument. We try to open it via OsUtils.browse. Error={}; URL={}", ExceptionUtil.print(e), uri);
+            OsUtils.browse(uri);
+        }
     }
 }
