@@ -70,6 +70,28 @@ public class OsUtils {
         return getOSName().contains("linux") && getOSArchitecture().equals("64");
     }
 
+    public static boolean isDebianLinux() {
+        return isLinux() && new File("/etc/debian_version").isFile();
+    }
+
+    public static boolean isRedHatLinux() {
+        return isLinux() && new File("/etc/redhat-release").isFile();
+    }
+
+    public static String getInstallerExtension() {
+        if (OsUtils.isMac()) {
+            return ".dmg";
+        } else if (OsUtils.isWindows()) {
+            return ".exe";
+        } else if (OsUtils.isDebianLinux()) {
+            return ".deb";
+        } else if (OsUtils.isRedHatLinux()) {
+            return ".rpm";
+        } else {
+            throw new RuntimeException("No suitable install package available for your OS.");
+        }
+    }
+
     public static String getVersionString() {
         return System.getProperty("os.version");
     }
