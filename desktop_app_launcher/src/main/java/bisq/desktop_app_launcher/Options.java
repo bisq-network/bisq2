@@ -17,32 +17,53 @@
 
 package bisq.desktop_app_launcher;
 
-import bisq.updater.UpdaterUtils;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+@Slf4j
+@Getter
 public class Options {
-    static String getVersion(String[] args, List<String> jvmArgs, String userDataDir) {
-        return UpdaterUtils.readVersionFromVersionFile(userDataDir)
-                .orElse(getOptionValue(args, jvmArgs, "version", DesktopAppLauncher.VERSION));
+    private final String[] args;
+    private final List<String> jvmArgs;
+
+    public Options(String[] args) {
+        this.args = args;
+        jvmArgs = getJvmArgs();
     }
 
-    static String getAppName(String[] args, List<String> jvmArgs) {
-        return getOptionValue(args, jvmArgs, "appName", DesktopAppLauncher.APP_NAME);
-    }
-
-    static List<String> getBisqJvmArgs() {
-        return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+    List<String> getJvmArgs() {
+        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
                 .filter(e -> e.startsWith("-Dapplication"))
                 .collect(Collectors.toList());
+
+        // If we start from a binary we pass the JVM args as program arguments and add it as system properties, to make 
+        // them available for typesafe config. The jvmArgs from the ManagementFactory.getRuntimeMXBean().getInputArguments()
+        // call would be empty in that case.
+        Stream.of(args)
+                .filter(e -> e.startsWith("-Dapplication"))
+                .forEach(e -> {
+                    try {
+                        String[] pair = e.split("=");
+                        String key = pair[0].replace("-D", "");
+                        System.setProperty(key, pair[1]);
+                        jvmArgs.add(e);
+                    } catch (Exception exception) {
+                        log.error("error at parsing argument {}", e);
+                    }
+                });
+        return jvmArgs;
     }
 
-    static String getOptionValue(String[] args, List<String> jvmArgs, String option, String defaultValue) {
-        String jvmOptionString = "-Dapplication." + option + "=";
-        String argsOptionString = "--" + option + "=";
+    Optional<String> getValue(String key) {
+        String jvmOptionString = "-Dapplication." + key + "=";
+        String argsOptionString = "--" + key + "=";
         return jvmArgs.stream()
                 .filter(e -> e.startsWith(jvmOptionString))
                 .map(e -> e.replace(jvmOptionString, ""))
@@ -50,11 +71,18 @@ public class Options {
                 .or(() -> Arrays.stream(args)
                         .filter(e -> e.startsWith(argsOptionString))
                         .map(e -> e.replace(argsOptionString, ""))
-                        .findAny())
-                .orElse(defaultValue);
+                        .findAny());
     }
 
-    static boolean getOptionValueAsBoolean(String[] args, List<String> jvmArgs, String option, String defaultValue) {
-        return "true".equalsIgnoreCase(getOptionValue(args, jvmArgs, option, defaultValue));
+    Optional<String> getAppName() {
+        return getValue("appName");
+    }
+
+    Optional<String> getVersion() {
+        return getValue("version");
+    }
+
+    Optional<Boolean> getValueAsBoolean(String key) {
+        return getValue(key).map("true"::equalsIgnoreCase);
     }
 }

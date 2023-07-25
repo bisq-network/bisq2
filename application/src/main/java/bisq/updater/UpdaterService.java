@@ -26,37 +26,41 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.FileUtils;
+import bisq.common.util.OsUtils;
 import bisq.common.util.Version;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.updater.UpdaterUtils.*;
+import static bisq.updater.UpdaterUtils.UPDATES_DIR;
+import static bisq.updater.UpdaterUtils.VERSION_FILE_NAME;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class UpdaterService implements Service {
-    private final Version installedVersion;
-    private final String baseDir;
     private final SettingsService settingsService;
     private final ReleaseNotificationsService releaseNotificationsService;
     @Getter
     private final Observable<ReleaseNotification> releaseNotification = new Observable<>();
     @Getter
     private final ObservableArray<DownloadItem> downloadItemList = new ObservableArray<>();
+    private final ApplicationService.Config config;
     private ExecutorService executorService;
 
     public UpdaterService(ApplicationService.Config config, SettingsService settingsService, ReleaseNotificationsService releaseNotificationsService) {
-        installedVersion = config.getVersion();
-        baseDir = config.getBaseDir();
+        this.config = config;
+
         this.settingsService = settingsService;
         this.releaseNotificationsService = releaseNotificationsService;
     }
@@ -112,6 +116,7 @@ public class UpdaterService implements Service {
         }
 
         Version newVersion = releaseNotification.getVersion();
+        Version installedVersion = config.getVersion();
         if (newVersion.belowOrEqual(installedVersion)) {
             log.debug("Our installed version is the same or higher as the version of the new releaseNotification.");
             return;
@@ -137,27 +142,56 @@ public class UpdaterService implements Service {
 
     public CompletableFuture<Void> downloadAndVerify() throws IOException {
         String version = releaseNotification.get().getVersionString();
-        String sourceFileName = getSourceFileName(version);
-        String destinationDirectory = Path.of(baseDir, DESTINATION_DIR, version).toString();
-        FileUtils.makeDirs(new File(destinationDirectory));
+        boolean isLauncherUpdate = releaseNotification.get().isLauncherUpdate();
+        String baseDir = config.getBaseDir();
+        List<String> keyIds = config.getKeyIds();
+        checkArgument(!keyIds.isEmpty());
 
-        downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirectory, sourceFileName));
-        return download(downloadItemList, getExecutorService())
-                .thenCompose(nil -> verify(destinationDirectory, getExecutorService()))
-                .thenCompose(nil -> writeVersionFile(version, getExecutorService()));
+        String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
+        String destinationDirectory = isLauncherUpdate ? OsUtils.getDownloadOfHomeDir() :
+                Path.of(baseDir, UPDATES_DIR, version).toString();
+        FileUtils.makeDirs(new File(destinationDirectory));
+        downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));
+        if (executorService == null) {
+            executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
+        }
+        boolean isIgnoreSigningKeyInResourcesCheck = config.isIgnoreSigningKeyInResourcesCheck();
+        return downloadAndVerify(version,
+                isLauncherUpdate,
+                downloadItemList,
+                destinationDirectory,
+                baseDir,
+                keyIds,
+                isIgnoreSigningKeyInResourcesCheck,
+                executorService);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Private/package static
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<Void> download(List<DownloadItem> downloadItemList, ExecutorService executorService) {
+    private static CompletableFuture<Void> downloadAndVerify(String version,
+                                                             boolean isLauncherUpdate,
+                                                             List<DownloadItem> downloadItemList,
+                                                             String destinationDirectory,
+                                                             String baseDir,
+                                                             List<String> keyIds,
+                                                             boolean ignoreSigningKeyInResourcesCheck,
+                                                             ExecutorService executorService) {
+        return download(downloadItemList, executorService)
+                .thenCompose(nil -> verify(version, isLauncherUpdate, destinationDirectory, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
+                .thenCompose(nil -> writeVersionFile(version, baseDir, executorService));
+    }
+
+    @VisibleForTesting
+    static CompletableFuture<Void> download(List<DownloadItem> downloadItemList, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             for (DownloadItem downloadItem : downloadItemList) {
                 try {
-                    FileUtils.downloadFile(downloadItem.getUrl(), downloadItem.getDestination(), downloadItem.getProgress());
+                    FileUtils.downloadFile(new URL(downloadItem.getUrlPath()), downloadItem.getDestinationFile(), downloadItem.getProgress());
                 } catch (Exception e) {
+                    e.printStackTrace();
                     throw new RuntimeException(e);
                 }
             }
@@ -165,32 +199,29 @@ public class UpdaterService implements Service {
         }, executorService);
     }
 
-    private CompletableFuture<Void> verify(String destinationDir, ExecutorService executorService) {
+    @VisibleForTesting
+    static CompletableFuture<Void> verify(String version, boolean isLauncherUpdate, String destinationDir, List<String> keyIds, boolean ignoreSigningKeyInResourcesCheck, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                DownloadedFilesVerification.verify(destinationDir);
+                DownloadedFilesVerification.verify(destinationDir, UpdaterUtils.getDownloadFileName(version, isLauncherUpdate), keyIds, ignoreSigningKeyInResourcesCheck);
                 return null;
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         }, executorService);
     }
 
-    private CompletionStage<Void> writeVersionFile(String version, ExecutorService executorService) {
+    @VisibleForTesting
+    static CompletionStage<Void> writeVersionFile(String version, String baseDir, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 FileUtils.writeToFile(version, new File(baseDir, VERSION_FILE_NAME));
                 return null;
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         }, executorService);
-    }
-
-    private ExecutorService getExecutorService() {
-        if (executorService == null) {
-            executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
-        }
-        return executorService;
     }
 }

@@ -93,7 +93,7 @@ public class UpdaterController implements Controller {
             });
         });
 
-        model.getFilteredList().setPredicate(e -> !e.getDownloadItem().getDestination().getName().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
+        model.getFilteredList().setPredicate(e -> !e.getDownloadItem().getDestinationFile().getName().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
     }
 
     @Override

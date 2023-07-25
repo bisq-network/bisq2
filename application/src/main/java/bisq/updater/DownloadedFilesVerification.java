@@ -31,11 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class DownloadedFilesVerification {
-    public static void verify(String directory) throws IOException {
-        verify(directory, List.of(KEY_4A133008, KEY_E222AA02), false);
-    }
-
-    public static void verify(String directory, List<String> keyIds, boolean ignoreSigningKeyInResourcesCheck) throws IOException {
+    public static void verify(String directory, String fileName, List<String> keyIds, boolean ignoreSigningKeyInResourcesCheck) throws IOException {
         String signingKeyId = getSigningKeyId(directory);
         checkArgument(keyIds.contains(signingKeyId), "signingKeyId not matching any of the provided keys");
         String signingKey = getSigningKey(directory, signingKeyId);
@@ -48,14 +44,15 @@ public class DownloadedFilesVerification {
         }
 
         File signingKeyFile = Path.of(directory, signingKeyId + EXTENSION).toFile();
-        File sigFile = Path.of(directory, SIGNATURE_FILE_NAME).toFile();
-        File file = Path.of(directory, FILE_NAME).toFile();
+        File sigFile = Path.of(directory, fileName + EXTENSION).toFile();
+        File file = Path.of(directory, fileName).toFile();
         checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, file), "Signature verification failed");
         log.info("signature verification succeeded");
     }
 
     private static void checkIfSigningKeyMatchesKeyFromWebpage(String directory, String keyId, String signingKey) throws IOException {
-        String keyFromWebpage = FileUtils.readStringFromFile(Path.of(directory, FROM_BISQ_WEBPAGE_PREFIX + keyId + EXTENSION).toFile());
+        String keyFileName = FROM_BISQ_WEBPAGE_PREFIX + keyId + EXTENSION;
+        String keyFromWebpage = FileUtils.readStringFromFile(Path.of(directory, keyFileName).toFile());
         checkArgument(keyFromWebpage.equals(signingKey),
                 "Key from webpage not matching signing key. keyFromWebpage=" + keyFromWebpage + "; signingKey=" + signingKey);
     }

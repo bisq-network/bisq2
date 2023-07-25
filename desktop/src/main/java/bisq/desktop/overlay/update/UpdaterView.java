@@ -274,10 +274,10 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         private final BooleanProperty showVerified = new SimpleBooleanProperty(true);
 
         ListItem(DownloadItem downloadItem) {
-            fileName = downloadItem.getDestination().getName();
+            fileName = downloadItem.getDestinationFile().getName();
             this.downloadItem = downloadItem;
             FxBindings.bind(progress).to(downloadItem.getProgress());
-            showVerified.set((downloadItem.getDestination().getName().equals(UpdaterUtils.FILE_NAME)));
+            showVerified.set(UpdaterUtils.isDownloadedFile(downloadItem.getSourceFileName()));
         }
     }
 }

@@ -26,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static bisq.updater.UpdaterUtils.*;
@@ -37,39 +37,39 @@ import static bisq.updater.UpdaterUtils.*;
 @Getter
 @EqualsAndHashCode
 public class DownloadItem {
-    static List<DownloadItem> createDescriptorList(String version, String destinationDirectory, String sourceFileName) throws IOException {
+
+    static List<DownloadItem> createDescriptorList(String version, String destinationDirectory, String fileName, List<String> keys) throws IOException {
         String baseUrl = GITHUB_DOWNLOAD_URL + version + "/";
-        String key_4A133008_fileName = KEY_4A133008 + EXTENSION;
-        String key_E222AA02_fileName = KEY_E222AA02 + EXTENSION;
-        return List.of(
-                create(SIGNING_KEY_FILE, baseUrl, destinationDirectory),
-                create(key_4A133008_fileName, FROM_BISQ_WEBPAGE_PREFIX + key_4A133008_fileName, PUB_KEYS_URL, destinationDirectory),
-                create(key_E222AA02_fileName, FROM_BISQ_WEBPAGE_PREFIX + key_E222AA02_fileName, PUB_KEYS_URL, destinationDirectory),
-                create(key_4A133008_fileName, baseUrl, destinationDirectory),
-                create(key_E222AA02_fileName, baseUrl, destinationDirectory),
-                create(sourceFileName + EXTENSION, FILE_NAME + EXTENSION, baseUrl, destinationDirectory),
-                create(sourceFileName, FILE_NAME, baseUrl, destinationDirectory)
-        );
+        List<DownloadItem> downloadItems = new ArrayList<>();
+        downloadItems.add(create(SIGNING_KEY_FILE, baseUrl, destinationDirectory));
+        for (String key : keys) {
+            String keyFileName = key + EXTENSION;
+            downloadItems.add(create(keyFileName, baseUrl, destinationDirectory));
+            downloadItems.add(create(keyFileName, FROM_BISQ_WEBPAGE_PREFIX + keyFileName, PUB_KEYS_URL, destinationDirectory));
+        }
+        downloadItems.add(create(fileName + EXTENSION, baseUrl, destinationDirectory));
+        downloadItems.add(create(fileName, baseUrl, destinationDirectory));
+        return downloadItems;
     }
 
     public static DownloadItem create(String fileName, String baseUrl, String destinationDirectory) throws MalformedURLException {
         return create(fileName, fileName, baseUrl, destinationDirectory);
     }
 
-    public static DownloadItem create(String sourceFileName, String destinationFileName, String baseUrl, String destinationDirectory) throws MalformedURLException {
+    private static DownloadItem create(String sourceFileName, String destinationFileName, String baseUrl, String destinationDirectory) {
         File destination = Path.of(destinationDirectory, destinationFileName).toFile();
         String urlPath = baseUrl + sourceFileName;
-        return new DownloadItem(new URL(urlPath), destination, sourceFileName);
+        return new DownloadItem(urlPath, destination, sourceFileName);
     }
 
-    private final URL url;
-    private final File destination;
+    private final String urlPath;
+    private final File destinationFile;
     private final String sourceFileName;
     private final Observable<Double> progress = new Observable<>(-1d);
 
-    private DownloadItem(URL url, File destination, String sourceFileName) {
-        this.url = url;
-        this.destination = destination;
+    private DownloadItem(String urlPath, File destinationFile, String sourceFileName) {
+        this.urlPath = urlPath;
+        this.destinationFile = destinationFile;
         this.sourceFileName = sourceFileName;
     }
 }

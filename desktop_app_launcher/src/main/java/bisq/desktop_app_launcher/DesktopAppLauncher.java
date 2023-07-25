@@ -22,6 +22,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
 import bisq.updater.DownloadedFilesVerification;
+import bisq.updater.UpdaterUtils;
 import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,76 +32,102 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
-import static bisq.updater.UpdaterUtils.*;
-
+import static bisq.updater.UpdaterUtils.UPDATES_DIR;
+import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
- * If there is a jar file found for the given version at the data directory we use that jar file to start a new
- * java process with the new jar file. Otherwise, we use the provided DesktopApp.
+ * If there is a version file found in the data dir we read it and look up for the jar file for that version.
+ * If it exists we start a new java process with that jar file. Otherwise, we call the main method on the provided DesktopApp.
+ * <p>
  * The `java.home` system property is pointing to the provided JRE from the binary.
+ * <p>
+ * We do not use the typesafe config framework for the DesktopAppLauncher to keep
+ * complexity and dependencies at a minimum. There are only 3 options which are used by the DesktopAppLauncher itself.
+ * <p>
+ * All JVM options and program arguments are forwarded to the Desktop application. As we cannot pass JVM arguments
+ * to an executable, we add all program arguments starting with `-Dapplication` with `System.setProperty` as JVM options.
+ * <p>
+ * DesktopAppLauncher specific options can be set as JVM option or as program arguments:
+ * <p>
+ * --ignoreSignatureVerification=true|false (default false) OR -Dapplication.ignoreSignatureVerification
+ * --ignoreSigningKeyInResourcesCheck=true|false (default false) OR -Dapplication.ignoreSigningKeyInResourcesCheck
+ * --keyIds=keyId1,keyId2 (comma separated list of keyIds; default null)OR -Dapplication.keyIds
  */
 @Slf4j
 public class DesktopAppLauncher {
-    static final String VERSION = "2.0.0";
-    static final String APP_NAME = "Bisq2";
-    private static final String BIN_PATH = "bin/java";
-
-    private static String[] args;
-    private static List<String> jvmArgs;
-    private static String version, directory, jarPath;
+    private static final String VERSION = "2.0.0";
+    private static final String APP_NAME = "Bisq2";
+    private static final List<String> KEY_IDS = List.of("4A133008", "E222AA02");
+    private final Options options;
 
     public static void main(String[] args) {
-        DesktopAppLauncher.args = args;
         try {
-            jvmArgs = Options.getBisqJvmArgs();
-            String appName = Options.getAppName(args, jvmArgs);
-            String userDataDir = OsUtils.getUserDataDir().getAbsolutePath();
-            String dataDir = userDataDir + File.separator + appName;
-
-            LogSetup.setup(Paths.get(dataDir, "bisq").toString());
-            LogSetup.setLevel(Level.INFO);
-
-            version = Options.getVersion(args, jvmArgs, userDataDir);
-            directory = dataDir + File.separator + DESTINATION_DIR + File.separator + version;
-            jarPath = directory + File.separator + FILE_NAME;
-            if (new File(jarPath).exists()) {
-                launchNewProcess();
-            } else {
-                log.info("No jar file found. Run default Bisq application with version Ï" + VERSION);
-                DesktopApp.main(args);
-            }
+            new DesktopAppLauncher(args);
         } catch (Exception e) {
-            log.error("Error at launch: {}", ExceptionUtil.print(e));
+            System.err.println("Error at launch: " + ExceptionUtil.print(e));
         }
     }
 
-    private static void launchNewProcess() throws IOException, InterruptedException {
-        boolean ignoreSignatureVerification = Options.getOptionValueAsBoolean(args, jvmArgs, "ignoreSignatureVerification", "false");
-        boolean ignoreSigningKeyInResourcesCheck = Options.getOptionValueAsBoolean(args, jvmArgs, "ignoreSigningKeyInResourcesCheck", "false");
-        if (!ignoreSignatureVerification) {
-            // If keyIds are provided as: --keyIds=keyId1,keyId2
-            String keyIds = Options.getOptionValue(args, jvmArgs, "keyIds", null);
-            if (keyIds != null) {
-                List<String> keyList = List.of(keyIds.split(","));
-                DownloadedFilesVerification.verify(directory, keyList, ignoreSigningKeyInResourcesCheck);
-            } else {
-                DownloadedFilesVerification.verify(directory, List.of(KEY_4A133008, KEY_E222AA02), ignoreSigningKeyInResourcesCheck);
-            }
-        }
+    private final String version, updatesDir, jarPath, jarFileName;
 
+    private DesktopAppLauncher(String[] args) throws IOException, InterruptedException {
+        // this.args = args;
+        options = new Options(args);
+        //  jvmArgs = Options.getJvmArgs(args);
+        String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
+        String appDataDir = OsUtils.getUserDataDir().getAbsolutePath() + File.separator + appName;
+        LogSetup.setup(Paths.get(appDataDir, "bisq").toString());
+        LogSetup.setLevel(Level.INFO);
+        //  version = Options.getVersion(appDataDir).orElse(DesktopAppLauncher.VERSION);
+        version = UpdaterUtils.readVersionFromVersionFile(appDataDir)
+                .or(options::getVersion)
+                .orElse(DesktopAppLauncher.VERSION);
+        updatesDir = appDataDir + File.separator + UPDATES_DIR + File.separator + version;
+        jarFileName = UpdaterUtils.getJarFileName(version);
+        jarPath = updatesDir + File.separator + jarFileName;
+        if (new File(jarPath).exists()) {
+            boolean ignoreSignatureVerification = options.getValueAsBoolean("ignoreSignatureVerification").orElse(false);
+            if (ignoreSignatureVerification) {
+                log.warn("Signature verification is disabled by the provided program argument. This is not recommended and should be done only if the user can ensure that the jar file is trusted.");
+            } else {
+                verifyJarFile();
+            }
+            launchNewProcess();
+        } else {
+            Optional<String> fromVersionFile = readVersionFromVersionFile(appDataDir);
+            if (fromVersionFile.isPresent() && !fromVersionFile.get().equals(VERSION)) {
+                Optional<String> versionFromArgs = options.getValue("version");
+                log.warn("We found a version file with version {} but it does not match our version. versionFromArgs={}; DesktopAppLauncher.VERSION={}; ",
+                        fromVersionFile.get(), versionFromArgs, VERSION);
+            }
+            log.info("No jar file found. Run default Bisq application with version " + VERSION);
+            DesktopApp.main(args);
+        }
+    }
+
+    private void verifyJarFile() throws IOException {
+        boolean ignoreSigningKeyInResourcesCheck = options.getValueAsBoolean("ignoreSigningKeyInResourcesCheck").orElse(false);
+        List<String> keyList = options.getValue("keyIds")
+                .map(keyIds -> List.of(keyIds.split(",")))
+                .orElse(KEY_IDS);
+        DownloadedFilesVerification.verify(updatesDir, jarFileName, keyList, ignoreSigningKeyInResourcesCheck);
+    }
+
+    private void launchNewProcess() throws IOException, InterruptedException {
         String javaHome = System.getProperty("java.home");
         log.debug("javaHome {}", javaHome);
         log.debug("Jar file found at {}", jarPath);
-        log.info("Update found. Start Bisq v{} in a new process.", version);
-        String javaBinPath = javaHome + File.separator + BIN_PATH;
+        log.info("Update found. Start Bisq2 v{} in a new process.", version);
+        String javaBinPath = javaHome + File.separator + "bin/java";
         List<String> command = new ArrayList<>();
         command.add(javaBinPath);
-        command.addAll(jvmArgs);
+        command.addAll(options.getJvmArgs());
         command.add("-jar");
         command.add(jarPath);
-        command.addAll(Arrays.asList(args));
+        command.addAll(Arrays.asList(options.getArgs()));
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.environment().put("JAVA_HOME", javaHome);
         processBuilder.inheritIO();

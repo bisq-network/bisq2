@@ -36,7 +36,7 @@ at https://serverfault.com/questions/569911/how-to-verify-an-imported-gpg-key fo
 
 `gpg --digest-algo SHA256 --verify BINARY{.asc*,}`
 
-Replace BINARY with the file you downloaded (e.g. Bisq-1.9.11.dmg)
+Replace BINARY with the file you downloaded (e.g. Bisq-2.0.0.dmg)
 
 ### Verify jar file inside binary:
 
