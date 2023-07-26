@@ -17,6 +17,7 @@
 
 package bisq.desktop.main;
 
+import bisq.application.ApplicationService;
 import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.observable.collection.CollectionObserver;
@@ -32,6 +33,7 @@ import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.top.TopPanelController;
 import bisq.settings.SettingsService;
 import bisq.updater.UpdaterService;
+import bisq.updater.UpdaterUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,15 +50,16 @@ public class MainController extends NavigationController {
     private final AlertService alertService;
     private final SettingsService settingsService;
     private final UpdaterService updaterService;
+    private final ApplicationService.Config config;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
 
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
-
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         updaterService = serviceProvider.getUpdaterService();
+        config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
@@ -69,6 +72,19 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
+        Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(config.getBaseDir());
+        if (versionFromVersionFile.isPresent()) {
+            if (!config.getVersion().toString().equals(versionFromVersionFile.get())) {
+                String errorMsg = "Version of application (v" + config.getVersion() +
+                        ") does not match version from version file in data directory (v" + versionFromVersionFile.get() + ")";
+                new Popup().warning(errorMsg)
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show();
+                return;
+            }
+        }
+
         alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
