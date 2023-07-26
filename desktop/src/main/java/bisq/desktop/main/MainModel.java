@@ -23,9 +23,8 @@ import lombok.Getter;
 
 @Getter
 public class MainModel extends NavigationModel {
-
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
+        return NavigationTarget.DASHBOARD;
     }
 }
