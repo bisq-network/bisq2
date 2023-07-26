@@ -51,7 +51,7 @@ public class PreferencesController implements Controller {
     @Override
     public void onActivate() {
         model.getLanguageCodes().setAll(LanguageRepository.I18N_CODES);
-        model.setSelectedLanguageCode(LanguageRepository.getDefaultLanguage());
+        model.setSelectedLanguageCode(settingsService.getLanguageCode());
 
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
@@ -72,6 +72,7 @@ public class PreferencesController implements Controller {
 
     void onSelectLanguage(String selectedLanguageCode) {
         model.setSelectedLanguageCode(selectedLanguageCode);
+        settingsService.setLanguageCode(selectedLanguageCode);
         new Popup().feedback(Res.get("settings.preferences.language.restart")).useShutDownButton().show();
     }
 

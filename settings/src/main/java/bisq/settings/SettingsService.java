@@ -117,6 +117,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.isTacAccepted;
     }
 
+    public void setLanguageCode(String value) {
+        persistableStore.languageCode = value;
+        persist();
+    }
+
+    public String getLanguageCode() {
+        return persistableStore.languageCode;
+    }
+
     public Observable<Boolean> getCloseMyOfferWhenTaken() {
         return persistableStore.closeMyOfferWhenTaken;
     }

@@ -32,22 +32,8 @@ public class LanguageRepository {
     @Getter
     private static String defaultLanguage;
 
-    public static void setDefaultLanguage(String defaultLanguage) {
-        LanguageRepository.defaultLanguage = defaultLanguage;
-    }
-
     public static void setLocale(Locale defaultLocale) {
         LanguageRepository.defaultLanguage = defaultLocale.getLanguage();
-    }
-
-    public static final List<String> RTL_LANGUAGES_CODES = List.of(
-            "fa", // Persian
-            "ar", // Arabic
-            "iw" // Hebrew
-    );
-
-    public static boolean isDefaultLanguageRTL() {
-        return RTL_LANGUAGES_CODES.contains(defaultLanguage);
     }
 
     public static final List<String> CODES = LocaleRepository.LOCALES.stream()
@@ -134,5 +120,15 @@ public class LanguageRepository {
             "da", // Danish
             "mt"  // Maltese
             */
+    );
+
+    public static boolean isDefaultLanguageRTL() {
+        return RTL_LANGUAGES_CODES.contains(defaultLanguage);
+    }
+
+    public static final List<String> RTL_LANGUAGES_CODES = List.of(
+            "fa", // Persian
+            "ar", // Arabic
+            "iw" // Hebrew
     );
 }
