@@ -23,7 +23,10 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -33,6 +36,9 @@ public class PreferencesModel implements Model {
     private final BooleanProperty notifyForPreRelease = new SimpleBooleanProperty();
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
+    @Setter
+    private String selectedLanguageCode;
+    private final ObservableList<String> languageCodes = FXCollections.observableArrayList();
 
     public PreferencesModel() {
     }
