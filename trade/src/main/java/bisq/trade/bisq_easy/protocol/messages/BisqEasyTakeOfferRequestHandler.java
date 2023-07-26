@@ -23,6 +23,7 @@ import bisq.common.monetary.Monetary;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
@@ -68,7 +69,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                         .ifPresent(chatMessage -> bisqEasyPublicChatChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNodeIdAndKeyPair())
                                 .whenComplete((deleteChatMessageResult, throwable) -> {
                                     if (throwable == null) {
-                                        log.error("Offer with ID {} removed", chatMessage.getBisqEasyOffer().orElseThrow().getId());
+                                        log.error("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
                                     } else {
                                         log.error("We got an error at doDeleteMessage: " + throwable);
                                     }

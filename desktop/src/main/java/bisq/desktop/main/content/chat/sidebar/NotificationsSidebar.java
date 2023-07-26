@@ -114,7 +114,8 @@ public class NotificationsSidebar {
             model.notificationType.set(type);
             ChatChannel<? extends ChatMessage> chatChannel = model.getChannel();
             if (chatChannel != null) {
-                chatService.findChatChannelService(chatChannel).orElseThrow().setChatChannelNotificationType(chatChannel, type);
+                chatService.findChatChannelService(chatChannel)
+                        .ifPresent(service -> service.setChatChannelNotificationType(chatChannel, type));
             }
         }
     }

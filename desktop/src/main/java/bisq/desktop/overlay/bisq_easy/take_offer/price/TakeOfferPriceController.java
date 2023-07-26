@@ -40,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWithSymbol;
 import static bisq.presentation.parser.PercentageParser.parse;
 
@@ -100,8 +102,8 @@ public class TakeOfferPriceController implements Controller {
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageAsString().set("");
                 model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
-                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(findMarketPriceQuote(), percentage);
-                priceInput.setQuote(priceQuote);
+                findMarketPriceQuote().ifPresentOrElse(marketPriceQuote -> priceInput.setQuote(PriceUtil.fromMarketPriceMarkup(marketPriceQuote, percentage)),
+                        () -> log.warn("marketPriceQuote not present"));
                 applyPriceSpec();
             } catch (NumberFormatException t) {
                 new Popup().warning(Res.get("bisqEasy.price.warn.invalidPrice")).show();
@@ -135,35 +137,48 @@ public class TakeOfferPriceController implements Controller {
             applyPriceSpec();
         } else {
             new Popup().warning(Res.get("bisqEasy.price.warn.invalidPrice")).show();
-            PriceQuote marketPrice = findMarketPriceQuote();
-            priceInput.setQuote(marketPrice);
-            applyPercentageFromQuote(marketPrice);
+            findMarketPriceQuote().ifPresentOrElse(marketPrice -> {
+                        priceInput.setQuote(marketPrice);
+                        applyPercentageFromQuote(marketPrice);
+                    },
+                    () -> log.warn("marketPrice not present"));
             applyPriceSpec();
         }
     }
 
     private void applyPercentageFromQuote(PriceQuote priceQuote) {
-        double percentage = getPercentage(priceQuote);
-        model.getPercentage().set(percentage);
-        model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
+        Optional<Double> optionalPercentage = getPercentage(priceQuote);
+        if (optionalPercentage.isPresent()) {
+            double percentage = optionalPercentage.get();
+            model.getPercentage().set(percentage);
+            model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
+        } else {
+            log.warn("optionalPercentage not present");
+        }
     }
 
 
     //todo add validator and give feedback
     private boolean isQuoteValid(PriceQuote priceQuote) {
-        double percentage = getPercentage(priceQuote);
-        if (percentage >= -0.1 && percentage <= 0.5) {
+        Optional<Double> optionalPercentage = getPercentage(priceQuote);
+        if (optionalPercentage.isPresent()) {
+            double percentage = optionalPercentage.get();
+            if (percentage >= -0.1 && percentage <= 0.5) {
+                return true;
+            }
+        } else {
+            log.warn("optionalPercentage not present");
             return true;
         }
         return false;
     }
 
-    private double getPercentage(PriceQuote priceQuote) {
-        return PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote).orElseThrow().getPercentage();
+    private Optional<Double> getPercentage(PriceQuote priceQuote) {
+        return PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote).map(FloatPriceSpec::getPercentage);
     }
 
-    private PriceQuote findMarketPriceQuote() {
-        return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
+    private Optional<PriceQuote> findMarketPriceQuote() {
+        return marketPriceService.findMarketPriceQuote(model.getMarket());
     }
 
     private String getCookieSubKey() {

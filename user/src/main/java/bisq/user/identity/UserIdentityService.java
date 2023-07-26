@@ -76,8 +76,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Config config;
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
     @Getter
-    private final Observable<Integer> userIdentityChangedFlag = new Observable<>(0);
-    @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
 
     public UserIdentityService(Config config,
@@ -207,8 +205,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
 
         synchronized (lock) {
-            persistableStore.getUserIdentities().remove(oldUserIdentity);
-            persistableStore.getUserIdentities().add(newUserIdentity);
+            getUserIdentities().remove(oldUserIdentity);
+            getUserIdentities().add(newUserIdentity);
             persistableStore.setSelectedUserIdentity(newUserIdentity);
         }
         persist();
@@ -219,22 +217,16 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
         //todo add more checks if deleting profile is permitted (e.g. not used in trades, PM,...)
-        if (persistableStore.getUserIdentities().size() <= 1) {
+        if (getUserIdentities().size() <= 1) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
         }
 
-        getUserIdentities().remove(userIdentity);
-        getUserIdentities().stream().findAny()
-                .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
-                        () -> persistableStore.setSelectedUserIdentity(null));
         synchronized (lock) {
-            //todo
-            persistableStore.getUserIdentities().remove(userIdentity);
-            persistableStore.getUserIdentities().stream().findAny()
+            getUserIdentities().remove(userIdentity);
+            getUserIdentities().stream().findAny()
                     .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
                             () -> persistableStore.setSelectedUserIdentity(null));
         }
-        userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
         identityService.retireActiveIdentity(userIdentity.getIdentity().getTag());
         return networkService.removeAuthenticatedData(userIdentity.getUserProfile(),
@@ -256,7 +248,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public boolean hasMultipleUserIdentities() {
-        return getUserIdentities().size() == 1;
+        return getUserIdentities().size() > 1;
     }
 
     public Observable<UserIdentity> getSelectedUserIdentityObservable() {
@@ -296,16 +288,11 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, statement);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
-        getUserIdentities().add(userIdentity);
-        persistableStore.setSelectedUserIdentity(userIdentity);
-
         synchronized (lock) {
-            //todo
-            persistableStore.getUserIdentities().add(userIdentity);
+            getUserIdentities().add(userIdentity);
             persistableStore.setSelectedUserIdentity(userIdentity);
         }
         newlyCreatedUserIdentity.set(userIdentity);
-        userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
         return userIdentity;
     }

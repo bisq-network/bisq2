@@ -96,7 +96,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    userProfileIcon.setUserProfile(item.getUserProfile());
+                    item.getUserProfile().ifPresent(userProfileIcon::setUserProfile);
                     setGraphic(hBox);
                 } else {
                     setGraphic(null);

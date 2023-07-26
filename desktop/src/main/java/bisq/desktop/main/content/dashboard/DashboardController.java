@@ -43,7 +43,7 @@ public class DashboardController implements Controller {
     private final DashboardModel model;
     private final UserProfileService userProfileService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private Pin selectedMarketPin, marketPriceUpdateFlagPin, userProfileUpdateFlagPin;
+    private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, getNumUserProfilesPin;
     private boolean allowUpdateOffersOnline;
 
     public DashboardController(ServiceProvider serviceProvider) {
@@ -58,9 +58,9 @@ public class DashboardController implements Controller {
     @Override
     public void onActivate() {
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
-        marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> updateMarketPrice());
+        getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts -> updateMarketPrice());
 
-        userProfileUpdateFlagPin = userProfileService.getUserProfilesUpdateFlag().addObserver(__ ->
+        getNumUserProfilesPin = userProfileService.getNumUserProfiles().addObserver(numUserProfiles ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
         // We listen on all channels, also hidden ones and use a weak reference listener
@@ -76,8 +76,8 @@ public class DashboardController implements Controller {
     @Override
     public void onDeactivate() {
         selectedMarketPin.unbind();
-        marketPriceUpdateFlagPin.unbind();
-        userProfileUpdateFlagPin.unbind();
+        getMarketPriceUpdateTimestampPin.unbind();
+        getNumUserProfilesPin.unbind();
     }
 
     public void onLearn() {

@@ -48,7 +48,6 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
-import bisq.support.mediation.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -126,12 +125,11 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final SettingsService settingsService;
         private final ChatService chatService;
-        private final MediationService mediationService;
         private final Optional<WalletService> walletService;
         private final AccountService accountService;
 
         private Pin selectedChannelPin, inMediationPin, chatMessagesPin,
-                selectedPaymentAccountPin, paymentAccountsPin;
+                selectedPaymentAccountPin, paymentAccountsPin, getUserIdentitiesPin;
         private Subscription selectedPaymentAccountSubscription;
 
         private Controller(ServiceProvider serviceProvider,
@@ -144,7 +142,6 @@ public class ChatMessagesComponent {
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             accountService = serviceProvider.getAccountService();
-            mediationService = serviceProvider.getSupportService().getMediationService();
             walletService = serviceProvider.getWalletService();
 
             citationBlock = new CitationBlock(serviceProvider);
@@ -170,10 +167,8 @@ public class ChatMessagesComponent {
             model.getPaymentAccounts().setAll(accountService.getAccounts());
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetailsHandler);
 
-            //todo
-            //model.mentionableChatChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
+            getUserIdentitiesPin = userIdentityService.getUserIdentities().addListener(() -> UIThread.run(this::applyUserProfileOrChannelChange));
 
-            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> UIThread.run(this::applyUserProfileOrChannelChange));
             ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
             selectedChannelPin = chatChannelSelectionService.getSelectedChannel()
                     .addObserver(this::selectedChannelChanged);
@@ -187,6 +182,22 @@ public class ChatMessagesComponent {
                             accountService.setSelectedAccount(selectedAccount);
                         }
                     });
+        }
+
+        @Override
+        public void onDeactivate() {
+            selectedChannelPin.unbind();
+            selectedPaymentAccountPin.unbind();
+            getUserIdentitiesPin.unbind();
+            paymentAccountsPin.unbind();
+            if (inMediationPin != null) {
+                inMediationPin.unbind();
+            }
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
+
+            selectedPaymentAccountSubscription.unsubscribe();
         }
 
         protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -220,21 +231,6 @@ public class ChatMessagesComponent {
 
                 accountsChanged();
             });
-        }
-
-        @Override
-        public void onDeactivate() {
-            selectedChannelPin.unbind();
-            selectedPaymentAccountPin.unbind();
-            paymentAccountsPin.unbind();
-            if (inMediationPin != null) {
-                inMediationPin.unbind();
-            }
-            if (chatMessagesPin != null) {
-                chatMessagesPin.unbind();
-            }
-
-            selectedPaymentAccountSubscription.unsubscribe();
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////

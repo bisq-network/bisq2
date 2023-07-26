@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.reputation;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -39,7 +40,7 @@ public class ReputationController implements Controller {
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
     private final ReputationModel model;
-    private Pin userProfileChangedFlagPin, proofOfBurnScoreChangedFlagPin,
+    private Pin getNumUserProfilesPin, proofOfBurnScoreChangedFlagPin,
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin;
 
@@ -53,10 +54,10 @@ public class ReputationController implements Controller {
 
     @Override
     public void onActivate() {
-        userProfileChangedFlagPin = userProfileService.getUserProfilesUpdateFlag()
-                .addObserver(__ -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
+        getNumUserProfilesPin = userProfileService.getNumUserProfiles()
+                .addObserver(numUserProfiles -> UIThread.run(() -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
                         .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
-                        .collect(Collectors.toList())));
+                        .collect(Collectors.toList()))));
         proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdOfUpdatedScore()
                 .addObserver(this::updateScore);
         bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdOfUpdatedScore()
@@ -71,7 +72,7 @@ public class ReputationController implements Controller {
 
     @Override
     public void onDeactivate() {
-        userProfileChangedFlagPin.unbind();
+        getNumUserProfilesPin.unbind();
         proofOfBurnScoreChangedFlagPin.unbind();
         bondedReputationScoreChangedFlagPin.unbind();
         accountAgeScoreChangedFlagPin.unbind();
@@ -106,10 +107,12 @@ public class ReputationController implements Controller {
     }
 
     private void updateScore(String userProfileId) {
-        model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
-                .forEach(item -> item.requestReputationScore(userProfileId));
-        // Enforce update in view by setting to null first
-        model.getUserProfileIdOfScoreUpdate().set(null);
-        model.getUserProfileIdOfScoreUpdate().set(userProfileId);
+        UIThread.run(() -> {
+            model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
+                    .forEach(item -> item.requestReputationScore(userProfileId));
+            // Enforce update in view by setting to null first
+            model.getUserProfileIdOfScoreUpdate().set(null);
+            model.getUserProfileIdOfScoreUpdate().set(userProfileId);
+        });
     }
 }

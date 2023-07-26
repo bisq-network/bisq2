@@ -41,6 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 @Slf4j
 public class CreateOfferAmountController implements Controller {
     private final CreateOfferAmountModel model;
@@ -87,14 +89,23 @@ public class CreateOfferAmountController implements Controller {
         PriceQuote priceQuote;
         if (priceSpec instanceof FixPriceSpec) {
             priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
-        } else if (priceSpec instanceof FloatPriceSpec) {
-            double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-            priceQuote = PriceUtil.fromMarketPriceMarkup(getMarketPriceQuote(), percentage);
+            minAmountComponent.setQuote(priceQuote);
+            maxOrFixAmountComponent.setQuote(priceQuote);
         } else {
-            priceQuote = getMarketPriceQuote();
+            Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
+            if (marketPriceQuote.isPresent()) {
+                if (priceSpec instanceof FloatPriceSpec) {
+                    double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
+                    priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
+                } else {
+                    priceQuote = marketPriceQuote.get();
+                }
+                minAmountComponent.setQuote(priceQuote);
+                maxOrFixAmountComponent.setQuote(priceQuote);
+            } else {
+                log.error("marketPriceQuote not present");
+            }
         }
-        minAmountComponent.setQuote(priceQuote);
-        maxOrFixAmountComponent.setQuote(priceQuote);
     }
 
     public void reset() {
@@ -198,8 +209,8 @@ public class CreateOfferAmountController implements Controller {
         }
     }
 
-    private PriceQuote getMarketPriceQuote() {
-        return marketPriceService.findMarketPriceQuote(model.getMarket()).orElseThrow();
+    private Optional<PriceQuote> getMarketPriceQuote() {
+        return marketPriceService.findMarketPriceQuote(model.getMarket());
     }
 
 }

@@ -118,14 +118,14 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     protected void onSave() {
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
-
+        ProofOfWork proofOfWork = model.getProofOfWork().orElseThrow();
         if (model.getTempKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getTempKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
-                            model.getProofOfWork().orElseThrow(),
+                            proofOfWork,
                             model.getTerms().get(),
                             model.getStatement().get())
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
@@ -141,7 +141,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
             userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
                     model.getNickName().get(),
-                    model.getProofOfWork().orElseThrow(),
+                    proofOfWork,
                     model.getTerms().get(),
                     model.getStatement().get());
             model.getCreateProfileProgress().set(0);

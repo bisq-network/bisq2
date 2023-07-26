@@ -136,9 +136,6 @@ public class CreateOfferReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(model.getMarket()).orElseThrow();
-        model.setSelectedChannel(channel);
-
         model.getShowCreateOfferSuccess().set(false);
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
@@ -185,28 +182,36 @@ public class CreateOfferReviewOfferController implements Controller {
                 settingsService.getRequiredTotalReputationScore().get());
         model.setBisqEasyOffer(bisqEasyOffer);
 
-        BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
-                userIdentity.getUserProfile().getId(),
-                Optional.of(bisqEasyOffer),
-                Optional.of(chatMessageText),
-                Optional.empty(),
-                new Date().getTime(),
-                false);
-
-        model.setMyOfferMessage(myOfferMessage);
-
-        model.getMatchingOffers().setAll(channel.getChatMessages().stream()
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
-                        userProfileService,
-                        reputationService,
-                        marketPriceService))
-                .filter(getTakeOfferPredicate())
-                .sorted(Comparator.comparing(CreateOfferReviewOfferView.ListItem::getReputationScore))
-                .limit(3)
-                .collect(Collectors.toList()));
-
         model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
+
+        Optional<BisqEasyPublicChatChannel> optionalChannel = bisqEasyPublicChatChannelService.findChannel(model.getMarket());
+        if (optionalChannel.isPresent()) {
+            BisqEasyPublicChatChannel channel = optionalChannel.get();
+            model.setSelectedChannel(channel);
+
+            BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
+                    userIdentity.getUserProfile().getId(),
+                    Optional.of(bisqEasyOffer),
+                    Optional.of(chatMessageText),
+                    Optional.empty(),
+                    new Date().getTime(),
+                    false);
+
+            model.setMyOfferMessage(myOfferMessage);
+
+            model.getMatchingOffers().setAll(channel.getChatMessages().stream()
+                    .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                    .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                            userProfileService,
+                            reputationService,
+                            marketPriceService))
+                    .filter(getTakeOfferPredicate())
+                    .sorted(Comparator.comparing(CreateOfferReviewOfferView.ListItem::getReputationScore))
+                    .limit(3)
+                    .collect(Collectors.toList()));
+        } else {
+            log.warn("optionalChannel not present");
+        }
     }
 
     @Override

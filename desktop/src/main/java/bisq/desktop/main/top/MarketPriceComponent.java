@@ -68,7 +68,7 @@ public class MarketPriceComponent {
         @Getter
         private final View view;
         private final MarketPriceService marketPriceService;
-        private Pin selectedMarketPin, marketPriceUpdateFlagPin;
+        private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin;
 
         private Controller(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
@@ -79,7 +79,7 @@ public class MarketPriceComponent {
 
         @Override
         public void onActivate() {
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ ->
+            getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts ->
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
                                 .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
@@ -108,7 +108,7 @@ public class MarketPriceComponent {
 
         @Override
         public void onDeactivate() {
-            marketPriceUpdateFlagPin.unbind();
+            getMarketPriceUpdateTimestampPin.unbind();
             if (selectedMarketPin != null) {
                 selectedMarketPin.unbind();
             }

@@ -95,7 +95,7 @@ public class PriceInput {
         private final View view;
         private final PriceValidator validator = new PriceValidator();
         private final MarketPriceService marketPriceService;
-        private Pin marketPriceUpdateFlagPin;
+        private Pin getMarketPriceUpdateTimestampPin;
         private Subscription quotePin, pricePin;
 
         private Controller(MarketPriceService marketPriceService) {
@@ -122,7 +122,7 @@ public class PriceInput {
         public void onActivate() {
             updateFromMarketPrice();
 
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
+            getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts -> {
                 UIThread.run(() -> {
                     // We only set it initially
                     if (model.priceQuote.get() != null) return;
@@ -136,7 +136,7 @@ public class PriceInput {
 
         @Override
         public void onDeactivate() {
-            marketPriceUpdateFlagPin.unbind();
+            getMarketPriceUpdateTimestampPin.unbind();
             pricePin.unsubscribe();
             quotePin.unsubscribe();
             model.description.set(null);

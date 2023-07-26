@@ -44,7 +44,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private final Persistence<UserProfileStore> persistence;
     private final NetworkService networkService;
     @Getter
-    private final Observable<Boolean> userProfilesUpdateFlag = new Observable<>(true);
+    private final Observable<Integer> numUserProfiles = new Observable<>();
 
     public UserProfileService(PersistenceService persistenceService,
                               NetworkService networkService) {
@@ -142,8 +142,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private void processUserProfileAdded(UserProfile userProfile) {
         Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
         if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
-            getUserProfileById().put(userProfile.getId(), userProfile);
-            notifyObservers();
+            synchronized (persistableStore) {
+                getUserProfileById().put(userProfile.getId(), userProfile);
+            }
+            numUserProfiles.set(getUserProfileById().values().size());
             persist();
         }
     }
@@ -152,8 +154,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof UserProfile) {
             UserProfile userProfile = (UserProfile) distributedData;
-            getUserProfileById().remove(userProfile.getId());
-            notifyObservers();
+            synchronized (persistableStore) {
+                getUserProfileById().remove(userProfile.getId());
+            }
+            numUserProfiles.set(getUserProfileById().values().size());
             persist();
         }
     }
@@ -164,9 +168,5 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     public Map<String, UserProfile> getUserProfileById() {
         return persistableStore.getUserProfileById();
-    }
-
-    private void notifyObservers() {
-        userProfilesUpdateFlag.set(!userProfilesUpdateFlag.get());
     }
 }

@@ -379,7 +379,7 @@ public class StorageService {
                 }
             });
             authenticatedDataStores.put(key, dataStore);
-            return dataStore.readPersisted().thenApplyAsync(__ -> dataStore, NetworkService.DISPATCHER);
+            return dataStore.readPersisted().thenApplyAsync(store -> dataStore, NetworkService.DISPATCHER);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(key));
         }
@@ -403,7 +403,7 @@ public class StorageService {
                 }
             });
             mailboxStores.put(key, dataStore);
-            return dataStore.readPersisted().thenApply(__ -> dataStore);
+            return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(mailboxStores.get(key));
         }
@@ -416,7 +416,7 @@ public class StorageService {
                     APPEND_ONLY_DATA_STORE.getStoreName(),
                     metaData.getFileName());
             appendOnlyDataStores.put(key, dataStore);
-            return dataStore.readPersisted().thenApply(__ -> dataStore);
+            return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(key));
         }
