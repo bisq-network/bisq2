@@ -116,9 +116,13 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     }
 
     protected void onSave() {
+        if (model.getProofOfWork().isEmpty()) {
+            log.error("proofOfWork is not present");
+            return;
+        }
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
-        ProofOfWork proofOfWork = model.getProofOfWork().orElseThrow();
+        ProofOfWork proofOfWork = model.getProofOfWork().get();
         if (model.getTempKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getTempKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
