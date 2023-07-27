@@ -183,8 +183,6 @@ public class CreateOfferReviewOfferController implements Controller {
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 
-        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
-
         Optional<BisqEasyPublicChatChannel> optionalChannel = bisqEasyPublicChatChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent()) {
             BisqEasyPublicChatChannel channel = optionalChannel.get();
@@ -213,6 +211,8 @@ public class CreateOfferReviewOfferController implements Controller {
         } else {
             log.warn("optionalChannel not present");
         }
+
+        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
     }
 
     @Override
