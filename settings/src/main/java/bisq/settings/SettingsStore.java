@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
-
     final Observable<Boolean> useAnimations = new Observable<>(true);
     final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
@@ -50,6 +49,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Set<String> consumedAlertIds;
     boolean isTacAccepted;
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>(true);
+    final Observable<Boolean> preventStandbyMode = new Observable<>(true);
     String languageCode;
 
     public SettingsStore() {
@@ -65,7 +65,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 new HashSet<>(),
                 false,
-                LanguageRepository.getDefaultLanguage());
+                LanguageRepository.getDefaultLanguage(),
+                true);
     }
 
     public SettingsStore(Cookie cookie,
@@ -80,7 +81,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean isTacAccepted,
                          Set<String> consumedAlertIds,
                          boolean closeMyOfferWhenTaken,
-                         String languageCode) {
+                         String languageCode,
+                         boolean preventStandbyMode) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -94,6 +96,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.consumedAlertIds = consumedAlertIds;
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
         this.languageCode = languageCode;
+        this.preventStandbyMode.set(preventStandbyMode);
     }
 
     @Override
@@ -112,6 +115,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .addAllConsumedAlertIds(consumedAlertIds)
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
                 .setLanguageCode(languageCode)
+                .setPreventStandbyMode(preventStandbyMode.get())
                 .build();
     }
 
@@ -129,7 +133,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getIsTacAccepted(),
                 new HashSet<>(proto.getConsumedAlertIdsList()),
                 proto.getCloseMyOfferWhenTaken(),
-                proto.getLanguageCode());
+                proto.getLanguageCode(),
+                proto.getPreventStandbyMode());
     }
 
     @Override
@@ -157,7 +162,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 isTacAccepted,
                 consumedAlertIds,
                 closeMyOfferWhenTaken.get(),
-                languageCode);
+                languageCode,
+                preventStandbyMode.get());
     }
 
     @Override
@@ -177,5 +183,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         consumedAlertIds.addAll(persisted.consumedAlertIds);
         closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
         languageCode = persisted.languageCode;
+        preventStandbyMode.set(persisted.preventStandbyMode.get());
     }
 }

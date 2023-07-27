@@ -39,7 +39,7 @@ public class PreferencesController implements Controller {
     private final PreferencesView view;
     private final SettingsService settingsService;
     private final PreferencesModel model;
-    private Pin chatNotificationTypePin, useAnimationsPin, closeMyOfferWhenTakenPin;
+    private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, closeMyOfferWhenTakenPin;
     private Subscription notifyForPreReleasePin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
@@ -55,6 +55,7 @@ public class PreferencesController implements Controller {
 
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
+        getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode()).to(settingsService.getPreventStandbyMode());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
 
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
@@ -67,6 +68,7 @@ public class PreferencesController implements Controller {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
+        getPreventStandbyModePin.unbind();
         notifyForPreReleasePin.unsubscribe();
     }
 

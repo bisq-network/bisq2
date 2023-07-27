@@ -50,4 +50,5 @@ message SettingsStore {
   repeated string consumedAlertIds = 11;
   bool closeMyOfferWhenTaken = 12;
   string languageCode = 13;
+  bool preventStandbyMode = 14;
 }
