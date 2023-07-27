@@ -26,6 +26,7 @@ import bisq.common.logging.LogSetup;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.common.util.Version;
+import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
@@ -137,6 +138,7 @@ public abstract class ApplicationService {
         CountryRepository.applyDefaultLocale(locale);
         LanguageRepository.setLocale(locale);
         FiatCurrencyRepository.setLocale(locale);
+        Res.setLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();
 
         persistenceService = new PersistenceService(config.getBaseDir());
