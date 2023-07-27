@@ -26,6 +26,7 @@ import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
+import com.google.common.base.Charsets;
 import org.slf4j.LoggerFactory;
 
 public class LogSetup {
@@ -58,6 +59,7 @@ public class LogSetup {
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
         encoder.setPattern("%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15}: %msg %xEx%n");
+        encoder.setCharset(Charsets.UTF_8);
         encoder.start();
 
         appender.setEncoder(encoder);
@@ -68,6 +70,8 @@ public class LogSetup {
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
         logbackLogger.setLevel(DEFAULT_LOG_LEVEL);
+
+        logbackLogger.info(AsciiLogo.getAsciiLogo());
     }
 
     public static void setCustomLogLevel(String pattern, Level logLevel) {
