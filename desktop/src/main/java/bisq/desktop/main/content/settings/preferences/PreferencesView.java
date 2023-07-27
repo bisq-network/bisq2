@@ -68,7 +68,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
             @Override
             public String fromString(String string) {
-                return "";
+                return null;
             }
         });
 
@@ -88,7 +88,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
             @Override
             public String fromString(String string) {
-                return "";
+                return null;
             }
         });
         addSupportedLanguageButton = new Button(Res.get("settings.preferences.language.supported.add"));

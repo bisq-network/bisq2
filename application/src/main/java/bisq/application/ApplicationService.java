@@ -136,7 +136,7 @@ public abstract class ApplicationService {
 
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setLocale(locale);
+        LanguageRepository.setDefaultLanguage(locale.getLanguage());
         FiatCurrencyRepository.setLocale(locale);
         Res.setLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();

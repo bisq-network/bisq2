@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.application.Service;
 import bisq.common.currency.Market;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
@@ -90,6 +91,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
+        LanguageRepository.setDefaultLanguage(getLanguageCode());
         Res.setLanguage(getLanguageCode());
     }
 
