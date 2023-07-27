@@ -39,7 +39,8 @@ public class PreferencesController implements Controller {
     private final PreferencesView view;
     private final SettingsService settingsService;
     private final PreferencesModel model;
-    private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, closeMyOfferWhenTakenPin;
+    private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, closeMyOfferWhenTakenPin,
+            getSupportedLanguageCodesPin;
     private Subscription notifyForPreReleasePin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
@@ -52,15 +53,20 @@ public class PreferencesController implements Controller {
     public void onActivate() {
         model.getLanguageCodes().setAll(LanguageRepository.I18N_CODES);
         model.setSelectedLanguageCode(settingsService.getLanguageCode());
+        model.getAddSupportedLanguageButtonDisabled().set(true);
+        model.getSupportedLanguageCodes().setAll(LanguageRepository.CODES);
 
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
         getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode()).to(settingsService.getPreventStandbyMode());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
+        getSupportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes()).to(settingsService.getSupportedLanguageCodes());
 
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
                 notifyForPreRelease -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, notifyForPreRelease));
+
+        model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
     }
 
     @Override
@@ -69,12 +75,13 @@ public class PreferencesController implements Controller {
         useAnimationsPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
         getPreventStandbyModePin.unbind();
+        getSupportedLanguageCodesPin.unbind();
         notifyForPreReleasePin.unsubscribe();
     }
 
-    void onSelectLanguage(String selectedLanguageCode) {
-        model.setSelectedLanguageCode(selectedLanguageCode);
-        settingsService.setLanguageCode(selectedLanguageCode);
+    void onSelectLanguage(String languageCode) {
+        model.setSelectedLanguageCode(languageCode);
+        settingsService.setLanguageCode(languageCode);
         new Popup().feedback(Res.get("settings.preferences.language.restart")).useShutDownButton().show();
     }
 
@@ -88,5 +95,28 @@ public class PreferencesController implements Controller {
 
     String getDisplayLanguage(String languageCode) {
         return LanguageRepository.getDisplayString(languageCode);
+    }
+
+    void onSelectSupportedLanguage(String languageCode) {
+        if (languageCode != null) {
+            model.getSelectedLSupportedLanguageCode().set(languageCode);
+        }
+        model.getAddSupportedLanguageButtonDisabled().set(languageCode == null || model.getSelectedSupportedLanguageCodes().contains(languageCode));
+    }
+
+    void onAddSupportedLanguage() {
+        if (model.getSelectedLSupportedLanguageCode() != null) {
+            settingsService.getSupportedLanguageCodes().add(model.getSelectedLSupportedLanguageCode().get());
+            model.getAddSupportedLanguageButtonDisabled().set(true);
+            model.getSelectedLSupportedLanguageCode().set(null);
+            model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
+        }
+    }
+
+    void onRemoveSupportedLanguage(String languageCode) {
+        if (languageCode != null) {
+            settingsService.getSupportedLanguageCodes().remove(languageCode);
+            model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
+        }
     }
 }

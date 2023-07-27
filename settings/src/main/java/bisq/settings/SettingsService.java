@@ -42,6 +42,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
     private final Persistence<SettingsStore> persistence;
+    private boolean isInitialized;
 
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
@@ -61,12 +62,25 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
+        getSupportedLanguageCodes().addListener(this::persist);
+        isInitialized = true;
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> persist() {
+        // We don't want to call persist from the addObserver calls at initialize
+        if (isInitialized) {
+            return getPersistence().persistAsync(getPersistableStore().getClone())
+                    .handle((r, t) -> true);
+        } else {
+            return CompletableFuture.completedFuture(true);
+        }
     }
 
 
@@ -135,6 +149,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public String getLanguageCode() {
         return persistableStore.languageCode;
+    }
+
+    public ObservableSet<String> getSupportedLanguageCodes() {
+        return persistableStore.supportedLanguageCodes;
     }
 
     public Observable<Boolean> getCloseMyOfferWhenTaken() {

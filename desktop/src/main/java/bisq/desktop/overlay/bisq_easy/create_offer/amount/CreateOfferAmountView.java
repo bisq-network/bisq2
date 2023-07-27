@@ -43,7 +43,7 @@ public class CreateOfferAmountView extends View<VBox, CreateOfferAmountModel, Cr
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         minAmountRoot = minAmountComponent.getView().getRoot();
-        HBox amountBox = new HBox(20, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
+        HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
         toggleButton = new Button(Res.get("bisqEasy.createOffer.amount.addMinAmountOption"));

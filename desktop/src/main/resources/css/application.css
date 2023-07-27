@@ -61,3 +61,26 @@
 .updater-table-view {
     -fx-background-color: -bisq-grey-2;
 }
+
+/*******************************************************************************
+ * Preferences                                                              *
+ ******************************************************************************/
+
+.preferences-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+}
+
+.preferences-sub-headLine {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.25em;
+}
+
+.preferences-supported-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-padding: 20px;
+}

@@ -19,12 +19,10 @@ package bisq.desktop.main.content.settings.preferences;
 
 import bisq.desktop.common.view.Model;
 import bisq.settings.ChatNotificationType;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,9 +35,14 @@ public class PreferencesModel implements Model {
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
+    private final BooleanProperty addSupportedLanguageButtonDisabled = new SimpleBooleanProperty();
     @Setter
     private String selectedLanguageCode;
+    private final StringProperty selectedLSupportedLanguageCode = new SimpleStringProperty();
     private final ObservableList<String> languageCodes = FXCollections.observableArrayList();
+    private final ObservableList<String> supportedLanguageCodes = FXCollections.observableArrayList();
+    private final FilteredList<String> supportedLanguageCodeFilteredList = new FilteredList<>(supportedLanguageCodes);
+    private final ObservableList<String> selectedSupportedLanguageCodes = FXCollections.observableArrayList();
 
     public PreferencesModel() {
     }
