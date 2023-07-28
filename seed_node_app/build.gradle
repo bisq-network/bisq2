@@ -2,7 +2,7 @@ plugins {
     id 'bisq.java-library'
     id 'application'
     alias(libs.plugins.shadow)
-    alias(libs.plugins.jpackage)
+  /*  alias(libs.plugins.jpackage)*/
 }
 
 application {
@@ -32,8 +32,9 @@ distZip.enabled = false
 distTar.enabled = false
 shadowDistZip.enabled = false
 shadowDistTar.enabled = false
-shadowJar.enabled = true
+shadowJar.enabled = false
 
+/*
 
 tasks.jpackage {
     dependsOn tasks.clean // Ensure fresh buildDir for every jpackager binary build
@@ -82,7 +83,7 @@ tasks.jpackage {
     mac {
         // Avoid error "The first number in an app-version cannot be zero or negative."
         appVersion = appVersion.startsWith('0') ? '1.0.0' : appVersion
-        icon = "package/macosx/Bisq 2.icns"
+        icon = "package/macosx/Bisq2.icns"
         resourceDir = "package/macosx"
 
         if (project.hasProperty("signBinary")) {
@@ -104,7 +105,7 @@ tasks.jpackage {
     }
 
     windows {
-        icon = "package/windows/Bisq 2.ico"
+        icon = "package/windows/Bisq2.ico"
         resourceDir = "package/windows"
     }
 
@@ -222,4 +223,4 @@ def executeCmd(String cmd) {
         println "Command output (stderr):\n${result}"
     }
     return result
-}
+}*/

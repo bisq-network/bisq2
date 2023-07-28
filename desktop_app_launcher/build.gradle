@@ -66,7 +66,7 @@ tasks.jpackage {
     // It can be inspected in order to troubleshoot the packaging process
     File jpackageTempDir = new File(buildDir, "jpackage-temp")
 
-    appName = "Bisq 2"
+    appName = "Bisq2"
     // Remove the -SNAPSHOT suffix from the version string (originally defined in build.gradle)
     // Having it in would have resulted in an invalid version property for several platforms (mac, linux/rpm)
     appVersion = version.replaceAll("-SNAPSHOT", "")
@@ -90,7 +90,7 @@ tasks.jpackage {
     winPerUserInstall = false
     winConsole = false
 
-    macPackageName = 'Bisq 2'
+    macPackageName = 'Bisq2'
 
     linuxPackageName = 'bisq2'
     linuxDebMaintainer = 'noreply@bisq.network'
@@ -105,7 +105,7 @@ tasks.jpackage {
     mac {
         // Avoid error "The first number in an app-version cannot be zero or negative."
         appVersion = appVersion.startsWith('0') ? '1.0.0' : appVersion
-        icon = "package/macosx/Bisq 2.icns"
+        icon = "package/macosx/Bisq2.icns"
         resourceDir = "package/macosx"
 
         if (project.hasProperty("signBinary")) {
@@ -127,7 +127,7 @@ tasks.jpackage {
     }
 
     windows {
-        icon = "package/windows/Bisq 2.ico"
+        icon = "package/windows/Bisq2.ico"
         resourceDir = "package/windows"
     }
 

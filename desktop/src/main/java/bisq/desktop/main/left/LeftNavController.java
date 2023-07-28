@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.presentation.notifications.NotificationsService;
-import bisq.update.UpdateService;
+import bisq.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -47,7 +47,7 @@ public class LeftNavController implements Controller {
     private final NotificationsService notificationsService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
-    private final UpdateService updateService;
+    private final UpdaterService updaterService;
     private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
     private Subscription tradeAppsSubMenuExpandedPin;
 
@@ -56,7 +56,7 @@ public class LeftNavController implements Controller {
         notificationsService = serviceProvider.getNotificationsService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        updateService = serviceProvider.getUpdateService();
+        updaterService = serviceProvider.getUpdaterService();
         model = new LeftNavModel(serviceProvider);
         model.setVersion("v" + serviceProvider.getConfig().getVersion().toString());
         view = new LeftNavView(model, this);
@@ -72,7 +72,7 @@ public class LeftNavController implements Controller {
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
 
-        releaseNotificationPin = updateService.getReleaseNotification().addObserver(releaseNotification ->
+        releaseNotificationPin = updaterService.getReleaseNotification().addObserver(releaseNotification ->
                 UIThread.run(() -> model.getNewVersionAvailable().set(releaseNotification != null)));
     }
 

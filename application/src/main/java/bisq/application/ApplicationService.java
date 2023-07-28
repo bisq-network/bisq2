@@ -40,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
@@ -55,8 +56,6 @@ public abstract class ApplicationService {
                 appName = config.getString("appName");
             }
 
-            boolean devMode = config.getBoolean("devMode");
-
             String dataDir = null;
             for (String arg : args) {
                 if (arg.startsWith("--appName")) {
@@ -71,24 +70,40 @@ public abstract class ApplicationService {
             String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
             log.info("Use application directory {}", appDir);
 
-            String version = config.getString("version");
-
-            return new Config(appDir, appName, version, devMode);
+            return new Config(appDir,
+                    appName,
+                    config.getString("version"),
+                    config.getBoolean("devMode"),
+                    config.getString("keyIds"),
+                    config.getBoolean("ignoreSigningKeyInResourcesCheck"),
+                    config.getBoolean("ignoreSignatureVerification"));
         }
 
         private final String baseDir;
         private final String appName;
         private final Version version;
         private final boolean devMode;
+        private final List<String> keyIds;
+        private final boolean ignoreSigningKeyInResourcesCheck;
+        private final boolean ignoreSignatureVerification;
 
         public Config(String baseDir,
                       String appName,
                       String version,
-                      boolean devMode) {
+                      boolean devMode,
+                      String keyIds,
+                      boolean ignoreSigningKeyInResourcesCheck,
+                      boolean ignoreSignatureVerification) {
             this.baseDir = baseDir;
             this.appName = appName;
             this.version = new Version(version);
             this.devMode = devMode;
+            // We want to use the keyIds at the DesktopApplicationLauncher as a simple format. 
+            // Using the typesafe format with indexes would require a more complicate parsing as we do not use 
+            // typesafe at the DesktopApplicationLauncher class. Thus, we use a simple comma separated list instead and treat it as sting in typesafe.
+            this.keyIds = List.of(keyIds.split(","));
+            this.ignoreSigningKeyInResourcesCheck = ignoreSigningKeyInResourcesCheck;
+            this.ignoreSignatureVerification = ignoreSignatureVerification;
         }
     }
 

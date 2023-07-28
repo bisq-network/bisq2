@@ -35,13 +35,13 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.update.UpdateService;
+import bisq.updater.UpdaterService;
+import bisq.updater.UpdaterUtils;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -81,10 +82,16 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
-    private final UpdateService updateService;
+    private final UpdaterService updaterService;
 
     public DesktopApplicationService(String[] args) {
         super("desktop", args);
+
+        UpdaterUtils.readVersionFromVersionFile(config.getBaseDir())
+                .ifPresent(version -> checkArgument(getConfig().getVersion().toString().equals(version),
+                        "Version of application (" + getConfig().getVersion().toString() +
+                                ") does not match version from version file in data directory (" + version + ")"));
+
         securityService = new SecurityService(persistenceService);
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
@@ -147,7 +154,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
-        updateService = new UpdateService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
+        updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
 
         serviceProvider = new ServiceProvider(this::shutdown,
                 getConfig(),
@@ -165,7 +172,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 supportService,
                 notificationsService,
                 tradeService,
-                updateService);
+                updaterService);
     }
 
     @Override
@@ -208,7 +215,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
-                .thenCompose(result -> updateService.initialize())
+                .thenCompose(result -> updaterService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -229,7 +236,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> updateService.shutdown()
+        return supplyAsync(() -> updaterService.shutdown()
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
@@ -253,7 +260,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     }
 
     private void setState(State newState) {
-        Preconditions.checkArgument(state.get().ordinal() < newState.ordinal(),
+        checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);

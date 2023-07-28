@@ -44,7 +44,7 @@ public class BasicTest {
             // Test request to mempool.space
             String testHttpRequest = "GET / HTTP/1.1\r\n" +
                     "Host: mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion\r\n" +
-                    "User-Agent: Bisq 2\r\n" +
+                    "User-Agent: Bisq2\r\n" +
                     "Accept: */*\r\n" +
                     "\r\n";
             byteBuffer.put(testHttpRequest.getBytes());
