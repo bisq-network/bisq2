@@ -46,7 +46,6 @@ public abstract class CommonTorrcGenerator implements TorrcConfigGenerator {
         torConfigMap.put("TestingMinExitFlagThreshold", "0");
 
         torConfigMap.put("DataDirectory", thisTorNode.getDataDir().toAbsolutePath().toString());
-        torConfigMap.put("RunAsDaemon", "1");
 
         torConfigMap.put("Nickname", thisTorNode.getNickname());
         torConfigMap.put("ShutdownWaitLength", "2");
