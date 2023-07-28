@@ -17,6 +17,7 @@
 
 package bisq.tor.process;
 
+import bisq.tor.ClientTorrcGenerator;
 import net.freehaven.tor.control.PasswordDigest;
 import net.freehaven.tor.control.TorControlConnection;
 
@@ -40,6 +41,11 @@ public class NativeTorController {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
         controlConnection.takeOwnership();
         controlConnection.resetConf(NativeTorProcess.ARG_OWNER_PID);
+    }
+
+    public void enableTorNetworking() throws IOException {
+        TorControlConnection controlConnection = torControlConnection.orElseThrow();
+        controlConnection.setConf(ClientTorrcGenerator.DISABLE_NETWORK_CONFIG_KEY, "0");
     }
 
     public void shutdown() throws IOException {
