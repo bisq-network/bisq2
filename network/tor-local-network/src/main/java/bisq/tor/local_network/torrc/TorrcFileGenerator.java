@@ -21,20 +21,31 @@ import bisq.tor.local_network.TorNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 
 public class TorrcFileGenerator {
-    private final CommonTorrcGenerator commonTorrcGenerator;
+    private final Path torrcPath;
+    private final TorrcConfigGenerator torrcConfigGenerator;
     private final Set<TorNode> allDirAuthorities;
 
-    public TorrcFileGenerator(CommonTorrcGenerator commonTorrcGenerator, Set<TorNode> allDirAuthorities) {
-        this.commonTorrcGenerator = commonTorrcGenerator;
+    public TorrcFileGenerator(Path torrcPath, TorrcConfigGenerator torrcConfigGenerator, Set<TorNode> allDirAuthorities) {
+        this.torrcPath = torrcPath;
+        this.torrcConfigGenerator = torrcConfigGenerator;
         this.allDirAuthorities = allDirAuthorities;
     }
 
     public void generate() throws IOException {
-        commonTorrcGenerator.generate();
-        StringBuilder torrcStringBuilder = commonTorrcGenerator.getTorrcStringBuilder();
+        Map<String, String> torrcConfigs = torrcConfigGenerator.generate();
+
+        StringBuilder torrcStringBuilder = new StringBuilder();
+        torrcConfigs.forEach((key, value) ->
+                torrcStringBuilder.append(key)
+                        .append(" ")
+                        .append(value)
+                        .append("\n")
+        );
 
         allDirAuthorities.forEach(dirAuthority ->
                 torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
@@ -44,7 +55,6 @@ public class TorrcFileGenerator {
                         .append(" ").append(dirAuthority.getRelayKeyFingerprint().orElseThrow())
                         .append("\n"));
 
-        TorNode thisTorNode = commonTorrcGenerator.getThisTorNode();
-        Files.writeString(thisTorNode.getTorrcPath(), torrcStringBuilder.toString());
+        Files.writeString(torrcPath, torrcStringBuilder.toString());
     }
 }
