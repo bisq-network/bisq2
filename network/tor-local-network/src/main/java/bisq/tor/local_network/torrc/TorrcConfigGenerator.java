@@ -17,23 +17,8 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.TorNode;
-
 import java.util.Map;
 
-public class RelayTorrcGenerator extends CommonTorrcGenerator {
-    public RelayTorrcGenerator(TorNode thisTorNode) {
-        super(thisTorNode);
-    }
-
-    @Override
-    public Map<String, String> generate() {
-        super.generate();
-
-        torConfigMap.put("ExitRelay", "1");
-        torConfigMap.put("ExitPolicy", "accept 127.0.0.0/8:*,accept private:*,accept *:*,reject *:*");
-        torConfigMap.put("ExitPolicyRejectPrivate", "0");
-
-        return torConfigMap;
-    }
+public interface TorrcConfigGenerator {
+    Map<String, String> generate();
 }

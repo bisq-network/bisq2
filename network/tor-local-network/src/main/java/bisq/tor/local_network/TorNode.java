@@ -46,8 +46,6 @@ public class TorNode {
     private final int orPort;
     private final int dirPort;
 
-    private final String exitPolicy = "ExitPolicy accept *:*";
-
     private final Path keysPath;
 
     @Getter

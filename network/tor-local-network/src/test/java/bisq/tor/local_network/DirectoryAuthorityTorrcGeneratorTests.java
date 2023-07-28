@@ -82,7 +82,8 @@ public class DirectoryAuthorityTorrcGeneratorTests {
         var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(firstDirAuth);
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
 
-        var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDirAuthorities);
+        Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
+        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torDaTorrcGenerator, allDirAuthorities);
         torrcFileGenerator.generate();
 
         assertThat(firstDirAuth.getTorrcPath())

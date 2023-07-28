@@ -89,7 +89,8 @@ public class DirectoryAuthorityTests {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
-            var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDAs);
+            Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torDaTorrcGenerator, allDAs);
             torrcFileGenerator.generate();
         }
     }
