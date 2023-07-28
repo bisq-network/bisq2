@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -160,9 +159,10 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         VBox.setMargin(notificationsHeadline, new Insets(10, 0, -10, 0));
         VBox.setMargin(displayHeadline, new Insets(10, 0, -10, 0));
         VBox.setMargin(tradeHeadline, new Insets(10, 0, -10, 0));
-        root.getChildren().addAll(languageSelectionHeadline, languageSelection, supportedLanguageSelectionHeadline, addSupportedLanguageHBox, Layout.hLine(),
-                notificationsHeadline, notificationsVBox, Layout.hLine(),
-                displayHeadline, displayVBox, Layout.hLine(),
+        root.getChildren().addAll(languageSelectionHeadline, languageSelection,
+                supportedLanguageSelectionHeadline, addSupportedLanguageHBox,
+                notificationsHeadline, notificationsVBox,
+                displayHeadline, displayVBox,
                 tradeHeadline, tradeVBox);
 
         notificationsToggleListener = (observable, oldValue, newValue) -> controller.onSetChatNotificationType((ChatNotificationType) newValue.getUserData());
