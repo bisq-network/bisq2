@@ -37,6 +37,7 @@ import bisq.updater.UpdaterUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URLClassLoader;
 import java.util.Optional;
 
 @Slf4j
@@ -72,16 +73,20 @@ public class MainController extends NavigationController {
 
     @Override
     public void onActivate() {
-        Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(config.getBaseDir());
-        if (versionFromVersionFile.isPresent()) {
-            if (!config.getVersion().toString().equals(versionFromVersionFile.get())) {
-                String errorMsg = "Version of application (v" + config.getVersion() +
-                        ") does not match version from version file in data directory (v" + versionFromVersionFile.get() + ")";
-                new Popup().warning(errorMsg)
-                        .useShutDownButton()
-                        .hideCloseButton()
-                        .show();
-                return;
+        if (getClass().getClassLoader() instanceof URLClassLoader) {
+            // We only verify version if we have been loaded as jar into the launcher. 
+            // In that case our class loader is of typ URLClassLoader.
+            Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(config.getBaseDir());
+            if (versionFromVersionFile.isPresent()) {
+                if (!config.getVersion().toString().equals(versionFromVersionFile.get())) {
+                    String errorMsg = "Version of application (v" + config.getVersion() +
+                            ") does not match version from version file in data directory (v" + versionFromVersionFile.get() + ")";
+                    new Popup().warning(errorMsg)
+                            .useShutDownButton()
+                            .hideCloseButton()
+                            .show();
+                    return;
+                }
             }
         }
 

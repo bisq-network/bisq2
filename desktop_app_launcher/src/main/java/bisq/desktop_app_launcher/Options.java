@@ -17,54 +17,32 @@
 
 package bisq.desktop_app_launcher;
 
+import bisq.common.util.JvmUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.management.ManagementFactory;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 @Slf4j
-@Getter
 public class Options {
+    @Getter
     private final String[] args;
-    private final List<String> jvmArgs;
+    private final Set<String> jvmOptions;
 
     public Options(String[] args) {
         this.args = args;
-        jvmArgs = getJvmArgs();
-    }
-
-    List<String> getJvmArgs() {
-        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
-                .filter(e -> e.startsWith("-Dapplication"))
-                .collect(Collectors.toList());
-
-        // If we start from a binary we pass the JVM args as program arguments and add it as system properties, to make 
-        // them available for typesafe config. The jvmArgs from the ManagementFactory.getRuntimeMXBean().getInputArguments()
-        // call would be empty in that case.
-        Stream.of(args)
-                .filter(e -> e.startsWith("-Dapplication"))
-                .forEach(e -> {
-                    try {
-                        String[] pair = e.split("=");
-                        String key = pair[0].replace("-D", "");
-                        System.setProperty(key, pair[1]);
-                        jvmArgs.add(e);
-                    } catch (Exception exception) {
-                        log.error("error at parsing argument {}", e);
-                    }
-                });
-        return jvmArgs;
+        jvmOptions = JvmUtils.getJvmOptions("application");
+        Set<String> jvmOptionsFromArgs = JvmUtils.getJvmOptionsFromArgs(args, "application");
+        JvmUtils.addToSystemProperties(jvmOptionsFromArgs);
+        jvmOptions.addAll(jvmOptionsFromArgs);
     }
 
     Optional<String> getValue(String key) {
         String jvmOptionString = "-Dapplication." + key + "=";
         String argsOptionString = "--" + key + "=";
-        return jvmArgs.stream()
+        return jvmOptions.stream()
                 .filter(e -> e.startsWith(jvmOptionString))
                 .map(e -> e.replace(jvmOptionString, ""))
                 .findAny()
