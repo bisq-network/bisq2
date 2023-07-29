@@ -83,6 +83,7 @@ message CountryBasedAccountPayload {
   string countryCode = 1;
   oneof message {
     SepaAccountPayload sepaAccountPayload = 10;
+    F2FAccountPayload f2fAccountPayload = 11;
   }
 }
 message SepaAccountPayload {
@@ -90,6 +91,12 @@ message SepaAccountPayload {
   string iban = 2;
   string bic = 3;
 
+}
+
+message F2FAccountPayload {
+  string contact = 1;
+  string city = 2;
+  string extra_info = 3;
 }
 
 
@@ -116,9 +123,13 @@ message CountryBasedAccount {
   common.Country country = 1;
   oneof message {
     SepaAccount sepaAccount = 20;
+    F2FAccount f2fAccount = 21;
   }
 }
 message SepaAccount {
+}
+
+message F2FAccount {
 }
 
 message AccountStore {

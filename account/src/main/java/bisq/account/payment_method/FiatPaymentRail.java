@@ -40,7 +40,8 @@ public enum FiatPaymentRail implements PaymentRail {
     REVOLUT(FiatPaymentRailUtil.getRevolutCountries(), FiatPaymentRailUtil.getRevolutCurrencies()),
     WISE(FiatPaymentRailUtil.getWiseCountries(), FiatPaymentRailUtil.getWiseCurrencies()),
     NATIONAL_BANK(new ArrayList<>(), new ArrayList<>()),
-    SWIFT();
+    SWIFT(),
+    F2F();
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -105,7 +106,6 @@ CASH_DEPOSIT=Cash Deposit
 CASH_BY_MAIL=Cash By Mail
 MONEY_GRAM=MoneyGram
 WESTERN_UNION=Western Union
-F2F=Face to face (in person)
 JAPAN_BANK=Japan Bank Furikomi
 AUSTRALIA_PAY_ID=Australian PayID
 
