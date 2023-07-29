@@ -21,9 +21,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.settings.about.AboutController;
 import bisq.desktop.main.content.settings.network.NetworkInfoController;
 import bisq.desktop.main.content.settings.preferences.PreferencesController;
+import bisq.desktop.main.content.settings.utils.UtilsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,8 +59,8 @@ public class SettingsController extends TabController<SettingsModel> {
             case NETWORK_INFO: {
                 return Optional.of(new NetworkInfoController(serviceProvider));
             }
-            case ABOUT: {
-                return Optional.of(new AboutController(serviceProvider));
+            case UTILS: {
+                return Optional.of(new UtilsController(serviceProvider));
             }
             default: {
                 return Optional.empty();

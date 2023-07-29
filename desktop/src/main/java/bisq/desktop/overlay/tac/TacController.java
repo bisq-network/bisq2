@@ -57,6 +57,7 @@ public class TacController implements InitWithDataController<TacController.InitD
 
     @Override
     public void onActivate() {
+        model.getTacConfirmed().set(settingsService.isTacAccepted());
     }
 
     @Override

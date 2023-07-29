@@ -21,6 +21,7 @@ import bisq.common.util.OsUtils;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.scene.Scene;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,4 +49,11 @@ public class FileChooserUtil {
         }
         return file;
     }
-}
+
+    public static File chooseDirectory(Scene scene, String path, String title) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setInitialDirectory(new File(path));
+        directoryChooser.setTitle(title);
+        return directoryChooser.showDialog(scene.getWindow());
+    }
+}  

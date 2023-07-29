@@ -15,13 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.about;
+package bisq.desktop.main.content.settings.utils;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class AboutModel implements Model {
+public class UtilsModel implements Model {
+   private final StringProperty backupLocation = new SimpleStringProperty();
+   private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
+   private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
 }

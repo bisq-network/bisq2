@@ -27,6 +27,7 @@ import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -355,5 +356,23 @@ public class FileUtils {
 
     public static boolean hasResourceFile(String fileName) {
         return FileUtils.class.getClassLoader().getResource(fileName) != null;
+    }
+
+    public static void copyDirectory(String sourceDirectory, String destinationDirectory) throws IOException {
+        Path start = Paths.get(sourceDirectory);
+        AtomicReference<IOException> exception = new AtomicReference<>();
+        try (Stream<Path> stream = Files.walk(start)) {
+            stream.forEach(source -> {
+                Path destination = Paths.get(destinationDirectory, source.toString().substring(sourceDirectory.length()));
+                try {
+                    Files.copy(source, destination);
+                } catch (IOException e) {
+                    exception.set(e);
+                }
+            });
+        }
+        if (exception.get() != null) {
+            throw exception.get();
+        }
     }
 }
