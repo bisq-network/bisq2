@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -49,6 +50,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Set<String> consumedAlertIds;
     boolean isTacAccepted;
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>(true);
+    String languageCode;
 
     public SettingsStore() {
         this(new Cookie(),
@@ -62,7 +64,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatNotificationType.MENTION,
                 false,
                 new HashSet<>(),
-                false);
+                false,
+                LanguageRepository.getDefaultLanguage());
     }
 
     public SettingsStore(Cookie cookie,
@@ -76,7 +79,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          ChatNotificationType chatNotificationType,
                          boolean isTacAccepted,
                          Set<String> consumedAlertIds,
-                         boolean closeMyOfferWhenTaken) {
+                         boolean closeMyOfferWhenTaken,
+                         String languageCode) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -89,6 +93,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.isTacAccepted = isTacAccepted;
         this.consumedAlertIds = consumedAlertIds;
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
+        this.languageCode = languageCode;
     }
 
     @Override
@@ -106,6 +111,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setIsTacAccepted(isTacAccepted)
                 .addAllConsumedAlertIds(consumedAlertIds)
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
+                .setLanguageCode(languageCode)
                 .build();
     }
 
@@ -122,7 +128,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
                 proto.getIsTacAccepted(),
                 new HashSet<>(proto.getConsumedAlertIdsList()),
-                proto.getCloseMyOfferWhenTaken());
+                proto.getCloseMyOfferWhenTaken(),
+                proto.getLanguageCode());
     }
 
     @Override
@@ -149,7 +156,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 chatNotificationType.get(),
                 isTacAccepted,
                 consumedAlertIds,
-                closeMyOfferWhenTaken.get());
+                closeMyOfferWhenTaken.get(),
+                languageCode);
     }
 
     @Override
@@ -168,5 +176,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         consumedAlertIds.clear();
         consumedAlertIds.addAll(persisted.consumedAlertIds);
         closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
+        languageCode = persisted.languageCode;
     }
 }

@@ -17,10 +17,13 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
@@ -47,6 +50,9 @@ public class PreferencesController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getLanguageCodes().setAll(LanguageRepository.I18N_CODES);
+        model.setSelectedLanguageCode(settingsService.getLanguageCode());
+
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
@@ -64,11 +70,21 @@ public class PreferencesController implements Controller {
         notifyForPreReleasePin.unsubscribe();
     }
 
+    void onSelectLanguage(String selectedLanguageCode) {
+        model.setSelectedLanguageCode(selectedLanguageCode);
+        settingsService.setLanguageCode(selectedLanguageCode);
+        new Popup().feedback(Res.get("settings.preferences.language.restart")).useShutDownButton().show();
+    }
+
     void onResetDontShowAgain() {
         DontShowAgainService.resetDontShowAgain();
     }
 
     void onSetChatNotificationType(ChatNotificationType type) {
         model.getChatNotificationType().set(type);
+    }
+
+    String getDisplayLanguage(String languageCode) {
+        return LanguageRepository.getDisplayString(languageCode);
     }
 }

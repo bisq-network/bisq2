@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -31,42 +32,39 @@ public class LanguageRepository {
     @Getter
     private static String defaultLanguage;
 
-    public static void setDefaultLanguage(String defaultLanguage) {
-        LanguageRepository.defaultLanguage = defaultLanguage;
-    }
-
     public static void setLocale(Locale defaultLocale) {
         LanguageRepository.defaultLanguage = defaultLocale.getLanguage();
-    }
-
-    public static final List<String> RTL_LANGUAGES_CODES = List.of(
-            "fa", // Persian
-            "ar", // Arabic
-            "iw" // Hebrew
-    );
-
-    public static boolean isDefaultLanguageRTL() {
-        return RTL_LANGUAGES_CODES.contains(defaultLanguage);
     }
 
     public static final List<String> CODES = LocaleRepository.LOCALES.stream()
             .filter(locale -> !locale.getLanguage().isEmpty() &&
                     !locale.getDisplayLanguage().isEmpty())
-            .distinct()
             .map(Locale::getLanguage)
-            .sorted(Comparator.comparing(LanguageRepository::getDisplayName))
+            .filter(Objects::nonNull)
+            .distinct()
+            .sorted(Comparator.comparing(LanguageRepository::getDisplayString))
             .collect(Collectors.toList());
 
-    public static String getDisplayName(String code) {
+    public static String getDisplayString(String code) {
         Locale locale = Locale.forLanguageTag(code);
+        return getDisplayLanguage(locale) + " (" + getDisplayLanguageInLocale(locale) + ")";
+    }
+
+    public static String getDisplayLanguage(String code) {
+        return getDisplayLanguage(Locale.forLanguageTag(code));
+    }
+
+    // Returns language in defaut locale language (e.g. Spanish if "en" is default)
+    public static String getDisplayLanguage(Locale locale) {
+        return locale.getDisplayLanguage();
+    }
+
+    // Returns language in locale's language (e.g. español)
+    public static String getDisplayLanguageInLocale(Locale locale) {
         return locale.getDisplayName(locale);
     }
 
-    public static String getEnglishCode() {
-        return new Locale(Locale.ENGLISH.getLanguage()).getLanguage();
-    }
-
-    private static final List<String> I18N_CODES = List.of(
+    public static final List<String> I18N_CODES = List.of(
             "en", // English
             "de", // German
             "es", // Spanish
@@ -122,5 +120,15 @@ public class LanguageRepository {
             "da", // Danish
             "mt"  // Maltese
             */
+    );
+
+    public static boolean isDefaultLanguageRTL() {
+        return RTL_LANGUAGES_CODES.contains(defaultLanguage);
+    }
+
+    public static final List<String> RTL_LANGUAGES_CODES = List.of(
+            "fa", // Persian
+            "ar", // Arabic
+            "iw" // Hebrew
     );
 }

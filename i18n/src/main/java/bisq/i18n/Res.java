@@ -23,26 +23,26 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.MessageFormat;
 import java.util.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class Res {
-    private static ResourceBundle defaultBundle;
     private static final List<ResourceBundle> bundles = new ArrayList<>();
 
-    public static void setLocale(Locale locale) {
-        if ("en".equalsIgnoreCase(locale.getLanguage())) {
-            locale = Locale.ROOT;
-        }
-        defaultBundle = ResourceBundle.getBundle("default", locale);
-        bundles.addAll(List.of(defaultBundle,
+    public static void setLanguage(String languageCode) {
+        Locale locale = Locale.forLanguageTag(languageCode);
+        bundles.clear();
+        bundles.addAll(List.of(
+                ResourceBundle.getBundle("default", locale),
                 ResourceBundle.getBundle("application", locale),
-                ResourceBundle.getBundle("payment_method", locale),
-                ResourceBundle.getBundle("wallet", locale),
                 ResourceBundle.getBundle("chat", locale),
                 ResourceBundle.getBundle("trade_apps", locale),
                 ResourceBundle.getBundle("bisq_easy", locale),
                 ResourceBundle.getBundle("academy", locale),
                 ResourceBundle.getBundle("user", locale),
                 ResourceBundle.getBundle("authorized_role", locale),
+                ResourceBundle.getBundle("payment_method", locale),
+                ResourceBundle.getBundle("wallet", locale),
                 ResourceBundle.getBundle("settings", locale)
         ));
     }
@@ -52,6 +52,7 @@ public class Res {
     }
 
     public static String get(String key) {
+        checkArgument(!bundles.isEmpty(), "Res.get cannot be called as bundles is still empty. key=" + key);
         try {
             return bundles.stream()
                     .filter(bundle -> bundle.containsKey(key))

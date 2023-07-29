@@ -49,4 +49,5 @@ message SettingsStore {
   bool isTacAccepted = 10;
   repeated string consumedAlertIds = 11;
   bool closeMyOfferWhenTaken = 12;
+  string languageCode = 13;
 }

@@ -21,6 +21,7 @@ import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.i18n.Res;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -72,6 +73,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public void onPersistedApplied(SettingsStore persisted) {
+        Res.setLanguage(getLanguageCode());
+    }
+
     public ObservableSet<Market> getMarkets() {
         return persistableStore.markets;
     }
@@ -115,6 +121,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public boolean isTacAccepted() {
         return persistableStore.isTacAccepted;
+    }
+
+    public void setLanguageCode(String value) {
+        persistableStore.languageCode = value;
+        persist();
+    }
+
+    public String getLanguageCode() {
+        return persistableStore.languageCode;
     }
 
     public Observable<Boolean> getCloseMyOfferWhenTaken() {

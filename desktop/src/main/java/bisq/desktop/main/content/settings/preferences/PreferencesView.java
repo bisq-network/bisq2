@@ -17,7 +17,9 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
@@ -26,6 +28,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -37,6 +40,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
+    private final AutoCompleteComboBox<String> languageSelection;
     private Subscription selectedNotificationTypePin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
@@ -44,6 +48,23 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         root.setAlignment(Pos.TOP_LEFT);
 
+        // Notifications
+        Label languageSelectionHeadline = new Label(Res.get("settings.preferences.language.headline"));
+        languageSelectionHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+
+        languageSelection = new AutoCompleteComboBox<>(model.getLanguageCodes(), Res.get("settings.preferences.language.select"));
+        languageSelection.setPrefWidth(300);
+        languageSelection.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String languageCode) {
+                return languageCode != null ? controller.getDisplayLanguage(languageCode) : "";
+            }
+
+            @Override
+            public String fromString(String string) {
+                return "";
+            }
+        });
 
         // Notifications
         Label notificationsHeadline = new Label(Res.get("settings.preferences.notification.options"));
@@ -81,10 +102,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         tradeHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
 
-        VBox.setMargin(notificationsHeadline, new Insets(30, 0, 0, 0));
-        VBox.setMargin(displayHeadline, new Insets(15, 0, 0, 0));
-        root.getChildren().addAll(notificationsHeadline, notificationsVBox, notifyForPreRelease,
-                displayHeadline, useAnimations, resetDontShowAgain,
+        VBox.setMargin(languageSelectionHeadline, new Insets(30, 0, 0, 0));
+        VBox.setMargin(notificationsHeadline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(displayHeadline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(tradeHeadline, new Insets(10, 0, 0, 0));
+        root.getChildren().addAll(languageSelectionHeadline, languageSelection, Layout.hLine(),
+                notificationsHeadline, notificationsVBox, notifyForPreRelease, Layout.hLine(),
+                displayHeadline, useAnimations, resetDontShowAgain, Layout.hLine(),
                 tradeHeadline, closeMyOfferWhenTaken);
     }
 
@@ -95,9 +119,18 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notifyForPreRelease.selectedProperty().bindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
-        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
-
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
+
+        languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
+        languageSelection.setOnChangeConfirmed(e -> {
+            if (languageSelection.getSelectionModel().getSelectedItem() == null) {
+                languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
+                return;
+            }
+            controller.onSelectLanguage(languageSelection.getSelectionModel().getSelectedItem());
+        });
+
+        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
     }
 
     @Override
@@ -107,9 +140,11 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notifyForPreRelease.selectedProperty().unbindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
-        resetDontShowAgain.setOnAction(null);
-
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
+
+        languageSelection.setOnChangeConfirmed(null);
+
+        resetDontShowAgain.setOnAction(null);
     }
 
     private void applyChatNotificationType() {

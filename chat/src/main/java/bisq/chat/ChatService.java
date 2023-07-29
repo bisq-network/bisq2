@@ -100,7 +100,11 @@ public class ChatService implements Service {
                 bisqEasyPublicChatChannelService,
                 bisqEasyPrivateTradeChatChannelService,
                 userIdentityService));
+    }
 
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         // DISCUSSION
         addToCommonPublicChatChannelServices(ChatChannelDomain.DISCUSSION,
                 List.of(new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "bisq"),
@@ -129,11 +133,7 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "reports")));
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.SUPPORT);
         addToChatChannelSelectionServices(ChatChannelDomain.SUPPORT);
-    }
 
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyPublicChatChannelService.initialize(),
                 bisqEasyPrivateTradeChatChannelService.initialize()));
         list.addAll(commonPublicChatChannelServices.values().stream()
