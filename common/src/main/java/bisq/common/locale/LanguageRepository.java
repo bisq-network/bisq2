@@ -18,6 +18,7 @@
 package bisq.common.locale;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -30,11 +31,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class LanguageRepository {
     @Getter
-    private static String defaultLanguage;
-
-    public static void setLocale(Locale defaultLocale) {
-        LanguageRepository.defaultLanguage = defaultLocale.getLanguage();
-    }
+    @Setter
+    private static String defaultLanguage = "en";
 
     public static final List<String> CODES = LocaleRepository.LOCALES.stream()
             .filter(locale -> !locale.getLanguage().isEmpty() &&
@@ -56,7 +54,7 @@ public class LanguageRepository {
 
     // Returns language in defaut locale language (e.g. Spanish if "en" is default)
     public static String getDisplayLanguage(Locale locale) {
-        return locale.getDisplayLanguage();
+        return locale.getDisplayLanguage(Locale.forLanguageTag(defaultLanguage));
     }
 
     // Returns language in locale's language (e.g. español)

@@ -179,10 +179,9 @@ public class CreateOfferReviewOfferController implements Controller {
                 priceSpec,
                 new ArrayList<>(model.getFiatPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getRequiredTotalReputationScore().get());
+                settingsService.getRequiredTotalReputationScore().get(),
+                new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
-
-        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
 
         Optional<BisqEasyPublicChatChannel> optionalChannel = bisqEasyPublicChatChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent()) {
@@ -212,6 +211,8 @@ public class CreateOfferReviewOfferController implements Controller {
         } else {
             log.warn("optionalChannel not present");
         }
+
+        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
     }
 
     @Override

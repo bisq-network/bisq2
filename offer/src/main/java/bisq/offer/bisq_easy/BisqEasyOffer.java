@@ -21,6 +21,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+    private final List<String> supportedLanguageCodes;
+
     public BisqEasyOffer(NetworkId makerNetworkId,
                          Direction direction,
                          Market market,
@@ -36,7 +40,8 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          PriceSpec priceSpec,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
-                         long requiredTotalReputationScore) {
+                         long requiredTotalReputationScore,
+                         List<String> supportedLanguageCodes) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -47,7 +52,8 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 List.of(TradeProtocolType.BISQ_EASY),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore)
+                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
+                supportedLanguageCodes
         );
     }
 
@@ -61,7 +67,8 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                           List<TradeProtocolType> protocolTypes,
                           List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                           List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                          List<OfferOption> offerOptions) {
+                          List<OfferOption> offerOptions,
+                          List<String> supportedLanguageCodes) {
         super(id,
                 date,
                 makerNetworkId,
@@ -73,12 +80,14 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
+        this.supportedLanguageCodes = supportedLanguageCodes;
+        Collections.sort(supportedLanguageCodes);
     }
 
     @Override
     public bisq.offer.protobuf.Offer toProto() {
         return getOfferBuilder().setBisqEasyOffer(
-                        bisq.offer.protobuf.BisqEasyOffer.newBuilder())
+                        bisq.offer.protobuf.BisqEasyOffer.newBuilder().addAllSupportedLanguageCodes(supportedLanguageCodes))
                 .build();
     }
 
@@ -105,6 +114,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions);
+                offerOptions,
+                new ArrayList<>(proto.getBisqEasyOffer().getSupportedLanguageCodesList()));
     }
 }

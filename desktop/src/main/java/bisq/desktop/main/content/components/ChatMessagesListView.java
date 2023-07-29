@@ -30,6 +30,7 @@ import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.*;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -59,6 +60,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -91,7 +93,9 @@ import org.fxmisc.easybind.Subscription;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -444,10 +448,30 @@ public class ChatMessagesListView {
                     .to(channel.getChatMessages());
         }
 
-        public String getUserName(String userProfileId) {
+        private String getUserName(String userProfileId) {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
                     .orElse(Res.get("data.na"));
+        }
+
+        private String getSupportedLanguageCodes(BisqEasyPublicChatMessage chatMessage) {
+            String result = getSupportedLanguageCodes(chatMessage, ", ", LanguageRepository::getDisplayLanguage);
+            return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + " " + StringUtils.truncate(result, 100);
+        }
+
+        private String getSupportedLanguageCodesForTooltip(BisqEasyPublicChatMessage chatMessage) {
+            String result = getSupportedLanguageCodes(chatMessage, "\n", LanguageRepository::getDisplayString);
+            return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
+        }
+
+        private String getSupportedLanguageCodes(BisqEasyPublicChatMessage chatMessage, String separator, Function<String, String> toStringFunction) {
+            return chatMessage.getBisqEasyOffer()
+                    .map(BisqEasyOffer::getSupportedLanguageCodes)
+                    .map(supportedLanguageCodes -> Joiner.on(separator)
+                            .join(supportedLanguageCodes.stream()
+                                    .map(toStringFunction)
+                                    .collect(Collectors.toList())))
+                    .orElse("");
         }
     }
 
@@ -532,7 +556,7 @@ public class ChatMessagesListView {
                     return new ListCell<>() {
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
-                        private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon, moreOptionsIcon;
+                        private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon, moreOptionsIcon, supportedLanguages;
                         private final Text quotedMessageField;
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
@@ -592,10 +616,10 @@ public class ChatMessagesListView {
                             copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
                             deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
                             moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
+                            supportedLanguages = new Label();
 
                             reactionsHBox = new HBox(20);
 
-                            // reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
                             reactionsHBox.setVisible(false);
 
                             HBox.setHgrow(messageBgHBox, Priority.SOMETIMES);
@@ -631,6 +655,11 @@ public class ChatMessagesListView {
                                 boolean hasTradeChatOffer = model.hasTradeChatOffer(chatMessage);
                                 boolean isBisqEasyPublicChatMessageWithOffer = chatMessage instanceof BisqEasyPublicChatMessage && hasTradeChatOffer;
                                 boolean isMyMessage = model.isMyMessage(chatMessage);
+
+                                if (isBisqEasyPublicChatMessageWithOffer) {
+                                    supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyPublicChatMessage) chatMessage)));
+                                    supportedLanguages.setTooltip(new Tooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyPublicChatMessage) chatMessage))));
+                                }
 
                                 dateTime.setVisible(false);
 
@@ -668,9 +697,8 @@ public class ChatMessagesListView {
 
                                         removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
                                         HBox.setMargin(removeOfferButton, new Insets(0, 11, 0, -15));
-                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, removeOfferButton);
+                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon, removeOfferButton);
                                         reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
-                                        // HBox.setMargin(reactionsHBox, new Insets(2.5, -10, 0, 0));
                                     } else {
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(140));
                                         userProfileIcon.setSize(30);
@@ -695,12 +723,13 @@ public class ChatMessagesListView {
 
                                     userProfileIcon.setSize(60);
                                     HBox.setMargin(replyIcon, new Insets(0, 0, 0, 15));
-                                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
+
 
                                     quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
 
                                     messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
                                     if (isBisqEasyPublicChatMessageWithOffer) {
+                                        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(430));
                                         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
 
@@ -725,6 +754,7 @@ public class ChatMessagesListView {
                                         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 30));
                                         mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
                                     } else {
+                                        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(140));//165
                                         userProfileIcon.setSize(30);
                                         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);

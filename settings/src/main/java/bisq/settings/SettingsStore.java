@@ -28,10 +28,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -51,6 +48,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>(true);
     final Observable<Boolean> preventStandbyMode = new Observable<>(true);
     String languageCode;
+    final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -66,7 +64,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(),
                 false,
                 LanguageRepository.getDefaultLanguage(),
-                true);
+                true,
+                Set.of(LanguageRepository.getDefaultLanguage()));
     }
 
     public SettingsStore(Cookie cookie,
@@ -82,7 +81,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          Set<String> consumedAlertIds,
                          boolean closeMyOfferWhenTaken,
                          String languageCode,
-                         boolean preventStandbyMode) {
+                         boolean preventStandbyMode,
+                         Set<String> supportedLanguageCodes) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -97,6 +97,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
         this.languageCode = languageCode;
         this.preventStandbyMode.set(preventStandbyMode);
+        this.supportedLanguageCodes.setAll(supportedLanguageCodes);
     }
 
     @Override
@@ -116,6 +117,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
                 .setLanguageCode(languageCode)
                 .setPreventStandbyMode(preventStandbyMode.get())
+                .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
                 .build();
     }
 
@@ -134,7 +136,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(proto.getConsumedAlertIdsList()),
                 proto.getCloseMyOfferWhenTaken(),
                 proto.getLanguageCode(),
-                proto.getPreventStandbyMode());
+                proto.getPreventStandbyMode(),
+                new HashSet<>(proto.getSupportedLanguageCodesList()));
     }
 
     @Override
@@ -163,7 +166,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 consumedAlertIds,
                 closeMyOfferWhenTaken.get(),
                 languageCode,
-                preventStandbyMode.get());
+                preventStandbyMode.get(),
+                new HashSet<>(supportedLanguageCodes));
     }
 
     @Override
@@ -184,5 +188,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
         languageCode = persisted.languageCode;
         preventStandbyMode.set(persisted.preventStandbyMode.get());
+        supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
     }
 }

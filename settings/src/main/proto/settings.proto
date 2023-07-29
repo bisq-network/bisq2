@@ -51,4 +51,5 @@ message SettingsStore {
   bool closeMyOfferWhenTaken = 12;
   string languageCode = 13;
   bool preventStandbyMode = 14;
+  repeated string supportedLanguageCodes = 15;
 }
