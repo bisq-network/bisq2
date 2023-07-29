@@ -109,10 +109,14 @@ public class CreateProfileController implements Controller {
         if (model.getCreateProfileButtonDisabled().get()) {
             return;
         }
+        if (model.getProofOfWork().isEmpty()) {
+            log.error("proofOfWork is not present");
+            return;
+        }
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
-        ProofOfWork proofOfWork = model.getProofOfWork().orElseThrow();
+        ProofOfWork proofOfWork = model.getProofOfWork().get();
         if (model.getKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(

@@ -36,7 +36,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
     private final Button resetDontShowAgain;
-    private final Switch useAnimations, closeMyOfferWhenTaken, notifyForPreRelease;
+    private final Switch useAnimations, preventStandbyMode, closeMyOfferWhenTaken, notifyForPreRelease;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -95,6 +95,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         displayHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         useAnimations = new Switch(Res.get("settings.preferences.display.useAnimations"));
+        preventStandbyMode = new Switch(Res.get("settings.preferences.display.preventStandbyMode"));
         resetDontShowAgain = new Button(Res.get("settings.preferences.display.resetDontShowAgain"));
 
         // Trade
@@ -108,7 +109,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         VBox.setMargin(tradeHeadline, new Insets(10, 0, 0, 0));
         root.getChildren().addAll(languageSelectionHeadline, languageSelection, Layout.hLine(),
                 notificationsHeadline, notificationsVBox, notifyForPreRelease, Layout.hLine(),
-                displayHeadline, useAnimations, resetDontShowAgain, Layout.hLine(),
+                displayHeadline, useAnimations, preventStandbyMode, resetDontShowAgain, Layout.hLine(),
                 tradeHeadline, closeMyOfferWhenTaken);
     }
 
@@ -119,6 +120,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notifyForPreRelease.selectedProperty().bindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
+        preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
         languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
@@ -140,6 +142,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notifyForPreRelease.selectedProperty().unbindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
+        preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         languageSelection.setOnChangeConfirmed(null);

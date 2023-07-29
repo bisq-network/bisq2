@@ -26,7 +26,9 @@ import bisq.desktop.overlay.onboarding.create_profile.CreateProfileController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileModel;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileView;
 import javafx.application.Platform;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CreateNewProfileStep1Controller extends CreateProfileController {
     private final ServiceProvider serviceProvider;
 
@@ -47,10 +49,14 @@ public class CreateNewProfileStep1Controller extends CreateProfileController {
 
     @Override
     protected void onCreateUserProfile() {
+        if (model.getProofOfWork().isEmpty()) {
+            log.error("proofOfWork is not present");
+            return;
+        }
         CreateNewProfileStep2Controller.InitData initData = new CreateNewProfileStep2Controller.InitData(
                 model.getKeyPairAndId(),
                 model.getPooledIdentity(),
-                model.getProofOfWork().orElseThrow(),
+                model.getProofOfWork().get(),
                 model.getNickName().get(),
                 model.getNym().get());
         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);

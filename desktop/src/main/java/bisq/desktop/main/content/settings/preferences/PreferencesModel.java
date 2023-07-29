@@ -35,6 +35,7 @@ public class PreferencesModel implements Model {
     private final ObjectProperty<ChatNotificationType> chatNotificationType = new SimpleObjectProperty<>(ChatNotificationType.MENTION);
     private final BooleanProperty notifyForPreRelease = new SimpleBooleanProperty();
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
+    private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     @Setter
     private String selectedLanguageCode;

@@ -22,6 +22,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.standby.PreventStandbyModeService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -68,6 +69,7 @@ public class DesktopController extends NavigationController {
     private final SplashController splashController;
     private final UserIdentityService userIdentityService;
     private final ServiceProvider serviceProvider;
+    private final PreventStandbyModeService preventStandbyModeService;
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
@@ -89,6 +91,7 @@ public class DesktopController extends NavigationController {
         Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
+        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
 
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
@@ -132,6 +135,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onActivate() {
+        preventStandbyModeService.initialize();
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
 
@@ -147,6 +151,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        preventStandbyModeService.shutdown();
     }
 
     public void onApplicationServiceInitialized(boolean result, Throwable throwable) {

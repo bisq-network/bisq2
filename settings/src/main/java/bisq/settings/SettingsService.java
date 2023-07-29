@@ -59,6 +59,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getOffersOnly().addObserver(value -> persist());
         getChatNotificationType().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
+        getPreventStandbyMode().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
         return CompletableFuture.completedFuture(true);
     }
@@ -108,6 +109,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getTradeRulesConfirmed() {
         return persistableStore.tradeRulesConfirmed;
+    }
+
+    public Observable<Boolean> getPreventStandbyMode() {
+        return persistableStore.preventStandbyMode;
     }
 
     public Observable<ChatNotificationType> getChatNotificationType() {
