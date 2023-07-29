@@ -23,16 +23,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class BootstrapEventHandler implements EventHandler {
+public class ControllerEventHandler implements EventHandler {
 
-    private final Set<BootstrapEventListener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<BootstrapEventListener> bootstrapListeners = new CopyOnWriteArraySet<>();
+    private final Set<HsDescUploadedEventListener> hsDescUploadedEventListeners = new CopyOnWriteArraySet<>();
 
-    public void addListener(BootstrapEventListener listener) {
-        listeners.add(listener);
+    public void addBootstrapListener(BootstrapEventListener listener) {
+        bootstrapListeners.add(listener);
     }
 
-    public void removeListener(BootstrapEventListener listener) {
-        listeners.remove(listener);
+    public void removeBootstrapListener(BootstrapEventListener listener) {
+        bootstrapListeners.remove(listener);
+    }
+
+    public void addHsDescUploadedListener(HsDescUploadedEventListener listener) {
+        hsDescUploadedEventListeners.add(listener);
+    }
+
+    public void removeHsDescUploadedListener(HsDescUploadedEventListener listener) {
+        hsDescUploadedEventListeners.remove(listener);
     }
 
     @Override
@@ -61,6 +70,10 @@ public class BootstrapEventHandler implements EventHandler {
 
     @Override
     public void hiddenServiceEvent(String action, String msg) {
+        if (HsDescUploadedEvent.isHsDescMessage(action)) {
+            HsDescUploadedEvent uploadedEvent = HsDescUploadedEvent.fromHsDescMessage(msg);
+            hsDescUploadedEventListeners.forEach(l -> l.onHsDescUploaded(uploadedEvent));
+        }
     }
 
     @Override
@@ -75,7 +88,7 @@ public class BootstrapEventHandler implements EventHandler {
     public void unrecognized(String type, String msg) {
         if (BootstrapEvent.isBootstrapMessage(type, msg)) {
             BootstrapEvent bootstrapEvent = BootstrapEvent.fromEventMessage(msg);
-            listeners.forEach(l -> l.onBootstrapStatusEvent(bootstrapEvent));
+            bootstrapListeners.forEach(l -> l.onBootstrapStatusEvent(bootstrapEvent));
         }
     }
 
