@@ -17,11 +17,13 @@
 
 package bisq.desktop.common.utils.standby;
 
+import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 class Inhibitor implements PreventStandbyMode {
@@ -31,6 +33,7 @@ class Inhibitor implements PreventStandbyMode {
             "/bin/gnome-session-inhibit",
             "/usr/bin/systemd-inhibit",
             "/bin/systemd-inhibit");
+    private ExecutorService executor;
 
     static Optional<PreventStandbyMode> findExecutableInhibitor() {
         return findInhibitExecutable().map(file -> new Inhibitor(file.getPath()));
@@ -59,7 +62,8 @@ class Inhibitor implements PreventStandbyMode {
         }
         isPlaying = true;
 
-        new Thread(() -> {
+        executor = ExecutorFactory.newSingleThreadExecutor("PreventStandbyMode");
+        executor.submit(() -> {
             try {
                 String[] commands = inhibitExecutablePath.contains("gnome-session-inhibit")
                         ? new String[]{inhibitExecutablePath, "--app-id", "Bisq", "--inhibit", "suspend", "--reason", "Avoid Standby", "--inhibit-only"}
@@ -70,7 +74,7 @@ class Inhibitor implements PreventStandbyMode {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, "Linux-InhibitExecutable-thread").start();
+        });
     }
 
     @Override
@@ -83,5 +87,6 @@ class Inhibitor implements PreventStandbyMode {
             }
         });
         process = Optional.empty();
+        ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
     }
 }

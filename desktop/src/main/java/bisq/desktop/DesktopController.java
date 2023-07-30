@@ -18,6 +18,7 @@
 package bisq.desktop;
 
 import bisq.common.observable.Observable;
+import bisq.common.util.OsUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
@@ -223,7 +224,12 @@ public class DesktopController extends NavigationController {
     }
 
     public void shutdown() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+        preventStandbyModeService.shutdown();
+        serviceProvider.getShotDownHandler().shutdown()
+                .thenAccept(result -> {
+                    Platform.exit();
+                    System.exit(OsUtils.EXIT_SUCCESS);
+                });
     }
 
     public void onStageXChanged(double value) {
