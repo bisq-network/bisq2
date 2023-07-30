@@ -18,7 +18,7 @@
 package bisq.tor.process;
 
 import bisq.tor.ClientTorrcGenerator;
-import bisq.tor.bootstrap.*;
+import bisq.tor.controller.*;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 import net.freehaven.tor.control.TorControlConnection;

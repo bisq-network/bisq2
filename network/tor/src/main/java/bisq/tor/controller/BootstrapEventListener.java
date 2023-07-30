@@ -15,14 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.bootstrap;
+package bisq.tor.controller;
 
-public class TorBootstrapFailed extends RuntimeException {
-    public TorBootstrapFailed(String message) {
-        super(message);
-    }
-
-    public TorBootstrapFailed(Throwable cause) {
-        super(cause);
-    }
+public interface BootstrapEventListener {
+    void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent);
 }
