@@ -19,6 +19,7 @@ package bisq.tor.process;
 
 import bisq.common.FileCreationWatcher;
 import bisq.common.scanner.FileScanner;
+import bisq.tor.Pid;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -31,6 +32,8 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class NativeTorProcess {
+
+    private static final String ARG_OWNER_PID = "__OwningControllerProcess";
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
     private Optional<Future<Path>> logFileCreationWaiter = Optional.empty();
@@ -41,7 +44,13 @@ public class NativeTorProcess {
 
     public void start() throws IOException {
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
-        var processBuilder = new ProcessBuilder("tor", "-f", absoluteTorrcPathAsString);
+
+        String ownerPid = Pid.getMyPid();
+        var processBuilder = new ProcessBuilder("tor",
+                "-f", absoluteTorrcPathAsString,
+                ARG_OWNER_PID, ownerPid
+        );
+
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
 
