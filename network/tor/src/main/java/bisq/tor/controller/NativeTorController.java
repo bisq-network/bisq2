@@ -18,8 +18,8 @@
 package bisq.tor.controller;
 
 import bisq.tor.ClientTorrcGenerator;
-import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.ControllerEventHandler;
+import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescUploadedEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescUploadedEventListener;
@@ -69,11 +69,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
 
         controllerEventHandler.addHsDescUploadedListener(this);
-        try {
-            controlConnection.setEvents(List.of("HS_DESC"));
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't set tor events.");
-        }
+        setEventSubscriptionsOnConnection(controlConnection, List.of("HS_DESC"));
 
         TorControlConnection.CreateHiddenServiceResult result;
         if (privateKey.isEmpty()) {
@@ -147,31 +143,33 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         }
     }
 
-    private void addBootstrapEventListener(TorControlConnection controlConnection) throws IOException {
+    private void setEventSubscriptionsOnConnection(TorControlConnection controlConnection, List<String> events) {
+        try {
+            controlConnection.setEvents(events);
+        } catch (IOException e) {
+            throw new IllegalStateException("Can't set tor events.");
+        }
+    }
+
+    private void clearAllEventSubscriptionsOnConnection(TorControlConnection controlConnection) {
+        setEventSubscriptionsOnConnection(controlConnection, Collections.emptyList());
+    }
+
+    private void addBootstrapEventListener(TorControlConnection controlConnection) {
         controllerEventHandler.addBootstrapListener(this);
         controlConnection.setEventHandler(controllerEventHandler);
-        controlConnection.setEvents(List.of("STATUS_CLIENT"));
+        setEventSubscriptionsOnConnection(controlConnection, List.of("STATUS_CLIENT"));
     }
 
     private void removeBootstrapEventListener() {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
         controllerEventHandler.removeBootstrapListener(this);
-
-        try {
-            controlConnection.setEvents(Collections.emptyList());
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't set tor events.");
-        }
+        clearAllEventSubscriptionsOnConnection(controlConnection);
     }
 
     private void removeHsDescUploadedEventListener() {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
         controllerEventHandler.removeHsDescUploadedListener(this);
-
-        try {
-            controlConnection.setEvents(Collections.emptyList());
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't set tor events.");
-        }
+        clearAllEventSubscriptionsOnConnection(controlConnection);
     }
 }
