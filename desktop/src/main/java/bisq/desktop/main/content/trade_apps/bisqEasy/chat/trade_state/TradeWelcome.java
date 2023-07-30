@@ -47,11 +47,9 @@ class TradeWelcome {
         private final View view;
 
         private Controller() {
-
             model = new Model();
             view = new View(model, this);
         }
-
 
         @Override
         public void onActivate() {
@@ -75,23 +73,25 @@ class TradeWelcome {
         private final Button openTradeGuideButton;
 
         public View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
+            super(new VBox(20), model, controller);
 
             root.setAlignment(Pos.CENTER);
+            root.setPadding(new Insets(30));
 
             Label welcomeHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.headline"));
+            welcomeHeadline.setWrapText(true);
             welcomeHeadline.getStyleClass().add("bisq-easy-trade-state-welcome-headline");
 
             Label infoHeadline = new Label(Res.get("bisqEasy.tradeState.welcome.info"));
             infoHeadline.setWrapText(true);
+            infoHeadline.setMaxWidth(600);
             infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-text");
             infoHeadline.setTextAlignment(TextAlignment.CENTER);
 
             openTradeGuideButton = new Button(Res.get("bisqEasy.tradeState.openTradeGuide"));
             openTradeGuideButton.setDefaultButton(true);
 
-            VBox.setMargin(welcomeHeadline, new Insets(20, 0, 20, 0));
-            VBox.setMargin(openTradeGuideButton, new Insets(30, 0, 20, 0));
+            VBox.setMargin(openTradeGuideButton, new Insets(15, 0, 0, 0));
             root.getChildren().addAll(welcomeHeadline, infoHeadline, openTradeGuideButton);
         }
 
