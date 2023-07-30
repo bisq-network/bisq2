@@ -17,6 +17,8 @@
 
 package bisq.tor.controller;
 
+import bisq.tor.controller.events.HsDescUploadedEvent;
+
 public interface HsDescUploadedEventListener {
     void onHsDescUploaded(HsDescUploadedEvent uploadedEvent);
 }
