@@ -17,14 +17,24 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -47,17 +57,19 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.lang.ref.WeakReference;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class UserProfileSelection {
     private final Controller controller;
 
-    public UserProfileSelection(UserIdentityService userIdentityService) {
-        controller = new Controller(userIdentityService, 30, false);
+    public UserProfileSelection(ServiceProvider serviceProvider) {
+        controller = new Controller(serviceProvider, 30, false);
     }
 
-    public UserProfileSelection(UserIdentityService userIdentityService, int iconSize, boolean useMaterialStyle) {
-        controller = new Controller(userIdentityService, iconSize, useMaterialStyle);
+    public UserProfileSelection(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
+        controller = new Controller(serviceProvider, iconSize, useMaterialStyle);
     }
 
     public Pane getRoot() {
@@ -97,11 +109,16 @@ public class UserProfileSelection {
         @Getter
         private final View view;
         private final UserIdentityService userIdentityService;
+        private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
         private Pin selectedUserProfilePin;
         private Pin userProfilesPin;
+        private Pin chatChannelSelectionPin;
+        private Pin navigationPin;
+        private Optional<UserProfile> pinnedPrivateChannelUserProfile = Optional.empty();
 
-        private Controller(UserIdentityService userIdentityService, int iconSize, boolean useMaterialStyle) {
-            this.userIdentityService = userIdentityService;
+        private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
+            this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            chatChannelSelectionServices = serviceProvider.getChatService().getChatChannelSelectionServices();
 
             model = new Model();
             view = new View(model, this, iconSize, useMaterialStyle);
@@ -114,6 +131,8 @@ public class UserProfileSelection {
             userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(userIdentityService.getUserIdentities());
+
+            navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
         }
 
         @Override
@@ -124,28 +143,78 @@ public class UserProfileSelection {
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
+            navigationPin.unbind();
+            if (chatChannelSelectionPin != null) {
+                chatChannelSelectionPin.unbind();
+            }
         }
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                userIdentityService.selectChatUserIdentity(selectedItem.userIdentity);
+                UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+                if (pinnedPrivateChannelUserProfile.isPresent() && selectedUserIdentity != null) {
+                    new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn", selectedUserIdentity.getUserProfile().getUserName()))
+                            .onClose(() -> {
+                                model.selectedUserProfile.set(null);
+                                model.selectedUserProfile.set(new ListItem(selectedUserIdentity));
+                            })
+                            .show();
+                } else {
+                    userIdentityService.selectChatUserIdentity(selectedItem.userIdentity);
+                }
             }
         }
 
-        public boolean isFocused() {
+        private boolean isFocused() {
             return view.getComboBox().isFocused();
         }
 
-        public ReadOnlyBooleanProperty focusedProperty() {
+        private ReadOnlyBooleanProperty focusedProperty() {
             return view.getComboBox().focusedProperty();
         }
 
-        public void requestFocus() {
+        private void requestFocus() {
             view.getComboBox().requestFocus();
         }
 
-        public void setPrefWidth(double value) {
+        private void setPrefWidth(double value) {
             view.getComboBox().setPrefWidth(value);
+        }
+
+        private void navigationTargetChanged(NavigationTarget navigationTarget) {
+            if (chatChannelSelectionPin != null) {
+                chatChannelSelectionPin.unbind();
+            }
+            pinnedPrivateChannelUserProfile = Optional.empty();
+            switch (navigationTarget) {
+                case BISQ_EASY:
+                case BISQ_EASY_CHAT:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY));
+                    return;
+                case DISCUSSION:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.DISCUSSION));
+                    return;
+                case EVENTS:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.EVENTS));
+                    return;
+                case SUPPORT:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.SUPPORT));
+            }
+        }
+
+        private void selectionServiceChanged(ChatChannelSelectionService chatChannelSelectionService) {
+            chatChannelSelectionPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+        }
+
+        private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
+            UIThread.run(() -> {
+                if (channel instanceof PrivateChatChannel) {
+                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) channel;
+                    pinnedPrivateChannelUserProfile = Optional.of(privateChatChannel.getMyUserIdentity().getUserProfile());
+                } else {
+                    pinnedPrivateChannelUserProfile = Optional.empty();
+                }
+            });
         }
     }
 

@@ -38,7 +38,7 @@ public class RoleRegistrationController extends BondedRolesRegistrationControlle
 
     @Override
     protected BondedRolesRegistrationView<RoleRegistrationModel, RoleRegistrationController> createAndGetView() {
-        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService, 20, true);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider, 20, true);
         return new RoleRegistrationView((RoleRegistrationModel) model, this, userProfileSelection);
     }
 }

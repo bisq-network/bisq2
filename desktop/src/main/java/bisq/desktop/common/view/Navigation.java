@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.common.observable.Observable;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -37,6 +38,8 @@ public class Navigation {
     private static SettingsService settingsService;
     @Getter
     private static Optional<NavigationTarget> persistedNavigationTarget = Optional.empty();
+    @Getter
+    private static Observable<NavigationTarget> currentNavigationTarget = new Observable<>();
 
     public static void init(SettingsService settingsService) {
         Navigation.settingsService = settingsService;
@@ -62,6 +65,7 @@ public class Navigation {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
         });
+        currentNavigationTarget.set(navigationTarget);
     }
 
     // If data is passed we don't add it to the history as we would need to store the data as well, and it could be 
@@ -72,6 +76,7 @@ public class Navigation {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.of(data)));
             }
         });
+        currentNavigationTarget.set(navigationTarget);
     }
 
     static void persistNavigationTarget(NavigationTarget navigationTarget) {

@@ -53,7 +53,7 @@ public class SignedWitnessTab3Controller implements Controller {
     public SignedWitnessTab3Controller(ServiceProvider serviceProvider, SignedWitnessView parentView) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.parentView = parentView;
-        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         signedWitnessService = serviceProvider.getUserService().getReputationService().getSignedWitnessService();
 
         model = new SignedWitnessTab3Model();
