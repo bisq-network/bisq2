@@ -83,10 +83,10 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
             if (isSuccess) {
                 removeHsDescUploadedEventListener();
             } else {
-                throw new HsDescUploadFailed("HS_DESC upload timeout (2 minutes) triggered.");
+                throw new HsDescUploadFailedException("HS_DESC upload timeout (2 minutes) triggered.");
             }
         } catch (InterruptedException e) {
-            throw new HsDescUploadFailed(e);
+            throw new HsDescUploadFailedException(e);
         }
 
         return result;
@@ -136,7 +136,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
                 isHsDescUploadedCountdownLatch.countDown();
             }
         } catch (TimeoutException e) {
-            throw new HsDescUploadFailed("Unknown hidden service descriptor uploaded");
+            throw new HsDescUploadFailedException("Unknown hidden service descriptor uploaded");
         } catch (ExecutionException | InterruptedException e) {
             throw new IllegalStateException(e);
         }

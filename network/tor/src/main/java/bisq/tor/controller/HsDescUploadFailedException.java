@@ -17,12 +17,12 @@
 
 package bisq.tor.controller;
 
-public class HsDescUploadFailed extends RuntimeException {
-    public HsDescUploadFailed(String message) {
+public class HsDescUploadFailedException extends RuntimeException {
+    public HsDescUploadFailedException(String message) {
         super(message);
     }
 
-    public HsDescUploadFailed(Throwable cause) {
+    public HsDescUploadFailedException(Throwable cause) {
         super(cause);
     }
 }
