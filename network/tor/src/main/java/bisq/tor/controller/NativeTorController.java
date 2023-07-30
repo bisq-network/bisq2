@@ -107,10 +107,10 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
             if (isSuccess) {
                 removeBootstrapEventListener();
             } else {
-                throw new TorBootstrapFailed("Tor bootstrap timout (2 minutes) triggered.");
+                throw new TorBootstrapFailedException("Tor bootstrap timout (2 minutes) triggered.");
             }
         } catch (InterruptedException e) {
-            throw new TorBootstrapFailed(e);
+            throw new TorBootstrapFailedException(e);
         }
     }
 

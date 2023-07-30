@@ -17,12 +17,12 @@
 
 package bisq.tor.controller;
 
-public class TorBootstrapFailed extends RuntimeException {
-    public TorBootstrapFailed(String message) {
+public class TorBootstrapFailedException extends RuntimeException {
+    public TorBootstrapFailedException(String message) {
         super(message);
     }
 
-    public TorBootstrapFailed(Throwable cause) {
+    public TorBootstrapFailedException(Throwable cause) {
         super(cause);
     }
 }
