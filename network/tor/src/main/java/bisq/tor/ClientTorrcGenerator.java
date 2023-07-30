@@ -39,7 +39,6 @@ public class ClientTorrcGenerator {
 
     public Map<String, String> generate() {
         torConfigMap.put("DataDirectory", dataDirPath.toAbsolutePath().toString());
-        torConfigMap.put("RunAsDaemon", "1");
 
         torConfigMap.put("ControlPort", "127.0.0.1:" + controlPort);
         torConfigMap.put("HashedControlPassword", hashedControlPassword);

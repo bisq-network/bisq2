@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
@@ -76,6 +77,19 @@ public class NativeTorProcess {
             log.error("Couldn't wait for log file creation.", e);
             throw new IllegalStateException("Couldn't wait for log file creation.");
         }
+    }
+
+    public void waitUntilExited() {
+        process.ifPresent(process -> {
+            try {
+                boolean isSuccess = process.waitFor(2, TimeUnit.MINUTES);
+                if (!isSuccess) {
+                    throw new CouldNotWaitForTorShutdown("Tor still running after 2 minutes timeout.");
+                }
+            } catch (InterruptedException e) {
+                throw new CouldNotWaitForTorShutdown(e);
+            }
+        });
     }
 
     private Future<Path> createLogFileCreationWaiter() {
