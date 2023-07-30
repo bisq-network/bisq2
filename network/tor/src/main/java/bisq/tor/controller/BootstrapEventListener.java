@@ -17,6 +17,8 @@
 
 package bisq.tor.controller;
 
+import bisq.tor.controller.events.BootstrapEvent;
+
 public interface BootstrapEventListener {
     void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent);
 }

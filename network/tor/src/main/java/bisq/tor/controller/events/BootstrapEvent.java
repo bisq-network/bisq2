@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.controller;
+package bisq.tor.controller.events;
 
 import lombok.Builder;
 import lombok.Getter;
