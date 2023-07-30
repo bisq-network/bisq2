@@ -18,9 +18,9 @@
 package bisq.tor.controller;
 
 import bisq.tor.ClientTorrcGenerator;
-import bisq.tor.controller.events.BootstrapEvent;
+import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.ControllerEventHandler;
-import bisq.tor.controller.events.HsDescUploadedEvent;
+import bisq.tor.controller.events.events.HsDescUploadedEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescUploadedEventListener;
 import bisq.tor.process.NativeTorProcess;
