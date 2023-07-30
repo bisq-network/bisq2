@@ -17,7 +17,7 @@
 
 package bisq.contract;
 
-import bisq.common.proto.DeterministicProto;
+import bisq.common.proto.Proto;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode
-public class SignedTwoPartyContract<T extends Offer<?, ?>> implements DeterministicProto {
+public class SignedTwoPartyContract<T extends Offer<?, ?>> implements Proto {
     private final TwoPartyContract<T> contract;
     private final ContractSignatureData makerSignatureData;
     private final ContractSignatureData takerSignatureData;

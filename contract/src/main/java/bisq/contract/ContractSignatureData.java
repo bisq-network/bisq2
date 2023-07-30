@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.DeterministicProto;
+import bisq.common.proto.Proto;
 import bisq.security.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import java.security.PublicKey;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public class ContractSignatureData implements DeterministicProto {
+public class ContractSignatureData implements Proto {
     private final byte[] contractHash;
     private final byte[] signature;
     private final PublicKey publicKey;

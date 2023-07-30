@@ -17,7 +17,7 @@
 
 package bisq.contract;
 
-import bisq.common.proto.DeterministicProto;
+import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Party implements DeterministicProto {
+public final class Party implements Proto {
     private final Role role;
     private final NetworkId networkId;
 
