@@ -143,6 +143,7 @@ public class ChatNotificationService implements Service {
                     twoPartyPrivateChatChannelService.getChannels().addListener(() ->
                             onChatChannelsChanged(twoPartyPrivateChatChannelService.getChannels()));
                 });
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -216,6 +217,7 @@ public class ChatNotificationService implements Service {
     }
 
     private <M extends ChatMessage> void chatNotificationAdded(ChatChannel<M> chatChannel, M chatMessage) {
+        log.error("chatNotificationAdded {} {}", chatChannel.getDisplayString(), chatMessage.getText());
         String notificationId = createNotificationId(chatChannel.getId(), chatMessage.getId());
         if (notificationsService.containsNotificationId(notificationId)) {
             return;
@@ -232,11 +234,16 @@ public class ChatNotificationService implements Service {
         }
 
         notificationsService.addNotificationId(notificationId);
-        ChatNotification<M> chatNotification = new ChatNotification<>(userProfileService,
-                notificationId,
-                chatChannel,
-                chatMessage);
-        maybeSendNotification(chatChannel, chatMessage, notificationId, chatNotification);
+
+        if (userIdentityService.hasUserIdentities()) {
+            ChatNotification<M> chatNotification = new ChatNotification<>(userProfileService,
+                    notificationId,
+                    chatChannel,
+                    chatMessage);
+            maybeSendNotification(chatChannel, chatMessage, notificationId, chatNotification);
+        } else {
+            notificationsService.consumeNotificationId(notificationId);
+        }
     }
 
     private <M extends ChatMessage> void maybeSendNotification(ChatChannel<M> chatChannel,
