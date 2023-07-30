@@ -75,6 +75,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
 
     @Override
     public void shutdown() {
+        super.shutdown();
     }
 
     public void addListener(AppendOnlyDataStorageService.Listener listener) {

@@ -245,6 +245,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     @Override
     public void shutdown() {
+        super.shutdown();
     }
 
     public void addListener(Listener listener) {

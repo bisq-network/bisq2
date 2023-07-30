@@ -162,6 +162,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     @Override
     public void shutdown() {
+        super.shutdown();
     }
 
     public void addListener(Listener listener) {
