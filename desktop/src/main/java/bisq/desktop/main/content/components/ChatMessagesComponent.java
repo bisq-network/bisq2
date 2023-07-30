@@ -146,7 +146,7 @@ public class ChatMessagesComponent {
 
             citationBlock = new CitationBlock(serviceProvider);
 
-            UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
+            UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
 
             chatMessagesListView = new ChatMessagesListView(serviceProvider,
                     this::mentionUserHandler,
@@ -366,7 +366,7 @@ public class ChatMessagesComponent {
                 if (myUserProfilesInChannel.size() > 0) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
                     if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity())) {
-                        new Popup().information(Res.get("chat.message.send.differentUserProfile.warn"))
+                        new Popup().warning(Res.get("chat.message.send.differentUserProfile.warn"))
                                 .closeButtonText(Res.get("confirmation.no"))
                                 .actionButtonText(Res.get("confirmation.yes"))
                                 .onAction(() -> doSendMessage(text))

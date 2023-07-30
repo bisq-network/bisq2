@@ -53,7 +53,7 @@ public class AccountAgeTab3Controller implements Controller {
     public AccountAgeTab3Controller(ServiceProvider serviceProvider, AccountAgeView parentView) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.parentView = parentView;
-        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         accountAgeService = serviceProvider.getUserService().getReputationService().getAccountAgeService();
 
         model = new AccountAgeTab3Model();

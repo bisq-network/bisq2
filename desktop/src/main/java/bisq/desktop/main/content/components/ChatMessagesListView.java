@@ -305,7 +305,7 @@ public class ChatMessagesListView {
                         if (authorUserIdentity.equals(userIdentityService.getSelectedUserIdentity())) {
                             doDeleteMessage(chatMessage, authorUserIdentity);
                         } else {
-                            new Popup().information(Res.get("chat.message.delete.differentUserProfile.warn"))
+                            new Popup().warning(Res.get("chat.message.delete.differentUserProfile.warn"))
                                     .closeButtonText(Res.get("confirmation.no"))
                                     .actionButtonText(Res.get("confirmation.yes"))
                                     .onAction(() -> {

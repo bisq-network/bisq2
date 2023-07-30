@@ -40,7 +40,7 @@ public class TopPanelController implements Controller {
         walletService = serviceProvider.getWalletService();
 
         model = new TopPanelModel(serviceProvider.getWalletService().isPresent());
-        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider.getUserService().getUserIdentityService());
+        UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         MarketPriceComponent marketPriceComponent = new MarketPriceComponent(serviceProvider.getBondedRolesService().getMarketPriceService());
         view = new TopPanelView(model, this, userProfileSelection, marketPriceComponent.getRoot());
 
