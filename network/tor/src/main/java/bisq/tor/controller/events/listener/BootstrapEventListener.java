@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.controller;
+package bisq.tor.controller.events.listener;
 
 import bisq.tor.controller.events.BootstrapEvent;
 

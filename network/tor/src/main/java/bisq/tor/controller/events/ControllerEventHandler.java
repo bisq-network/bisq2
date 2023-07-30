@@ -17,7 +17,7 @@
 
 package bisq.tor.controller.events;
 
-import bisq.tor.controller.BootstrapEventListener;
+import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.HsDescUploadedEventListener;
 import net.freehaven.tor.control.EventHandler;
 
