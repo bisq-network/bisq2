@@ -23,6 +23,8 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescUploadedEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescUploadedEventListener;
+import bisq.tor.controller.exceptions.HsDescUploadFailedException;
+import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.tor.process.NativeTorProcess;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;

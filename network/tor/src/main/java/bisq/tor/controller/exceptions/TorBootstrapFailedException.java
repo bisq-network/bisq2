@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.controller;
+package bisq.tor.controller.exceptions;
 
 public class TorBootstrapFailedException extends RuntimeException {
     public TorBootstrapFailedException(String message) {
