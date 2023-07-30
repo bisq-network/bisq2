@@ -33,7 +33,7 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class NativeTorProcess {
 
-    private static final String ARG_OWNER_PID = "__OwningControllerProcess";
+    public static final String ARG_OWNER_PID = "__OwningControllerProcess";
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
     private Optional<Future<Path>> logFileCreationWaiter = Optional.empty();
