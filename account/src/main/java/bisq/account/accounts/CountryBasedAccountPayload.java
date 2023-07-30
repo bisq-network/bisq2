@@ -40,9 +40,11 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
                 .setCountryCode(countryCode);
     }
 
-    @SuppressWarnings("DuplicateBranchesInSwitch") // https://youtrack.jetbrains.com/issue/IDEA-316332
-    public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.CountryBasedAccountPayload proto) {
-        switch (proto.getMessageCase()) {
+    public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
+            case BANKACCOUNTPAYLOAD: {
+                return BankAccountPayload.fromProto(proto);
+            }
             case SEPAACCOUNTPAYLOAD: {
                 return SepaAccountPayload.fromProto(proto);
             }
