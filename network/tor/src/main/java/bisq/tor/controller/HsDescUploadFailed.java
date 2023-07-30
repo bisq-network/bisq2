@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.process;
+package bisq.tor.controller;
 
 public class HsDescUploadFailed extends RuntimeException {
     public HsDescUploadFailed(String message) {

@@ -18,8 +18,6 @@
 package bisq.tor.controller;
 
 import bisq.tor.ClientTorrcGenerator;
-import bisq.tor.controller.*;
-import bisq.tor.process.HsDescUploadFailed;
 import bisq.tor.process.NativeTorProcess;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
