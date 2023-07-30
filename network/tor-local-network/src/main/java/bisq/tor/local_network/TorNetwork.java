@@ -129,19 +129,22 @@ public class TorNetwork {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
-            var torrcFileGenerator = new TorrcFileGenerator(torDaTorrcGenerator, allDAs);
+            Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torDaTorrcGenerator, allDAs);
             generateTorrc(da, torrcFileGenerator);
         }
 
         for (TorNode relay : relays) {
             var relayTorrcGenerator = new RelayTorrcGenerator(relay);
-            var torrcFileGenerator = new TorrcFileGenerator(relayTorrcGenerator, allDAs);
+            Path torrcPath = relayTorrcGenerator.getThisTorNode().getTorrcPath();
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, relayTorrcGenerator, allDAs);
             generateTorrc(relay, torrcFileGenerator);
         }
 
         for (TorNode client : clients) {
             var clientTorrcGenerator = new ClientTorrcGenerator(client);
-            var torrcFileGenerator = new TorrcFileGenerator(clientTorrcGenerator, allDAs);
+            Path torrcPath = clientTorrcGenerator.getThisTorNode().getTorrcPath();
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, clientTorrcGenerator, allDAs);
             generateTorrc(client, torrcFileGenerator);
         }
     }

@@ -19,30 +19,33 @@ package bisq.tor.local_network.torrc;
 
 import bisq.tor.local_network.TorNode;
 
+import java.util.Map;
+
 public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
     public DirectoryAuthorityTorrcGenerator(TorNode thisDirectoryAuthority) {
         super(thisDirectoryAuthority);
     }
 
     @Override
-    public void generate() {
+    public Map<String, String> generate() {
         super.generate();
 
-        torrcStringBuilder
-                .append("AuthoritativeDirectory 1\n")
-                .append("V3AuthoritativeDirectory 1\n")
-                .append("ContactInfo auth-").append(thisTorNode.getNickname()).append("@test.test\n")
+        torConfigMap.put("AuthoritativeDirectory", "1");
+        torConfigMap.put("V3AuthoritativeDirectory", "1");
+        torConfigMap.put("ContactInfo", "auth-" + thisTorNode.getNickname() + "@test.test\n");
 
-                .append("AssumeReachable 1\n")
+        torConfigMap.put("AssumeReachable", "1");
+        torConfigMap.put("TestingV3AuthInitialVotingInterval", "20");
 
-                .append("TestingV3AuthInitialVotingInterval 20\n")
-                .append("TestingV3AuthInitialVoteDelay 4\n")
-                .append("TestingV3AuthInitialDistDelay 4\n")
+        torConfigMap.put("TestingV3AuthInitialVoteDelay", "4");
+        torConfigMap.put("TestingV3AuthInitialDistDelay", "4");
 
-                .append("V3AuthVotingInterval 20\n")
-                .append("V3AuthVoteDelay 4\n")
-                .append("V3AuthDistDelay 4\n")
+        torConfigMap.put("V3AuthVotingInterval", "20");
+        torConfigMap.put("V3AuthVoteDelay", "4");
+        torConfigMap.put("V3AuthDistDelay", "4");
 
-                .append(thisTorNode.getExitPolicy()).append("\n");
+        torConfigMap.put("ExitPolicy", "accept *:*");
+
+        return torConfigMap;
     }
 }

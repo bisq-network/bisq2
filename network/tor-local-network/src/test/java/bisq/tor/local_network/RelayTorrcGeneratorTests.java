@@ -82,7 +82,8 @@ public class RelayTorrcGeneratorTests {
         var relayTorrcGenerator = new RelayTorrcGenerator(firstRelay);
         var allDirAuthorities = Set.of(firstRelay, secondRelay);
 
-        var torrcFileGenerator = new TorrcFileGenerator(relayTorrcGenerator, allDirAuthorities);
+        Path torrcPath = relayTorrcGenerator.getThisTorNode().getTorrcPath();
+        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, relayTorrcGenerator, allDirAuthorities);
         torrcFileGenerator.generate();
 
         assertThat(firstRelay.getTorrcPath())
