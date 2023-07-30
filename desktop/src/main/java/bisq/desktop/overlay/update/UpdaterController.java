@@ -32,7 +32,6 @@ import bisq.settings.SettingsService;
 import bisq.updater.DownloadItem;
 import bisq.updater.UpdaterService;
 import bisq.updater.UpdaterUtils;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -132,7 +131,7 @@ public class UpdaterController implements Controller {
         if (updaterService.getReleaseNotification().get().isLauncherUpdate()) {
             OsUtils.open(OsUtils.getDownloadOfHomeDir());
         }
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 
     void onClose() {

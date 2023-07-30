@@ -26,7 +26,6 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;
-import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -112,7 +111,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     }
 
     void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 
     protected void onSave() {

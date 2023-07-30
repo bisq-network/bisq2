@@ -40,6 +40,6 @@ public interface PersistenceClient<T extends PersistableStore<T>> {
 
     default CompletableFuture<Boolean> persist() {
         return getPersistence().persistAsync(getPersistableStore().getClone())
-                .handle((r, t) -> true);
+                .handle((nil, throwable) -> throwable == null);
     }
 }

@@ -26,6 +26,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
+import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -83,7 +84,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     private final TradeService tradeService;
     private final UpdaterService updaterService;
 
-    public DesktopApplicationService(String[] args) {
+    public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
 
         securityService = new SecurityService(persistenceService);
@@ -150,8 +151,9 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
 
         updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
 
-        serviceProvider = new ServiceProvider(this::shutdown,
+        serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
+                persistenceService,
                 securityService,
                 walletService,
                 networkService,

@@ -26,10 +26,11 @@ import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
-import bisq.desktop.common.application.ShotDownHandler;
+import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
+import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
@@ -48,6 +49,7 @@ import java.util.Optional;
 public class ServiceProvider {
 
     private final ApplicationService.Config config;
+    private final PersistenceService persistenceService;
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
@@ -63,10 +65,11 @@ public class ServiceProvider {
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
-    private final ShotDownHandler shotDownHandler;
+    private final ShutDownHandler shutDownHandler;
 
-    public ServiceProvider(ShotDownHandler shotDownHandler,
+    public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
+                           PersistenceService persistenceService,
                            SecurityService securityService,
                            Optional<WalletService> walletService,
                            NetworkService networkService,
@@ -82,8 +85,9 @@ public class ServiceProvider {
                            NotificationsService notificationsService,
                            TradeService tradeService,
                            UpdaterService updaterService) {
-        this.shotDownHandler = shotDownHandler;
+        this.shutDownHandler = shutDownHandler;
         this.config = config;
+        this.persistenceService = persistenceService;
         this.securityService = securityService;
         this.walletService = walletService;
         this.networkService = networkService;

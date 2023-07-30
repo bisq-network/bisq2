@@ -29,7 +29,6 @@ import bisq.i18n.Res;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -232,7 +231,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     }
 
     void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 
     private void updateNextButtonDisabledState() {

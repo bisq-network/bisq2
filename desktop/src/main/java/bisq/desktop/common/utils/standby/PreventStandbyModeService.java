@@ -34,8 +34,7 @@ public class PreventStandbyModeService {
 
     public PreventStandbyModeService(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-        preventStandbyMode = OsUtils.isLinux() ? Inhibitor.findExecutableInhibitor().orElse(new SoundPlayer()) : new SoundPlayer();
+        preventStandbyMode = OsUtils.isLinux() ? Inhibitor.findExecutableInhibitor().orElse(new SoundPlayer(serviceProvider)) : new SoundPlayer(serviceProvider);
     }
 
     public void initialize() {

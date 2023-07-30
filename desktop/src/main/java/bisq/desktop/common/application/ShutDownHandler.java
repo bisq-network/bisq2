@@ -17,9 +17,8 @@
 
 package bisq.desktop.common.application;
 
-import java.util.concurrent.CompletableFuture;
+public interface ShutDownHandler {
+    void shutdown();
 
-@FunctionalInterface
-public interface ShotDownHandler {
-    CompletableFuture<Boolean> shutdown();
+    void addShutDownHook(Runnable shutDownHandler);
 }

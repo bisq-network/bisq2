@@ -26,7 +26,6 @@ import bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.rules.BisqEasyGu
 import bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.security.BisqEasyGuideSecurityController;
 import bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.welcome.BisqEasyGuideWelcomeController;
 import bisq.desktop.overlay.OverlayController;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,6 +78,6 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     }
 
     public void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 }

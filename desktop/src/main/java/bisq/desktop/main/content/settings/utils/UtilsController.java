@@ -21,12 +21,14 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,10 +46,12 @@ public class UtilsController implements Controller {
     private final UtilsModel model;
     private final String baseDir;
     private final String appName;
+    private final PersistenceService persistenceService;
 
     public UtilsController(ServiceProvider serviceProvider) {
         baseDir = serviceProvider.getConfig().getBaseDir();
         appName = serviceProvider.getConfig().getAppName();
+        persistenceService = serviceProvider.getPersistenceService();
 
         model = new UtilsModel();
         view = new UtilsView(model, this);
@@ -55,7 +59,6 @@ public class UtilsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getBackupLocation().set(null);
         model.getBackupButtonDisabled().bind(model.getBackupLocation().isEmpty());
         model.getBackupButtonDefault().bind(model.getBackupLocation().isEmpty().not());
     }
@@ -87,19 +90,28 @@ public class UtilsController implements Controller {
     }
 
     void onBackup() {
-        String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
-        String destinationDirName = appName + "_backup_" + dateString;
-        String destination = Paths.get(model.getBackupLocation().get(), destinationDirName).toString();
-        if (!new File(model.getBackupLocation().get()).exists()) {
-            new Popup().warning(Res.get("settings.utils.backup.destinationNotExist", model.getBackupLocation().get())).show();
-            return;
-        }
-        try {
-            FileUtils.copyDirectory(baseDir, destination);
-            new Popup().feedback(Res.get("settings.utils.backup.success", destination)).show();
-        } catch (IOException e) {
-            new Popup().error(e).show();
-        }
+        persistenceService.persistAllClients()
+                .whenComplete((result, throwable) -> {
+                    UIThread.run(() -> {
+                        if (throwable == null) {
+                            String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
+                            String destinationDirName = appName + "_backup_" + dateString;
+                            String destination = Paths.get(model.getBackupLocation().get(), destinationDirName).toString();
+                            if (!new File(model.getBackupLocation().get()).exists()) {
+                                new Popup().warning(Res.get("settings.utils.backup.destinationNotExist", model.getBackupLocation().get())).show();
+                                return;
+                            }
+                            try {
+                                FileUtils.copyDirectory(baseDir, destination);
+                                new Popup().feedback(Res.get("settings.utils.backup.success", destination)).show();
+                            } catch (IOException e) {
+                                new Popup().error(e).show();
+                            }
+                        } else {
+                            new Popup().error(throwable).show();
+                        }
+                    });
+                });
     }
 
     void onTac() {

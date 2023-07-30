@@ -27,7 +27,6 @@ import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.support.moderator.ModeratorService;
 import bisq.user.profile.UserProfile;
-import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -109,7 +108,7 @@ public class ReportToModeratorWindow {
         }
 
         void onQuit() {
-            serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+            serviceProvider.getShutDownHandler().shutdown();
         }
     }
 

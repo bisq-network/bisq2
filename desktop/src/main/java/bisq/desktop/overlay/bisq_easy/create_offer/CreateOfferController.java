@@ -29,7 +29,6 @@ import bisq.desktop.overlay.bisq_easy.create_offer.price.CreateOfferPriceControl
 import bisq.desktop.overlay.bisq_easy.create_offer.review.CreateOfferReviewOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -225,7 +224,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 
     private void reset() {

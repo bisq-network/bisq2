@@ -51,7 +51,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         this.fileName = fileName;
         subDirectory = SUB_PATH + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName, persistableStore);
-        scheduler = Scheduler.run(this::pruneExpired).periodically(5, TimeUnit.SECONDS);
+        scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
     }
 
     protected Set<Map.Entry<ByteArray, T>> pruneExpired() {

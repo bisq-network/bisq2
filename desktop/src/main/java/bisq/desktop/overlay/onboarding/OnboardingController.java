@@ -26,7 +26,6 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileController;
 import bisq.desktop.overlay.onboarding.password.OnboardingPasswordController;
 import bisq.desktop.overlay.onboarding.welcome.WelcomeController;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -77,6 +76,6 @@ public class OnboardingController extends NavigationController {
     }
 
     public void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 }

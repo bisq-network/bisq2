@@ -41,7 +41,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     @Override
     protected DesktopApplicationService createApplicationService(String[] args) {
-        return new DesktopApplicationService(args);
+        return new DesktopApplicationService(args, this);
     }
 
     @Override
