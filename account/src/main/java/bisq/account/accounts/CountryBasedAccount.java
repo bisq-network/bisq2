@@ -45,10 +45,14 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
                 .setCountry(country.toProto());
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch") // https://youtrack.jetbrains.com/issue/IDEA-316332
     public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.CountryBasedAccount proto) {
         switch (proto.getMessageCase()) {
             case SEPAACCOUNT: {
                 return SepaAccount.fromProto(proto);
+            }
+            case F2FACCOUNT: {
+                return F2FAccount.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

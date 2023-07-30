@@ -390,6 +390,10 @@
     -fx-image: url("/images/payment/NationalBankTransfer.png");
 }
 
+#F2F {
+    -fx-image: url("/images/payment/F2F.png");
+}
+
 
 /* Onboarding icons*/
 #info-circle-solid {
