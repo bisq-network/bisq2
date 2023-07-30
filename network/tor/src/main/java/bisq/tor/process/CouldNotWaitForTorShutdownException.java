@@ -17,12 +17,12 @@
 
 package bisq.tor.process;
 
-public class CouldNotWaitForTorShutdown extends RuntimeException {
-    public CouldNotWaitForTorShutdown(String message) {
+public class CouldNotWaitForTorShutdownException extends RuntimeException {
+    public CouldNotWaitForTorShutdownException(String message) {
         super(message);
     }
 
-    public CouldNotWaitForTorShutdown(Throwable cause) {
+    public CouldNotWaitForTorShutdownException(Throwable cause) {
         super(cause);
     }
 }
