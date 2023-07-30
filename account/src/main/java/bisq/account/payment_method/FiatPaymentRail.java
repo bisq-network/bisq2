@@ -41,7 +41,8 @@ public enum FiatPaymentRail implements PaymentRail {
     WISE(FiatPaymentRailUtil.getWiseCountries(), FiatPaymentRailUtil.getWiseCurrencies()),
     NATIONAL_BANK(new ArrayList<>(), new ArrayList<>()),
     SWIFT(),
-    F2F();
+    F2F(),
+    ACH_TRANSFER(List.of("US"), List.of("USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -147,7 +148,6 @@ TIKKIE=Tikkie
 VERSE=Verse
 STRIKE=Strike
 SWIFT=SWIFT International Wire Transfer
-ACH_TRANSFER=ACH Transfer
 DOMESTIC_WIRE_TRANSFER=Domestic Wire Transfer
 CIPS=Cross-Border Interbank Payment System
 */

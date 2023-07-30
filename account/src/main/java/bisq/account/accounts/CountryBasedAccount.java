@@ -47,6 +47,9 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
 
     public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {
         switch (proto.getCountryBasedAccount().getMessageCase()) {
+            case BANKACCOUNT: {
+                return BankAccount.fromProto(proto);
+            }
             case SEPAACCOUNT: {
                 return SepaAccount.fromProto(proto);
             }

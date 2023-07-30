@@ -394,6 +394,10 @@
     -fx-image: url("/images/payment/F2F.png");
 }
 
+#ACH_TRANSFER {
+    -fx-image: url("/images/payment/ACH.png");
+}
+
 
 /* Onboarding icons*/
 #info-circle-solid {
