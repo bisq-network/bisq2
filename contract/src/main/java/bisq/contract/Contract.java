@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.common.proto.DeterministicProto;
+import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class Contract<T extends Offer<?, ?>> implements DeterministicProto {
+public abstract class Contract<T extends Offer<?, ?>> implements Proto {
     protected final T offer;
     protected final TradeProtocolType protocolType;
 
