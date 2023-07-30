@@ -185,8 +185,12 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         }
     }
 
-    public void onToggleHelp() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+    public void onOpenHelp() {
+        if (model.chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+        } else {
+            Navigation.navigateTo(NavigationTarget.CHAT_RULES);
+        }
     }
 
     public void onCloseSideBar() {
@@ -200,7 +204,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             channelSidebar.setChannel(model.getSelectedChannel());
         });
     }
-
 
     protected void cleanupChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));

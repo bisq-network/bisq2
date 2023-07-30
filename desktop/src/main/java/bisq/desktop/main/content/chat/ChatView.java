@@ -87,7 +87,7 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
         searchBox = new SearchBox();
         searchBox.setPrefWidth(200);
-        helpButton = BisqIconButton.createIconButton("icon-help", Res.get("action.help"));
+        helpButton = BisqIconButton.createIconButton("icon-help", model.getHelpTitle());
         channelInfoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
         HBox.setMargin(channelInfoButton, new Insets(0, 0, 0, -5));
 
@@ -123,6 +123,7 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
     @Override
     protected void onViewAttached() {
+        log.error("onViewAttached");
         MainView.setFitToHeight(true);
         channelTitle.textProperty().bind(model.getChannelTitle());
         channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
@@ -130,7 +131,7 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
-        helpButton.setOnAction(e -> controller.onToggleHelp());
+        helpButton.setOnAction(e -> controller.onOpenHelp());
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 

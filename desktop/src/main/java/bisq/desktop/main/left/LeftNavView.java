@@ -144,7 +144,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
 
-        horizontalExpandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
+        horizontalExpandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, 16);
         horizontalExpandIcon.setCursor(Cursor.HAND);
         horizontalExpandIcon.setLayoutY(menuTop - 3);
         horizontalExpandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
@@ -152,7 +152,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         BisqTooltip tooltip = new BisqTooltip(Res.get("navigation.expandIcon.tooltip"));
         horizontalExpandIcon.setTooltip(tooltip);
 
-        horizontalCollapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
+        horizontalCollapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, 16);
         horizontalCollapseIcon.setCursor(Cursor.HAND);
         horizontalCollapseIcon.setLayoutY(menuTop - 3);
         horizontalCollapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
