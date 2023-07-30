@@ -30,6 +30,7 @@ import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
+import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
@@ -48,6 +49,7 @@ import java.util.Optional;
 public class ServiceProvider {
 
     private final ApplicationService.Config config;
+    private final PersistenceService persistenceService;
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
@@ -67,6 +69,7 @@ public class ServiceProvider {
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
+                           PersistenceService persistenceService,
                            SecurityService securityService,
                            Optional<WalletService> walletService,
                            NetworkService networkService,
@@ -84,6 +87,7 @@ public class ServiceProvider {
                            UpdaterService updaterService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
+        this.persistenceService = persistenceService;
         this.securityService = securityService;
         this.walletService = walletService;
         this.networkService = networkService;

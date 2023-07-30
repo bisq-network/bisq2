@@ -153,6 +153,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
 
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
+                persistenceService,
                 securityService,
                 walletService,
                 networkService,

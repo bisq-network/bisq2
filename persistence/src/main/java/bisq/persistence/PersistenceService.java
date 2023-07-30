@@ -80,4 +80,17 @@ public class PersistenceService {
                                 })))
                 .thenApply(list -> true);
     }
+
+    public CompletableFuture<Boolean> persistAllClients() {
+        return CompletableFutureUtils.allOf(clients.stream()
+                        .map(persistenceClient -> persistenceClient.persist()
+                                .whenComplete((result, throwable) -> {
+                                    if (throwable != null) {
+                                        throwable.printStackTrace();
+                                    } else if (!result) {
+                                        log.warn("Failed to persist");
+                                    }
+                                })))
+                .thenApply(list -> true);
+    }
 }
