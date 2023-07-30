@@ -21,6 +21,7 @@ import bisq.desktop.DesktopModel;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.OrderedList;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.overlay.OverlayController;
@@ -93,14 +94,13 @@ public class TacView extends View<VBox, TacModel, TacController> {
         rejectButton = new Button(Res.get("tac.reject"));
         rejectButton.getStyleClass().add("outlined-button");
 
-        HBox buttons = new HBox(20, acceptButton, rejectButton);
+        HBox.setMargin(confirmCheckBox, new Insets(0, 0, 0, 10));
+        HBox buttons = new HBox(20, confirmCheckBox, Spacer.fillHBox(), acceptButton, rejectButton);
         VBox.setMargin(rulesList, new Insets(-20, 0, 0, 20));
-        VBox.setMargin(confirmCheckBox, new Insets(25, 0, 15, 10));
-
+        VBox.setMargin(buttons, new Insets(30, 0, 15, 0));
         root.getChildren().addAll(headline,
                 textList,
                 rulesList,
-                confirmCheckBox,
                 buttons);
     }
 
