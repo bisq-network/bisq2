@@ -31,7 +31,7 @@ public class ClientTorrcGenerator {
     private final Path dataDirPath;
     private final int controlPort;
     private final String hashedControlPassword;
-    protected final Map<String, String> torConfigMap = new HashMap<>();
+    private final Map<String, String> torConfigMap = new HashMap<>();
 
     public ClientTorrcGenerator(Path dataDirPath, int controlPort, String hashedControlPassword) {
         this.dataDirPath = dataDirPath;
