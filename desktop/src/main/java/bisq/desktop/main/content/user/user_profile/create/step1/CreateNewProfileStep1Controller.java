@@ -25,7 +25,6 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileModel;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileView;
-import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -67,6 +66,6 @@ public class CreateNewProfileStep1Controller extends CreateProfileController {
     }
 
     void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 }

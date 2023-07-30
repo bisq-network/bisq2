@@ -23,7 +23,6 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.user.user_profile.create.step1.CreateNewProfileStep1Controller;
 import bisq.desktop.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,6 +73,6 @@ public class CreateUserProfileController extends NavigationController {
     }
 
     public void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 }

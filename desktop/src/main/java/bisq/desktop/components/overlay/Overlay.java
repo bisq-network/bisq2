@@ -21,9 +21,11 @@ import bisq.common.locale.LanguageRepository;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.application.ShutDownHandler;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.containers.BisqGridPane;
@@ -78,16 +80,13 @@ public abstract class Overlay<T extends Overlay<T>> {
     public static Region primaryStageOwner;
     private static String baseDir;
     public static SettingsService settingsService;
-    private static Runnable shutdownHandler;
+    private static ShutDownHandler shutdownHandler;
 
-    public static void init(Region primaryStageOwner,
-                            String baseDir,
-                            SettingsService settingsService,
-                            Runnable shutdownHandler) {
+    public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
-        Overlay.baseDir = baseDir;
-        Overlay.settingsService = settingsService;
-        Overlay.shutdownHandler = shutdownHandler;
+        Overlay.baseDir = serviceProvider.getConfig().getBaseDir();
+        Overlay.settingsService = serviceProvider.getSettingsService();
+        Overlay.shutdownHandler = serviceProvider.getShutDownHandler();
     }
 
 
@@ -451,7 +450,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T useShutDownButton() {
         this.actionButtonText = Res.get("action.shutDown");
-        this.actionHandlerOptional = Optional.ofNullable(shutdownHandler);
+        this.actionHandlerOptional = Optional.of(() -> shutdownHandler.shutdown());
         return cast();
     }
 

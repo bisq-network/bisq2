@@ -37,7 +37,6 @@ import bisq.desktop.overlay.onboarding.OnboardingController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.overlay.update.UpdaterController;
-import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -179,6 +178,6 @@ public class OverlayController extends NavigationController {
     }
 
     void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 }

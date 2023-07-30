@@ -25,7 +25,6 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -78,7 +77,7 @@ public class UnlockController implements InitWithDataController<UnlockController
     }
 
     void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 
     void onUnlock() {
@@ -104,7 +103,7 @@ public class UnlockController implements InitWithDataController<UnlockController
     }
 
     void onCancel() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
     private void handleError() {

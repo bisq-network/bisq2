@@ -21,7 +21,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.settings.SettingsService;
-import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +64,7 @@ public class TacController implements InitWithDataController<TacController.InitD
     }
 
     public void onQuit() {
-        serviceProvider.getShotDownHandler().shutdown().thenAccept(result -> Platform.exit());
+         serviceProvider.getShutDownHandler().shutdown();
     }
 
     public void onConfirm(boolean selected) {

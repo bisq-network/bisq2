@@ -38,7 +38,6 @@ public class PreventStandbyModeService {
     }
 
     public void initialize() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         settingsService.getPreventStandbyMode().addObserver(preventStandbyMode -> {
             if (preventStandbyMode) {
                 this.preventStandbyMode.initialize();

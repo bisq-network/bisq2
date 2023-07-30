@@ -26,7 +26,7 @@ import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
-import bisq.desktop.common.application.ShotDownHandler;
+import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
@@ -63,9 +63,9 @@ public class ServiceProvider {
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
-    private final ShotDownHandler shotDownHandler;
+    private final ShutDownHandler shutDownHandler;
 
-    public ServiceProvider(ShotDownHandler shotDownHandler,
+    public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
                            SecurityService securityService,
                            Optional<WalletService> walletService,
@@ -82,7 +82,7 @@ public class ServiceProvider {
                            NotificationsService notificationsService,
                            TradeService tradeService,
                            UpdaterService updaterService) {
-        this.shotDownHandler = shotDownHandler;
+        this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.securityService = securityService;
         this.walletService = walletService;

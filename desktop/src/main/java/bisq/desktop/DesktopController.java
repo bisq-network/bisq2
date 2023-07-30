@@ -18,7 +18,6 @@
 package bisq.desktop;
 
 import bisq.common.observable.Observable;
-import bisq.common.util.OsUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
@@ -40,7 +39,6 @@ import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
-import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Screen;
@@ -78,16 +76,16 @@ public class DesktopController extends NavigationController {
                              Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
         this.serviceProvider = serviceProvider;
-
-        settingsService = this.serviceProvider.getSettingsService();
-        userIdentityService = this.serviceProvider.getUserService().getUserIdentityService();
         this.onActivatedHandler = onActivatedHandler;
+
+        settingsService = serviceProvider.getSettingsService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
 
         model = new DesktopModel(serviceProvider.getConfig().getAppName());
         setInitialScreenSize();
         view = new DesktopView(model, this, applicationJavaFxApplicationData.getStage());
 
-        splashController = new SplashController(applicationServiceState, this.serviceProvider);
+        splashController = new SplashController(applicationServiceState, serviceProvider);
 
         Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
         Transitions.setSettingsService(settingsService);
@@ -95,15 +93,13 @@ public class DesktopController extends NavigationController {
         preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
 
         Navigation.init(settingsService);
-        Overlay.init(viewRoot,
-                serviceProvider.getConfig().getBaseDir(),
-                settingsService,
-                this::shutdown);
+        Overlay.init(serviceProvider, viewRoot);
+        serviceProvider.getShutDownHandler().addShutDownHook(this::onShutdown);
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
 
-        new OverlayController(this.serviceProvider, viewRoot);
+        new OverlayController(serviceProvider, viewRoot);
     }
 
     private void setInitialScreenSize() {
@@ -152,7 +148,6 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
-        preventStandbyModeService.shutdown();
     }
 
     public void onApplicationServiceInitialized(boolean result, Throwable throwable) {
@@ -172,6 +167,12 @@ public class DesktopController extends NavigationController {
         } else {
             splashController.startAnimation();
         }
+    }
+
+    public void onUncaughtException(Thread thread, Throwable throwable) {
+        log.error("Uncaught exception from thread {}", thread);
+        log.error("Uncaught exception", throwable);
+        UIThread.run(() -> new Popup().error(throwable).show());
     }
 
     private void maybeShowLockScreen() {
@@ -219,39 +220,28 @@ public class DesktopController extends NavigationController {
         }
     }
 
-    public void onQuit() {
-        shutdown();
+    void onQuit() {
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
-    public void shutdown() {
-        preventStandbyModeService.shutdown();
-        serviceProvider.getShotDownHandler().shutdown()
-                .thenAccept(result -> {
-                    Platform.exit();
-                    System.exit(OsUtils.EXIT_SUCCESS);
-                });
-    }
-
-    public void onStageXChanged(double value) {
+    void onStageXChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_X, value);
     }
 
-    public void onStageYChanged(double value) {
+    void onStageYChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_Y, value);
     }
 
-    public void onStageWidthChanged(double value) {
+    void onStageWidthChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_W, value);
     }
 
-    public void onStageHeightChanged(double value) {
+    void onStageHeightChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_H, value);
     }
 
-    public void onUncaughtException(Thread thread, Throwable throwable) {
-        log.error("Uncaught exception from thread {}", thread);
-        log.error("Uncaught exception", throwable);
-        UIThread.run(() -> new Popup().error(throwable).show());
+    private void onShutdown() {
+        preventStandbyModeService.shutdown();
     }
 
     private boolean isLocked() {
