@@ -49,7 +49,9 @@ class SoundPlayer implements PreventStandbyMode {
 
     public void shutdown() {
         isPlaying = false;
-        ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+        if (executor != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+        }
     }
 
     private void playSound() {
@@ -64,7 +66,6 @@ class SoundPlayer implements PreventStandbyMode {
             AudioInputStream audioInputStream = null;
             SourceDataLine sourceDataLine = null;
             while (isPlaying) {
-                log.error("loop");
                 try {
                     audioInputStream = AudioSystem.getAudioInputStream(soundFile);
                     sourceDataLine = getSourceDataLine(audioInputStream.getFormat());
@@ -95,6 +96,7 @@ class SoundPlayer implements PreventStandbyMode {
             log.error(e.toString());
         }
     }
+
     private static SourceDataLine getSourceDataLine(AudioFormat audioFormat) throws LineUnavailableException {
         DataLine.Info dataLineInfo = new DataLine.Info(SourceDataLine.class, audioFormat);
         return (SourceDataLine) AudioSystem.getLine(dataLineInfo);

@@ -87,6 +87,8 @@ class Inhibitor implements PreventStandbyMode {
             }
         });
         process = Optional.empty();
-        ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+        if (executor != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+        }
     }
 }
