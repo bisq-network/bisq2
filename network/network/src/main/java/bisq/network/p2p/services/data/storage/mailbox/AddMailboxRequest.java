@@ -131,9 +131,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         });
     }
 
-    public String getFileName() {
-        return mailboxSequentialData.getMailboxData().getMetaData().getFileName();
-    }
 
     @Override
     public int getSequenceNumber() {
@@ -147,6 +144,10 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public MetaData getMetaData() {
         return mailboxSequentialData.getMailboxData().getMetaData();
+    }
+
+    public String getStoreFileName() {
+        return mailboxSequentialData.getMailboxData().getStoreFileName();
     }
 
     @Override

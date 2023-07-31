@@ -140,10 +140,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         });
     }
 
-    public String getFileName() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getFileName();
-    }
-
     @Override
     public int getSequenceNumber() {
         return authenticatedSequentialData.getSequenceNumber();
@@ -154,13 +150,17 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return authenticatedSequentialData.getCreated();
     }
 
+    @Override
+    public boolean isExpired() {
+        return authenticatedSequentialData.isExpired();
+    }
+
     public MetaData getMetaData() {
         return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
-    @Override
-    public boolean isExpired() {
-        return authenticatedSequentialData.isExpired();
+    public String getStoreFileName() {
+        return authenticatedSequentialData.getAuthenticatedData().getStoreFileName();
     }
 
     @Override

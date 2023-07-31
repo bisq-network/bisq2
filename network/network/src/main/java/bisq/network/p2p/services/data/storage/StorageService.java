@@ -204,7 +204,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
         MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
-        return getOrCreateMailboxDataStore(mailboxData.getMetaData())
+        return getOrCreateMailboxDataStore(mailboxData.getStoreFileName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -220,7 +220,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
         AuthenticatedData authenticatedData = request.getAuthenticatedSequentialData().getAuthenticatedData();
-        return getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
+        return getOrCreateAuthenticatedDataStore(authenticatedData.getStoreFileName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -236,7 +236,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
         AppendOnlyData appendOnlyData = request.getAppendOnlyData();
-        return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
+        return getOrCreateAppendOnlyDataStore(appendOnlyData.getStoreFileName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -268,7 +268,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
-        return getOrCreateMailboxDataStore(request.getMetaData())
+        return getOrCreateMailboxDataStore(request.getStoreFileName())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
@@ -283,7 +283,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
-        return getOrCreateAuthenticatedDataStore(request.getMetaData())
+        return getOrCreateAuthenticatedDataStore(request.getStoreFileName())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
@@ -361,12 +361,11 @@ public class StorageService {
     // Get or create stores
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(MetaData metaData) {
-        String key = getStoreKey(metaData);
-        if (!authenticatedDataStores.containsKey(key)) {
+    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeFileName) {
+        if (!authenticatedDataStores.containsKey(storeFileName)) {
             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
-                    metaData.getFileName());
+                    storeFileName);
             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                 @Override
                 public void onAdded(AuthenticatedData authenticatedData) {
@@ -378,19 +377,18 @@ public class StorageService {
                     listeners.forEach(listener -> listener.onRemoved(authenticatedData));
                 }
             });
-            authenticatedDataStores.put(key, dataStore);
+            authenticatedDataStores.put(storeFileName, dataStore);
             return dataStore.readPersisted().thenApplyAsync(store -> dataStore, NetworkService.DISPATCHER);
         } else {
-            return CompletableFuture.completedFuture(authenticatedDataStores.get(key));
+            return CompletableFuture.completedFuture(authenticatedDataStores.get(storeFileName));
         }
     }
 
-    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(MetaData metaData) {
-        String key = getStoreKey(metaData);
-        if (!mailboxStores.containsKey(key)) {
+    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeFileName) {
+        if (!mailboxStores.containsKey(storeFileName)) {
             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
                     MAILBOX_DATA_STORE.getStoreName(),
-                    metaData.getFileName());
+                    storeFileName);
             dataStore.addListener(new MailboxDataStorageService.Listener() {
                 @Override
                 public void onAdded(MailboxData mailboxData) {
@@ -402,28 +400,23 @@ public class StorageService {
                     listeners.forEach(listener -> listener.onRemoved(mailboxData));
                 }
             });
-            mailboxStores.put(key, dataStore);
+            mailboxStores.put(storeFileName, dataStore);
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
-            return CompletableFuture.completedFuture(mailboxStores.get(key));
+            return CompletableFuture.completedFuture(mailboxStores.get(storeFileName));
         }
     }
 
-    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(MetaData metaData) {
-        String key = getStoreKey(metaData);
-        if (!appendOnlyDataStores.containsKey(key)) {
+    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeFileName) {
+        if (!appendOnlyDataStores.containsKey(storeFileName)) {
             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
-                    metaData.getFileName());
-            appendOnlyDataStores.put(key, dataStore);
+                    storeFileName);
+            appendOnlyDataStores.put(storeFileName, dataStore);
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
-            return CompletableFuture.completedFuture(appendOnlyDataStores.get(key));
+            return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeFileName));
         }
-    }
-
-    private String getStoreKey(MetaData metaData) {
-        return metaData.getFileName();
     }
 
 

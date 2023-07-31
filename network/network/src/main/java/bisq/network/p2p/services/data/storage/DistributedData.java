@@ -33,5 +33,9 @@ public interface DistributedData extends Proto {
 
     MetaData getMetaData();
 
+    default String getStoreFileName() {
+        return getMetaData().getFileName();
+    }
+
     boolean isDataInvalid(byte[] pubKeyHash);
 }
