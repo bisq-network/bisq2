@@ -37,15 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
-    public final static long TTL = TimeUnit.DAYS.toMillis(10);
-
     protected final String id;
     private final ChatChannelDomain chatChannelDomain;
     protected final String channelId;

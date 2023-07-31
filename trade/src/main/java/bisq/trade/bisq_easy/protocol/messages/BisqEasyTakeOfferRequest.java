@@ -26,15 +26,11 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
-    public final static long TTL = TimeUnit.DAYS.toMillis(10);
-
     private final BisqEasyContract bisqEasyContract;
     private final ContractSignatureData contractSignatureData;
 
@@ -43,7 +39,7 @@ public class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
                 sender,
                 bisqEasyContract,
                 contractSignatureData,
-                new MetaData(TTL, 100000, BisqEasyTakeOfferRequest.class.getSimpleName()));
+                new MetaData(TTL, 100_000, BisqEasyTakeOfferRequest.class.getSimpleName()));
     }
 
     private BisqEasyTakeOfferRequest(String tradeId, NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData, MetaData metaData) {

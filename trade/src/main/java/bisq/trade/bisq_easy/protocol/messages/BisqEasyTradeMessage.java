@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
-    public final static long TTL = TimeUnit.DAYS.toMillis(10);
+    final static long TTL = TimeUnit.DAYS.toMillis(10);
 
     protected BisqEasyTradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
         super(tradeId, sender, metaData);

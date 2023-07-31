@@ -40,10 +40,9 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 public final class MediationRequest implements MailboxMessage {
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
-            100000,
-            MediationRequest.class.getSimpleName());
+    private final static long TTL = TimeUnit.DAYS.toMillis(2);
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, MediationRequest.class.getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
     private final UserProfile requester;
     private final UserProfile peer;

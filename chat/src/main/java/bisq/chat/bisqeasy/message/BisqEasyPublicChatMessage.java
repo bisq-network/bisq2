@@ -18,7 +18,6 @@
 package bisq.chat.bisqeasy.message;
 
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
 import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
@@ -31,12 +30,15 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(10);
+
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyPublicChatMessage(String channelId,
@@ -56,7 +58,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 date,
                 wasEdited,
                 ChatMessageType.TEXT,
-                new MetaData(ChatMessage.TTL, 100000, BisqEasyPublicChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100_000, BisqEasyPublicChatMessage.class.getSimpleName()));
     }
 
     private BisqEasyPublicChatMessage(String messageId,

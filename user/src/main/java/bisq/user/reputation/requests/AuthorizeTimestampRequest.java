@@ -34,10 +34,10 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeTimestampRequest implements MailboxMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(2);
+
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizeTimestampRequest.class.getSimpleName());
     private final String profileId;
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
-            100000,
-            AuthorizeTimestampRequest.class.getSimpleName());
 
     public AuthorizeTimestampRequest(String profileId) {
         this.profileId = profileId;

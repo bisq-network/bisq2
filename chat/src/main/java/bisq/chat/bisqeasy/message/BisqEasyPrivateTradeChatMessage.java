@@ -43,6 +43,10 @@ import java.util.concurrent.TimeUnit;
 public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(30);
 
+    private static MetaData createMetaData() {
+        return new MetaData(TTL, 100_000, BisqEasyPrivateTradeChatMessage.class.getSimpleName());
+    }
+
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
@@ -69,7 +73,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 mediator,
                 chatMessageType,
                 bisqEasyOffer,
-                new MetaData(TTL, 100000, BisqEasyPrivateTradeChatMessage.class.getSimpleName()));
+                createMetaData());
     }
 
     private BisqEasyPrivateTradeChatMessage(String messageId,
@@ -119,7 +123,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 new Date().getTime(),
                 false,
                 chatMessageType,
-                new MetaData(TTL, 100000, BisqEasyPrivateTradeChatMessage.class.getSimpleName()));
+                createMetaData());
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
     }

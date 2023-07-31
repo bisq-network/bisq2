@@ -55,7 +55,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 chatMessageType,
-                new MetaData(TTL, 100000, TwoPartyPrivateChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100_000, TwoPartyPrivateChatMessage.class.getSimpleName()));
     }
 
     private TwoPartyPrivateChatMessage(String messageId,

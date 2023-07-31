@@ -35,7 +35,8 @@ import lombok.ToString;
 @ToString
 public final class MailboxData implements StorageData {
     @Getter
-    protected final ConfidentialMessage confidentialMessage;
+    private final ConfidentialMessage confidentialMessage;
+    @Getter
     private final MetaData metaData;
 
     public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
@@ -53,11 +54,6 @@ public final class MailboxData implements StorageData {
     public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {
         return new MailboxData(ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
                 MetaData.fromProto(proto.getMetaData()));
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
     }
 
     @Override

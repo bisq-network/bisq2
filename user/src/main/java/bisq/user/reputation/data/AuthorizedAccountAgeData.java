@@ -37,12 +37,9 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(15);
+    public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
-    private final MetaData metaData = new MetaData(TTL,
-            100000,
-            AuthorizedAccountAgeData.class.getSimpleName());
-
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizedAccountAgeData.class.getSimpleName());
     private final String profileId;
     private final long date;
     private final boolean staticPublicKeysProvided;

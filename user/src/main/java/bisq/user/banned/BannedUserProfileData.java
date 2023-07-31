@@ -36,16 +36,13 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public final class BannedUserProfileData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(15);
-
-    private final MetaData metaData = new MetaData(TTL,
-            100000,
-            BannedUserProfileData.class.getSimpleName());
+    public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
     // todo Production key not set yet - we use devMode key only yet
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
     );
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, BannedUserProfileData.class.getSimpleName());
     private final UserProfile userProfile;
     private final boolean staticPublicKeysProvided;
 

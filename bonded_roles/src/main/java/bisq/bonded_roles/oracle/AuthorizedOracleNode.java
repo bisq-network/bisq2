@@ -38,12 +38,9 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(30);
+    public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
-    private final MetaData metaData = new MetaData(TTL,
-            100000,
-            AuthorizedOracleNode.class.getSimpleName());
-
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizedOracleNode.class.getSimpleName());
     private final NetworkId networkId;
     private final String bondUserName;          // username from DAO proposal
     private final String signature;             // signature created by bond with username as message

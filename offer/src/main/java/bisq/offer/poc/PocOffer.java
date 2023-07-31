@@ -48,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public final class PocOffer implements DistributedData {
+    private final static long TTL = TimeUnit.DAYS.toMillis(2);
+
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
     // Only used in payment method F2F
@@ -98,7 +100,7 @@ public final class PocOffer implements DistributedData {
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions,
-                new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, PocOffer.class.getSimpleName()));
+                new MetaData(TTL, 100_000, PocOffer.class.getSimpleName()));
     }
 
     private PocOffer(String id,

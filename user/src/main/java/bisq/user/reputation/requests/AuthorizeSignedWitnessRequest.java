@@ -20,6 +20,8 @@ package bisq.user.reputation.requests;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -27,10 +29,15 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.concurrent.TimeUnit;
+
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AuthorizeSignedWitnessRequest implements NetworkMessage {
+public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(2);
+
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizeSignedWitnessRequest.class.getSimpleName());
     private final String profileId;
     private final String hashAsHex;
     private final long accountAgeWitnessDate;
