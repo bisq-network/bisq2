@@ -27,20 +27,18 @@ import java.util.Set;
 
 public class TorrcFileGenerator {
     private final Path torrcPath;
-    private final TorrcConfigGenerator torrcConfigGenerator;
+    private final Map<String, String> torrcConfigMap;
     private final Set<TorNode> allDirAuthorities;
 
-    public TorrcFileGenerator(Path torrcPath, TorrcConfigGenerator torrcConfigGenerator, Set<TorNode> allDirAuthorities) {
+    public TorrcFileGenerator(Path torrcPath, Map<String, String> torrcConfigMap, Set<TorNode> allDirAuthorities) {
         this.torrcPath = torrcPath;
-        this.torrcConfigGenerator = torrcConfigGenerator;
+        this.torrcConfigMap = torrcConfigMap;
         this.allDirAuthorities = allDirAuthorities;
     }
 
     public void generate() throws IOException {
-        Map<String, String> torrcConfigs = torrcConfigGenerator.generate();
-
         StringBuilder torrcStringBuilder = new StringBuilder();
-        torrcConfigs.forEach((key, value) ->
+        torrcConfigMap.forEach((key, value) ->
                 torrcStringBuilder.append(key)
                         .append(" ")
                         .append(value)

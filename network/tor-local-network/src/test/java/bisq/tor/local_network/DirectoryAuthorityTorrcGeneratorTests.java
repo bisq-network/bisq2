@@ -24,6 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -82,8 +83,10 @@ public class DirectoryAuthorityTorrcGeneratorTests {
         var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(firstDirAuth);
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
 
+        Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
         Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
-        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torDaTorrcGenerator, allDirAuthorities);
+        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDirAuthorities);
+
         torrcFileGenerator.generate();
 
         assertThat(firstDirAuth.getTorrcPath())
