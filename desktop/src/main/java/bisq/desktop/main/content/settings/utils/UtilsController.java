@@ -114,6 +114,14 @@ public class UtilsController implements Controller {
                 });
     }
 
+    void onChatRules() {
+        Navigation.navigateTo(NavigationTarget.CHAT_RULES);
+    }
+
+    void onTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+    }
+
     void onTac() {
         Navigation.navigateTo(NavigationTarget.TAC);
     }

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.security;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,17 +27,12 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityModel, BisqEasyGuideSecurityController> {
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
-    private final Text content;
-    private Subscription widthPin;
 
     public BisqEasyGuideSecurityView(BisqEasyGuideSecurityModel model, BisqEasyGuideSecurityController controller) {
         super(new VBox(), model, controller);
@@ -48,8 +44,7 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         Label headline = new Label(Res.get("tradeGuide.security.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeGuide.security.content"));
-        content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        UnorderedList content = new UnorderedList(Res.get("tradeGuide.security.content"), "bisq-text-13");
 
         backButton = new Button(Res.get("action.back"));
 
@@ -70,8 +65,6 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        widthPin = EasyBind.subscribe(root.widthProperty(),
-                w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
@@ -79,6 +72,5 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
-        widthPin.unsubscribe();
     }
 }

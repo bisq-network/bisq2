@@ -38,7 +38,6 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
     public BisqEasyGuideView(BisqEasyGuideModel model, BisqEasyGuideController controller) {
         super(model, controller);
 
-        root.getStyleClass().addAll("bisq-box-2");
         root.setPadding(new Insets(15, 30, 30, 30));
         VBox.setMargin(contentPane, new Insets(10, 0, 0, 0));
 
@@ -66,7 +65,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         closeIconButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT);
+        root.setPrefHeight(OverlayModel.HEIGHT + 30);
     }
 
     @Override

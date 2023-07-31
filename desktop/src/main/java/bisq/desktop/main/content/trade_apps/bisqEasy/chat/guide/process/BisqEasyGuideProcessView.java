@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.process;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.OrderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,17 +27,12 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessModel, BisqEasyGuideProcessController> {
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
-    private final Text content;
-    private Subscription widthPin;
 
     public BisqEasyGuideProcessView(BisqEasyGuideProcessModel model, BisqEasyGuideProcessController controller) {
         super(new VBox(), model, controller);
@@ -47,8 +43,10 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         Label headline = new Label(Res.get("tradeGuide.process.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Text(Res.get("tradeGuide.process.content"));
+        Label content = new Label(Res.get("tradeGuide.process.content"));
+        content.setWrapText(true);
         content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        OrderedList rules = new OrderedList(Res.get("tradeGuide.process.steps"), "bisq-text-13");
 
         backButton = new Button(Res.get("action.back"));
 
@@ -61,7 +59,7 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, learnMore, buttons);
+        root.getChildren().addAll(headline, content, rules, learnMore, buttons);
     }
 
     @Override
@@ -69,8 +67,6 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        widthPin = EasyBind.subscribe(root.widthProperty(),
-                w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
@@ -78,6 +74,5 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
-        widthPin.unsubscribe();
     }
 }

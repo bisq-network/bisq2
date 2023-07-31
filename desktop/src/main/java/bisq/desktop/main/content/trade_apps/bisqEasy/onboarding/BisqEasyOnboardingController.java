@@ -52,11 +52,15 @@ public class BisqEasyOnboardingController implements Controller {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
-    public void onCreateOffer() {
+    void onCreateOffer() {
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(true));
     }
 
-    public void onDontShowAgain() {
+    void onDontShowAgain() {
         DontShowAgainService.dontShowAgain(BISQ_EASY_INTRO);
+    }
+
+    void onOpenTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
     }
 }

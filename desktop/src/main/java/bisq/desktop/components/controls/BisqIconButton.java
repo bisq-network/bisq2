@@ -62,13 +62,25 @@ public class BisqIconButton extends Button {
         return button;
     }
 
-    public static Button createIconButton(AwesomeIcon icon, String fontSize) {
-        Label label = AwesomeDude.createIconLabel(icon, fontSize);
+    public static Button createIconButton(AwesomeIcon icon, String tooltip) {
+        return createIconButton(icon, tooltip, Double.parseDouble(AwesomeDude.DEFAULT_ICON_SIZE));
+    }
+
+    public static Button createIconButton(AwesomeIcon icon, double iconSize) {
+        return createIconButton(icon, null, iconSize);
+    }
+
+    public static Button createIconButton(AwesomeIcon icon, @Nullable String tooltip, double iconSize) {
+        Label label = AwesomeDude.createIconLabel(icon, String.valueOf(iconSize));
         Button button = new Button();
+        if (tooltip != null) {
+            button.setTooltip(new BisqTooltip(tooltip));
+        }
         button.setGraphic(label);
         button.getStyleClass().add("icon-button");
         return button;
     }
+
 
     public static Button createIconButton(String iconId) {
         return createIconButton(iconId, null);
@@ -112,8 +124,8 @@ public class BisqIconButton extends Button {
         setGraphic(AwesomeDude.createIconLabel(icon));
     }
 
-    public void setIcon(AwesomeIcon icon, String fontSize) {
-        setGraphic(AwesomeDude.createIconLabel(icon, fontSize));
+    public void setIcon(AwesomeIcon icon, String iconSize) {
+        setGraphic(AwesomeDude.createIconLabel(icon, iconSize));
     }
 
     public void setIcon(String iconId) {

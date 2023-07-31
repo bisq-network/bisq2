@@ -20,11 +20,13 @@ package bisq.desktop.main.content.trade_apps.bisqEasy.onboarding;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
@@ -39,6 +41,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
     private final Button createOfferButton, openChatButton;
     private final Switch dontShowAgain;
+    private final Hyperlink tradeGuide;
 
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(new GridPane(), model, controller);
@@ -85,7 +88,9 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         root.add(rightBoxPair.getFirst(), 1, 1, 1, 1);
 
         dontShowAgain = new Switch(Res.get("bisqEasy.onboarding.dontShowAgain"));
-        root.add(dontShowAgain, 0, 2, 2, 1);
+        tradeGuide = new Hyperlink(Res.get("bisqEasy.onboarding.tradeGuide"));
+        HBox hBox = new HBox(dontShowAgain, Spacer.fillHBox(), tradeGuide);
+        root.add(hBox, 0, 2, 2, 1);
     }
 
     @Override
@@ -94,12 +99,15 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         openChatButton.setOnAction(e -> controller.onOpenChat());
         dontShowAgain.setOnAction(e -> controller.onDontShowAgain());
+        tradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
     }
 
     @Override
     protected void onViewDetached() {
         createOfferButton.setOnAction(null);
         openChatButton.setOnAction(null);
+        dontShowAgain.setOnAction(null);
+        tradeGuide.setOnAction(null);
     }
 
     private Pair<VBox, Button> getWidgetBox(String headline,

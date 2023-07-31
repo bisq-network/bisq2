@@ -22,6 +22,7 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
+import bisq.i18n.Res;
 import javafx.beans.property.*;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
@@ -50,12 +51,18 @@ public abstract class ChatModel extends NavigationModel {
     private final StringProperty searchText = new SimpleStringProperty();
     protected final BooleanProperty isTwoPartyPrivateChatChannelSelectionVisible = new SimpleBooleanProperty();
     protected final ChatChannelDomain chatChannelDomain;
-
+    private final String helpTitle;
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
 
     public ChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
+
+        if (chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
+            helpTitle = Res.get("chat.topMenu.tradeGuide.tooltip");
+        } else {
+            helpTitle = Res.get("chat.topMenu.chatRules.tooltip");
+        }
     }
 
     @Nullable

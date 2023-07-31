@@ -33,6 +33,7 @@ import bisq.desktop.main.content.user.reputation.signedAccount.SignedWitnessCont
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.overlay.bisq_easy.create_offer.CreateOfferController;
 import bisq.desktop.overlay.bisq_easy.take_offer.TakeOfferController;
+import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
@@ -139,6 +140,9 @@ public class OverlayController extends NavigationController {
             case BISQ_EASY_OFFER_DETAILS: {
                 return Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
             }
+            case CHAT_RULES: {
+                return Optional.of(new ChatRulesController(serviceProvider));
+            }
             case CREATE_PROFILE: {
                 return Optional.of(new CreateUserProfileController(serviceProvider));
             }
@@ -178,6 +182,6 @@ public class OverlayController extends NavigationController {
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
     }
 }

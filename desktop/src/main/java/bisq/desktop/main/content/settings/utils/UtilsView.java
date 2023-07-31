@@ -32,7 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
 
-    private final Button openLogFileButton, openDataDirButton, setBackupLocationButton, backupButton, license, tac;
+    private final Button openLogFileButton, openDataDirButton, setBackupLocationButton, backupButton,
+            chatRules, tradeGuide, license, tac;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute;
 
@@ -61,6 +62,15 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         HBox localDataBox = new HBox(20, openDataDirButton, openLogFileButton);
         localDataBox.getStyleClass().add("settings-box-bg");
 
+        Label rulesHeadline = new Label(Res.get("settings.utils.rules.headline"));
+        rulesHeadline.getStyleClass().addAll("settings-headline");
+        chatRules = new Button(Res.get("settings.utils.rules.chatRules"));
+        chatRules.getStyleClass().add("outlined-button");
+        tradeGuide = new Button(Res.get("settings.utils.rules.tradeGuide"));
+        tradeGuide.getStyleClass().add("outlined-button");
+        HBox rulesBox = new HBox(20, chatRules, tradeGuide);
+        rulesBox.getStyleClass().add("settings-box-bg");
+
         Label legalHeadline = new Label(Res.get("settings.utils.legal.headline"));
         legalHeadline.getStyleClass().addAll("settings-headline");
         tac = new Button(Res.get("settings.utils.legal.tac"));
@@ -83,10 +93,12 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
 
         VBox.setMargin(backupHeadline, new Insets(20, 0, -10, 0));
         VBox.setMargin(localDataHeadline, new Insets(0, 0, -10, 0));
+        VBox.setMargin(rulesHeadline, new Insets(0, 0, -10, 0));
         VBox.setMargin(legalHeadline, new Insets(0, 0, -10, 0));
         VBox.setMargin(resourcesHeadline, new Insets(0, 0, -10, 0));
         root.getChildren().addAll(backupHeadline, backupBox,
                 localDataHeadline, localDataBox,
+                rulesHeadline, rulesBox,
                 legalHeadline, legalBox,
                 resourcesHeadline, resourcesBox);
     }
@@ -102,6 +114,8 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         openDataDirButton.setOnAction(e -> controller.onOpenDataDir());
         setBackupLocationButton.setOnAction(e -> controller.onSetBackupLocation());
         backupButton.setOnAction(e -> controller.onBackup());
+        chatRules.setOnAction(e -> controller.onChatRules());
+        tradeGuide.setOnAction(e -> controller.onTradeGuide());
         tac.setOnAction(e -> controller.onTac());
         license.setOnAction(e -> controller.onOpenLicense());
         webpage.setOnAction(e -> controller.onOpenWebpage());
@@ -122,6 +136,8 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         openDataDirButton.setOnAction(null);
         setBackupLocationButton.setOnAction(null);
         backupButton.setOnAction(null);
+        chatRules.setOnAction(null);
+        tradeGuide.setOnAction(null);
         tac.setOnAction(null);
         license.setOnAction(null);
         webpage.setOnAction(null);

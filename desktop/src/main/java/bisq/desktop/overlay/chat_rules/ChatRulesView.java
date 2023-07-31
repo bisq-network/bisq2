@@ -15,53 +15,52 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps.bisqEasy.chat.guide.welcome;
+package bisq.desktop.overlay.chat_rules;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.UnorderedList;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeModel, BisqEasyGuideWelcomeController> {
-    private final Button nextButton;
-    private final Label content;
+public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesController> {
+    private final Button closeButton;
+    private final UnorderedList content;
 
-    public BisqEasyGuideWelcomeView(BisqEasyGuideWelcomeModel model, BisqEasyGuideWelcomeController controller) {
-        super(new VBox(), model, controller);
+    public ChatRulesView(ChatRulesModel model, ChatRulesController controller) {
+        super(new VBox(20), model, controller);
 
         root.setSpacing(20);
-        root.setFillWidth(true);
-        root.setAlignment(Pos.TOP_LEFT);
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headline = new Label(Res.get("tradeGuide.welcome.headline"));
+        root.setPadding(new Insets(15, 30, 30, 30));
+
+        Label headline = new Label(Res.get("chat.chatRules.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        content = new Label();
-        content.setWrapText(true);
-        content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        content = new UnorderedList(Res.get("chat.chatRules.content"), "bisq-text-13");
 
-        nextButton = new Button(Res.get("action.next"));
-        nextButton.setDefaultButton(true);
+        closeButton = new Button(Res.get("action.close"));
+        closeButton.setDefaultButton(true);
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(nextButton, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, content, nextButton);
+        VBox.setMargin(closeButton, new Insets(10, 0, 0, 0));
+        root.getChildren().addAll(headline, content, closeButton);
     }
 
     @Override
     protected void onViewAttached() {
-        content.textProperty().bind(model.getContentText());
-        nextButton.setOnAction(e -> controller.onNext());
+        closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
-        content.textProperty().unbind();
-        nextButton.setOnAction(null);
+        closeButton.setOnAction(null);
     }
 }

@@ -42,9 +42,10 @@ public class BisqEasyGuideWelcomeController implements Controller {
     @Override
     public void onActivate() {
         String content = Res.get("tradeGuide.welcome.content");
-        model.getContentText().setValue(settingsService.getTradeRulesConfirmed().get() ?
+        model.getContentText().setValue(content);
+      /*  model.getContentText().setValue(settingsService.getTradeRulesConfirmed().get() ?
                 content :
-                content + "\n\n" + Res.get("tradeGuide.welcome.content.notYetConfirmed"));
+                content + "\n\n" + Res.get("tradeGuide.welcome.content.notYetConfirmed"));*/
     }
 
     @Override

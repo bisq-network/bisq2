@@ -76,6 +76,8 @@ public enum NavigationTarget {
 
     BISQ_EASY_OFFER_DETAILS(OVERLAY, false),
 
+    CHAT_RULES(OVERLAY, false),
+
     BURN_BSQ(OVERLAY, false),
     BURN_BSQ_TAB_1(BURN_BSQ, false),
     BURN_BSQ_TAB_2(BURN_BSQ, false),
