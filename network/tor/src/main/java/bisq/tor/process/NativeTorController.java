@@ -18,15 +18,27 @@
 package bisq.tor.process;
 
 import bisq.tor.ClientTorrcGenerator;
+import bisq.tor.bootstrap.BootstrapEvent;
+import bisq.tor.bootstrap.BootstrapEventHandler;
+import bisq.tor.bootstrap.BootstrapEventListener;
+import bisq.tor.bootstrap.TorBootstrapFailed;
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 import net.freehaven.tor.control.TorControlConnection;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-public class NativeTorController {
+@Slf4j
+public class NativeTorController implements BootstrapEventListener {
 
+    private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
+    private final BootstrapEventHandler bootstrapEventHandler = new BootstrapEventHandler();
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
 
     public void connect(int controlPort, PasswordDigest controlConnectionSecret) throws IOException {
@@ -45,11 +57,50 @@ public class NativeTorController {
 
     public void enableTorNetworking() throws IOException {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
+        addBootstrapEventListener(controlConnection);
         controlConnection.setConf(ClientTorrcGenerator.DISABLE_NETWORK_CONFIG_KEY, "0");
+    }
+
+    public void waitUntilBootstrapped() {
+        try {
+            boolean isSuccess = isBootstrappedCountdownLatch.await(2, TimeUnit.MINUTES);
+            if (!isSuccess) {
+                throw new TorBootstrapFailed("Tor bootstrap timout (2 minutes) triggered.");
+            }
+        } catch (InterruptedException e) {
+            throw new TorBootstrapFailed(e);
+        }
     }
 
     public void shutdown() throws IOException {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
         controlConnection.shutdownTor("SHUTDOWN");
+    }
+
+    @Override
+    public void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent) {
+        log.info("Tor bootstrap event: {}", bootstrapEvent);
+        if (bootstrapEvent.isDoneEvent()) {
+            isBootstrappedCountdownLatch.countDown();
+            removeBootstrapEventListener();
+        }
+    }
+
+    private void addBootstrapEventListener(TorControlConnection controlConnection) throws IOException {
+        bootstrapEventHandler.addListener(this);
+        controlConnection.setEventHandler(bootstrapEventHandler);
+        controlConnection.setEvents(List.of("STATUS_CLIENT"));
+    }
+
+    private void removeBootstrapEventListener() {
+        TorControlConnection controlConnection = torControlConnection.orElseThrow();
+        bootstrapEventHandler.removeListener(this);
+
+        controlConnection.setEventHandler(null);
+        try {
+            controlConnection.setEvents(Collections.emptyList());
+        } catch (IOException e) {
+            throw new IllegalStateException("Can't set tor events.");
+        }
     }
 }
