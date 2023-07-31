@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.reputation.components;
+package bisq.desktop.main.content.user.reputation.accountAge.tab2;
 
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.user.reputation.components.AgeSlider;
 import bisq.i18n.Res;
+import bisq.user.reputation.AccountAgeService;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -30,16 +32,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 
-import java.util.function.BiFunction;
-
-public class Simulation {
+public class AccountAgeScoreSimulation {
 
     private final Controller controller;
 
-    public Simulation(BiFunction<String, Number, String> calculateSimScore) {
-        controller = new Controller(calculateSimScore);
+    public AccountAgeScoreSimulation() {
+        controller = new Controller();
     }
 
     public VBox getViewRoot() {
@@ -51,31 +50,27 @@ public class Simulation {
         @Getter
         private final View view;
         private final Model model;
-        private final BiFunction<String, Number, String> calculateSimScore;
         private Subscription agePin, ageAsStringPin, scorePin;
 
-        private Controller(BiFunction<String, Number, String> calculateSimScore) {
-            this.calculateSimScore = calculateSimScore;
+        private Controller() {
             model = new Model();
             view = new View(model, this);
 
-            model.getSimAmount().set("100");
-            model.getSimAge().set(0);
-            model.getSimAgeAsString().set("0");
+            model.getAge().set(0);
+            model.getAgeAsString().set("0");
         }
 
         @Override
         public void onActivate() {
-            agePin = EasyBind.subscribe(model.getSimAge(), age -> model.getSimAgeAsString().set(String.valueOf(age)));
-            ageAsStringPin = EasyBind.subscribe(model.getSimAgeAsString(), ageAsString -> {
+            agePin = EasyBind.subscribe(model.getAge(), age -> model.getAgeAsString().set(String.valueOf(age)));
+            ageAsStringPin = EasyBind.subscribe(model.getAgeAsString(), ageAsString -> {
                 try {
-                    model.getSimAge().set(Integer.parseInt(ageAsString));
+                    model.getAge().set(Integer.parseInt(ageAsString));
                 } catch (Exception e) {
                 }
             });
 
-            MonadicBinding<String> binding = EasyBind.combine(model.getSimAmount(), model.getSimAge(), calculateSimScore);
-            scorePin = EasyBind.subscribe(binding, score -> model.getSimScore().set(score));
+            scorePin = EasyBind.subscribe(model.getAge(), age -> model.getScore().set(calculateSimScore(age)));
         }
 
         @Override
@@ -84,18 +79,26 @@ public class Simulation {
             ageAsStringPin.unsubscribe();
             scorePin.unsubscribe();
         }
+
+        private String calculateSimScore(Number age) {
+            try {
+                long ageInDays = age.intValue();
+                long totalScore = AccountAgeService.doCalculateScore(ageInDays);
+                return String.valueOf(totalScore);
+            } catch (Exception e) {
+                return "";
+            }
+        }
     }
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final IntegerProperty simAge = new SimpleIntegerProperty();
-        private final StringProperty simAgeAsString = new SimpleStringProperty();
-        private final StringProperty simAmount = new SimpleStringProperty();
-        private final StringProperty simScore = new SimpleStringProperty();
+        private final IntegerProperty age = new SimpleIntegerProperty();
+        private final StringProperty ageAsString = new SimpleStringProperty();
+        private final StringProperty score = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final MaterialTextField simAmount;
         private final AgeSlider simAgeSlider;
         private final MaterialTextField simScore;
         private final MaterialTextField ageField;
@@ -106,13 +109,11 @@ public class Simulation {
 
             Label simHeadline = new Label(Res.get("user.reputation.sim.headline"));
             simHeadline.getStyleClass().addAll("bisq-text-1");
-            simAmount = getInputField("user.reputation.sim.burnAmount");
             ageField = getInputField("user.reputation.sim.age");
             simAgeSlider = new AgeSlider(0, 400, 0);
             simScore = getField(Res.get("user.reputation.sim.score"));
             VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
             root.getChildren().addAll(simHeadline,
-                    simAmount,
                     ageField,
                     simAgeSlider.getView().getRoot(),
                     simScore);
@@ -120,17 +121,15 @@ public class Simulation {
 
         @Override
         protected void onViewAttached() {
-            simAgeSlider.valueProperty().bindBidirectional(model.getSimAge());
-            ageField.textProperty().bindBidirectional(model.getSimAgeAsString());
-            simAmount.textProperty().bindBidirectional(model.getSimAmount());
-            simScore.textProperty().bind(model.getSimScore());
+            simAgeSlider.valueProperty().bindBidirectional(model.getAge());
+            ageField.textProperty().bindBidirectional(model.getAgeAsString());
+            simScore.textProperty().bind(model.getScore());
         }
 
         @Override
         protected void onViewDetached() {
-            simAgeSlider.valueProperty().unbindBidirectional(model.getSimAge());
-            ageField.textProperty().unbindBidirectional(model.getSimAgeAsString());
-            simAmount.textProperty().unbindBidirectional(model.getSimAmount());
+            simAgeSlider.valueProperty().unbindBidirectional(model.getAge());
+            ageField.textProperty().unbindBidirectional(model.getAgeAsString());
             simScore.textProperty().unbind();
         }
 
@@ -144,6 +143,7 @@ public class Simulation {
 
         private MaterialTextField getInputField(String key) {
             MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
+            field.setMinWidth(400);
             field.setMinWidth(400);
             field.setMaxWidth(400);
             return field;

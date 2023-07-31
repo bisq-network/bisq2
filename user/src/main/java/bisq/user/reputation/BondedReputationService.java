@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.banned.BannedUserService;
@@ -35,7 +36,8 @@ import java.util.Optional;
 @Slf4j
 public class BondedReputationService extends SourceReputationService<AuthorizedBondedReputationData> {
     public static final long WEIGHT = 100;
-    private static final long AGE_WEIGHT = 1;
+    public static final double MAX_AGE = 100;
+    public static final long MAX_DAYS_AGE_SCORE = 365;
 
     public BondedReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -64,11 +66,32 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
+        return doCalculateScore(data.getAmount(), data.getLockTime(), getAgeInDays(data.getTime()));
+    }
+
+    public static long doCalculateScore(long amount, long lockTime, long ageInDays) {
+        long score = calculateScore(amount, ageInDays, lockTime);
+        long ageScore = calculateAgeScore(amount, ageInDays);
+        return score + ageScore;
+    }
+
+    private static long calculateScore(long amount, long ageInDays, long lockTime) {
+        double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
+        return MathUtils.roundDoubleToLong(amount / 100d * lockTime / 10000d * decayFactor * WEIGHT);
+    }
+
+    private static long calculateAgeScore(long score, long ageInDays) {
+        long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
+        return MathUtils.roundDoubleToLong(score * boundedAgeInDays / 100d);
+    }
+    
+  /*  @Override
+    public long calculateScore(AuthorizedBondedReputationData data) {
         long score = calculateScore(data.getAmount(), data.getLockTime());
         long ageScore = calculateAgeScore(score, data.getTime());
         return score * WEIGHT + ageScore * AGE_WEIGHT;
     }
-
+    
     private static long calculateScore(long amount, long lockTime) {
         return Math.round(amount / 100d * lockTime / 10000d);
     }
@@ -76,4 +99,7 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     private static long calculateAgeScore(long score, long time) {
         return score * getAgeInDays(time);
     }
+    */
+
+
 }

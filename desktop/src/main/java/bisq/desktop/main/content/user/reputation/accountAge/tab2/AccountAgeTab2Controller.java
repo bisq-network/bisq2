@@ -32,7 +32,8 @@ public class AccountAgeTab2Controller implements Controller {
 
     public AccountAgeTab2Controller(ServiceProvider serviceProvider) {
         AccountAgeTab2Model model = new AccountAgeTab2Model();
-        view = new AccountAgeTab2View(model, this);
+        AccountAgeScoreSimulation simulation = new AccountAgeScoreSimulation();
+        view = new AccountAgeTab2View(model, this, simulation.getViewRoot());
     }
 
     @Override

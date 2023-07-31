@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.burn.tab2;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -36,8 +37,7 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
 
-    public BurnBsqTab2View(BurnBsqTab2Model model,
-                           BurnBsqTab2Controller controller, VBox simulation) {
+    public BurnBsqTab2View(BurnBsqTab2Model model, BurnBsqTab2Controller controller, VBox simulation) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
@@ -50,7 +50,7 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         info.setWrapText(true);
         info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        Label formulaHeadline = new Label(Res.get("user.reputation.burnedBsq.score.formulaHeadline"));
+        Label formulaHeadline = new Label(Res.get("user.reputation.score.formulaHeadline"));
         formulaHeadline.getStyleClass().addAll("bisq-text-1");
         VBox formulaBox = new VBox(10, formulaHeadline,
                 getField(Res.get("user.reputation.weight"), String.valueOf(ProofOfBurnService.WEIGHT)),
@@ -89,6 +89,7 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
+        UIThread.runOnNextRenderFrame(root::requestFocus);
     }
 
     private MaterialTextField getFormulaField(String key) {
@@ -99,13 +100,6 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         MaterialTextField field = new MaterialTextField(description);
         field.setEditable(false);
         field.setText(value);
-        field.setMinWidth(400);
-        field.setMaxWidth(400);
-        return field;
-    }
-
-    private MaterialTextField getInputField(String key) {
-        MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
         field.setMinWidth(400);
         field.setMaxWidth(400);
         return field;

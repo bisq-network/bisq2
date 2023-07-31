@@ -32,7 +32,8 @@ public class BondedReputationTab2Controller implements Controller {
 
     public BondedReputationTab2Controller(ServiceProvider serviceProvider) {
         BondedReputationTab2Model model = new BondedReputationTab2Model();
-        view = new BondedReputationTab2View(model, this);
+        BondScoreSimulation simulation = new BondScoreSimulation();
+        view = new BondedReputationTab2View(model, this, simulation.getViewRoot());
     }
 
     @Override

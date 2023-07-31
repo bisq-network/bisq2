@@ -37,10 +37,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ProofOfBurnService extends SourceReputationService<AuthorizedProofOfBurnData> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
-    public static final double MAX_AGE = 30;
-    public static final long MAX_DAYS_AGE_SCORE = 365;
+    public static final double MAX_AGE = 100;
     public static final long WEIGHT = 1000;
-    private static final long AGE_WEIGHT = 1;
+    public static final long MAX_DAYS_AGE_SCORE = 365;
 
     public ProofOfBurnService(NetworkService networkService,
                               UserIdentityService userIdentityService,
@@ -73,18 +72,18 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     public static long doCalculateScore(long amount, long ageInDays) {
-        double score = calculateScore(amount, ageInDays);
+        long score = calculateScore(amount, ageInDays);
         long ageScore = calculateAgeScore(amount, ageInDays);
-        return MathUtils.roundDoubleToLong(score * WEIGHT) + ageScore * AGE_WEIGHT;
+        return score + ageScore;
     }
 
-    private static double calculateScore(long amount, long ageInDays) {
+    private static long calculateScore(long amount, long ageInDays) {
         double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
-        return amount / 100d * decayFactor;
+        return MathUtils.roundDoubleToLong(amount / 100d * decayFactor * WEIGHT);
     }
 
     private static long calculateAgeScore(long amount, long ageInDays) {
         long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
-        return MathUtils.roundDoubleToLong(amount * boundedAgeInDays / 100d);
+        return MathUtils.roundDoubleToLong(amount / 100d * boundedAgeInDays * 2);
     }
 }
