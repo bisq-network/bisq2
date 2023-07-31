@@ -137,7 +137,7 @@ public class ReportToModeratorWindow {
             root.setPrefWidth(OverlayModel.WIDTH);
 
             Label headline = new Label(Res.get("chat.reportToModerator.headline"));
-            headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+            headline.getStyleClass().addAll("bisq-text-headline-2");
 
             Label info = new Label(Res.get("chat.reportToModerator.info"));
             info.setWrapText(true);

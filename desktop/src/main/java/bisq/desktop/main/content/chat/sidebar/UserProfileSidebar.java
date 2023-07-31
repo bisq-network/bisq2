@@ -382,8 +382,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             Label titleLabel = new Label(title.toUpperCase());
             titleLabel.getStyleClass().addAll("bisq-text-4", "bisq-text-grey-9", "font-semi-bold");
             Label contentLabel = new Label();
+            contentLabel.setWrapText(true);
 
-            contentLabel.getStyleClass().addAll(smaller ? "bisq-text-7" : "bisq-text-6", "wrap-text");
+            contentLabel.getStyleClass().addAll(smaller ? "bisq-text-7" : "bisq-text-6");
             VBox box = new VBox(2, titleLabel, contentLabel);
             VBox.setMargin(box, new Insets(2, 0, 0, 0));
 

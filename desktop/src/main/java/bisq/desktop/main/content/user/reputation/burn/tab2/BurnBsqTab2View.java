@@ -37,7 +37,7 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
     private final Hyperlink learnMore;
 
     public BurnBsqTab2View(BurnBsqTab2Model model,
-                           BurnBsqTab2Controller controller) {
+                           BurnBsqTab2Controller controller, VBox simulation) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
@@ -48,12 +48,17 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
 
         Label info = new Label(Res.get("user.reputation.burnedBsq.score.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        VBox formula = new VBox(10, getField("weight", String.valueOf(ProofOfBurnService.WEIGHT)),
-                getField("score"),
-                getField("ageScore"),
-                getField("totalScore"));
+        Label formulaHeadline = new Label(Res.get("user.reputation.burnedBsq.score.formulaHeadline"));
+        formulaHeadline.getStyleClass().addAll("bisq-text-1");
+        VBox formulaBox = new VBox(10, formulaHeadline,
+                getField(Res.get("user.reputation.weight"), String.valueOf(ProofOfBurnService.WEIGHT)),
+                getFormulaField("score"),
+                getFormulaField("ageScore"),
+                getFormulaField("totalScore"));
+
+        HBox hBox = new HBox(20, formulaBox, simulation);
 
         backButton = new Button(Res.get("action.back"));
 
@@ -67,7 +72,9 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
 
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, info, formula, buttons);
+        root.getChildren().addAll(headline, info,
+                hBox,
+                buttons);
     }
 
     @Override
@@ -84,14 +91,22 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         learnMore.setOnAction(null);
     }
 
-    private MaterialTextField getField(String key) {
-        return getField(key, Res.get("user.reputation.burnedBsq." + key));
+    private MaterialTextField getFormulaField(String key) {
+        return getField(Res.get("user.reputation." + key), Res.get("user.reputation.burnedBsq." + key));
     }
 
-    private MaterialTextField getField(String key, String value) {
-        MaterialTextField field = new MaterialTextField(Res.get("user.reputation." + key));
+    private MaterialTextField getField(String description, String value) {
+        MaterialTextField field = new MaterialTextField(description);
         field.setEditable(false);
         field.setText(value);
+        field.setMinWidth(400);
+        field.setMaxWidth(400);
+        return field;
+    }
+
+    private MaterialTextField getInputField(String key) {
+        MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
+        field.setMinWidth(400);
         field.setMaxWidth(400);
         return field;
     }

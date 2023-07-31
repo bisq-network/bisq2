@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.content.user.reputation.burn.tab2;
 
+import bisq.common.util.MathUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.main.content.user.reputation.components.Simulation;
+import bisq.user.reputation.ProofOfBurnService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,14 +32,28 @@ import lombok.extern.slf4j.Slf4j;
 public class BurnBsqTab2Controller implements Controller {
     @Getter
     private final BurnBsqTab2View view;
+    private final BurnBsqTab2Model model;
 
     public BurnBsqTab2Controller(ServiceProvider serviceProvider) {
-        BurnBsqTab2Model model = new BurnBsqTab2Model();
-        view = new BurnBsqTab2View(model, this);
+        model = new BurnBsqTab2Model();
+        Simulation simulation = new Simulation(BurnBsqTab2Controller::calculateSimScore);
+        view = new BurnBsqTab2View(model, this, simulation.getViewRoot());
     }
 
     @Override
     public void onActivate() {
+    }
+
+    private static String calculateSimScore(String amount, Number age) {
+        try {
+            // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
+            long amountAsLong = MathUtils.roundDoubleToLong(Double.parseDouble(amount) * 100);
+            long ageInDays = age.intValue();
+            long totalScore = ProofOfBurnService.doCalculateScore(amountAsLong, ageInDays);
+            return String.valueOf(totalScore);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @Override

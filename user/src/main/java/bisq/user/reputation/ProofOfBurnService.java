@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.banned.BannedUserService;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class ProofOfBurnService extends SourceReputationService<AuthorizedProofOfBurnData> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final double MAX_AGE = 30;
+    public static final long MAX_DAYS_AGE_SCORE = 365;
     public static final long WEIGHT = 1000;
     private static final long AGE_WEIGHT = 1;
 
@@ -67,18 +69,22 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
 
     @Override
     public long calculateScore(AuthorizedProofOfBurnData data) {
-        long amount = data.getAmount();
-        long score = calculateScore(amount, data.getTime());
-        long ageScore = calculateAgeScore(amount, data.getTime());
-        return score * WEIGHT + ageScore * AGE_WEIGHT;
+        return doCalculateScore(data.getAmount(), getAgeInDays(data.getTime()));
     }
 
-    private static long calculateScore(long amount, long time) {
-        double decayFactor = Math.max(0, MAX_AGE - getAgeInDays(time)) / MAX_AGE;
-        return Math.round(amount / 100d * decayFactor);
+    public static long doCalculateScore(long amount, long ageInDays) {
+        double score = calculateScore(amount, ageInDays);
+        long ageScore = calculateAgeScore(amount, ageInDays);
+        return MathUtils.roundDoubleToLong(score * WEIGHT) + ageScore * AGE_WEIGHT;
     }
 
-    private static long calculateAgeScore(long amount, long time) {
-        return amount * getAgeInDays(time);
+    private static double calculateScore(long amount, long ageInDays) {
+        double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
+        return amount / 100d * decayFactor;
+    }
+
+    private static long calculateAgeScore(long amount, long ageInDays) {
+        long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
+        return MathUtils.roundDoubleToLong(amount * boundedAgeInDays / 100d);
     }
 }
