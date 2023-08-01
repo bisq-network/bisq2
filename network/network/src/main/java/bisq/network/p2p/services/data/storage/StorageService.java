@@ -57,10 +57,10 @@ import static bisq.network.p2p.services.data.storage.StorageService.StoreType.*;
 @Slf4j
 public class StorageService {
     public enum StoreType {
-        ALL(""), //todo remove
-        AUTHENTICATED_DATA_STORE("AuthenticatedDataStore"),
-        MAILBOX_DATA_STORE("MailboxDataStore"),
-        APPEND_ONLY_DATA_STORE("AppendOnlyDataStore");
+        ALL(""),
+        AUTHENTICATED_DATA_STORE("authenticated"),
+        MAILBOX_DATA_STORE("mailbox"),
+        APPEND_ONLY_DATA_STORE("append");
         @Getter
         private final String storeName;
 
