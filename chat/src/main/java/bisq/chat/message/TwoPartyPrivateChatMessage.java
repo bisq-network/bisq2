@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(30);
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
                                       String channelId,
@@ -54,22 +56,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 citation,
                 date,
                 wasEdited,
-                chatMessageType,
-                new MetaData(TTL, 100_000, TwoPartyPrivateChatMessage.class.getSimpleName()));
-    }
-
-    private TwoPartyPrivateChatMessage(String messageId,
-                                       ChatChannelDomain chatChannelDomain,
-                                       String channelId,
-                                       UserProfile sender,
-                                       String receiverUserProfileId,
-                                       String text,
-                                       Optional<Citation> citation,
-                                       long date,
-                                       boolean wasEdited,
-                                       ChatMessageType chatMessageType,
-                                       MetaData metaData) {
-        super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
+                chatMessageType);
     }
 
     @Override
@@ -102,7 +89,6 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                MetaData.fromProto(baseProto.getMetaData()));
+                ChatMessageType.fromProto(baseProto.getChatMessageType()));
     }
 }

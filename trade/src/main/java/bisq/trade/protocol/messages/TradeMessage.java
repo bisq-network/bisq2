@@ -22,7 +22,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
@@ -41,19 +40,16 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class TradeMessage implements MailboxMessage, Event {
     private final String tradeId;
     private final NetworkId sender;
-    protected final MetaData metaData;
 
-    protected TradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
+    protected TradeMessage(String tradeId, NetworkId sender) {
         this.tradeId = tradeId;
         this.sender = sender;
-        this.metaData = metaData;
     }
 
     public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {
         return bisq.trade.protobuf.TradeMessage.newBuilder()
                 .setTradeId(tradeId)
-                .setSender(sender.toProto())
-                .setMetaData(metaData.toProto());
+                .setSender(sender.toProto());
     }
 
     @Override

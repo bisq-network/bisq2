@@ -43,9 +43,7 @@ import java.util.concurrent.TimeUnit;
 public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(30);
 
-    private static MetaData createMetaData() {
-        return new MetaData(TTL, 100_000, BisqEasyPrivateTradeChatMessage.class.getSimpleName());
-    }
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
 
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
@@ -72,8 +70,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 wasEdited,
                 mediator,
                 chatMessageType,
-                bisqEasyOffer,
-                createMetaData());
+                bisqEasyOffer);
     }
 
     private BisqEasyPrivateTradeChatMessage(String messageId,
@@ -87,9 +84,8 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             boolean wasEdited,
                                             Optional<UserProfile> mediator,
                                             ChatMessageType chatMessageType,
-                                            Optional<BisqEasyOffer> bisqEasyOffer,
-                                            MetaData metaData) {
-        super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
+                                            Optional<BisqEasyOffer> bisqEasyOffer) {
+        super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -122,8 +118,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 Optional.empty(),
                 new Date().getTime(),
                 false,
-                chatMessageType,
-                createMetaData());
+                chatMessageType);
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
     }
@@ -174,8 +169,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 baseProto.getWasEdited(),
                 mediator,
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                bisqEasyOffer,
-                MetaData.fromProto(baseProto.getMetaData())
+                bisqEasyOffer
         );
     }
 }

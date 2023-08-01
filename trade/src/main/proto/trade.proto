@@ -60,7 +60,6 @@ message Trade {
 message TradeMessage {
   string tradeId = 1;
   network.NetworkId sender = 2;
-  network.MetaData metaData = 3;
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
     SubmarineTradeMessage submarineTradeMessage = 21;

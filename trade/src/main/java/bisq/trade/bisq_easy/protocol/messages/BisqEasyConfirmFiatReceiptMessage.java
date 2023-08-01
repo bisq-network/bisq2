@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,13 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessage {
     public BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender) {
-        this(tradeId,
-                sender,
-                new MetaData(TTL, 100_000, BisqEasyConfirmFiatReceiptMessage.class.getSimpleName()));
-    }
-
-    private BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender, MetaData metaData) {
-        super(tradeId, sender, metaData);
+        super(tradeId, sender);
     }
 
     @Override
@@ -51,7 +44,6 @@ public class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessage {
     public static BisqEasyConfirmFiatReceiptMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         return new BisqEasyConfirmFiatReceiptMessage(
                 proto.getTradeId(),
-                NetworkId.fromProto(proto.getSender()),
-                MetaData.fromProto(proto.getMetaData()));
+                NetworkId.fromProto(proto.getSender()));
     }
 }

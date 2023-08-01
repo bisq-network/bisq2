@@ -34,28 +34,22 @@ import java.util.concurrent.TimeUnit;
 public class OfferMessage implements DistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(2);
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final Offer<?, ?> offer;
-    protected final MetaData metaData;
 
     public OfferMessage(Offer<?, ?> offer) {
-        this(offer, new MetaData(TTL, 100_000, OfferMessage.class.getSimpleName()));
-    }
-
-    private OfferMessage(Offer<?, ?> offer, MetaData metaData) {
         this.offer = offer;
-        this.metaData = metaData;
     }
 
     @Override
     public bisq.offer.protobuf.OfferMessage toProto() {
         return bisq.offer.protobuf.OfferMessage.newBuilder()
                 .setOffer(offer.toProto())
-                .setMetaData(metaData.toProto())
                 .build();
     }
 
     public static OfferMessage fromProto(bisq.offer.protobuf.OfferMessage proto) {
-        return new OfferMessage(Offer.fromProto(proto.getOffer()), MetaData.fromProto(proto.getMetaData()));
+        return new OfferMessage(Offer.fromProto(proto.getOffer()));
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

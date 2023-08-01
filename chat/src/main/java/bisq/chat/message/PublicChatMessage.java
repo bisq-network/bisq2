@@ -20,7 +20,6 @@ package bisq.chat.message;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -42,9 +41,8 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
                                 Optional<Citation> citation,
                                 long date,
                                 boolean wasEdited,
-                                ChatMessageType chatMessageType,
-                                MetaData metaData) {
-        super(messageId, chatChannelDomain, channelId, authorUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
+                                ChatMessageType chatMessageType) {
+        super(messageId, chatChannelDomain, channelId, authorUserProfileId, text, citation, date, wasEdited, chatMessageType);
     }
 
     @Override

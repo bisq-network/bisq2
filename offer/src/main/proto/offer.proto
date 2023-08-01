@@ -135,7 +135,6 @@ message Offer {
 
 message OfferMessage {
   Offer offer = 1;
-  network.MetaData metaData = 2;
 }
 
 // BisqEasy

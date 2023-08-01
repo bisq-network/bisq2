@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,14 +31,7 @@ public class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     private final String btcAddress;
 
     public BisqEasyBtcAddressMessage(String tradeId, NetworkId sender, String btcAddress) {
-        this(tradeId,
-                sender,
-                btcAddress,
-                new MetaData(TTL, 100_000, BisqEasyBtcAddressMessage.class.getSimpleName()));
-    }
-
-    private BisqEasyBtcAddressMessage(String tradeId, NetworkId sender, String btcAddress, MetaData metaData) {
-        super(tradeId, sender, metaData);
+        super(tradeId, sender);
 
         this.btcAddress = btcAddress;
     }
@@ -59,7 +51,6 @@ public class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         return new BisqEasyBtcAddressMessage(
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
-                bisqEasyConfirmFiatSentMessage.getBtcAddress(),
-                MetaData.fromProto(proto.getMetaData()));
+                bisqEasyConfirmFiatSentMessage.getBtcAddress());
     }
 }

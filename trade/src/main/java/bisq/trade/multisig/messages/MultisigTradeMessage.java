@@ -19,7 +19,6 @@ package bisq.trade.multisig.messages;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class MultisigTradeMessage extends TradeMessage {
-    protected MultisigTradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
-        super(tradeId, sender, metaData);
+    protected MultisigTradeMessage(String tradeId, NetworkId sender) {
+        super(tradeId, sender);
     }
 
     public static MultisigTradeMessage fromProto(bisq.trade.protobuf.MultisigTradeMessage proto) {
