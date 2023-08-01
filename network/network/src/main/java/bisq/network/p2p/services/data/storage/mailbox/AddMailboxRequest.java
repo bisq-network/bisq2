@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.data.AddDataRequest;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
@@ -140,14 +139,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public long getCreated() {
         return mailboxSequentialData.getCreated();
-    }
-
-    public MetaData getMetaData() {
-        return mailboxSequentialData.getMailboxData().getMetaData();
-    }
-
-    public String getFileName() {
-        return mailboxSequentialData.getMailboxData().getFileName();
     }
 
     @Override

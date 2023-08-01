@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.AddDataRequest;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
@@ -153,14 +152,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public boolean isExpired() {
         return authenticatedSequentialData.isExpired();
-    }
-
-    public MetaData getMetaData() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData();
-    }
-
-    public String getFileName() {
-        return authenticatedSequentialData.getAuthenticatedData().getFileName();
     }
 
     @Override
