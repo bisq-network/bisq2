@@ -204,7 +204,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
         MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
-        return getOrCreateMailboxDataStore(mailboxData.getStoreFileName())
+        return getOrCreateMailboxDataStore(mailboxData.getFileName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -220,7 +220,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
         AuthenticatedData authenticatedData = request.getAuthenticatedSequentialData().getAuthenticatedData();
-        return getOrCreateAuthenticatedDataStore(authenticatedData.getStoreFileName())
+        return getOrCreateAuthenticatedDataStore(authenticatedData.getFileName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -236,7 +236,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
         AppendOnlyData appendOnlyData = request.getAppendOnlyData();
-        return getOrCreateAppendOnlyDataStore(appendOnlyData.getStoreFileName())
+        return getOrCreateAppendOnlyDataStore(appendOnlyData.getFileName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -268,7 +268,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
-        return getOrCreateMailboxDataStore(request.getStoreFileName())
+        return getOrCreateMailboxDataStore(request.getFileName())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
@@ -283,7 +283,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
-        return getOrCreateAuthenticatedDataStore(request.getStoreFileName())
+        return getOrCreateAuthenticatedDataStore(request.getFileName())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {

@@ -33,7 +33,7 @@ public interface DistributedData extends Proto {
 
     MetaData getMetaData();
 
-    default String getStoreFileName() {
+    default String getFileName() {
         return getMetaData().getFileName();
     }
 

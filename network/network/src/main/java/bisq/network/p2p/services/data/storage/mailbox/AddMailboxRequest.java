@@ -146,8 +146,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return mailboxSequentialData.getMailboxData().getMetaData();
     }
 
-    public String getStoreFileName() {
-        return mailboxSequentialData.getMailboxData().getStoreFileName();
+    public String getFileName() {
+        return mailboxSequentialData.getMailboxData().getFileName();
     }
 
     @Override

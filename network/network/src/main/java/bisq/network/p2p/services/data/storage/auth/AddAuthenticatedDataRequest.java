@@ -159,8 +159,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
-    public String getStoreFileName() {
-        return authenticatedSequentialData.getAuthenticatedData().getStoreFileName();
+    public String getFileName() {
+        return authenticatedSequentialData.getAuthenticatedData().getFileName();
     }
 
     @Override

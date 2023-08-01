@@ -132,7 +132,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         return Integer.MAX_VALUE <= seqNumberFromMap;
     }
 
-    public String getStoreFileName() {
+    public String getFileName() {
         return metaData.getFileName();
     }
 

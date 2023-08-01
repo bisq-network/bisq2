@@ -196,7 +196,7 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadCastDataResult> addAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
-        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getStoreFileName())
+        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getFileName())
                 .thenApply(store -> {
                     try {
                         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
@@ -224,7 +224,7 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public CompletableFuture<BroadCastDataResult> addAppendOnlyData(AppendOnlyData appendOnlyData) {
-        return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getStoreFileName())
+        return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getFileName())
                 .thenApply(store -> {
                     AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);
                     Result result = store.add(request);
@@ -241,7 +241,7 @@ public class DataService implements DataNetworkService.Listener {
     public CompletableFuture<BroadCastDataResult> addMailboxData(MailboxData mailboxData,
                                                                  KeyPair senderKeyPair,
                                                                  PublicKey receiverPublicKey) {
-        return storageService.getOrCreateMailboxDataStore(mailboxData.getStoreFileName())
+        return storageService.getOrCreateMailboxDataStore(mailboxData.getFileName())
                 .thenApply(store -> {
                     try {
                         AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverPublicKey);
@@ -267,7 +267,7 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
-        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getStoreFileName())
+        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getFileName())
                 .thenApply(store -> {
                     try {
                         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
@@ -295,7 +295,7 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public CompletableFuture<BroadCastDataResult> removeMailboxData(MailboxData mailboxData, KeyPair keyPair) {
-        return storageService.getOrCreateMailboxDataStore(mailboxData.getStoreFileName())
+        return storageService.getOrCreateMailboxDataStore(mailboxData.getFileName())
                 .thenApply(store -> {
                     try {
                         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, keyPair);

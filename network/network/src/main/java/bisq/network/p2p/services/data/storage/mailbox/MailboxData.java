@@ -56,7 +56,7 @@ public final class MailboxData implements StorageData {
                 MetaData.fromProto(proto.getMetaData()));
     }
 
-    public String getStoreFileName() {
+    public String getFileName() {
         return metaData.getFileName();
     }
 
