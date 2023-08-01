@@ -168,8 +168,8 @@ public class StorageService {
         return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedData);
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedData(String storeName) {
-        return getAuthenticatedData(getStoreByStoreName(storeName));
+    public Stream<AuthenticatedData> getAuthenticatedData(String fileName) {
+        return getAuthenticatedData(getStoreByFileName(fileName));
     }
 
     public Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
@@ -329,8 +329,8 @@ public class StorageService {
         return getFilterEntries(getStoresByStoreType(storeType));
     }
 
-    public Set<FilterEntry> getFilterEntries(String storeName) {
-        return getFilterEntries(getStoreByStoreName(storeName));
+    public Set<FilterEntry> getFilterEntries(String fileName) {
+        return getFilterEntries(getStoreByFileName(fileName));
     }
 
     private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
@@ -451,9 +451,9 @@ public class StorageService {
         return dataStorageServiceStream.stream();
     }
 
-    private Stream<DataStorageService<? extends DataRequest>> getStoreByStoreName(String storeName) {
+    private Stream<DataStorageService<? extends DataRequest>> getStoreByFileName(String fileName) {
         return getAllStores()
-                .filter(store -> storeName.equals(store.getFileName()));
+                .filter(store -> fileName.equals(store.getFileName()));
     }
 
     // We do not use the extensions in the persistence framework, so we have to remove it from the file name.
