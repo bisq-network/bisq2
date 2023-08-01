@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizedBondedRole.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;

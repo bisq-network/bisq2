@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public final class MediationRequest implements MailboxMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(2);
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, MediationRequest.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
     private final UserProfile requester;
     private final UserProfile peer;

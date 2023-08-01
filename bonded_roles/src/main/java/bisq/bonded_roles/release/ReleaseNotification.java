@@ -48,7 +48,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     );
 
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, ReleaseNotification.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final String id;
     private final long date;
     private final boolean isPreRelease;

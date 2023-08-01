@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizedBondedReputationData.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final long amount;
     private final long lockTime;
     private final boolean staticPublicKeysProvided;

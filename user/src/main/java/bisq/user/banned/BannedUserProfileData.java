@@ -42,7 +42,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
     );
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, BannedUserProfileData.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final UserProfile userProfile;
     private final boolean staticPublicKeysProvided;
 
