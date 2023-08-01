@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
+public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
     private final String paymentAccountData;
 
     public BisqEasyAccountDataMessage(String tradeId, NetworkId sender, String paymentAccountData) {

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
+public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     private final String btcAddress;
 
     public BisqEasyBtcAddressMessage(String tradeId, NetworkId sender, String btcAddress) {

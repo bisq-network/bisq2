@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @Getter
 @EqualsAndHashCode
-public class OfferMessage implements DistributedData {
+public final class OfferMessage implements DistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(2);
 
     private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
