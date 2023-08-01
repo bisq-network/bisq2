@@ -361,11 +361,11 @@ public class StorageService {
     // Get or create stores
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeFileName) {
-        if (!authenticatedDataStores.containsKey(storeFileName)) {
+    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String fileName) {
+        if (!authenticatedDataStores.containsKey(fileName)) {
             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
-                    storeFileName);
+                    fileName);
             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                 @Override
                 public void onAdded(AuthenticatedData authenticatedData) {
@@ -377,18 +377,18 @@ public class StorageService {
                     listeners.forEach(listener -> listener.onRemoved(authenticatedData));
                 }
             });
-            authenticatedDataStores.put(storeFileName, dataStore);
+            authenticatedDataStores.put(fileName, dataStore);
             return dataStore.readPersisted().thenApplyAsync(store -> dataStore, NetworkService.DISPATCHER);
         } else {
-            return CompletableFuture.completedFuture(authenticatedDataStores.get(storeFileName));
+            return CompletableFuture.completedFuture(authenticatedDataStores.get(fileName));
         }
     }
 
-    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeFileName) {
-        if (!mailboxStores.containsKey(storeFileName)) {
+    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String fileName) {
+        if (!mailboxStores.containsKey(fileName)) {
             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
                     MAILBOX_DATA_STORE.getStoreName(),
-                    storeFileName);
+                    fileName);
             dataStore.addListener(new MailboxDataStorageService.Listener() {
                 @Override
                 public void onAdded(MailboxData mailboxData) {
@@ -400,22 +400,22 @@ public class StorageService {
                     listeners.forEach(listener -> listener.onRemoved(mailboxData));
                 }
             });
-            mailboxStores.put(storeFileName, dataStore);
+            mailboxStores.put(fileName, dataStore);
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
-            return CompletableFuture.completedFuture(mailboxStores.get(storeFileName));
+            return CompletableFuture.completedFuture(mailboxStores.get(fileName));
         }
     }
 
-    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeFileName) {
-        if (!appendOnlyDataStores.containsKey(storeFileName)) {
+    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String fileName) {
+        if (!appendOnlyDataStores.containsKey(fileName)) {
             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
-                    storeFileName);
-            appendOnlyDataStores.put(storeFileName, dataStore);
+                    fileName);
+            appendOnlyDataStores.put(fileName, dataStore);
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
-            return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeFileName));
+            return CompletableFuture.completedFuture(appendOnlyDataStores.get(fileName));
         }
     }
 
