@@ -32,7 +32,8 @@ public class BurnBsqTab2Controller implements Controller {
 
     public BurnBsqTab2Controller(ServiceProvider serviceProvider) {
         BurnBsqTab2Model model = new BurnBsqTab2Model();
-        view = new BurnBsqTab2View(model, this);
+        BurnScoreSimulation simulation = new BurnScoreSimulation();
+        view = new BurnBsqTab2View(model, this, simulation.getViewRoot());
     }
 
     @Override

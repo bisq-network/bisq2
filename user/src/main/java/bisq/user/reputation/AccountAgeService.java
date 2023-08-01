@@ -20,6 +20,7 @@ package bisq.user.reputation;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -53,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 10;
+    public static final long MAX_DAYS_AGE_SCORE = 365;
 
     // Has to be in sync with Bisq1 class
     @Getter
@@ -148,7 +150,12 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
 
     @Override
     public long calculateScore(AuthorizedAccountAgeData data) {
-        return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
+        return doCalculateScore(getAgeInDays(data.getDate()));
+    }
+
+    public static long doCalculateScore(long ageInDays) {
+        long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
+        return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT);
     }
 
     public boolean requestAuthorization(String json) {

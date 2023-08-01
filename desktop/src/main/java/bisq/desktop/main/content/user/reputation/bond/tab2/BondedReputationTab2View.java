@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.bond.tab2;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -36,8 +37,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
 
-    public BondedReputationTab2View(BondedReputationTab2Model model,
-                                    BondedReputationTab2Controller controller) {
+    public BondedReputationTab2View(BondedReputationTab2Model model, BondedReputationTab2Controller controller, VBox simulation) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
@@ -48,12 +48,17 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
 
         Label info = new Label(Res.get("user.reputation.bond.score.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
-        VBox formula = new VBox(10, getField("weight", String.valueOf(BondedReputationService.WEIGHT)),
+        Label formulaHeadline = new Label(Res.get("user.reputation.score.formulaHeadline"));
+        formulaHeadline.getStyleClass().addAll("bisq-text-1");
+        VBox formulaBox = new VBox(10, formulaHeadline,
+                getField("weight", String.valueOf(BondedReputationService.WEIGHT)),
                 getField("score"),
                 getField("ageScore"),
                 getField("totalScore"));
+
+        HBox hBox = new HBox(20, formulaBox, simulation);
 
         backButton = new Button(Res.get("action.back"));
 
@@ -67,7 +72,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, info, formula, buttons);
+        root.getChildren().addAll(headline, info, hBox, buttons);
     }
 
     private MaterialTextField getField(String key) {
@@ -78,6 +83,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
         MaterialTextField field = new MaterialTextField(Res.get("user.reputation." + key));
         field.setEditable(false);
         field.setText(value);
+        field.setMinWidth(400);
         field.setMaxWidth(400);
         return field;
     }
@@ -87,6 +93,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
+        UIThread.runOnNextRenderFrame(root::requestFocus);
     }
 
     @Override

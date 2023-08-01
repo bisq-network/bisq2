@@ -46,14 +46,14 @@ public class BondedReputationTab1View extends View<VBox, BondedReputationTab1Mod
 
         Label info = new Label(Res.get("user.reputation.bond.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         Label headline2 = new Label(Res.get("user.reputation.bond.infoHeadline2"));
         headline2.getStyleClass().add("bisq-text-headline-2");
 
         Label info2 = new Label(Res.get("user.reputation.bond.info2"));
         info2.setWrapText(true);
-        info2.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
+        info2.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);

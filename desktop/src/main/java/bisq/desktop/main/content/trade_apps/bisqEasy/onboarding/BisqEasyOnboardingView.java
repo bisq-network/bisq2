@@ -119,7 +119,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                                             String imageId3,
                                             String buttonLabel) {
         Label headlineLabel = new Label(headline);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
         headlineLabel.setWrapText(true);
 
         Button button = new Button(buttonLabel);

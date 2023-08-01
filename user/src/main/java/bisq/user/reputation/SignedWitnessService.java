@@ -20,6 +20,7 @@ package bisq.user.reputation;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.Persistence;
@@ -52,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 50;
+    public static final long MAX_DAYS_AGE_SCORE = 365;
 
     // Has to be in sync with Bisq1 class
     @Getter
@@ -142,13 +144,27 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         return userProfile.getSignedWitnessKey();
     }
 
-    @Override
+  /*  @Override
     public long calculateScore(AuthorizedSignedWitnessData data) {
         long age = getAgeInDays(data.getWitnessSignDate());
         if (age <= 60) {
             return 0;
         }
         return Math.min(365, age) * WEIGHT;
+    }*/
+
+
+    @Override
+    public long calculateScore(AuthorizedSignedWitnessData data) {
+        return doCalculateScore(getAgeInDays(data.getWitnessSignDate()));
+    }
+
+    public static long doCalculateScore(long ageInDays) {
+        if (ageInDays <= 60) {
+            return 0;
+        }
+        long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
+        return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT);
     }
 
     private boolean doRequestAuthorization(String json) {
