@@ -40,7 +40,8 @@ public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, Privacy
 
         Hyperlink learnMore = addLearnMoreHyperlink();
 
-        VBox.setMargin(whyPrivacyHeadline, new Insets(25, 0, 0, 0));
+        VBox.setMargin(introContent, new Insets(25, 0, 0, 0));
+        VBox.setMargin(whyPrivacyHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(giveUpPrivacyHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(bisqProtectsPrivacyHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(bisqProtectsPrivacyContent, new Insets(0, 0, 15, 0));

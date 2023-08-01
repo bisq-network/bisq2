@@ -37,7 +37,8 @@ public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, Secur
         Label avoidScamsContent = addContentLabel("avoidScamsContent");
         Hyperlink learnMore = addLearnMoreHyperlink();
 
-        VBox.setMargin(securingYourKeysHeadline, new Insets(25, 0, 0, 0));
+        VBox.setMargin(introContent, new Insets(25, 0, 0, 0));
+        VBox.setMargin(securingYourKeysHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(avoidScamsHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(avoidScamsContent, new Insets(0, 0, 15, 0));
     }
