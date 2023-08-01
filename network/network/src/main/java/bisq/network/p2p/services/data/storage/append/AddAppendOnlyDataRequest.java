@@ -55,4 +55,10 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
         // AppendOnlyData never expires
         return false;
     }
+
+    @Override
+    public long getCreated() {
+        // Used for sorting at pruning, but AppendOnlyData does not get pruned 
+        return 0;
+    }
 }

@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -45,6 +46,12 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
 
     public AppendOnlyDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super(persistenceService, storeName, storeKey);
+    }
+
+    @Override
+    public DataStore<AddAppendOnlyDataRequest> prunePersisted(DataStore<AddAppendOnlyDataRequest> persisted) {
+        // We do not prune append only data
+        return persisted;
     }
 
     @Override

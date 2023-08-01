@@ -59,4 +59,6 @@ public interface DataRequest extends BroadcastMessage {
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
+
+    long getCreated();
 }
