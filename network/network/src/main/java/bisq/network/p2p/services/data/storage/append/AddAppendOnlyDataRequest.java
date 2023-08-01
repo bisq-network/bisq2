@@ -61,4 +61,9 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
         // Used for sorting at pruning, but AppendOnlyData does not get pruned 
         return 0;
     }
+
+    @Override
+    public int getMaxMapSize() {
+        return appendOnlyData.getMetaData().getMaxMapSize();
+    }
 }

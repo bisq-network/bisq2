@@ -164,6 +164,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return (System.currentTimeMillis() - created) > metaData.getTtl();
     }
 
+    @Override
+    public int getMaxMapSize() {
+        return metaData.getMaxMapSize();
+    }
+
     public String getClassName() {
         return metaData.getClassName();
     }

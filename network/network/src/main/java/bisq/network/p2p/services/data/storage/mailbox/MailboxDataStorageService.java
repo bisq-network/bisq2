@@ -62,7 +62,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.size() > MAX_MAP_SIZE) {
+            if (map.size() > getMaxMapSize()) {
                 return new Result(false).maxMapSizeReached();
             }
             requestFromMap = map.get(byteArray);

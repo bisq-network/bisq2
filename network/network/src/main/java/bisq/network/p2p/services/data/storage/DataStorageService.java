@@ -28,13 +28,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String SUB_PATH = "db" + File.separator + "network";
     public static final String STORE_POST_FIX = "Store";
-    public static final int MAX_MAP_SIZE = 10000;
 
     @Getter
     protected final Persistence<DataStore<T>> persistence;
@@ -44,6 +44,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     private final String storeKey;
     @Getter
     protected final String subDirectory;
+    protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
@@ -64,13 +65,25 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Override
     public DataStore<T> prunePersisted(DataStore<T> persisted) {
         Map<ByteArray, T> map = persisted.getMap();
+        if (map.isEmpty()) {
+            return persisted;
+        }
+
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> !entry.getValue().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(MAX_MAP_SIZE)
+                .limit(getMaxMapSize())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
         return persisted;
+    }
+
+    protected int getMaxMapSize() {
+        if (maxMapSize.isPresent()) {
+            return maxMapSize.get();
+        }
+        maxMapSize = persistableStore.getMap().values().stream().map(DataRequest::getMaxMapSize).findFirst();
+        return maxMapSize.orElse(10_000);
     }
 }

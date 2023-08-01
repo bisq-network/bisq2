@@ -69,17 +69,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.size() > MAX_MAP_SIZE) {
+            if (map.size() > getMaxMapSize()) {
                 return new Result(false).maxMapSizeReached();
             }
             requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
-                //log.warn("request.equals(requestFromMap). request={}", request);
                 return new Result(false).requestAlreadyReceived();
             }
 
             if (requestFromMap != null && authenticatedSequentialData.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                //log.warn("SequenceNrInvalid. request={}", request);
                 return new Result(false).sequenceNrInvalid();
             }
 

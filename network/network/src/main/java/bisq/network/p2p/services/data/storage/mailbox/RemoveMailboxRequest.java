@@ -145,4 +145,9 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, metaData.getTtl());
     }
+
+    @Override
+    public int getMaxMapSize() {
+        return metaData.getMaxMapSize();
+    }
 }

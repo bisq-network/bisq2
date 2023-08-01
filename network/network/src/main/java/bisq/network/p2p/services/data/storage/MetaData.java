@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Meta data for storage properties per DistributedData
  */
@@ -33,10 +35,21 @@ public final class MetaData implements Proto {
     private final int maxSizeInBytes;
     private final String className;
 
+    private transient final int maxMapSize;
+
     public MetaData(long ttl, int maxSizeInBytes, String className) {
+        this(ttl, maxSizeInBytes, className, 10_000);
+    }
+
+    public MetaData(String className) {
+        this(TimeUnit.DAYS.toMillis(10), 100_000, className, 10_000);
+    }
+
+    public MetaData(long ttl, int maxSizeInBytes, String className, int maxMapSize) {
         this.ttl = ttl;
         this.maxSizeInBytes = maxSizeInBytes;
         this.className = className;
+        this.maxMapSize = maxMapSize;
     }
 
     public bisq.network.protobuf.MetaData toProto() {

@@ -150,6 +150,11 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
+    public int getMaxMapSize() {
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getMaxMapSize();
+    }
+
+    @Override
     public boolean isExpired() {
         return authenticatedSequentialData.isExpired();
     }

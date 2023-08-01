@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeTimestampRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(2);
+    private final static long TTL = TimeUnit.DAYS.toMillis(10);
 
     private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final String profileId;

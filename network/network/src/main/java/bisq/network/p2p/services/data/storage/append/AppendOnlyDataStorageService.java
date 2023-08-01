@@ -35,8 +35,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 @Slf4j
 public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOnlyDataRequest> {
-    private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
-
     public interface Listener {
         void onAppended(AppendOnlyData appendOnlyData);
     }
@@ -63,7 +61,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
         AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.getAppendOnlyData();
         Map<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.size() > MAX_MAP_SIZE) {
+            if (map.size() > getMaxMapSize()) {
                 return new Result(false).maxMapSizeReached();
             }
 

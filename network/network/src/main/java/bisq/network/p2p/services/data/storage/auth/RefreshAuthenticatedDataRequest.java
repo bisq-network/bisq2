@@ -143,6 +143,17 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
+    public long getCreated() {
+        // Not used as not stored in map and no pruning applied
+        return 0;
+    }
+
+    @Override
+    public int getMaxMapSize() {
+        return metaData.getMaxMapSize();
+    }
+
+    @Override
     public String toString() {
         return "RefreshAuthenticatedDataRequest{" +
                 "\r\n     metaData=" + metaData +
