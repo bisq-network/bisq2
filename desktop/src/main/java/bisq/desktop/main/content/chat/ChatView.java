@@ -123,7 +123,6 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
     @Override
     protected void onViewAttached() {
-        log.error("onViewAttached");
         MainView.setFitToHeight(true);
         channelTitle.textProperty().bind(model.getChannelTitle());
         channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
