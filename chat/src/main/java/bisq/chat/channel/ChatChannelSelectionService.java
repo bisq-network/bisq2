@@ -50,9 +50,10 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
                                        ChatChannelDomain chatChannelDomain,
                                        UserIdentityService userIdentityService) {
         this.userIdentityService = userIdentityService;
+        String prefix = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase())) + "ChannelSelectionStore",
+                prefix + "ChannelSelectionStore",
                 persistableStore);
         this.privateChatChannelService = privateChatChannelService;
         this.publicChatChannelService = publicChatChannelService;

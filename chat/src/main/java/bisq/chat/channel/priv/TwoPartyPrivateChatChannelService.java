@@ -51,9 +51,10 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                                              ProofOfWorkService proofOfWorkService,
                                              ChatChannelDomain chatChannelDomain) {
         super(networkService, userService, proofOfWorkService, chatChannelDomain);
+        String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Private" + StringUtils.capitalize(chatChannelDomain.name()) + "ChatChannelStore",
+                "Private" + name + "ChatChannelStore",
                 persistableStore);
     }
 

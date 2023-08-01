@@ -95,7 +95,7 @@ public class StringUtils {
         } else if (value.length() == 1) {
             return value.toUpperCase();
         } else {
-            return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+            return value.substring(0, 1).toUpperCase() + value.substring(1);
         }
     }
 
