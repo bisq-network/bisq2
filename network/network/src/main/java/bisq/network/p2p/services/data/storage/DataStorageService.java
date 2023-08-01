@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -49,8 +50,9 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     public DataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super();
         this.fileName = fileName;
+        String storageFileName = StringUtils.camelCaseToSnakeCase(fileName + "Store");
         subDirectory = SUB_PATH + File.separator + storeName;
-        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, storageFileName, persistableStore);
         scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
     }
 
