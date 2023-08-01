@@ -158,7 +158,7 @@ message NetworkMessage {
 message MetaData {
   sint64 ttl = 1;
   sint32 maxSizeInBytes = 2;
-  string fileName = 3;
+  string className = 3;
 }
 message AuthorizedData {
   optional bytes signature = 1;

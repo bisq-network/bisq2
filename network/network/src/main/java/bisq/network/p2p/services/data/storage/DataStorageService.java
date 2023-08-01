@@ -42,15 +42,15 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     public final DataStore<T> persistableStore = new DataStore<>();
     @Getter
-    private final String fileName;
+    private final String storeKey;
     @Getter
     protected final String subDirectory;
     private final Scheduler scheduler;
 
-    public DataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
+    public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
-        this.fileName = fileName;
-        String storageFileName = StringUtils.camelCaseToSnakeCase(fileName + "Store");
+        this.storeKey = storeKey;
+        String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + "Store");
         subDirectory = SUB_PATH + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this, subDirectory, storageFileName, persistableStore);
         scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);

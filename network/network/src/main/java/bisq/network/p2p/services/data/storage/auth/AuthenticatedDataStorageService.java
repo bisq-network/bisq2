@@ -59,8 +59,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
-        super(persistenceService, storeName, fileName);
+    public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        super(persistenceService, storeName, storeKey);
     }
 
     @Override

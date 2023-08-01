@@ -45,8 +45,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
-        super(persistenceService, storeName, fileName);
+    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        super(persistenceService, storeName, storeKey);
     }
 
     @Override

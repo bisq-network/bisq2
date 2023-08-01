@@ -43,8 +43,8 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public AppendOnlyDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
-        super(persistenceService, storeName, fileName);
+    public AppendOnlyDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        super(persistenceService, storeName, storeKey);
     }
 
     @Override
