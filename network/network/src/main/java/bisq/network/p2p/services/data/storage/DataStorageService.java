@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String SUB_PATH = "db" + File.separator + "network";
+    public static final String STORE_POST_FIX = "Store";
 
     @Getter
     protected final Persistence<DataStore<T>> persistence;
@@ -50,7 +51,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
         this.storeKey = storeKey;
-        String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + "Store");
+        String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + STORE_POST_FIX);
         subDirectory = SUB_PATH + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this, subDirectory, storageFileName, persistableStore);
         scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);

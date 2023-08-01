@@ -19,7 +19,8 @@ package bisq.network.p2p.services.data.storage;
 
 
 import bisq.common.data.ByteArray;
-import bisq.common.util.FileUtils;
+import bisq.common.proto.NetworkStorageWhiteList;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
@@ -44,7 +45,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,8 +93,7 @@ public class StorageService {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             String directory = subPath + File.separator + authStoreName;
             if (new File(directory).exists()) {
-                //todo
-                getProtobufFilesInDirectory(directory)
+                getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, storeKey);
                             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
@@ -113,8 +113,7 @@ public class StorageService {
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
             directory = subPath + File.separator + mailboxStoreName;
             if (new File(directory).exists()) {
-                //todo
-                getProtobufFilesInDirectory(directory)
+                getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, storeKey);
                             dataStore.addListener(new MailboxDataStorageService.Listener() {
@@ -135,15 +134,14 @@ public class StorageService {
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
             directory = subPath + File.separator + appendStoreName;
             if (new File(directory).exists()) {
-                //todo
-                getProtobufFilesInDirectory(directory)
+                getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
                             dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> listener.onAdded(appendOnlyData)));
                             appendOnlyDataStores.put(storeKey, dataStore);
                         });
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -459,12 +457,12 @@ public class StorageService {
                 .filter(store -> storeKey.equals(store.getStoreKey()));
     }
 
-    // We do not use the extensions in the persistence framework, so we have to remove it from the file name.
-    private Set<String> getProtobufFilesInDirectory(String directory) throws IOException {
-        return FileUtils.listFilesInDirectory(directory, 1)
-                .stream()
-                .filter(fileName -> fileName.endsWith(Persistence.EXTENSION))
-                .map(fileName -> fileName.replace(Persistence.EXTENSION, ""))
+    private Set<String> getExistingStoreKeys(String directory) {
+        return NetworkStorageWhiteList.getClassNames().stream()
+                .filter(storeKey -> {
+                    String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
+                    return Path.of(directory, storageFileName).toFile().exists();
+                })
                 .collect(Collectors.toSet());
     }
 }

@@ -23,6 +23,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.chat.message.ChatMessage;
+import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.OfferMessage;
@@ -39,9 +40,30 @@ import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 
 public class ResolverConfig {
     public static void config() {
+        // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.
+        // Otherwise, the className gets added from the `addResolver` method call.
+
+        // ChatMessage subclasses
+        NetworkStorageWhiteList.add("CommonPublicChatMessage");
+        NetworkStorageWhiteList.add("BisqEasyPublicChatMessage");
+        NetworkStorageWhiteList.add("TwoPartyPrivateChatMessage");
+        NetworkStorageWhiteList.add("BisqEasyPrivateTradeChatMessage");
+
+        // TradeMessage subclasses
+        NetworkStorageWhiteList.add("BisqEasyAccountDataMessage");
+        NetworkStorageWhiteList.add("BisqEasyBtcAddressMessage");
+        NetworkStorageWhiteList.add("BisqEasyConfirmBtcSentMessage");
+        NetworkStorageWhiteList.add("BisqEasyConfirmFiatReceiptMessage");
+        NetworkStorageWhiteList.add("BisqEasyConfirmFiatSentMessage");
+        NetworkStorageWhiteList.add("BisqEasyTakeOfferRequest");
+        NetworkStorageWhiteList.add("BisqEasyTakeOfferResponse");
+
         // Register resolvers for distributedData 
-        DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
+        // Abstract classes
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+
+        // Final classes
+        DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedAlertData", AuthorizedAlertData.getResolver());
@@ -51,11 +73,15 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
-        DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
         DistributedDataResolver.addResolver("user.BannedUserProfileData", BannedUserProfileData.getResolver());
+        DistributedDataResolver.addResolver("offer.OfferMessage", OfferMessage.getResolver());
 
         // Register resolvers for networkMessages 
+        // Abstract classes
         NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
+
+        // Final classes
         NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("user.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
@@ -63,6 +89,5 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationResponse", MediationResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
     }
 }

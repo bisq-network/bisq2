@@ -22,7 +22,7 @@ import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 public class NetworkMessageResolver {
-    private static final ProtoResolverMap<NetworkMessage> protoResolverMap = new ProtoResolverMap<>();
+    private static final ProtoResolverMap<NetworkMessage> protoResolverMap = new ProtoResolverMap<>(true);
 
     public static void addResolver(String protoTypeName, ProtoResolver<NetworkMessage> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
