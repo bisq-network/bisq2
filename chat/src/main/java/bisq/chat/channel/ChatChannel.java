@@ -71,13 +71,12 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
                 return TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());
             }
 
-            case PRIVATEBISQEASYTRADECHATCHANNEL: {
-                return BisqEasyPrivateTradeChatChannel.fromProto(proto, proto.getPrivateBisqEasyTradeChatChannel());
+            case BISQEASYPRIVATETRADECHATCHANNEL: {
+                return BisqEasyPrivateTradeChatChannel.fromProto(proto, proto.getBisqEasyPrivateTradeChatChannel());
             }
-            case PUBLICBISQEASYOFFERCHATCHANNEL: {
-                return BisqEasyPublicChatChannel.fromProto(proto, proto.getPublicBisqEasyOfferChatChannel());
+            case BISQEASYPUBLICCHATCHANNEL: {
+                return BisqEasyPublicChatChannel.fromProto(proto, proto.getBisqEasyPublicChatChannel());
             }
-
 
             case COMMONPUBLICCHATCHANNEL: {
                 return CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
