@@ -24,6 +24,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.concurrent.TimeUnit;
+
 // We want to have fine-grained control over mailbox messages.
 // As the data is encrypted we could not use it's TTL, and we would merge all mailbox proto into one storage file.
 // By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
@@ -34,6 +36,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public final class MailboxData implements StorageData {
+    public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
+    
     @Getter
     private final ConfidentialMessage confidentialMessage;
     @Getter

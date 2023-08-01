@@ -118,6 +118,6 @@ public final class MailboxSequentialData implements Proto {
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > mailboxData.getMetaData().getTtl();
+        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
     }
 }
