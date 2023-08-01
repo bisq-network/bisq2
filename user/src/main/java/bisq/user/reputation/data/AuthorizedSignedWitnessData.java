@@ -77,11 +77,6 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

@@ -130,16 +130,9 @@ public final class PocOffer implements DistributedData {
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
-
-
 
     public Optional<TradeProtocolType> findProtocolType() {
         if (protocolTypes.isEmpty()) {

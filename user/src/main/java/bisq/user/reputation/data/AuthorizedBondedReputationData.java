@@ -87,11 +87,6 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

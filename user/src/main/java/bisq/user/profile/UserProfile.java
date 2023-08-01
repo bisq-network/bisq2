@@ -47,13 +47,12 @@ import java.util.concurrent.TimeUnit;
 public final class UserProfile implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
     private final static long TTL = TimeUnit.DAYS.toMillis(15);
-    // Metadata are not sent over the wire but hardcoded as we want to control it by ourselves.
-    private final static MetaData META_DATA = new MetaData(TTL, 100_000, UserProfile.class.getSimpleName());
 
     public static UserProfile from(UserProfile userProfile, String terms, String statement) {
         return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getNetworkId(), terms, statement);
     }
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final String nickName;
     // We need the proofOfWork for verification of the nym and robohash icon
     private final ProofOfWork proofOfWork;
@@ -105,11 +104,6 @@ public final class UserProfile implements DistributedData {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return META_DATA;
     }
 
     @Override

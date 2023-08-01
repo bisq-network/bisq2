@@ -136,11 +136,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return message.orElse("").length() > MAX_MESSAGE_LENGTH;
     }

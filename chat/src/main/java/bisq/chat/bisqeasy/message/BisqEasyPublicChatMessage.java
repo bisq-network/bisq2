@@ -116,11 +116,6 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }

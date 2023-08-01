@@ -77,11 +77,6 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

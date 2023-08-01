@@ -89,9 +89,4 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
         this.receiverUserProfileId = receiverUserProfileId;
         this.sender = sender;
     }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
 }

@@ -83,11 +83,6 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     }
 
     @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
