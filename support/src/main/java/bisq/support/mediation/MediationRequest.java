@@ -43,7 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MediationRequest implements MailboxMessage {
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
     private final UserProfile requester;
     private final UserProfile peer;
