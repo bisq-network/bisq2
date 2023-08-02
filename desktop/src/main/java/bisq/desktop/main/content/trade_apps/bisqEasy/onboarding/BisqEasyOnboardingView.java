@@ -66,8 +66,8 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 Res.get("bisqEasy.onboarding.left.content2"),
                 Res.get("bisqEasy.onboarding.left.content3"),
                 "onboarding-2-offer",
-                "onboarding-2-chat",
                 "onboarding-1-reputation",
+                "onboarding-2-payment",
                 Res.get("bisqEasy.onboarding.left.button")
         );
         createOfferButton = leftBoxPair.getSecond();
@@ -79,9 +79,9 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 Res.get("bisqEasy.onboarding.right.content1"),
                 Res.get("bisqEasy.onboarding.right.content2"),
                 Res.get("bisqEasy.onboarding.right.content3"),
+                "onboarding-1-reputation",
+                "onboarding-2-offer",
                 "onboarding-2-payment",
-                "onboarding-2-chat",
-                "onboarding-3-method",
                 Res.get("bisqEasy.onboarding.right.button")
         );
         openChatButton = rightBoxPair.getSecond();
