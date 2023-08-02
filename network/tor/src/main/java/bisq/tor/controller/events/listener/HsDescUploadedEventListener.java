@@ -15,14 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.bootstrap;
+package bisq.tor.controller.events.listener;
 
-public class TorBootstrapFailed extends RuntimeException {
-    public TorBootstrapFailed(String message) {
-        super(message);
-    }
+import bisq.tor.controller.events.events.HsDescUploadedEvent;
 
-    public TorBootstrapFailed(Throwable cause) {
-        super(cause);
-    }
+public interface HsDescUploadedEventListener {
+    void onHsDescUploaded(HsDescUploadedEvent uploadedEvent);
 }

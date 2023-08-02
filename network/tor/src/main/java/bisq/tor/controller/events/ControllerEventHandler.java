@@ -15,8 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.bootstrap;
+package bisq.tor.controller.events;
 
+import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.events.HsDescUploadedEvent;
+import bisq.tor.controller.events.listener.BootstrapEventListener;
+import bisq.tor.controller.events.listener.HsDescUploadedEventListener;
 import net.freehaven.tor.control.EventHandler;
 
 import java.util.List;

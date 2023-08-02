@@ -15,8 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.bootstrap;
+package bisq.tor.process;
 
-public interface BootstrapEventListener {
-    void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent);
+public class CouldNotWaitForTorShutdownException extends RuntimeException {
+    public CouldNotWaitForTorShutdownException(String message) {
+        super(message);
+    }
+
+    public CouldNotWaitForTorShutdownException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.process;
+package bisq.tor.controller.exceptions;
 
-public class CouldNotWaitForTorShutdown extends RuntimeException {
-    public CouldNotWaitForTorShutdown(String message) {
+public class HsDescUploadFailedException extends RuntimeException {
+    public HsDescUploadFailedException(String message) {
         super(message);
     }
 
-    public CouldNotWaitForTorShutdown(Throwable cause) {
+    public HsDescUploadFailedException(Throwable cause) {
         super(cause);
     }
 }

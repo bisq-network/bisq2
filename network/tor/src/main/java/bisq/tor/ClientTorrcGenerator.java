@@ -30,12 +30,14 @@ public class ClientTorrcGenerator {
 
     private final Path dataDirPath;
     private final int controlPort;
+    private final int socksPort;
     private final String hashedControlPassword;
-    protected final Map<String, String> torConfigMap = new HashMap<>();
+    private final Map<String, String> torConfigMap = new HashMap<>();
 
-    public ClientTorrcGenerator(Path dataDirPath, int controlPort, String hashedControlPassword) {
+    public ClientTorrcGenerator(Path dataDirPath, int controlPort, int socksPort, String hashedControlPassword) {
         this.dataDirPath = dataDirPath;
         this.controlPort = controlPort;
+        this.socksPort = socksPort;
         this.hashedControlPassword = hashedControlPassword;
     }
 
@@ -49,7 +51,7 @@ public class ClientTorrcGenerator {
                 "debug file " + dataDirPath.resolve("debug.log").toAbsolutePath()
         );
 
-        torConfigMap.put("SocksPort", String.valueOf(NetworkUtils.findFreeSystemPort()));
+        torConfigMap.put("SocksPort", String.valueOf(socksPort));
 
         return torConfigMap;
     }
