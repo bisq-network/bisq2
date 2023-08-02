@@ -21,12 +21,16 @@ import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Meta data for storage properties per DistributedData
  */
+@Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
@@ -37,51 +41,53 @@ public final class MetaData implements Proto {
     public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);
     public static final long TTL_100_DAYS = TimeUnit.DAYS.toMillis(100);
 
-    public static final int MAX_SIZE_1000 = 1000;
-    public static final int MAX_SIZE_10_000 = 10_000;
+    public static final int MAX_DATA_SIZE_1000 = 1000;
+    public static final int MAX_DATA_SIZE_10_000 = 10_000;
 
     public static final int MAX_MAP_SIZE_100 = 100;
     public static final int MAX_MAP_SIZE_1000 = 1000;
     public static final int MAX_MAP_SIZE_10_000 = 10_000;
 
     private final long ttl;
-    private final int maxSizeInBytes;
+    private final int maxDataSize;
     private final String className;
 
     private transient final int maxMapSize;
 
     public MetaData(String className) {
-        this(TTL_10_DAYS, MAX_SIZE_10_000, className, MAX_MAP_SIZE_1000);
+        this(TTL_10_DAYS, MAX_DATA_SIZE_10_000, className, MAX_MAP_SIZE_1000);
     }
 
     public MetaData(long ttl, String className) {
-        this(ttl, MAX_SIZE_10_000, className, MAX_MAP_SIZE_1000);
+        this(ttl, MAX_DATA_SIZE_10_000, className, MAX_MAP_SIZE_1000);
     }
 
-    public MetaData(long ttl, int maxSizeInBytes, String className) {
-        this(ttl, maxSizeInBytes, className, MAX_MAP_SIZE_1000);
+    public MetaData(long ttl, int maxDataSize, String className) {
+        this(ttl, maxDataSize, className, MAX_MAP_SIZE_1000);
     }
 
     public MetaData(long ttl, String className, int maxMapSize) {
-        this(ttl, MAX_SIZE_10_000, className, maxMapSize);
+        this(ttl, MAX_DATA_SIZE_10_000, className, maxMapSize);
     }
 
-    public MetaData(long ttl, int maxSizeInBytes, String className, int maxMapSize) {
+    public MetaData(long ttl, int maxDataSize, String className, int maxMapSize) {
         this.ttl = ttl;
-        this.maxSizeInBytes = maxSizeInBytes;
+        this.maxDataSize = maxDataSize;
         this.className = className;
         this.maxMapSize = maxMapSize;
+
+        checkArgument(className.length() < 50);
     }
 
     public bisq.network.protobuf.MetaData toProto() {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)
-                .setMaxSizeInBytes(maxSizeInBytes)
+                .setMaxDataSize(maxDataSize)
                 .setClassName(className)
                 .build();
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
-        return new MetaData(proto.getTtl(), proto.getMaxSizeInBytes(), proto.getClassName());
+        return new MetaData(proto.getTtl(), proto.getMaxDataSize(), proto.getClassName());
     }
 }
