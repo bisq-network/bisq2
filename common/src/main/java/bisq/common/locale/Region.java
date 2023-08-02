@@ -37,7 +37,7 @@ public final class Region implements Proto {
     public bisq.common.protobuf.Region toProto() {
         return bisq.common.protobuf.Region.newBuilder()
                 .setCode(code)
-                .setCode(name)
+                .setName(name)
                 .build();
     }
 

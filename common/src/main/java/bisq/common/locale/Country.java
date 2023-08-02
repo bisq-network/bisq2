@@ -44,7 +44,7 @@ public final class Country implements Proto {
     public bisq.common.protobuf.Country toProto() {
         return bisq.common.protobuf.Country.newBuilder()
                 .setCode(code)
-                .setCode(name)
+                .setName(name)
                 .setRegion(region.toProto())
                 .build();
     }
