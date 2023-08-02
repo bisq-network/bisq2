@@ -22,6 +22,7 @@ dependencies {
     implementation libs.google.guava
     implementation libs.failsafe
     implementation libs.tukaani
+    implementation libs.typesafe.config
 
     implementation libs.chimp.jsocks
     implementation libs.chimp.jtorctl
