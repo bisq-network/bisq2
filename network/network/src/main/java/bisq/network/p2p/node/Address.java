@@ -26,6 +26,8 @@ import lombok.Getter;
 
 import java.util.StringTokenizer;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @EqualsAndHashCode
 @Getter
 public final class Address implements Proto, Comparable<Address> {
@@ -49,6 +51,8 @@ public final class Address implements Proto, Comparable<Address> {
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
         this.port = port;
+
+        checkArgument(host.length() < 500);
     }
 
     public Address(OnionAddress onionAddress) {

@@ -34,14 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_SIZE_1000;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_DATA_SIZE_1000;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, MAX_SIZE_1000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, MAX_DATA_SIZE_1000, getClass().getSimpleName());
     private final long amount;
     private final long time;
     private final byte[] hash;

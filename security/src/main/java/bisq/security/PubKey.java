@@ -20,13 +20,16 @@ package bisq.security;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.BasicInputValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
+@Slf4j
 @EqualsAndHashCode
 public final class PubKey implements Proto {
     @Getter
@@ -40,6 +43,8 @@ public final class PubKey implements Proto {
     public PubKey(PublicKey publicKey, String keyId) {
         this.publicKey = publicKey;
         this.keyId = keyId;
+
+        BasicInputValidation.validateId(keyId);
     }
 
     public bisq.security.protobuf.PubKey toProto() {

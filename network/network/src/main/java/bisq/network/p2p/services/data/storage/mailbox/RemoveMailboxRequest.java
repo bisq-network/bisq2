@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.validation.BasicInputValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -75,6 +76,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         this.receiverPublicKey = receiverPublicKey;
         this.signature = signature;
         this.created = created;
+
+        BasicInputValidation.validateHash(hash);
+        BasicInputValidation.validatePubKey(receiverPublicKeyBytes);
+        BasicInputValidation.validateSignature(signature);
+        BasicInputValidation.validateCreationDate(created);
     }
 
     @Override
@@ -149,5 +155,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public int getMaxMapSize() {
         return metaData.getMaxMapSize();
+    }
+
+    @Override
+    public int getMaxDataSize() {
+        return metaData.getMaxDataSize();
     }
 }

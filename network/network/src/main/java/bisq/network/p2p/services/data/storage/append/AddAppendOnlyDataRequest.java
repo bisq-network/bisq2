@@ -66,4 +66,9 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     public int getMaxMapSize() {
         return appendOnlyData.getMetaData().getMaxMapSize();
     }
+
+    @Override
+    public int getMaxDataSize() {
+        return appendOnlyData.getMetaData().getMaxDataSize();
+    }
 }

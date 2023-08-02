@@ -63,4 +63,6 @@ public interface DataRequest extends BroadcastMessage {
     long getCreated();
 
     int getMaxMapSize();
+
+    int getMaxDataSize();
 }

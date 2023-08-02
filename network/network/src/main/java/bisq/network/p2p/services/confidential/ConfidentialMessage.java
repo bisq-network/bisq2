@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.validation.BasicInputValidation;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 @EqualsAndHashCode
 @Getter
 public final class ConfidentialMessage implements NetworkMessage, DistributedData {
+    //todo
     private static final int VERSION = 0;
 
     private final int version;
@@ -48,6 +50,8 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
         this.version = version;
         this.confidentialData = confidentialData;
         this.receiverKeyId = receiverKeyId;
+
+        BasicInputValidation.validateId(receiverKeyId);
     }
 
     @Override

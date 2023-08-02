@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BasicInputValidation {
     public static final long TWO_HOURS = TimeUnit.HOURS.toMillis(2);
 
-    public static void dateNotInFarFuture(long date) {
+    public static void validateCreationDate(long date) {
         checkArgument(date < System.currentTimeMillis() + TWO_HOURS);
     }
 
@@ -48,5 +48,10 @@ public class BasicInputValidation {
     public static void validateId(String id) {
         log.error("id {}", id.length());
         checkArgument(id.length() < 50);
+    }
+
+    public static void validateProfileId(String profileId) {
+        log.error("profileId {}", profileId.length());
+        checkArgument(profileId.length() == 40);
     }
 }

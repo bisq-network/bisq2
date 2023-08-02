@@ -23,6 +23,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.BasicInputValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
@@ -40,6 +41,7 @@ import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
@@ -74,6 +76,13 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.networkId = networkId;
         this.authorizedOracleNode = authorizedOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        checkArgument(authorizedPublicKey.length() < 200);
+        checkArgument(bondUserName.length() < 100);
+        checkArgument(signature.length() < 200);
+
+        BasicInputValidation.validateProfileId(profileId);
+
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//862
     }

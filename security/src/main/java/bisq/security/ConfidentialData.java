@@ -18,11 +18,16 @@
 package bisq.security;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.BasicInputValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -40,6 +45,18 @@ public final class ConfidentialData implements Proto {
         this.iv = iv;
         this.cipherText = cipherText;
         this.signature = signature;
+
+        log.error("senderPublicKey {}", senderPublicKey.length);
+        log.error("iv {}", iv.length);
+        log.error("cipherText {}", cipherText.length);
+        log.error("signature {}", signature.length);
+
+
+        checkArgument(iv.length < 20);
+        checkArgument(cipherText.length < 10_000);
+
+        BasicInputValidation.validatePubKey(senderPublicKey);
+        BasicInputValidation.validateSignature(signature);
     }
 
     public bisq.security.protobuf.ConfidentialData toProto() {

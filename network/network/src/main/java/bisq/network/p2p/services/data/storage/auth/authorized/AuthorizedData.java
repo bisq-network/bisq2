@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
+import bisq.common.validation.BasicInputValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.KeyGeneration;
@@ -63,6 +64,9 @@ public final class AuthorizedData extends AuthenticatedData {
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
+
+        signature.ifPresent(BasicInputValidation::validateSignature);
+        BasicInputValidation.validatePubKey(authorizedPublicKeyBytes);
     }
 
     public bisq.network.protobuf.AuthenticatedData toProto() {

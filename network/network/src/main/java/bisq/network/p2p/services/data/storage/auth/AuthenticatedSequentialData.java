@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
+import bisq.common.validation.BasicInputValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,6 +53,9 @@ public final class AuthenticatedSequentialData implements Proto {
         this.sequenceNumber = sequenceNumber;
         this.pubKeyHash = pubKeyHash;
         this.created = created;
+
+        BasicInputValidation.validateCreationDate(created);
+        BasicInputValidation.validateHash(pubKeyHash);
     }
 
     public bisq.network.protobuf.AuthenticatedSequentialData toProto() {

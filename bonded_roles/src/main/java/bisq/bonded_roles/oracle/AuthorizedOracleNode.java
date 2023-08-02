@@ -35,6 +35,7 @@ import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
@@ -57,6 +58,9 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         this.signature = signature;
         this.publicKeyHash = publicKeyHash;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        checkArgument(bondUserName.length() == 100);
+
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//326
     }

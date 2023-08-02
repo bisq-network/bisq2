@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.validation.BasicInputValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
@@ -63,9 +64,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Getter
     private final AuthenticatedSequentialData authenticatedSequentialData;
     @Getter
-    private final byte[] signature;         // 256 bytes
+    private final byte[] signature;
     @Getter
-    private final byte[] ownerPublicKeyBytes; // 294 bytes
+    private final byte[] ownerPublicKeyBytes;
     private transient final PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {
@@ -83,6 +84,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         this.signature = signature;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
+
+        BasicInputValidation.validatePubKey(ownerPublicKeyBytes);
+        BasicInputValidation.validateSignature(signature);
     }
 
     @Override
@@ -152,6 +156,11 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public int getMaxMapSize() {
         return authenticatedSequentialData.getAuthenticatedData().getMetaData().getMaxMapSize();
+    }
+
+    @Override
+    public int getMaxDataSize() {
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getMaxDataSize();
     }
 
     @Override
