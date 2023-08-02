@@ -156,9 +156,4 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public int getMaxMapSize() {
         return metaData.getMaxMapSize();
     }
-
-    @Override
-    public int getMaxDataSize() {
-        return metaData.getMaxDataSize();
-    }
 }

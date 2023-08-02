@@ -45,7 +45,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     protected final String subDirectory;
     protected Optional<Integer> maxMapSize = Optional.empty();
-    protected Optional<Integer> maxDataSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
@@ -86,13 +85,5 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         }
         maxMapSize = persistableStore.getMap().values().stream().map(DataRequest::getMaxMapSize).findFirst();
         return maxMapSize.orElse(MetaData.MAX_MAP_SIZE_10_000);
-    }
-
-    protected int getDataMaxSize() {
-        if (maxDataSize.isPresent()) {
-            return maxDataSize.get();
-        }
-        maxDataSize = persistableStore.getMap().values().stream().map(DataRequest::getMaxDataSize).findFirst();
-        return maxDataSize.orElse(MetaData.MAX_DATA_SIZE_10_000);
     }
 }

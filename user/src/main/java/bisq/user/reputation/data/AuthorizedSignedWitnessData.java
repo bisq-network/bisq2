@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_DATA_SIZE_1000;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
@@ -41,7 +40,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Getter
 public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
     public static final long TTL = TTL_100_DAYS;
-    private final MetaData metaData = new MetaData(TTL, MAX_DATA_SIZE_1000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     private final String profileId;
     private final long witnessSignDate;
     private final boolean staticPublicKeysProvided;

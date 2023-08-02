@@ -174,11 +174,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return metaData.getMaxMapSize();
     }
 
-    @Override
-    public int getMaxDataSize() {
-        return metaData.getMaxDataSize();
-    }
-
     public String getClassName() {
         return metaData.getClassName();
     }

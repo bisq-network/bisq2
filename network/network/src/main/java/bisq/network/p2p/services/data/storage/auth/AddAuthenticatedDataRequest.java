@@ -159,11 +159,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public int getMaxDataSize() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getMaxDataSize();
-    }
-
-    @Override
     public boolean isExpired() {
         return authenticatedSequentialData.isExpired();
     }

@@ -159,11 +159,6 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
-    public int getMaxDataSize() {
-        return metaData.getMaxDataSize();
-    }
-
-    @Override
     public String toString() {
         return "RefreshAuthenticatedDataRequest{" +
                 "\r\n     metaData=" + metaData +

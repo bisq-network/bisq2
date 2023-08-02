@@ -156,11 +156,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public int getMaxDataSize() {
-        return mailboxSequentialData.getMailboxData().getMetaData().getMaxDataSize();
-    }
-
-    @Override
     public String toString() {
         return "AddMailboxDataRequest{} " + super.toString();
     }

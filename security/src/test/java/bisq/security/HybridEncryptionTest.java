@@ -76,7 +76,10 @@ public class HybridEncryptionTest {
         byte[] cypherText = confidentialData.getCipherText();
 
         try {
-            ConfidentialData withFakeSig = new ConfidentialData(encodedSenderPublicKey, iv, cypherText, "signature".getBytes());
+            // In the ConfidentialData constructor we call NetworkDataValidation.validateECSignature which expects 
+            // a 71-73 bytes long sig, that's why we test with that long string to not trigger the exception for the length check.
+            ConfidentialData withFakeSig = new ConfidentialData(encodedSenderPublicKey, iv, cypherText,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".getBytes());
             HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
             fail();
         } catch (Throwable e) {

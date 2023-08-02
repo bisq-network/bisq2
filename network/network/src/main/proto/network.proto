@@ -157,7 +157,7 @@ message NetworkMessage {
 
 message MetaData {
   sint64 ttl = 1;
-  sint32 maxDataSize = 2;
+  sint32 maxMapSize = 2;
   string className = 3;
 }
 message AuthorizedData {
