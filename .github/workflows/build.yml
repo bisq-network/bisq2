@@ -26,28 +26,6 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Cache Tor binary
-        uses: actions/cache@v3.3.1
-        env:
-          cache-name: cache-tor-binary
-        with:
-          path: |
-            network/tor/build/tor_binary
-            network/tor/build/generated/src/main/resources/tor.zip
-            network/tor-local-network/build/tor_binary
-            network/tor-local-network/build/generated/src/main/resources/tor.zip
-          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('network/tor/build.gradle') }}
-
-      - name: Cache Electrum binary
-        uses: actions/cache@v3.3.1
-        env:
-          cache-name: cache-electrum-binary
-        with:
-          path: |
-            wallets/electrum/build/electrum_binaries
-            wallets/electrum/build/generated/src/main/resources/electrum-binaries.zip
-          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('wallets/electrum/build.gradle') }}
-
       - name: Gradle Build Action (root)
         uses: gradle/gradle-build-action@v2.7.0
         with:
