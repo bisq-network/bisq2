@@ -28,8 +28,7 @@ import java.net.Socket;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Slf4j
 public class NativeTorController implements BootstrapEventListener, HsDescUploadedEventListener {
@@ -37,6 +36,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
     private final CountDownLatch isHsDescUploadedCountdownLatch = new CountDownLatch(1);
     private final ControllerEventHandler controllerEventHandler = new ControllerEventHandler();
+    private final CompletableFuture<String> hiddenServiceAddress = new CompletableFuture<>();
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
 
     public void connect(int controlPort, PasswordDigest controlConnectionSecret) throws IOException {
@@ -76,6 +76,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         } else {
             result = controlConnection.createHiddenService(hiddenServicePort, localPort, privateKey.get());
         }
+        hiddenServiceAddress.complete(result.serviceID);
 
         try {
             boolean isSuccess = isHsDescUploadedCountdownLatch.await(2, TimeUnit.MINUTES);
@@ -129,7 +130,16 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     @Override
     public void onHsDescUploaded(HsDescUploadedEvent uploadedEvent) {
         log.info("Tor HS_DESC event: {}", uploadedEvent);
-        isHsDescUploadedCountdownLatch.countDown();
+        try {
+            String hsAddress = hiddenServiceAddress.get(2, TimeUnit.MINUTES);
+            if (hsAddress.equals(uploadedEvent.getHsAddress())) {
+                isHsDescUploadedCountdownLatch.countDown();
+            }
+        } catch (TimeoutException e) {
+            throw new HsDescUploadFailed("Unknown hidden service descriptor uploaded");
+        } catch (ExecutionException | InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void addBootstrapEventListener(TorControlConnection controlConnection) throws IOException {
