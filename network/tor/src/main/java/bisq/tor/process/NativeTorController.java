@@ -91,6 +91,15 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         return result;
     }
 
+    public boolean isHiddenServiceAvailable(String onionUrl) {
+        try {
+            TorControlConnection controlConnection = torControlConnection.orElseThrow();
+            return controlConnection.isHSAvailable(onionUrl);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     public void waitUntilBootstrapped() {
         try {
             boolean isSuccess = isBootstrappedCountdownLatch.await(2, TimeUnit.MINUTES);
