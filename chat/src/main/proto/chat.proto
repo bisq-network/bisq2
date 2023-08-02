@@ -77,8 +77,8 @@ message ChatChannel {
   oneof message{
     TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = 10;
     CommonPublicChatChannel commonPublicChatChannel = 11;
-    BisqEasyPrivateTradeChatChannel privateBisqEasyTradeChatChannel = 12;
-    BisqEasyPublicChatChannel publicBisqEasyOfferChatChannel = 13;
+    BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = 12;
+    BisqEasyPublicChatChannel bisqEasyPublicChatChannel = 13;
   }
 }
 

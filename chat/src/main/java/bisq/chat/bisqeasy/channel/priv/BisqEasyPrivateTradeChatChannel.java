@@ -143,7 +143,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                         .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        return getChatChannelBuilder().setPrivateBisqEasyTradeChatChannel(builder).build();
+        return getChatChannelBuilder().setBisqEasyPrivateTradeChatChannel(builder).build();
     }
 
     public static BisqEasyPrivateTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
