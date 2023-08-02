@@ -152,7 +152,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
         keepAliveService = new KeepAliveService(node, peerGroup, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
-        String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name();
+        String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name().toLowerCase();
         persistence = persistenceService.getOrCreatePersistence(this, "db", fileName, persistableStore);
 
         retryPolicy = RetryPolicy.<Boolean>builder()

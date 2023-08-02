@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.AddDataRequest;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
@@ -140,10 +139,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         });
     }
 
-    public String getFileName() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getFileName();
-    }
-
     @Override
     public int getSequenceNumber() {
         return authenticatedSequentialData.getSequenceNumber();
@@ -152,10 +147,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public long getCreated() {
         return authenticatedSequentialData.getCreated();
-    }
-
-    public MetaData getMetaData() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
     @Override

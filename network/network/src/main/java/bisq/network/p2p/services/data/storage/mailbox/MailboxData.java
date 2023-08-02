@@ -56,6 +56,10 @@ public final class MailboxData implements StorageData {
                 MetaData.fromProto(proto.getMetaData()));
     }
 
+    public String getFileName() {
+        return metaData.getFileName();
+    }
+
     @Override
     public boolean isDataInvalid(byte[] ownerPubKeyHash) {
         return confidentialMessage.isDataInvalid(ownerPubKeyHash);

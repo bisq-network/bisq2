@@ -68,6 +68,10 @@ public abstract class AuthenticatedData implements StorageData {
         return distributedData.getMetaData();
     }
 
+    public String getFileName() {
+        return distributedData.getFileName();
+    }
+
     @Override
     public String toString() {
         return "AuthenticatedData{" +

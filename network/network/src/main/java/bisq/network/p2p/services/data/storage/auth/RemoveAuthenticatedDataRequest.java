@@ -164,6 +164,10 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return (System.currentTimeMillis() - created) > metaData.getTtl();
     }
 
+    public String getFileName() {
+        return metaData.getFileName();
+    }
+
     @Override
     public String toString() {
         return "RemoveAuthenticatedDataRequest{" +

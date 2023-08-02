@@ -53,9 +53,10 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
         this.channels = channels;
 
+        String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Public" + StringUtils.capitalize(chatChannelDomain.name()) + "ChatChannelStore",
+                "Public" + name + "ChatChannelStore",
                 persistableStore);
     }
 
