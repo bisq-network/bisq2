@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.proto.Proto;
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.security.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -84,10 +84,10 @@ public final class MailboxSequentialData implements Proto {
         this.sequenceNumber = sequenceNumber;
 
 
-        BasicInputValidation.validateCreationDate(created);
-        BasicInputValidation.validateHash(senderPublicKeyHash);
-        BasicInputValidation.validateHash(receiversPublicKeyHash);
-        BasicInputValidation.validatePubKey(receiversPubKeyBytes);
+        NetworkDataValidation.validateHash(senderPublicKeyHash);
+        NetworkDataValidation.validateHash(receiversPublicKeyHash);
+        NetworkDataValidation.validateECPubKey(receiversPubKeyBytes);
+        NetworkDataValidation.validateDate(created);
     }
 
     public bisq.network.protobuf.MailboxSequentialData toProto() {

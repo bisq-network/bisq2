@@ -19,6 +19,7 @@ package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -42,6 +43,8 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
 
     public AuthorizeTimestampRequest(String profileId) {
         this.profileId = profileId;
+
+        NetworkDataValidation.validateProfileId(profileId);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //100
     }

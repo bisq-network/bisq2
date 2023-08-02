@@ -19,6 +19,7 @@ package bisq.offer.options;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -49,6 +50,8 @@ public final class FeeOption implements OfferOption {
         this.feeType = feeType;
         this.blockHeightAtFeePayment = blockHeightAtFeePayment;
         this.feeTxId = feeTxId;
+
+        NetworkDataValidation.validateBtcTxId(feeTxId);
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {

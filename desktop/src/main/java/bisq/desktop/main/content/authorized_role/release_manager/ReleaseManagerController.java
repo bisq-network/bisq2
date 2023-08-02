@@ -75,13 +75,11 @@ public class ReleaseManagerController implements Controller {
 
     void onSendReleaseNotification() {
         String releaseNotes = model.getReleaseNotes().get();
-        //todo use validation framework instead (not impl yet)
         if (releaseNotes != null && releaseNotes.length() > ReleaseNotification.MAX_MESSAGE_LENGTH) {
-            new Popup().warning(Res.get("authorizedRole.releaseManager.releaseNotes.tooLong")).show();
+            new Popup().warning(Res.get("validation.tooLong", ReleaseNotification.MAX_MESSAGE_LENGTH)).show();
             return;
         }
         Version.validate(model.getVersion().get());
-
         releaseManagerService.publishReleaseNotification(model.getIsPreRelease().get(),
                         model.getIsLauncherUpdate().get(),
                         releaseNotes,

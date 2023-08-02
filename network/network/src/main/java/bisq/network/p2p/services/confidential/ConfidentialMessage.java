@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -51,7 +51,7 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
         this.confidentialData = confidentialData;
         this.receiverKeyId = receiverKeyId;
 
-        BasicInputValidation.validateId(receiverKeyId);
+        NetworkDataValidation.validateId(receiverKeyId);
     }
 
     @Override

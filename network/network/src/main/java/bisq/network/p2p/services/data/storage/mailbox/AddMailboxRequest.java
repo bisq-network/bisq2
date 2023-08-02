@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
@@ -75,8 +75,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         this.senderPublicKeyBytes = senderPublicKeyBytes;
         this.senderPublicKey = senderPublicKey;
 
-        BasicInputValidation.validatePubKey(senderPublicKeyBytes);
-        BasicInputValidation.validateSignature(signature);
+        NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
     @Override

@@ -60,7 +60,7 @@ public class BondedRolesListItem implements TableItem {
         userProfileId = userProfile.map(UserProfile::getId).orElse(Res.get("data.na"));
         userName = userProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
         bondUserName = authorizedBondedRoleData.getBondUserName();
-        signature = authorizedBondedRoleData.getSignature();
+        signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         roleTypeString = bondedRoleType.getDisplayString();
 

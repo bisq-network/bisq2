@@ -18,12 +18,14 @@
 package bisq.common.currency;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
 public final class Market implements Proto {
+    public final static int MAX_NAME_LENGTH = 50;
     private static final String QUOTE_SEPARATOR = "/";
 
     private final String baseCurrencyCode;
@@ -39,6 +41,11 @@ public final class Market implements Proto {
         this.quoteCurrencyCode = quoteCurrencyCode;
         this.baseCurrencyName = baseCurrencyName;
         this.quoteCurrencyName = quoteCurrencyName;
+
+        NetworkDataValidation.validateCode(baseCurrencyCode);
+        NetworkDataValidation.validateCode(quoteCurrencyCode);
+        NetworkDataValidation.validateText(baseCurrencyName, MAX_NAME_LENGTH);
+        NetworkDataValidation.validateText(quoteCurrencyName, MAX_NAME_LENGTH);
     }
 
     public bisq.common.protobuf.Market toProto() {

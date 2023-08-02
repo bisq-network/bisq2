@@ -18,6 +18,7 @@
 package bisq.chat.message;
 
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -83,5 +84,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 chatMessageType);
         this.receiverUserProfileId = receiverUserProfileId;
         this.sender = sender;
+
+        NetworkDataValidation.validateProfileId(receiverUserProfileId);
     }
 }

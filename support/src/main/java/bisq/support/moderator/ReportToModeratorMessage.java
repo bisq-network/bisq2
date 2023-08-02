@@ -20,6 +20,7 @@ package bisq.support.moderator;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -38,6 +39,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class ReportToModeratorMessage implements MailboxMessage {
+    public final static int MAX_MESSAGE_LENGTH = 1000;
+
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final long date;
     private final String reporterUserProfileId;
@@ -55,6 +58,10 @@ public final class ReportToModeratorMessage implements MailboxMessage {
         this.accusedUserProfile = accusedUserProfile;
         this.message = message;
         this.chatChannelDomain = chatChannelDomain;
+
+        NetworkDataValidation.validateDate(date);
+        NetworkDataValidation.validateProfileId(reporterUserProfileId);
+        NetworkDataValidation.validateText(message, MAX_MESSAGE_LENGTH);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//1438
     }

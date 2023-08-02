@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,6 +35,10 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
         super(tradeId, sender);
 
         this.txId = txId;
+
+        // We tolerate non-btc txId data as well 
+        NetworkDataValidation.validateText(txId, 200);
+
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //412
     }
 

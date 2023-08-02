@@ -74,7 +74,6 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 wasEdited,
                 chatMessageType);
 
-        //356
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //755
     }
 

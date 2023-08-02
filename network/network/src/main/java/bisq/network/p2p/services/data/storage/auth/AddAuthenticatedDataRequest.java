@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
@@ -85,8 +85,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
 
-        BasicInputValidation.validatePubKey(ownerPublicKeyBytes);
-        BasicInputValidation.validateSignature(signature);
+        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
     @Override

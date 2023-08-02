@@ -23,7 +23,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
@@ -41,7 +41,6 @@ import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
@@ -52,7 +51,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
-    private final String signature;
+    private final String signatureBase64;
     private final Map<Transport.Type, Address> addressByNetworkType;
     private final NetworkId networkId;
     private final Optional<AuthorizedOracleNode> authorizedOracleNode;
@@ -62,7 +61,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 String authorizedPublicKey,
                                 BondedRoleType bondedRoleType,
                                 String bondUserName,
-                                String signature,
+                                String signatureBase64,
                                 Map<Transport.Type, Address> addressByNetworkType,
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizedOracleNode,
@@ -71,18 +70,16 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
-        this.signature = signature;
+        this.signatureBase64 = signatureBase64;
         this.addressByNetworkType = addressByNetworkType;
         this.networkId = networkId;
         this.authorizedOracleNode = authorizedOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        checkArgument(authorizedPublicKey.length() < 200);
-        checkArgument(bondUserName.length() < 100);
-        checkArgument(signature.length() < 200);
-
-        BasicInputValidation.validateProfileId(profileId);
-
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
+        NetworkDataValidation.validateBondUserName(bondUserName);
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//862
     }
@@ -94,7 +91,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
-                .setSignature(signature)
+                .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto())
                 .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
@@ -107,7 +104,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
-                proto.getSignature(),
+                proto.getSignatureBase64(),
                 NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.hasAuthorizedOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizedOracleNode())) : Optional.empty(),
@@ -151,7 +148,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    authorizedPublicKey='" + authorizedPublicKey + '\'' +
                 ",\r\n                    bondedRoleType=" + bondedRoleType +
                 ",\r\n                    bondUserName='" + bondUserName + '\'' +
-                ",\r\n                    signature='" + signature + '\'' +
+                ",\r\n                    signature='" + signatureBase64 + '\'' +
                 ",\r\n                    networkId=" + networkId +
                 ",\r\n                    addressByNetworkType=" + addressByNetworkType +
                 ",\r\n                    authorizedOracleNode=" + authorizedOracleNode +

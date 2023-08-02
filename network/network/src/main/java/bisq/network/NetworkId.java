@@ -19,7 +19,7 @@ package bisq.network;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
@@ -52,7 +52,7 @@ public final class NetworkId implements Proto {
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByNetworkType.putAll(addressByNetworkType);
 
-        BasicInputValidation.validateId(nodeId);
+        NetworkDataValidation.validateId(nodeId);
     }
 
     public bisq.network.protobuf.NetworkId toProto() {

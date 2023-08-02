@@ -18,14 +18,13 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Meta data for storage properties per DistributedData
@@ -76,7 +75,7 @@ public final class MetaData implements Proto {
         this.className = className;
         this.maxMapSize = maxMapSize;
 
-        checkArgument(className.length() < 50);
+        NetworkDataValidation.validateText(className, 50);
     }
 
     public bisq.network.protobuf.MetaData toProto() {

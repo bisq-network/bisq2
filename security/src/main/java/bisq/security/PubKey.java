@@ -20,7 +20,7 @@ package bisq.security;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,7 +44,7 @@ public final class PubKey implements Proto {
         this.publicKey = publicKey;
         this.keyId = keyId;
 
-        BasicInputValidation.validateId(keyId);
+        NetworkDataValidation.validateId(keyId);
     }
 
     public bisq.security.protobuf.PubKey toProto() {

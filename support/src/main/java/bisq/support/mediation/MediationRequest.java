@@ -53,7 +53,7 @@ public final class MediationRequest implements MailboxMessage {
         this.bisqEasyOffer = bisqEasyOffer;
         this.requester = requester;
         this.peer = peer;
-        this.chatMessages = chatMessages;
+        this.chatMessages = maybePrune(chatMessages);
 
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.chatMessages);
@@ -98,5 +98,20 @@ public final class MediationRequest implements MailboxMessage {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    private List<BisqEasyPrivateTradeChatMessage> maybePrune(List<BisqEasyPrivateTradeChatMessage> chatMessages) {
+        StringBuilder sb = new StringBuilder();
+        List<BisqEasyPrivateTradeChatMessage> result = chatMessages.stream()
+                .filter(message -> {
+                    sb.append(message.getText());
+                    return sb.toString().length() < 10_000;
+                })
+                .collect(Collectors.toList());
+        if (result.size() != chatMessages.size()) {
+            log.warn("chatMessages have been pruned as total text size exceeded 10 000 characters. ");
+            log.warn("chatMessages={}", chatMessages);
+        }
+        return result;
     }
 }

@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.filter;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,6 +37,8 @@ public final class FilterEntry implements Proto, Comparable<FilterEntry> {
     public FilterEntry(byte[] hash, int sequenceNumber) {
         this.hash = hash;
         this.sequenceNumber = sequenceNumber;
+
+        NetworkDataValidation.validateHash(hash);
     }
 
     public bisq.network.protobuf.FilterEntry toProto() {

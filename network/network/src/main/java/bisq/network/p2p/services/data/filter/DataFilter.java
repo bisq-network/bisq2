@@ -36,7 +36,7 @@ public final class DataFilter implements Proto {
     public DataFilter(List<FilterEntry> filterEntries) {
         this.filterEntries = filterEntries;
         // We need to sort deterministically as the data is used in the proof of work check
-        Collections.sort(filterEntries);
+        Collections.sort(this.filterEntries);
     }
 
     public bisq.network.protobuf.DataFilter toProto() {

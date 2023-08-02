@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -38,7 +39,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Publicly shared user profile (from other peers or mine).
@@ -48,8 +48,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public final class UserProfile implements DistributedData {
     public static final int MAX_LENGTH_NICK_NAME = 100;
-    public static final int MAX_LENGTH_NYM = 100;
-    public static final int MAX_LENGTH_USER_NAME = 100;
     public static final int MAX_LENGTH_TERMS = 100;
     public static final int MAX_LENGTH_STATEMENT = 100;
 
@@ -75,16 +73,15 @@ public final class UserProfile implements DistributedData {
                        NetworkId networkId,
                        String terms,
                        String statement) {
-        this.nickName = nickName.trim().isEmpty() ? "Invalid nickname" :
-                nickName.trim();
+        this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
         this.terms = terms;
         this.statement = statement;
 
-        checkArgument(nickName.length() < MAX_LENGTH_NICK_NAME);
-        checkArgument(terms.length() < MAX_LENGTH_TERMS);
-        checkArgument(statement.length() < MAX_LENGTH_STATEMENT);
+        NetworkDataValidation.validateText(nickName, MAX_LENGTH_NICK_NAME);
+        NetworkDataValidation.validateText(terms, MAX_LENGTH_TERMS);
+        NetworkDataValidation.validateText(statement, MAX_LENGTH_STATEMENT);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 310
     }

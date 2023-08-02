@@ -19,6 +19,7 @@ package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -54,6 +55,12 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
         this.date = date;
         this.pubKeyBase64 = pubKeyBase64;
         this.signatureBase64 = signatureBase64;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validateHashAsHex(hashAsHex);
+        NetworkDataValidation.validateDate(date);
+        NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//814
     }

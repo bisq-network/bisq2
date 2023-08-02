@@ -19,6 +19,7 @@ package bisq.account.payment_method;
 
 import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,6 +45,8 @@ public class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     private CryptoPaymentMethod(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
         super(cryptoPaymentRail);
         this.currencyCode = currencyCode;
+
+        NetworkDataValidation.validateCode(currencyCode);
     }
 
     private CryptoPaymentMethod(String name, String currencyCode) {

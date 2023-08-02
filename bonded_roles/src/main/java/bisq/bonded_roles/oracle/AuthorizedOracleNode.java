@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -35,7 +36,6 @@ import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
@@ -43,24 +43,25 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     private final MetaData metaData = new MetaData(TTL_100_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final NetworkId networkId;
-    private final String bondUserName;          // username from DAO proposal
-    private final String signature;             // signature created by bond with username as message
+    private final String bondUserName;                // username from DAO proposal
+    private final String signatureBase64;             // signature created by bond with username as message
     private final String publicKeyHash;
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedOracleNode(NetworkId networkId,
                                 String bondUserName,
-                                String signature,
+                                String signatureBase64,
                                 String publicKeyHash,
                                 boolean staticPublicKeysProvided) {
         this.networkId = networkId;
         this.bondUserName = bondUserName;
-        this.signature = signature;
+        this.signatureBase64 = signatureBase64;
         this.publicKeyHash = publicKeyHash;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        checkArgument(bondUserName.length() == 100);
-
+        NetworkDataValidation.validateBondUserName(bondUserName);
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
+        NetworkDataValidation.validateHashAsHex(publicKeyHash);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//326
     }
@@ -70,7 +71,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         return bisq.bonded_roles.protobuf.AuthorizedOracleNode.newBuilder()
                 .setNetworkId(networkId.toProto())
                 .setBondUserName(bondUserName)
-                .setSignature(signature)
+                .setSignatureBase64(signatureBase64)
                 .setPublicKeyHash(publicKeyHash)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .build();
@@ -79,7 +80,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {
         return new AuthorizedOracleNode(NetworkId.fromProto(proto.getNetworkId()),
                 proto.getBondUserName(),
-                proto.getSignature(),
+                proto.getSignatureBase64(),
                 proto.getPublicKeyHash(),
                 proto.getStaticPublicKeysProvided());
     }
@@ -118,7 +119,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
                 "\r\n                    networkId=" + networkId +
                 ",\r\n                    metaData=" + metaData +
                 ",\r\n                    bondUserName='" + bondUserName + '\'' +
-                ",\r\n                    signature='" + signature + '\'' +
+                ",\r\n                    signature='" + signatureBase64 + '\'' +
                 ",\r\n                    publicKeyAsHex='" + publicKeyHash + '\'' +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +

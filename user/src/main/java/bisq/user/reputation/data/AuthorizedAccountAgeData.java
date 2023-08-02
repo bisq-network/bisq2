@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -50,6 +51,9 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         this.profileId = profileId;
         this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validateDate(date);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//51
     }

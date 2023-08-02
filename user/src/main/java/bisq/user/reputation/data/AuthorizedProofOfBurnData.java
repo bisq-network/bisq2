@@ -22,6 +22,7 @@ import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -36,6 +37,7 @@ import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_DATA_SIZE_1000;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
@@ -52,6 +54,10 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         this.time = time;
         this.hash = hash;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        NetworkDataValidation.validateDate(time);
+        NetworkDataValidation.validateHash(hash);
+        checkArgument(amount > 0);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//34
     }

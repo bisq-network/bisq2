@@ -1,6 +1,8 @@
 package bisq.chat.message;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,12 +11,17 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class Citation implements Proto {
+    public static final int MAX_TEXT_LENGTH = 1000;
+
     private final String authorUserProfileId;
     private final String text;
 
     public Citation(String authorUserProfileId, String text) {
         this.authorUserProfileId = authorUserProfileId;
-        this.text = text;
+        this.text = StringUtils.truncate(text, MAX_TEXT_LENGTH - 10);
+
+        NetworkDataValidation.validateProfileId(authorUserProfileId);
+        NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
     }
 
     public bisq.chat.protobuf.Citation toProto() {

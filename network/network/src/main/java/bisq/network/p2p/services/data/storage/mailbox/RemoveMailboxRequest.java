@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -77,10 +77,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         this.signature = signature;
         this.created = created;
 
-        BasicInputValidation.validateHash(hash);
-        BasicInputValidation.validatePubKey(receiverPublicKeyBytes);
-        BasicInputValidation.validateSignature(signature);
-        BasicInputValidation.validateCreationDate(created);
+        NetworkDataValidation.validateHash(hash);
+        NetworkDataValidation.validateECPubKey(receiverPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
+        NetworkDataValidation.validateDate(created);
     }
 
     @Override

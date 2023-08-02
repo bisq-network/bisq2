@@ -23,6 +23,8 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -43,6 +45,8 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
+    public static final int MAX_TEXT_LENGTH = 10_000;
+
     protected final String id;
     private final ChatChannelDomain chatChannelDomain;
     protected final String channelId;
@@ -66,11 +70,17 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
         this.chatChannelDomain = chatChannelDomain;
         this.channelId = channelId;
         this.authorUserProfileId = authorUserProfileId;
-        this.optionalText = text;
+        this.optionalText = text.map(e -> StringUtils.truncate(e, MAX_TEXT_LENGTH - 10));
         this.citation = citation;
         this.date = date;
         this.wasEdited = wasEdited;
         this.chatMessageType = chatMessageType;
+
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateText(channelId, 200); // For private channels we combine user profile IDs for channelId
+        NetworkDataValidation.validateProfileId(authorUserProfileId);
+        NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
+        NetworkDataValidation.validateDate(date);
     }
 
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {

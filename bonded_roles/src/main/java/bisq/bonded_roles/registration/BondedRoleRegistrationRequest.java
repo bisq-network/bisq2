@@ -20,6 +20,7 @@ package bisq.bonded_roles.registration;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
@@ -69,6 +70,12 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
         this.addressByNetworkType = addressByNetworkType;
         this.networkId = networkId;
         this.isCancellationRequest = isCancellationRequest;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
+        NetworkDataValidation.validateBondUserName(bondUserName);
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
+
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//637
     }

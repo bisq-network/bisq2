@@ -34,6 +34,7 @@ import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.NymIdGenerator;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -117,6 +118,12 @@ public class CreateProfileController implements Controller {
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
         ProofOfWork proofOfWork = model.getProofOfWork().get();
+
+        if (model.getNickName().get().length() > UserProfile.MAX_LENGTH_NICK_NAME) {
+            new Popup().warning(Res.get("onboarding.createProfile.nickName.tooLong", UserProfile.MAX_LENGTH_NICK_NAME)).show();
+            return;
+        }
+
         if (model.getKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(

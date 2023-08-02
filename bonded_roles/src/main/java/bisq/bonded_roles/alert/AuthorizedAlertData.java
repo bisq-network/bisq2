@@ -21,7 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.validation.BasicInputValidation;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -35,7 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @ToString
@@ -83,11 +82,11 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.securityManagerProfileId = securityManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        BasicInputValidation.validateId(id);
-        BasicInputValidation.validateProfileId(securityManagerProfileId);
-
-        message.ifPresent(m -> checkArgument(m.length() < 10_000));
-        minVersion.ifPresent(v -> checkArgument(v.length() < 10));
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateDate(date);
+        NetworkDataValidation.validateText(message, MAX_MESSAGE_LENGTH);
+        minVersion.ifPresent(NetworkDataValidation::validateVersion);
+        NetworkDataValidation.validateProfileId(securityManagerProfileId);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//957
     }

@@ -19,6 +19,7 @@ package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -58,6 +59,15 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
         this.witnessSignDate = witnessSignDate;
         this.pubKeyBase64 = pubKeyBase64;
         this.signatureBase64 = signatureBase64;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validateHashAsHex(hashAsHex);
+        NetworkDataValidation.validateDate(accountAgeWitnessDate);
+        NetworkDataValidation.validateDate(witnessSignDate);
+        NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
+        ;
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
+
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());
     }

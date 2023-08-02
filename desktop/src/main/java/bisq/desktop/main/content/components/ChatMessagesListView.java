@@ -347,6 +347,11 @@ public class ChatMessagesListView {
             checkArgument(chatMessage instanceof PublicChatMessage);
             checkArgument(model.isMyMessage(chatMessage));
 
+            if (editedText.length() > ChatMessage.MAX_TEXT_LENGTH) {
+                new Popup().warning(Res.get("validation.tooLong", ChatMessage.MAX_TEXT_LENGTH)).show();
+                return;
+            }
+
             UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             if (chatMessage instanceof BisqEasyPublicChatMessage) {
                 BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;

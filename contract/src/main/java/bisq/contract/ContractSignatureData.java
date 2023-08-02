@@ -19,6 +19,7 @@ package bisq.contract;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.security.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -40,6 +41,9 @@ public class ContractSignatureData implements Proto {
         this.contractHash = contractHash;
         this.signature = signature;
         this.publicKey = publicKey;
+
+        NetworkDataValidation.validateHash(contractHash);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
     @Override
