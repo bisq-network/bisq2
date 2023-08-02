@@ -25,11 +25,14 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class CommonPublicChatMessage extends PublicChatMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(10);
+
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
                                    String channelId,
                                    String authorUserProfileId,
@@ -46,7 +49,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 date,
                 wasEdited,
                 ChatMessageType.TEXT,
-                new MetaData(ChatMessage.TTL, 100000, CommonPublicChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100_000, CommonPublicChatMessage.class.getSimpleName()));
     }
 
     private CommonPublicChatMessage(String messageId,

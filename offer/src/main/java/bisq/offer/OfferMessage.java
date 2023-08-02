@@ -38,7 +38,7 @@ public class OfferMessage implements DistributedData {
     protected final MetaData metaData;
 
     public OfferMessage(Offer<?, ?> offer) {
-        this(offer, new MetaData(OfferMessage.TTL, 100000, OfferMessage.class.getSimpleName()));
+        this(offer, new MetaData(TTL, 100_000, OfferMessage.class.getSimpleName()));
     }
 
     private OfferMessage(Offer<?, ?> offer, MetaData metaData) {

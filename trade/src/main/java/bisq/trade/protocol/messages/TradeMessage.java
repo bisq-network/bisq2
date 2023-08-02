@@ -34,15 +34,11 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode
 public abstract class TradeMessage implements MailboxMessage, Event {
-    public final static long TTL = TimeUnit.DAYS.toMillis(10);
-
     private final String tradeId;
     private final NetworkId sender;
     protected final MetaData metaData;

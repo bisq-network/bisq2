@@ -34,14 +34,14 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeAccountAgeRequest implements MailboxMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(2);
+
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizeAccountAgeRequest.class.getSimpleName());
     private final String profileId;
     private final String hashAsHex;
     private final long date;
     private final String pubKeyBase64;
     private final String signatureBase64;
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
-            100000,
-            AuthorizeAccountAgeRequest.class.getSimpleName());
 
     public AuthorizeAccountAgeRequest(String profileId,
                                       String hashAsHex,

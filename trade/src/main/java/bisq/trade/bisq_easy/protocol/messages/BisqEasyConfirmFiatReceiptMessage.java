@@ -24,20 +24,15 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessage {
-    public final static long TTL = TimeUnit.DAYS.toMillis(10);
-
-
     public BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender) {
         this(tradeId,
                 sender,
-                new MetaData(TTL, 100000, BisqEasyConfirmFiatReceiptMessage.class.getSimpleName()));
+                new MetaData(TTL, 100_000, BisqEasyConfirmFiatReceiptMessage.class.getSimpleName()));
     }
 
     private BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender, MetaData metaData) {

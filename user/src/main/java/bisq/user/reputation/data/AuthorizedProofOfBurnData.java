@@ -41,10 +41,7 @@ import java.util.concurrent.TimeUnit;
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     public final static long TTL = TimeUnit.DAYS.toMillis(100);
 
-    private final MetaData metaData = new MetaData(TTL,
-            100000,
-            AuthorizedProofOfBurnData.class.getSimpleName());
-
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizedProofOfBurnData.class.getSimpleName());
     private final long amount;
     private final long time;
     private final byte[] hash;

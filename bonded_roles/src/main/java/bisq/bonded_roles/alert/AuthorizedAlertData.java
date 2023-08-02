@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
-    public final static long TTL = TimeUnit.DAYS.toMillis(15);
+    public final static long TTL = TimeUnit.DAYS.toMillis(30);
 
     // todo Production key not set yet - we use devMode key only yet
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
@@ -48,11 +48,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
             "3056301006072a8648ce3d020106052b8104000a03420004b406936966b236bcfd26a85f53b952fbc8fc1c1c80b549de589c8c3bd1e0a114dc426afb6794747341f117ac9c452ad5ecbfcbb66801527ba1dbc7a33f776a40"
     );
 
-
-    private final MetaData metaData = new MetaData(TTL,
-            100000,
-            AuthorizedAlertData.class.getSimpleName());
-
+    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizedAlertData.class.getSimpleName());
     private final String id;
     private final long date;
     private final AlertType alertType;

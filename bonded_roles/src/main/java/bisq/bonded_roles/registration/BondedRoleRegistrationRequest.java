@@ -39,10 +39,9 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage {
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
-            100000,
-            BondedRoleRegistrationRequest.class.getSimpleName());
+    private final static long TTL = TimeUnit.DAYS.toMillis(2);
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, BondedRoleRegistrationRequest.class.getSimpleName());
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
