@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class TorNetwork {
@@ -129,22 +130,25 @@ public class TorNetwork {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
+            Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
             Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torDaTorrcGenerator, allDAs);
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             generateTorrc(da, torrcFileGenerator);
         }
 
         for (TorNode relay : relays) {
             var relayTorrcGenerator = new RelayTorrcGenerator(relay);
+            Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
             Path torrcPath = relayTorrcGenerator.getThisTorNode().getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, relayTorrcGenerator, allDAs);
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             generateTorrc(relay, torrcFileGenerator);
         }
 
         for (TorNode client : clients) {
             var clientTorrcGenerator = new ClientTorrcGenerator(client);
+            Map<String, String> torrcConfigs = clientTorrcGenerator.generate();
             Path torrcPath = clientTorrcGenerator.getThisTorNode().getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, clientTorrcGenerator, allDAs);
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             generateTorrc(client, torrcFileGenerator);
         }
     }

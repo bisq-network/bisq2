@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -89,8 +90,9 @@ public class DirectoryAuthorityTests {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
+            Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
             Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torDaTorrcGenerator, allDAs);
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             torrcFileGenerator.generate();
         }
     }
