@@ -11,7 +11,7 @@ class DownloadTaskFactory(
     private val project: Project, private val downloadDirectoryPath: String
 ) {
     fun registerDownloadTask(taskName: String, url: Provider<URL>): TaskProvider<DownloadTask> {
-        val outputFileProvider: Provider<Provider<RegularFile>> = url.map {
+        val outputFileProvider: Provider<RegularFile> = url.flatMap {
             // url.file:
             // https://example.org/1.2.3/binary.exe -> 1.2.3/binary.exe
             val fileName = it.file.split("/").last()
