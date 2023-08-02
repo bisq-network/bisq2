@@ -45,8 +45,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
-        super(persistenceService, storeName, fileName);
+    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        super(persistenceService, storeName, storeKey);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         ByteArray byteArray = new ByteArray(request.getHash());
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
-        MailboxSequentialData sequentialSataFromMap;
+        MailboxSequentialData sequentialDataFromMap;
         synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
@@ -134,16 +134,16 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new Result(false).alreadyRemoved();
             }
 
-            // At that point we know requestFromMap is an AddProtectedDataRequest
+            // At that point we know requestFromMap is an AddMailboxRequest
             AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            sequentialSataFromMap = addRequest.getMailboxSequentialData();
-            if (request.isSequenceNrInvalid(sequentialSataFromMap.getSequenceNumber())) {
+            sequentialDataFromMap = addRequest.getMailboxSequentialData();
+            if (request.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
                 return new Result(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(sequentialSataFromMap)) {
+            if (request.isPublicKeyHashInvalid(sequentialDataFromMap)) {
                 // Hash of pubKey of data does not match provided one
                 return new Result(false).publicKeyHashInvalid();
             }
@@ -153,11 +153,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             map.put(byteArray, request);
-            listeners.forEach(listener -> listener.onRemoved(sequentialSataFromMap.getMailboxData()));
+            listeners.forEach(listener -> listener.onRemoved(sequentialDataFromMap.getMailboxData()));
         }
 
         persist();
-        return new Result(true).removedData(sequentialSataFromMap.getMailboxData());
+        return new Result(true).removedData(sequentialDataFromMap.getMailboxData());
     }
 
     @Override

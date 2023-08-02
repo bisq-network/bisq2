@@ -52,7 +52,6 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
     protected final long date;
     protected final boolean wasEdited;
     protected final ChatMessageType chatMessageType;
-    protected final MetaData metaData;
 
     protected ChatMessage(String id,
                           ChatChannelDomain chatChannelDomain,
@@ -62,8 +61,7 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
                           Optional<Citation> citation,
                           long date,
                           boolean wasEdited,
-                          ChatMessageType chatMessageType,
-                          MetaData metaData) {
+                          ChatMessageType chatMessageType) {
         this.id = id;
         this.chatChannelDomain = chatChannelDomain;
         this.channelId = channelId;
@@ -73,7 +71,6 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
         this.date = date;
         this.wasEdited = wasEdited;
         this.chatMessageType = chatMessageType;
-        this.metaData = metaData;
     }
 
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
@@ -84,8 +81,7 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
                 .setAuthorUserProfileId(authorUserProfileId)
                 .setDate(date)
                 .setWasEdited(wasEdited)
-                .setChatMessageType(chatMessageType.toProto())
-                .setMetaData(metaData.toProto());
+                .setChatMessageType(chatMessageType.toProto());
         citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
         optionalText.ifPresent(builder::setText);
         return builder;
@@ -177,6 +173,8 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
     public boolean isExpired() {
         return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
+
+    protected abstract MetaData getMetaData();
 
     public boolean isMyMessage(UserIdentityService userIdentityService) {
         return userIdentityService.isUserIdentityPresent(authorUserProfileId);

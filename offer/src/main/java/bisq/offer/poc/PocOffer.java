@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 public final class PocOffer implements DistributedData {
     private final static long TTL = TimeUnit.DAYS.toMillis(2);
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
     // Only used in payment method F2F
@@ -76,7 +78,6 @@ public final class PocOffer implements DistributedData {
     private final List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs;
     private final List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs;
     private final List<OfferOption> offerOptions;
-    private final MetaData metaData;
 
     public PocOffer(String id,
                     long date,
@@ -89,32 +90,6 @@ public final class PocOffer implements DistributedData {
                     List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
                     List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
                     List<OfferOption> offerOptions) {
-        this(id,
-                date,
-                makerNetworkId,
-                market,
-                direction,
-                baseAmount,
-                priceSpec,
-                protocolTypes,
-                baseSidePaymentMethodSpecs,
-                quoteSidePaymentMethodSpecs,
-                offerOptions,
-                new MetaData(TTL, 100_000, PocOffer.class.getSimpleName()));
-    }
-
-    private PocOffer(String id,
-                     long date,
-                     NetworkId makerNetworkId,
-                     Market market,
-                     Direction direction,
-                     long baseAmount,
-                     PriceSpec priceSpec,
-                     List<TradeProtocolType> protocolTypes,
-                     List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
-                     List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                     List<OfferOption> offerOptions,
-                     MetaData metaData) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
@@ -126,20 +101,12 @@ public final class PocOffer implements DistributedData {
         this.baseSidePaymentMethodSpecs = baseSidePaymentMethodSpecs;
         this.quoteSidePaymentMethodSpecs = quoteSidePaymentMethodSpecs;
         this.offerOptions = offerOptions;
-        this.metaData = metaData;
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
     }
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
-
-
 
     public Optional<TradeProtocolType> findProtocolType() {
         if (protocolTypes.isEmpty()) {

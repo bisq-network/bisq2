@@ -217,7 +217,6 @@ public class ChatNotificationService implements Service {
     }
 
     private <M extends ChatMessage> void chatNotificationAdded(ChatChannel<M> chatChannel, M chatMessage) {
-        log.error("chatNotificationAdded {} {}", chatChannel.getDisplayString(), chatMessage.getText());
         String notificationId = createNotificationId(chatChannel.getId(), chatMessage.getId());
         if (notificationsService.containsNotificationId(notificationId)) {
             return;

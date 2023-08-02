@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,18 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
+public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
     private final String txId;
 
     public BisqEasyConfirmBtcSentMessage(String tradeId, NetworkId sender, String txId) {
-        this(tradeId,
-                sender,
-                txId,
-                new MetaData(TTL, 100_000, BisqEasyConfirmBtcSentMessage.class.getSimpleName()));
-    }
-
-    private BisqEasyConfirmBtcSentMessage(String tradeId, NetworkId sender, String txId, MetaData metaData) {
-        super(tradeId, sender, metaData);
+        super(tradeId, sender);
 
         this.txId = txId;
     }
@@ -59,7 +51,6 @@ public class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
         return new BisqEasyConfirmBtcSentMessage(
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
-                bisqEasyConfirmBtcSentMessage.getTxId(),
-                MetaData.fromProto(proto.getMetaData()));
+                bisqEasyConfirmBtcSentMessage.getTxId());
     }
 }

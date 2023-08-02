@@ -59,8 +59,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
-        super(persistenceService, storeName, fileName);
+    public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        super(persistenceService, storeName, storeKey);
     }
 
     @Override
@@ -169,6 +169,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             checkArgument(requestFromMap instanceof AddAuthenticatedDataRequest,
                     "requestFromMap expected be type of AddProtectedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
+
+            // The metaData provided in the RemoveAuthenticatedDataRequest must be the same as we had in the AddAuthenticatedDataRequest
+            // The AddAuthenticatedDataRequest does use the metaData from the code base, not one provided by the message, thus it is trusted.
+            if (!request.getMetaData().equals(addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData())) {
+                log.warn("MetaData of remove request not matching the one from the addRequest from the map. {} vs. {}",
+                        request.getMetaData(),
+                        addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData());
+                return new Result(false).metaDataInvalid();
+            }
+
             // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             authenticatedDataFromMap = dataFromMap.getAuthenticatedData();

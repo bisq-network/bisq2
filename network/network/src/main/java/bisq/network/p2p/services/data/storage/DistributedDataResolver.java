@@ -22,7 +22,7 @@ import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 public class DistributedDataResolver {
-    private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>();
+    private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>(true);
 
     public static void addResolver(String protoTypeName, ProtoResolver<DistributedData> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);

@@ -24,9 +24,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.concurrent.TimeUnit;
+
 // We want to have fine-grained control over mailbox messages.
-// As the data is encrypted we could not use it's TTL, and we would merge all mailbox proto into one storage file.
-// By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
+// As the data is encrypted we could not use it's metaData, and we would merge all mailbox proto into one storage file.
+// To allow more fine-grained control we add the metaData to the MailboxData, though this is untrusted data. 
+// For TTL we set an upper bound with MAX_TLL.
 
 /**
  * Holds the ConfidentialMessage and metaData providing information about the message type.
@@ -34,6 +37,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public final class MailboxData implements StorageData {
+    public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
+
     @Getter
     private final ConfidentialMessage confidentialMessage;
     @Getter
@@ -56,8 +61,8 @@ public final class MailboxData implements StorageData {
                 MetaData.fromProto(proto.getMetaData()));
     }
 
-    public String getFileName() {
-        return metaData.getFileName();
+    public String getClassName() {
+        return metaData.getClassName();
     }
 
     @Override

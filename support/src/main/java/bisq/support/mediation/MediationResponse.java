@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public final class MediationResponse implements MailboxMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(2);
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, MediationResponse.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
 
     public MediationResponse(BisqEasyOffer bisqEasyOffer) {

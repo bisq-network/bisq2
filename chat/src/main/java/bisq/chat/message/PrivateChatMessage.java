@@ -18,7 +18,6 @@
 package bisq.chat.message;
 
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -50,8 +49,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  Optional<Citation> citation,
                                  long date,
                                  boolean wasEdited,
-                                 ChatMessageType chatMessageType,
-                                 MetaData metaData) {
+                                 ChatMessageType chatMessageType) {
         this(messageId,
                 chatChannelDomain,
                 channelId,
@@ -61,8 +59,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 citation,
                 date,
                 wasEdited,
-                chatMessageType,
-                metaData);
+                chatMessageType);
     }
 
     protected PrivateChatMessage(String messageId,
@@ -74,8 +71,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  Optional<Citation> citation,
                                  long date,
                                  boolean wasEdited,
-                                 ChatMessageType chatMessageType,
-                                 MetaData metaData) {
+                                 ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -84,14 +80,8 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 citation,
                 date,
                 wasEdited,
-                chatMessageType,
-                metaData);
+                chatMessageType);
         this.receiverUserProfileId = receiverUserProfileId;
         this.sender = sender;
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
     }
 }

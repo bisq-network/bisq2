@@ -62,7 +62,6 @@ message ChatMessage {
   sint64 date = 7;
   bool wasEdited = 8;
   ChatMessageType chatMessageType = 9;
-  network.MetaData metaData = 10;
   oneof message {
     TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = 20;
     CommonPublicChatMessage commonPublicChatMessage = 21;

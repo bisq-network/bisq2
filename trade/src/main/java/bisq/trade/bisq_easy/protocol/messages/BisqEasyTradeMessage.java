@@ -34,9 +34,10 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
     final static long TTL = TimeUnit.DAYS.toMillis(10);
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
 
-    protected BisqEasyTradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
-        super(tradeId, sender, metaData);
+    protected BisqEasyTradeMessage(String tradeId, NetworkId sender) {
+        super(tradeId, sender);
     }
 
     public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

@@ -31,23 +31,23 @@ import lombok.ToString;
 public final class MetaData implements Proto {
     private final long ttl;
     private final int maxSizeInBytes;
-    private final String fileName;
+    private final String className;
 
-    public MetaData(long ttl, int maxSizeInBytes, String fileName) {
+    public MetaData(long ttl, int maxSizeInBytes, String className) {
         this.ttl = ttl;
         this.maxSizeInBytes = maxSizeInBytes;
-        this.fileName = fileName;
+        this.className = className;
     }
 
     public bisq.network.protobuf.MetaData toProto() {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)
                 .setMaxSizeInBytes(maxSizeInBytes)
-                .setFileName(fileName)
+                .setClassName(className)
                 .build();
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
-        return new MetaData(proto.getTtl(), proto.getMaxSizeInBytes(), proto.getFileName());
+        return new MetaData(proto.getTtl(), proto.getMaxSizeInBytes(), proto.getClassName());
     }
 }

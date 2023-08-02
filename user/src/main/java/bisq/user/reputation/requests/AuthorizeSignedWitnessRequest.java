@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(2);
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, AuthorizeSignedWitnessRequest.class.getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final String profileId;
     private final String hashAsHex;
     private final long accountAgeWitnessDate;

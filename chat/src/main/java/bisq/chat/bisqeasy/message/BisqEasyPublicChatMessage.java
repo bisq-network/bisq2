@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     private final static long TTL = TimeUnit.DAYS.toMillis(10);
 
+    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyPublicChatMessage(String channelId,
@@ -57,8 +58,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 citation,
                 date,
                 wasEdited,
-                ChatMessageType.TEXT,
-                new MetaData(TTL, 100_000, BisqEasyPublicChatMessage.class.getSimpleName()));
+                ChatMessageType.TEXT);
     }
 
     private BisqEasyPublicChatMessage(String messageId,
@@ -70,8 +70,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                                       Optional<Citation> citation,
                                       long date,
                                       boolean wasEdited,
-                                      ChatMessageType chatMessageType,
-                                      MetaData metaData) {
+                                      ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -80,8 +79,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 citation,
                 date,
                 wasEdited,
-                chatMessageType,
-                metaData);
+                chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
     }
 
@@ -111,13 +109,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
+                ChatMessageType.fromProto(baseProto.getChatMessageType()));
     }
 
     @Override

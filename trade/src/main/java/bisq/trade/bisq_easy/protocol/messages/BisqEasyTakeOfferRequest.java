@@ -20,7 +20,6 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,20 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
+public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
     private final BisqEasyContract bisqEasyContract;
     private final ContractSignatureData contractSignatureData;
 
     public BisqEasyTakeOfferRequest(String tradeId, NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData) {
-        this(tradeId,
-                sender,
-                bisqEasyContract,
-                contractSignatureData,
-                new MetaData(TTL, 100_000, BisqEasyTakeOfferRequest.class.getSimpleName()));
-    }
-
-    private BisqEasyTakeOfferRequest(String tradeId, NetworkId sender, BisqEasyContract bisqEasyContract, ContractSignatureData contractSignatureData, MetaData metaData) {
-        super(tradeId, sender, metaData);
+        super(tradeId, sender);
 
         this.bisqEasyContract = bisqEasyContract;
         this.contractSignatureData = contractSignatureData;
@@ -66,7 +57,6 @@ public class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
                 BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),
-                ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()),
-                MetaData.fromProto(proto.getMetaData()));
+                ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()));
     }
 }

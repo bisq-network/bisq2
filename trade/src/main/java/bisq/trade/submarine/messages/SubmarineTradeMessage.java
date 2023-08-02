@@ -19,7 +19,6 @@ package bisq.trade.submarine.messages;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class SubmarineTradeMessage extends TradeMessage {
-    protected SubmarineTradeMessage(String tradeId, NetworkId sender, MetaData metaData) {
-        super(tradeId, sender, metaData);
+    protected SubmarineTradeMessage(String tradeId, NetworkId sender) {
+        super(tradeId, sender);
     }
 
     public static SubmarineTradeMessage fromProto(bisq.trade.protobuf.SubmarineTradeMessage proto) {

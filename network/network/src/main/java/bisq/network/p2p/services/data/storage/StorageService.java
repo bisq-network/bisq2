@@ -19,7 +19,8 @@ package bisq.network.p2p.services.data.storage;
 
 
 import bisq.common.data.ByteArray;
-import bisq.common.util.FileUtils;
+import bisq.common.proto.NetworkStorageWhiteList;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
@@ -44,7 +45,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,9 +93,9 @@ public class StorageService {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             String directory = subPath + File.separator + authStoreName;
             if (new File(directory).exists()) {
-                getProtobufFilesInDirectory(directory)
-                        .forEach(fileName -> {
-                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, fileName);
+                getExistingStoreKeys(directory)
+                        .forEach(storeKey -> {
+                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, storeKey);
                             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(AuthenticatedData authenticatedData) {
@@ -106,15 +107,15 @@ public class StorageService {
                                     listeners.forEach(listener -> listener.onRemoved(authenticatedData));
                                 }
                             });
-                            authenticatedDataStores.put(fileName, dataStore);
+                            authenticatedDataStores.put(storeKey, dataStore);
                         });
             }
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
             directory = subPath + File.separator + mailboxStoreName;
             if (new File(directory).exists()) {
-                getProtobufFilesInDirectory(directory)
-                        .forEach(fileName -> {
-                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, fileName);
+                getExistingStoreKeys(directory)
+                        .forEach(storeKey -> {
+                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, storeKey);
                             dataStore.addListener(new MailboxDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(MailboxData mailboxData) {
@@ -126,21 +127,21 @@ public class StorageService {
                                     listeners.forEach(listener -> listener.onRemoved(mailboxData));
                                 }
                             });
-                            mailboxStores.put(fileName, dataStore);
+                            mailboxStores.put(storeKey, dataStore);
                         });
             }
 
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
             directory = subPath + File.separator + appendStoreName;
             if (new File(directory).exists()) {
-                getProtobufFilesInDirectory(directory)
-                        .forEach(fileName -> {
-                            AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, fileName);
+                getExistingStoreKeys(directory)
+                        .forEach(storeKey -> {
+                            AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
                             dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> listener.onAdded(appendOnlyData)));
-                            appendOnlyDataStores.put(fileName, dataStore);
+                            appendOnlyDataStores.put(storeKey, dataStore);
                         });
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -168,8 +169,8 @@ public class StorageService {
         return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedData);
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedData(String fileName) {
-        return getAuthenticatedData(getStoreByFileName(fileName));
+    public Stream<AuthenticatedData> getAuthenticatedData(String storeKey) {
+        return getAuthenticatedData(getStoreByFileName(storeKey));
     }
 
     public Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
@@ -204,7 +205,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
         MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
-        return getOrCreateMailboxDataStore(mailboxData.getFileName())
+        return getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -220,7 +221,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
         AuthenticatedData authenticatedData = request.getAuthenticatedSequentialData().getAuthenticatedData();
-        return getOrCreateAuthenticatedDataStore(authenticatedData.getFileName())
+        return getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -236,7 +237,7 @@ public class StorageService {
 
     private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
         AppendOnlyData appendOnlyData = request.getAppendOnlyData();
-        return getOrCreateAppendOnlyDataStore(appendOnlyData.getFileName())
+        return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData().getClassName())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
@@ -268,7 +269,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
-        return getOrCreateMailboxDataStore(request.getFileName())
+        return getOrCreateMailboxDataStore(request.getClassName())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
@@ -283,7 +284,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
-        return getOrCreateAuthenticatedDataStore(request.getFileName())
+        return getOrCreateAuthenticatedDataStore(request.getClassName())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
@@ -329,8 +330,8 @@ public class StorageService {
         return getFilterEntries(getStoresByStoreType(storeType));
     }
 
-    public Set<FilterEntry> getFilterEntries(String fileName) {
-        return getFilterEntries(getStoreByFileName(fileName));
+    public Set<FilterEntry> getFilterEntries(String storeKey) {
+        return getFilterEntries(getStoreByFileName(storeKey));
     }
 
     private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
@@ -361,11 +362,11 @@ public class StorageService {
     // Get or create stores
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String fileName) {
-        if (!authenticatedDataStores.containsKey(fileName)) {
+    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
+        if (!authenticatedDataStores.containsKey(storeKey)) {
             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
-                    fileName);
+                    storeKey);
             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                 @Override
                 public void onAdded(AuthenticatedData authenticatedData) {
@@ -377,18 +378,18 @@ public class StorageService {
                     listeners.forEach(listener -> listener.onRemoved(authenticatedData));
                 }
             });
-            authenticatedDataStores.put(fileName, dataStore);
+            authenticatedDataStores.put(storeKey, dataStore);
             return dataStore.readPersisted().thenApplyAsync(store -> dataStore, NetworkService.DISPATCHER);
         } else {
-            return CompletableFuture.completedFuture(authenticatedDataStores.get(fileName));
+            return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }
     }
 
-    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String fileName) {
-        if (!mailboxStores.containsKey(fileName)) {
+    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
+        if (!mailboxStores.containsKey(storeKey)) {
             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
                     MAILBOX_DATA_STORE.getStoreName(),
-                    fileName);
+                    storeKey);
             dataStore.addListener(new MailboxDataStorageService.Listener() {
                 @Override
                 public void onAdded(MailboxData mailboxData) {
@@ -400,22 +401,22 @@ public class StorageService {
                     listeners.forEach(listener -> listener.onRemoved(mailboxData));
                 }
             });
-            mailboxStores.put(fileName, dataStore);
+            mailboxStores.put(storeKey, dataStore);
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
-            return CompletableFuture.completedFuture(mailboxStores.get(fileName));
+            return CompletableFuture.completedFuture(mailboxStores.get(storeKey));
         }
     }
 
-    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String fileName) {
-        if (!appendOnlyDataStores.containsKey(fileName)) {
+    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
+        if (!appendOnlyDataStores.containsKey(storeKey)) {
             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
-                    fileName);
-            appendOnlyDataStores.put(fileName, dataStore);
+                    storeKey);
+            appendOnlyDataStores.put(storeKey, dataStore);
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
-            return CompletableFuture.completedFuture(appendOnlyDataStores.get(fileName));
+            return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
         }
     }
 
@@ -451,17 +452,17 @@ public class StorageService {
         return dataStorageServiceStream.stream();
     }
 
-    private Stream<DataStorageService<? extends DataRequest>> getStoreByFileName(String fileName) {
+    private Stream<DataStorageService<? extends DataRequest>> getStoreByFileName(String storeKey) {
         return getAllStores()
-                .filter(store -> fileName.equals(store.getFileName()));
+                .filter(store -> storeKey.equals(store.getStoreKey()));
     }
 
-    // We do not use the extensions in the persistence framework, so we have to remove it from the file name.
-    private Set<String> getProtobufFilesInDirectory(String directory) throws IOException {
-        return FileUtils.listFilesInDirectory(directory, 1)
-                .stream()
-                .filter(fileName -> fileName.endsWith(Persistence.EXTENSION))
-                .map(fileName -> fileName.replace(Persistence.EXTENSION, ""))
+    private Set<String> getExistingStoreKeys(String directory) {
+        return NetworkStorageWhiteList.getClassNames().stream()
+                .filter(storeKey -> {
+                    String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
+                    return Path.of(directory, storageFileName).toFile().exists();
+                })
                 .collect(Collectors.toSet());
     }
 }

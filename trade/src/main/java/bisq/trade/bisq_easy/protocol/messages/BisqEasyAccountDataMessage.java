@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,18 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
+public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
     private final String paymentAccountData;
 
     public BisqEasyAccountDataMessage(String tradeId, NetworkId sender, String paymentAccountData) {
-        this(tradeId,
-                sender,
-                paymentAccountData,
-                new MetaData(TTL, 100_000, BisqEasyAccountDataMessage.class.getSimpleName()));
-    }
-
-    private BisqEasyAccountDataMessage(String tradeId, NetworkId sender, String paymentAccountData, MetaData metaData) {
-        super(tradeId, sender, metaData);
+        super(tradeId, sender);
 
         this.paymentAccountData = paymentAccountData;
     }
@@ -59,7 +51,6 @@ public class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
         return new BisqEasyAccountDataMessage(
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
-                bisqEasyAccountDataMessage.getPaymentAccountData(),
-                MetaData.fromProto(proto.getMetaData()));
+                bisqEasyAccountDataMessage.getPaymentAccountData());
     }
 }

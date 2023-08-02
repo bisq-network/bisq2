@@ -22,7 +22,7 @@ import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 public class PersistableStoreResolver {
-    private static final ProtoResolverMap<PersistableStore<?>> protoResolverMap = new ProtoResolverMap<>();
+    private static final ProtoResolverMap<PersistableStore<?>> protoResolverMap = new ProtoResolverMap<>(false);
 
     public static void addResolver(ProtoResolver<PersistableStore<?>> resolver) {
         protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(resolver), resolver);
