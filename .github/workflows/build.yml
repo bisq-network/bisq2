@@ -38,6 +38,16 @@ jobs:
             network/tor-local-network/build/generated/src/main/resources/tor.zip
           key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('network/tor/build.gradle') }}
 
+      - name: Cache Electrum binary
+        uses: actions/cache@v3.3.1
+        env:
+          cache-name: cache-electrum-binary
+        with:
+          path: |
+            wallets/electrum/build/electrum_binaries
+            wallets/electrum/build/generated/src/main/resources/electrum-binaries.zip
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('wallets/electrum/build.gradle') }}
+
       - name: Gradle Build Action (root)
         uses: gradle/gradle-build-action@v2.7.0
         with:
