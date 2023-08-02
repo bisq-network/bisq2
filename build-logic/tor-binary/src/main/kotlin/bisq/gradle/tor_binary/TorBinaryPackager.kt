@@ -1,23 +1,26 @@
 package bisq.gradle.tor_binary
 
+import bisq.gradle.tasks.download.SignedBinaryDownloader
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.kotlin.dsl.register
 
-class TorBinaryPackager(private val project: Project) {
+class TorBinaryPackager(private val project: Project, private val torBinaryDownloader: SignedBinaryDownloader) {
 
     companion object {
         private const val ARCHIVE_EXTRACTION_DIR = "${BisqTorBinaryPlugin.DOWNLOADS_DIR}/extracted"
         private const val PROCESSED_DIR = "${BisqTorBinaryPlugin.DOWNLOADS_DIR}/processed"
     }
 
-    fun registerTasks(tarFile: Provider<RegularFile>) {
+    fun registerTasks() {
         val unpackTarTask: TaskProvider<Copy> = project.tasks.register<Copy>("unpackTorBinaryTar") {
+            dependsOn(torBinaryDownloader.verifySignatureTask)
+
+            val tarFile: Provider<RegularFile> = torBinaryDownloader.verifySignatureTask.flatMap { it.fileToVerify }
             from(
                 tarFile.map {
                     project.tarTree(it.asFile.absolutePath)

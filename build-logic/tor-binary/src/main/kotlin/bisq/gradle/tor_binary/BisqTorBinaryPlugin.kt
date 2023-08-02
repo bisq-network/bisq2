@@ -4,10 +4,6 @@ import bisq.gradle.tasks.PgpFingerprint
 import bisq.gradle.tasks.download.SignedBinaryDownloader
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.create
 
 class BisqTorBinaryPlugin : Plugin<Project> {
@@ -35,8 +31,7 @@ class BisqTorBinaryPlugin : Plugin<Project> {
         )
         torBinaryDownloader.registerTasks()
 
-        val binaryTarFile: Provider<RegularFile> = torBinaryDownloader.verifySignatureTask.flatMap { it.fileToVerify }
-        val torBinaryPackager = TorBinaryPackager(project)
-        torBinaryPackager.registerTasks(binaryTarFile)
+        val torBinaryPackager = TorBinaryPackager(project, torBinaryDownloader)
+        torBinaryPackager.registerTasks()
     }
 }
