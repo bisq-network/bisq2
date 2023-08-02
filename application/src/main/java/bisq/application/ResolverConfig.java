@@ -22,7 +22,11 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.release.ReleaseNotification;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.message.ChatMessage;
+import bisq.chat.message.CommonPublicChatMessage;
+import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
@@ -30,6 +34,7 @@ import bisq.offer.OfferMessage;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationResponse;
 import bisq.support.moderator.ReportToModeratorMessage;
+import bisq.trade.bisq_easy.protocol.messages.*;
 import bisq.trade.protocol.messages.TradeMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.profile.UserProfile;
@@ -44,19 +49,19 @@ public class ResolverConfig {
         // Otherwise, the className gets added from the `addResolver` method call.
 
         // ChatMessage subclasses
-        NetworkStorageWhiteList.add("CommonPublicChatMessage");
-        NetworkStorageWhiteList.add("BisqEasyPublicChatMessage");
-        NetworkStorageWhiteList.add("TwoPartyPrivateChatMessage");
-        NetworkStorageWhiteList.add("BisqEasyPrivateTradeChatMessage");
+        NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyPublicChatMessage.class);
+        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyPrivateTradeChatMessage.class);
 
         // TradeMessage subclasses
-        NetworkStorageWhiteList.add("BisqEasyAccountDataMessage");
-        NetworkStorageWhiteList.add("BisqEasyBtcAddressMessage");
-        NetworkStorageWhiteList.add("BisqEasyConfirmBtcSentMessage");
-        NetworkStorageWhiteList.add("BisqEasyConfirmFiatReceiptMessage");
-        NetworkStorageWhiteList.add("BisqEasyConfirmFiatSentMessage");
-        NetworkStorageWhiteList.add("BisqEasyTakeOfferRequest");
-        NetworkStorageWhiteList.add("BisqEasyTakeOfferResponse");
+        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
+        NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
 
         // Register resolvers for distributedData 
         // Abstract classes
