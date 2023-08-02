@@ -231,17 +231,17 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 fiatPaymentMethodSpec,
                 mediator);
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
-        BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
 
-        checkArgument(findProtocol(tradeModel.getId()).isEmpty(),
+        checkArgument(findProtocol(bisqEasyTrade.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
-        persistableStore.add(tradeModel);
+        persistableStore.add(bisqEasyTrade);
 
-        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
+        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(bisqEasyTrade);
         protocol.handle(new BisqEasyTakeOfferEvent(contract));
         persist();
-        return tradeModel;
+        return bisqEasyTrade;
     }
 
     public void sellerSendsPaymentAccount(BisqEasyTrade tradeModel, String paymentAccountData) throws TradeException {
