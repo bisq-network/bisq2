@@ -16,11 +16,11 @@ class TorBinaryPackager(private val project: Project) {
         private const val PROCESSED_DIR = "${BisqTorBinaryPlugin.DOWNLOADS_DIR}/processed"
     }
 
-    fun registerTasks(tarFile: Provider<Property<Provider<RegularFile>>>) {
+    fun registerTasks(tarFile: Provider<RegularFile>) {
         val unpackTarTask: TaskProvider<Copy> = project.tasks.register<Copy>("unpackTorBinaryTar") {
             from(
                 tarFile.map {
-                    project.tarTree(it.get().get().asFile.absolutePath)
+                    project.tarTree(it.asFile.absolutePath)
                 }
             )
 

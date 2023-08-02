@@ -16,10 +16,10 @@ import java.net.URL
 abstract class SignatureVerificationTask : DefaultTask() {
 
     @get:InputFile
-    abstract val fileToVerify: Property<Provider<RegularFile>>
+    abstract val fileToVerify: RegularFileProperty
 
     @get:InputFile
-    abstract val detachedSignatureFile: Property<Provider<RegularFile>>
+    abstract val detachedSignatureFile: RegularFileProperty
 
     @get:Input
     abstract val pgpFingerprintToKeyUrl: MapProperty<String, URL>
@@ -31,15 +31,15 @@ abstract class SignatureVerificationTask : DefaultTask() {
     fun verify() {
         val signatureVerifier = SignatureVerifier(pgpFingerprintToKeyUrl.get())
         val isSignatureValid = signatureVerifier.verifySignature(
-            signatureFile = detachedSignatureFile.get().get().asFile,
-            fileToVerify = fileToVerify.get().get().asFile
+            signatureFile = detachedSignatureFile.get().asFile,
+            fileToVerify = fileToVerify.get().asFile
         )
 
         resultFile.get().asFile.writeText("$isSignatureValid")
 
         if (!isSignatureValid) {
             throw GradleException(
-                "Signature verification failed for ${fileToVerify.get().get().asFile.absolutePath}."
+                "Signature verification failed for ${fileToVerify.get().asFile.absolutePath}."
             )
         }
     }
