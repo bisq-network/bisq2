@@ -17,13 +17,15 @@
 
 package bisq.tor;
 
-import bisq.common.util.NetworkUtils;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@Builder
 @Getter
 public class ClientTorrcGenerator {
     public static final String DISABLE_NETWORK_CONFIG_KEY = "DisableNetwork";
@@ -42,6 +44,10 @@ public class ClientTorrcGenerator {
     }
 
     public Map<String, String> generate() {
+        return generate(Collections.emptyMap());
+    }
+
+    public Map<String, String> generate(Map<String, String> torrcOverrideConfigs) {
         torConfigMap.put("DataDirectory", dataDirPath.toAbsolutePath().toString());
 
         torConfigMap.put(DISABLE_NETWORK_CONFIG_KEY, "1");
@@ -52,6 +58,8 @@ public class ClientTorrcGenerator {
         );
 
         torConfigMap.put("SocksPort", String.valueOf(socksPort));
+
+        torConfigMap.putAll(torrcOverrideConfigs);
 
         return torConfigMap;
     }
