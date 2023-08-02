@@ -31,12 +31,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Getter
 @Slf4j
 public class ProofOfBurnService extends SourceReputationService<AuthorizedProofOfBurnData> {
-    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final double MAX_AGE = 100;
     public static final long WEIGHT = 1000;
     public static final long MAX_DAYS_AGE_SCORE = 365;

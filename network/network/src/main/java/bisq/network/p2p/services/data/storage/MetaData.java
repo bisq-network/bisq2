@@ -31,18 +31,39 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @Getter
 public final class MetaData implements Proto {
+    public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
+    public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
+    public static final long TTL_15_DAYS = TimeUnit.DAYS.toMillis(15);
+    public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);
+    public static final long TTL_100_DAYS = TimeUnit.DAYS.toMillis(100);
+
+    public static final int MAX_SIZE_1000 = 1000;
+    public static final int MAX_SIZE_10_000 = 10_000;
+
+    public static final int MAX_MAP_SIZE_100 = 100;
+    public static final int MAX_MAP_SIZE_1000 = 1000;
+    public static final int MAX_MAP_SIZE_10_000 = 10_000;
+
     private final long ttl;
     private final int maxSizeInBytes;
     private final String className;
 
     private transient final int maxMapSize;
 
-    public MetaData(long ttl, int maxSizeInBytes, String className) {
-        this(ttl, maxSizeInBytes, className, 10_000);
+    public MetaData(String className) {
+        this(TTL_10_DAYS, MAX_SIZE_10_000, className, MAX_MAP_SIZE_1000);
     }
 
-    public MetaData(String className) {
-        this(TimeUnit.DAYS.toMillis(10), 100_000, className, 10_000);
+    public MetaData(long ttl, String className) {
+        this(ttl, MAX_SIZE_10_000, className, MAX_MAP_SIZE_1000);
+    }
+
+    public MetaData(long ttl, int maxSizeInBytes, String className) {
+        this(ttl, maxSizeInBytes, className, MAX_MAP_SIZE_1000);
+    }
+
+    public MetaData(long ttl, String className, int maxMapSize) {
+        this(ttl, MAX_SIZE_10_000, className, maxMapSize);
     }
 
     public MetaData(long ttl, int maxSizeInBytes, String className, int maxMapSize) {

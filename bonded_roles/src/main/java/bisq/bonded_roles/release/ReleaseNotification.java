@@ -31,15 +31,15 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
 public final class ReleaseNotification implements AuthorizedDistributedData {
-    public final static int MAX_MESSAGE_LENGTH = 10000;
-    public final static long TTL = TimeUnit.DAYS.toMillis(180);
+    public final static int MAX_MESSAGE_LENGTH = 10_000;
 
     // todo Production key not set yet - we use devMode key only yet
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
@@ -48,7 +48,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     );
 
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, getClass().getSimpleName());
     private final String id;
     private final long date;
     private final boolean isPreRelease;
@@ -78,6 +78,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         version = new Version(versionString);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //3545
     }
 
     @Override

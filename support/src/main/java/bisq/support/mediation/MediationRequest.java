@@ -30,19 +30,20 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class MediationRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(10);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, 100_000, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
     private final UserProfile requester;
     private final UserProfile peer;
@@ -56,6 +57,8 @@ public final class MediationRequest implements MailboxMessage {
 
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.chatMessages);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 3729 -> can be much more if lot of messages!
     }
 
     @Override

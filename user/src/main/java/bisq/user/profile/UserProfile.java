@@ -36,7 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 /**
  * Publicly shared user profile (from other peers or mine).
@@ -45,14 +46,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public final class UserProfile implements DistributedData {
-    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
-    private final static long TTL = TimeUnit.DAYS.toMillis(15);
-
     public static UserProfile from(UserProfile userProfile, String terms, String statement) {
         return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getNetworkId(), terms, statement);
     }
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
+    private final MetaData metaData = new MetaData(TTL_15_DAYS, MAX_SIZE_1000, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final String nickName;
     // We need the proofOfWork for verification of the nym and robohash icon
     private final ProofOfWork proofOfWork;
@@ -75,6 +74,8 @@ public final class UserProfile implements DistributedData {
         this.networkId = networkId;
         this.terms = terms;
         this.statement = statement;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 310
     }
 
     @Override

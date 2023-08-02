@@ -30,25 +30,27 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_SIZE_1000;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class BannedUserProfileData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(100);
-
     // todo Production key not set yet - we use devMode key only yet
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
     );
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, MAX_SIZE_1000, getClass().getSimpleName());
     private final UserProfile userProfile;
     private final boolean staticPublicKeysProvided;
 
     public BannedUserProfileData(UserProfile userProfile, boolean staticPublicKeysProvided) {
         this.userProfile = userProfile;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //313
     }
 
     @Override

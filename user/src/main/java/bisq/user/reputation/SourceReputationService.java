@@ -47,10 +47,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class SourceReputationService<T extends AuthorizedDistributedData> implements DataService.Listener, Service {
-    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
+    protected static final long DAY_AS_MS = TimeUnit.DAYS.toMillis(1);
 
     public static long getAgeInDays(long date) {
-        return (System.currentTimeMillis() - date) / DAY_MS;
+        return (System.currentTimeMillis() - date) / DAY_AS_MS;
     }
 
     protected final NetworkService networkService;

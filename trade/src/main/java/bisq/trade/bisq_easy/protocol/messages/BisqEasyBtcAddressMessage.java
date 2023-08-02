@@ -34,6 +34,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         super(tradeId, sender);
 
         this.btcAddress = btcAddress;
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//338
     }
 
     @Override

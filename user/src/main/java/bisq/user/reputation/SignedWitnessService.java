@@ -51,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @Slf4j
 public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
-    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 50;
     public static final long MAX_DAYS_AGE_SCORE = 365;
 

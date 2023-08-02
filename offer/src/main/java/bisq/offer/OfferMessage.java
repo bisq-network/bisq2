@@ -25,20 +25,22 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 
+@Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode
 public final class OfferMessage implements DistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(2);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
     private final Offer<?, ?> offer;
 
     public OfferMessage(Offer<?, ?> offer) {
         this.offer = offer;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());
     }
 
     @Override

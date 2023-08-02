@@ -34,6 +34,7 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
         super(tradeId, sender);
 
         this.txId = txId;
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //412
     }
 
     @Override

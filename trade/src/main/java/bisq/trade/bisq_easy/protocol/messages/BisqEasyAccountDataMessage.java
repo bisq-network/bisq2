@@ -34,6 +34,7 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
         super(tradeId, sender);
 
         this.paymentAccountData = paymentAccountData;
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //631
     }
 
     @Override

@@ -52,7 +52,6 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @Slf4j
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore> {
-    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 10;
     public static final long MAX_DAYS_AGE_SCORE = 365;
 

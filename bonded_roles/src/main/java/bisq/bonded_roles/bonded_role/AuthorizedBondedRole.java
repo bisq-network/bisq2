@@ -37,15 +37,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(100);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -74,6 +74,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.networkId = networkId;
         this.authorizedOracleNode = authorizedOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//862
     }
 
     @Override

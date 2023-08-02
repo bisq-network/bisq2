@@ -31,19 +31,21 @@ import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+
+@Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(30);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
@@ -88,6 +90,9 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
         super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
+
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //908
     }
 
     public static BisqEasyPrivateTradeChatMessage createTakeOfferMessage(String channelId,
@@ -121,6 +126,8 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 chatMessageType);
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //884
     }
 
     @Override

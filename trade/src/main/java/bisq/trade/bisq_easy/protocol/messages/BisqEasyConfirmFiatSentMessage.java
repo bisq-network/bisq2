@@ -30,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
     public BisqEasyConfirmFiatSentMessage(String tradeId, NetworkId sender) {
         super(tradeId, sender);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//332
     }
 
     @Override

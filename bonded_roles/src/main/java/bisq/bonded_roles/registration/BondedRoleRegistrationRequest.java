@@ -31,17 +31,19 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(10);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -67,6 +69,8 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
         this.addressByNetworkType = addressByNetworkType;
         this.networkId = networkId;
         this.isCancellationRequest = isCancellationRequest;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//637
     }
 
     @Override

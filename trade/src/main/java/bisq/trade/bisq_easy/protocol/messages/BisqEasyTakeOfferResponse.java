@@ -35,6 +35,8 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
         super(tradeId, sender);
 
         this.contractSignatureData = contractSignatureData;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //534
     }
 
     @Override
