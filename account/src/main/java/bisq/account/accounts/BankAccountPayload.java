@@ -1,6 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +27,8 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     @Nullable
     protected String nationalAccountId;
 
-    protected BankAccountPayload(String paymentMethodName,
-                                 String id,
+    protected BankAccountPayload(String id,
+                                 String paymentMethodName,
                                  String countryCode,
                                  String holderName,
                                  @Nullable String bankName,
@@ -39,7 +38,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
                                  @Nullable String holderTaxId,
                                  @Nullable String bankId,
                                  @Nullable String nationalAccountId) {
-        super(paymentMethodName, id, countryCode);
+        super(id, paymentMethodName, countryCode);
         this.holderName = Optional.ofNullable(holderName).orElse("");
         this.bankName = Optional.ofNullable(bankName).orElse("");
         this.branchId = Optional.ofNullable(branchId).orElse("");
@@ -50,21 +49,17 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         this.nationalAccountId = nationalAccountId;
     }
 
-    protected AccountPayload.Builder getBankAccountPayloadBuilder() {
+    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder() {
         var builder = bisq.account.protobuf.BankAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setBankName(bankName)
                 .setBranchId(branchId)
                 .setAccountNr(accountNr)
-                .setAccountType(accountNr)
+                .setAccountType(accountType)
                 .setBranchId(branchId)
                 .setBankId(bankId);
         Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
         Optional.ofNullable(nationalAccountId).ifPresent(builder::setNationalAccountId);
-        var countryBasedPaymentAccountPayloadBuilder = getAccountPayloadBuilder()
-                .getCountryBasedAccountPayloadBuilder()
-                .setBankAccountPayload(builder);
-        return getAccountPayloadBuilder()
-                .setCountryBasedAccountPayload(countryBasedPaymentAccountPayloadBuilder);
+        return builder;
     }
 }

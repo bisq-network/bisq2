@@ -16,8 +16,8 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
 
     private final String holderAddress;
 
-    public AchTransferAccountPayload(String paymentMethodName,
-                                     String id,
+    public AchTransferAccountPayload(String id,
+                                     String paymentMethodName,
                                      String countryCode,
                                      String holderName,
                                      String bankName,
@@ -25,8 +25,9 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                                      String accountNr,
                                      String accountType,
                                      String holderAddress) {
-        super(paymentMethodName,
+        super(
                 id,
+                paymentMethodName,
                 countryCode,
                 holderName,
                 bankName,
@@ -41,17 +42,14 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
 
     @Override
     public AccountPayload toProto() {
-        var builder = bisq.account.protobuf.AchTransferAccountPayload.newBuilder().setHolderAddress(holderAddress);
-        var bankAccountPayloadBuilder = getAccountPayloadBuilder()
-                .getCountryBasedAccountPayloadBuilder()
-                .getBankAccountPayloadBuilder()
-                .setAchTransferAccountPayload(builder);
-        var countryBasedPaymentAccountPayloadBuilder = getAccountPayloadBuilder()
-                .getCountryBasedAccountPayloadBuilder()
-                .setBankAccountPayload(bankAccountPayloadBuilder);
-        return getAccountPayloadBuilder()
-                .setCountryBasedAccountPayload(countryBasedPaymentAccountPayloadBuilder)
-                .build();
+        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
+                getCountryBasedAccountPayloadBuilder().setBankAccountPayload(
+                        getBankAccountPayloadBuilder().setAchTransferAccountPayload(
+                                bisq.account.protobuf.AchTransferAccountPayload.newBuilder()
+                                        .setHolderAddress(holderAddress)
+                        )
+                )
+        ).build();
     }
 
     public static AchTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -59,8 +57,8 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         var accountPayload = bankAccountPayload.getAchTransferAccountPayload();
         return new AchTransferAccountPayload(
-                proto.getPaymentMethodName(),
                 proto.getId(),
+                proto.getPaymentMethodName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getHolderName(),
                 bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
