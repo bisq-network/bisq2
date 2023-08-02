@@ -23,11 +23,11 @@ class SignedBinaryDownloader(
     private val downloadTaskFactory = DownloadTaskFactory(project, downloadDirectory)
 
     fun registerTasks() {
-        val binaryDownloadUrl: Provider<URL> = version.map { perOsUrlProvider(it).url }
+        val binaryDownloadUrl: Provider<String> = version.map { perOsUrlProvider(it).url }
         val binaryDownloadTask =
             downloadTaskFactory.registerDownloadTask("download${binaryName}Binary", binaryDownloadUrl)
 
-        val signatureDownloadUrl: Provider<URL> = binaryDownloadUrl.map { URL("$it.asc") }
+        val signatureDownloadUrl: Provider<String> = binaryDownloadUrl.map { "$it.asc" }
         val signatureDownloadTask =
             downloadTaskFactory.registerDownloadTask("download${binaryName}Signature", signatureDownloadUrl)
 
