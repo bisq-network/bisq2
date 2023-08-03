@@ -42,7 +42,8 @@ public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPay
 
     @Override
     public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder().setRevolutAccount(bisq.account.protobuf.RevolutAccount.newBuilder()).build();
+        return getAccountBuilder()
+                .setRevolutAccount(bisq.account.protobuf.RevolutAccount.newBuilder()).build();
     }
 
     public static RevolutAccount fromProto(bisq.account.protobuf.Account proto) {

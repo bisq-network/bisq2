@@ -79,7 +79,7 @@ public class FiatPaymentRailUtil {
                 .collect(Collectors.toList());
     }
 
-    // https://wise.com/help/articles/2571942/what-countriesregions-can-i-send-to
+    // https://wise.com/help/articles/2571907/what-currencies-can-i-send-to-and-from?origin=related-article-2571942
     // https://github.com/bisq-network/proposals/issues/243
     static List<String> getWiseCountries() {
         List<String> list = new ArrayList<>(List.of("AR", "AU", "BD", "BR", "BG", "CA", "CL", "CN", "CO", "CR", "CZ", "DK", "EG",
@@ -106,7 +106,6 @@ public class FiatPaymentRailUtil {
                 "GBP",
                 "GEL",
                 "HKD",
-                "HRK",
                 "HUF",
                 "IDR",
                 "ILS",
@@ -137,7 +136,7 @@ public class FiatPaymentRailUtil {
         );
     }
 
-    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
+    // https://help.revolut.com/help/wealth/exchanging-money/what-currencies-are-available/what-currencies-are-supported-for-holding-and-exchange/
     static List<String> getRevolutCountries() {
         return List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
                 "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL",
@@ -157,7 +156,6 @@ public class FiatPaymentRailUtil {
                 "EUR",
                 "GBP",
                 "HKD",
-                "HRK",
                 "HUF",
                 "ILS",
                 "ISK",
