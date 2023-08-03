@@ -55,24 +55,24 @@ public class TacView extends View<VBox, TacModel, TacController> {
         Label headline = new Label(Res.get("tac.headline"));
         headline.getStyleClass().addAll("tac-headline", "wrap-text");
 
-        String text = "1. In no event, unless for damages caused by acts of intent and gross negligence, damages resulting from personal injury, " +
+        String text = "1. The user is responsible for using the software in compliance with local laws. Don't use the software if using it is not legal in your jurisdiction.\n\n" +
+
+                "2. Any market prices, network fee estimates, or other data obtained from servers operated by the Bisq DAO is provided on an 'as is, as available' basis without representation or warranty of any kind. It is your responsibility to verify any data provided in regards to inaccuracies or omissions.\n\n" +
+
+                "3. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the user confirms " +
+                "to be aware of those risks and in no case will claim legal responsibility to the authors or copyright holders of the software.\n\n" +
+
+                "4. Any dispute, controversy or claim arising out of or relating to the use of the software shall be settled by arbitration in " +
+                "accordance with the Bisq arbitration rules as at present in force. The arbitration is conducted online. " +
+                "The language to be used in the arbitration proceedings shall be English if not otherwise stated.\n\n" +
+
+                "5. In no event, unless for damages caused by acts of intent and gross negligence, damages resulting from personal injury, " +
                 "or damages ensuing from other instances where liability is required by applicable law or agreed to in writing, will any " +
                 "developer, copyright holder and/or any other party who modifies and/or conveys the software as permitted above or " +
                 "facilitates its operation, be liable for damages, including any general, special, incidental or consequential damages " +
                 "arising out of the use or inability to use the software (including but not limited to loss of data or data being " +
                 "rendered inaccurate or losses sustained by you or third parties or a failure of the software to operate with any " +
                 "other software), even if such developer, copyright holder and/or other party has been advised of the possibility of such damages.\n\n" +
-
-                "2. The user is responsible for using the software in compliance with local laws. Don't use the software if using it is not legal in your jurisdiction.\n\n" +
-
-                "3. Any market prices, network fee estimates, or other data obtained from servers operated by the Bisq DAO is provided on an 'as is, as available' basis without representation or warranty of any kind. It is your responsibility to verify any data provided in regards to inaccuracies or omissions.\n\n" +
-
-                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the user confirms " +
-                "to be aware of those risks and in no case will claim legal responsibility to the authors or copyright holders of the software.\n\n" +
-
-                "5. Any dispute, controversy or claim arising out of or relating to the use of the software shall be settled by arbitration in " +
-                "accordance with the Bisq arbitration rules as at present in force. The arbitration is conducted online. " +
-                "The language to be used in the arbitration proceedings shall be English if not otherwise stated.\n\n" +
 
                 "6. The user confirms that they have read and agreed to the rules regarding the dispute process:";
 
