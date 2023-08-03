@@ -526,8 +526,8 @@ public class ChatMessagesListView {
             listView = new ListView<>(model.getSortedChatMessages());
             listView.getStyleClass().add("chat-messages-list-view");
 
-            Label placeholder = new Label(Res.get("data.noDataAvailable"));
-            listView.setPlaceholder(placeholder);
+            //Label placeholder = new Label(Res.get("data.noDataAvailable"));
+            //listView.setPlaceholder(placeholder);
             listView.setCellFactory(getCellFactory());
 
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
