@@ -25,6 +25,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -207,7 +208,11 @@ public class CreateProfileController implements Controller {
     }
 
     private void next() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_PASSWORD);
+        Navigation.navigateTo(NavigationTarget.MAIN);
+        UIThread.runOnNextRenderFrame(() -> {
+            OverlayController.hide();
+            Navigation.navigateTo(NavigationTarget.DASHBOARD);
+        });
     }
 
     private void createSimulatedDelay(long powDuration) {
