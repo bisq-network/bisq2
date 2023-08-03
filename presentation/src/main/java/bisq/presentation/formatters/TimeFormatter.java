@@ -26,7 +26,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class TimeFormatter {
-    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
+    public static final long DAY_AS_MS = TimeUnit.DAYS.toMillis(1);
 
     public static String formatDuration(long duration) {
         //todo
@@ -44,7 +44,7 @@ public class TimeFormatter {
     }
 
     public static long getAgeInDays(long date) {
-        return (System.currentTimeMillis() - date) / DAY_MS;
+        return (System.currentTimeMillis() - date) / DAY_AS_MS;
     }
 
     public static String formatAgeInDays(long date) {

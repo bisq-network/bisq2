@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
-import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.Persistence;
@@ -29,8 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,7 +44,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     private final String storeKey;
     @Getter
     protected final String subDirectory;
-    private final Scheduler scheduler;
+    protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
@@ -54,30 +52,38 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + STORE_POST_FIX);
         subDirectory = SUB_PATH + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this, subDirectory, storageFileName, persistableStore);
-        scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
     }
-
-    protected Set<Map.Entry<ByteArray, T>> pruneExpired() {
-        Set<Map.Entry<ByteArray, T>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> entry.getValue().isExpired())
-                .collect(Collectors.toSet());
-        if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our map", expiredEntries.size());
-            expiredEntries.forEach(e -> persistableStore.getMap().remove(e.getKey()));
-        }
-        return expiredEntries;
-    }
-
-    /*  public Inventory getInventory(DataFilter dataFilter) {
-          Map<ByteArray, T> mapClone = getClone();
-          List<T> result = mapClone.entrySet().stream()
-                  .filter(e -> dataFilter.doInclude(e.getKey()))
-                  .map(Map.Entry::getValue)
-                  .collect(Collectors.toList());
-          return new Inventory(result, mapClone.size() - result.size());
-      }*/
 
     public void shutdown() {
-        scheduler.stop();
+    }
+
+    @Override
+    protected long getMaxWriteRateInMs() {
+        return 1000;
+    }
+
+    @Override
+    public DataStore<T> prunePersisted(DataStore<T> persisted) {
+        Map<ByteArray, T> map = persisted.getMap();
+        if (map.isEmpty()) {
+            return persisted;
+        }
+
+        Map<ByteArray, T> pruned = map.entrySet().stream()
+                .filter(entry -> !entry.getValue().isExpired())
+                .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
+                .limit(getMaxMapSize())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        map.clear();
+        map.putAll(pruned);
+        return persisted;
+    }
+
+    protected int getMaxMapSize() {
+        if (maxMapSize.isPresent()) {
+            return maxMapSize.get();
+        }
+        maxMapSize = persistableStore.getMap().values().stream().map(DataRequest::getMaxMapSize).findFirst();
+        return maxMapSize.orElse(MetaData.MAX_MAP_SIZE_10_000);
     }
 }

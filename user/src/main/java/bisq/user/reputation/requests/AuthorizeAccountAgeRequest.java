@@ -19,6 +19,7 @@ package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -27,16 +28,17 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeAccountAgeRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(2);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String hashAsHex;
     private final long date;
@@ -53,6 +55,14 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
         this.date = date;
         this.pubKeyBase64 = pubKeyBase64;
         this.signatureBase64 = signatureBase64;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validateHashAsHex(hashAsHex);
+        NetworkDataValidation.validateDate(date);
+        NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//814
     }
 
     @Override

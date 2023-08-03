@@ -30,19 +30,20 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class MediationRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(2);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
     private final UserProfile requester;
     private final UserProfile peer;
@@ -52,10 +53,12 @@ public final class MediationRequest implements MailboxMessage {
         this.bisqEasyOffer = bisqEasyOffer;
         this.requester = requester;
         this.peer = peer;
-        this.chatMessages = chatMessages;
+        this.chatMessages = maybePrune(chatMessages);
 
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.chatMessages);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 3729 -> can be much more if lot of messages!
     }
 
     @Override
@@ -95,5 +98,20 @@ public final class MediationRequest implements MailboxMessage {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    private List<BisqEasyPrivateTradeChatMessage> maybePrune(List<BisqEasyPrivateTradeChatMessage> chatMessages) {
+        StringBuilder sb = new StringBuilder();
+        List<BisqEasyPrivateTradeChatMessage> result = chatMessages.stream()
+                .filter(message -> {
+                    sb.append(message.getText());
+                    return sb.toString().length() < 10_000;
+                })
+                .collect(Collectors.toList());
+        if (result.size() != chatMessages.size()) {
+            log.warn("chatMessages have been pruned as total text size exceeded 10 000 characters. ");
+            log.warn("chatMessages={}", chatMessages);
+        }
+        return result;
     }
 }

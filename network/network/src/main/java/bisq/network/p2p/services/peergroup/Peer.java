@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peergroup;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Load;
@@ -47,6 +48,8 @@ public final class Peer implements Proto, Comparable<Peer> {
         this.load = load;
         this.isOutboundConnection = isOutboundConnection;
         this.created = created;
+
+        NetworkDataValidation.validateDate(created);
     }
 
     public bisq.network.protobuf.Peer toProto() {

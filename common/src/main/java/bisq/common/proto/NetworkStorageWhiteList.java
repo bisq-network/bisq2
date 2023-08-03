@@ -32,8 +32,8 @@ public class NetworkStorageWhiteList {
     @Getter
     private static final Set<String> classNames = new HashSet<>();
 
-    public static void add(String className) {
-        classNames.add(className);
+    public static void add(Class<?> clazz) {
+        classNames.add(clazz.getSimpleName());
     }
 
     public static <T extends Proto> void add(String protoTypeName, ProtoResolver<T> resolver) {

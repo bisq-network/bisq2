@@ -18,8 +18,8 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.data.ByteArray;
+import bisq.common.timer.Scheduler;
 import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -33,9 +33,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class MailboxDataStorageService extends DataStorageService<MailboxRequest> {
-    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
-    private static final int MAX_MAP_SIZE = 10000;
-
     public interface Listener {
         void onAdded(MailboxData mailboxData);
 
@@ -44,19 +41,17 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
+    private final Scheduler scheduler;
 
     public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super(persistenceService, storeName, storeKey);
+        scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
     }
 
     @Override
-    public void onPersistedApplied(DataStore<MailboxRequest> persisted) {
-        maybePruneMap(persisted.getMap());
-    }
-
-    @Override
-    protected long getMaxWriteRateInMs() {
-        return 1000;
+    public void shutdown() {
+        super.shutdown();
+        scheduler.stop();
     }
 
     public Result add(AddMailboxRequest request) {
@@ -67,7 +62,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.size() > MAX_MAP_SIZE) {
+            if (map.size() > getMaxMapSize()) {
                 return new Result(false).maxMapSizeReached();
             }
             requestFromMap = map.get(byteArray);
@@ -160,11 +155,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         return new Result(true).removedData(sequentialDataFromMap.getMailboxData());
     }
 
-    @Override
-    public void shutdown() {
-        super.shutdown();
-    }
-
     public void addListener(Listener listener) {
         listeners.add(listener);
     }
@@ -202,23 +192,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 
-    private void maybePruneMap(Map<ByteArray, MailboxRequest> persisted) {
-        long now = System.currentTimeMillis();
-        // Remove entries older than MAX_AGE
-        // Remove expired ProtectedEntry in case value is of type AddProtectedDataRequest
-        // Sort by created date
-        // Limit to MAX_MAP_SIZE
-        Map<ByteArray, MailboxRequest> pruned = persisted.entrySet().stream()
-                .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
-                .filter(entry -> entry.getValue() instanceof RemoveMailboxRequest ||
-                        !((AddMailboxRequest) entry.getValue()).getMailboxSequentialData().isExpired())
-                .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(MAX_MAP_SIZE)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            map.clear();
-            map.putAll(pruned);
+    private void pruneExpired() {
+        Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
+                .filter(entry -> entry.getValue().isExpired())
+                .collect(Collectors.toSet());
+        if (!expiredEntries.isEmpty()) {
+            log.info("We remove {} expired entries from our map", expiredEntries.size());
+            expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
         }
     }
 }

@@ -20,6 +20,7 @@ package bisq.account.payment_method;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +41,10 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, Proto {
+    public final static int MAX_NAME_LENGTH = 50;
+
     protected final String name;
+
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
     protected transient final R paymentRail;
 
@@ -54,10 +58,13 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
      */
     protected PaymentMethod(R paymentRail) {
         this.name = paymentRail.name();
+
         this.paymentRail = paymentRail;
 
         displayString = createDisplayString();
         shortDisplayString = createShortDisplayString();
+
+        NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
     }
 
     /**

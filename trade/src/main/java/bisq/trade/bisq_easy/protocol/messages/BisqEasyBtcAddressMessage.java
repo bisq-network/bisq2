@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,6 +35,11 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         super(tradeId, sender);
 
         this.btcAddress = btcAddress;
+
+        // We tolerate non-btc address data as well (e.g. LN invoice)
+        NetworkDataValidation.validateText(btcAddress, 200);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//338
     }
 
     @Override

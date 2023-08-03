@@ -21,11 +21,14 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -111,7 +114,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
     protected void onSave() {
@@ -122,6 +125,18 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         ProofOfWork proofOfWork = model.getProofOfWork().get();
+        if (model.getNickName().get().length() > UserProfile.MAX_LENGTH_NICK_NAME) {
+            new Popup().warning(Res.get("onboarding.createProfile.nickName.tooLong", UserProfile.MAX_LENGTH_NICK_NAME)).show();
+            return;
+        }
+        if (model.getTerms().get().length() > UserProfile.MAX_LENGTH_TERMS) {
+            new Popup().warning(Res.get("user.userProfile.terms.tooLong", UserProfile.MAX_LENGTH_TERMS)).show();
+            return;
+        }
+        if (model.getStatement().get().length() > UserProfile.MAX_LENGTH_STATEMENT) {
+            new Popup().warning(Res.get("user.userProfile.statement.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
+            return;
+        }
         if (model.getTempKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getTempKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(

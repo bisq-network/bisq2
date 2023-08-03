@@ -18,8 +18,8 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
+import bisq.common.timer.Scheduler;
 import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
@@ -37,16 +37,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
-    // Maybe we need to customize that per data type or derive it from metaData
-    private static final long PRUNE_MAX_AGE = TimeUnit.DAYS.toMillis(365);
-    private static final int MAX_MAP_SIZE = 10000;
- /*
-    // Max size of serialized NetworkData or MailboxMessage. Used to limit response map.
-    // Depends on data types max. expected size.
-    // Does not contain metadata like signatures and keys as well not the overhead from encryption.
-    // So this number has to be fine-tuned with real data later...
-    private static final int MAX_INVENTORY_MAP_SIZE = 1_000_000;*/
-
     public interface Listener {
         void onAdded(AuthenticatedData authenticatedData);
 
@@ -58,19 +48,17 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
+    private final Scheduler scheduler;
 
     public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super(persistenceService, storeName, storeKey);
+        scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
     }
 
     @Override
-    public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
-        maybePruneMap(persisted.getMap());
-    }
-
-    @Override
-    protected long getMaxWriteRateInMs() {
-        return 1000;
+    public void shutdown() {
+        super.shutdown();
+        scheduler.stop();
     }
 
     public Result add(AddAuthenticatedDataRequest request) {
@@ -81,17 +69,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.size() > MAX_MAP_SIZE) {
+            if (map.size() > getMaxMapSize()) {
                 return new Result(false).maxMapSizeReached();
             }
             requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
-                //log.warn("request.equals(requestFromMap). request={}", request);
                 return new Result(false).requestAlreadyReceived();
             }
 
             if (requestFromMap != null && authenticatedSequentialData.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                //log.warn("SequenceNrInvalid. request={}", request);
                 return new Result(false).sequenceNrInvalid();
             }
 
@@ -253,11 +239,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return new Result(true);
     }
 
-    @Override
-    public void shutdown() {
-        super.shutdown();
-    }
-
     public void addListener(Listener listener) {
         listeners.add(listener);
     }
@@ -279,40 +260,19 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return sequenceNumber;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> pruneExpired() {
-        Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = super.pruneExpired();
-        expiredEntries.stream()
-                .map(Map.Entry::getValue)
-                .filter(e -> e instanceof AddAuthenticatedDataRequest)
-                .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData())
-                .forEach(e -> listeners.forEach(listener -> listener.onRemoved(e)));
-        return expiredEntries;
-    }
-
-    private void maybePruneMap(Map<ByteArray, AuthenticatedDataRequest> persisted) {
-        long now = System.currentTimeMillis();
-        // Remove entries older than MAX_AGE
-        // Remove expired data in case value is of type AddProtectedDataRequest
-        // Sort by created date
-        // Limit to MAX_MAP_SIZE
-        Map<ByteArray, AuthenticatedDataRequest> pruned = persisted.entrySet().stream()
-                .filter(entry -> now - entry.getValue().getCreated() < PRUNE_MAX_AGE)
-                .filter(entry -> entry.getValue() instanceof RemoveAuthenticatedDataRequest ||
-                        !((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().isExpired())
-                .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(MAX_MAP_SIZE)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            map.clear();
-            map.putAll(pruned);
+    private void pruneExpired() {
+        Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
+                .filter(entry -> entry.getValue().isExpired())
+                .collect(Collectors.toSet());
+        if (!expiredEntries.isEmpty()) {
+            log.info("We remove {} expired entries from our map", expiredEntries.size());
+            expiredEntries.forEach(entry -> {
+                persistableStore.getMap().remove(entry.getKey());
+                if (entry.getValue() instanceof AddAuthenticatedDataRequest) {
+                    AuthenticatedData data = ((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().getAuthenticatedData();
+                    listeners.forEach(listener -> listener.onRemoved(data));
+                }
+            });
         }
     }
 }

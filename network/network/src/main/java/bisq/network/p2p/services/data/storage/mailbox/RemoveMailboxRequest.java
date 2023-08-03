@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -75,6 +76,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         this.receiverPublicKey = receiverPublicKey;
         this.signature = signature;
         this.created = created;
+
+        NetworkDataValidation.validateHash(hash);
+        NetworkDataValidation.validateECPubKey(receiverPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
+        NetworkDataValidation.validateDate(created);
     }
 
     @Override
@@ -144,5 +150,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, metaData.getTtl());
+    }
+
+    @Override
+    public int getMaxMapSize() {
+        return metaData.getMaxMapSize();
     }
 }

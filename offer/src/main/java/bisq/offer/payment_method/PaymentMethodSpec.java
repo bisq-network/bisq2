@@ -21,6 +21,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -49,6 +50,9 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     public PaymentMethodSpec(T paymentMethod, Optional<String> saltedMakerAccountId) {
         this.paymentMethod = paymentMethod;
         this.saltedMakerAccountId = saltedMakerAccountId;
+
+        NetworkDataValidation.validateText(saltedMakerAccountId, 100);
+
     }
 
     public abstract bisq.offer.protobuf.PaymentMethodSpec toProto();

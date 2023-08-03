@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,10 +26,14 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class TradeTermsOption implements OfferOption {
+    public final static int MAX_TERM_LENGTH = 1000;
+
     private final String makersTradeTerms;
 
     public TradeTermsOption(String makersTradeTerms) {
         this.makersTradeTerms = makersTradeTerms;
+
+        NetworkDataValidation.validateText(makersTradeTerms, MAX_TERM_LENGTH);
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {

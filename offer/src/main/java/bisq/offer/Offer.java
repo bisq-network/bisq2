@@ -21,6 +21,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
@@ -35,11 +36,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -83,10 +83,18 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         this.offerOptions = new ArrayList<>(offerOptions);
 
         // All lists need to sort deterministically as the data is used in the proof of work check
-        this.protocolTypes.sort(Comparator.comparingInt(TradeProtocolType::hashCode));
+        Collections.sort(this.protocolTypes);
         this.baseSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.quoteSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.offerOptions.sort(Comparator.comparingInt(OfferOption::hashCode));
+
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateDate(date);
+
+        checkArgument(protocolTypes.size() < 10);
+        checkArgument(baseSidePaymentMethodSpecs.size() < 10);
+        checkArgument(quoteSidePaymentMethodSpecs.size() < 10);
+        checkArgument(offerOptions.size() < 10);
     }
 
     public abstract bisq.offer.protobuf.Offer toProto();

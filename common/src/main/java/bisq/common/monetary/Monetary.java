@@ -20,6 +20,7 @@ package bisq.common.monetary;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -75,6 +76,9 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         this.code = code;
         this.precision = precision;
         this.lowPrecision = lowPrecision;
+
+        NetworkDataValidation.validateText(id, 20);
+        NetworkDataValidation.validateCode(code);
     }
 
     /**

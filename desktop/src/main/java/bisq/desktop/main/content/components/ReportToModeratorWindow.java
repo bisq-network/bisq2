@@ -22,10 +22,12 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.support.moderator.ModeratorService;
+import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -99,7 +101,13 @@ public class ReportToModeratorWindow {
         }
 
         void onReport() {
-            moderatorService.reportUserProfile(model.getAccusedUserProfile(), model.getMessage().get(), model.getChatChannelDomain());
+            String message = model.getMessage().get();
+            if (message.length() > ReportToModeratorMessage.MAX_MESSAGE_LENGTH) {
+                new Popup().warning(Res.get("validation.tooLong", ReportToModeratorMessage.MAX_MESSAGE_LENGTH)).show();
+                return;
+            }
+
+            moderatorService.reportUserProfile(model.getAccusedUserProfile(), message, model.getChatChannelDomain());
             onCancel();
         }
 

@@ -19,6 +19,7 @@ package bisq.network;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
@@ -26,6 +27,7 @@ import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 @Getter
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
@@ -48,6 +51,8 @@ public final class NetworkId implements Proto {
         checkArgument(!addressByNetworkType.isEmpty(),
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByNetworkType.putAll(addressByNetworkType);
+
+        NetworkDataValidation.validateId(nodeId);
     }
 
     public bisq.network.protobuf.NetworkId toProto() {

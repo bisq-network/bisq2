@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -36,7 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 
 /**
  * Publicly shared user profile (from other peers or mine).
@@ -45,14 +48,16 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 public final class UserProfile implements DistributedData {
-    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
-    private final static long TTL = TimeUnit.DAYS.toMillis(15);
+    public static final int MAX_LENGTH_NICK_NAME = 100;
+    public static final int MAX_LENGTH_TERMS = 100;
+    public static final int MAX_LENGTH_STATEMENT = 100;
 
     public static UserProfile from(UserProfile userProfile, String terms, String statement) {
         return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getNetworkId(), terms, statement);
     }
 
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
+    private final MetaData metaData = new MetaData(TTL_15_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final String nickName;
     // We need the proofOfWork for verification of the nym and robohash icon
     private final ProofOfWork proofOfWork;
@@ -69,12 +74,17 @@ public final class UserProfile implements DistributedData {
                        NetworkId networkId,
                        String terms,
                        String statement) {
-        this.nickName = nickName.trim().isEmpty() ? "Invalid nickname" :
-                nickName.trim();
+        this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
         this.terms = terms;
         this.statement = statement;
+
+        NetworkDataValidation.validateText(nickName, MAX_LENGTH_NICK_NAME);
+        NetworkDataValidation.validateText(terms, MAX_LENGTH_TERMS);
+        NetworkDataValidation.validateText(statement, MAX_LENGTH_STATEMENT);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 310
     }
 
     @Override

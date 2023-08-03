@@ -5,6 +5,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
@@ -81,7 +82,9 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
         this.supportedLanguageCodes = supportedLanguageCodes;
-        Collections.sort(supportedLanguageCodes);
+        Collections.sort(this.supportedLanguageCodes);
+
+        NetworkDataValidation.validateText(supportedLanguageCodes.toString(), 100);
     }
 
     @Override

@@ -20,6 +20,7 @@ package bisq.bonded_roles.registration;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
@@ -31,17 +32,19 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(2);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -67,6 +70,14 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
         this.addressByNetworkType = addressByNetworkType;
         this.networkId = networkId;
         this.isCancellationRequest = isCancellationRequest;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
+        NetworkDataValidation.validateBondUserName(bondUserName);
+        NetworkDataValidation.validateSignatureBase64(signatureBase64);
+
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//637
     }
 
     @Override

@@ -28,8 +28,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class StringUtils {
     public static String truncate(String value) {
@@ -37,8 +35,7 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
-        checkArgument(maxLength > 3, "maxLength must be > 3");
-        if (value.length() > maxLength) {
+        if (maxLength > 3 && value.length() > maxLength) {
             return value.substring(0, maxLength - 3) + "...";
         } else {
             return value;

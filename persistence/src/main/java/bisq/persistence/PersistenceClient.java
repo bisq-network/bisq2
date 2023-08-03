@@ -26,9 +26,14 @@ import java.util.concurrent.CompletableFuture;
 public interface PersistenceClient<T extends PersistableStore<T>> {
     default CompletableFuture<Optional<T>> readPersisted() {
         return getPersistence().readAsync(persisted -> {
+            persisted = prunePersisted(persisted);
             getPersistableStore().applyPersisted(persisted);
             onPersistedApplied(persisted);
         });
+    }
+
+    default T prunePersisted(T persisted) {
+        return persisted;
     }
 
     default void onPersistedApplied(T persisted) {

@@ -24,12 +24,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public final class NotificationsStore implements PersistableStore<NotificationsStore> {
-    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
-
     private final Map<String, DateAndConsumedFlag> notificationIdMap = new ConcurrentHashMap<>();
 
     public NotificationsStore() {
@@ -72,17 +69,10 @@ public final class NotificationsStore implements PersistableStore<NotificationsS
     @Override
     public void applyPersisted(NotificationsStore persisted) {
         notificationIdMap.clear();
-        notificationIdMap.putAll(prune(persisted.notificationIdMap));
+        notificationIdMap.putAll(persisted.notificationIdMap);
     }
 
     Map<String, DateAndConsumedFlag> getNotificationIdMap() {
         return notificationIdMap;
-    }
-
-    private Map<String, DateAndConsumedFlag> prune(Map<String, DateAndConsumedFlag> dateByNotificationId) {
-        long pruneDate = System.currentTimeMillis() - MAX_AGE;
-        return dateByNotificationId.entrySet().stream()
-                .filter(entry -> entry.getValue().getDate() > pruneDate)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

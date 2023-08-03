@@ -50,8 +50,6 @@ import java.util.stream.Collectors;
 @Getter
 @Slf4j
 public class ProfileAgeService extends SourceReputationService<AuthorizedTimestampData> implements PersistenceClient<ProfileAgeStore> {
-    // private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
-    // Ïpublic static final long WEIGHT = 1;
 
     @Getter
     private final ProfileAgeStore persistableStore = new ProfileAgeStore();

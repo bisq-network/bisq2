@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,12 +27,17 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class FiatPaymentOption implements OfferOption {
+    public final static int MAX_NAME_LENGTH = 50;
+
     private final String countyCodeOfBank;
     private final String bankName;
 
     public FiatPaymentOption(String countyCodeOfBank, String bankName) {
         this.countyCodeOfBank = countyCodeOfBank;
         this.bankName = bankName;
+
+        NetworkDataValidation.validateCode(countyCodeOfBank);
+        NetworkDataValidation.validateText(bankName, MAX_NAME_LENGTH);
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {

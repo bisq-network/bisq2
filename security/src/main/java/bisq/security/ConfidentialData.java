@@ -18,18 +18,23 @@
 package bisq.security;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class ConfidentialData implements Proto {
     private final byte[] senderPublicKey;
     private final byte[] iv;
-    private final byte[] cipherText;
+    private final byte[] cipherText;    // message with 1000 chars has about 1500 bytes
     private final byte[] signature;
 
     public ConfidentialData(byte[] senderPublicKey,
@@ -40,6 +45,12 @@ public final class ConfidentialData implements Proto {
         this.iv = iv;
         this.cipherText = cipherText;
         this.signature = signature;
+
+        checkArgument(iv.length < 20);
+        checkArgument(cipherText.length < 20_000);
+
+        NetworkDataValidation.validateECPubKey(senderPublicKey);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
     public bisq.security.protobuf.ConfidentialData toProto() {

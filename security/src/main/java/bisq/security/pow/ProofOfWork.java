@@ -19,24 +19,27 @@ package bisq.security.pow;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
+import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 
 // Borrowed from: https://github.com/bisq-network/bisq
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public final class ProofOfWork implements Proto {
     // payload is usually the pubKeyHash
-    private final byte[] payload;
+    private final byte[] payload;       // message of 1000 chars has about 1300 bytes
     // If challenge does not make sense we set it null
     @Nullable
-    private final byte[] challenge;
+    private final byte[] challenge; // 15 or 16 bytes
     private final double difficulty;
-    private final byte[] solution;
+    private final byte[] solution; // 72 bytes
 
     public ProofOfWork(byte[] payload,
                        @Nullable byte[] challenge,
@@ -46,6 +49,12 @@ public final class ProofOfWork implements Proto {
         this.challenge = challenge;
         this.difficulty = difficulty;
         this.solution = solution;
+
+        NetworkDataValidation.validateByteArray(payload, 20_000);
+        if (challenge != null) {
+            NetworkDataValidation.validateByteArray(challenge, 20);
+        }
+        NetworkDataValidation.validateByteArray(solution, 75);
     }
 
 

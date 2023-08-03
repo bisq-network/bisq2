@@ -19,6 +19,7 @@ package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -27,20 +28,24 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeTimestampRequest implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(2);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final String profileId;
 
     public AuthorizeTimestampRequest(String profileId) {
         this.profileId = profileId;
+
+        NetworkDataValidation.validateProfileId(profileId);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //100
     }
 
     @Override

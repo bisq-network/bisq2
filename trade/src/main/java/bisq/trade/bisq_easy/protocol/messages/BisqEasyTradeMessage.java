@@ -26,15 +26,14 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
-    final static long TTL = TimeUnit.DAYS.toMillis(10);
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    protected final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
 
     protected BisqEasyTradeMessage(String tradeId, NetworkId sender) {
         super(tradeId, sender);

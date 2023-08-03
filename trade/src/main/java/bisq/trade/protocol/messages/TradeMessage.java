@@ -20,6 +20,7 @@ package bisq.trade.protocol.messages;
 import bisq.common.fsm.Event;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -44,6 +45,8 @@ public abstract class TradeMessage implements MailboxMessage, Event {
     protected TradeMessage(String tradeId, NetworkId sender) {
         this.tradeId = tradeId;
         this.sender = sender;
+
+        NetworkDataValidation.validateId(tradeId);
     }
 
     public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {

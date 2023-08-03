@@ -385,9 +385,19 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void doSendMessage(String text) {
+            if (text.length() > ChatMessage.MAX_TEXT_LENGTH) {
+                new Popup().warning(Res.get("validation.tooLong", ChatMessage.MAX_TEXT_LENGTH)).show();
+                return;
+            }
+
             ChatChannel<? extends ChatMessage> chatChannel = model.selectedChannel.get();
             UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             Optional<Citation> citation = citationBlock.getCitation();
+
+            if (citation.isPresent() && citation.get().getText().length() > Citation.MAX_TEXT_LENGTH) {
+                new Popup().warning(Res.get("validation.tooLong", Citation.MAX_TEXT_LENGTH)).show();
+                return;
+            }
 
             if (chatChannel instanceof BisqEasyPublicChatChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";

@@ -30,16 +30,16 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(10);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyPublicChatMessage(String channelId,
@@ -81,6 +81,8 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //768
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {

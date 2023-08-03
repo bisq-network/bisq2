@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -31,15 +32,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedTimestampData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(100);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    public static final long TTL = TTL_30_DAYS;
+    private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     private final String profileId;
     private final long date;
     private final boolean staticPublicKeysProvided;
@@ -48,6 +49,11 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         this.profileId = profileId;
         this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        NetworkDataValidation.validateProfileId(profileId);
+        NetworkDataValidation.validateDate(date);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//51
     }
 
     @Override

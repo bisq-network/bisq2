@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,12 +29,17 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
+    public final static int MAX_LENGTH = 1000;
+
     private final String paymentAccountData;
 
     public BisqEasyAccountDataMessage(String tradeId, NetworkId sender, String paymentAccountData) {
         super(tradeId, sender);
 
         this.paymentAccountData = paymentAccountData;
+
+        NetworkDataValidation.validateText(paymentAccountData, MAX_LENGTH);
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //631
     }
 
     @Override

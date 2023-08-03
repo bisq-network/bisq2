@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -83,6 +84,10 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
         this.ownerPublicKey = ownerPublicKey;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
+
+        NetworkDataValidation.validateHash(hash);
+        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
     @Override
@@ -140,6 +145,17 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
         // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new 
         // AddAuthenticatedDataRequest with the updated sequenceNumber
         return false;
+    }
+
+    @Override
+    public long getCreated() {
+        // Not used as not stored in map and no pruning applied
+        return 0;
+    }
+
+    @Override
+    public int getMaxMapSize() {
+        return metaData.getMaxMapSize();
     }
 
     @Override

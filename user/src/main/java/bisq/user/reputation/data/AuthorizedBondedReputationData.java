@@ -22,6 +22,7 @@ import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -33,15 +34,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(100);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, getClass().getSimpleName());
     private final long amount;
     private final long lockTime;
     private final boolean staticPublicKeysProvided;
@@ -54,6 +55,14 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         this.hash = hash;
         this.lockTime = lockTime;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+
+        NetworkDataValidation.validateDate(time);
+        NetworkDataValidation.validateHash(hash);
+        checkArgument(amount > 0);
+        checkArgument(lockTime >= 10_000);
+
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//38
     }
 
     @Override

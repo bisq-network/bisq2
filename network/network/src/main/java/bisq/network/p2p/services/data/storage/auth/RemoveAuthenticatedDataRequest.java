@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -53,11 +54,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     private final MetaData metaData;
     private final byte[] hash;
-    private final byte[] ownerPublicKeyBytes; // 442 bytes
+    private final byte[] ownerPublicKeyBytes;
     @Nullable
     transient private PublicKey ownerPublicKey;
     private final int sequenceNumber;
-    private final byte[] signature;         // 47 bytes
+    private final byte[] signature;
     private final long created;
 
     public RemoveAuthenticatedDataRequest(MetaData metaData,
@@ -102,6 +103,10 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.created = created;
+
+        NetworkDataValidation.validateHash(hash);
+        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
     @Override
@@ -162,6 +167,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > metaData.getTtl();
+    }
+
+    @Override
+    public int getMaxMapSize() {
+        return metaData.getMaxMapSize();
     }
 
     public String getClassName() {

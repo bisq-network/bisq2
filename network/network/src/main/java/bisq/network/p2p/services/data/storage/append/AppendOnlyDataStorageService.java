@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -34,8 +35,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 @Slf4j
 public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOnlyDataRequest> {
-    private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
-
     public interface Listener {
         void onAppended(AppendOnlyData appendOnlyData);
     }
@@ -48,6 +47,12 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
     }
 
     @Override
+    public DataStore<AddAppendOnlyDataRequest> prunePersisted(DataStore<AddAppendOnlyDataRequest> persisted) {
+        // We do not prune append only data
+        return persisted;
+    }
+
+    @Override
     protected long getMaxWriteRateInMs() {
         return 1000;
     }
@@ -56,7 +61,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
         AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.getAppendOnlyData();
         Map<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.size() > MAX_MAP_SIZE) {
+            if (map.size() > getMaxMapSize()) {
                 return new Result(false).maxMapSizeReached();
             }
 

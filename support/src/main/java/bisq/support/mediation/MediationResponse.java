@@ -28,20 +28,22 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class MediationResponse implements MailboxMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(2);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
 
     public MediationResponse(BisqEasyOffer bisqEasyOffer) {
         this.bisqEasyOffer = bisqEasyOffer;
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //425
     }
 
     @Override

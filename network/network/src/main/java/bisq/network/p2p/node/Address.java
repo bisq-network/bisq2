@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.tor.OnionAddress;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
@@ -44,11 +45,15 @@ public final class Address implements Proto, Comparable<Address> {
         } else {
             this.port = -1;
         }
+
+        NetworkDataValidation.validateText(host, 500);
     }
 
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
         this.port = port;
+
+        NetworkDataValidation.validateText(host, 500);
     }
 
     public Address(OnionAddress onionAddress) {

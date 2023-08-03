@@ -33,10 +33,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class NotificationsService implements PersistenceClient<NotificationsStore>, Service {
+    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
+
     public interface Listener {
         void onChanged(String notificationId);
     }
@@ -52,6 +55,23 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
+    @Override
+    public NotificationsStore prunePersisted(NotificationsStore persisted) {
+        long pruneDate = System.currentTimeMillis() - MAX_AGE;
+        Map<String, DateAndConsumedFlag> pruned = persisted.getNotificationIdMap().entrySet().stream()
+                .filter(entry -> entry.getValue().getDate() > pruneDate)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        persisted.getNotificationIdMap().clear();
+        persisted.getNotificationIdMap().putAll(pruned);
+        return persisted;
+    }
+
+    private Map<String, DateAndConsumedFlag> prune(Map<String, DateAndConsumedFlag> dateByNotificationId) {
+        long pruneDate = System.currentTimeMillis() - MAX_AGE;
+        return dateByNotificationId.entrySet().stream()
+                .filter(entry -> entry.getValue().getDate() > pruneDate)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service

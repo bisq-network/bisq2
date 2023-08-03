@@ -19,7 +19,7 @@ enum BondedRoleType {
 message AuthorizedOracleNode {
   network.NetworkId networkId = 1;
   string bondUserName = 2;
-  string signature = 3;
+  string signatureBase64 = 3;
   string publicKeyHash = 4;
   bool staticPublicKeysProvided = 5;
 }
@@ -40,7 +40,7 @@ message AuthorizedBondedRole {
   string authorizedPublicKey = 2;
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
-  string signature = 5;
+  string signatureBase64 = 5;
   repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
   network.NetworkId networkId = 7;
   optional AuthorizedOracleNode authorizedOracleNode = 8;

@@ -31,6 +31,8 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -118,10 +120,15 @@ public class SellerState1 extends BaseState {
         }
 
         private void onSendPaymentData() {
-            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.systemMessage", model.getPaymentAccountData().get());
+            String paymentAccountData = model.getPaymentAccountData().get();
+            if (paymentAccountData.length() > BisqEasyAccountDataMessage.MAX_LENGTH) {
+                new Popup().warning(Res.get("validation.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
+                return;
+            }
+            String message = Res.get("bisqEasy.tradeState.info.seller.phase1.systemMessage", paymentAccountData);
             sendSystemMessage(message);
             try {
-                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), model.getPaymentAccountData().get());
+                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
             } catch (TradeException e) {
                 new Popup().error(e).show();
             }

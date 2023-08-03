@@ -25,17 +25,19 @@ import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+
+@Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
-    private final static long TTL = TimeUnit.DAYS.toMillis(30);
-
-    private final MetaData metaData = new MetaData(TTL, 100_000, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
@@ -57,6 +59,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 chatMessageType);
+
+        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //1245
     }
 
     @Override
