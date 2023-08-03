@@ -43,7 +43,7 @@ public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeMod
 
         content = new Label();
         content.setWrapText(true);
-        content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        content.getStyleClass().addAll("bisq-text-13");
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);

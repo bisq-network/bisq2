@@ -48,7 +48,7 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
 
         Label info = new Label(Res.get("user.reputation.burnedBsq.score.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13");
 
         Label formulaHeadline = new Label(Res.get("user.reputation.score.formulaHeadline"));
         formulaHeadline.getStyleClass().addAll("bisq-text-1");

@@ -40,7 +40,7 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         root.setAlignment(Pos.TOP_LEFT);
 
         headline = new Label();
-        headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        headline.getStyleClass().addAll("bisq-text-headline-2");
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidator(new PasswordValidator());

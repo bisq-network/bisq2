@@ -48,7 +48,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
 
         Label info = new Label(Res.get("user.reputation.bond.score.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13");
 
         Label formulaHeadline = new Label(Res.get("user.reputation.score.formulaHeadline"));
         formulaHeadline.getStyleClass().addAll("bisq-text-1");

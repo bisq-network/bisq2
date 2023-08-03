@@ -26,8 +26,8 @@ import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,21 +35,29 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, PaymentAccountsController> {
-    private final Button createButton, deletedButton, saveButton;
+public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, PaymentAccountsController> {
+    private final Label hadline, noAccountsInfo;
+    private final Button createButton, largeCreateButton, deletedButton, saveButton;
     private final MaterialTextArea accountData;
-    private final VBox formVBox;
     private final AutoCompleteComboBox<Account<?, ? extends PaymentMethod<?>>> accountSelection;
-    private Subscription selectedAccountPin;
+    private final HBox buttonsHBox;
+    private final HBox selectionButtonHBox;
+    private Subscription selectedAccountPin, noAccountsSetupPin;
 
     public PaymentAccountsView(PaymentAccountsModel model, PaymentAccountsController controller) {
-        super(new HBox(20), model, controller);
+        super(new VBox(20), model, controller);
 
         root.setPadding(new Insets(40, 0, 0, 0));
 
-        formVBox = new VBox(20);
-        HBox.setHgrow(formVBox, Priority.ALWAYS);
-        root.getChildren().add(formVBox);
+        hadline = new Label();
+        hadline.getStyleClass().addAll("bisq-text-headline-2");
+
+        noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
+        noAccountsInfo.setWrapText(true);
+        noAccountsInfo.getStyleClass().addAll("bisq-text-13");
+
+        largeCreateButton = new Button(Res.get("user.paymentAccounts.createAccount"));
+        largeCreateButton.setDefaultButton(true);
 
         createButton = new Button(Res.get("user.paymentAccounts.createAccount"));
         createButton.getStyleClass().addAll("outlined-button");
@@ -68,10 +76,9 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
             }
         });
 
-        HBox selectionButtonHBox = new HBox(20, accountSelection, Spacer.fillHBox(), createButton);
-        formVBox.getChildren().add(selectionButtonHBox);
+        selectionButtonHBox = new HBox(20, accountSelection, Spacer.fillHBox(), createButton);
 
-        accountData = addTextArea(Res.get("user.paymentAccounts.accountData"), Res.get("user.paymentAccounts.createAccount.accountData.prompt"));
+        accountData = new MaterialTextArea(Res.get("user.paymentAccounts.accountData"), Res.get("user.paymentAccounts.createAccount.accountData.prompt"));
         accountData.setEditable(true);
         accountData.showEditIcon();
         accountData.getIconButton().setOpacity(0.2);
@@ -83,16 +90,18 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
 
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
-        HBox buttonsHBox = new HBox(20, saveButton, deletedButton);
-        formVBox.getChildren().add(buttonsHBox);
+        buttonsHBox = new HBox(20, saveButton, deletedButton);
+        root.getChildren().addAll(hadline, noAccountsInfo, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
     }
 
     @Override
     protected void onViewAttached() {
+        hadline.textProperty().bind(model.getHeadline());
         accountData.textProperty().bindBidirectional(model.accountDataProperty());
         saveButton.disableProperty().bind(model.saveButtonDisabledProperty());
         deletedButton.disableProperty().bind(model.deleteButtonDisabledProperty());
 
+        largeCreateButton.setOnAction(e -> controller.onCreateAccount());
         createButton.setOnAction(e -> controller.onCreateAccount());
         saveButton.setOnAction(e -> controller.onSaveAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
@@ -107,27 +116,38 @@ public class PaymentAccountsView extends View<HBox, PaymentAccountsModel, Paymen
 
         selectedAccountPin = EasyBind.subscribe(model.selectedAccountProperty(),
                 accountName -> accountSelection.getSelectionModel().select(accountName));
+
+        noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsSetup(), noAccountsSetup -> {
+            noAccountsInfo.setVisible(noAccountsSetup);
+            noAccountsInfo.setManaged(noAccountsSetup);
+            largeCreateButton.setVisible(noAccountsSetup);
+            largeCreateButton.setManaged(noAccountsSetup);
+
+            boolean anyAccountSetup = !noAccountsSetup;
+            selectionButtonHBox.setVisible(anyAccountSetup);
+            selectionButtonHBox.setManaged(anyAccountSetup);
+            accountData.setVisible(anyAccountSetup);
+            accountData.setManaged(anyAccountSetup);
+            buttonsHBox.setVisible(anyAccountSetup);
+            buttonsHBox.setManaged(anyAccountSetup);
+        });
     }
 
     @Override
     protected void onViewDetached() {
+        hadline.textProperty().unbind();
         accountData.textProperty().unbindBidirectional(model.getAccountData());
         saveButton.disableProperty().unbind();
         deletedButton.disableProperty().unbind();
 
+        largeCreateButton.setOnAction(null);
+        createButton.setOnAction(null);
         deletedButton.setOnAction(null);
         saveButton.setOnAction(null);
-        createButton.setOnAction(null);
 
         accountSelection.setOnChangeConfirmed(null);
 
         selectedAccountPin.unsubscribe();
-    }
-
-    private MaterialTextArea addTextArea(String description, String prompt) {
-        MaterialTextArea field = new MaterialTextArea(description, prompt);
-        field.setEditable(false);
-        formVBox.getChildren().add(field);
-        return field;
+        noAccountsSetupPin.unsubscribe();
     }
 }
