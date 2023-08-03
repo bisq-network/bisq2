@@ -46,7 +46,7 @@ public abstract class TradeMessage implements MailboxMessage, Event {
         this.tradeId = tradeId;
         this.sender = sender;
 
-        NetworkDataValidation.validateId(tradeId);
+        NetworkDataValidation.validateText(tradeId, 200); // For private channels we combine user profile IDs for channelId
     }
 
     public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {
