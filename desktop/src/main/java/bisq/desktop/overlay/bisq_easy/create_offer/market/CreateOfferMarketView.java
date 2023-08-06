@@ -140,6 +140,7 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
             private final Label label = new Label();
 
             {
+                label.setPadding(new Insets(0, 0, 0, -10));
                 label.setGraphicTextGap(8);
                 label.getStyleClass().add("bisq-text-8");
             }
@@ -186,7 +187,7 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
             this.numOffers = String.valueOf(numOffersAsInteger);
             this.numOffersAsInteger = numOffersAsInteger;
             this.numUsers = String.valueOf(numUsersAsInteger);
-            icon = MarketImageComposition.imageBoxForFiat(market.getQuoteCurrencyCode().toLowerCase()).getFirst();
+            icon = MarketImageComposition.getCurrencyIcon(market.getQuoteCurrencyCode());
             this.numUsersAsInteger = numUsersAsInteger;
         }
 

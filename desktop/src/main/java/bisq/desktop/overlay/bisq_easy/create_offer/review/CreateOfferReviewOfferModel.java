@@ -52,6 +52,8 @@ class CreateOfferReviewOfferModel implements Model {
     @Setter
     private String quoteAmountAsString;
     @Setter
+    private String takeOfferHeadline;
+    @Setter
     private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;

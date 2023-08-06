@@ -155,11 +155,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                 maybeConfigTableView();
                 createOfferHBox.setMinWidth(tableView.getMaxWidth());
                 createOfferHBox.setMaxWidth(tableView.getMaxWidth());
-                if (model.getDirection().isBuy()) {
-                    headLineLabel.setText(Res.get("bisqEasy.createOffer.review.headline.buy", model.getQuoteAmountAsString()));
-                } else {
-                    headLineLabel.setText(Res.get("bisqEasy.createOffer.review.headline.sell", model.getQuoteAmountAsString()));
-                }
+                headLineLabel.setText(model.getTakeOfferHeadline());
                 createOfferLabel.setText(Res.get("bisqEasy.createOffer.review.headLine2.createOffer"));
 
                 int numMatchingOffers = model.getMatchingOffers().size();

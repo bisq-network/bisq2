@@ -27,6 +27,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import com.google.common.base.Joiner;
@@ -68,6 +69,13 @@ public class CreateOfferPaymentMethodController implements Controller {
         model.getShowCustomMethodNotEmptyWarning().set(true);
     }
 
+    public void setDirection(Direction direction) {
+        if (direction == null) {
+            return;
+        }
+        model.setDirection(direction);
+    }
+
     public ReadOnlyBooleanProperty getShowCustomMethodNotEmptyWarning() {
         return model.getShowCustomMethodNotEmptyWarning();
     }
@@ -90,7 +98,9 @@ public class CreateOfferPaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
-        model.setHeadline(Res.get("bisqEasy.createOffer.paymentMethod.headline", model.getMarket().get().getQuoteCurrencyCode()));
+        model.setHeadline(model.getDirection().isBuy() ?
+                Res.get("bisqEasy.createOffer.paymentMethod.headline.buyer", model.getMarket().get().getQuoteCurrencyCode()) :
+                Res.get("bisqEasy.createOffer.paymentMethod.headline.seller", model.getMarket().get().getQuoteCurrencyCode()));
         model.getCustomFiatPaymentMethodName().set("");
         model.getShowCustomMethodNotEmptyWarning().set(false);
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));

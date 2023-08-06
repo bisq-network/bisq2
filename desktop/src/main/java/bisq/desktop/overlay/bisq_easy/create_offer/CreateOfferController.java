@@ -111,6 +111,7 @@ public class CreateOfferController extends NavigationController implements InitW
             createOfferMarketController.setDirection(direction);
             createOfferReviewOfferController.setDirection(direction);
             createOfferAmountController.setDirection(direction);
+            createOfferPaymentMethodController.setDirection(direction);
             model.getPriceProgressItemVisible().set(direction == Direction.SELL);
             if (direction == Direction.SELL) {
                 model.getChildTargets().add(2, NavigationTarget.CREATE_OFFER_PRICE);

@@ -165,7 +165,7 @@ public class SmallAmountInput {
     }
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private static final String ESTIMATION_PREFIX = "~ ";
+        private final String prefix = Res.get("bisqEasy.createOffer.amount.receive") + " ";
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
@@ -183,7 +183,7 @@ public class SmallAmountInput {
             root.setStyle("-fx-fill: -fx-light-text-color;");
 
             textInput = new TextField();
-            textInput.setPrefWidth(100);
+            textInput.setPrefWidth(150);
             textInput.setId("quote-amount-text-field");
             textInput.setAlignment(Pos.CENTER_RIGHT);
             textInput.setPadding(new Insets(0, 0, 0, 0));
@@ -242,13 +242,13 @@ public class SmallAmountInput {
         }
 
         private void applyAmount(Monetary newValue) {
-            String prefix = model.showEstimationPrefix ? ESTIMATION_PREFIX : "";
+            String prefix = model.showEstimationPrefix ? this.prefix : "";
             textInput.setText(newValue == null ? "" :
                     prefix + AmountFormatter.formatAmount(newValue, model.useLowPrecision));
         }
 
         private String getText() {
-            return textInput.getText().replace(ESTIMATION_PREFIX, "");
+            return textInput.getText().replace(prefix, "");
         }
     }
 }
