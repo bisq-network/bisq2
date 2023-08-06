@@ -19,6 +19,7 @@ package bisq.desktop.overlay.bisq_easy.create_offer.market;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,15 +29,21 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class CreateOfferMarketModel implements Model {
+    @Setter
+    private Direction direction;
+    @Setter
+    private String headline;
     private final ObjectProperty<CreateOfferMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final ObservableList<CreateOfferMarketView.MarketListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<CreateOfferMarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<CreateOfferMarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
+
 
     void reset() {
         selectedMarketListItem.set(null);

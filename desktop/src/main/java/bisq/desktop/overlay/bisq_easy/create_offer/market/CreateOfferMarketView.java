@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay.bisq_easy.create_offer.market;
 
+import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
@@ -48,13 +49,14 @@ import java.util.Comparator;
 public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, CreateOfferMarketController> {
     private final BisqTableView<MarketListItem> tableView;
     private final SearchBox searchBox;
+    private final Label headLineLabel;
 
     public CreateOfferMarketView(CreateOfferMarketModel model, CreateOfferMarketController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.market.headline"));
+        headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.market.subTitle"));
@@ -87,6 +89,7 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
 
     @Override
     protected void onViewAttached() {
+        headLineLabel.setText(model.getHeadline());
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());
@@ -109,8 +112,8 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .title(Res.get("bisqEasy.createOffer.market.columns.name"))
                 .left()
-                .minWidth(100)
-                .comparator(Comparator.comparing(MarketListItem::getMarketCodes))
+                .minWidth(150)
+                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyName))
                 .setCellFactory(getNameCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
@@ -147,13 +150,14 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
 
                 if (item != null && !empty) {
                     label.setGraphic(item.getIcon());
-                    label.setText(item.getMarketCodes());
-
-                    Tooltip tooltip = new BisqTooltip(item.getMarketName());
-                    // Force font color as color from css gets shadowed by parent
-                    tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
-
-                    label.setTooltip(tooltip);
+                    String quoteCurrencyName = item.getQuoteCurrencyName();
+                    label.setText(quoteCurrencyName);
+                    if (quoteCurrencyName.length() > 20) {
+                        Tooltip tooltip = new BisqTooltip(quoteCurrencyName);
+                        // Force font color as color from css gets shadowed by parent
+                        tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
+                        label.setTooltip(tooltip);
+                    }
 
                     setGraphic(label);
                 } else {
@@ -168,6 +172,7 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
     @Getter
     static class MarketListItem implements TableItem {
         private final Market market;
+        private final String quoteCurrencyName;
         private final int numOffersAsInteger;
         private final int numUsersAsInteger;
         private final String numOffers;
@@ -177,21 +182,12 @@ public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, Cr
 
         MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
+            quoteCurrencyName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndName();
             this.numOffers = String.valueOf(numOffersAsInteger);
             this.numOffersAsInteger = numOffersAsInteger;
             this.numUsers = String.valueOf(numUsersAsInteger);
-            icon = MarketImageComposition.imageBoxForMarket(
-                    market.getBaseCurrencyCode().toLowerCase(),
-                    market.getQuoteCurrencyCode().toLowerCase()).getFirst();
+            icon = MarketImageComposition.imageBoxForFiat(market.getQuoteCurrencyCode().toLowerCase()).getFirst();
             this.numUsersAsInteger = numUsersAsInteger;
-        }
-
-        public String getMarketCodes() {
-            return market.getMarketCodes();
-        }
-
-        public String getMarketName() {
-            return market.getMarketName();
         }
 
         @Override

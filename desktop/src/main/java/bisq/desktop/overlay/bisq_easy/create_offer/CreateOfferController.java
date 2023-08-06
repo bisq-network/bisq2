@@ -107,6 +107,7 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getNextButtonDisabled().set(false);
 
         directionPin = EasyBind.subscribe(createOfferDirectionController.getDirection(), direction -> {
+            createOfferMarketController.setDirection(direction);
             createOfferReviewOfferController.setDirection(direction);
             createOfferAmountController.setDirection(direction);
             model.getPriceProgressItemVisible().set(direction == Direction.SELL);
@@ -224,7 +225,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
     private void reset() {
