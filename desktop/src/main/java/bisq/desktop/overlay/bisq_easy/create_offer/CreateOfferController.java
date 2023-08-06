@@ -79,8 +79,8 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getChildTargets().addAll(List.of(
                 NavigationTarget.CREATE_OFFER_DIRECTION,
                 NavigationTarget.CREATE_OFFER_MARKET,
-                NavigationTarget.CREATE_OFFER_AMOUNT,
                 NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
+                NavigationTarget.CREATE_OFFER_AMOUNT,
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
@@ -176,11 +176,11 @@ public class CreateOfferController extends NavigationController implements InitW
             case CREATE_OFFER_PRICE: {
                 return Optional.of(createOfferPriceController);
             }
-            case CREATE_OFFER_AMOUNT: {
-                return Optional.of(createOfferAmountController);
-            }
             case CREATE_OFFER_PAYMENT_METHOD: {
                 return Optional.of(createOfferPaymentMethodController);
+            }
+            case CREATE_OFFER_AMOUNT: {
+                return Optional.of(createOfferAmountController);
             }
             case CREATE_OFFER_REVIEW_OFFER: {
                 return Optional.of(createOfferReviewOfferController);
