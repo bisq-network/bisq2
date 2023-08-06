@@ -178,6 +178,9 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
         for (FiatPaymentMethod fiatPaymentMethod : model.getSortedFiatPaymentMethods()) {
             // enum name or custom name
             ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
+            if (!fiatPaymentMethod.getShortDisplayString().equals(fiatPaymentMethod.getDisplayString())) {
+                chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
+            }
             if (model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 chipButton.setSelected(true);
             }
@@ -194,9 +197,6 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
                                 closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(fiatPaymentMethod));
-                                if (fiatPaymentMethod.getShortDisplayString().length() > 13) {
-                                    chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
-                                }
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
