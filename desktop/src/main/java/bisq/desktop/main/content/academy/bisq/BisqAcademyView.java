@@ -38,10 +38,10 @@ public class BisqAcademyView extends AcademyView<BisqAcademyModel, BisqAcademyCo
         Label tradeSafelyContent = addContentLabel("tradeSafelyContent");
         Hyperlink learnMore = addLearnMoreHyperlink();
 
-        VBox.setMargin(exchangeDecentralizedHeadline, new Insets(25, 0, 0, 0));
-        VBox.setMargin(whyBisqHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(tradeSafelyHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(tradeSafelyContent, new Insets(0, 0, 15, 0));
+        setHeadlineMargin(exchangeDecentralizedHeadline);
+        setHeadlineMargin(whyBisqHeadline);
+        setHeadlineMargin(tradeSafelyHeadline);
+        setLastLabelMargin(tradeSafelyContent);
     }
 
     @Override

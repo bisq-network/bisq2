@@ -36,10 +36,9 @@ public class BitcoinAcademyView extends AcademyView<BitcoinAcademyModel, Bitcoin
         Label whyUseBitcoinContent = addContentLabel("whyUseBitcoinContent");
         Hyperlink learnMore = addLearnMoreHyperlink();
 
-        VBox.setMargin(whatIsBitcoinHeadline, new Insets(25, 0, 0, 0));
-        VBox.setMargin(whyUseBitcoinHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(whyUseBitcoinContent, new Insets(0, 0, 15, 0));
-
+        setHeadlineMargin(whatIsBitcoinHeadline);
+        setHeadlineMargin(whyUseBitcoinHeadline);
+        setLastLabelMargin(whyUseBitcoinContent);
     }
 
     @Override

@@ -34,12 +34,11 @@ public class WalletsAcademyView extends AcademyView<WalletsAcademyModel, Wallets
         Label whatIsAWalletContent = addContentLabel("whatIsAWalletContent");
         Label howToPickHeadline = addHeadlineLabel("howToPickHeadline");
         Label howToPickContent = addContentLabel("howToPickContent");
-
         Hyperlink learnMore = addLearnMoreHyperlink();
-        
-        VBox.setMargin(whatIsAWalletHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(howToPickHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(howToPickContent, new Insets(0, 0, 15, 0));
+
+        setHeadlineMargin(whatIsAWalletHeadline);
+        setHeadlineMargin(howToPickHeadline);
+        setLastLabelMargin(howToPickContent);
     }
 
     @Override

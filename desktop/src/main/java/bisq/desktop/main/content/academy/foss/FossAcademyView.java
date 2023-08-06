@@ -34,12 +34,11 @@ public class FossAcademyView extends AcademyView<FossAcademyModel, FossAcademyCo
         Label bitcoinAndFossContent = addContentLabel("bitcoinAndFossContent");
         Label openSourceBenefitsHeadline = addHeadlineLabel("openSourceBenefitsHeadline");
         Label openSourceBenefitsContent = addContentLabel("openSourceBenefitsContent");
-
         Hyperlink learnMore = addLearnMoreHyperlink();
 
-        VBox.setMargin(bitcoinAndFossHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(openSourceBenefitsHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(openSourceBenefitsContent, new Insets(0, 0, 15, 0));
+        setHeadlineMargin(bitcoinAndFossHeadline);
+        setHeadlineMargin(openSourceBenefitsHeadline);
+        setLastLabelMargin(openSourceBenefitsContent);
     }
 
     @Override

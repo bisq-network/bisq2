@@ -37,14 +37,13 @@ public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, Privacy
         Label giveUpPrivacyContent = addContentLabel("giveUpPrivacyContent");
         Label bisqProtectsPrivacyHeadline = addHeadlineLabel("bisqProtectsPrivacyHeadline");
         Label bisqProtectsPrivacyContent = addContentLabel("bisqProtectsPrivacyContent");
-
         Hyperlink learnMore = addLearnMoreHyperlink();
 
-        VBox.setMargin(introContent, new Insets(25, 0, 0, 0));
-        VBox.setMargin(whyPrivacyHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(giveUpPrivacyHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(bisqProtectsPrivacyHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(bisqProtectsPrivacyContent, new Insets(0, 0, 15, 0));
+        setHeadlineMargin(introContent);
+        setHeadlineMargin(whyPrivacyHeadline);
+        setHeadlineMargin(giveUpPrivacyHeadline);
+        setHeadlineMargin(bisqProtectsPrivacyHeadline);
+        setLastLabelMargin(bisqProtectsPrivacyContent);
     }
 
     @Override

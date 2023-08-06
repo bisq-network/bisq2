@@ -74,6 +74,15 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         root.getChildren().add(learnMore);
         return learnMore;
     }
+
+    protected void setHeadlineMargin(Label headlineLabel) {
+        VBox.setMargin(headlineLabel, new Insets(35, 0, 0, 0));
+    }
+
+    protected void setLastLabelMargin(Label lastLabel) {
+        VBox.setMargin(lastLabel, new Insets(0, 0, 15, 0));
+    }
+
     protected abstract String getIconId();
 
     protected abstract String getKey();
