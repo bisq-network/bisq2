@@ -18,6 +18,10 @@
 package bisq.desktop.main.content.academy.foss;
 
 import bisq.desktop.main.content.academy.AcademyView;
+import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,6 +29,17 @@ public class FossAcademyView extends AcademyView<FossAcademyModel, FossAcademyCo
 
     public FossAcademyView(FossAcademyModel model, FossAcademyController controller) {
         super(model, controller);
+
+        Label bitcoinAndFossHeadline = addHeadlineLabel("bitcoinAndFossHeadline");
+        Label bitcoinAndFossContent = addContentLabel("bitcoinAndFossContent");
+        Label openSourceBenefitsHeadline = addHeadlineLabel("openSourceBenefitsHeadline");
+        Label openSourceBenefitsContent = addContentLabel("openSourceBenefitsContent");
+
+        Hyperlink learnMore = addLearnMoreHyperlink();
+
+        VBox.setMargin(bitcoinAndFossHeadline, new Insets(35, 0, 0, 0));
+        VBox.setMargin(openSourceBenefitsHeadline, new Insets(35, 0, 0, 0));
+        VBox.setMargin(openSourceBenefitsContent, new Insets(0, 0, 15, 0));
     }
 
     @Override
