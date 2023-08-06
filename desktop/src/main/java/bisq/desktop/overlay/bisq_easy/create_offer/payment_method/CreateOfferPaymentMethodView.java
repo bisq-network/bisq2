@@ -53,6 +53,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
     private final BisqIconButton addButton;
     private final VBox content;
     private final VBox overlay;
+    private final Label headLineLabel;
     private Subscription addCustomMethodIconEnabledPin;
     private Subscription showCustomMethodNotEmptyWarning;
     private Button closeOverlayButton;
@@ -68,7 +69,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.headline"));
+        headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.subTitle"));
@@ -117,6 +118,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
 
     @Override
     protected void onViewAttached() {
+        headLineLabel.setText(model.getHeadline());
         custom.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());

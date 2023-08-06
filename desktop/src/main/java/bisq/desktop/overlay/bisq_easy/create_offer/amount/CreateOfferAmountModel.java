@@ -29,12 +29,15 @@ import javax.annotation.Nullable;
 
 @Getter
 public class CreateOfferAmountModel implements Model {
+    private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
     @Setter
     @Nullable
     private Market market = MarketRepository.getDefault();
+    @Setter
+    private String headline;
 
     public void reset() {
         isMinAmountEnabled.set(false);

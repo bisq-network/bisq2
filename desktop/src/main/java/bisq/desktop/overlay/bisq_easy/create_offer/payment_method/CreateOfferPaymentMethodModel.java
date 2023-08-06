@@ -25,9 +25,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class CreateOfferPaymentMethodModel implements Model {
+    @Setter
+    private String headline;
     private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
     private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
     private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();

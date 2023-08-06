@@ -90,6 +90,7 @@ public class CreateOfferPaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
+        model.setHeadline(Res.get("bisqEasy.createOffer.paymentMethod.headline", model.getMarket().get().getQuoteCurrencyCode()));
         model.getCustomFiatPaymentMethodName().set("");
         model.getShowCustomMethodNotEmptyWarning().set(false);
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));

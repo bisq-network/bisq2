@@ -33,13 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class CreateOfferAmountView extends View<VBox, CreateOfferAmountModel, CreateOfferAmountController> {
     private final Button toggleButton;
     private final VBox minAmountRoot;
+    private final Label headLineLabel;
 
     public CreateOfferAmountView(CreateOfferAmountModel model, CreateOfferAmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.amount.headline"));
+        headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         minAmountRoot = minAmountComponent.getView().getRoot();
@@ -57,8 +58,11 @@ public class CreateOfferAmountView extends View<VBox, CreateOfferAmountModel, Cr
 
     @Override
     protected void onViewAttached() {
+        headLineLabel.setText(model.getHeadline());
         minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
         minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
+        toggleButton.visibleProperty().bind(model.getShowRangeAmounts());
+        toggleButton.managedProperty().bind(model.getShowRangeAmounts());
         toggleButton.textProperty().bind(model.getToggleButtonText());
 
         toggleButton.setOnAction(e -> controller.onToggleMinAmountVisibility());

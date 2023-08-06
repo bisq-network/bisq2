@@ -46,10 +46,10 @@ public class CreateOfferController extends NavigationController implements InitW
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final boolean showMatchingOffers;
+        private final boolean openedFromDashboard;
 
-        public InitData(boolean showMatchingOffers) {
-            this.showMatchingOffers = showMatchingOffers;
+        public InitData(boolean openedFromDashboard) {
+            this.openedFromDashboard = openedFromDashboard;
         }
     }
 
@@ -99,7 +99,8 @@ public class CreateOfferController extends NavigationController implements InitW
 
     @Override
     public void initWithData(InitData initData) {
-        createOfferReviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
+        createOfferAmountController.setShowRangeAmounts(!initData.isOpenedFromDashboard());
+        createOfferReviewOfferController.setShowMatchingOffers(initData.isOpenedFromDashboard());
     }
 
     @Override

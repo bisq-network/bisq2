@@ -68,12 +68,19 @@ public class CreateOfferAmountController implements Controller {
                 maxOrFixAmountComponent);
     }
 
+    public void setShowRangeAmounts(boolean value) {
+        model.getShowRangeAmounts().set(value);
+    }
+
     public void setDirection(Direction direction) {
         if (direction == null) {
             return;
         }
         minAmountComponent.setDirection(direction);
         maxOrFixAmountComponent.setDirection(direction);
+        model.setHeadline(direction.isBuy() ?
+                Res.get("bisqEasy.createOffer.amount.headline.buyer") :
+                Res.get("bisqEasy.createOffer.amount.headline.seller"));
     }
 
     public void setMarket(Market market) {
