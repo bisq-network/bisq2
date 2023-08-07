@@ -77,7 +77,7 @@ public class ContractService implements Service {
     }
 
     private <T extends Offer<?, ?>> byte[] getContractHash(Contract<T> contract) {
-        return DigestUtil.sha256(contract.getHashForSignature());
+        return DigestUtil.hash(contract.getHashForSignature());
     }
 
 }
