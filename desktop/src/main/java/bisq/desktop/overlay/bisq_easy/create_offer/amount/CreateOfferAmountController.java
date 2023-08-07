@@ -25,12 +25,14 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -40,6 +42,7 @@ import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
@@ -92,6 +95,10 @@ public class CreateOfferAmountController implements Controller {
 
     public void setShowRangeAmounts(boolean value) {
         model.getShowRangeAmounts().set(value);
+    }
+
+    public void setOpenedFromDashboard(boolean isOpenedFromDashboard) {
+        model.setOpenedFromDashboard(isOpenedFromDashboard);
     }
 
     public void setDirection(Direction direction) {
@@ -214,6 +221,19 @@ public class CreateOfferAmountController implements Controller {
         });
 
         applyAmountSpec();
+
+        if (model.getDirection().isSell()) {
+            maxOrFixAmountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
+        } else {
+            if (model.isOpenedFromDashboard()) {
+                applyBestOfferQuote();
+                maxOrFixAmountComponent.setTooltip(model.getBestOffersPrice()
+                        .map(bestOffersPrice -> Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))
+                        .orElse(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice")));
+            } else {
+                maxOrFixAmountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
+            }
+        }
     }
 
     @Override
@@ -244,25 +264,25 @@ public class CreateOfferAmountController implements Controller {
         } else {
             model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
         }
+    }
 
+    private void applyBestOfferQuote() {
         Optional<BisqEasyPublicChatChannel> optionalChannel = bisqEasyPublicChatChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent() && model.getMarket() != null) {
             Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                     .filter(chatMessage -> filterOffers(chatMessage.getBisqEasyOffer().get()))
-                    /*   .peek(e -> log.error("filterOffers {}", e.getText()))*/
                     .map(chatMessage -> chatMessage.getBisqEasyOffer().get().getPriceSpec())
                     .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream())
                     .min(Comparator.comparing(PriceQuote::getValue));
+            model.setBestOffersPrice(bestOffersPrice);
             if (bestOffersPrice.isPresent()) {
-                // log.error("Found offer with price {}", PriceFormatter.format(bestOffersPrice.get()));
-                // maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
-                // AmountSpecUtil.findBaseSideFixedAmountFromSpec(model.getAmountSpec().get(), model.getMarket().getBaseCurrencyCode()).ifPresent(maxOrFixAmountComponent::setQuoteSideAmount);
+                maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
             } else {
-              /*  getMarketPriceQuote().ifPresentOrElse(e -> log.error("No offer found. Use market price with price {}", PriceFormatter.format(e)),
-                        () -> log.error("No offer found and no market price found"));*/
                 getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
             }
+            AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
+                    .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
         }
     }
 

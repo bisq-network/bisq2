@@ -20,6 +20,7 @@ package bisq.desktop.overlay.bisq_easy.create_offer.amount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
@@ -31,6 +32,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 public class CreateOfferAmountModel implements Model {
@@ -48,6 +50,10 @@ public class CreateOfferAmountModel implements Model {
     private PriceSpec priceSpec = new MarketPriceSpec();
     @Setter
     private String headline;
+    @Setter
+    private boolean isOpenedFromDashboard;
+    @Setter
+    private Optional<PriceQuote> bestOffersPrice = Optional.empty();
 
     public void reset() {
         showRangeAmounts.set(false);

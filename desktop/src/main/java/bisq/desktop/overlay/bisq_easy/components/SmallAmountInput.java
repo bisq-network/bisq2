@@ -59,7 +59,7 @@ public class SmallAmountInput {
     }
 
     public void setTooltip(String tooltip) {
-        controller.model.setTooltip(tooltip);
+        controller.model.tooltip.set(tooltip);
     }
 
     public void setShowEstimationPrefix(boolean showEstimationPrefix) {
@@ -144,11 +144,10 @@ public class SmallAmountInput {
         private boolean showEstimationPrefix;
         @Setter
         private boolean useLowPrecision;
-        @Setter
-        private String tooltip = Res.get("bisqEasy.component.amount.baseSide.buyer.tooltip");
         private final boolean isBaseCurrency;
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();
+        private final StringProperty tooltip = new SimpleStringProperty(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
         private Market selectedMarket;
         public boolean hasFocus;
 
@@ -224,7 +223,7 @@ public class SmallAmountInput {
 
         @Override
         protected void onViewAttached() {
-            tooltip.setText(model.tooltip);
+            tooltip.textProperty().bind(model.tooltip);
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             codeLabel.textProperty().bind(model.code);
@@ -234,6 +233,7 @@ public class SmallAmountInput {
 
         @Override
         protected void onViewDetached() {
+            tooltip.textProperty().unbind();
             textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
 
