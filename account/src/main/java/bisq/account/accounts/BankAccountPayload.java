@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
+
+import static bisq.account.protobuf.Account.MessageCase.MESSAGE_NOT_SET;
+import static bisq.account.protobuf.BankAccountPayload.MessageCase.ACHTRANSFERACCOUNTPAYLOAD;
+import static bisq.account.protobuf.BankAccountPayload.MessageCase.NATIONALBANKACCOUNTPAYLOAD;
 
 @EqualsAndHashCode(callSuper = true)
 @Setter
@@ -61,5 +66,18 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
         Optional.ofNullable(nationalAccountId).ifPresent(builder::setNationalAccountId);
         return builder;
+    }
+
+    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+        switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
+            case ACHTRANSFERACCOUNTPAYLOAD:
+                return AchTransferAccountPayload.fromProto(proto);
+            case NATIONALBANKACCOUNTPAYLOAD:
+                return NationalBankAccountPayload.fromProto(proto);
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }
