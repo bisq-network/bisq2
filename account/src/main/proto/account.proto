@@ -105,6 +105,9 @@ message AchTransferAccountPayload {
   string holder_address = 1;
 }
 
+message NationalBankAccountPayload {
+}
+
 message BankAccountPayload {
   string holder_name = 1;
   string bank_name = 2;
@@ -116,6 +119,7 @@ message BankAccountPayload {
   string national_account_id = 12;
   oneof message {
     AchTransferAccountPayload achTransferAccountPayload = 13;
+    NationalBankAccountPayload nationalBankAccountPayload = 14;
   }
 }
 
@@ -162,6 +166,7 @@ message F2FAccount {
 message BankAccount {
   oneof message {
     AchTransferAccount achTransferAccount = 1;
+    NationalBankAccount nationalBankAccount = 2;
   }
 }
 
@@ -169,6 +174,9 @@ message AchTransferAccount {
 }
 
 message ZelleAccount {
+}
+
+message NationalBankAccount {
 }
 
 message AccountStore {
