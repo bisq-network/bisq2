@@ -196,7 +196,7 @@ public class TakeOfferReviewController implements Controller {
 
         Monetary baseAmount = model.getTakersBaseSideAmount();
         Monetary quoteAmount = model.getTakersQuoteSideAmount();
-        String formattedBaseAmount = AmountFormatter.formatAmountWithCode(baseAmount);
+        String formattedBaseAmount = AmountFormatter.formatAmountWithCode(baseAmount, false);
         String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(quoteAmount);
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 

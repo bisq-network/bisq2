@@ -131,6 +131,7 @@ public class AmountComponent {
                            boolean useQuoteCurrencyForMinMaxRange) {
             quoteSideAmountInput = new BigAmountInput(false);
             baseSideAmountInput = new SmallAmountInput(true);
+            baseSideAmountInput.setUseLowPrecision(false);
             price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
             model = new Model(useQuoteCurrencyForMinMaxRange);
@@ -190,9 +191,6 @@ public class AmountComponent {
             }
             model.setDirection(direction);
             model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
-
-            baseSideAmountInput.setShowEstimationPrefix(direction.isBuy());
-            baseSideAmountInput.setUseLowPrecision(direction.isBuy());
         }
 
         private void setTooltip(String tooltip) {

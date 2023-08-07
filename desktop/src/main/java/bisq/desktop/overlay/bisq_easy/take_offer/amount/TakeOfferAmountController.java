@@ -24,12 +24,14 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.presentation.formatters.PriceFormatter;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +59,9 @@ public class TakeOfferAmountController implements Controller {
     public void init(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec) {
         model.setBisqEasyOffer(bisqEasyOffer);
 
-        amountComponent.setDirection(bisqEasyOffer.getDirection());
+        Direction takersDirection = bisqEasyOffer.getTakersDirection();
+        model.setHeadline(takersDirection.isBuy() ? Res.get("bisqEasy.takeOffer.amount.headline.buyer") : Res.get("bisqEasy.takeOffer.amount.headline.seller"));
+        amountComponent.setDirection(takersDirection);
         Market market = bisqEasyOffer.getMarket();
         amountComponent.setMarket(market);
         Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
@@ -69,17 +73,11 @@ public class TakeOfferAmountController implements Controller {
             log.error("optionalQuoteSideMinOrFixedAmount or optionalQuoteSideMaxOrFixedAmount is not present");
         }
 
-        String direction = bisqEasyOffer.getTakersDirection().isBuy() ?
-                Res.get("offer.buy").toUpperCase() :
-                Res.get("offer.sell").toUpperCase();
-
         amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
-                market.getQuoteCurrencyCode(),
-                direction,
                 OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer, false),
                 OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer)));
 
-        if (bisqEasyOffer.getTakersDirection().isBuy()) {
+        if (takersDirection.isBuy()) {
             // If taker is buyer we set the sellers price from the offer
             PriceUtil.findQuote(marketPriceService, bisqEasyOffer).ifPresent(amountComponent::setQuote);
         }
@@ -90,10 +88,16 @@ public class TakeOfferAmountController implements Controller {
             OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
                     .ifPresent(amountComponent::setBaseSideAmount);
         });
+        if (model.getBisqEasyOffer().getTakersDirection().isSell()) {
+            amountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
+        } else {
+            PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer()).ifPresent(priceQuote ->
+                    amountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote))));
+        }
     }
 
     public void setTradePriceSpec(PriceSpec priceSpec) {
-        // Only handle if taker is seller
+        // priceSpec from price view in case we are the seller
         if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
             PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket()).ifPresent(amountComponent::setQuote);
         }

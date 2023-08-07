@@ -19,7 +19,6 @@ package bisq.desktop.overlay.bisq_easy.take_offer.amount;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -29,12 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TakeOfferAmountView extends View<VBox, TakeOfferAmountModel, TakeOfferAmountController> {
 
+    private final Label headlineLabel;
+
     public TakeOfferAmountView(TakeOfferAmountModel model, TakeOfferAmountController controller, VBox amountComponentRoot) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.amount.headline"));
+        headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
@@ -43,6 +44,7 @@ public class TakeOfferAmountView extends View<VBox, TakeOfferAmountModel, TakeOf
 
     @Override
     protected void onViewAttached() {
+        headlineLabel.setText(model.getHeadline());
     }
 
     @Override
