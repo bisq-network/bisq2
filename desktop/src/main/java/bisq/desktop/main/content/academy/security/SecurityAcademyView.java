@@ -18,10 +18,7 @@
 package bisq.desktop.main.content.academy.security;
 
 import bisq.desktop.main.content.academy.AcademyView;
-import javafx.geometry.Insets;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,10 +29,10 @@ public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, Secur
 
         Label introContent = addContentLabel("introContent");
         Label securingYourKeysHeadline = addHeadlineLabel("securingYourKeysHeadline");
-        Label securingYourKeysContent = addContentLabel("securingYourKeysContent");
+        addContentLabel("securingYourKeysContent");
         Label avoidScamsHeadline = addHeadlineLabel("avoidScamsHeadline");
         Label avoidScamsContent = addContentLabel("avoidScamsContent");
-        Hyperlink learnMore = addLearnMoreHyperlink();
+        addLearnMoreHyperlink();
 
         setHeadlineMargin(introContent);
         setHeadlineMargin(securingYourKeysHeadline);
@@ -52,7 +49,6 @@ public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, Secur
     protected String getIconId() {
         return "learn-security";
     }
-
 
     @Override
     protected String getUrl() {
