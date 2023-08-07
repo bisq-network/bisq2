@@ -68,6 +68,7 @@ message AccountPayload {
   string id = 1;
   string paymentMethodName = 2;
   oneof message {
+    ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
     RevolutAccountPayload RevolutAccountPayload = 21;
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
@@ -118,6 +119,11 @@ message BankAccountPayload {
   }
 }
 
+message ZelleAccountPayload {
+  string holderName = 1;
+  string emailOrMobileNr = 2;
+}
+
 
 // Account
 message Account {
@@ -128,6 +134,7 @@ message Account {
   common.TradeCurrency selectedTradeCurrency = 6;
 
   oneof message {
+    ZelleAccount zelleAccount = 19;
     UserDefinedFiatAccount userDefinedFiatAccount = 20;
     RevolutAccount revolutAccount = 21;
     CountryBasedAccount countryBasedAccount = 22;
@@ -159,6 +166,9 @@ message BankAccount {
 }
 
 message AchTransferAccount {
+}
+
+message ZelleAccount {
 }
 
 message AccountStore {

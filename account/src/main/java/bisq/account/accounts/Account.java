@@ -71,6 +71,9 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {
         switch (proto.getMessageCase()) {
+            case ZELLEACCOUNT: {
+                return ZelleAccount.fromProto(proto);
+            }
             case USERDEFINEDFIATACCOUNT: {
                 return UserDefinedFiatAccount.fromProto(proto);
             }

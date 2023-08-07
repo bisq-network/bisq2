@@ -50,6 +50,9 @@ public abstract class AccountPayload implements Proto {
 
     public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         switch (proto.getMessageCase()) {
+            case ZELLEACCOUNTPAYLOAD: {
+                return ZelleAccountPayload.fromProto(proto);
+            }
             case COUNTRYBASEDACCOUNTPAYLOAD: {
                 return CountryBasedAccountPayload.fromProto(proto);
             }
