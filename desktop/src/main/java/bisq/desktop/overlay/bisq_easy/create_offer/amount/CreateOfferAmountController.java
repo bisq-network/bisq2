@@ -17,23 +17,35 @@
 
 package bisq.desktop.overlay.bisq_easy.create_offer.amount;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.common.currency.Market;
+import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -41,6 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -51,12 +65,20 @@ public class CreateOfferAmountController implements Controller {
     private final AmountComponent minAmountComponent, maxOrFixAmountComponent;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
+    private final UserProfileService userProfileService;
+    private final ReputationService reputationService;
+    private final UserIdentityService userIdentityService;
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
     public CreateOfferAmountController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        bisqEasyPublicChatChannelService = serviceProvider.getChatService().getBisqEasyPublicChatChannelService();
         model = new CreateOfferAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
@@ -76,11 +98,9 @@ public class CreateOfferAmountController implements Controller {
         if (direction == null) {
             return;
         }
+        model.setDirection(direction);
         minAmountComponent.setDirection(direction);
         maxOrFixAmountComponent.setDirection(direction);
-        model.setHeadline(direction.isBuy() ?
-                Res.get("bisqEasy.createOffer.amount.headline.buyer") :
-                Res.get("bisqEasy.createOffer.amount.headline.seller"));
     }
 
     public void setMarket(Market market) {
@@ -92,7 +112,14 @@ public class CreateOfferAmountController implements Controller {
         model.setMarket(market);
     }
 
+    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+        if (fiatPaymentMethods != null) {
+            model.setFiatPaymentMethods(fiatPaymentMethods);
+        }
+    }
+
     public void setPriceSpec(PriceSpec priceSpec) {
+        model.setPriceSpec(priceSpec);
         PriceQuote priceQuote;
         if (priceSpec instanceof FixPriceSpec) {
             priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
@@ -131,6 +158,9 @@ public class CreateOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
+        model.setHeadline(model.getDirection().isBuy() ?
+                Res.get("bisqEasy.createOffer.amount.headline.buyer") :
+                Res.get("bisqEasy.createOffer.amount.headline.seller"));
         model.getIsMinAmountEnabled().set(settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false));
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
                 value -> {
@@ -214,10 +244,83 @@ public class CreateOfferAmountController implements Controller {
         } else {
             model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
         }
+
+        Optional<BisqEasyPublicChatChannel> optionalChannel = bisqEasyPublicChatChannelService.findChannel(model.getMarket());
+        if (optionalChannel.isPresent() && model.getMarket() != null) {
+            Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
+                    .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                    .filter(chatMessage -> filterOffers(chatMessage.getBisqEasyOffer().get()))
+                    /*   .peek(e -> log.error("filterOffers {}", e.getText()))*/
+                    .map(chatMessage -> chatMessage.getBisqEasyOffer().get().getPriceSpec())
+                    .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream())
+                    .min(Comparator.comparing(PriceQuote::getValue));
+            if (bestOffersPrice.isPresent()) {
+                // log.error("Found offer with price {}", PriceFormatter.format(bestOffersPrice.get()));
+                // maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
+                // AmountSpecUtil.findBaseSideFixedAmountFromSpec(model.getAmountSpec().get(), model.getMarket().getBaseCurrencyCode()).ifPresent(maxOrFixAmountComponent::setQuoteSideAmount);
+            } else {
+              /*  getMarketPriceQuote().ifPresentOrElse(e -> log.error("No offer found. Use market price with price {}", PriceFormatter.format(e)),
+                        () -> log.error("No offer found and no market price found"));*/
+                getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
+            }
+        }
+    }
+
+    private boolean filterOffers(BisqEasyOffer peersOffer) {
+        try {
+            Optional<UserProfile> authorUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+            if (authorUserProfile.isEmpty()) {
+                return false;
+            }
+            if (userProfileService.isChatUserIgnored(authorUserProfile.get())) {
+                return false;
+            }
+            if (userIdentityService.getUserIdentities().stream()
+                    .map(userIdentity -> userIdentity.getUserProfile().getId())
+                    .anyMatch(userProfileId -> userProfileId.equals(authorUserProfile.get().getId()))) {
+                return false;
+            }
+
+            if (peersOffer.getDirection().equals(model.getDirection())) {
+                return false;
+            }
+
+            if (!peersOffer.getMarket().equals(model.getMarket())) {
+                return false;
+            }
+
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+            if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
+                return false;
+            }
+
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+            if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
+                return false;
+            }
+
+            List<String> paymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
+            List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
+            if (quoteSidePaymentMethodNames.stream().noneMatch(paymentMethodNames::contains)) {
+                return false;
+            }
+
+            //todo
+           /* if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
+                return false;
+            }*/
+
+            return true;
+        } catch (Throwable t) {
+            log.error("Error at TakeOfferPredicate", t);
+            return false;
+        }
     }
 
     private Optional<PriceQuote> getMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket());
     }
-
 }

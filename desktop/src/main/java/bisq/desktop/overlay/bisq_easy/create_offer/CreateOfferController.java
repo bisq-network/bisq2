@@ -261,6 +261,7 @@ public class CreateOfferController extends NavigationController implements InitW
 
     private void handlePaymentMethodsUpdate() {
         createOfferReviewOfferController.setFiatPaymentMethods(createOfferPaymentMethodController.getFiatPaymentMethods());
+        createOfferAmountController.setFiatPaymentMethods(createOfferPaymentMethodController.getFiatPaymentMethods());
         updateNextButtonDisabledState();
     }
 }
