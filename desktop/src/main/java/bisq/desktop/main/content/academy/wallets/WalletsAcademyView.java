@@ -18,6 +18,10 @@
 package bisq.desktop.main.content.academy.wallets;
 
 import bisq.desktop.main.content.academy.AcademyView;
+import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,6 +29,16 @@ public class WalletsAcademyView extends AcademyView<WalletsAcademyModel, Wallets
 
     public WalletsAcademyView(WalletsAcademyModel model, WalletsAcademyController controller) {
         super(model, controller);
+        
+        Label whatIsAWalletHeadline = addHeadlineLabel("whatIsAWalletHeadline");
+        Label whatIsAWalletContent = addContentLabel("whatIsAWalletContent");
+        Label howToPickHeadline = addHeadlineLabel("howToPickHeadline");
+        Label howToPickContent = addContentLabel("howToPickContent");
+        Hyperlink learnMore = addLearnMoreHyperlink();
+
+        setHeadlineMargin(whatIsAWalletHeadline);
+        setHeadlineMargin(howToPickHeadline);
+        setLastLabelMargin(howToPickContent);
     }
 
     @Override

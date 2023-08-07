@@ -30,6 +30,9 @@ public class BisqAcademyController implements Controller {
         view = new BisqAcademyView(model, this);
     }
 
+    public boolean useCaching() {
+        return false;
+    }
     @Override
     public void onActivate() {
     }

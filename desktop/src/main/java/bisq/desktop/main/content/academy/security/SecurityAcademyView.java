@@ -18,6 +18,10 @@
 package bisq.desktop.main.content.academy.security;
 
 import bisq.desktop.main.content.academy.AcademyView;
+import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,6 +29,18 @@ public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, Secur
 
     public SecurityAcademyView(SecurityAcademyModel model, SecurityAcademyController controller) {
         super(model, controller);
+
+        Label introContent = addContentLabel("introContent");
+        Label securingYourKeysHeadline = addHeadlineLabel("securingYourKeysHeadline");
+        Label securingYourKeysContent = addContentLabel("securingYourKeysContent");
+        Label avoidScamsHeadline = addHeadlineLabel("avoidScamsHeadline");
+        Label avoidScamsContent = addContentLabel("avoidScamsContent");
+        Hyperlink learnMore = addLearnMoreHyperlink();
+
+        setHeadlineMargin(introContent);
+        setHeadlineMargin(securingYourKeysHeadline);
+        setHeadlineMargin(avoidScamsHeadline);
+        setLastLabelMargin(avoidScamsContent);
     }
 
     @Override
