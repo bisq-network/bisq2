@@ -16,6 +16,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,15 +36,30 @@ public class TorTransport implements Transport {
     @EqualsAndHashCode
     public static final class Config implements Transport.Config {
         public static Config from(String baseDir, com.typesafe.config.Config config) {
-            return new Config(baseDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
+            return new Config(
+                    baseDir,
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    parseTorrcOverrideConfig(config.getConfig("torrc_overrides"))
+            );
+        }
+
+        private static Map<String, String> parseTorrcOverrideConfig(com.typesafe.config.Config torrcOverrides) {
+            Map<String, String> torrcOverrideConfigMap = new HashMap<>();
+            torrcOverrides.entrySet()
+                    .forEach(entry -> torrcOverrideConfigMap.put(
+                            entry.getKey(), (String) entry.getValue().unwrapped()
+                    ));
+            return torrcOverrideConfigMap;
         }
 
         private final int socketTimeout;
         private final String baseDir;
+        private final Map<String, String> torrcOverrides;
 
-        public Config(String baseDir, int socketTimeout) {
+        public Config(String baseDir, int socketTimeout, Map<String, String> torrcOverrides) {
             this.baseDir = baseDir;
             this.socketTimeout = socketTimeout;
+            this.torrcOverrides = torrcOverrides;
         }
     }
 
