@@ -46,24 +46,36 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     private final CompletableFuture<String> hiddenServiceAddress = new CompletableFuture<>();
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
 
-    public void connect(int controlPort, PasswordDigest controlConnectionSecret) throws IOException {
-        var controlSocket = new Socket("127.0.0.1", controlPort);
-        var controlConnection = new TorControlConnection(controlSocket);
-        controlConnection.launchThread(true);
-        controlConnection.authenticate(controlConnectionSecret.getSecret());
-        torControlConnection = Optional.of(controlConnection);
+    public synchronized void connect(int controlPort, PasswordDigest controlConnectionSecret) {
+        try {
+            var controlSocket = new Socket("127.0.0.1", controlPort);
+            var controlConnection = new TorControlConnection(controlSocket);
+            controlConnection.launchThread(true);
+            controlConnection.authenticate(controlConnectionSecret.getSecret());
+            torControlConnection = Optional.of(controlConnection);
+        } catch (IOException e) {
+            throw new ControlCommandFailedException("Couldn't connect to control port.", e);
+        }
     }
 
-    public void bindTorToConnection() throws IOException {
-        TorControlConnection controlConnection = torControlConnection.orElseThrow();
-        controlConnection.takeOwnership();
-        controlConnection.resetConf(NativeTorProcess.ARG_OWNER_PID);
+    public void bindTorToConnection() {
+        try {
+            TorControlConnection controlConnection = torControlConnection.orElseThrow();
+            controlConnection.takeOwnership();
+            controlConnection.resetConf(NativeTorProcess.ARG_OWNER_PID);
+        } catch (IOException e) {
+            throw new ControlCommandFailedException("Couldn't bind Tor to control connection.", e);
+        }
     }
 
-    public void enableTorNetworking() throws IOException {
-        TorControlConnection controlConnection = torControlConnection.orElseThrow();
-        addBootstrapEventListener(controlConnection);
-        controlConnection.setConf(ClientTorrcGenerator.DISABLE_NETWORK_CONFIG_KEY, "0");
+    public void enableTorNetworking() {
+        try {
+            TorControlConnection controlConnection = torControlConnection.orElseThrow();
+            addBootstrapEventListener(controlConnection);
+            controlConnection.setConf(ClientTorrcGenerator.DISABLE_NETWORK_CONFIG_KEY, "0");
+        } catch (IOException e) {
+            throw new ControlCommandFailedException("Couldn't enable Tor networking.", e);
+        }
     }
 
     public TorControlConnection.CreateHiddenServiceResult createHiddenService(
@@ -117,9 +129,13 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         }
     }
 
-    public void shutdown() throws IOException {
-        TorControlConnection controlConnection = torControlConnection.orElseThrow();
-        controlConnection.shutdownTor("SHUTDOWN");
+    public synchronized void shutdown() {
+        try {
+            TorControlConnection controlConnection = torControlConnection.orElseThrow();
+            controlConnection.shutdownTor("SHUTDOWN");
+        } catch (IOException e) {
+            throw new ControlCommandFailedException("Couldn't send shutdown command to Tor.", e);
+        }
     }
 
     @Override

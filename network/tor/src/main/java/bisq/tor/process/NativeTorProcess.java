@@ -43,7 +43,7 @@ public class NativeTorProcess {
         this.torrcPath = torrcPath;
     }
 
-    public void start() throws IOException {
+    public void start() {
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
         String ownerPid = Pid.getMyPid();
@@ -57,8 +57,12 @@ public class NativeTorProcess {
 
         logFileCreationWaiter = Optional.of(createLogFileCreationWaiter());
 
-        Process torProcess = processBuilder.start();
-        process = Optional.of(torProcess);
+        try {
+            Process torProcess = processBuilder.start();
+            process = Optional.of(torProcess);
+        } catch (IOException e) {
+            throw new TorStartupFailedException(e);
+        }
     }
 
     public void waitUntilControlPortReady() {
