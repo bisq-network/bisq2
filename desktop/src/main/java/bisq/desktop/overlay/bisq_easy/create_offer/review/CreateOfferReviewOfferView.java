@@ -393,7 +393,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
                             bisqEasyOffer.getMarket())
                     .orElse(Monetary.from(0, model.getMarket().getBaseCurrencyCode()));
             baseAmountAsLong = baseAmountAsMonetary.getValue();
-            baseAmountDisplayString = AmountFormatter.formatAmountWithCode(baseAmountAsMonetary);
+            baseAmountDisplayString = AmountFormatter.formatAmountWithCode(baseAmountAsMonetary, false);
             reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }
