@@ -46,10 +46,10 @@ public class CreateOfferController extends NavigationController implements InitW
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final boolean showMatchingOffers;
+        private final boolean openedFromDashboard;
 
-        public InitData(boolean showMatchingOffers) {
-            this.showMatchingOffers = showMatchingOffers;
+        public InitData(boolean openedFromDashboard) {
+            this.openedFromDashboard = openedFromDashboard;
         }
     }
 
@@ -79,8 +79,8 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getChildTargets().addAll(List.of(
                 NavigationTarget.CREATE_OFFER_DIRECTION,
                 NavigationTarget.CREATE_OFFER_MARKET,
-                NavigationTarget.CREATE_OFFER_AMOUNT,
                 NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
+                NavigationTarget.CREATE_OFFER_AMOUNT,
                 NavigationTarget.CREATE_OFFER_REVIEW_OFFER
         ));
 
@@ -99,7 +99,9 @@ public class CreateOfferController extends NavigationController implements InitW
 
     @Override
     public void initWithData(InitData initData) {
-        createOfferReviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
+        createOfferAmountController.setOpenedFromDashboard(initData.isOpenedFromDashboard());
+        createOfferAmountController.setShowRangeAmounts(!initData.isOpenedFromDashboard());
+        createOfferReviewOfferController.setShowMatchingOffers(initData.isOpenedFromDashboard());
     }
 
     @Override
@@ -107,8 +109,10 @@ public class CreateOfferController extends NavigationController implements InitW
         model.getNextButtonDisabled().set(false);
 
         directionPin = EasyBind.subscribe(createOfferDirectionController.getDirection(), direction -> {
+            createOfferMarketController.setDirection(direction);
             createOfferReviewOfferController.setDirection(direction);
             createOfferAmountController.setDirection(direction);
+            createOfferPaymentMethodController.setDirection(direction);
             model.getPriceProgressItemVisible().set(direction == Direction.SELL);
             if (direction == Direction.SELL) {
                 model.getChildTargets().add(2, NavigationTarget.CREATE_OFFER_PRICE);
@@ -173,11 +177,11 @@ public class CreateOfferController extends NavigationController implements InitW
             case CREATE_OFFER_PRICE: {
                 return Optional.of(createOfferPriceController);
             }
-            case CREATE_OFFER_AMOUNT: {
-                return Optional.of(createOfferAmountController);
-            }
             case CREATE_OFFER_PAYMENT_METHOD: {
                 return Optional.of(createOfferPaymentMethodController);
+            }
+            case CREATE_OFFER_AMOUNT: {
+                return Optional.of(createOfferAmountController);
             }
             case CREATE_OFFER_REVIEW_OFFER: {
                 return Optional.of(createOfferReviewOfferController);
@@ -224,7 +228,7 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
     private void reset() {
@@ -258,6 +262,7 @@ public class CreateOfferController extends NavigationController implements InitW
 
     private void handlePaymentMethodsUpdate() {
         createOfferReviewOfferController.setFiatPaymentMethods(createOfferPaymentMethodController.getFiatPaymentMethods());
+        createOfferAmountController.setFiatPaymentMethods(createOfferPaymentMethodController.getFiatPaymentMethods());
         updateNextButtonDisabledState();
     }
 }

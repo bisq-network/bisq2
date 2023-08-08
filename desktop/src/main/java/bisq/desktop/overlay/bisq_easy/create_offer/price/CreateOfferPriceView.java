@@ -55,7 +55,7 @@ public class CreateOfferPriceView extends View<VBox, CreateOfferPriceModel, Crea
         Label headLine = new Label(Res.get("bisqEasy.price.headline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.price.subtitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");

@@ -38,14 +38,15 @@ import lombok.extern.slf4j.Slf4j;
 public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, TakeOfferPaymentController> {
     private final FlowPane flowPane;
     private final ToggleGroup toggleGroup = new ToggleGroup();
+    private final Label headlineLabel;
 
     public TakeOfferPaymentView(TakeOfferPaymentModel model, TakeOfferPaymentController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.takeOffer.method.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label();
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.method.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -59,15 +60,16 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         flowPane.setVgap(20);
         flowPane.setHgap(20);
 
-        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
         VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, flowPane, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, flowPane, Spacer.fillVBox());
 
         root.setOnMousePressed(e -> root.requestFocus());
     }
 
     @Override
     protected void onViewAttached() {
+        headlineLabel.setText(model.getHeadline());
         flowPane.getChildren().clear();
         for (FiatPaymentMethodSpec spec : model.getSortedSpecs()) {
             FiatPaymentMethod paymentMethod = spec.getPaymentMethod();

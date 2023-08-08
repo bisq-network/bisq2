@@ -27,6 +27,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -62,7 +63,13 @@ public class PaymentAccountsController implements Controller {
         accountsPin = accountService.getAccounts().addListener(() -> {
             model.setAllAccounts(accountService.getAccounts());
             maybeSelectFirstAccount();
+            model.getNoAccountsSetup().set(!accountService.hasAccounts());
+            model.getHeadline().set(accountService.hasAccounts() ?
+                    Res.get("user.paymentAccounts.headline") :
+                    Res.get("user.paymentAccounts.noAccounts.headline")
+            );
         });
+
         selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
                 .to(accountService.selectedAccountAsObservable());
 
@@ -79,10 +86,6 @@ public class PaymentAccountsController implements Controller {
 
         accountDataSubscription = EasyBind.subscribe(model.accountDataProperty(),
                 accountData -> updateButtonStates());
-
-        if (!accountService.hasAccounts()) {
-            onCreateAccount();
-        }
     }
 
     @Override

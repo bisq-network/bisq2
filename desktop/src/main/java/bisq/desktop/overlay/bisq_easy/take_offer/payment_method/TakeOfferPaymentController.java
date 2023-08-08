@@ -20,6 +20,7 @@ package bisq.desktop.overlay.bisq_easy.take_offer.payment_method;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
@@ -55,6 +56,10 @@ public class TakeOfferPaymentController implements Controller {
         if (matchingPaymentMethodSpecs.size() == 1) {
             model.getSelectedSpec().set(matchingPaymentMethodSpecs.get(0));
         }
+
+        model.setHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
+                Res.get("bisqEasy.takeOffer.method.headline.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
+                Res.get("bisqEasy.takeOffer.method.headline.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
     }
 
     /**

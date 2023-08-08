@@ -27,6 +27,8 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -61,12 +63,17 @@ public class CreateOfferMarketController implements Controller {
         return model.getSelectedMarket();
     }
 
+    public void setDirection(Direction direction) {
+        model.setDirection(direction);
+    }
+
     public void reset() {
         model.reset();
     }
 
     @Override
     public void onActivate() {
+        model.setHeadline(model.getDirection().isBuy() ? Res.get("bisqEasy.createOffer.market.headline.buyer") : Res.get("bisqEasy.createOffer.market.headline.seller"));
         model.getSearchText().set("");
         if (model.getSelectedMarket().get() == null) {
             // Use selected public channel or if private channel is selected we use any of the public channels for 
@@ -108,7 +115,7 @@ public class CreateOfferMarketController implements Controller {
                 String search = searchText.toLowerCase();
                 model.getFilteredList().setPredicate(item ->
                         item != null &&
-                                (item.getMarketCodes().toLowerCase().contains(search) ||
+                                (item.getQuoteCurrencyName().toLowerCase().contains(search) ||
                                         item.getMarket().getQuoteCurrencyName().toLowerCase().contains(search))
                 );
             }

@@ -18,10 +18,7 @@
 package bisq.desktop.main.content.academy.privacy;
 
 import bisq.desktop.main.content.academy.AcademyView;
-import javafx.geometry.Insets;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,12 +29,12 @@ public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, Privacy
 
         Label introContent = addContentLabel("introContent");
         Label whyPrivacyHeadline = addHeadlineLabel("whyPrivacyHeadline");
-        Label whyPrivacyContent = addContentLabel("whyPrivacyContent");
+        addContentLabel("whyPrivacyContent");
         Label giveUpPrivacyHeadline = addHeadlineLabel("giveUpPrivacyHeadline");
-        Label giveUpPrivacyContent = addContentLabel("giveUpPrivacyContent");
+        addContentLabel("giveUpPrivacyContent");
         Label bisqProtectsPrivacyHeadline = addHeadlineLabel("bisqProtectsPrivacyHeadline");
         Label bisqProtectsPrivacyContent = addContentLabel("bisqProtectsPrivacyContent");
-        Hyperlink learnMore = addLearnMoreHyperlink();
+        addLearnMoreHyperlink();
 
         setHeadlineMargin(introContent);
         setHeadlineMargin(whyPrivacyHeadline);
@@ -55,7 +52,6 @@ public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, Privacy
     protected String getIconId() {
         return "learn-privacy";
     }
-
 
     @Override
     protected String getUrl() {

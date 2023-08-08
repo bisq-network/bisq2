@@ -46,7 +46,7 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
         Label headlineLabel = new Label(Res.get("onboarding.bisq2.headline"));
         headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
 
-        nextButton = new Button(Res.get("action.start"));
+        nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         HBox hBox = new HBox(23, getWidgetBox(Res.get("onboarding.bisq2.headline1"),

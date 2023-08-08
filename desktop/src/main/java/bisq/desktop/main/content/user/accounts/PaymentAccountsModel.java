@@ -24,16 +24,20 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 
+@Getter
 @Slf4j
 public class PaymentAccountsModel implements Model {
+    private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty accountData = new SimpleStringProperty("");
     private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty noAccountsSetup = new SimpleBooleanProperty();
     private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
     private final ObservableList<Account<?, ? extends PaymentMethod<?>>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<?, ? extends PaymentMethod<?>>> sortedAccounts = new SortedList<>(accounts);

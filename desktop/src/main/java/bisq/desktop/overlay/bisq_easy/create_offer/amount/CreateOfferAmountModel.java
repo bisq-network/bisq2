@@ -17,27 +17,52 @@
 
 package bisq.desktop.overlay.bisq_easy.create_offer.amount;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Getter
 public class CreateOfferAmountModel implements Model {
+    private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
     @Setter
-    @Nullable
+    private Direction direction;
+    @Setter
     private Market market = MarketRepository.getDefault();
+    @Setter
+    private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
+    @Setter
+    private PriceSpec priceSpec = new MarketPriceSpec();
+    @Setter
+    private String headline;
+    @Setter
+    private boolean isOpenedFromDashboard;
+    @Setter
+    private Optional<PriceQuote> bestOffersPrice = Optional.empty();
 
     public void reset() {
+        showRangeAmounts.set(false);
         isMinAmountEnabled.set(false);
         toggleButtonText.set(null);
+        amountSpec.set(null);
+        direction = null;
+        market = MarketRepository.getDefault();
+        fiatPaymentMethods = new ArrayList<>();
+        priceSpec = new MarketPriceSpec();
     }
 }

@@ -152,7 +152,7 @@ public class TakeOfferReviewController implements Controller {
             model.setFiatPaymentMethodSpec(spec);
             model.getFiatPaymentMethodDisplayString().set(spec.getDisplayString());
 
-            String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("offer.buying").toUpperCase() : Res.get("offer.selling").toUpperCase();
+            String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("offer.buying") : Res.get("offer.selling");
             model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle", direction, model.getFiatPaymentMethodDisplayString().get().toUpperCase()));
             model.getMethod().set(model.getFiatPaymentMethodDisplayString().get());
         }
@@ -196,7 +196,7 @@ public class TakeOfferReviewController implements Controller {
 
         Monetary baseAmount = model.getTakersBaseSideAmount();
         Monetary quoteAmount = model.getTakersQuoteSideAmount();
-        String formattedBaseAmount = AmountFormatter.formatAmountWithCode(baseAmount);
+        String formattedBaseAmount = AmountFormatter.formatAmountWithCode(baseAmount, false);
         String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(quoteAmount);
         model.getAmountDescription().set(formattedQuoteAmount + " = " + formattedBaseAmount);
 

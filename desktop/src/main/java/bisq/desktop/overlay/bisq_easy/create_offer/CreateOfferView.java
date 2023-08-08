@@ -195,14 +195,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 getHLine(),
                 market,
                 getHLine(),
-                amount,
-                getHLine(),
                 method,
+                getHLine(),
+                amount,
                 getHLine(),
                 complete,
                 Spacer.fillHBox(), closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, method, complete)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, complete)));
     }
 
     private Region getHLine() {
@@ -216,7 +216,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         label.setTextAlignment(TextAlignment.CENTER);
         label.setAlignment(Pos.CENTER);
         label.getStyleClass().addAll("bisq-text-14");
-
         label.setOpacity(OPACITY);
         return label;
     }

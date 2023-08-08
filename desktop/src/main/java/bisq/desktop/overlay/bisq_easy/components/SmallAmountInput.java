@@ -59,11 +59,7 @@ public class SmallAmountInput {
     }
 
     public void setTooltip(String tooltip) {
-        controller.model.setTooltip(tooltip);
-    }
-
-    public void setShowEstimationPrefix(boolean showEstimationPrefix) {
-        controller.model.setShowEstimationPrefix(showEstimationPrefix);
+        controller.model.tooltip.set(tooltip);
     }
 
     public void setUseLowPrecision(boolean useLowPrecision) {
@@ -141,14 +137,11 @@ public class SmallAmountInput {
 
     private static class Model implements bisq.desktop.common.view.Model {
         @Setter
-        private boolean showEstimationPrefix;
-        @Setter
         private boolean useLowPrecision;
-        @Setter
-        private String tooltip = Res.get("bisqEasy.component.amount.baseSide.buyer.tooltip");
         private final boolean isBaseCurrency;
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();
+        private final StringProperty tooltip = new SimpleStringProperty(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
         private Market selectedMarket;
         public boolean hasFocus;
 
@@ -165,7 +158,6 @@ public class SmallAmountInput {
     }
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private static final String ESTIMATION_PREFIX = "~ ";
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
@@ -183,7 +175,6 @@ public class SmallAmountInput {
             root.setStyle("-fx-fill: -fx-light-text-color;");
 
             textInput = new TextField();
-            textInput.setPrefWidth(100);
             textInput.setId("quote-amount-text-field");
             textInput.setAlignment(Pos.CENTER_RIGHT);
             textInput.setPadding(new Insets(0, 0, 0, 0));
@@ -209,12 +200,12 @@ public class SmallAmountInput {
             focusListener = (o, oldValue, newValue) -> {
                 controller.onFocusChange(newValue);
                 if (oldValue) {
-                    controller.onAmount(getText());
+                    controller.onAmount(textInput.getText());
                 }
             };
             textInputListener = (o, old, newValue) -> {
                 if (textInput.isFocused()) {
-                    controller.onAmount(getText());
+                    controller.onAmount(textInput.getText());
                 }
             };
 
@@ -224,7 +215,7 @@ public class SmallAmountInput {
 
         @Override
         protected void onViewAttached() {
-            tooltip.setText(model.tooltip);
+            tooltip.textProperty().bind(model.tooltip);
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             codeLabel.textProperty().bind(model.code);
@@ -234,21 +225,16 @@ public class SmallAmountInput {
 
         @Override
         protected void onViewDetached() {
+            tooltip.textProperty().unbind();
             textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
-
             codeLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);
         }
 
         private void applyAmount(Monetary newValue) {
-            String prefix = model.showEstimationPrefix ? ESTIMATION_PREFIX : "";
             textInput.setText(newValue == null ? "" :
-                    prefix + AmountFormatter.formatAmount(newValue, model.useLowPrecision));
-        }
-
-        private String getText() {
-            return textInput.getText().replace(ESTIMATION_PREFIX, "");
+                    AmountFormatter.formatAmount(newValue, model.useLowPrecision));
         }
     }
 }

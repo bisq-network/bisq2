@@ -25,7 +25,6 @@ import bisq.desktop.overlay.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
@@ -55,7 +54,7 @@ public class TakeOfferPriceView extends View<VBox, TakeOfferPriceModel, TakeOffe
         Label headLine = new Label(Res.get("bisqEasy.price.headline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.price.subtitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
@@ -69,7 +68,7 @@ public class TakeOfferPriceView extends View<VBox, TakeOfferPriceModel, TakeOffe
         useFixPriceToggle.getStyleClass().add("icon-button");
         useFixPriceToggle.setTooltip(new BisqTooltip(Res.get("bisqEasy.price.toggle.tooltip")));
 
-        fieldsBox = new VBox(20);
+        fieldsBox = new VBox(20, priceInput.getRoot(), percentage);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(400);
 
@@ -87,11 +86,14 @@ public class TakeOfferPriceView extends View<VBox, TakeOfferPriceModel, TakeOffe
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
         useFixPriceToggle.setSelected(model.getUseFixPrice().get());
         useFixPriceToggle.setOnAction(e -> controller.onToggleUseFixPrice());
+
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice -> {
-            fieldsBox.getChildren().clear();
-            Node firstChild = useFixPrice ? priceInput.getRoot() : percentage;
-            Node lastChild = useFixPrice ? percentage : priceInput.getRoot();
-            fieldsBox.getChildren().addAll(firstChild, lastChild);
+            if (useFixPrice) {
+                priceInput.getRoot().toBack();
+            } else {
+                priceInput.getRoot().toFront();
+            }
+
             if (useFixPrice) {
                 percentage.setEditable(false);
                 percentage.deselect();

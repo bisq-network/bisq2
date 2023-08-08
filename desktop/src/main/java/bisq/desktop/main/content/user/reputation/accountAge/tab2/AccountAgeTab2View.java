@@ -48,7 +48,7 @@ public class AccountAgeTab2View extends View<VBox, AccountAgeTab2Model, AccountA
 
         Label info = new Label(Res.get("user.reputation.accountAge.score.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13");
 
         Label formulaHeadline = new Label(Res.get("user.reputation.score.formulaHeadline"));
         formulaHeadline.getStyleClass().addAll("bisq-text-1");

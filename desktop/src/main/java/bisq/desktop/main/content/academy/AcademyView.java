@@ -28,9 +28,11 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public abstract class AcademyView<M extends Model, C extends Controller> extends View<VBox, M, C> {
     protected final Label headline, subHeadline;
-    protected Hyperlink learnMore;
+    protected final Hyperlink learnMore;
 
     public AcademyView(M model, C controller) {
         super(new VBox(10), model, controller);
@@ -46,10 +48,11 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
         subHeadline.setWrapText(true);
 
+        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));
         root.getChildren().addAll(headline, subHeadline);
-
     }
 
     protected Label addHeadlineLabel(String headlineKey) {
@@ -68,11 +71,9 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         return label;
     }
 
-    protected Hyperlink addLearnMoreHyperlink() {
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
-        learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
+    protected void addLearnMoreHyperlink() {
+        checkArgument(!root.getChildren().contains(learnMore));
         root.getChildren().add(learnMore);
-        return learnMore;
     }
 
     protected void setHeadlineMargin(Label headlineLabel) {

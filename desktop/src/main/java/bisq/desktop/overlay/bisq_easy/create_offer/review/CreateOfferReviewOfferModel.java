@@ -50,6 +50,10 @@ class CreateOfferReviewOfferModel implements Model {
     @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods;
     @Setter
+    private String quoteAmountAsString;
+    @Setter
+    private String takeOfferHeadline;
+    @Setter
     private String myOfferText;
     @Setter
     private BisqEasyPublicChatMessage myOfferMessage;

@@ -46,14 +46,14 @@ public class AccountAgeTab1View extends View<VBox, AccountAgeTab1Model, AccountA
 
         Label info = new Label(Res.get("user.reputation.accountAge.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13");
 
         Label headline2 = new Label(Res.get("user.reputation.accountAge.infoHeadline2"));
         headline2.getStyleClass().add("bisq-text-headline-2");
 
         Label info2 = new Label(Res.get("user.reputation.accountAge.info2"));
         info2.setWrapText(true);
-        info2.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        info2.getStyleClass().addAll("bisq-text-13");
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);

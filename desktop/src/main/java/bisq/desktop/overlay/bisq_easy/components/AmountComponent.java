@@ -96,6 +96,10 @@ public class AmountComponent {
         controller.setMinMaxRange(minRangeValue, maxRangeValue);
     }
 
+    public void setTooltip(String tooltip) {
+        controller.setTooltip(tooltip);
+    }
+
     public void setQuote(PriceQuote priceQuote) {
         if (priceQuote != null) {
             controller.setQuote(priceQuote);
@@ -127,6 +131,7 @@ public class AmountComponent {
                            boolean useQuoteCurrencyForMinMaxRange) {
             quoteSideAmountInput = new BigAmountInput(false);
             baseSideAmountInput = new SmallAmountInput(true);
+            baseSideAmountInput.setUseLowPrecision(false);
             price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
             model = new Model(useQuoteCurrencyForMinMaxRange);
@@ -186,11 +191,10 @@ public class AmountComponent {
             }
             model.setDirection(direction);
             model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
+        }
 
-            baseSideAmountInput.setShowEstimationPrefix(direction.isBuy());
-            baseSideAmountInput.setUseLowPrecision(direction.isBuy());
-            baseSideAmountInput.setTooltip(direction.isBuy() ? Res.get("bisqEasy.component.amount.baseSide.buyer.tooltip") :
-                    Res.get("bisqEasy.component.amount.baseSide.seller.tooltip"));
+        private void setTooltip(String tooltip) {
+            baseSideAmountInput.setTooltip(tooltip);
         }
 
         private void setMarket(Market market) {

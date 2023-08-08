@@ -18,10 +18,7 @@
 package bisq.desktop.main.content.academy.bitcoin;
 
 import bisq.desktop.main.content.academy.AcademyView;
-import javafx.geometry.Insets;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -31,10 +28,10 @@ public class BitcoinAcademyView extends AcademyView<BitcoinAcademyModel, Bitcoin
         super(model, controller);
 
         Label whatIsBitcoinHeadline = addHeadlineLabel("whatIsBitcoinHeadline");
-        Label whatIsBitcoinContent = addContentLabel("whatIsBitcoinContent");
+        addContentLabel("whatIsBitcoinContent");
         Label whyUseBitcoinHeadline = addHeadlineLabel("whyUseBitcoinHeadline");
         Label whyUseBitcoinContent = addContentLabel("whyUseBitcoinContent");
-        Hyperlink learnMore = addLearnMoreHyperlink();
+        addLearnMoreHyperlink();
 
         setHeadlineMargin(whatIsBitcoinHeadline);
         setHeadlineMargin(whyUseBitcoinHeadline);
@@ -50,7 +47,6 @@ public class BitcoinAcademyView extends AcademyView<BitcoinAcademyModel, Bitcoin
     protected String getIconId() {
         return "learn-bitcoin";
     }
-
 
     @Override
     protected String getUrl() {

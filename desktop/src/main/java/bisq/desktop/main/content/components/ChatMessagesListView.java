@@ -526,8 +526,8 @@ public class ChatMessagesListView {
             listView = new ListView<>(model.getSortedChatMessages());
             listView.getStyleClass().add("chat-messages-list-view");
 
-            Label placeholder = new Label(Res.get("data.noDataAvailable"));
-            listView.setPlaceholder(placeholder);
+            //Label placeholder = new Label(Res.get("data.noDataAvailable"));
+            //listView.setPlaceholder(placeholder);
             listView.setCellFactory(getCellFactory());
 
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
@@ -701,9 +701,14 @@ public class ChatMessagesListView {
                                         HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
 
                                         removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
-                                        HBox.setMargin(removeOfferButton, new Insets(0, 11, 0, -15));
-                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon, removeOfferButton);
+                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon);
                                         reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
+
+                                        HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
+                                        HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
+                                        HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
+                                        VBox vBox = new VBox(hBox, removeOfferButtonHBox);
+                                        messageBgHBox.getChildren().setAll(vBox);
                                     } else {
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(140));
                                         userProfileIcon.setSize(30);
@@ -713,10 +718,9 @@ public class ChatMessagesListView {
                                         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
                                         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
                                         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
+                                        messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
                                     }
                                     mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, reactionsHBox);
-
-                                    messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
                                     messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
 

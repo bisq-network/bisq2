@@ -53,13 +53,13 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
     private final BisqIconButton addButton;
     private final VBox content;
     private final VBox overlay;
+    private final Label headLineLabel;
     private Subscription addCustomMethodIconEnabledPin;
     private Subscription showCustomMethodNotEmptyWarning;
     private Button closeOverlayButton;
 
     public CreateOfferPaymentMethodView(CreateOfferPaymentMethodModel model, CreateOfferPaymentMethodController controller) {
         super(new StackPane(), model, controller);
-        // super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.CENTER);
 
@@ -68,7 +68,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.headline"));
+        headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.subTitle"));
@@ -99,7 +99,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
         custom.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
+        VBox.setMargin(flowPane, new Insets(10, 85, 30, 85));
         content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
         overlay = new VBox(20);
@@ -117,6 +117,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
 
     @Override
     protected void onViewAttached() {
+        headLineLabel.setText(model.getHeadline());
         custom.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
@@ -178,6 +179,9 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
         for (FiatPaymentMethod fiatPaymentMethod : model.getSortedFiatPaymentMethods()) {
             // enum name or custom name
             ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
+            if (!fiatPaymentMethod.getShortDisplayString().equals(fiatPaymentMethod.getDisplayString())) {
+                chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
+            }
             if (model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 chipButton.setSelected(true);
             }
@@ -194,9 +198,6 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
                                 closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(fiatPaymentMethod));
-                                if (fiatPaymentMethod.getShortDisplayString().length() > 13) {
-                                    chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
-                                }
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)

@@ -60,7 +60,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
         Label info = new Label(Res.get("user.reputation.info"));
         info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
+        info.getStyleClass().addAll("bisq-text-13");
         info.setMinHeight(220);
 
         burnBsqButton = new Button(Res.get("user.reputation.burnBsq"));

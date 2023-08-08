@@ -20,11 +20,13 @@ package bisq.common.currency;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class FiatCurrencyRepository {
     private static Map<String, FiatCurrency> currencyByCode;
     @Getter
@@ -98,5 +100,10 @@ public class FiatCurrencyRepository {
 
     public static List<String> getAllFiatCurrencyCodes() {
         return getAllCurrencies().stream().map(e -> e.getCurrency().getCurrencyCode()).collect(Collectors.toList());
+    }
+
+
+    public static String getSymbol(String code) {
+        return Currency.getInstance(code.toUpperCase()).getSymbol();
     }
 }

@@ -24,6 +24,24 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+.fiat-code {
+    -fx-font-size: 8;
+    -fx-text-fill: -fx-light-text-color !important;;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.fiat-symbol {
+    -fx-font-size: 13;
+    -fx-text-fill: -fx-light-text-color !important;;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.fiat-symbol-2 {
+    -fx-font-size: 11;
+    -fx-text-fill: -fx-light-text-color !important;;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
 .market-crypto-label {
     -fx-font-size: 7;
     -fx-text-fill: -fx-light-text-color;

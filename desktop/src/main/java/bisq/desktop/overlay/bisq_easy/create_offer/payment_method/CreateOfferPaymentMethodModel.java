@@ -20,14 +20,20 @@ package bisq.desktop.overlay.bisq_easy.create_offer.payment_method;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class CreateOfferPaymentMethodModel implements Model {
+    @Setter
+    private Direction direction;
+    @Setter
+    private String headline;
     private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
     private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
     private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();

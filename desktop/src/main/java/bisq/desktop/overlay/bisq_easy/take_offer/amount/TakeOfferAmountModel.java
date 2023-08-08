@@ -31,4 +31,6 @@ public class TakeOfferAmountModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     private final ObjectProperty<Monetary> takersQuoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> takersBaseSideAmount = new SimpleObjectProperty<>();
+    @Setter
+    private String headline;
 }

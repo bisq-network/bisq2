@@ -1,15 +1,21 @@
 package bisq.desktop.main.content.components;
 
+import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.security.DigestUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -80,5 +86,55 @@ public class MarketImageComposition {
         }).collect(Collectors.toList());
 
         return new Pair<>(pane, imageViews);
+    }
+
+    public static StackPane getCurrencyIcon(String code) {
+        boolean isRetina = ImageUtil.isRetina();
+
+        StackPane pane = new StackPane();
+        pane.setPrefHeight(isRetina ? 34 : 17);
+        pane.setPrefWidth(isRetina ? 30 : 15);
+
+
+        String symbolOrCode = FiatCurrencyRepository.getSymbol(code);
+        if (symbolOrCode.length() > 3) {
+            symbolOrCode = code.toUpperCase().substring(0, 3);
+        }
+        Label label = new Label(symbolOrCode);
+
+        if (symbolOrCode.length() == 1) {
+            label.getStyleClass().setAll("fiat-symbol");
+            label.setPadding(new Insets(0, 4.5, 0, 0));
+        } else if (symbolOrCode.length() == 2) {
+            label.getStyleClass().setAll("fiat-symbol-2");
+            label.setPadding(new Insets(0, 1.25, 0, 0));
+        } else {
+            label.getStyleClass().setAll("fiat-code");
+            label.setPadding(new Insets(0, 0.2, 0, 0));
+        }
+
+        Circle circle = new Circle(10);
+        circle.setTranslateX(6.5);
+        circle.setSmooth(true);
+        pane.getChildren().add(circle);
+        if (code.equalsIgnoreCase("EUR")) {
+            circle.setFill(Paint.valueOf("#0F0FD9"));
+            label.setPadding(new Insets(0, 4.25, 0, 0));
+        } else if (code.equalsIgnoreCase("USD")) {
+            circle.setFill(Paint.valueOf("#3D8603"));
+        } else {
+            circle.setFill(Paint.valueOf("#FF0000"));
+            ColorAdjust colorAdjust = new ColorAdjust();
+            colorAdjust.setSaturation(-0.25);
+            colorAdjust.setBrightness(-0.5);
+            double hue = new BigInteger(DigestUtil.sha256(symbolOrCode.getBytes())).mod(BigInteger.valueOf(100000)).doubleValue() / 100000;
+            colorAdjust.setHue(hue);
+            circle.setEffect(colorAdjust);
+        }
+
+        StackPane.setAlignment(label, Pos.CENTER_RIGHT);
+        pane.getChildren().add(label);
+
+        return pane;
     }
 }

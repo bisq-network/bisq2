@@ -137,7 +137,6 @@ public class CreateOfferReviewOfferController implements Controller {
     @Override
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
-
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         String priceInfo;
         PriceSpec priceSpec = model.getPriceSpec();
@@ -161,11 +160,17 @@ public class CreateOfferReviewOfferController implements Controller {
         String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
         AmountSpec amountSpec = model.getAmountSpec();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
-        String amountString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
+        String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
+        model.setQuoteAmountAsString(quoteAmountAsString);
+
+        model.setTakeOfferHeadline(model.getDirection().isBuy() ?
+                Res.get("bisqEasy.createOffer.review.headline.buy", quoteAmountAsString) :
+                Res.get("bisqEasy.createOffer.review.headline.sell", quoteAmountAsString));
+
         String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethod(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
-                amountString,
+                quoteAmountAsString,
                 paymentMethodNames,
                 priceInfo);
 
@@ -201,6 +206,7 @@ public class CreateOfferReviewOfferController implements Controller {
             model.getMatchingOffers().setAll(channel.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                     .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                            model,
                             userProfileService,
                             reputationService,
                             marketPriceService))

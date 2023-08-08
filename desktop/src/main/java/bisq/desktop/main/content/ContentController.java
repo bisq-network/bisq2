@@ -37,7 +37,7 @@ import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
 import bisq.desktop.main.content.trade_apps.ProtocolRoadmapController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
-import bisq.desktop.main.content.trade_apps.bisqEasy.BisqEasyController;
+import bisq.desktop.main.content.trade_apps.bisq_easy.BisqEasyController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
 import lombok.Getter;

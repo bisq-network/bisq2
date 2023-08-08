@@ -37,17 +37,17 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         String name = model.getTradeProtocolType().name();
         Label headline = new Label(Res.get("tradeApps." + name));
         headline.setGraphic(ImageUtil.getImageViewById(model.getIconId()));
-        headline.getStyleClass().add("trade-apps-roadmap-headline");
+        headline.getStyleClass().add("trade-protocols-roadmap-headline");
         headline.setGraphicTextGap(10);
 
         Label subHeadline = new Label(Res.get("tradeApps." + name + ".subHeadline"));
         subHeadline.setWrapText(true);
-        subHeadline.getStyleClass().add("trade-apps-roadmap-sub-headline");
+        subHeadline.getStyleClass().add("trade-protocols-roadmap-sub-headline");
 
         Label overviewHeadline = new Label(Res.get("tradeApps.overview"));
-        overviewHeadline.getStyleClass().add("trade-apps-roadmap-content-headline");
+        overviewHeadline.getStyleClass().add("trade-protocols-roadmap-content-headline");
 
-        UnorderedList overview = new UnorderedList(Res.get("tradeApps." + name + ".overview"), "trade-apps-roadmap-text");
+        UnorderedList overview = new UnorderedList(Res.get("tradeApps." + name + ".overview"), "trade-protocols-roadmap-text");
 
         Label releaseHeadline = new Label(Res.get("tradeApps.release"));
         releaseHeadline.getStyleClass().addAll("font-size-16", "font-light");
@@ -59,8 +59,8 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         Label tradeOffsHeadline = new Label(Res.get("tradeApps.tradeOffs"));
         tradeOffsHeadline.getStyleClass().addAll("font-size-16", "font-light");
 
-        UnorderedList pro = new UnorderedList(Res.get("tradeApps." + name + ".pro"), "trade-apps-roadmap-text", "\\+ ", "+ ");
-        UnorderedList con = new UnorderedList(Res.get("tradeApps." + name + ".con"), "trade-apps-roadmap-text", "- ", "- ");
+        UnorderedList pro = new UnorderedList(Res.get("tradeApps." + name + ".pro"), "trade-protocols-roadmap-text", "\\+ ", "+ ");
+        UnorderedList con = new UnorderedList(Res.get("tradeApps." + name + ".con"), "trade-protocols-roadmap-text", "- ", "- ");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
