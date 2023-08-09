@@ -56,7 +56,6 @@ public class LeftNavModel implements Model {
     private final BooleanProperty i2pEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty menuHorizontalExpanded = new SimpleBooleanProperty(true);
     private final BooleanProperty tradeAppsSubMenuExpanded = new SimpleBooleanProperty(false);
-    private final BooleanProperty learnsSubMenuExpanded = new SimpleBooleanProperty(false);
     private final BooleanProperty authorizedRoleVisible = new SimpleBooleanProperty(false);
     private final BooleanProperty newVersionAvailable = new SimpleBooleanProperty(false);
     @Setter

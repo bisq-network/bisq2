@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.academy.security;
 
-import bisq.desktop.main.content.academy.AcademyView;
+import bisq.desktop.main.content.academy.AcademyBaseView;
 import javafx.scene.control.Label;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, SecurityAcademyController> {
+public class SecurityAcademyView extends AcademyBaseView<SecurityAcademyModel, SecurityAcademyController> {
 
     public SecurityAcademyView(SecurityAcademyModel model, SecurityAcademyController controller) {
         super(model, controller);

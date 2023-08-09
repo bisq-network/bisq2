@@ -106,14 +106,6 @@ public class LeftNavController implements Controller {
         model.getSelectedNavigationTarget().set(supportedNavigationTarget);
 
         switch (supportedNavigationTarget) {
-            case BISQ_ACADEMY:
-            case BITCOIN_ACADEMY:
-            case SECURITY_ACADEMY:
-            case PRIVACY_ACADEMY:
-            case WALLETS_ACADEMY:
-            case FOSS_ACADEMY:
-                onLearSubMenuExpanded(true);
-                break;
             case BISQ_EASY:
             case MULTISIG:
             case SUBMARINE:
@@ -145,10 +137,6 @@ public class LeftNavController implements Controller {
 
     void onTradeAppsSubMenuExpanded(boolean value) {
         model.getTradeAppsSubMenuExpanded().set(value);
-    }
-
-    void onLearSubMenuExpanded(boolean value) {
-        model.getLearnsSubMenuExpanded().set(value);
     }
 
     void onOpenUpdateWindow() {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.academy;
+package bisq.desktop.main.content.academy.overview;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -23,13 +23,13 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
-public class AcademyOverviewController implements Controller {
+public class OverviewAcademyController implements Controller {
     @Getter
-    private final AcademyOverviewView view;
+    private final OverviewAcademyView view;
 
-    public AcademyOverviewController(ServiceProvider serviceProvider) {
-        AcademyOverviewModel model = new AcademyOverviewModel();
-        view = new AcademyOverviewView(model, this);
+    public OverviewAcademyController(ServiceProvider serviceProvider) {
+        OverviewAcademyModel model = new OverviewAcademyModel();
+        view = new OverviewAcademyView(model, this);
     }
 
     @Override

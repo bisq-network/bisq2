@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.academy.privacy;
 
-import bisq.desktop.main.content.academy.AcademyView;
+import bisq.desktop.main.content.academy.AcademyBaseView;
 import javafx.scene.control.Label;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, PrivacyAcademyController> {
+public class PrivacyAcademyView extends AcademyBaseView<PrivacyAcademyModel, PrivacyAcademyController> {
 
     public PrivacyAcademyView(PrivacyAcademyModel model, PrivacyAcademyController controller) {
         super(model, controller);

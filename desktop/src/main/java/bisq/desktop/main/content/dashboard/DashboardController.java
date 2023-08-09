@@ -81,7 +81,7 @@ public class DashboardController implements Controller {
     }
 
     public void onLearn() {
-        Navigation.navigateTo(NavigationTarget.ACADEMY_OVERVIEW);
+        Navigation.navigateTo(NavigationTarget.ACADEMY);
     }
 
     public void onOpenTradeOverview() {

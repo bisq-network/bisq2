@@ -17,86 +17,31 @@
 
 package bisq.desktop.main.content.academy;
 
-import bisq.desktop.common.Browser;
-import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
-import javafx.geometry.Insets;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 
-import static com.google.common.base.Preconditions.checkArgument;
+public class AcademyView extends TabView<AcademyModel, AcademyController> {
 
-public abstract class AcademyView<M extends Model, C extends Controller> extends View<VBox, M, C> {
-    protected final Label headline, subHeadline;
-    protected final Hyperlink learnMore;
+    public AcademyView(AcademyModel model, AcademyController controller) {
+        super(model, controller);
 
-    public AcademyView(M model, C controller) {
-        super(new VBox(10), model, controller);
+        addTab(Res.get("academy.overview"), NavigationTarget.OVERVIEW_ACADEMY);
+        addTab(Res.get("academy.overview.bisq"), NavigationTarget.BISQ_ACADEMY);
+        addTab(Res.get("academy.overview.bitcoin"), NavigationTarget.BITCOIN_ACADEMY);
+        addTab(Res.get("academy.overview.wallets"), NavigationTarget.WALLETS_ACADEMY);
+        addTab(Res.get("academy.overview.security"), NavigationTarget.SECURITY_ACADEMY);
+        addTab(Res.get("academy.overview.privacy"), NavigationTarget.PRIVACY_ACADEMY);
+        addTab(Res.get("academy.overview.foss"), NavigationTarget.FOSS_ACADEMY);
 
-        String key = getKey();
-        headline = new Label(Res.get("academy.overview." + key));
-        headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
-        headline.getStyleClass().addAll("font-size-20", "font-light");
-        headline.setGraphicTextGap(10);
-        headline.setWrapText(true);
-
-        subHeadline = new Label(Res.get("academy." + key + ".subHeadline"));
-        subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
-        subHeadline.setWrapText(true);
-
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
-        learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
-
-        VBox.setMargin(headline, new Insets(0, 0, 0, 0));
-        root.getChildren().addAll(headline, subHeadline);
+        headLine.setText(Res.get("academy.learn"));
     }
-
-    protected Label addHeadlineLabel(String headlineKey) {
-        Label label = new Label(Res.get("academy." + getKey() + "." + headlineKey));
-        label.getStyleClass().addAll("font-size-16", "font-light");
-        label.setWrapText(true);
-        root.getChildren().add(label);
-        return label;
-    }
-
-    protected Label addContentLabel(String contentKey) {
-        Label label = new Label(Res.get("academy." + getKey() + "." + contentKey));
-        label.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
-        label.setWrapText(true);
-        root.getChildren().add(label);
-        return label;
-    }
-
-    protected void addLearnMoreHyperlink() {
-        checkArgument(!root.getChildren().contains(learnMore));
-        root.getChildren().add(learnMore);
-    }
-
-    protected void setHeadlineMargin(Label headlineLabel) {
-        VBox.setMargin(headlineLabel, new Insets(35, 0, 0, 0));
-    }
-
-    protected void setLastLabelMargin(Label lastLabel) {
-        VBox.setMargin(lastLabel, new Insets(0, 0, 15, 0));
-    }
-
-    protected abstract String getIconId();
-
-    protected abstract String getKey();
-
-    protected abstract String getUrl();
 
     @Override
     protected void onViewAttached() {
-        learnMore.setOnAction(e -> Browser.open(getUrl()));
     }
 
     @Override
     protected void onViewDetached() {
-        learnMore.setOnAction(null);
     }
 }

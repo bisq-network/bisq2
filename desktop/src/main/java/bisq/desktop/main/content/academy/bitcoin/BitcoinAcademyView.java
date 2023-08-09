@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.academy.bitcoin;
 
-import bisq.desktop.main.content.academy.AcademyView;
+import bisq.desktop.main.content.academy.AcademyBaseView;
 import javafx.scene.control.Label;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BitcoinAcademyView extends AcademyView<BitcoinAcademyModel, BitcoinAcademyController> {
+public class BitcoinAcademyView extends AcademyBaseView<BitcoinAcademyModel, BitcoinAcademyController> {
 
     public BitcoinAcademyView(BitcoinAcademyModel model, BitcoinAcademyController controller) {
         super(model, controller);

@@ -17,7 +17,16 @@
 
 package bisq.desktop.main.content.academy;
 
-import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabModel;
 
-public class AcademyOverviewModel implements Model {
+public class AcademyModel extends TabModel {
+
+    public AcademyModel() {
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.OVERVIEW_ACADEMY;
+    }
 }
