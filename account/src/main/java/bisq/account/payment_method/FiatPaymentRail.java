@@ -49,6 +49,7 @@ public enum FiatPaymentRail implements PaymentRail {
     ACH_TRANSFER(List.of("US"), List.of("USD")),
     PIX(List.of("BR"), List.of("BRL")),
     FASTER_PAYMENTS(List.of("GB"), List.of("GBP"));
+
     @Getter
     @EqualsAndHashCode.Exclude
     private final List<Country> countries;
@@ -124,7 +125,6 @@ ALI_PAY=AliPay
 WECHAT_PAY=WeChat Pay
 SEPA=SEPA
 SEPA_INSTANT=SEPA Instant Payments
-FASTER_PAYMENTS=Faster Payments
 SWISH=Swish
 ZELLE=Zelle
 CHASE_QUICK_PAY=Chase QuickPay

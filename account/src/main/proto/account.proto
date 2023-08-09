@@ -72,6 +72,7 @@ message AccountPayload {
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
     RevolutAccountPayload RevolutAccountPayload = 21;
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
+    FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 23;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -133,6 +134,11 @@ message PixAccountPayload {
   string pix_key = 1;
 }
 
+message FasterPaymentsAccountPayload {
+  string sort_code = 1;
+  string account_nr = 2;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -146,6 +152,7 @@ message Account {
     UserDefinedFiatAccount userDefinedFiatAccount = 20;
     RevolutAccount revolutAccount = 21;
     CountryBasedAccount countryBasedAccount = 22;
+    FasterPaymentsAccount fasterPaymentsAccount = 23;
   }
 }
 
@@ -185,6 +192,9 @@ message NationalBankAccount {
 }
 
 message PixAccount {
+}
+
+message FasterPaymentsAccount {
 }
 
 message AccountStore {
