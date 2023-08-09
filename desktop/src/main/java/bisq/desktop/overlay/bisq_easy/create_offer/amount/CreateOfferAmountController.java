@@ -223,15 +223,17 @@ public class CreateOfferAmountController implements Controller {
         applyAmountSpec();
 
         if (model.getDirection().isSell()) {
-            maxOrFixAmountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
+            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
+            maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
         } else {
+            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount") + "\n";
             if (model.isOpenedFromDashboard()) {
                 applyBestOfferQuote();
                 maxOrFixAmountComponent.setTooltip(model.getBestOffersPrice()
-                        .map(bestOffersPrice -> Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))
-                        .orElse(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice")));
+                        .map(bestOffersPrice -> btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))
+                        .orElse(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice")));
             } else {
-                maxOrFixAmountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
+                maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
             }
         }
     }
