@@ -25,7 +25,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -42,8 +46,9 @@ public enum FiatPaymentRail implements PaymentRail {
     NATIONAL_BANK(new ArrayList<>(), new ArrayList<>()),
     SWIFT(),
     F2F(),
-    ACH_TRANSFER(List.of("US"), List.of("USD"));
-
+    ACH_TRANSFER(List.of("US"), List.of("USD")),
+    PIX(List.of("BR"), List.of("BRL")),
+    FASTER_PAYMENTS(List.of("GB"), List.of("GBP"));
     @Getter
     @EqualsAndHashCode.Exclude
     private final List<Country> countries;
@@ -138,7 +143,6 @@ UPI=India/UPI
 PAYTM=India/PayTM
 NEQUI=Nequi
 BIZUM=Bizum
-PIX=Pix
 AMAZON_GIFT_CARD=Amazon eGift Card
 CAPITUAL=Capitual
 CELPAY=CelPay

@@ -51,6 +51,9 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
             case F2FACCOUNTPAYLOAD: {
                 return F2FAccountPayload.fromProto(proto);
             }
+            case PIXACCOUNTPAYLOAD: {
+                return PixAccountPayload.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
