@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.trade_apps.more;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.trade_apps.ProtocolRoadmapView;
+import bisq.desktop.main.content.trade_apps.roadmap.ProtocolRoadmapView;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;

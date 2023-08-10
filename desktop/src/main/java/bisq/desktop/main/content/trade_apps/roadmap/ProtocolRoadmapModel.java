@@ -15,19 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps.overview.grid;
+package bisq.desktop.main.content.trade_apps.roadmap;
 
-import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.trade_apps.overview.TradeOverviewController;
+import bisq.account.protocol_type.TradeProtocolType;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
 
-public class TradeOverviewGridController extends TradeOverviewController<TradeOverviewGridModel> {
-    @Getter
-    private final TradeOverviewGridView view;
+@Getter
+public class ProtocolRoadmapModel implements Model {
+    private final TradeProtocolType tradeProtocolType;
+    private final String iconId;
+    private final String url;
 
-    public TradeOverviewGridController(ServiceProvider serviceProvider) {
-        super(new TradeOverviewGridModel());
-
-        this.view = new TradeOverviewGridView(model, this);
+    public ProtocolRoadmapModel(TradeProtocolType tradeProtocolType, String iconId, String url) {
+        this.tradeProtocolType = tradeProtocolType;
+        this.iconId = iconId;
+        this.url = url;
     }
 }

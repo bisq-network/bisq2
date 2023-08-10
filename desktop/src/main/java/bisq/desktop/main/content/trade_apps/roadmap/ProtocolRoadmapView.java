@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps;
+package bisq.desktop.main.content.trade_apps.roadmap;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -36,6 +36,8 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
 
         String name = model.getTradeProtocolType().name();
         Label headline = new Label(Res.get("tradeApps." + name));
+        log.error("model.getIconId() " + model.getIconId());
+        log.error("ImageUtil.getImageViewById(model.getIconId()) " + ImageUtil.getImageViewById(model.getIconId()));
         headline.setGraphic(ImageUtil.getImageViewById(model.getIconId()));
         headline.getStyleClass().add("trade-protocols-roadmap-headline");
         headline.setGraphicTextGap(10);
@@ -65,7 +67,7 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
 
-        VBox.setMargin(headline, new Insets(0, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(20, 0, 0, 0));
         VBox.setMargin(overviewHeadline, new Insets(25, 0, 0, 0));
         VBox.setMargin(releaseHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(tradeOffsHeadline, new Insets(35, 0, 0, 0));

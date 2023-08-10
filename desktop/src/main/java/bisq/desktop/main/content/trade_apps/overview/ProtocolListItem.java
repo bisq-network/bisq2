@@ -64,6 +64,7 @@ public class ProtocolListItem implements TableItem {
         this.releaseDate = releaseDate;
 
         this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(name.toLowerCase());
+        log.error("iconId {}", iconId);
     }
 
     @Override

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps;
+package bisq.desktop.main.content.trade_apps.roadmap;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.common.Browser;
