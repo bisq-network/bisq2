@@ -232,6 +232,9 @@ public class UserProfileSelection {
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         @Getter
         private final UserProfileComboBox comboBox;
+        private final HBox userNameAndIcon;
+        private final Label userName;
+        private final ImageView icon;
         private Subscription selectedUserProfilePin, isLeftAlignedPin, comboBoxWidthPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
@@ -239,15 +242,50 @@ public class UserProfileSelection {
 
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("user.userProfile.comboBox.description"), iconSize, useMaterialStyle);
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
-            root.getChildren().setAll(comboBox);
+
+            userName = new Label();
+            userName.getStyleClass().add("bisq-text-19");
+            icon = new ImageView();
+            icon.setFitWidth(iconSize);
+            icon.setFitHeight(iconSize);
+            userNameAndIcon = new HBox(10, userName, icon);
+            userNameAndIcon.setLayoutY(8);
+            userNameAndIcon.setAlignment(Pos.CENTER);
+            root.getChildren().setAll(comboBox, userNameAndIcon);
+            root.setPrefHeight(60);
         }
 
         @Override
         protected void onViewAttached() {
             comboBox.setOnChangeConfirmed(e -> controller.onSelected(comboBox.getSelectionModel().getSelectedItem()));
             selectedUserProfilePin = EasyBind.subscribe(model.selectedUserProfile,
-                    selected -> UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected)));
-            isLeftAlignedPin = EasyBind.subscribe(model.isLeftAligned, comboBox::setIsLeftAligned);
+                    selected -> {
+                        UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected));
+
+                        UserIdentity userIdentity = selected.userIdentity;
+                        if (userIdentity != null) {
+                            boolean multipleItems = model.userProfiles.size() > 1;
+                            comboBox.setManaged(multipleItems);
+                            comboBox.setVisible(multipleItems);
+                            userNameAndIcon.setManaged(!multipleItems);
+                            userNameAndIcon.setVisible(!multipleItems);
+
+                            userName.setText(comboBox.getConverter().toString(selected));
+                            icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                        }
+                    });
+            isLeftAlignedPin = EasyBind.subscribe(model.isLeftAligned, isLeftAligned -> {
+                comboBox.setIsLeftAligned(isLeftAligned);
+                if (!isLeftAligned) {
+                    HBox.setMargin(userName, new Insets(-2, 0, 0, 0));
+                    HBox.setMargin(icon, new Insets(-1.5, 0, 0, 16));
+                    userName.toFront();
+                } else {
+                    HBox.setMargin(userName, new Insets(-1, 0, 0, 0));
+                    HBox.setMargin(icon, new Insets(0, 17, 0, 0));
+                    userName.toBack();
+                }
+            });
             comboBoxWidthPin = EasyBind.subscribe(model.comboBoxWidth, w -> comboBox.setComboBoxWidth(w.doubleValue()));
         }
 

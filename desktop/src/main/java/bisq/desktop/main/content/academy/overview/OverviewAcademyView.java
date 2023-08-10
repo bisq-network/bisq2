@@ -130,7 +130,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         Button button = new Button(buttonLabel);
         button.setMaxWidth(Double.MAX_VALUE);
         // button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
-        button.getStyleClass().addAll("medium-large-button");
+        button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
         button.setOnAction(e -> controller.onSelect(navigationTarget));
 
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
@@ -138,7 +138,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         VBox.setMargin(button, new Insets(10, 0, 10, 0));
         VBox vBox = new VBox(20, headlineLabel, contentLabel, button);
         vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
-        vBox.getStyleClass().add("bisq-box-1");
+        vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(PADDING));
         return vBox;
     }
