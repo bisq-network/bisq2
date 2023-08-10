@@ -15,19 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.trade_apps;
+package bisq.desktop.main.content.trade_apps.more;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.trade_apps.ProtocolRoadmapView;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class TradeAppsModel extends TabModel {
-    private final BooleanProperty moreTabVisible = new SimpleBooleanProperty();
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_PROTOCOLS_OVERVIEW;
-    }
+public class MoreProtocolsModel implements Model {
+    private final ObjectProperty<ProtocolRoadmapView> protocolRoadmapView = new SimpleObjectProperty<>();
+
+
 }

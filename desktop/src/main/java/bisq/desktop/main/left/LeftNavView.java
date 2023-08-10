@@ -62,10 +62,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Region selectionMarker;
     private final VBox mainMenuItems;
     private final int menuTop;
-    private final LeftNavButton tradeAppsButton, learnButton, authorizedRole;
+    private final LeftNavButton authorizedRole;
     private final Label version;
-    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin,
-            tradeAppsSubMenuExpandedPin, newVersionAvailablePin;
+    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
@@ -81,27 +80,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-community",
                 NavigationTarget.DASHBOARD, false);
 
-        tradeAppsButton = createNavigationButton(Res.get("navigation.tradeApps"),
+        LeftNavButton bisqEasy = createNavigationButton(Res.get("navigation.bisqEasy"),
                 "nav-trade",
-                NavigationTarget.TRADE_OVERVIEW, true);
+                NavigationTarget.BISQ_EASY, false);
 
-        VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.bisqEasy"), NavigationTarget.BISQ_EASY, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.multiSig"), NavigationTarget.MULTISIG, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.submarine"), NavigationTarget.SUBMARINE, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.liquidMultisig"), NavigationTarget.LIQUID_MULTISIG, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.lightningFiat"), NavigationTarget.LIGHTNING_FIAT, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.lightningEscrow"), NavigationTarget.LIGHTNING_ESCROW, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.moneroSwap"), NavigationTarget.MONERO_SWAP, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.liquidSwap"), NavigationTarget.LIQUID_SWAP, tradeAppsButton),
-                createSubmenuNavigationButton(Res.get("navigation.tradeApps.bsqSwap"), NavigationTarget.BSQ_SWAP, tradeAppsButton)
-        );
+        LeftNavButton tradeAppsButton = createNavigationButton(Res.get("navigation.tradeApps"),
+                "nav-community",
+                NavigationTarget.TRADE_PROTOCOLS, false);
 
         LeftNavButton wallet = createNavigationButton(Res.get("navigation.wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
-        learnButton = createNavigationButton(Res.get("navigation.academy"),
+        LeftNavButton learnButton = createNavigationButton(Res.get("navigation.academy"),
                 "nav-learn",
                 NavigationTarget.ACADEMY, false);
 
@@ -166,7 +157,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, tradeAppsButton, tradeSubMenuItems,
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, tradeAppsButton,
                 learnButton,
                 chat, events, support,
                 user, settings, authorizedRole);
@@ -284,9 +275,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             }
         });
 
-        tradeAppsSubMenuExpandedPin = EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
-                tradeAppsButton::setVerticalExpanded);
-
         newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
                 newVersionAvailable -> {
                     if (newVersionAvailable) {
@@ -312,7 +300,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         navigationTargetSubscription.unsubscribe();
         menuExpandedSubscription.unsubscribe();
         selectedNavigationButtonPin.unsubscribe();
-        tradeAppsSubMenuExpandedPin.unsubscribe();
         newVersionAvailablePin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
@@ -358,12 +345,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             maybeAnimateMark();
         });
         controller.onNavigationButtonCreated(button);
-
-        EasyBind.subscribe(button.getIsSubMenuExpanded(), expanded -> {
-            if (button == tradeAppsButton) {
-                controller.onTradeAppsSubMenuExpanded(expanded);
-            }
-        });
     }
 
     private void verticalExpandCollapseHandler(NavigationTarget navigationTarget) {

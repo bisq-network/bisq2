@@ -85,7 +85,7 @@ public class DashboardController implements Controller {
     }
 
     public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+        Navigation.navigateTo(NavigationTarget.TRADE_PROTOCOLS);
     }
 
     public void onOpenBisqEasy() {
