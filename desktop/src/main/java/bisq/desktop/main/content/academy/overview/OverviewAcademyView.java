@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.academy;
+package bisq.desktop.main.content.academy.overview;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,13 +32,14 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, AcademyOverviewController> {
+public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, OverviewAcademyController> {
     private static final int PADDING = 20;
     private int rowIndex;
 
-    public AcademyOverviewView(AcademyOverviewModel model, AcademyOverviewController controller) {
+    public OverviewAcademyView(OverviewAcademyModel model, OverviewAcademyController controller) {
         super(new GridPane(), model, controller);
 
+        root.setPadding(new Insets(20, 0, 0, 0));
         root.setHgap(PADDING);
         root.setVgap(PADDING);
         root.setCursor(Cursor.HAND);
@@ -54,12 +55,12 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         addSmallBox("learn-bisq", "learn-bitcoin",
                 "bisq", "bitcoin",
                 NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
-        addSmallBox("learn-security", "learn-privacy",
-                "security", "privacy",
-                NavigationTarget.SECURITY_ACADEMY, NavigationTarget.PRIVACY_ACADEMY);
-        addSmallBox("learn-wallets", "learn-openSource",
-                "wallets", "foss",
-                NavigationTarget.WALLETS_ACADEMY, NavigationTarget.FOSS_ACADEMY);
+        addSmallBox("learn-wallets", "learn-security",
+                "wallets", "security",
+                NavigationTarget.WALLETS_ACADEMY, NavigationTarget.SECURITY_ACADEMY);
+        addSmallBox("learn-privacy", "learn-openSource",
+                "privacy", "foss",
+                NavigationTarget.PRIVACY_ACADEMY, NavigationTarget.FOSS_ACADEMY);
     }
 
     @Override
@@ -71,7 +72,7 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
     }
 
     private void addHeaderBox() {
-        Label headlineLabel = new Label(Res.get("academy.overview.headline"));
+        Label headlineLabel = new Label(Res.get("academy.overview.subHeadline"));
         headlineLabel.setWrapText(true);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
         headlineLabel.setMinHeight(55);

@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.academy.foss;
 
-import bisq.desktop.main.content.academy.AcademyView;
+import bisq.desktop.main.content.academy.AcademyBaseView;
 import javafx.scene.control.Label;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class FossAcademyView extends AcademyView<FossAcademyModel, FossAcademyController> {
+public class FossAcademyView extends AcademyBaseView<FossAcademyModel, FossAcademyController> {
 
     public FossAcademyView(FossAcademyModel model, FossAcademyController controller) {
         super(model, controller);

@@ -65,7 +65,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final LeftNavButton tradeAppsButton, learnButton, authorizedRole;
     private final Label version;
     private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin,
-            tradeAppsSubMenuExpandedPin, learnsSubMenuExpandedPin, newVersionAvailablePin;
+            tradeAppsSubMenuExpandedPin, newVersionAvailablePin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
@@ -103,16 +103,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         learnButton = createNavigationButton(Res.get("navigation.academy"),
                 "nav-learn",
-                NavigationTarget.ACADEMY_OVERVIEW, true);
-
-        VBox learnSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("navigation.academy.bisq"), NavigationTarget.BISQ_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("navigation.academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("navigation.academy.security"), NavigationTarget.SECURITY_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("navigation.academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("navigation.academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learnButton),
-                createSubmenuNavigationButton(Res.get("navigation.academy.foss"), NavigationTarget.FOSS_ACADEMY, learnButton)
-        );
+                NavigationTarget.ACADEMY, false);
 
         LeftNavButton chat = createNavigationButton(Res.get("navigation.discussion"),
                 "nav-chat",
@@ -176,7 +167,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
         mainMenuItems.getChildren().addAll(dashBoard, tradeAppsButton, tradeSubMenuItems,
-                learnButton, learnSubMenuItems,
+                learnButton,
                 chat, events, support,
                 user, settings, authorizedRole);
         if (model.isWalletEnabled()) {
@@ -295,8 +286,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         tradeAppsSubMenuExpandedPin = EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
                 tradeAppsButton::setVerticalExpanded);
-        learnsSubMenuExpandedPin = EasyBind.subscribe(model.getLearnsSubMenuExpanded(),
-                learnButton::setVerticalExpanded);
 
         newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
                 newVersionAvailable -> {
@@ -324,7 +313,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         menuExpandedSubscription.unsubscribe();
         selectedNavigationButtonPin.unsubscribe();
         tradeAppsSubMenuExpandedPin.unsubscribe();
-        learnsSubMenuExpandedPin.unsubscribe();
         newVersionAvailablePin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
@@ -374,8 +362,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         EasyBind.subscribe(button.getIsSubMenuExpanded(), expanded -> {
             if (button == tradeAppsButton) {
                 controller.onTradeAppsSubMenuExpanded(expanded);
-            } else if (button == learnButton) {
-                controller.onLearSubMenuExpanded(expanded);
             }
         });
     }

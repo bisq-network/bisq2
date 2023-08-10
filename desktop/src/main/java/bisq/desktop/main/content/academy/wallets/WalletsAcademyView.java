@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.academy.wallets;
 
-import bisq.desktop.main.content.academy.AcademyView;
+import bisq.desktop.main.content.academy.AcademyBaseView;
 import javafx.scene.control.Label;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class WalletsAcademyView extends AcademyView<WalletsAcademyModel, WalletsAcademyController> {
+public class WalletsAcademyView extends AcademyBaseView<WalletsAcademyModel, WalletsAcademyController> {
 
     public WalletsAcademyView(WalletsAcademyModel model, WalletsAcademyController controller) {
         super(model, controller);

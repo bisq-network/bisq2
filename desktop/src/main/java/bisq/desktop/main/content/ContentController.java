@@ -24,13 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.content.academy.AcademyOverviewController;
-import bisq.desktop.main.content.academy.bisq.BisqAcademyController;
-import bisq.desktop.main.content.academy.bitcoin.BitcoinAcademyController;
-import bisq.desktop.main.content.academy.foss.FossAcademyController;
-import bisq.desktop.main.content.academy.privacy.PrivacyAcademyController;
-import bisq.desktop.main.content.academy.security.SecurityAcademyController;
-import bisq.desktop.main.content.academy.wallets.WalletsAcademyController;
+import bisq.desktop.main.content.academy.AcademyController;
 import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.desktop.main.content.dashboard.DashboardController;
@@ -92,26 +86,8 @@ public class ContentController extends NavigationController {
             case DISCUSSION: {
                 return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.DISCUSSION));
             }
-            case ACADEMY_OVERVIEW: {
-                return Optional.of(new AcademyOverviewController(serviceProvider));
-            }
-            case BISQ_ACADEMY: {
-                return Optional.of(new BisqAcademyController(serviceProvider));
-            }
-            case BITCOIN_ACADEMY: {
-                return Optional.of(new BitcoinAcademyController(serviceProvider));
-            }
-            case SECURITY_ACADEMY: {
-                return Optional.of(new SecurityAcademyController(serviceProvider));
-            }
-            case PRIVACY_ACADEMY: {
-                return Optional.of(new PrivacyAcademyController(serviceProvider));
-            }
-            case WALLETS_ACADEMY: {
-                return Optional.of(new WalletsAcademyController(serviceProvider));
-            }
-            case FOSS_ACADEMY: {
-                return Optional.of(new FossAcademyController(serviceProvider));
+            case ACADEMY: {
+                return Optional.of(new AcademyController(serviceProvider));
             }
             case EVENTS: {
                 return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.EVENTS));
