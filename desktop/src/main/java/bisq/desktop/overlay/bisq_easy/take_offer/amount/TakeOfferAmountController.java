@@ -89,10 +89,12 @@ public class TakeOfferAmountController implements Controller {
                     .ifPresent(amountComponent::setBaseSideAmount);
         });
         if (model.getBisqEasyOffer().getTakersDirection().isSell()) {
-            amountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
+            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
+            amountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
         } else {
+            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
             PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer()).ifPresent(priceQuote ->
-                    amountComponent.setTooltip(Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote))));
+                    amountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote))));
         }
     }
 
