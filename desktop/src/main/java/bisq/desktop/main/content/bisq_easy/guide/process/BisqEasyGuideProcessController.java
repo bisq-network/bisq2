@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat.guide.security;
+package bisq.desktop.main.content.bisq_easy.guide.process;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -26,13 +26,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideSecurityController implements Controller {
+public class BisqEasyGuideProcessController implements Controller {
     @Getter
-    private final BisqEasyGuideSecurityView view;
+    private final BisqEasyGuideProcessView view;
 
-    public BisqEasyGuideSecurityController(ServiceProvider serviceProvider) {
-        BisqEasyGuideSecurityModel model = new BisqEasyGuideSecurityModel();
-        view = new BisqEasyGuideSecurityView(model, this);
+    public BisqEasyGuideProcessController(ServiceProvider serviceProvider) {
+        BisqEasyGuideProcessModel model = new BisqEasyGuideProcessModel();
+        view = new BisqEasyGuideProcessView(model, this);
     }
 
     @Override
@@ -43,15 +43,15 @@ public class BisqEasyGuideSecurityController implements Controller {
     public void onDeactivate() {
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
-    }
-
     void onBack() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_WELCOME);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_SECURITY);
     }
 
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_PROCESS);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_RULES);
+    }
+
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/bisqeasy");
     }
 }

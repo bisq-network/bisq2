@@ -15,16 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat.guide.welcome;
+package bisq.desktop.main.content.bisq_easy.guide.process;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideWelcomeModel implements Model {
-    private final StringProperty contentText = new SimpleStringProperty();
+public class BisqEasyGuideProcessModel implements Model {
 }

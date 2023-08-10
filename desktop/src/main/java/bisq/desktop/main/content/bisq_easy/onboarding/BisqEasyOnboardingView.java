@@ -140,9 +140,9 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         gridPane.add(headlineLabel, 0, 0, 2, 1);
 
-        HBox line1 = getIconAndText(Res.get("bisqEasy.onboarding.top.content1"), "onboarding-2-offer");
-        HBox line2 = getIconAndText(Res.get("bisqEasy.onboarding.top.content2"), "onboarding-1-reputation");
-        HBox line3 = getIconAndText(Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-payment");
+        HBox line1 = getIconAndText(Res.get("bisqEasy.onboarding.top.content1"), "onboarding-bisq-easy");
+        HBox line2 = getIconAndText(Res.get("bisqEasy.onboarding.top.content2"), "onboarding-trade");
+        HBox line3 = getIconAndText(Res.get("bisqEasy.onboarding.top.content3"), "onboarding-1-easy");
         VBox vBox = new VBox(15, Spacer.fillVBox(), line1, line2, line3, Spacer.fillVBox());
         gridPane.add(vBox, 0, 1);
 

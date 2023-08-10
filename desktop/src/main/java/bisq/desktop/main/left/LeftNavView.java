@@ -81,11 +81,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.DASHBOARD, false);
 
         LeftNavButton bisqEasy = createNavigationButton(Res.get("navigation.bisqEasy"),
-                "nav-trade",
+                "nav-bisq-easy",
                 NavigationTarget.BISQ_EASY, false);
 
         LeftNavButton tradeAppsButton = createNavigationButton(Res.get("navigation.tradeApps"),
-                "nav-community",
+                "nav-trade",
                 NavigationTarget.TRADE_PROTOCOLS, false);
 
         LeftNavButton wallet = createNavigationButton(Res.get("navigation.wallet"),

@@ -142,6 +142,18 @@
     -fx-image: url("/images/navigation/nav-chat-hover.png");
 }
 
+#nav-bisq-easy {
+    -fx-image: url("/images/navigation/nav-bisq-easy.png");
+}
+
+#nav-bisq-easy-active {
+    -fx-image: url("/images/navigation/nav-bisq-easy-active.png");
+}
+
+#nav-bisq-easy-hover {
+    -fx-image: url("/images/navigation/nav-bisq-easy-hover.png");
+}
+
 #nav-community {
     -fx-image: url("/images/navigation/nav-community.png");
 }
@@ -313,6 +325,14 @@
 
 #intro-3 {
     -fx-image: url("/images/onboarding/intro-3-more.png");
+}
+
+#onboarding-bisq-easy {
+    -fx-image: url("/images/onboarding/onboarding-bisq-easy.png");
+}
+
+#onboarding-trade {
+    -fx-image: url("/images/onboarding/onboarding-trade.png");
 }
 
 #onboarding-1-easy {

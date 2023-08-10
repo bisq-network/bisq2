@@ -36,8 +36,6 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
 
         String name = model.getTradeProtocolType().name();
         Label headline = new Label(Res.get("tradeApps." + name));
-        log.error("model.getIconId() " + model.getIconId());
-        log.error("ImageUtil.getImageViewById(model.getIconId()) " + ImageUtil.getImageViewById(model.getIconId()));
         headline.setGraphic(ImageUtil.getImageViewById(model.getIconId()));
         headline.getStyleClass().add("trade-protocols-roadmap-headline");
         headline.setGraphicTextGap(10);

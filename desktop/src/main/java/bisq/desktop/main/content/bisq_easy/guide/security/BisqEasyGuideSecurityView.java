@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat.guide.process;
+package bisq.desktop.main.content.bisq_easy.guide.security;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.OrderedList;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,23 +30,21 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessModel, BisqEasyGuideProcessController> {
+public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityModel, BisqEasyGuideSecurityController> {
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
 
-    public BisqEasyGuideProcessView(BisqEasyGuideProcessModel model, BisqEasyGuideProcessController controller) {
+    public BisqEasyGuideSecurityView(BisqEasyGuideSecurityModel model, BisqEasyGuideSecurityController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
+        root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.process.headline"));
+        Label headline = new Label(Res.get("tradeGuide.security.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label content = new Label(Res.get("tradeGuide.process.content"));
-        content.setWrapText(true);
-        content.getStyleClass().addAll("bisq-text-13");
-        OrderedList rules = new OrderedList(Res.get("tradeGuide.process.steps"), "bisq-text-13");
+        UnorderedList content = new UnorderedList(Res.get("tradeGuide.security.content"), "bisq-text-13");
 
         backButton = new Button(Res.get("action.back"));
 
@@ -59,7 +57,7 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, rules, learnMore, buttons);
+        root.getChildren().addAll(headline, content, learnMore, buttons);
     }
 
     @Override

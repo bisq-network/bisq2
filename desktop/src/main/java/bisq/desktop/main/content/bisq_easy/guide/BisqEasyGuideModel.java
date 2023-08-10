@@ -15,13 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat.guide.process;
+package bisq.desktop.main.content.bisq_easy.guide;
 
-import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideProcessModel implements Model {
+public class BisqEasyGuideModel extends TabModel {
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.BISQ_EASY_GUIDE_WELCOME;
+    }
 }

@@ -15,16 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat.guide.rules;
+package bisq.desktop.main.content.bisq_easy.guide.security;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideRulesModel implements Model {
-    private final BooleanProperty tradeRulesConfirmed = new SimpleBooleanProperty();
+public class BisqEasyGuideSecurityModel implements Model {
 }
