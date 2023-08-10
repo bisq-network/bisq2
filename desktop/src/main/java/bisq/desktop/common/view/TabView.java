@@ -27,10 +27,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -57,6 +54,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         setupTopBox();
         contentPane = new VBox();
         setupLineAndMarker();
+        VBox.setVgrow(contentPane, Priority.ALWAYS);
         root.getChildren().addAll(topBox, lineAndMarker, contentPane);
     }
 
@@ -97,6 +95,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         if (newValue != null) {
+            VBox.setVgrow(newValue.getRoot(), Priority.ALWAYS);
             contentPane.getChildren().setAll(newValue.getRoot());
         } else {
             contentPane.getChildren().clear();
