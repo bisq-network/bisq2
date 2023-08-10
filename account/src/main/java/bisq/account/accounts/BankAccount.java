@@ -17,6 +17,8 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
         switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
             case ACHTRANSFERACCOUNT:
                 return AchTransferAccount.fromProto(proto);
+            case NATIONALBANKACCOUNT:
+                return NationalBankAccount.fromProto(proto);
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
