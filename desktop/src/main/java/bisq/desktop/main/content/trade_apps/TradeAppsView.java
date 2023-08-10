@@ -31,7 +31,7 @@ public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> 
     public TradeAppsView(TradeAppsModel model, TradeAppsController controller) {
         super(model, controller);
 
-        headLine.setText(Res.get("tradeApps.headline"));
+        // headLine.setText(Res.get("tradeApps.headline"));
 
         addTab(Res.get("tradeApps.overview"), NavigationTarget.TRADE_PROTOCOLS_OVERVIEW);
         addTab(Res.get("tradeApps.multisig"), NavigationTarget.MULTISIG);
@@ -48,5 +48,10 @@ public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> 
 
     @Override
     protected void onViewDetached() {
+    }
+
+    @Override
+    protected boolean isRightSide() {
+        return false;
     }
 }

@@ -31,7 +31,7 @@ public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
     public BisqEasyView(BisqEasyModel model, BisqEasyController controller) {
         super(model, controller);
 
-       // headLine.setText(Res.get("bisqEasy.headline"));
+        // headLine.setText(Res.get("bisqEasy.headline"));
 
         addTab(Res.get("bisqEasy.dashboard"), NavigationTarget.BISQ_EASY_ONBOARDING);
         addTab(Res.get("bisqEasy.markets"), NavigationTarget.BISQ_EASY_MARKETS);
@@ -49,5 +49,10 @@ public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
 
     @Override
     protected void onViewDetached() {
+    }
+
+    @Override
+    protected boolean isRightSide() {
+        return false;
     }
 }

@@ -126,6 +126,14 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     protected void setupTopBox() {
+        setupTopBox(isRightSide());
+    }
+
+    protected boolean isRightSide() {
+        return true;
+    }
+
+    protected void setupTopBox(boolean isRightSide) {
         headLine = new Label();
         headLine.getStyleClass().add("bisq-content-headline-label");
         headLine.setMinWidth(90);
@@ -134,7 +142,11 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         tabs.setSpacing(46);
         tabs.setMinHeight(52);
 
-        topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
+        if (isRightSide) {
+            topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
+        } else {
+            topBox = new HBox(tabs, Spacer.fillHBox(), headLine);
+        }
         HBox.setMargin(headLine, new Insets(-4, 0, 0, -2));
     }
 
