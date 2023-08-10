@@ -38,6 +38,7 @@ public class TorTransport implements Transport {
     public static final class Config implements Transport.Config {
         public static Config from(String baseDir, com.typesafe.config.Config config) {
             return new Config(
+                    config.getBoolean("testNetwork"),
                     baseDir,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     parseDirectoryAuthorities(config.getList("directoryAuthorities")),
@@ -78,12 +79,18 @@ public class TorTransport implements Transport {
                     .unwrapped();
         }
 
+        private final boolean isTestNetwork;
         private final int socketTimeout;
         private final String baseDir;
         private final Set<DirectoryAuthority> directoryAuthorities;
         private final Map<String, String> torrcOverrides;
 
-        public Config(String baseDir, int socketTimeout, Set<DirectoryAuthority> directoryAuthorities, Map<String, String> torrcOverrides) {
+        public Config(boolean isTestNetwork,
+                      String baseDir,
+                      int socketTimeout,
+                      Set<DirectoryAuthority> directoryAuthorities,
+                      Map<String, String> torrcOverrides) {
+            this.isTestNetwork = isTestNetwork;
             this.baseDir = baseDir;
             this.socketTimeout = socketTimeout;
             this.directoryAuthorities = directoryAuthorities;
