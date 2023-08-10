@@ -100,7 +100,6 @@ public class CreateOfferController extends NavigationController implements InitW
     @Override
     public void initWithData(InitData initData) {
         createOfferAmountController.setOpenedFromDashboard(initData.isOpenedFromDashboard());
-        createOfferAmountController.setShowRangeAmounts(!initData.isOpenedFromDashboard());
         createOfferReviewOfferController.setShowMatchingOffers(initData.isOpenedFromDashboard());
     }
 
