@@ -3,8 +3,8 @@ package bisq.network.p2p.node.transport;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.tor.onionservice.CreateOnionServiceResponse;
 import bisq.tor.TorService;
+import bisq.tor.onionservice.CreateOnionServiceResponse;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,7 +39,7 @@ public class TorTransport implements Transport {
             return new Config(
                     baseDir,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
-                    parseTorrcOverrideConfig(config.getConfig("torrc_overrides"))
+                    parseTorrcOverrideConfig(config.getConfig("torrcOverrides"))
             );
         }
 
