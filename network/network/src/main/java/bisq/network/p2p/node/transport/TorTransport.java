@@ -3,9 +3,12 @@ package bisq.network.p2p.node.transport;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.tor.DirectoryAuthority;
 import bisq.tor.TorService;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigValue;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -16,9 +19,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -39,8 +40,25 @@ public class TorTransport implements Transport {
             return new Config(
                     baseDir,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                     parseTorrcOverrideConfig(config.getConfig("torrcOverrides"))
             );
+        }
+
+        private static Set<DirectoryAuthority> parseDirectoryAuthorities(ConfigList directoryAuthoritiesConfig) {
+            Set<DirectoryAuthority> allDirectoryAuthorities = new HashSet<>();
+            directoryAuthoritiesConfig.forEach(authConfig -> {
+                DirectoryAuthority directoryAuthority = DirectoryAuthority.builder()
+                        .nickname(getStringFromConfigValue(authConfig, "nickname"))
+                        .orPort(Integer.parseInt(getStringFromConfigValue(authConfig, "orPort")))
+                        .v3Ident(getStringFromConfigValue(authConfig, "v3Ident"))
+                        .dirPort(Integer.parseInt(getStringFromConfigValue(authConfig, "dirPort")))
+                        .relayFingerprint(getStringFromConfigValue(authConfig, "relayFingerprint"))
+                        .build();
+
+                allDirectoryAuthorities.add(directoryAuthority);
+            });
+            return allDirectoryAuthorities;
         }
 
         private static Map<String, String> parseTorrcOverrideConfig(com.typesafe.config.Config torrcOverrides) {
@@ -52,13 +70,23 @@ public class TorTransport implements Transport {
             return torrcOverrideConfigMap;
         }
 
+        private static String getStringFromConfigValue(ConfigValue configValue, String key) {
+            return (String) configValue
+                    .atKey(key)
+                    .getObject(key)
+                    .get(key)
+                    .unwrapped();
+        }
+
         private final int socketTimeout;
         private final String baseDir;
+        private final Set<DirectoryAuthority> directoryAuthorities;
         private final Map<String, String> torrcOverrides;
 
-        public Config(String baseDir, int socketTimeout, Map<String, String> torrcOverrides) {
+        public Config(String baseDir, int socketTimeout, Set<DirectoryAuthority> directoryAuthorities, Map<String, String> torrcOverrides) {
             this.baseDir = baseDir;
             this.socketTimeout = socketTimeout;
+            this.directoryAuthorities = directoryAuthorities;
             this.torrcOverrides = torrcOverrides;
         }
     }
