@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.trade_apps;
 
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +26,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> {
 
+    private final TabButton more;
+
     public TradeAppsView(TradeAppsModel model, TradeAppsController controller) {
         super(model, controller);
 
         headLine.setText(Res.get("tradeApps.headline"));
 
-        addTab(Res.get("tradeApps.gridView"), NavigationTarget.TRADE_OVERVIEW_GRID, "nav-grid");
-        addTab(Res.get("tradeApps.listView"), NavigationTarget.TRADE_OVERVIEW_LIST, "nav-list");
+        addTab(Res.get("tradeApps.overview"), NavigationTarget.TRADE_PROTOCOLS_OVERVIEW);
+        addTab(Res.get("tradeApps.multisig"), NavigationTarget.MULTISIG);
+        addTab(Res.get("tradeApps.subMarine"), NavigationTarget.SUBMARINE);
+        addTab(Res.get("tradeApps.lightningFiat"), NavigationTarget.LIGHTNING_FIAT);
+        more = addTab(Res.get("tradeApps.more"), NavigationTarget.MORE_TRADE_PROTOCOLS);
     }
 
     @Override
     protected void onViewAttached() {
+        more.visibleProperty().bind(model.getMoreTabVisible());
+        more.managedProperty().bind(model.getMoreTabVisible());
     }
 
     @Override

@@ -55,11 +55,43 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
         columnConstraints2.setMinWidth(450);
         root.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
 
+        Label headline = new Label(Res.get("tradeApps.overview.headline"));
+        headline.getStyleClass().add("bisq-text-headline-2");
+        root.add(headline, 0, 0, 2, 1);
+
+        Label subHeadline = new Label(Res.get("tradeApps.overview.subHeadline"));
+        subHeadline.setWrapText(true);
+        subHeadline.getStyleClass().add("bisq-text-1");
+        GridPane.setMargin(subHeadline, new Insets(0, 0, 10, 0));
+        root.add(subHeadline, 0, 1, 2, 1);
+
+
+        int rowCount = root.getRowCount();
         int index = 0;
-        for (ProtocolListItem protocol : model.getSortedItems()) {
+        for (ProtocolListItem protocol : model.getMainProtocols()) {
             Pane protocolBox = getProtocolBox(protocol);
             GridPane.setHgrow(protocolBox, Priority.ALWAYS);
-            root.add(protocolBox, index % 2, index >> 1);
+            int columnIndex = index % 2;
+            int rowIndex = (index >> 1) + rowCount;
+            root.add(protocolBox, columnIndex, rowIndex);
+            index++;
+        }
+
+        Label more = new Label(Res.get("tradeApps.overview.more"));
+        more.setWrapText(true);
+        more.getStyleClass().add("bisq-text-1");
+        GridPane.setMargin(more, new Insets(20, 0, 10, 0));
+        root.add(more, 0, root.getRowCount(), 2, 1);
+
+        rowCount = root.getRowCount();
+        index = 0;
+        for (ProtocolListItem protocol : model.getMoreProtocols()) {
+            Pane protocolBox = getProtocolBox(protocol);
+            GridPane.setHgrow(protocolBox, Priority.ALWAYS);
+            int columnIndex = index % 2;
+            int rowIndex = (index >> 1) + rowCount;
+            log.error("index={}, columnIndex={}, rowIndex={}", index, columnIndex, rowIndex);
+            root.add(protocolBox, columnIndex, rowIndex);
             index++;
         }
     }
@@ -101,7 +133,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
 
         if (protocolListItem.getTradeAppsAttributesType() != TradeAppsAttributes.Type.BISQ_EASY) {
             Label label = new Label(Res.get("tradeApps.comingSoon"));
-            label.setOpacity(0.1);
+            label.setOpacity(0.2);
             GridPane.setHalignment(label, HPos.RIGHT);
             GridPane.setMargin(label, new Insets(-14, 0, 0, 0));
             gridPane.add(label, 2, rowIndex);

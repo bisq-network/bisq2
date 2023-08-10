@@ -20,11 +20,10 @@ package bisq.desktop.main.content.trade_apps.overview;
 import bisq.desktop.common.view.Model;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
 public class TradeOverviewModel implements Model {
-    private final ObservableList<ProtocolListItem> listItems = FXCollections.observableArrayList();
-    private final SortedList<ProtocolListItem> sortedItems = new SortedList<>(listItems);
+    private final ObservableList<ProtocolListItem> mainProtocols = FXCollections.observableArrayList();
+    private final ObservableList<ProtocolListItem> moreProtocols = FXCollections.observableArrayList();
 }

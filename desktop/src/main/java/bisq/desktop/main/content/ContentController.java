@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content;
 
-import bisq.account.protocol_type.TradeProtocolType;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -26,12 +25,11 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.content.academy.AcademyController;
 import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
+import bisq.desktop.main.content.bisq_easy.BisqEasyController;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
-import bisq.desktop.main.content.trade_apps.ProtocolRoadmapController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
-import bisq.desktop.main.content.trade_apps.bisq_easy.BisqEasyController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
 import lombok.Getter;
@@ -95,52 +93,13 @@ public class ContentController extends NavigationController {
             case SUPPORT: {
                 return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.SUPPORT));
             }
-            case TRADE_OVERVIEW: {
+            case TRADE_PROTOCOLS: {
                 return Optional.of(new TradeAppsController(serviceProvider));
             }
             case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(serviceProvider));
             }
-            case MULTISIG: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MULTISIG,
-                        "protocol-multisig",
-                        "https://bisq.network/"));
-            }
-            case SUBMARINE: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
-                        "protocol-submarine",
-                        "https://docs.lightning.engineering/the-lightning-network/multihop-payments/understanding-submarine-swaps"));
-            }
-            case LIQUID_MULTISIG: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MULTISIG,
-                        "protocol-liquid-multisig",
-                        "https://bisq.wiki/liquid-multisig"));
-            }
-            case LIGHTNING_FIAT: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_FIAT,
-                        "protocol-ln-liquid",
-                        "https://bisq.wiki/ln-liquid"));
-            }
-            case LIQUID_SWAP: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_SWAP,
-                        "protocol-liquid-multisig",
-                        "https://www.blockstream.com/liquid/"));
-            }
-            case BSQ_SWAP: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
-                        "protocol-bsq",
-                        "https://bisq.wiki/BSQ"));
-            }
-            case LIGHTNING_ESCROW: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_ESCROW,
-                        "protocol-lightning-escrow",
-                        "https://github.com/bisq-network/proposals/issues/416"));
-            }
-            case MONERO_SWAP: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
-                        "protocol-monero",
-                        "https://www.monerooutreach.org/stories/monero-atomic-swaps.html"));
-            }
+
             case USER: {
                 return Optional.of(new UserController(serviceProvider));
             }

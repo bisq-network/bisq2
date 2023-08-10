@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.trade_apps.overview;
 
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.NavigationTarget;
@@ -33,6 +34,7 @@ public class ProtocolListItem implements TableItem {
 
     private final TradeAppsAttributes.Type tradeAppsAttributesType;
     private final NavigationTarget navigationTarget;
+    private final TradeProtocolType tradeProtocolType;
     private final String protocolsName;
     private final String basicInfo;
     private final String markets;
@@ -45,10 +47,12 @@ public class ProtocolListItem implements TableItem {
 
     ProtocolListItem(TradeAppsAttributes.Type tradeAppsAttributesType,
                      NavigationTarget navigationTarget,
+                     TradeProtocolType tradeProtocolType,
                      Pair<Long, Long> tradeLimits,
                      String releaseDate) {
         this.tradeAppsAttributesType = tradeAppsAttributesType;
         this.navigationTarget = navigationTarget;
+        this.tradeProtocolType = tradeProtocolType;
         String name = tradeAppsAttributesType.name();
         protocolsName = Res.get("tradeApps." + name);
         this.basicInfo = Res.get("tradeApps.overview." + name);

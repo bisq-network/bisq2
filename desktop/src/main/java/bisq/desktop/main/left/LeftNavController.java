@@ -32,8 +32,6 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 import java.util.Set;
@@ -49,7 +47,6 @@ public class LeftNavController implements Controller {
     private final UserIdentityService userIdentityService;
     private final UpdaterService updaterService;
     private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
-    private Subscription tradeAppsSubMenuExpandedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
@@ -65,9 +62,6 @@ public class LeftNavController implements Controller {
     @Override
     public void onActivate() {
         notificationsService.addListener(this::updateNumNotifications);
-        tradeAppsSubMenuExpandedPin = EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
-                tradeAppsSubMenuExpanded ->
-                        notificationsService.getNotConsumedNotificationIds().forEach(this::updateNumNotifications));
 
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
@@ -81,7 +75,6 @@ public class LeftNavController implements Controller {
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
         releaseNotificationPin.unbind();
-        tradeAppsSubMenuExpandedPin.unsubscribe();
         notificationsService.removeListener(this::updateNumNotifications);
     }
 
@@ -104,20 +97,6 @@ public class LeftNavController implements Controller {
         findNavButton(supportedNavigationTarget)
                 .ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(supportedNavigationTarget);
-
-        switch (supportedNavigationTarget) {
-            case BISQ_EASY:
-            case MULTISIG:
-            case SUBMARINE:
-            case LIQUID_MULTISIG:
-            case LIGHTNING_FIAT:
-            case LIQUID_SWAP:
-            case BSQ_SWAP:
-            case LIGHTNING_ESCROW:
-            case MONERO_SWAP:
-                onTradeAppsSubMenuExpanded(true);
-                break;
-        }
     }
 
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
@@ -133,10 +112,6 @@ public class LeftNavController implements Controller {
     void onNavigationButtonCreated(LeftNavButton leftNavButton) {
         model.getLeftNavButtons().add(leftNavButton);
         model.getNavigationTargets().add(leftNavButton.getNavigationTarget());
-    }
-
-    void onTradeAppsSubMenuExpanded(boolean value) {
-        model.getTradeAppsSubMenuExpanded().set(value);
     }
 
     void onOpenUpdateWindow() {
@@ -179,11 +154,7 @@ public class LeftNavController implements Controller {
     private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
         switch (chatChannelDomain) {
             case BISQ_EASY:
-                if (model.getTradeAppsSubMenuExpanded().get()) {
-                    return Optional.of(NavigationTarget.BISQ_EASY);
-                } else {
-                    return Optional.of(NavigationTarget.TRADE_OVERVIEW);
-                }
+                return Optional.of(NavigationTarget.BISQ_EASY);
             case DISCUSSION:
                 return Optional.of(NavigationTarget.DISCUSSION);
             case EVENTS:
