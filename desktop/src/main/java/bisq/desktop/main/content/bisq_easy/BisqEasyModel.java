@@ -17,18 +17,19 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
-import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.TabModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import lombok.Getter;
 
-@Slf4j
-
-public class BisqEasyModel extends NavigationModel {
-    public BisqEasyModel() {
-    }
+@Getter
+public class BisqEasyModel extends TabModel {
+    private final BooleanProperty tradeTabVisible = new SimpleBooleanProperty();
+    private final BooleanProperty privateChatTabVisible = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY_INTRO;
+        return NavigationTarget.BISQ_EASY_ONBOARDING;
     }
 }

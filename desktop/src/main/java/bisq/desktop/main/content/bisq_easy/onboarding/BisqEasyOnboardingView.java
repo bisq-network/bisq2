@@ -21,33 +21,36 @@ import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingModel, BisqEasyOnboardingController> {
     private static final int PADDING = 20;
 
-    private final Button createOfferButton, openChatButton;
-    private final Switch dontShowAgain;
-    private final Hyperlink tradeGuide;
+    private Button watchVideoButton, openTradeGuideButton;
+    private final Button startTradingButton, openChatButton;
+    private ImageView videoImage;
+    private Subscription videoSeenPin;
 
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(new GridPane(), model, controller);
 
+        root.setPadding(new Insets(20, 0, 0, 0));
         root.setHgap(PADDING);
         root.setVgap(PADDING);
+        root.setMinWidth(780);
 
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(50);
@@ -55,69 +58,173 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         col2.setPercentWidth(50);
         root.getColumnConstraints().addAll(col1, col2);
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.headline"));
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-4");
-        headlineLabel.setWrapText(true);
-        root.add(headlineLabel, 0, 0, 2, 1);
+        addTopWidgetBox();
 
-        Pair<VBox, Button> leftBoxPair = getWidgetBox(
+        Label startTradingHeadlineLabel = new Label(Res.get("bisqEasy.onboarding.startTrading.headline"));
+        startTradingHeadlineLabel.getStyleClass().add("bisq-text-headline-4");
+        startTradingHeadlineLabel.setWrapText(true);
+        GridPane.setMargin(startTradingHeadlineLabel, new Insets(10, 48, -5, 48));
+        root.add(startTradingHeadlineLabel, 0, 1, 2, 1);
+
+        GridPane gridPane = getWidgetBoxGridPane();
+        root.add(gridPane, 0, 2, 2, 1);
+
+        startTradingButton = new Button(Res.get("bisqEasy.onboarding.startTrading"));
+        fillWidgetBox(gridPane,
+                0,
+                startTradingButton,
                 Res.get("bisqEasy.onboarding.left.headline"),
                 Res.get("bisqEasy.onboarding.left.content1"),
                 Res.get("bisqEasy.onboarding.left.content2"),
                 Res.get("bisqEasy.onboarding.left.content3"),
                 "onboarding-2-offer",
                 "onboarding-1-reputation",
-                "onboarding-2-payment",
-                Res.get("bisqEasy.onboarding.left.button")
+                "onboarding-2-payment"
         );
-        createOfferButton = leftBoxPair.getSecond();
-        createOfferButton.setDefaultButton(true);
-        root.add(leftBoxPair.getFirst(), 0, 1, 1, 1);
 
-        Pair<VBox, Button> rightBoxPair = getWidgetBox(
+        openChatButton = new Button(Res.get("bisqEasy.onboarding.openChat"));
+        fillWidgetBox(gridPane,
+                1,
+                openChatButton,
                 Res.get("bisqEasy.onboarding.right.headline"),
                 Res.get("bisqEasy.onboarding.right.content1"),
                 Res.get("bisqEasy.onboarding.right.content2"),
                 Res.get("bisqEasy.onboarding.right.content3"),
                 "onboarding-1-reputation",
                 "onboarding-2-offer",
-                "onboarding-2-payment",
-                Res.get("bisqEasy.onboarding.right.button")
+                "onboarding-2-payment"
         );
-        openChatButton = rightBoxPair.getSecond();
-        root.add(rightBoxPair.getFirst(), 1, 1, 1, 1);
-
-        dontShowAgain = new Switch(Res.get("bisqEasy.onboarding.dontShowAgain"));
-        tradeGuide = new Hyperlink(Res.get("bisqEasy.onboarding.tradeGuide"));
-        HBox hBox = new HBox(dontShowAgain, Spacer.fillHBox(), tradeGuide);
-        root.add(hBox, 0, 2, 2, 1);
     }
 
     @Override
     protected void onViewAttached() {
-        dontShowAgain.setSelected(false);
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        videoSeenPin = EasyBind.subscribe(model.getVideoSeen(), videoSeen -> {
+            startTradingButton.setDefaultButton(videoSeen);
+            watchVideoButton.setDefaultButton(!videoSeen);
+        });
+
+        startTradingButton.setOnAction(e -> controller.onCreateOffer());
         openChatButton.setOnAction(e -> controller.onOpenChat());
-        dontShowAgain.setOnAction(e -> controller.onDontShowAgain());
-        tradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
+        openTradeGuideButton.setOnAction(e -> controller.onOpenTradeGuide());
+        watchVideoButton.setOnMouseClicked(e -> controller.onPlayVideo());
+        videoImage.setOnMouseClicked(e -> controller.onPlayVideo());
     }
 
     @Override
     protected void onViewDetached() {
-        createOfferButton.setOnAction(null);
+        videoSeenPin.unsubscribe();
+
+        startTradingButton.setOnAction(null);
         openChatButton.setOnAction(null);
-        dontShowAgain.setOnAction(null);
-        tradeGuide.setOnAction(null);
+        openTradeGuideButton.setOnAction(null);
+        watchVideoButton.setOnAction(null);
+        videoImage.setOnMouseClicked(null);
     }
 
-    private Pair<VBox, Button> getWidgetBox(String headline,
-                                            String content1,
-                                            String content2,
-                                            String content3,
-                                            String imageId1,
-                                            String imageId2,
-                                            String imageId3,
-                                            String buttonLabel) {
+    private void addTopWidgetBox() {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(48);
+        gridPane.setVgap(15);
+        gridPane.getStyleClass().add("bisq-box-2");
+        gridPane.setPadding(new Insets(30, 48, 44, 48));
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        gridPane.getColumnConstraints().addAll(col1, col2);
+        root.add(gridPane, 0, 0, 2, 1);
+
+        Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.top.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-4");
+        headlineLabel.setWrapText(true);
+        GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
+        gridPane.add(headlineLabel, 0, 0, 2, 1);
+
+        HBox line1 = getIconAndText(Res.get("bisqEasy.onboarding.top.content1"), "onboarding-2-offer");
+        HBox line2 = getIconAndText(Res.get("bisqEasy.onboarding.top.content2"), "onboarding-1-reputation");
+        HBox line3 = getIconAndText(Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-payment");
+        VBox vBox = new VBox(15, Spacer.fillVBox(), line1, line2, line3, Spacer.fillVBox());
+        gridPane.add(vBox, 0, 1);
+
+        videoImage = ImageUtil.getImageViewById("video");
+        videoImage.setCursor(Cursor.HAND);
+        Tooltip.install(videoImage, new Tooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));
+        GridPane.setHalignment(videoImage, HPos.CENTER);
+        gridPane.add(videoImage, 1, 1);
+
+        openTradeGuideButton = new Button(Res.get("bisqEasy.onboarding.openTradeGuide"));
+        openTradeGuideButton.getStyleClass().add("super-large-button");
+        openTradeGuideButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setMargin(openTradeGuideButton, new Insets(10, 0, 0, 0));
+        gridPane.add(openTradeGuideButton, 0, 2);
+
+        watchVideoButton = new Button(Res.get("bisqEasy.onboarding.watchVideo"));
+        watchVideoButton.getStyleClass().add("super-large-button");
+        watchVideoButton.setMaxWidth(Double.MAX_VALUE);
+        watchVideoButton.setTooltip(new Tooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));
+        GridPane.setMargin(watchVideoButton, new Insets(10, 0, 0, 0));
+        gridPane.add(watchVideoButton, 1, 2);
+    }
+
+    private GridPane getWidgetBoxGridPane() {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(116);
+        gridPane.setVgap(15);
+        gridPane.setPadding(new Insets(36, 48, 52, 48));
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        gridPane.getColumnConstraints().addAll(col1, col2);
+        return gridPane;
+    }
+
+    private void fillWidgetBox(GridPane gridPane,
+                               int columnIndex,
+                               Button button,
+                               String headline,
+                               String content1,
+                               String content2,
+                               String content3,
+                               String imageId1,
+                               String imageId2,
+                               String imageId3) {
+        Pane group = new Pane();
+        group.getStyleClass().add("bisq-box-1");
+        if (columnIndex == 0) {
+            GridPane.setMargin(group, new Insets(-36, -48, -52, -48));
+        } else {
+            GridPane.setMargin(group, new Insets(-36, -48, -52, -48));
+        }
+        gridPane.add(group, columnIndex, 0, 1, 5);
+
+        Label headlineLabel = new Label(headline);
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
+        headlineLabel.setWrapText(true);
+        GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
+        gridPane.add(headlineLabel, columnIndex, 0);
+
+        HBox line1 = getIconAndText(content1, imageId1);
+        gridPane.add(line1, columnIndex, 1);
+        HBox line2 = getIconAndText(content2, imageId2);
+        gridPane.add(line2, columnIndex, 2);
+        HBox line3 = getIconAndText(content3, imageId3);
+        gridPane.add(line3, columnIndex, 3);
+
+        button.getStyleClass().add("large-button");
+        button.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setMargin(button, new Insets(20, 0, 0, 0));
+        gridPane.add(button, columnIndex, 4);
+    }
+
+    private Pair<VBox, Button> getWidgetBox1(String headline,
+                                             String content1,
+                                             String content2,
+                                             String content3,
+                                             String imageId1,
+                                             String imageId2,
+                                             String imageId3,
+                                             String buttonLabel) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
         headlineLabel.setWrapText(true);
@@ -128,7 +235,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         VBox.setMargin(button, new Insets(20, 0, 0, 0));
-        VBox vBox = new VBox(16,
+        VBox vBox = new VBox(15,
                 headlineLabel,
                 getIconAndText(content1, imageId1),
                 getIconAndText(content2, imageId2),

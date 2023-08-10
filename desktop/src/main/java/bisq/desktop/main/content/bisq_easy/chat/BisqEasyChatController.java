@@ -60,7 +60,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private TradeStateController tradeStateController;
 
     public BisqEasyChatController(ServiceProvider serviceProvider) {
-        super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_CHAT);
+        super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_MARKETS);
 
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         settingsService = serviceProvider.getSettingsService();

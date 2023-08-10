@@ -22,26 +22,27 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.bisq_easy.create_offer.CreateOfferController;
-import bisq.settings.DontShowAgainService;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import static bisq.settings.DontShowAgainKey.BISQ_EASY_INTRO;
 
 @Slf4j
 public class BisqEasyOnboardingController implements Controller {
     @Getter
     private final BisqEasyOnboardingView view;
+    private final BisqEasyOnboardingModel model;
+    private final SettingsService settingsService;
 
     public BisqEasyOnboardingController(ServiceProvider serviceProvider) {
-        SettingsService settingsService = serviceProvider.getSettingsService();
-        BisqEasyOnboardingModel model = new BisqEasyOnboardingModel();
+        settingsService = serviceProvider.getSettingsService();
+        model = new BisqEasyOnboardingModel();
         view = new BisqEasyOnboardingView(model, this);
     }
 
     @Override
     public void onActivate() {
+        model.getVideoSeen().set(settingsService.getCookie().asBoolean(CookieKey.BISQ_EASY_VIDEO_OPENED).orElse(false));
     }
 
     @Override
@@ -49,18 +50,18 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     void onOpenChat() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_MARKETS);
     }
 
     void onCreateOffer() {
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(true));
     }
 
-    void onDontShowAgain() {
-        DontShowAgainService.dontShowAgain(BISQ_EASY_INTRO);
-    }
-
     void onOpenTradeGuide() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+    }
+
+    void onPlayVideo() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_VIDEO);
     }
 }

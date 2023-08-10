@@ -55,6 +55,11 @@ public class BisqEasyChatView extends ChatView {
                 chatMessagesComponent,
                 channelSidebar);
 
+        //  root.setPadding(new Insets(-33, -67, -67, -67));
+        root.setPadding(new Insets(0, -67, -67, -67));
+
+        // StackPane.setMargin(newValue.getRoot(), new Insets(-33, -67, -67, -67));
+
         bisqEasyChatController = controller;
         this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
         this.tradeStateViewRoot = tradeStateViewRoot;

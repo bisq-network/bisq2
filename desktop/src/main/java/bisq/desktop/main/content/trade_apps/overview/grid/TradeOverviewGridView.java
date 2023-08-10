@@ -45,7 +45,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
         super(new GridPane(), model, controller);
         root.setHgap(25);
         root.setVgap(25);
-        root.setPadding(new Insets(25, 0, 0, 0));
+        root.setPadding(new Insets(20, 0, 0, 0));
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setPercentWidth(50);
@@ -56,12 +56,14 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
         root.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
 
         Label headline = new Label(Res.get("tradeApps.overview.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        headline.setWrapText(true);
+        headline.getStyleClass().add("bisq-text-headline-4");
+        headline.setMinHeight(55);
         root.add(headline, 0, 0, 2, 1);
 
         Label subHeadline = new Label(Res.get("tradeApps.overview.subHeadline"));
         subHeadline.setWrapText(true);
-        subHeadline.getStyleClass().add("bisq-text-1");
+        subHeadline.getStyleClass().add("bisq-text-16");
         GridPane.setMargin(subHeadline, new Insets(0, 0, 10, 0));
         root.add(subHeadline, 0, 1, 2, 1);
 
@@ -79,7 +81,7 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
 
         Label more = new Label(Res.get("tradeApps.overview.more"));
         more.setWrapText(true);
-        more.getStyleClass().add("bisq-text-1");
+        more.getStyleClass().add("bisq-text-16");
         GridPane.setMargin(more, new Insets(20, 0, 10, 0));
         root.add(more, 0, root.getRowCount(), 2, 1);
 
@@ -90,7 +92,6 @@ public class TradeOverviewGridView extends TradeOverviewView<GridPane, TradeOver
             GridPane.setHgrow(protocolBox, Priority.ALWAYS);
             int columnIndex = index % 2;
             int rowIndex = (index >> 1) + rowCount;
-            log.error("index={}, columnIndex={}, rowIndex={}", index, columnIndex, rowIndex);
             root.add(protocolBox, columnIndex, rowIndex);
             index++;
         }

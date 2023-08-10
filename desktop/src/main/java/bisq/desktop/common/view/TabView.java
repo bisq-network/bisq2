@@ -135,7 +135,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         tabs.setMinHeight(52);
 
         topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
-        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
+        HBox.setMargin(headLine, new Insets(-4, 0, 0, -2));
     }
 
     protected void setupLineAndMarker() {

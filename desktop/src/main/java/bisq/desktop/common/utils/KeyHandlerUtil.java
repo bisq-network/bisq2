@@ -58,7 +58,7 @@ public class KeyHandlerUtil {
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.BISQ_EASY_INTRO);
+                Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT6, keyEvent)) {

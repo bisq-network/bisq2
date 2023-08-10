@@ -188,7 +188,7 @@ public class UserProfileSelection {
             pinnedPrivateChannelUserProfile = Optional.empty();
             switch (navigationTarget) {
                 case BISQ_EASY:
-                case BISQ_EASY_CHAT:
+                case BISQ_EASY_MARKETS:
                     selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY));
                     return;
                 case DISCUSSION:
