@@ -21,7 +21,7 @@ import bisq.tor.local_network.TorNode;
 
 import java.util.Map;
 
-public class DirectoryAuthorityTorrcGenerator extends CommonTorrcGenerator {
+public class DirectoryAuthorityTorrcGenerator extends TestNetworkTorrcGenerator {
     public DirectoryAuthorityTorrcGenerator(TorNode thisDirectoryAuthority) {
         super(thisDirectoryAuthority);
     }

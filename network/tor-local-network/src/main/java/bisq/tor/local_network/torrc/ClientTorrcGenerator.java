@@ -22,7 +22,7 @@ import bisq.tor.local_network.TorNode;
 
 import java.util.Map;
 
-public class ClientTorrcGenerator extends CommonTorrcGenerator {
+public class ClientTorrcGenerator extends TestNetworkTorrcGenerator {
     public ClientTorrcGenerator(TorNode thisTorNode) {
         super(thisTorNode);
     }

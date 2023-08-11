@@ -21,10 +21,10 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class OverridingTorrcGenerator implements TorrcConfigGenerator {
-    private final CommonTorrcGenerator template;
+    private final TestNetworkTorrcGenerator template;
     private final Map<String, String> clientTorrcConfig;
 
-    public OverridingTorrcGenerator(CommonTorrcGenerator template, Map<String, String> clientTorrcConfig) {
+    public OverridingTorrcGenerator(TestNetworkTorrcGenerator template, Map<String, String> clientTorrcConfig) {
         this.template = template;
         this.clientTorrcConfig = clientTorrcConfig;
     }

@@ -21,7 +21,7 @@ import bisq.tor.local_network.TorNode;
 
 import java.util.Map;
 
-public class RelayTorrcGenerator extends CommonTorrcGenerator {
+public class RelayTorrcGenerator extends TestNetworkTorrcGenerator {
     public RelayTorrcGenerator(TorNode thisTorNode) {
         super(thisTorNode);
     }
