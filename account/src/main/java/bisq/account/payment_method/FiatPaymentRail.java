@@ -48,7 +48,8 @@ public enum FiatPaymentRail implements PaymentRail {
     F2F(),
     ACH_TRANSFER(List.of("US"), List.of("USD")),
     PIX(List.of("BR"), List.of("BRL")),
-    FASTER_PAYMENTS(List.of("GB"), List.of("GBP"));
+    FASTER_PAYMENTS(List.of("GB"), List.of("GBP")),
+    PAY_ID(List.of("AU"), List.of("AUD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -114,8 +115,6 @@ CASH_BY_MAIL=Cash By Mail
 MONEY_GRAM=MoneyGram
 WESTERN_UNION=Western Union
 JAPAN_BANK=Japan Bank Furikomi
-AUSTRALIA_PAY_ID=Australian PayID
-
 UPHOLD=Uphold
 MONEY_BEAM=MoneyBeam (N26)
 POPMONEY=Popmoney

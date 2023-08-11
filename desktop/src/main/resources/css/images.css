@@ -430,6 +430,10 @@
     -fx-image: url("/images/payment/FasterPayments.png");
 }
 
+#PAY_ID {
+    -fx-image: url("/images/payment/PayID.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");
