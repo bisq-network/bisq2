@@ -83,6 +83,9 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
             case COUNTRYBASEDACCOUNT: {
                 return CountryBasedAccount.fromProto(proto);
             }
+            case FASTERPAYMENTSACCOUNT: {
+                return FasterPaymentsAccount.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

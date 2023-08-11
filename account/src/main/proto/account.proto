@@ -72,6 +72,7 @@ message AccountPayload {
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
     RevolutAccountPayload RevolutAccountPayload = 21;
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
+    FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 23;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -86,6 +87,7 @@ message CountryBasedAccountPayload {
     BankAccountPayload bankAccountPayload = 2;
     SepaAccountPayload sepaAccountPayload = 10;
     F2FAccountPayload f2fAccountPayload = 11;
+    PixAccountPayload pixAccountPayload = 12;
   }
 }
 message SepaAccountPayload {
@@ -128,6 +130,14 @@ message ZelleAccountPayload {
   string emailOrMobileNr = 2;
 }
 
+message PixAccountPayload {
+  string pix_key = 1;
+}
+
+message FasterPaymentsAccountPayload {
+  string sort_code = 1;
+  string account_nr = 2;
+}
 
 // Account
 message Account {
@@ -142,6 +152,7 @@ message Account {
     UserDefinedFiatAccount userDefinedFiatAccount = 20;
     RevolutAccount revolutAccount = 21;
     CountryBasedAccount countryBasedAccount = 22;
+    FasterPaymentsAccount fasterPaymentsAccount = 23;
   }
 }
 
@@ -155,6 +166,7 @@ message CountryBasedAccount {
     BankAccount bankAccount = 19;
     SepaAccount sepaAccount = 20;
     F2FAccount f2fAccount = 21;
+    PixAccount pixAccount = 22;
   }
 }
 message SepaAccount {
@@ -177,6 +189,12 @@ message ZelleAccount {
 }
 
 message NationalBankAccount {
+}
+
+message PixAccount {
+}
+
+message FasterPaymentsAccount {
 }
 
 message AccountStore {

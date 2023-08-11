@@ -398,6 +398,13 @@
     -fx-image: url("/images/payment/ACH.png");
 }
 
+#PIX {
+    -fx-image: url("/images/payment/Pix.png");
+}
+
+#FASTER_PAYMENTS {
+    -fx-image: url("/images/payment/FasterPayments.png");
+}
 
 /* Onboarding icons*/
 #info-circle-solid {
