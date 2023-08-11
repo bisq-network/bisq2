@@ -17,14 +17,13 @@
 
 package bisq.tor.local_network.torrc;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 public class OverridingTorrcGenerator implements TorrcConfigGenerator {
-    private final CommonTorrcGenerator template;
+    private final TorrcConfigGenerator template;
     private final Map<String, String> clientTorrcConfig;
 
-    public OverridingTorrcGenerator(CommonTorrcGenerator template, Map<String, String> clientTorrcConfig) {
+    public OverridingTorrcGenerator(TorrcConfigGenerator template, Map<String, String> clientTorrcConfig) {
         this.template = template;
         this.clientTorrcConfig = clientTorrcConfig;
     }
@@ -34,9 +33,5 @@ public class OverridingTorrcGenerator implements TorrcConfigGenerator {
         Map<String, String> torrcConfigs = template.generate();
         torrcConfigs.putAll(clientTorrcConfig);
         return torrcConfigs;
-    }
-
-    public Path getTorrcPath() {
-        return template.getThisTorNode().getTorrcPath();
     }
 }

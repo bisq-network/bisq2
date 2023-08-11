@@ -17,18 +17,18 @@
 
 package bisq.tor.local_network.torrc;
 
-import bisq.tor.local_network.TorNode;
-
 import java.util.Map;
 
-public class RelayTorrcGenerator extends CommonTorrcGenerator {
-    public RelayTorrcGenerator(TorNode thisTorNode) {
-        super(thisTorNode);
+public class RelayTorrcGenerator implements TorrcConfigGenerator {
+    private final TorrcConfigGenerator baseTorrcConfigGenerator;
+
+    public RelayTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator) {
+        this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
     }
 
     @Override
     public Map<String, String> generate() {
-        super.generate();
+        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
 
         torConfigMap.put("ExitRelay", "1");
         torConfigMap.put("ExitPolicy", "accept 127.0.0.0/8:*,accept private:*,accept *:*,reject *:*");

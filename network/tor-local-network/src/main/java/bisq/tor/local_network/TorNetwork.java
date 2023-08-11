@@ -19,10 +19,7 @@ package bisq.tor.local_network;
 
 import bisq.common.util.NetworkUtils;
 import bisq.tor.local_network.da.DirectoryAuthorityFactory;
-import bisq.tor.local_network.torrc.ClientTorrcGenerator;
-import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
-import bisq.tor.local_network.torrc.RelayTorrcGenerator;
-import bisq.tor.local_network.torrc.TorrcFileGenerator;
+import bisq.tor.local_network.torrc.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -131,23 +128,25 @@ public class TorNetwork {
         for (TorNode da : allDAs) {
             var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
             Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
-            Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
+            Path torrcPath = da.getTorrcPath();
             var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             generateTorrc(da, torrcFileGenerator);
         }
 
         for (TorNode relay : relays) {
-            var relayTorrcGenerator = new RelayTorrcGenerator(relay);
+            var testNetworkTorrcGenerator = new TestNetworkTorrcGenerator(relay);
+            var relayTorrcGenerator = new RelayTorrcGenerator(testNetworkTorrcGenerator);
             Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
-            Path torrcPath = relayTorrcGenerator.getThisTorNode().getTorrcPath();
+            Path torrcPath = relay.getTorrcPath();
             var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             generateTorrc(relay, torrcFileGenerator);
         }
 
         for (TorNode client : clients) {
-            var clientTorrcGenerator = new ClientTorrcGenerator(client);
+            var testNetworkTorrcGenerator = new TestNetworkTorrcGenerator(client);
+            var clientTorrcGenerator = new ClientTorrcGenerator(testNetworkTorrcGenerator);
             Map<String, String> torrcConfigs = clientTorrcGenerator.generate();
-            Path torrcPath = clientTorrcGenerator.getThisTorNode().getTorrcPath();
+            Path torrcPath = client.getTorrcPath();
             var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
             generateTorrc(client, torrcFileGenerator);
         }

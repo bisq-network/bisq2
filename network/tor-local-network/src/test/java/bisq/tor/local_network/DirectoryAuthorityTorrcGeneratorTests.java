@@ -84,7 +84,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
 
         Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
-        Path torrcPath = torDaTorrcGenerator.getThisTorNode().getTorrcPath();
+        Path torrcPath = firstDirAuth.getTorrcPath();
         var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDirAuthorities);
 
         torrcFileGenerator.generate();
