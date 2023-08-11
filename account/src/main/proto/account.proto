@@ -91,6 +91,7 @@ message CountryBasedAccountPayload {
     SepaAccountPayload sepaAccountPayload = 10;
     F2FAccountPayload f2fAccountPayload = 11;
     PixAccountPayload pixAccountPayload = 12;
+    StrikeAccountPayload strikeAccountPayload = 13;
   }
 }
 message SepaAccountPayload {
@@ -158,6 +159,10 @@ message CashByMailAccountPayload {
   string extra_info = 3;
 }
 
+message StrikeAccountPayload {
+  string holderName = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -189,6 +194,7 @@ message CountryBasedAccount {
     SepaAccount sepaAccount = 20;
     F2FAccount f2fAccount = 21;
     PixAccount pixAccount = 22;
+    StrikeAccount strikeAccount = 23;
   }
 }
 message SepaAccount {
@@ -226,6 +232,9 @@ message USPostalMoneyOrderAccount {
 }
 
 message CashByMailAccount {
+}
+
+message StrikeAccount {
 }
 
 message AccountStore {

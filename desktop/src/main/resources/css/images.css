@@ -442,6 +442,10 @@
     -fx-image: url("/images/payment/CashByMail.png");
 }
 
+#STRIKE {
+    -fx-image: url("/images/payment/Strike.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");

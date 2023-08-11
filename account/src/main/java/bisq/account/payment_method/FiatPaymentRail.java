@@ -51,7 +51,8 @@ public enum FiatPaymentRail implements PaymentRail {
     FASTER_PAYMENTS(List.of("GB"), List.of("GBP")),
     PAY_ID(List.of("AU"), List.of("AUD")),
     US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD")),
-    CASH_BY_MAIL();
+    CASH_BY_MAIL(),
+    STRIKE(List.of("US", "SV"), List.of("USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -150,7 +151,6 @@ MONESE=Monese
 SATISPAY=Satispay
 TIKKIE=Tikkie
 VERSE=Verse
-STRIKE=Strike
 SWIFT=SWIFT International Wire Transfer
 DOMESTIC_WIRE_TRANSFER=Domestic Wire Transfer
 CIPS=Cross-Border Interbank Payment System
