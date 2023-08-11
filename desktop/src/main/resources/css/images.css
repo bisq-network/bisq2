@@ -434,6 +434,10 @@
     -fx-image: url("/images/payment/PayID.png");
 }
 
+#US_POSTAL_MONEY_ORDER {
+    -fx-image: url("/images/payment/USPostalMoneyOrder.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");

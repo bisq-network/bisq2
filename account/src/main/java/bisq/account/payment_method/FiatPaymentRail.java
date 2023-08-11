@@ -49,7 +49,8 @@ public enum FiatPaymentRail implements PaymentRail {
     ACH_TRANSFER(List.of("US"), List.of("USD")),
     PIX(List.of("BR"), List.of("BRL")),
     FASTER_PAYMENTS(List.of("GB"), List.of("GBP")),
-    PAY_ID(List.of("AU"), List.of("AUD"));
+    PAY_ID(List.of("AU"), List.of("AUD")),
+    US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -109,7 +110,6 @@ TODO add missing bisq 1 payment methods with supported countries and currencies
 NATIONAL_BANK=National bank transfer
 SAME_BANK=Transfer with same bank
 SPECIFIC_BANKS=Transfers with specific banks
-US_POSTAL_MONEY_ORDER=US Postal Money Order
 CASH_DEPOSIT=Cash Deposit
 CASH_BY_MAIL=Cash By Mail
 MONEY_GRAM=MoneyGram
