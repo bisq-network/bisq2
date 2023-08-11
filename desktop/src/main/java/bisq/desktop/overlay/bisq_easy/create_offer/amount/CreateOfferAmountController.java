@@ -93,12 +93,12 @@ public class CreateOfferAmountController implements Controller {
                 maxOrFixAmountComponent);
     }
 
-    public void setShowRangeAmounts(boolean value) {
-        model.getShowRangeAmounts().set(value);
-    }
-
     public void setOpenedFromDashboard(boolean isOpenedFromDashboard) {
         model.setOpenedFromDashboard(isOpenedFromDashboard);
+        model.getShowRangeAmounts().set(!isOpenedFromDashboard);
+        if (isOpenedFromDashboard) {
+            model.getIsMinAmountEnabled().set(false);
+        }
     }
 
     public void setDirection(Direction direction) {
@@ -168,7 +168,10 @@ public class CreateOfferAmountController implements Controller {
         model.setHeadline(model.getDirection().isBuy() ?
                 Res.get("bisqEasy.createOffer.amount.headline.buyer") :
                 Res.get("bisqEasy.createOffer.amount.headline.seller"));
-        model.getIsMinAmountEnabled().set(settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false));
+
+        Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
+        model.getIsMinAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
+
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
                 value -> {
                     if (model.getIsMinAmountEnabled().get()) {

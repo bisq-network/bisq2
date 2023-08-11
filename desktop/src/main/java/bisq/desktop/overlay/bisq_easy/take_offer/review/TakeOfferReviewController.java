@@ -227,7 +227,7 @@ public class TakeOfferReviewController implements Controller {
 
     void onOpenPrivateChat() {
         close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_MARKETS);
     }
 
     private void close() {

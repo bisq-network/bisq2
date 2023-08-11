@@ -23,7 +23,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
-import bisq.desktop.main.content.trade_apps.overview.grid.TradeOverviewGridController;
+import bisq.desktop.main.content.trade_apps.overview.TradeOverviewController;
+import bisq.desktop.main.content.trade_apps.roadmap.ProtocolRoadmapController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +63,7 @@ public class TradeAppsController extends TabController<TradeAppsModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case TRADE_PROTOCOLS_OVERVIEW: {
-                return Optional.of(new TradeOverviewGridController(serviceProvider));
+                return Optional.of(new TradeOverviewController(serviceProvider));
             }
             case BISQ_EASY_INFO: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
@@ -81,7 +82,7 @@ public class TradeAppsController extends TabController<TradeAppsModel> {
             }
             case LIGHTNING_FIAT: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_FIAT,
-                        "protocol-ln-liquid",
+                        "protocol-lightning-fiat",
                         "https://bisq.wiki/ln-liquid"));
             }
             case MORE_TRADE_PROTOCOLS: {

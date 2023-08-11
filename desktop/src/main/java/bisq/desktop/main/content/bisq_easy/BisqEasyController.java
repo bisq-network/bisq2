@@ -19,43 +19,31 @@ package bisq.desktop.main.content.bisq_easy;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.bisq_easy.chat.BisqEasyChatController;
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
-import bisq.settings.DontShowAgainService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.settings.DontShowAgainKey.BISQ_EASY_INTRO;
-
-//todo can be removed if we dont have a intro screen anymore... but leave it for now...
 @Slf4j
-public class BisqEasyController extends NavigationController {
+public class BisqEasyController extends TabController<BisqEasyModel> {
     private final ServiceProvider serviceProvider;
-    @Getter
-    private final BisqEasyModel model;
     @Getter
     private final BisqEasyView view;
 
     public BisqEasyController(ServiceProvider serviceProvider) {
-        super(NavigationTarget.BISQ_EASY);
+        super(new BisqEasyModel(), NavigationTarget.BISQ_EASY);
 
         this.serviceProvider = serviceProvider;
-        model = new BisqEasyModel();
+
         view = new BisqEasyView(model, this);
     }
 
     @Override
     public void onActivate() {
-        if (DontShowAgainService.showAgain(BISQ_EASY_INTRO)) {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_INTRO);
-        } else {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
-        }
     }
 
     @Override
@@ -63,12 +51,19 @@ public class BisqEasyController extends NavigationController {
     }
 
     @Override
+    protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
+        if (!model.getTradeTabVisible().get()) {
+            model.getTradeTabVisible().set(navigationTarget == NavigationTarget.MORE_TRADE_PROTOCOLS);
+        }
+    }
+
+    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_EASY_INTRO: {
+            case BISQ_EASY_ONBOARDING: {
                 return Optional.of(new BisqEasyOnboardingController(serviceProvider));
             }
-            case BISQ_EASY_CHAT: {
+            case BISQ_EASY_MARKETS: {
                 return Optional.of(new BisqEasyChatController(serviceProvider));
             }
             default: {

@@ -19,19 +19,44 @@ package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.data.Pair;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
 import lombok.Getter;
 
-public abstract class TradeOverviewController<M extends TradeOverviewModel> implements Controller {
+import java.util.List;
+
+public class TradeOverviewController implements Controller {
     @Getter
-    protected final M model;
+    private final TradeOverviewView view;
+    @Getter
+    private final TradeOverviewModel model;
 
-    public TradeOverviewController(M model) {
-        this.model = model;
+    public TradeOverviewController(ServiceProvider serviceProvider) {
+        this.model = new TradeOverviewModel(getMainProtocols(), getMoreProtocols());
+        this.view = new TradeOverviewView(model, this);
+    }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
+    void onSelect(ProtocolListItem protocolListItem) {
+        NavigationTarget navigationTarget = protocolListItem.getNavigationTarget();
+        if (navigationTarget == NavigationTarget.MORE_TRADE_PROTOCOLS) {
+            Navigation.navigateTo(navigationTarget, new MoreProtocolsController.InitData(protocolListItem.getTradeProtocolType()));
+        } else {
+            Navigation.navigateTo(navigationTarget);
+        }
+    }
+
+    private List<ProtocolListItem> getMainProtocols() {
         ProtocolListItem bisqEasy = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_EASY,
                 NavigationTarget.BISQ_EASY,
                 TradeProtocolType.BISQ_EASY,
@@ -56,13 +81,13 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 new Pair<>(10000L, 700000L),
                 "Q3/24"
         );
-        model.getMainProtocols().setAll(
-                bisqEasy,
+        return List.of(bisqEasy,
                 multisig,
                 submarine,
-                liquidFiat
-        );
+                liquidFiat);
+    }
 
+    private List<ProtocolListItem> getMoreProtocols() {
         ProtocolListItem liquidMultisig = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_MULTISIG,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.LIQUID_MULTISIG,
@@ -93,29 +118,10 @@ public abstract class TradeOverviewController<M extends TradeOverviewModel> impl
                 new Pair<>(10000L, 700000L),
                 "Q4/24"
         );
-        model.getMoreProtocols().setAll(
-                liquidMultisig,
+        return List.of(liquidMultisig,
                 lightningEscrow,
                 moneroSwap,
                 liquidSwap,
-                bsqSwap
-        );
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
-
-    public void onSelect(ProtocolListItem protocolListItem) {
-        NavigationTarget navigationTarget = protocolListItem.getNavigationTarget();
-        if (navigationTarget == NavigationTarget.MORE_TRADE_PROTOCOLS) {
-            Navigation.navigateTo(navigationTarget, new MoreProtocolsController.InitData(protocolListItem.getTradeProtocolType()));
-        } else {
-            Navigation.navigateTo(navigationTarget);
-        }
+                bsqSwap);
     }
 }

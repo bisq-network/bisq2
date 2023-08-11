@@ -63,11 +63,11 @@ public class TacController implements InitWithDataController<TacController.InitD
     public void onDeactivate() {
     }
 
-    public void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+    void onQuit() {
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
-    public void onConfirm(boolean selected) {
+    void onConfirm(boolean selected) {
         model.getTacConfirmed().set(selected);
         settingsService.setTacAccepted(selected);
     }

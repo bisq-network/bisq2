@@ -22,8 +22,9 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.bisq_easy.chat.guide.BisqEasyGuideController;
 import bisq.desktop.main.content.bisq_easy.chat.offer_details.BisqEasyOfferDetailsController;
+import bisq.desktop.main.content.bisq_easy.guide.BisqEasyGuideController;
+import bisq.desktop.main.content.bisq_easy.video.BisqEasyVideoController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
 import bisq.desktop.main.content.user.reputation.accountAge.AccountAgeController;
@@ -133,6 +134,9 @@ public class OverlayController extends NavigationController {
             }
             case TAKE_OFFER: {
                 return Optional.of(new TakeOfferController(serviceProvider));
+            }
+            case BISQ_EASY_VIDEO: {
+                return Optional.of(new BisqEasyVideoController(serviceProvider));
             }
             case BISQ_EASY_GUIDE: {
                 return Optional.of(new BisqEasyGuideController(serviceProvider));

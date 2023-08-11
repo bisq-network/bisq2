@@ -27,10 +27,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -57,6 +54,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         setupTopBox();
         contentPane = new VBox();
         setupLineAndMarker();
+        VBox.setVgrow(contentPane, Priority.ALWAYS);
         root.getChildren().addAll(topBox, lineAndMarker, contentPane);
     }
 
@@ -97,6 +95,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         if (newValue != null) {
+            VBox.setVgrow(newValue.getRoot(), Priority.ALWAYS);
             contentPane.getChildren().setAll(newValue.getRoot());
         } else {
             contentPane.getChildren().clear();
@@ -127,6 +126,14 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     protected void setupTopBox() {
+        setupTopBox(isRightSide());
+    }
+
+    protected boolean isRightSide() {
+        return true;
+    }
+
+    protected void setupTopBox(boolean isRightSide) {
         headLine = new Label();
         headLine.getStyleClass().add("bisq-content-headline-label");
         headLine.setMinWidth(90);
@@ -135,8 +142,12 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         tabs.setSpacing(46);
         tabs.setMinHeight(52);
 
-        topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
-        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
+        if (isRightSide) {
+            topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
+        } else {
+            topBox = new HBox(tabs, Spacer.fillHBox(), headLine);
+        }
+        HBox.setMargin(headLine, new Insets(-4, 0, 0, -2));
     }
 
     protected void setupLineAndMarker() {

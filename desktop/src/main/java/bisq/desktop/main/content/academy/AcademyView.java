@@ -26,6 +26,8 @@ public class AcademyView extends TabView<AcademyModel, AcademyController> {
     public AcademyView(AcademyModel model, AcademyController controller) {
         super(model, controller);
 
+        // headLine.setText(Res.get("academy.learn"));
+
         addTab(Res.get("academy.overview"), NavigationTarget.OVERVIEW_ACADEMY);
         addTab(Res.get("academy.overview.bisq"), NavigationTarget.BISQ_ACADEMY);
         addTab(Res.get("academy.overview.bitcoin"), NavigationTarget.BITCOIN_ACADEMY);
@@ -33,8 +35,6 @@ public class AcademyView extends TabView<AcademyModel, AcademyController> {
         addTab(Res.get("academy.overview.security"), NavigationTarget.SECURITY_ACADEMY);
         addTab(Res.get("academy.overview.privacy"), NavigationTarget.PRIVACY_ACADEMY);
         addTab(Res.get("academy.overview.foss"), NavigationTarget.FOSS_ACADEMY);
-
-        headLine.setText(Res.get("academy.learn"));
     }
 
     @Override

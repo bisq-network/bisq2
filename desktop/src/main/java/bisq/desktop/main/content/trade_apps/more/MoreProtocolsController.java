@@ -19,7 +19,7 @@ package bisq.desktop.main.content.trade_apps.more;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.main.content.trade_apps.ProtocolRoadmapController;
+import bisq.desktop.main.content.trade_apps.roadmap.ProtocolRoadmapController;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -66,7 +66,7 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
             }
             case BSQ_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
-                        "protocol-bsq",
+                        "protocol-bsq-swap",
                         "https://bisq.wiki/BSQ"));
             }
             case LIGHTNING_ESCROW: {
@@ -76,7 +76,7 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
             }
             case MONERO_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
-                        "protocol-monero",
+                        "protocol-monero-swap",
                         "https://www.monerooutreach.org/stories/monero-atomic-swaps.html"));
             }
             default: {

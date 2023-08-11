@@ -28,6 +28,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,6 +50,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
         VBox marketPrice = priceTriple.getFirst();
+        marketPrice.setPrefWidth(350);
         marketPriceLabel = priceTriple.getSecond();
         marketCodeLabel = priceTriple.getThird();
 
@@ -59,7 +61,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         Pair<VBox, Label> usersPair = getValueBox(Res.get("dashboard.activeUsers"));
         VBox activeUsers = usersPair.getFirst();
         activeUsersLabel = usersPair.getSecond();
-
+        HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
         root.add(hBox, 0, 0, 2, 1);
 
@@ -105,6 +107,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
     private Triple<VBox, Label, Label> getPriceBox(String title) {
         Label titleLabel = new Label(title);
+        titleLabel.setTextAlignment(TextAlignment.CENTER);
         titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
 
         Label valueLabel = new Label();
@@ -114,7 +117,8 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         codeLabel.getStyleClass().addAll("bisq-text-12");
 
         HBox hBox = new HBox(9, valueLabel, codeLabel);
-        hBox.setAlignment(Pos.BASELINE_RIGHT);
+        hBox.setAlignment(Pos.BASELINE_CENTER);
+        VBox.setMargin(titleLabel, new Insets(0, 100, 0, 0));
         VBox box = new VBox(titleLabel, hBox);
         box.setAlignment(Pos.TOP_CENTER);
         HBox.setHgrow(box, Priority.ALWAYS);

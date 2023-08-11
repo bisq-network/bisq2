@@ -17,30 +17,42 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
-import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.main.content.chat.ChatView;
-import javafx.geometry.Insets;
-import javafx.scene.layout.StackPane;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
+import bisq.desktop.common.view.TabView;
+import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyView extends NavigationView<StackPane, BisqEasyModel, BisqEasyController> {
+public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
+
+    private final TabButton trades, privateChat;
 
     public BisqEasyView(BisqEasyModel model, BisqEasyController controller) {
-        super(new StackPane(), model, controller);
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            if (newValue instanceof ChatView) {
-                StackPane.setMargin(newValue.getRoot(), new Insets(-33, -67, -67, -67));
-            }
-            root.getChildren().setAll(newValue.getRoot());
-        });
+        super(model, controller);
+
+        // headLine.setText(Res.get("bisqEasy.headline"));
+
+        addTab(Res.get("bisqEasy.dashboard"), NavigationTarget.BISQ_EASY_ONBOARDING);
+        addTab(Res.get("bisqEasy.markets"), NavigationTarget.BISQ_EASY_MARKETS);
+        trades = addTab(Res.get("bisqEasy.trades"), NavigationTarget.BISQ_EASY_TRADES);
+        privateChat = addTab(Res.get("bisqEasy.privateChat"), NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
     }
 
     @Override
     protected void onViewAttached() {
+        trades.visibleProperty().bind(model.getTradeTabVisible());
+        trades.managedProperty().bind(model.getTradeTabVisible());
+        privateChat.visibleProperty().bind(model.getPrivateChatTabVisible());
+        privateChat.managedProperty().bind(model.getPrivateChatTabVisible());
     }
 
     @Override
     protected void onViewDetached() {
+    }
+
+    @Override
+    protected boolean isRightSide() {
+        return false;
     }
 }

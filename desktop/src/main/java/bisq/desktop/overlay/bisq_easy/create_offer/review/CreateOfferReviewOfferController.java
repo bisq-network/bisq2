@@ -253,7 +253,7 @@ public class CreateOfferReviewOfferController implements Controller {
 
     void onOpenBisqEasy() {
         close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_MARKETS);
     }
 
     private void close() {

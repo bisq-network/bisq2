@@ -22,8 +22,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class TradeOverviewModel implements Model {
-    private final ObservableList<ProtocolListItem> mainProtocols = FXCollections.observableArrayList();
-    private final ObservableList<ProtocolListItem> moreProtocols = FXCollections.observableArrayList();
+    private final ObservableList<ProtocolListItem> mainProtocols;
+    private final ObservableList<ProtocolListItem> moreProtocols;
+
+    public TradeOverviewModel(List<ProtocolListItem> mainProtocols, List<ProtocolListItem> moreProtocols) {
+        this.mainProtocols = FXCollections.observableArrayList(mainProtocols);
+        this.moreProtocols = FXCollections.observableArrayList(moreProtocols);
+    }
 }

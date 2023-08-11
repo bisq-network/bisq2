@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.trade_apps.more;
 
 import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -30,8 +29,6 @@ public class MoreProtocolsView extends View<VBox, MoreProtocolsModel, MoreProtoc
 
     public MoreProtocolsView(MoreProtocolsModel model, MoreProtocolsController controller) {
         super(new VBox(10), model, controller);
-
-        root.setPadding(new Insets(20, 0, 0, 0));
     }
 
     @Override

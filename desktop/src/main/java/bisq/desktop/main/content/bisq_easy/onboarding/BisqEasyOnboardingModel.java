@@ -18,8 +18,11 @@
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
 public class BisqEasyOnboardingModel implements Model {
+    private final BooleanProperty videoSeen = new SimpleBooleanProperty();
 }
