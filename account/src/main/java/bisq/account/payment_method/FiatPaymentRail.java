@@ -50,7 +50,8 @@ public enum FiatPaymentRail implements PaymentRail {
     PIX(List.of("BR"), List.of("BRL")),
     FASTER_PAYMENTS(List.of("GB"), List.of("GBP")),
     PAY_ID(List.of("AU"), List.of("AUD")),
-    US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD"));
+    US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD")),
+    CASH_BY_MAIL();
 
     @Getter
     @EqualsAndHashCode.Exclude

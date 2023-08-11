@@ -75,6 +75,7 @@ message AccountPayload {
     FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 23;
     PayIDAccountPayload payIDAccountPayload = 24;
     USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
+    CashByMailAccountPayload cashByMailAccountPayload = 26;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -151,6 +152,12 @@ message USPostalMoneyOrderAccountPayload {
   string holder_name = 2;
 }
 
+message CashByMailAccountPayload {
+  string postal_address = 1;
+  string contact = 2;
+  string extra_info = 3;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -167,6 +174,7 @@ message Account {
     FasterPaymentsAccount fasterPaymentsAccount = 23;
     PayIDAccount payIDAccount = 24;
     USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
+    CashByMailAccount cashByMailAccount = 26;
   }
 }
 
@@ -215,6 +223,9 @@ message PayIDAccount {
 }
 
 message USPostalMoneyOrderAccount {
+}
+
+message CashByMailAccount {
 }
 
 message AccountStore {

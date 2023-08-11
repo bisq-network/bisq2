@@ -438,6 +438,10 @@
     -fx-image: url("/images/payment/USPostalMoneyOrder.png");
 }
 
+#CASH_BY_MAIL {
+    -fx-image: url("/images/payment/CashByMail.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");
