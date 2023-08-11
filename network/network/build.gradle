@@ -8,7 +8,7 @@ dependencies {
     implementation 'bisq:security'
     implementation 'bisq:persistence'
 
-    implementation project(':tor')
+    implementation 'tor:tor'
     implementation project(':i2p')
 
     implementation libs.failsafe
