@@ -35,7 +35,6 @@ include 'security'
 include 'seed_node_app'
 include 'settings'
 include 'support'
-include 'tor'
 include 'user'
 
 includeBuild('network')
