@@ -18,18 +18,19 @@
 package bisq.tor.local_network.torrc;
 
 import bisq.common.util.NetworkUtils;
-import bisq.tor.local_network.TorNode;
 
 import java.util.Map;
 
-public class ClientTorrcGenerator extends TestNetworkTorrcGenerator {
-    public ClientTorrcGenerator(TorNode thisTorNode) {
-        super(thisTorNode);
+public class ClientTorrcGenerator implements TorrcConfigGenerator {
+    private final TorrcConfigGenerator baseTorrcConfigGenerator;
+
+    public ClientTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator) {
+        this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
     }
 
     @Override
     public Map<String, String> generate() {
-        super.generate();
+        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
         torConfigMap.put("SocksPort", String.valueOf(NetworkUtils.findFreeSystemPort()));
         return torConfigMap;
     }

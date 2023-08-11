@@ -21,14 +21,18 @@ import bisq.tor.local_network.TorNode;
 
 import java.util.Map;
 
-public class DirectoryAuthorityTorrcGenerator extends TestNetworkTorrcGenerator {
-    public DirectoryAuthorityTorrcGenerator(TorNode thisDirectoryAuthority) {
-        super(thisDirectoryAuthority);
+public class DirectoryAuthorityTorrcGenerator implements TorrcConfigGenerator {
+    private final TorNode thisTorNode;
+    private final TorrcConfigGenerator baseTorrcConfigGenerator;
+
+    public DirectoryAuthorityTorrcGenerator(TorNode thisTorNode) {
+        this.thisTorNode = thisTorNode;
+        this.baseTorrcConfigGenerator = new TestNetworkTorrcGenerator(thisTorNode);
     }
 
     @Override
     public Map<String, String> generate() {
-        super.generate();
+        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
 
         torConfigMap.put("AuthoritativeDirectory", "1");
         torConfigMap.put("V3AuthoritativeDirectory", "1");

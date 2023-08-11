@@ -18,6 +18,7 @@
 package bisq.tor.local_network;
 
 import bisq.tor.local_network.torrc.RelayTorrcGenerator;
+import bisq.tor.local_network.torrc.TestNetworkTorrcGenerator;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -80,11 +81,12 @@ public class RelayTorrcGeneratorTests {
                 .when(secondRelay)
                 .getRelayKeyFingerprint();
 
-        var relayTorrcGenerator = new RelayTorrcGenerator(firstRelay);
+        var testNetworkTorrcGenerator = new TestNetworkTorrcGenerator(firstRelay);
+        var relayTorrcGenerator = new RelayTorrcGenerator(testNetworkTorrcGenerator);
         var allDirAuthorities = Set.of(firstRelay, secondRelay);
 
         Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
-        Path torrcPath = relayTorrcGenerator.getThisTorNode().getTorrcPath();
+        Path torrcPath = firstRelay.getTorrcPath();
         var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDirAuthorities);
         torrcFileGenerator.generate();
 
