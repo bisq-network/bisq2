@@ -48,7 +48,11 @@ public enum FiatPaymentRail implements PaymentRail {
     F2F(),
     ACH_TRANSFER(List.of("US"), List.of("USD")),
     PIX(List.of("BR"), List.of("BRL")),
-    FASTER_PAYMENTS(List.of("GB"), List.of("GBP"));
+    FASTER_PAYMENTS(List.of("GB"), List.of("GBP")),
+    PAY_ID(List.of("AU"), List.of("AUD")),
+    US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD")),
+    CASH_BY_MAIL(),
+    STRIKE(List.of("US", "SV"), List.of("USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -105,34 +109,25 @@ public enum FiatPaymentRail implements PaymentRail {
 
     /*
 TODO add missing bisq 1 payment methods with supported countries and currencies
-NATIONAL_BANK=National bank transfer
 SAME_BANK=Transfer with same bank
 SPECIFIC_BANKS=Transfers with specific banks
-US_POSTAL_MONEY_ORDER=US Postal Money Order
 CASH_DEPOSIT=Cash Deposit
-CASH_BY_MAIL=Cash By Mail
 MONEY_GRAM=MoneyGram
 WESTERN_UNION=Western Union
 JAPAN_BANK=Japan Bank Furikomi
-AUSTRALIA_PAY_ID=Australian PayID
-
 UPHOLD=Uphold
 MONEY_BEAM=MoneyBeam (N26)
 POPMONEY=Popmoney
-REVOLUT=Revolut
 PERFECT_MONEY=Perfect Money
 ALI_PAY=AliPay
 WECHAT_PAY=WeChat Pay
-SEPA=SEPA
 SEPA_INSTANT=SEPA Instant Payments
 SWISH=Swish
-ZELLE=Zelle
 CHASE_QUICK_PAY=Chase QuickPay
 INTERAC_E_TRANSFER=Interac e-Transfer
 HAL_CASH=HalCash
 PROMPT_PAY=PromptPay
 ADVANCED_CASH=Advanced Cash
-WISE=Wise
 WISE_USD=Wise-USD
 PAYSERA=Paysera
 PAXUM=Paxum
@@ -150,7 +145,6 @@ MONESE=Monese
 SATISPAY=Satispay
 TIKKIE=Tikkie
 VERSE=Verse
-STRIKE=Strike
 SWIFT=SWIFT International Wire Transfer
 DOMESTIC_WIRE_TRANSFER=Domestic Wire Transfer
 CIPS=Cross-Border Interbank Payment System

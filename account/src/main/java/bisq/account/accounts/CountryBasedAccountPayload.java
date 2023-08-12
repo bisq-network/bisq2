@@ -54,6 +54,9 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
             case PIXACCOUNTPAYLOAD: {
                 return PixAccountPayload.fromProto(proto);
             }
+            case STRIKEACCOUNTPAYLOAD: {
+                return StrikeAccountPayload.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

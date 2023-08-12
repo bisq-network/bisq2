@@ -430,6 +430,22 @@
     -fx-image: url("/images/payment/FasterPayments.png");
 }
 
+#PAY_ID {
+    -fx-image: url("/images/payment/PayID.png");
+}
+
+#US_POSTAL_MONEY_ORDER {
+    -fx-image: url("/images/payment/USPostalMoneyOrder.png");
+}
+
+#CASH_BY_MAIL {
+    -fx-image: url("/images/payment/CashByMail.png");
+}
+
+#STRIKE {
+    -fx-image: url("/images/payment/Strike.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");

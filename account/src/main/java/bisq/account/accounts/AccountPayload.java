@@ -65,6 +65,9 @@ public abstract class AccountPayload implements Proto {
             case FASTERPAYMENTSACCOUNTPAYLOAD: {
                 return FasterPaymentsAccountPayload.fromProto(proto);
             }
+            case CASHBYMAILACCOUNTPAYLOAD: {
+                return CashByMailAccountPayload.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

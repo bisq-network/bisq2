@@ -73,6 +73,9 @@ message AccountPayload {
     RevolutAccountPayload RevolutAccountPayload = 21;
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
     FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 23;
+    PayIDAccountPayload payIDAccountPayload = 24;
+    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
+    CashByMailAccountPayload cashByMailAccountPayload = 26;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -88,6 +91,7 @@ message CountryBasedAccountPayload {
     SepaAccountPayload sepaAccountPayload = 10;
     F2FAccountPayload f2fAccountPayload = 11;
     PixAccountPayload pixAccountPayload = 12;
+    StrikeAccountPayload strikeAccountPayload = 13;
   }
 }
 message SepaAccountPayload {
@@ -139,6 +143,26 @@ message FasterPaymentsAccountPayload {
   string account_nr = 2;
 }
 
+message PayIDAccountPayload {
+  string bank_account_name = 1;
+  string pay_id = 2;
+}
+
+message USPostalMoneyOrderAccountPayload {
+  string postal_address = 1;
+  string holder_name = 2;
+}
+
+message CashByMailAccountPayload {
+  string postal_address = 1;
+  string contact = 2;
+  string extra_info = 3;
+}
+
+message StrikeAccountPayload {
+  string holderName = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -153,6 +177,9 @@ message Account {
     RevolutAccount revolutAccount = 21;
     CountryBasedAccount countryBasedAccount = 22;
     FasterPaymentsAccount fasterPaymentsAccount = 23;
+    PayIDAccount payIDAccount = 24;
+    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
+    CashByMailAccount cashByMailAccount = 26;
   }
 }
 
@@ -167,6 +194,7 @@ message CountryBasedAccount {
     SepaAccount sepaAccount = 20;
     F2FAccount f2fAccount = 21;
     PixAccount pixAccount = 22;
+    StrikeAccount strikeAccount = 23;
   }
 }
 message SepaAccount {
@@ -195,6 +223,18 @@ message PixAccount {
 }
 
 message FasterPaymentsAccount {
+}
+
+message PayIDAccount {
+}
+
+message USPostalMoneyOrderAccount {
+}
+
+message CashByMailAccount {
+}
+
+message StrikeAccount {
 }
 
 message AccountStore {
