@@ -22,11 +22,15 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.validation.InputValidator;
+import bisq.desktop.components.controls.validator.ValidationControl;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -41,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
+
+import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CLASS_ERROR;
 
 @Slf4j
 public class MaterialTextField extends Pane {
@@ -80,7 +86,7 @@ public class MaterialTextField extends Pane {
 
         selectionLine.setPrefWidth(0);
         selectionLine.setPrefHeight(2);
-        selectionLine.getStyleClass().add("bisq-green-line");
+        selectionLine.getStyleClass().add("material-text-field-selection-line");
         selectionLine.setMouseTransparent(true);
 
         descriptionLabel.setLayoutX(16);
@@ -142,8 +148,43 @@ public class MaterialTextField extends Pane {
         textInputControl.setOnMouseEntered(e -> onMouseEntered());
         textInputControl.setOnMouseExited(e -> onMouseExited());
 
+        validationControl = new ValidationControl(this.textInputControl);
+
         doLayout();
         update();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Validation
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    protected ValidationControl validationControl;
+
+    public ValidatorBase getActiveValidator() {
+        return validationControl.getActiveValidator();
+    }
+
+    public ReadOnlyObjectProperty<ValidatorBase> activeValidatorProperty() {
+        return validationControl.activeValidatorProperty();
+    }
+
+    public ObservableList<ValidatorBase> getValidators() {
+        return validationControl.getValidators();
+    }
+
+    public void setValidators(ValidatorBase... validators) {
+        validationControl.setValidators(validators);
+    }
+
+    public boolean validate() {
+        var isValid = validationControl.validate();
+        selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid);
+        descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid);
+        return isValid;
+    }
+
+    public void resetValidation() {
+        validationControl.resetValidation();
     }
 
 

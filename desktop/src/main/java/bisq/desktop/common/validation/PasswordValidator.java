@@ -18,8 +18,13 @@
 package bisq.desktop.common.validation;
 
 
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 
+/**
+ * Deprecated. Use an instance of {@link ValidatorBase} instead.
+ */
+@Deprecated
 public class PasswordValidator extends InputValidator {
     public ValidationResult validate(CharSequence value) {
         //todo trim

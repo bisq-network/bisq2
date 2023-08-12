@@ -18,12 +18,17 @@
 package bisq.desktop.common.validation;
 
 
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 
 import java.math.BigInteger;
 import java.util.Objects;
 import java.util.function.Function;
 
+/**
+ * Deprecated. Use {@link ValidatorBase} instead.
+ */
+@Deprecated
 public class InputValidator {
 
     public ValidationResult validate(String input) {
