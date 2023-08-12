@@ -53,7 +53,10 @@ public enum FiatPaymentRail implements PaymentRail {
     US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD")),
     CASH_BY_MAIL(),
     STRIKE(List.of("US", "SV"), List.of("USD")),
-    INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD"));
+    INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD")),
+    AMAZON_GIFT_CARD(
+            new ArrayList<>(),
+            List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -138,7 +141,6 @@ UPI=India/UPI
 PAYTM=India/PayTM
 NEQUI=Nequi
 BIZUM=Bizum
-AMAZON_GIFT_CARD=Amazon eGift Card
 CAPITUAL=Capitual
 CELPAY=CelPay
 MONESE=Monese

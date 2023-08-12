@@ -62,6 +62,9 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
             case STRIKEACCOUNT: {
                 return StrikeAccount.fromProto(proto);
             }
+            case AMAZONGIFTCARDACCOUNT: {
+                return AmazonGiftCardAccount.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

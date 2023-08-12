@@ -93,6 +93,7 @@ message CountryBasedAccountPayload {
     F2FAccountPayload f2fAccountPayload = 11;
     PixAccountPayload pixAccountPayload = 12;
     StrikeAccountPayload strikeAccountPayload = 13;
+    AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 14;
   }
 }
 message SepaAccountPayload {
@@ -171,6 +172,10 @@ message InteracETransferAccountPayload {
   string answer = 4;
 }
 
+message AmazonGiftCardAccountPayload {
+  string email_or_mobile_nr = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -204,6 +209,7 @@ message CountryBasedAccount {
     F2FAccount f2fAccount = 21;
     PixAccount pixAccount = 22;
     StrikeAccount strikeAccount = 23;
+    AmazonGiftCardAccount amazonGiftCardAccount = 24;
   }
 }
 message SepaAccount {
@@ -247,6 +253,9 @@ message StrikeAccount {
 }
 
 message InteracETransferAccount {
+}
+
+message AmazonGiftCardAccount {
 }
 
 message AccountStore {
