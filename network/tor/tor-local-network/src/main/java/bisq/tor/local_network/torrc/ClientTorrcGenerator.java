@@ -17,6 +17,7 @@
 
 package bisq.tor.local_network.torrc;
 
+import bisq.network.tor.common.TorrcConfigGenerator;
 import bisq.common.util.NetworkUtils;
 
 import java.util.Map;

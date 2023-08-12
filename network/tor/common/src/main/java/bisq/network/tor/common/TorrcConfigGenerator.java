@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.torrc;
+package bisq.network.tor.common;
 
 import java.util.Map;
 

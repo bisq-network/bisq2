@@ -17,6 +17,8 @@
 
 package bisq.tor.local_network.torrc;
 
+import bisq.network.tor.common.TorrcConfigGenerator;
+
 import java.util.Map;
 
 public class OverridingTorrcGenerator implements TorrcConfigGenerator {
