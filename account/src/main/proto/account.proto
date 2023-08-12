@@ -76,6 +76,7 @@ message AccountPayload {
     PayIDAccountPayload payIDAccountPayload = 24;
     USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
     CashByMailAccountPayload cashByMailAccountPayload = 26;
+    InteracETransferAccountPayload interacETransferAccountPayload = 27;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -163,6 +164,13 @@ message StrikeAccountPayload {
   string holderName = 1;
 }
 
+message InteracETransferAccountPayload {
+  string email = 1;
+  string holder_name = 2;
+  string question = 3;
+  string answer = 4;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -180,6 +188,7 @@ message Account {
     PayIDAccount payIDAccount = 24;
     USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
     CashByMailAccount cashByMailAccount = 26;
+    InteracETransferAccount interacETransferAccount = 27;
   }
 }
 
@@ -235,6 +244,9 @@ message CashByMailAccount {
 }
 
 message StrikeAccount {
+}
+
+message InteracETransferAccount {
 }
 
 message AccountStore {

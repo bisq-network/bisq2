@@ -446,6 +446,10 @@
     -fx-image: url("/images/payment/Strike.png");
 }
 
+#INTERAC_E_TRANSFER {
+    -fx-image: url("/images/payment/InteracETransfer.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");
