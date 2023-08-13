@@ -17,10 +17,14 @@
 
 package bisq.desktop.main.content.user.password;
 
-import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
+import bisq.desktop.components.controls.validator.EqualTextsValidator;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.TextMinLengthValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -28,13 +32,19 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.ref.WeakReference;
+
 @Slf4j
 public class PasswordView extends View<VBox, PasswordModel, PasswordController> {
+
+    private static final ValidatorBase REQUIRED_FIELD_VALIDATOR = new RequiredFieldValidator(Res.get("validation.empty"));
+    private static final ValidatorBase MIN_LENGTH_VALIDATOR = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
+
     private final MaterialPasswordField password, confirmedPassword;
     private final Button button;
     private final Label headline;
 
-    public PasswordView(PasswordModel model, PasswordController controller, PasswordValidator confirmedPasswordValidator) {
+    public PasswordView(PasswordModel model, PasswordController controller) {
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
@@ -43,10 +53,22 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         headline.getStyleClass().addAll("bisq-text-headline-2");
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
-        password.setValidator(new PasswordValidator());
+        password.setValidators(
+                REQUIRED_FIELD_VALIDATOR,
+                MIN_LENGTH_VALIDATOR);
+        password.validate();
 
         confirmedPassword = new MaterialPasswordField(Res.get("user.password.confirmPassword"));
-        confirmedPassword.setValidator(confirmedPasswordValidator);
+        confirmedPassword.setValidators(
+                REQUIRED_FIELD_VALIDATOR,
+                MIN_LENGTH_VALIDATOR,
+                new EqualTextsValidator(Res.get("validation.password.notMatching"), password.getTextInputControl()));
+        confirmedPassword.validate();
+
+        password.passwordProperty().addListener(new WeakReference<>(
+                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> confirmedPassword.validate()).get());
+        confirmedPassword.passwordProperty().addListener(new WeakReference<>(
+                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> password.validate()).get());
 
         button = new Button();
         button.setDefaultButton(true);

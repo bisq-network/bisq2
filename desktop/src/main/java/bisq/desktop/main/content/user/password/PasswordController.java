@@ -50,7 +50,7 @@ public class PasswordController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         confirmedPasswordValidator = new PasswordValidator();
         model = new PasswordModel();
-        view = new PasswordView(model, this, confirmedPasswordValidator);
+        view = new PasswordView(model, this);
     }
 
     @Override
