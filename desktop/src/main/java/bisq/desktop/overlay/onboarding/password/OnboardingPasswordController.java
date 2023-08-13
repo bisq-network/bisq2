@@ -19,7 +19,6 @@ package bisq.desktop.overlay.onboarding.password;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -42,32 +41,23 @@ public class OnboardingPasswordController implements Controller {
     @Getter
     private final OnboardingPasswordView view;
     private final OnboardingPasswordModel model;
-    private final PasswordValidator confirmedPasswordValidator;
     private final UserIdentityService userIdentityService;
     private Subscription pin;
     private MonadicBinding<Boolean> binding;
 
     public OnboardingPasswordController(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        confirmedPasswordValidator = new PasswordValidator();
         model = new OnboardingPasswordModel();
-        view = new OnboardingPasswordView(model, this, confirmedPasswordValidator);
+        view = new OnboardingPasswordView(model, this);
     }
 
     @Override
     public void onActivate() {
         reset();
-        binding = EasyBind.combine(model.getPassword(), model.getConfirmedPassword(),
-                (password, confirmedPassword) -> {
-                    if (isPasswordInvalid(password)) {
-                        return false;
-                    }
-                    if (!password.equals(confirmedPassword)) {
-                        confirmedPasswordValidator.validate(password, confirmedPassword);
-                        return false;
-                    }
-                    return true;
-                });
+        binding = EasyBind.combine(
+                model.getPasswordIsValid(),
+                model.getConfirmedPasswordIsValid(),
+                (passwordIsValid, confirmedPasswordIsValid) -> passwordIsValid && confirmedPasswordIsValid);
         pin = EasyBind.subscribe(binding, isValid -> model.getSetPasswordButtonDisabled().set(!isValid));
     }
 
@@ -81,8 +71,7 @@ public class OnboardingPasswordController implements Controller {
 
     void onSetPassword() {
         CharSequence password = model.getPassword().get();
-        checkArgument(!isPasswordInvalid(password));
-        checkArgument(password.equals(model.getConfirmedPassword().get()));
+        checkArgument(model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get());
         if (userIdentityService.getAESSecretKey().isPresent()) {
             log.warn("Password is already set. This should not happen in the normal flow of the screens.");
             return;
@@ -131,9 +120,5 @@ public class OnboardingPasswordController implements Controller {
         model.getConfirmedPasswordIsMasked().set(true);
         model.getPassword().set("");
         model.getConfirmedPassword().set("");
-    }
-
-    private boolean isPasswordInvalid(CharSequence password) {
-        return password == null || password.length() < 8;
     }
 }
