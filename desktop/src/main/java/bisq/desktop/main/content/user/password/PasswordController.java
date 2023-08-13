@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.password;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -41,14 +40,12 @@ public class PasswordController implements Controller {
     @Getter
     private final PasswordView view;
     private final PasswordModel model;
-    private final PasswordValidator confirmedPasswordValidator;
     private final UserIdentityService userIdentityService;
     private Subscription pin;
     private MonadicBinding<Boolean> binding;
 
     public PasswordController(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        confirmedPasswordValidator = new PasswordValidator();
         model = new PasswordModel();
         view = new PasswordView(model, this);
     }
@@ -65,7 +62,7 @@ public class PasswordController implements Controller {
 
     void onButtonClicked() {
         CharSequence password = model.getPassword().get();
-        checkArgument(!isPasswordInvalid(password));
+        checkArgument(model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get());
 
         if (userIdentityService.getAESSecretKey().isPresent()) {
             removePassword(password);
@@ -125,22 +122,16 @@ public class PasswordController implements Controller {
         if (isKeyPresent) {
             model.getHeadline().set(Res.get("user.password.headline.removePassword"));
             model.getButtonText().set(Res.get("user.password.button.removePassword"));
-            pin = EasyBind.subscribe(model.getPassword(), password ->
-                    model.getButtonDisabled().set(isPasswordInvalid(password)));
+            pin = EasyBind.subscribe(
+                    model.getPasswordIsValid(),
+                    passwordIsValid -> model.getButtonDisabled().set(!passwordIsValid));
         } else {
             model.getHeadline().set(Res.get("user.password.headline.setPassword"));
             model.getButtonText().set(Res.get("user.password.button.savePassword"));
-            binding = EasyBind.combine(model.getPassword(), model.getConfirmedPassword(),
-                    (password, confirmedPassword) -> {
-                        if (isPasswordInvalid(password)) {
-                            return false;
-                        }
-                        if (!password.equals(confirmedPassword)) {
-                            confirmedPasswordValidator.validate(password, confirmedPassword);
-                            return false;
-                        }
-                        return true;
-                    });
+            binding = EasyBind.combine(
+                    model.getPasswordIsValid(),
+                    model.getConfirmedPasswordIsValid(),
+                    (passwordIsValid, confirmedPasswordIsValid) -> passwordIsValid && confirmedPasswordIsValid);
             pin = EasyBind.subscribe(binding, isValid -> model.getButtonDisabled().set(!isValid));
         }
     }
@@ -150,9 +141,5 @@ public class PasswordController implements Controller {
         model.getConfirmedPassword().set("");
         pin.unsubscribe();
         binding = null;
-    }
-
-    private boolean isPasswordInvalid(CharSequence password) {
-        return password == null || password.length() < 8;
     }
 }
