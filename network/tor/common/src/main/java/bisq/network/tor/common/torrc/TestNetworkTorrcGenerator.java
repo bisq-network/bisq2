@@ -26,7 +26,6 @@ import java.util.Map;
  * The configuration settings are from the Chutney (<a href="https://gitweb.torproject.org/chutney.git/">project</a>).
  */
 @Builder
-@Getter
 public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
 
     private final TorrcConfigGenerator baseTorrcConfigGenerator;
