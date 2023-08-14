@@ -18,9 +18,10 @@
 package bisq.desktop.overlay.unlock;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.validation.PasswordValidator;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.TextMinLengthValidator;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -47,8 +48,10 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
-        password.setValidator(new PasswordValidator());
-
+        password.setValidators(
+                new RequiredFieldValidator(Res.get("validation.empty")),
+                new TextMinLengthValidator(Res.get("validation.password.tooShort")));
+        password.validate();
         unlockButton = new Button(Res.get("unlock.button"));
         unlockButton.setDefaultButton(true);
         cancelButton = new Button(Res.get("action.cancel"));

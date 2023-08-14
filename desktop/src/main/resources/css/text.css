@@ -595,6 +595,14 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.material-text-field-selection-line {
+    -fx-background-color: -bisq-green;
+}
+
+.material-text-field-selection-line:error {
+    -fx-background-color: -bisq-red;
+}
+
 .material-text-field-bg {
     -fx-background-color: rgba(255, 255, 255, 0.05);
     -fx-background-radius: 4 4 0 0;
@@ -618,6 +626,10 @@
 
 .material-text-field-description-selected {
     -fx-text-fill: -bisq-green;
+}
+
+.material-text-field-description-selected:error {
+    -fx-text-fill: -bisq-red;
 }
 
 .material-text-field-description-deselected {
