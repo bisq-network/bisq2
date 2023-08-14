@@ -15,25 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.torrc;
-
-import bisq.network.tor.common.TorrcConfigGenerator;
+package bisq.network.tor.common.torrc;
 
 import java.util.Map;
 
-public class OverridingTorrcGenerator implements TorrcConfigGenerator {
-    private final TorrcConfigGenerator template;
-    private final Map<String, String> clientTorrcConfig;
-
-    public OverridingTorrcGenerator(TorrcConfigGenerator template, Map<String, String> clientTorrcConfig) {
-        this.template = template;
-        this.clientTorrcConfig = clientTorrcConfig;
-    }
-
-    @Override
-    public Map<String, String> generate() {
-        Map<String, String> torrcConfigs = template.generate();
-        torrcConfigs.putAll(clientTorrcConfig);
-        return torrcConfigs;
-    }
+public interface TorrcConfigGenerator {
+    Map<String, String> generate();
 }

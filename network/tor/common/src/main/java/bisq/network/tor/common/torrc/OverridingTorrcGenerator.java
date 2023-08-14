@@ -15,24 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.torrc;
-
-import bisq.network.tor.common.TorrcConfigGenerator;
-import bisq.common.util.NetworkUtils;
+package bisq.network.tor.common.torrc;
 
 import java.util.Map;
 
-public class ClientTorrcGenerator implements TorrcConfigGenerator {
-    private final TorrcConfigGenerator baseTorrcConfigGenerator;
+public class OverridingTorrcGenerator implements TorrcConfigGenerator {
+    private final TorrcConfigGenerator template;
+    private final Map<String, String> clientTorrcConfig;
 
-    public ClientTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator) {
-        this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
+    public OverridingTorrcGenerator(TorrcConfigGenerator template, Map<String, String> clientTorrcConfig) {
+        this.template = template;
+        this.clientTorrcConfig = clientTorrcConfig;
     }
 
     @Override
     public Map<String, String> generate() {
-        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
-        torConfigMap.put("SocksPort", String.valueOf(NetworkUtils.findFreeSystemPort()));
-        return torConfigMap;
+        Map<String, String> torrcConfigs = template.generate();
+        torrcConfigs.putAll(clientTorrcConfig);
+        return torrcConfigs;
     }
 }
