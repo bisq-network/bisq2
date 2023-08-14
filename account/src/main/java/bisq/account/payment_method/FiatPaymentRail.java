@@ -52,7 +52,11 @@ public enum FiatPaymentRail implements PaymentRail {
     PAY_ID(List.of("AU"), List.of("AUD")),
     US_POSTAL_MONEY_ORDER(List.of("US"), List.of("USD")),
     CASH_BY_MAIL(),
-    STRIKE(List.of("US", "SV"), List.of("USD"));
+    STRIKE(List.of("US", "SV"), List.of("USD")),
+    INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD")),
+    AMAZON_GIFT_CARD(
+            new ArrayList<>(),
+            List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -124,7 +128,6 @@ WECHAT_PAY=WeChat Pay
 SEPA_INSTANT=SEPA Instant Payments
 SWISH=Swish
 CHASE_QUICK_PAY=Chase QuickPay
-INTERAC_E_TRANSFER=Interac e-Transfer
 HAL_CASH=HalCash
 PROMPT_PAY=PromptPay
 ADVANCED_CASH=Advanced Cash
@@ -138,7 +141,6 @@ UPI=India/UPI
 PAYTM=India/PayTM
 NEQUI=Nequi
 BIZUM=Bizum
-AMAZON_GIFT_CARD=Amazon eGift Card
 CAPITUAL=Capitual
 CELPAY=CelPay
 MONESE=Monese

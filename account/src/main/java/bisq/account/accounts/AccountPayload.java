@@ -68,6 +68,9 @@ public abstract class AccountPayload implements Proto {
             case CASHBYMAILACCOUNTPAYLOAD: {
                 return CashByMailAccountPayload.fromProto(proto);
             }
+            case INTERACETRANSFERACCOUNTPAYLOAD: {
+                return InteracETransferAccountPayload.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

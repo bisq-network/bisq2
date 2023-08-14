@@ -446,6 +446,14 @@
     -fx-image: url("/images/payment/Strike.png");
 }
 
+#INTERAC_E_TRANSFER {
+    -fx-image: url("/images/payment/InteracETransfer.png");
+}
+
+#AMAZON_GIFT_CARD {
+    -fx-image: url("/images/payment/Amazon.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");
