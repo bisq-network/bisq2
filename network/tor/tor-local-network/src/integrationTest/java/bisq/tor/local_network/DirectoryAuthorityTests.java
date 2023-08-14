@@ -18,8 +18,9 @@
 package bisq.tor.local_network;
 
 import bisq.common.util.NetworkUtils;
+import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.tor.local_network.da.DirectoryAuthorityFactory;
-import bisq.tor.local_network.torrc.DirectoryAuthorityTorrcGenerator;
+import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -89,10 +90,10 @@ public class DirectoryAuthorityTests {
 
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
-            var torDaTorrcGenerator = new DirectoryAuthorityTorrcGenerator(da);
+            TorrcConfigGenerator torDaTorrcGenerator = TestNetworkTorrcGeneratorFactory.directoryTorrcGenerator(da);
             Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
             Path torrcPath = da.getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs , allDAs);
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
             torrcFileGenerator.generate();
         }
     }

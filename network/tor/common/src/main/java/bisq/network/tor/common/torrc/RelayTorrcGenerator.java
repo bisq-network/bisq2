@@ -15,10 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.tor.common;
+package bisq.network.tor.common.torrc;
 
 import java.util.Map;
 
-public interface TorrcConfigGenerator {
-    Map<String, String> generate();
+public class RelayTorrcGenerator implements TorrcConfigGenerator {
+    private final TorrcConfigGenerator baseTorrcConfigGenerator;
+
+    public RelayTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator) {
+        this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
+    }
+
+    @Override
+    public Map<String, String> generate() {
+        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
+
+        torConfigMap.put("ExitRelay", "1");
+        torConfigMap.put("ExitPolicy", "accept 127.0.0.0/8:*,accept private:*,accept *:*,reject *:*");
+        torConfigMap.put("ExitPolicyRejectPrivate", "0");
+
+        return torConfigMap;
+    }
 }

@@ -15,29 +15,40 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.torrc;
+package bisq.network.tor.common.torrc;
 
-import bisq.network.tor.common.TorrcConfigGenerator;
-import bisq.tor.local_network.TorNode;
+import lombok.Builder;
 import lombok.Getter;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The configuration settings are from the Chutney (<a href="https://gitweb.torproject.org/chutney.git/">project</a>).
  */
+@Builder
 @Getter
 public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
-    protected final TorNode thisTorNode;
-    protected final Map<String, String> torConfigMap = new HashMap<>();
 
-    public TestNetworkTorrcGenerator(TorNode thisTorNode) {
-        this.thisTorNode = thisTorNode;
+    private final TorrcConfigGenerator baseTorrcConfigGenerator;
+
+    private final String nickname;
+    private final int orPort;
+    private final int dirPort;
+
+    public TestNetworkTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator,
+                                     String nickname,
+                                     int orPort,
+                                     int dirPort) {
+        this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
+        this.nickname = nickname;
+        this.orPort = orPort;
+        this.dirPort = dirPort;
     }
 
     @Override
     public Map<String, String> generate() {
+        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
+
         torConfigMap.put("TestingTorNetwork", "1");
         torConfigMap.put("TestingDirAuthVoteExit", "*");
         torConfigMap.put("TestingDirAuthVoteHSDir", "*");
@@ -46,37 +57,22 @@ public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
         torConfigMap.put("TestingDirAuthVoteGuard", "*");
         torConfigMap.put("TestingMinExitFlagThreshold", "0");
 
-        torConfigMap.put("DataDirectory", thisTorNode.getDataDir().toAbsolutePath().toString());
 
-        torConfigMap.put("Nickname", thisTorNode.getNickname());
+        torConfigMap.put("Nickname", nickname);
         torConfigMap.put("ShutdownWaitLength", "2");
         torConfigMap.put("DisableDebuggerAttachment", "0");
-        torConfigMap.put("ControlPort", "127.0.0.1:" + thisTorNode.getControlPort());
-
-        torConfigMap.put("HashedControlPassword",
-                thisTorNode.getControlConnectionPassword()
-                        .getHashedPassword()
-        );
-
-        torConfigMap.put("Log",
-                "debug file " + thisTorNode.getDataDir().resolve("debug.log").toAbsolutePath()
-        );
 
         torConfigMap.put("ProtocolWarnings", "1");
         torConfigMap.put("SafeLogging", "0");
         torConfigMap.put("LogTimeGranularity", "1");
 
-        if (thisTorNode.getType() != TorNode.Type.CLIENT) {
-            torConfigMap.put("SocksPort", "0");
-        }
-
-        torConfigMap.put("OrPort", String.valueOf(thisTorNode.getOrPort()));
+        torConfigMap.put("OrPort", String.valueOf(orPort));
         torConfigMap.put("Address", "127.0.0.1");
         torConfigMap.put("ServerDNSDetectHijacking", "0");
 
         torConfigMap.put("ServerDNSTestAddresses", "");
 
-        torConfigMap.put("DirPort", String.valueOf(thisTorNode.getDirPort()));
+        torConfigMap.put("DirPort", String.valueOf(dirPort));
 
         return torConfigMap;
     }
