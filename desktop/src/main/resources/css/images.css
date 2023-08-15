@@ -462,6 +462,10 @@
     -fx-image: url("/images/payment/Upi.png");
 }
 
+#BIZUM {
+    -fx-image: url("/images/payment/Bizum.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");

@@ -95,6 +95,7 @@ message CountryBasedAccountPayload {
     StrikeAccountPayload strikeAccountPayload = 13;
     AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 14;
     UpiAccountPayload upiAccountPayload = 15;
+    BizumAccountPayload bizumAccountPayload = 16;
   }
 }
 message SepaAccountPayload {
@@ -186,6 +187,10 @@ message UpiAccountPayload {
   string virtual_payment_address = 1;
 }
 
+message BizumAccountPayload {
+  string mobileNr = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -221,6 +226,7 @@ message CountryBasedAccount {
     StrikeAccount strikeAccount = 23;
     AmazonGiftCardAccount amazonGiftCardAccount = 24;
     UpiAccount upiAccount = 25;
+    BizumAccount bizumAccount = 26;
   }
 }
 message SepaAccount {
@@ -274,6 +280,9 @@ message CashDepositAccount {
 }
 
 message UpiAccount {
+}
+
+message BizumAccount {
 }
 
 message AccountStore {

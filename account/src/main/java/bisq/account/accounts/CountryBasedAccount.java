@@ -68,6 +68,9 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
             case UPIACCOUNT: {
                 return UpiAccount.fromProto(proto);
             }
+            case BIZUMACCOUNT: {
+                return BizumAccount.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
