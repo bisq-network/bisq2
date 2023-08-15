@@ -56,7 +56,8 @@ public enum FiatPaymentRail implements PaymentRail {
     INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD")),
     AMAZON_GIFT_CARD(
             new ArrayList<>(),
-            List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD"));
+            List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD")),
+    CASH_DEPOSIT();
 
     @Getter
     @EqualsAndHashCode.Exclude

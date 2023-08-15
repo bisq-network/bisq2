@@ -128,6 +128,7 @@ message BankAccountPayload {
   oneof message {
     AchTransferAccountPayload achTransferAccountPayload = 13;
     NationalBankAccountPayload nationalBankAccountPayload = 14;
+    CashDepositAccountPayload cashDepositAccountPayload = 15;
   }
 }
 
@@ -176,6 +177,10 @@ message AmazonGiftCardAccountPayload {
   string email_or_mobile_nr = 1;
 }
 
+message CashDepositAccountPayload {
+  string requirements = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -222,6 +227,7 @@ message BankAccount {
   oneof message {
     AchTransferAccount achTransferAccount = 1;
     NationalBankAccount nationalBankAccount = 2;
+    CashDepositAccount cashDepositAccount = 3;
   }
 }
 
@@ -256,6 +262,9 @@ message InteracETransferAccount {
 }
 
 message AmazonGiftCardAccount {
+}
+
+message CashDepositAccount {
 }
 
 message AccountStore {

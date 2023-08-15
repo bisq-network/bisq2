@@ -454,6 +454,10 @@
     -fx-image: url("/images/payment/Amazon.png");
 }
 
+#CASH_DEPOSIT {
+    -fx-image: url("/images/payment/CashDeposit.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");
