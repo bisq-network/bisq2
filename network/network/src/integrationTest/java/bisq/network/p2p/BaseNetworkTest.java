@@ -55,7 +55,7 @@ public abstract class BaseNetworkTest {
     }
 
     protected String getBaseDirName() {
-        return OsUtils.getUserDataDir().getAbsolutePath() + "/Bisq2_" + getClassName();
+        return OsUtils.getUserDataDir().toAbsolutePath() + "/Bisq2_" + getClassName();
     }
 
     protected abstract long getTimeout();

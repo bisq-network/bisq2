@@ -46,7 +46,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         BanList banList = new BanList();
         Node tempNode = new Node(banList, nodeConfig, "node-id");
         PeerGroupStore peerGroupStore = new PeerGroupStore();
-        PersistenceService persistenceService = new PersistenceService(getBaseDirName());
+        PersistenceService persistenceService = new PersistenceService(getBaseDir().toAbsolutePath().toString());
         KeepAliveService keepAliveService = new KeepAliveService(tempNode, null, null);
         PeerGroupService.Config peerGroupServiceConfig = new PeerGroupService.Config(
                 null, null, null,

@@ -39,9 +39,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -56,21 +58,25 @@ public abstract class ApplicationService {
                 appName = config.getString("appName");
             }
 
-            String dataDir = null;
+            Optional<Path> dataDir = Optional.empty();
             for (String arg : args) {
                 if (arg.startsWith("--appName")) {
                     appName = arg.split("=")[1];
                 }
 
                 if (arg.startsWith("--data-dir")) {
-                    dataDir = arg.split("=")[1];
+                    dataDir = Optional.of(
+                            Paths.get(arg.split("=")[1])
+                    );
                 }
             }
 
-            String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
-            log.info("Use application directory {}", appDir);
+            Path appDataDir = dataDir.orElse(
+                    OsUtils.getUserDataDir().resolve(appName)
+            );
+            log.info("Use application directory {}", appDataDir);
 
-            return new Config(appDir,
+            return new Config(appDataDir,
                     appName,
                     config.getString("version"),
                     config.getBoolean("devMode"),
@@ -79,7 +85,7 @@ public abstract class ApplicationService {
                     config.getBoolean("ignoreSignatureVerification"));
         }
 
-        private final String baseDir;
+        private final Path baseDir;
         private final String appName;
         private final Version version;
         private final boolean devMode;
@@ -87,7 +93,7 @@ public abstract class ApplicationService {
         private final boolean ignoreSigningKeyInResourcesCheck;
         private final boolean ignoreSignatureVerification;
 
-        public Config(String baseDir,
+        public Config(Path baseDir,
                       String appName,
                       String version,
                       boolean devMode,
@@ -122,14 +128,15 @@ public abstract class ApplicationService {
         typesafeAppConfig = typesafeConfig.getConfig("application");
         config = Config.from(typesafeAppConfig, args);
 
+        Path dataDir = config.getBaseDir();
         try {
-            FileUtils.makeDirs(config.getBaseDir());
+            FileUtils.makeDirs(dataDir.toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         checkInstanceLock();
 
-        LogSetup.setup(Paths.get(config.getBaseDir(), "bisq").toString());
+        LogSetup.setup(dataDir.resolve("bisq").toString());
         LogSetup.setLevel(Level.INFO);
 
         DevMode.setDevMode(config.isDevMode());
@@ -141,13 +148,17 @@ public abstract class ApplicationService {
         Res.setLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();
 
-        persistenceService = new PersistenceService(config.getBaseDir());
+        String absoluteDataDirPath = dataDir.toAbsolutePath().toString();
+        persistenceService = new PersistenceService(absoluteDataDirPath);
     }
 
     private void checkInstanceLock() {
         // Acquire exclusive lock on file basedir/lock, throw if locks fails
         // to avoid running multiple instances using the same basedir
-        try (FileOutputStream fileOutputStream = new FileOutputStream(Paths.get(config.getBaseDir(), "lock").toString())) {
+        File lockFilePath = config.getBaseDir()
+                .resolve("lock")
+                .toFile();
+        try (FileOutputStream fileOutputStream = new FileOutputStream(lockFilePath)) {
             instanceLock = fileOutputStream.getChannel().tryLock();
         } catch (Exception e) {
             e.printStackTrace();

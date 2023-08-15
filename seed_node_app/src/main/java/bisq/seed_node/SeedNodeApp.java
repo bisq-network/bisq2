@@ -37,7 +37,7 @@ public class SeedNodeApp {
                 .whenComplete((result, throwable) -> {
                     Map<Transport.Type, Address> addressByNetworkType = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
                     String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
-                    Path path = Path.of(applicationService.getConfig().getBaseDir(), "default_node_address.json");
+                    Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
                     try {
                         FileUtils.writeToFile(json, path.toFile());
                     } catch (IOException e) {

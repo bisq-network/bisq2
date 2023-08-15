@@ -89,7 +89,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
     }
 
     void onImportNodeAddress() {
-        Path path = Path.of(serviceProvider.getConfig().getBaseDir());
+        Path path = serviceProvider.getConfig().getBaseDir();
         File file = FileChooserUtil.openFile(getView().getRoot().getScene(), path.toAbsolutePath().toString());
         if (file != null) {
             try {

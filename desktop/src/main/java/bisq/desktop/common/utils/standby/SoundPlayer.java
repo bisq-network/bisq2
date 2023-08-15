@@ -35,7 +35,7 @@ class SoundPlayer implements PreventStandbyMode {
     private ExecutorService executor;
 
     SoundPlayer(ServiceProvider serviceProvider) {
-        baseDir = serviceProvider.getConfig().getBaseDir();
+        baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
     }
 
     public void initialize() {

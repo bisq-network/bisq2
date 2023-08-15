@@ -84,7 +84,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
-        Overlay.baseDir = serviceProvider.getConfig().getBaseDir();
+        Overlay.baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
         Overlay.settingsService = serviceProvider.getSettingsService();
         Overlay.shutdownHandler = serviceProvider.getShutDownHandler();
     }
