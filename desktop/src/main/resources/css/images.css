@@ -458,6 +458,10 @@
     -fx-image: url("/images/payment/CashDeposit.png");
 }
 
+#UPI {
+    -fx-image: url("/images/payment/Upi.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");

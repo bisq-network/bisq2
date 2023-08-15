@@ -94,6 +94,7 @@ message CountryBasedAccountPayload {
     PixAccountPayload pixAccountPayload = 12;
     StrikeAccountPayload strikeAccountPayload = 13;
     AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 14;
+    UpiAccountPayload upiAccountPayload = 15;
   }
 }
 message SepaAccountPayload {
@@ -181,6 +182,10 @@ message CashDepositAccountPayload {
   string requirements = 1;
 }
 
+message UpiAccountPayload {
+  string virtual_payment_address = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -215,6 +220,7 @@ message CountryBasedAccount {
     PixAccount pixAccount = 22;
     StrikeAccount strikeAccount = 23;
     AmazonGiftCardAccount amazonGiftCardAccount = 24;
+    UpiAccount upiAccount = 25;
   }
 }
 message SepaAccount {
@@ -265,6 +271,9 @@ message AmazonGiftCardAccount {
 }
 
 message CashDepositAccount {
+}
+
+message UpiAccount {
 }
 
 message AccountStore {

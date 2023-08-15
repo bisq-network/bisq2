@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -57,7 +58,8 @@ public enum FiatPaymentRail implements PaymentRail {
     AMAZON_GIFT_CARD(
             new ArrayList<>(),
             List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD")),
-    CASH_DEPOSIT();
+    CASH_DEPOSIT(),
+    UPI(new ArrayList<>(), List.of("INR"));
 
     @Getter
     @EqualsAndHashCode.Exclude
