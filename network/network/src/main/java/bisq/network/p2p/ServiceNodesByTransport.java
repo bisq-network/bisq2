@@ -23,6 +23,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
@@ -63,7 +64,7 @@ public class ServiceNodesByTransport {
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<Transport.Type> supportedTransportTypes;
 
-    public ServiceNodesByTransport(Map<Transport.Type, Transport.Config> configByTransportType,
+    public ServiceNodesByTransport(Map<Transport.Type, TransportConfig> configByTransportType,
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
@@ -74,7 +75,7 @@ public class ServiceNodesByTransport {
                                    ProofOfWorkService proofOfWorkService) {
         this.supportedTransportTypes = supportedTransportTypes;
         supportedTransportTypes.forEach(transportType -> {
-            Transport.Config transportConfig = configByTransportType.get(transportType);
+            TransportConfig transportConfig = configByTransportType.get(transportType);
 
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,

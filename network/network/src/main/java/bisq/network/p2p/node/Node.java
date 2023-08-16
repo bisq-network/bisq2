@@ -23,6 +23,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -104,13 +105,13 @@ public class Node implements Connection.Handler {
         private final Transport.Type transportType;
         private final Set<Transport.Type> supportedTransportTypes;
         private final AuthorizationService authorizationService;
-        private final Transport.Config transportConfig;
+        private final TransportConfig transportConfig;
         private final int socketTimeout;
 
         public Config(Transport.Type transportType,
                       Set<Transport.Type> supportedTransportTypes,
                       AuthorizationService authorizationService,
-                      Transport.Config transportConfig,
+                      TransportConfig transportConfig,
                       int socketTimeout) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
@@ -598,7 +599,7 @@ public class Node implements Connection.Handler {
         }
     }
 
-    private Transport getTransport(Transport.Type transportType, Transport.Config config) {
+    private Transport getTransport(Transport.Type transportType, TransportConfig config) {
         switch (transportType) {
             case TOR:
                 return new TorTransport(config);
