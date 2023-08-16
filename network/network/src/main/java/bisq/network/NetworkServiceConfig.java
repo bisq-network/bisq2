@@ -23,12 +23,12 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.ClearNetTransport;
 import bisq.network.p2p.node.transport.I2PTransport;
-import bisq.network.p2p.node.transport.TorTransport;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
+import bisq.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
@@ -134,7 +134,7 @@ public final class NetworkServiceConfig {
         switch (type) {
             case TOR:
                 dataDir = baseDir.resolve("tor");
-                return TorTransport.Config.from(dataDir, transportConfig);
+                return TorTransportConfig.from(dataDir, transportConfig);
             case I2P:
                 dataDir = baseDir.resolve("i2p");
                 return I2PTransport.Config.from(dataDir, transportConfig);
