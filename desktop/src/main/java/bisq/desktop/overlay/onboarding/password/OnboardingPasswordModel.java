@@ -33,4 +33,6 @@ public class OnboardingPasswordModel implements Model {
     private final BooleanProperty setPasswordButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty confirmedPasswordIsMasked = new SimpleBooleanProperty();
+    private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
+    private final BooleanProperty confirmedPasswordIsValid = new SimpleBooleanProperty();
 }

@@ -26,8 +26,10 @@ import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
@@ -177,17 +179,20 @@ public class MaterialTextField extends Pane {
     }
 
     public boolean validate() {
-        var isValid = validationControl.validate();
-        selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid);
-        descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid);
-        return isValid;
+        isValid.set(validationControl.validate());
+        selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
+        descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
+        return isValid.get();
     }
 
     public void resetValidation() {
         validationControl.resetValidation();
     }
 
-
+    private final BooleanProperty isValid = new SimpleBooleanProperty();
+    public BooleanProperty isValidProperty() {
+        return isValid;
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Description
     ///////////////////////////////////////////////////////////////////////////////////////////////////
