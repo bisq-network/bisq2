@@ -74,6 +74,8 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
                 return AchTransferAccountPayload.fromProto(proto);
             case NATIONALBANKACCOUNTPAYLOAD:
                 return NationalBankAccountPayload.fromProto(proto);
+            case CASHDEPOSITACCOUNTPAYLOAD:
+                return CashDepositAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

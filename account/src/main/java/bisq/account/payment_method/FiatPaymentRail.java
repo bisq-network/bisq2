@@ -56,7 +56,10 @@ public enum FiatPaymentRail implements PaymentRail {
     INTERAC_E_TRANSFER(new ArrayList<>(), List.of("CAD")),
     AMAZON_GIFT_CARD(
             new ArrayList<>(),
-            List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD"));
+            List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD")),
+    CASH_DEPOSIT(),
+    UPI(new ArrayList<>(), List.of("INR")),
+    BIZUM(List.of("ES"), List.of("EUR"));
 
     @Getter
     @EqualsAndHashCode.Exclude
@@ -115,7 +118,6 @@ public enum FiatPaymentRail implements PaymentRail {
 TODO add missing bisq 1 payment methods with supported countries and currencies
 SAME_BANK=Transfer with same bank
 SPECIFIC_BANKS=Transfers with specific banks
-CASH_DEPOSIT=Cash Deposit
 MONEY_GRAM=MoneyGram
 WESTERN_UNION=Western Union
 JAPAN_BANK=Japan Bank Furikomi
@@ -137,10 +139,8 @@ PAXUM=Paxum
 NEFT=India/NEFT
 RTGS=India/RTGS
 IMPS=India/IMPS
-UPI=India/UPI
 PAYTM=India/PayTM
 NEQUI=Nequi
-BIZUM=Bizum
 CAPITUAL=Capitual
 CELPAY=CelPay
 MONESE=Monese
