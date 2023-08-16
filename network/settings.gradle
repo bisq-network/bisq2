@@ -16,6 +16,7 @@ dependencyResolutionManagement {
 includeBuild('..')
 includeBuild('tor')
 
+include 'common'
 include 'i2p'
 include 'network'
 include 'socks5-socket-channel'
