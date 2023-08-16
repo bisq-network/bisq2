@@ -31,6 +31,7 @@ import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ import static java.util.stream.Collectors.toMap;
 
 @Getter
 public final class NetworkServiceConfig {
-    public static NetworkServiceConfig from(String baseDir, Config config) {
+    public static NetworkServiceConfig from(Path baseDir, Config config) {
         Set<Transport.Type> supportedTransportTypes = new HashSet<>(config.getEnumList(Transport.Type.class, "supportedTransportTypes"));
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
@@ -91,7 +92,7 @@ public final class NetworkServiceConfig {
         Map<Transport.Type, Transport.Config> configByTransportType = createConfigByTransportType(config, baseDir);
 
 
-        return new NetworkServiceConfig(baseDir,
+        return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
                 supportedTransportTypes,
                 configByTransportType,
                 serviceNodeConfig,
@@ -118,7 +119,7 @@ public final class NetworkServiceConfig {
         return map;
     }
 
-    private static Map<Transport.Type, Transport.Config> createConfigByTransportType(Config config, String baseDir) {
+    private static Map<Transport.Type, Transport.Config> createConfigByTransportType(Config config, Path baseDir) {
         Map<Transport.Type, Transport.Config> map = new HashMap<>();
         map.put(Transport.Type.CLEAR, createTransportConfig(Transport.Type.CLEAR, config, baseDir));
         map.put(Transport.Type.TOR, createTransportConfig(Transport.Type.TOR, config, baseDir));
@@ -126,15 +127,19 @@ public final class NetworkServiceConfig {
         return map;
     }
 
-    private static Transport.Config createTransportConfig(Transport.Type type, Config config, String baseDir) {
+    private static Transport.Config createTransportConfig(Transport.Type type, Config config, Path baseDir) {
         Config transportConfig = config.getConfig("configByTransportType." + type.name().toLowerCase());
+        Path dataDir;
         switch (type) {
             case TOR:
-                return TorTransport.Config.from(baseDir, transportConfig);
+                dataDir = baseDir.resolve("tor");
+                return TorTransport.Config.from(dataDir, transportConfig);
             case I2P:
-                return I2PTransport.Config.from(baseDir, transportConfig);
+                dataDir = baseDir.resolve("i2p");
+                return I2PTransport.Config.from(dataDir, transportConfig);
             case CLEAR:
-                return ClearNetTransport.Config.from(baseDir, transportConfig);
+                dataDir = baseDir;
+                return ClearNetTransport.Config.from(dataDir, transportConfig);
             default:
                 throw new RuntimeException("Unhandled case. type=" + type);
         }

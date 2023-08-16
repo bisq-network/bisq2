@@ -14,11 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import static java.io.File.separator;
 
 @Slf4j
 public class I2PTransport implements Transport {
@@ -26,8 +25,8 @@ public class I2PTransport implements Transport {
     @ToString
     @EqualsAndHashCode
     public static final class Config implements Transport.Config {
-        public static Config from(String baseDir, com.typesafe.config.Config config) {
-            return new Config(baseDir,
+        public static Config from(Path dataDir, com.typesafe.config.Config config) {
+            return new Config(dataDir,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
@@ -45,13 +44,13 @@ public class I2PTransport implements Transport {
         private final int i2cpPort;
         private final String i2cpHost;
         private boolean embeddedRouter;
-        private final String baseDir;
+        private final Path dataDir;
         private final boolean extendedI2pLogging;
 
-        public Config(String baseDir, int socketTimeout, int inboundKBytesPerSecond, int outboundKBytesPerSecond,
+        public Config(Path dataDir, int socketTimeout, int inboundKBytesPerSecond, int outboundKBytesPerSecond,
                       int bandwidthSharePercentage, String i2cpHost, int i2cpPort, boolean embeddedRouter,
                       boolean extendedI2pLogging) {
-            this.baseDir = baseDir;
+            this.dataDir = dataDir;
             this.socketTimeout = socketTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;
@@ -77,7 +76,7 @@ public class I2PTransport implements Transport {
         // Failed to get config generic...
         this.config = (I2PTransport.Config) config;
 
-        i2pDirPath = config.getBaseDir() + separator + "i2p";
+        i2pDirPath = config.getDataDir().toAbsolutePath().toString();
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
     }
 

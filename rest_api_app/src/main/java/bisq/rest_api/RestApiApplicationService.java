@@ -104,7 +104,7 @@ public class RestApiApplicationService extends ApplicationService {
                 break;
         }
 
-        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir().toAbsolutePath().toString(),
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyPairService(),

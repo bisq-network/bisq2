@@ -23,6 +23,7 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.pow.EquihashProofOfWorkService;
 
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -35,16 +36,16 @@ public abstract class BaseNetworkTest {
         return new Node.Config(transportType,
                 supportedTransportTypes,
                 new AuthorizationService(new EquihashProofOfWorkService()),
-                getTransportConfig(getBaseDirName()),
+                getTransportConfig(getBaseDir()),
                 (int) TimeUnit.SECONDS.toMillis(120));
     }
 
 
-    protected Transport.Config getTransportConfig(String baseDirName) {
+    protected Transport.Config getTransportConfig(Path dataDir) {
         return new Transport.Config() {
             @Override
-            public String getBaseDir() {
-                return baseDirName;
+            public Path getDataDir() {
+                return dataDir;
             }
 
             @Override
@@ -54,8 +55,8 @@ public abstract class BaseNetworkTest {
         };
     }
 
-    protected String getBaseDirName() {
-        return OsUtils.getUserDataDir().toAbsolutePath() + "/Bisq2_" + getClassName();
+    protected Path getBaseDir() {
+        return OsUtils.getUserDataDir().resolve("/Bisq2_").resolve(getClassName());
     }
 
     protected abstract long getTimeout();

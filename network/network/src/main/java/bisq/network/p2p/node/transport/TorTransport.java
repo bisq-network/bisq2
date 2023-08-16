@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -36,11 +35,9 @@ public class TorTransport implements Transport {
     @ToString
     @EqualsAndHashCode
     public static final class Config implements Transport.Config {
-        public static Config from(String baseDir, com.typesafe.config.Config config) {
+        public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(
-                    config.getBoolean("testNetwork"),
-                    baseDir,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    dataDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")), config.getBoolean("testNetwork"),
                     parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                     parseTorrcOverrideConfig(config.getConfig("torrcOverrides"))
             );
@@ -79,19 +76,18 @@ public class TorTransport implements Transport {
                     .unwrapped();
         }
 
-        private final boolean isTestNetwork;
+        private final Path dataDir;
         private final int socketTimeout;
-        private final String baseDir;
+
+        private final boolean isTestNetwork;
         private final Set<DirectoryAuthority> directoryAuthorities;
         private final Map<String, String> torrcOverrides;
 
-        public Config(boolean isTestNetwork,
-                      String baseDir,
-                      int socketTimeout,
+        public Config(Path dataDir, int socketTimeout, boolean isTestNetwork,
                       Set<DirectoryAuthority> directoryAuthorities,
                       Map<String, String> torrcOverrides) {
             this.isTestNetwork = isTestNetwork;
-            this.baseDir = baseDir;
+            this.dataDir = dataDir;
             this.socketTimeout = socketTimeout;
             this.directoryAuthorities = directoryAuthorities;
             this.torrcOverrides = torrcOverrides;
@@ -101,7 +97,7 @@ public class TorTransport implements Transport {
     private final TorService torService;
 
     public TorTransport(Transport.Config config) {
-        Path torDirPath = Paths.get(config.getBaseDir(), "tor");
+        Path torDirPath = config.getDataDir();
         torService = new TorService(NetworkService.NETWORK_IO_POOL, torDirPath);
     }
 

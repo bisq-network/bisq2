@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -22,15 +23,15 @@ public class ClearNetTransport implements Transport {
     @ToString
     @EqualsAndHashCode
     public static final class Config implements Transport.Config {
-        public static Config from(String baseDir, com.typesafe.config.Config config) {
-            return new Config(baseDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
+        public static Config from(Path dataDir, com.typesafe.config.Config config) {
+            return new Config(dataDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
         }
 
         private final int socketTimeout;
-        private final String baseDir;
+        private final Path dataDir;
 
-        public Config(String baseDir, int socketTimeout) {
-            this.baseDir = baseDir;
+        public Config(Path dataDir, int socketTimeout) {
+            this.dataDir = dataDir;
             this.socketTimeout = socketTimeout;
         }
     }

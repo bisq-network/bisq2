@@ -102,7 +102,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 break;
         }
 
-        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir().toAbsolutePath().toString(),
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyPairService(),
