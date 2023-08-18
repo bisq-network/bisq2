@@ -19,6 +19,7 @@ package bisq.tor;
 
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.ClientTorrcGenerator;
+import bisq.network.tor.common.torrc.TestNetworkTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import lombok.Builder;
 import net.freehaven.tor.control.PasswordDigest;
@@ -30,12 +31,18 @@ import java.util.Map;
 public class TorrcClientConfigFactory {
     public static final String DISABLE_NETWORK_CONFIG_KEY = "DisableNetwork";
 
+    private final boolean isTestNetwork;
     private final Path dataDir;
     private final int controlPort;
     private final int socksPort;
     private final PasswordDigest hashedControlPassword;
 
-    public TorrcClientConfigFactory(Path dataDir, int controlPort, int socksPort, PasswordDigest hashedControlPassword) {
+    public TorrcClientConfigFactory(boolean isTestNetwork,
+                                    Path dataDir,
+                                    int controlPort,
+                                    int socksPort,
+                                    PasswordDigest hashedControlPassword) {
+        this.isTestNetwork = isTestNetwork;
         this.dataDir = dataDir;
         this.controlPort = controlPort;
         this.socksPort = socksPort;
@@ -50,8 +57,13 @@ public class TorrcClientConfigFactory {
     }
 
     private TorrcConfigGenerator clientTorrcGenerator() {
+        TorrcConfigGenerator baseTorrcGenerator = baseTorrcGenerator();
+        if (isTestNetwork) {
+            baseTorrcGenerator = testNetworkTorrcGenerator(baseTorrcGenerator);
+        }
+
         return ClientTorrcGenerator.builder()
-                .baseTorrcConfigGenerator(baseTorrcGenerator())
+                .baseTorrcConfigGenerator(baseTorrcGenerator)
                 .socksPort(socksPort)
                 .build();
     }
@@ -61,6 +73,12 @@ public class TorrcClientConfigFactory {
                 .dataDirPath(dataDir)
                 .controlPort(controlPort)
                 .hashedControlPassword(hashedControlPassword.getHashedPassword())
+                .build();
+    }
+
+    private static TorrcConfigGenerator testNetworkTorrcGenerator(TorrcConfigGenerator baseTorrcGenerator) {
+        return TestNetworkTorrcGenerator.builder()
+                .baseTorrcConfigGenerator(baseTorrcGenerator)
                 .build();
     }
 }
