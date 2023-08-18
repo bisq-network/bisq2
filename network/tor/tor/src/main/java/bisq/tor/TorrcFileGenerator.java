@@ -21,14 +21,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 public class TorrcFileGenerator {
     private final Path torrcPath;
     private final Map<String, String> torrcConfigMap;
+    private final Set<DirectoryAuthority> customDirectoryAuthorities;
 
-    public TorrcFileGenerator(Path torrcPath, Map<String, String> torrcConfigMap) {
+    public TorrcFileGenerator(Path torrcPath,
+                              Map<String, String> torrcConfigMap,
+                              Set<DirectoryAuthority> customDirectoryAuthorities) {
         this.torrcPath = torrcPath;
         this.torrcConfigMap = torrcConfigMap;
+        this.customDirectoryAuthorities = customDirectoryAuthorities;
     }
 
     public void generate() {
@@ -39,6 +44,14 @@ public class TorrcFileGenerator {
                         .append(value)
                         .append("\n")
         );
+
+        customDirectoryAuthorities.forEach(dirAuthority ->
+                torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
+                        .append(" orport=").append(dirAuthority.getOrPort())
+                        .append(" v3ident=").append(dirAuthority.getV3Ident())
+                        .append(" 127.0.0.1:").append(dirAuthority.getDirPort())
+                        .append(" ").append(dirAuthority.getRelayFingerprint())
+                        .append("\n"));
 
         try {
             Files.writeString(torrcPath, torrcStringBuilder.toString());
