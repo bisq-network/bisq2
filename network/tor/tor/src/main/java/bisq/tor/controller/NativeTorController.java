@@ -36,24 +36,33 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class NativeTorController implements BootstrapEventListener, HsDescUploadedEventListener {
 
+    private final AtomicBoolean isRunning = new AtomicBoolean();
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
     private final CountDownLatch isHsDescUploadedCountdownLatch = new CountDownLatch(1);
     private final ControllerEventHandler controllerEventHandler = new ControllerEventHandler();
     private final CompletableFuture<String> hiddenServiceAddress = new CompletableFuture<>();
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
 
-    public synchronized void connect(int controlPort, PasswordDigest controlConnectionSecret) {
+    public void connect(int controlPort, PasswordDigest controlConnectionSecret) {
+        boolean readyToStart = isRunning.compareAndSet(false, true);
+        if (!readyToStart) {
+            return;
+        }
+
         try {
             var controlSocket = new Socket("127.0.0.1", controlPort);
             var controlConnection = new TorControlConnection(controlSocket);
             controlConnection.launchThread(true);
             controlConnection.authenticate(controlConnectionSecret.getSecret());
             torControlConnection = Optional.of(controlConnection);
+
         } catch (IOException e) {
+            isRunning.set(false);
             throw new ControlCommandFailedException("Couldn't connect to control port.", e);
         }
     }
@@ -129,11 +138,17 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         }
     }
 
-    public synchronized void shutdown() {
+    public void shutdown() {
+        boolean canShutdown = isRunning.compareAndSet(true, false);
+        if (!canShutdown) {
+            return;
+        }
+
         try {
             TorControlConnection controlConnection = torControlConnection.orElseThrow();
             controlConnection.shutdownTor("SHUTDOWN");
         } catch (IOException e) {
+            isRunning.set(true);
             throw new ControlCommandFailedException("Couldn't send shutdown command to Tor.", e);
         }
     }
