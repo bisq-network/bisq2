@@ -24,7 +24,6 @@ import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +36,7 @@ import static org.mockito.Mockito.spy;
 
 public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) throws IOException {
+    void basicTest(@TempDir Path tempDir) {
         Path daAPath = tempDir.resolve("DA_A");
         assertThat(daAPath.toFile().mkdir()).isTrue();
 
@@ -87,6 +86,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
 
         Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
+
         Path torrcPath = firstDirAuth.getTorrcPath();
         Set<DirectoryAuthority> allDAs = allDirAuthorities.stream()
                 .map(TorNode::toDirectoryAuthority)

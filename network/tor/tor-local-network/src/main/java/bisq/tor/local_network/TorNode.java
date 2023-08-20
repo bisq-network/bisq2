@@ -104,9 +104,9 @@ public class TorNode {
         return DirectoryAuthority.builder()
                 .nickname(nickname)
                 .orPort(orPort)
-                .v3Ident(identityKeyFingerprint.orElseThrow())
+                .v3Ident(getAuthorityIdentityKeyFingerprint().orElseThrow())
                 .dirPort(dirPort)
-                .relayFingerprint(relayKeyFingerprint.orElseThrow())
+                .relayFingerprint(getRelayKeyFingerprint().orElseThrow())
                 .build();
     }
 

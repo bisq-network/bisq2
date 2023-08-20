@@ -24,12 +24,10 @@ import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -37,7 +35,7 @@ import static org.mockito.Mockito.spy;
 
 public class RelayTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) throws IOException {
+    void basicTest(@TempDir Path tempDir) {
         Path relayAPath = tempDir.resolve("RELAY_A");
         assertThat(relayAPath.toFile().mkdir()).isTrue();
 
@@ -84,13 +82,31 @@ public class RelayTorrcGeneratorTests {
                 .getRelayKeyFingerprint();
 
         TorrcConfigGenerator relayTorrcGenerator = TestNetworkTorrcGeneratorFactory.relayTorrcGenerator(firstRelay);
-        var allDirAuthorities = Set.of(firstRelay, secondRelay);
-
         Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
+
+        TorNode dirAuth = spy(
+                TorNode.builder()
+                        .type(TorNode.Type.DIRECTORY_AUTHORITY)
+                        .nickname("A")
+                        .dataDir(tempDir.resolve("dir_auth"))
+
+                        .controlPort(1)
+                        .orPort(2)
+                        .dirPort(3)
+
+                        .build()
+        );
+
+        doReturn(Optional.of("AAAA_fp"))
+                .when(dirAuth)
+                .getAuthorityIdentityKeyFingerprint();
+
+        doReturn(Optional.of("AAAA_v3"))
+                .when(dirAuth)
+                .getRelayKeyFingerprint();
+
         Path torrcPath = firstRelay.getTorrcPath();
-        Set<DirectoryAuthority> allDAs = allDirAuthorities.stream()
-                .map(TorNode::toDirectoryAuthority)
-                .collect(Collectors.toSet());
+        Set<DirectoryAuthority> allDAs = Set.of(dirAuth.toDirectoryAuthority());
         var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
         torrcFileGenerator.generate();
 
