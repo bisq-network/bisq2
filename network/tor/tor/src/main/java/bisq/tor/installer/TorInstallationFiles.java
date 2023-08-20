@@ -28,16 +28,12 @@ import java.nio.file.Path;
 public class TorInstallationFiles {
     private final File torDir;
     private final File torBinary;
-    private final File geoIPFile;
-    private final File geoIPv6File;
     private final File torrcFile;
     private final File versionFile;
 
     public TorInstallationFiles(Path torDirPath, OsType osType) {
         torDir = torDirPath.toFile();
         torBinary = new File(torDir, osType.getBinaryName());
-        geoIPFile = new File(torDir, Constants.GEO_IP);
-        geoIPv6File = new File(torDir, Constants.GEO_IPV_6);
         torrcFile = new File(torDir, Constants.TORRC);
         versionFile = new File(torDir, Constants.VERSION);
     }
