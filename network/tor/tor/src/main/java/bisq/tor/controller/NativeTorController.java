@@ -17,7 +17,7 @@
 
 package bisq.tor.controller;
 
-import bisq.tor.ClientTorrcGenerator;
+import bisq.tor.TorrcClientConfigFactory;
 import bisq.tor.controller.events.ControllerEventHandler;
 import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescUploadedEvent;
@@ -72,7 +72,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         try {
             TorControlConnection controlConnection = torControlConnection.orElseThrow();
             addBootstrapEventListener(controlConnection);
-            controlConnection.setConf(ClientTorrcGenerator.DISABLE_NETWORK_CONFIG_KEY, "0");
+            controlConnection.setConf(TorrcClientConfigFactory.DISABLE_NETWORK_CONFIG_KEY, "0");
         } catch (IOException e) {
             throw new ControlCommandFailedException("Couldn't enable Tor networking.", e);
         }
