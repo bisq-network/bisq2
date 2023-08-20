@@ -21,6 +21,8 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.*;
 import bisq.tor.local_network.TorNode;
 
+import java.util.Optional;
+
 public class TestNetworkTorrcGeneratorFactory {
     public static TorrcConfigGenerator directoryTorrcGenerator(TorNode directoryNode) {
         var testNetworkTorrcGenerator = testNetworkTorrcGenerator(directoryNode);
@@ -43,9 +45,9 @@ public class TestNetworkTorrcGeneratorFactory {
     private static TorrcConfigGenerator testNetworkTorrcGenerator(TorNode torNode) {
         return TestNetworkTorrcGenerator.builder()
                 .baseTorrcConfigGenerator(baseTorrcGenerator(torNode))
-                .nickname(torNode.getNickname())
-                .orPort(torNode.getOrPort())
-                .dirPort(torNode.getDirPort())
+                .nickname(Optional.of(torNode.getNickname()))
+                .orPort(Optional.of(torNode.getOrPort()))
+                .dirPort(Optional.of(torNode.getDirPort()))
                 .build();
     }
 

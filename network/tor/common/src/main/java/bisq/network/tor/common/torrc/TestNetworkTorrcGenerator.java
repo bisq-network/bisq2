@@ -18,9 +18,9 @@
 package bisq.network.tor.common.torrc;
 
 import lombok.Builder;
-import lombok.Getter;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The configuration settings are from the Chutney (<a href="https://gitweb.torproject.org/chutney.git/">project</a>).
@@ -30,19 +30,14 @@ public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
 
     private final TorrcConfigGenerator baseTorrcConfigGenerator;
 
-    private final String nickname;
-    private final int orPort;
-    private final int dirPort;
+    @Builder.Default
+    private final Optional<String> nickname = Optional.empty();
 
-    public TestNetworkTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator,
-                                     String nickname,
-                                     int orPort,
-                                     int dirPort) {
-        this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
-        this.nickname = nickname;
-        this.orPort = orPort;
-        this.dirPort = dirPort;
-    }
+    @Builder.Default
+    private final Optional<Integer> orPort = Optional.empty();
+
+    @Builder.Default
+    private final Optional<Integer> dirPort = Optional.empty();
 
     @Override
     public Map<String, String> generate() {
@@ -57,7 +52,7 @@ public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
         torConfigMap.put("TestingMinExitFlagThreshold", "0");
 
 
-        torConfigMap.put("Nickname", nickname);
+        nickname.ifPresent(nickname -> torConfigMap.put("Nickname", nickname));
         torConfigMap.put("ShutdownWaitLength", "2");
         torConfigMap.put("DisableDebuggerAttachment", "0");
 
@@ -65,13 +60,13 @@ public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
         torConfigMap.put("SafeLogging", "0");
         torConfigMap.put("LogTimeGranularity", "1");
 
-        torConfigMap.put("OrPort", String.valueOf(orPort));
+        orPort.ifPresent(orPort -> torConfigMap.put("OrPort", String.valueOf(orPort)));
         torConfigMap.put("Address", "127.0.0.1");
         torConfigMap.put("ServerDNSDetectHijacking", "0");
 
         torConfigMap.put("ServerDNSTestAddresses", "");
 
-        torConfigMap.put("DirPort", String.valueOf(dirPort));
+        dirPort.ifPresent(dirPort -> torConfigMap.put("DirPort", String.valueOf(dirPort)));
 
         return torConfigMap;
     }
