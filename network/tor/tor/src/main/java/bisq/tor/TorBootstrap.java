@@ -19,7 +19,6 @@ package bisq.tor;
 
 import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
-import bisq.tor.installer.TorrcConfigInstaller;
 import bisq.tor.process.TorProcessBuilder;
 import bisq.tor.process.TorProcessConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +40,6 @@ class TorBootstrap {
         OsType osType = OsType.getOsType();
         this.torInstallationFiles = new TorInstallationFiles(torDirPath, osType);
 
-        TorrcConfigInstaller torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFiles);
         this.torInstaller = new TorInstaller(torInstallationFiles);
 
         this.osType = osType;
