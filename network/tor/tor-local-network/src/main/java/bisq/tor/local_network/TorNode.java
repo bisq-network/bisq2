@@ -17,6 +17,7 @@
 
 package bisq.tor.local_network;
 
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -93,6 +94,20 @@ public class TorNode {
         File fingerprintFile = new File(dataDir.toFile(), "fingerprint");
         relayKeyFingerprint = readFingerprint(fingerprintFile, "Unnamed ");
         return relayKeyFingerprint;
+    }
+
+    public DirectoryAuthority toDirectoryAuthority() {
+        if (type != Type.DIRECTORY_AUTHORITY) {
+            throw new WrongTorNodeType("Can't convert non-directory node to directory authority.");
+        }
+
+        return DirectoryAuthority.builder()
+                .nickname(nickname)
+                .orPort(orPort)
+                .v3Ident(getAuthorityIdentityKeyFingerprint().orElseThrow())
+                .dirPort(dirPort)
+                .relayFingerprint(getRelayKeyFingerprint().orElseThrow())
+                .build();
     }
 
     private Optional<String> readFingerprint(File fingerprintFile, String linePrefix) {

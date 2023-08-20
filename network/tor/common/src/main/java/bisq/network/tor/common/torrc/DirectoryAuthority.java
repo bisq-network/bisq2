@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.network.tor.common.torrc;
 
 import lombok.Builder;
 import lombok.Getter;

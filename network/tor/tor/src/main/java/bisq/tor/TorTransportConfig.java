@@ -18,6 +18,7 @@
 package bisq.tor;
 
 import bisq.network.common.TransportConfig;
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigValue;
 import lombok.EqualsAndHashCode;

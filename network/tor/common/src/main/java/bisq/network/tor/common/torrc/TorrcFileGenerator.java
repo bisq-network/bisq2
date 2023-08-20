@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.local_network.torrc;
-
-import bisq.tor.local_network.TorNode;
+package bisq.network.tor.common.torrc;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,15 +26,17 @@ import java.util.Set;
 public class TorrcFileGenerator {
     private final Path torrcPath;
     private final Map<String, String> torrcConfigMap;
-    private final Set<TorNode> allDirAuthorities;
+    private final Set<DirectoryAuthority> customDirectoryAuthorities;
 
-    public TorrcFileGenerator(Path torrcPath, Map<String, String> torrcConfigMap, Set<TorNode> allDirAuthorities) {
+    public TorrcFileGenerator(Path torrcPath,
+                              Map<String, String> torrcConfigMap,
+                              Set<DirectoryAuthority> customDirectoryAuthorities) {
         this.torrcPath = torrcPath;
         this.torrcConfigMap = torrcConfigMap;
-        this.allDirAuthorities = allDirAuthorities;
+        this.customDirectoryAuthorities = customDirectoryAuthorities;
     }
 
-    public void generate() throws IOException {
+    public void generate() {
         StringBuilder torrcStringBuilder = new StringBuilder();
         torrcConfigMap.forEach((key, value) ->
                 torrcStringBuilder.append(key)
@@ -45,14 +45,18 @@ public class TorrcFileGenerator {
                         .append("\n")
         );
 
-        allDirAuthorities.forEach(dirAuthority ->
+        customDirectoryAuthorities.forEach(dirAuthority ->
                 torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
                         .append(" orport=").append(dirAuthority.getOrPort())
-                        .append(" v3ident=").append(dirAuthority.getAuthorityIdentityKeyFingerprint().orElseThrow())
+                        .append(" v3ident=").append(dirAuthority.getV3Ident())
                         .append(" 127.0.0.1:").append(dirAuthority.getDirPort())
-                        .append(" ").append(dirAuthority.getRelayKeyFingerprint().orElseThrow())
+                        .append(" ").append(dirAuthority.getRelayFingerprint())
                         .append("\n"));
 
-        Files.writeString(torrcPath, torrcStringBuilder.toString());
+        try {
+            Files.writeString(torrcPath, torrcStringBuilder.toString());
+        } catch (IOException e) {
+            throw new IllegalStateException("Couldn't create torrc file: " + torrcPath.toAbsolutePath());
+        }
     }
 }

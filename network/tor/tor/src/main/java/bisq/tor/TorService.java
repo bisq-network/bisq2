@@ -19,10 +19,12 @@ package bisq.tor;
 
 import bisq.common.application.Service;
 import bisq.common.util.NetworkUtils;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
+import bisq.tor.onionservice.OnionAddress;
 import bisq.tor.onionservice.OnionServicePublishService;
 import bisq.tor.process.NativeTorProcess;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -145,11 +147,7 @@ public class TorService implements Service {
         var torInstallationFiles = new TorInstallationFiles(torDataDirPath);
 
         var torInstaller = new TorInstaller(torInstallationFiles);
-        try {
-            torInstaller.installIfNotUpToDate();
-        } catch (IOException e) {
-            throw new CannotInstallBundledTor(e);
-        }
+        torInstaller.installIfNotUpToDate();
     }
 
     private void createTorrcConfigFile(Path dataDir, int controlPort, PasswordDigest hashedControlPassword) {

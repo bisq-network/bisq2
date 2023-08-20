@@ -15,31 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.installer;
 
-public class OnionAddress {
-    private final String host;
-    private final int port;
-
-    public OnionAddress(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public String getServiceId() {
-        return host.replace(".onion", "");
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    @Override
-    public String toString() {
-        return host + ":" + port;
+public class CannotInstallBundledTor extends RuntimeException {
+    public CannotInstallBundledTor(Throwable cause) {
+        super(cause);
     }
 }

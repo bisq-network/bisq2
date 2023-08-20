@@ -18,10 +18,11 @@
 package bisq.tor.local_network;
 
 import bisq.common.util.NetworkUtils;
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.local_network.da.DirectoryAuthorityFactory;
 import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
-import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -92,8 +94,12 @@ public class DirectoryAuthorityTests {
         for (TorNode da : allDAs) {
             TorrcConfigGenerator torDaTorrcGenerator = TestNetworkTorrcGeneratorFactory.directoryTorrcGenerator(da);
             Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
+
             Path torrcPath = da.getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
+            Set<DirectoryAuthority> directoryAuthorities = allDAs.stream()
+                    .map(TorNode::toDirectoryAuthority)
+                    .collect(Collectors.toSet());
+            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, directoryAuthorities);
             torrcFileGenerator.generate();
         }
     }

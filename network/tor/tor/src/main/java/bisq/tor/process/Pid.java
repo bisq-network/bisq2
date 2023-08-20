@@ -15,21 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.onionservice;
+package bisq.tor.process;
 
-import lombok.Getter;
+import java.lang.management.ManagementFactory;
 
-import java.net.ServerSocket;
-
-@Getter
-public class CreateOnionServiceResponse {
-    private final String nodeId;
-    private final ServerSocket serverSocket;
-    private final OnionAddress onionAddress;
-
-    public CreateOnionServiceResponse(String nodeId, ServerSocket serverSocket, OnionAddress onionAddress) {
-        this.nodeId = nodeId;
-        this.serverSocket = serverSocket;
-        this.onionAddress = onionAddress;
+public class Pid {
+    public static String getMyPid() {
+        String processName = ManagementFactory.getRuntimeMXBean().getName();
+        return processName.split("@")[0];
     }
 }

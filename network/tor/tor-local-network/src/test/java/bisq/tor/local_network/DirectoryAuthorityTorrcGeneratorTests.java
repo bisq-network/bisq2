@@ -17,17 +17,18 @@
 
 package bisq.tor.local_network;
 
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
-import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -35,7 +36,7 @@ import static org.mockito.Mockito.spy;
 
 public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) throws IOException {
+    void basicTest(@TempDir Path tempDir) {
         Path daAPath = tempDir.resolve("DA_A");
         assertThat(daAPath.toFile().mkdir()).isTrue();
 
@@ -85,8 +86,12 @@ public class DirectoryAuthorityTorrcGeneratorTests {
         var allDirAuthorities = Set.of(firstDirAuth, secondDirAuth);
 
         Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
+
         Path torrcPath = firstDirAuth.getTorrcPath();
-        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDirAuthorities);
+        Set<DirectoryAuthority> allDAs = allDirAuthorities.stream()
+                .map(TorNode::toDirectoryAuthority)
+                .collect(Collectors.toSet());
+        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
 
         torrcFileGenerator.generate();
 

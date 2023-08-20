@@ -19,7 +19,6 @@ package bisq.tor.process;
 
 import bisq.common.FileCreationWatcher;
 import bisq.common.scanner.FileScanner;
-import bisq.tor.Pid;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

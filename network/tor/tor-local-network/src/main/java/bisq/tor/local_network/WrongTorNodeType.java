@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.local_network;
 
-public class CannotInstallBundledTor extends RuntimeException {
-    public CannotInstallBundledTor(Throwable cause) {
-        super(cause);
+public class WrongTorNodeType extends RuntimeException {
+    public WrongTorNodeType(String message) {
+        super(message);
     }
 }

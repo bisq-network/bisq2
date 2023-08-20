@@ -18,10 +18,11 @@
 package bisq.tor.local_network;
 
 import bisq.common.util.NetworkUtils;
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.local_network.da.DirectoryAuthorityFactory;
 import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
-import bisq.tor.local_network.torrc.TorrcFileGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TorNetwork {
 
@@ -125,30 +127,24 @@ public class TorNetwork {
         }
     }
 
-    private void generateTorrcFiles() throws IOException {
+    private void generateTorrcFiles() {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             TorrcConfigGenerator torDaTorrcGenerator = TestNetworkTorrcGeneratorFactory.directoryTorrcGenerator(da);
             Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
-            Path torrcPath = da.getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
-            generateTorrc(da, torrcFileGenerator);
+            generateTorrc(da, torrcConfigs, allDAs);
         }
 
         for (TorNode relay : relays) {
             TorrcConfigGenerator relayTorrcGenerator = TestNetworkTorrcGeneratorFactory.relayTorrcGenerator(relay);
             Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
-            Path torrcPath = relay.getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
-            generateTorrc(relay, torrcFileGenerator);
+            generateTorrc(relay, torrcConfigs, allDAs);
         }
 
         for (TorNode client : clients) {
             TorrcConfigGenerator clientTorrcGenerator = TestNetworkTorrcGeneratorFactory.clientTorrcGenerator(client);
             Map<String, String> torrcConfigs = clientTorrcGenerator.generate();
-            Path torrcPath = client.getTorrcPath();
-            var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
-            generateTorrc(client, torrcFileGenerator);
+            generateTorrc(client, torrcConfigs, allDAs);
         }
     }
 
@@ -179,10 +175,16 @@ public class TorNetwork {
         return processBuilder.start();
     }
 
-    private void generateTorrc(TorNode torNode, TorrcFileGenerator torrcFileGenerator) throws IOException {
+    private void generateTorrc(TorNode torNode, Map<String, String> torrcConfigs, Set<TorNode> allDAs) {
         if (torNode.getTorrcPath().toFile().exists()) {
             return;
         }
+
+        Set<DirectoryAuthority> directoryAuthorities = allDAs.stream()
+                .map(TorNode::toDirectoryAuthority)
+                .collect(Collectors.toSet());
+
+        var torrcFileGenerator = new TorrcFileGenerator(torNode.getTorrcPath(), torrcConfigs, directoryAuthorities);
         torrcFileGenerator.generate();
     }
 }

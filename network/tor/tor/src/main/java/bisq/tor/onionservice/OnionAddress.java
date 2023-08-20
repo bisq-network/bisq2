@@ -15,13 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.onionservice;
 
-import java.lang.management.ManagementFactory;
+public class OnionAddress {
+    private final String host;
+    private final int port;
 
-public class Pid {
-    public static String getMyPid() {
-        String processName = ManagementFactory.getRuntimeMXBean().getName();
-        return processName.split("@")[0];
+    public OnionAddress(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    @Override
+    public String toString() {
+        return host + ":" + port;
     }
 }
