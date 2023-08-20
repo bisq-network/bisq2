@@ -44,7 +44,7 @@ public class TorSocksProxyFactory {
     }
 
     public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
-        Socks5Proxy socks5Proxy = new Socks5Proxy(Constants.LOCALHOST, socksPort);
+        Socks5Proxy socks5Proxy = new Socks5Proxy("127.0.0.1", socksPort);
         socks5Proxy.resolveAddrLocally(false);
         if (streamId == null) {
             return socks5Proxy;

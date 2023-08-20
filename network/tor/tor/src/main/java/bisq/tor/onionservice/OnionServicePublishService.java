@@ -17,7 +17,6 @@
 
 package bisq.tor.onionservice;
 
-import bisq.tor.Constants;
 import bisq.tor.OnionAddress;
 import bisq.tor.controller.NativeTorController;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class OnionServicePublishService {
+    private static final String HS_DIR_NANE = "hiddenservice";
+
     private final NativeTorController nativeTorController;
     private final Path torDirPath;
     private Optional<OnionServiceDataDirManager> onionDataDirManager = Optional.empty();
@@ -55,7 +56,7 @@ public class OnionServicePublishService {
 
             onionDataDirManager = Optional.of(
                     new OnionServiceDataDirManager(
-                            torDirPath.resolve(Constants.HS_DIR).resolve(nodeId)
+                            torDirPath.resolve(HS_DIR_NANE).resolve(nodeId)
                     )
             );
             onionDataDirManager.ifPresent(dataDirManager -> dataDirManager.persist(result));
