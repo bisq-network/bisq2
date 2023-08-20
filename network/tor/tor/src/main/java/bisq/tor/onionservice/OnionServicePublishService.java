@@ -19,7 +19,7 @@ package bisq.tor.onionservice;
 
 import bisq.tor.Constants;
 import bisq.tor.OnionAddress;
-import bisq.tor.TorController;
+import bisq.tor.controller.NativeTorController;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
 
@@ -30,13 +30,13 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class OnionServicePublishService {
-    private final TorController torController;
+    private final NativeTorController nativeTorController;
     private final Path torDirPath;
-    private Optional<OnionServiceDataDirManager> dataDirManager = Optional.empty();
+    private Optional<OnionServiceDataDirManager> onionDataDirManager = Optional.empty();
     private Optional<OnionAddress> onionAddress = Optional.empty();
 
-    public OnionServicePublishService(TorController torController, Path torDirPath) {
-        this.torController = torController;
+    public OnionServicePublishService(NativeTorController nativeTorController, Path torDirPath) {
+        this.nativeTorController = nativeTorController;
         this.torDirPath = torDirPath;
     }
 
@@ -47,28 +47,23 @@ public class OnionServicePublishService {
 
         CompletableFuture<OnionAddress> completableFuture = new CompletableFuture<>();
         try {
+            Optional<String> privateKey = onionDataDirManager.orElseThrow().getPrivateKey();
             TorControlConnection.CreateHiddenServiceResult jTorResult =
-                    sendPublishRequestToTor(onionServicePort, localPort);
+                    nativeTorController.createHiddenService(onionServicePort, localPort, privateKey);
 
             CreateHiddenServiceResult result = new CreateHiddenServiceResult(jTorResult);
 
-            dataDirManager = Optional.of(
+            onionDataDirManager = Optional.of(
                     new OnionServiceDataDirManager(
                             torDirPath.resolve(Constants.HS_DIR).resolve(nodeId)
                     )
             );
-            dataDirManager.ifPresent(dataDirManager -> dataDirManager.persist(result));
+            onionDataDirManager.ifPresent(dataDirManager -> dataDirManager.persist(result));
 
-            this.onionAddress = Optional.of(
-                    new OnionAddress(jTorResult.serviceID + ".onion", onionServicePort)
-            );
 
-            log.debug("Start publishing hidden service {}", onionAddress);
-            String serviceId = jTorResult.serviceID;
-            torController.addHiddenServiceReadyListener(serviceId, () -> {
-                torController.removeHiddenServiceReadyListener(serviceId);
-                completableFuture.complete(onionAddress.orElseThrow());
-            });
+            var onionAddress = new OnionAddress(jTorResult.serviceID + ".onion", onionServicePort);
+            this.onionAddress = Optional.of(onionAddress);
+            completableFuture.complete(onionAddress);
 
         } catch (IOException e) {
             log.error("Couldn't initialize onion service {}", onionAddress);
@@ -76,28 +71,5 @@ public class OnionServicePublishService {
         }
 
         return completableFuture;
-    }
-
-    public synchronized void shutdown() {
-        log.info("Close onionAddress={}", onionAddress);
-        onionAddress.ifPresent(onionAddress -> {
-            torController.removeHiddenServiceReadyListener(onionAddress.getServiceId());
-            try {
-                torController.destroyHiddenService(onionAddress.getServiceId());
-            } catch (IOException ignore) {
-            }
-        });
-    }
-
-    private TorControlConnection.CreateHiddenServiceResult sendPublishRequestToTor(int onionServicePort, int localPort) throws IOException {
-        Optional<String> privateKey = dataDirManager.orElseThrow().getPrivateKey();
-
-        TorControlConnection.CreateHiddenServiceResult result;
-        if (privateKey.isPresent()) {
-            result = torController.createHiddenService(onionServicePort, localPort, privateKey.get());
-        } else {
-            result = torController.createHiddenService(onionServicePort, localPort);
-        }
-        return result;
     }
 }
