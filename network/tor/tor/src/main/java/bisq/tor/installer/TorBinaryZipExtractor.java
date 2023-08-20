@@ -19,7 +19,7 @@ package bisq.tor.installer;
 
 import bisq.common.archive.ZipFileExtractionFailedException;
 import bisq.common.archive.ZipFileExtractor;
-import bisq.tor.OsType;
+import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -67,12 +67,6 @@ public class TorBinaryZipExtractor {
     }
 
     private boolean isMacOsOrLinux() {
-        switch (OsType.getOsType()) {
-            case OSX:
-            case LINUX_32:
-            case LINUX_64:
-                return true;
-        }
-        return false;
+        return OsUtils.isMac() || OsUtils.isLinux();
     }
 }
