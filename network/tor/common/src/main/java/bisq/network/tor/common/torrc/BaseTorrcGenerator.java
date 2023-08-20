@@ -25,7 +25,6 @@ import java.util.Map;
 
 @Builder
 public class BaseTorrcGenerator implements TorrcConfigGenerator {
-    public static final String DISABLE_NETWORK_CONFIG_KEY = "DisableNetwork";
 
     private final Path dataDirPath;
     private final int controlPort;
@@ -42,7 +41,6 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
         Map<String, String> torConfigMap = new HashMap<>();
         torConfigMap.put("DataDirectory", dataDirPath.toAbsolutePath().toString());
 
-        torConfigMap.put(DISABLE_NETWORK_CONFIG_KEY, "1");
         torConfigMap.put("ControlPort", "127.0.0.1:" + controlPort);
         torConfigMap.put("HashedControlPassword", hashedControlPassword);
         torConfigMap.put("Log",
