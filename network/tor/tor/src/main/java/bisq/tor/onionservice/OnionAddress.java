@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.onionservice;
 
 public class OnionAddress {
     private final String host;

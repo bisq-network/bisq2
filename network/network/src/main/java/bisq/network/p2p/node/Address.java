@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.tor.OnionAddress;
+import bisq.tor.onionservice.OnionAddress;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

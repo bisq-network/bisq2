@@ -17,7 +17,6 @@
 
 package bisq.tor.onionservice;
 
-import bisq.tor.OnionAddress;
 import lombok.Getter;
 
 import java.net.ServerSocket;

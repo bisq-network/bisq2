@@ -23,6 +23,7 @@ import bisq.tor.controller.NativeTorController;
 import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
+import bisq.tor.onionservice.OnionAddress;
 import bisq.tor.onionservice.OnionServicePublishService;
 import bisq.tor.process.NativeTorProcess;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
