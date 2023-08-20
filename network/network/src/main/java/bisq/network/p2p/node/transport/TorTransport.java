@@ -1,10 +1,10 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.network.NetworkService;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.tor.TorService;
+import bisq.tor.TorTransportConfig;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -12,14 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 
 @Slf4j
@@ -29,22 +26,13 @@ public class TorTransport implements Transport {
     private final TorService torService;
 
     public TorTransport(TransportConfig config) {
-        Path torDirPath = config.getDataDir();
-        torService = new TorService(NetworkService.NETWORK_IO_POOL, torDirPath);
+        torService = new TorService((TorTransportConfig) config);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("Initialize Tor");
-        return torService.initialize()
-                .thenApply(isSuccess -> {
-                    checkArgument(isSuccess, "Tor start failed");
-                    return true;
-                })
-                .exceptionally(throwable -> {
-                    log.error("tor.start failed", throwable);
-                    throw new ConnectionException(throwable);
-                });
+        return torService.initialize();
     }
 
     @Override

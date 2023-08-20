@@ -35,11 +35,13 @@ import java.util.concurrent.TimeoutException;
 public class NativeTorProcess {
 
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
+    private final Path torBinaryPath;
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
     private Optional<Future<Path>> logFileCreationWaiter = Optional.empty();
 
-    public NativeTorProcess(Path torrcPath) {
+    public NativeTorProcess(Path torBinaryPath, Path torrcPath) {
+        this.torBinaryPath = torBinaryPath;
         this.torrcPath = torrcPath;
     }
 
@@ -47,7 +49,8 @@ public class NativeTorProcess {
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
         String ownerPid = Pid.getMyPid();
-        var processBuilder = new ProcessBuilder("tor",
+        var processBuilder = new ProcessBuilder(
+                torBinaryPath.toAbsolutePath().toString(),
                 "-f", absoluteTorrcPathAsString,
                 ARG_OWNER_PID, ownerPid
         );

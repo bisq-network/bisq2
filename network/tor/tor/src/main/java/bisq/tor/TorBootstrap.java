@@ -43,7 +43,7 @@ class TorBootstrap {
         this.torInstallationFiles = new TorInstallationFiles(torDirPath, osType);
 
         TorrcConfigInstaller torrcConfigInstaller = new TorrcConfigInstaller(torInstallationFiles);
-        this.torInstaller = new TorInstaller(torInstallationFiles, torrcConfigInstaller);
+        this.torInstaller = new TorInstaller(torInstallationFiles);
 
         this.osType = osType;
     }

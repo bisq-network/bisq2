@@ -17,8 +17,6 @@
 
 package bisq.tor;
 
-import bisq.tor.context.ReadOnlyTorContext;
-import bisq.tor.context.TorContext;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -33,18 +31,11 @@ import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class TorSocksProxyFactory {
-    private final ReadOnlyTorContext torContext;
-    private int proxyPort = -1;
+    private final int socksPort;
 
-    public TorSocksProxyFactory(ReadOnlyTorContext torContext) {
-        this.torContext = torContext;
-    }
-
-    public void initialize(int proxyPort) {
-        this.proxyPort = proxyPort;
+    public TorSocksProxyFactory(int socksPort) {
+        this.socksPort = socksPort;
     }
 
     public Socket getSocket(@Nullable String streamId) throws IOException {
@@ -53,10 +44,7 @@ public class TorSocksProxyFactory {
     }
 
     public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
-        checkArgument(torContext.getState() == TorContext.State.RUNNING,
-                "Invalid state at Tor.getSocks5Proxy. state=" + torContext.getState());
-        checkArgument(proxyPort > -1, "proxyPort must be defined");
-        Socks5Proxy socks5Proxy = new Socks5Proxy(Constants.LOCALHOST, proxyPort);
+        Socks5Proxy socks5Proxy = new Socks5Proxy(Constants.LOCALHOST, socksPort);
         socks5Proxy.resolveAddrLocally(false);
         if (streamId == null) {
             return socks5Proxy;
@@ -99,8 +87,6 @@ public class TorSocksProxyFactory {
     }
 
     private Proxy getProxy(@Nullable String streamId) throws IOException {
-        checkArgument(torContext.getState() == TorContext.State.RUNNING,
-                "Invalid state at Tor.getProxy. state=" + torContext.getState());
         Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
         InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         return new Proxy(Proxy.Type.SOCKS, socketAddress);

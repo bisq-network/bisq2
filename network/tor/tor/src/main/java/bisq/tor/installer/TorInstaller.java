@@ -18,7 +18,6 @@
 package bisq.tor.installer;
 
 import bisq.common.util.FileUtils;
-import bisq.tor.Tor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -26,12 +25,11 @@ import java.io.IOException;
 
 @Slf4j
 public class TorInstaller {
+    private static final String VERSION = "0.1.0";
     private final TorInstallationFiles torInstallationFiles;
-    private final TorrcConfigInstaller torrcConfigInstaller;
 
-    public TorInstaller(TorInstallationFiles torInstallationFiles, TorrcConfigInstaller torrcConfigInstaller) {
+    public TorInstaller(TorInstallationFiles torInstallationFiles) {
         this.torInstallationFiles = torInstallationFiles;
-        this.torrcConfigInstaller = torrcConfigInstaller;
     }
 
     public void installIfNotUpToDate() throws IOException {
@@ -50,7 +48,7 @@ public class TorInstaller {
 
     private boolean isTorUpToDate() throws IOException {
         File versionFile = torInstallationFiles.getVersionFile();
-        return versionFile.exists() && Tor.VERSION.equals(FileUtils.readStringFromFile(versionFile));
+        return versionFile.exists() && VERSION.equals(FileUtils.readStringFromFile(versionFile));
     }
 
     private void install() throws IOException {
@@ -61,15 +59,13 @@ public class TorInstaller {
             File dotTorDir = torInstallationFiles.getDotTorDir();
             FileUtils.makeDirs(dotTorDir);
 
-            torrcConfigInstaller.install();
-
             File destDir = torInstallationFiles.getTorDir();
             new TorBinaryZipExtractor(destDir).extractBinary();
             log.info("Tor files installed to {}", destDir.getAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
             File versionFile = torInstallationFiles.getVersionFile();
-            FileUtils.writeToFile(Tor.VERSION, versionFile);
+            FileUtils.writeToFile(VERSION, versionFile);
         } catch (Throwable e) {
             deleteVersionFile();
             throw e;

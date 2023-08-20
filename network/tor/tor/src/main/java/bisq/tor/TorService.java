@@ -18,107 +18,85 @@
 package bisq.tor;
 
 import bisq.common.application.Service;
-import bisq.tor.context.TorContext;
+import bisq.common.util.NetworkUtils;
+import bisq.tor.controller.NativeTorController;
+import bisq.tor.installer.TorInstallationFiles;
+import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import bisq.tor.onionservice.OnionServicePublishService;
+import bisq.tor.process.NativeTorProcess;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import dev.failsafe.Failsafe;
-import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
+import net.freehaven.tor.control.PasswordDigest;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class TorService implements Service {
     private static final int RANDOM_PORT = 0;
 
-    private final ExecutorService executorService;
-    private final Tor tor;
-    private final TorContext context = new TorContext();
-    private final OnionServicePublishService onionPublishService;
-    private final TorSocksProxyFactory torSocksProxyFactory;
+    private final TorTransportConfig transportConfig;
+    private final Path torDataDirPath;
+    private final NativeTorController nativeTorController = new NativeTorController();
 
-    public TorService(ExecutorService executorService, Path torDirPath) {
-        this.executorService = executorService;
-        this.tor = new Tor(torDirPath, context);
-        this.onionPublishService = tor.getOnionServicePublishService();
-        this.torSocksProxyFactory = tor.getTorSocksProxyFactory();
+    private Optional<NativeTorProcess> torProcess = Optional.empty();
+    private Optional<Integer> socksPort = Optional.empty();
+    private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
+    private Optional<OnionAddress> onionAddress = Optional.empty();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("Tor.shutdownHook");
-            shutdown();
-        }));
+    public TorService(TorTransportConfig transportConfig) {
+        this.transportConfig = transportConfig;
+        this.torDataDirPath = transportConfig.getDataDir();
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.supplyAsync(
-                () -> {
-                    var retryPolicy = RetryPolicy.<Boolean>builder()
-                            .handle(IllegalStateException.class)
-                            .handleResultIf(result -> context.getState() == TorContext.State.STARTING)
-                            .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
-                            .withJitter(0.25)
-                            .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(30)
-                            .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
-                            .onRetriesExceeded(e -> {
-                                log.warn("Failed. Max retries exceeded. We shutdown.");
-                                shutdown();
-                            })
-                            .onSuccess(e -> log.debug("Succeeded."))
-                            .build();
+        installTorIfNotUpToDate();
 
-                    return Failsafe.with(retryPolicy).get(this::start);
-                },
-                executorService
-        );
+        int controlPort = NetworkUtils.findFreeSystemPort();
+        PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
+        createTorrcConfigFile(torDataDirPath, controlPort, hashedControlPassword);
+
+        Path torBinaryPath = torDataDirPath.resolve("tor");
+        Path torrcPath = torDataDirPath.resolve("torrc");
+        var nativeTorProcess = new NativeTorProcess(torBinaryPath, torrcPath);
+        torProcess = Optional.of(nativeTorProcess);
+
+        File debugLogFile = torDataDirPath.resolve("debug.log").toFile();
+        if (debugLogFile.exists()) {
+            boolean isSuccess = debugLogFile.delete();
+            if (!isSuccess) {
+                throw new IllegalStateException("Can't delete old debug.log file");
+            }
+        }
+
+        nativeTorProcess.start();
+        nativeTorProcess.waitUntilControlPortReady();
+
+        nativeTorController.connect(controlPort, hashedControlPassword);
+        nativeTorController.bindTorToConnection();
+
+        nativeTorController.enableTorNetworking();
+        nativeTorController.waitUntilBootstrapped();
+
+        int socksPort = this.socksPort.orElseThrow();
+        torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(socksPort));
+
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        TorContext.State previousState = context.getAndUpdateStateAtomically(
-                state -> state.isStartingOrRunning() ? TorContext.State.STOPPING : state
-        );
-
-        if (!previousState.isStartingOrRunning()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
-        onionPublishService.shutdown();
-        tor.shutdown();
-        context.setState(TorContext.State.TERMINATED);
+        nativeTorController.shutdown();
+        torProcess.ifPresent(NativeTorProcess::waitUntilExited);
         return CompletableFuture.completedFuture(true);
-    }
-
-    private boolean start() {
-        TorContext.State previousState = context.compareAndExchangeState(TorContext.State.NEW, TorContext.State.STARTING);
-        switch (previousState) {
-            case NEW: {
-                boolean isSuccess = tor.startTor();
-                context.setState(TorContext.State.RUNNING);
-                return isSuccess;
-            }
-            case STARTING: {
-                throw new IllegalStateException("Already starting.");
-            }
-            case RUNNING: {
-                log.debug("Got called while already running. We ignore that call.");
-                return true;
-            }
-            case STOPPING:
-            case TERMINATED:
-                return false;
-            default: {
-                throw new IllegalStateException("Unhandled state " + previousState);
-            }
-        }
     }
 
     public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, String nodeId) {
@@ -128,33 +106,72 @@ public class TorService implements Service {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
 
-            return onionPublishService.initialize(nodeId, port, localPort)
+            var onionServicePublishService = new OnionServicePublishService(nativeTorController, torDataDirPath);
+            return onionServicePublishService.initialize(nodeId, port, localPort)
                     .thenApply(onionAddress -> {
                                 log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
                                         System.currentTimeMillis() - ts, onionAddress, nodeId);
+                                this.onionAddress = Optional.of(onionAddress);
                                 return new CreateOnionServiceResponse(nodeId, localServerSocket, onionAddress);
                             }
                     );
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Can't create onion service", e);
             return CompletableFuture.failedFuture(e);
         }
     }
 
     public boolean isOnionServiceOnline(String onionUrl) {
-        return tor.isHiddenServiceAvailable(onionUrl);
+        return nativeTorController.isHiddenServiceAvailable(onionUrl);
     }
 
     public Optional<String> getHostName(String serverId) {
-        return tor.getHostName(serverId);
+        return onionAddress.map(OnionAddress::getHost);
     }
 
     public Socket getSocket(String streamId) throws IOException {
-        return torSocksProxyFactory.getSocket(streamId);
+        TorSocksProxyFactory socksProxyFactory = torSocksProxyFactory.orElseThrow();
+        return socksProxyFactory.getSocket(streamId);
     }
 
     public Socks5Proxy getSocks5Proxy(String streamId) throws IOException {
-        return torSocksProxyFactory.getSocks5Proxy(streamId);
+        TorSocksProxyFactory socksProxyFactory = torSocksProxyFactory.orElseThrow();
+        return socksProxyFactory.getSocks5Proxy(streamId);
+    }
+
+    private void installTorIfNotUpToDate() {
+        Path torDataDirPath = transportConfig.getDataDir();
+        OsType osType = OsType.getOsType();
+        var torInstallationFiles = new TorInstallationFiles(torDataDirPath, osType);
+
+        var torInstaller = new TorInstaller(torInstallationFiles);
+        try {
+            torInstaller.installIfNotUpToDate();
+        } catch (IOException e) {
+            throw new CannotInstallBundledTor(e);
+        }
+    }
+
+    private void createTorrcConfigFile(Path dataDir, int controlPort, PasswordDigest hashedControlPassword) {
+        int socksPort = NetworkUtils.findFreeSystemPort();
+        this.socksPort = Optional.of(socksPort);
+
+        TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
+                .isTestNetwork(transportConfig.isTestNetwork())
+                .dataDir(dataDir)
+                .controlPort(controlPort)
+                .socksPort(socksPort)
+                .hashedControlPassword(hashedControlPassword)
+                .build();
+
+        Map<String, String> torrcOverrideConfigs = transportConfig.getTorrcOverrides();
+        Map<String, String> torrcConfigMap = torrcClientConfigFactory.torrcClientConfigMap(torrcOverrideConfigs);
+
+        Path torrcPath = dataDir.resolve("torrc");
+        var torrcFileGenerator = new TorrcFileGenerator(torrcPath,
+                torrcConfigMap,
+                transportConfig.getDirectoryAuthorities());
+        torrcFileGenerator.generate();
     }
 }
