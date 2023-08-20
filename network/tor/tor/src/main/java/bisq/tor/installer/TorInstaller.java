@@ -32,9 +32,13 @@ public class TorInstaller {
         this.torInstallationFiles = torInstallationFiles;
     }
 
-    public void installIfNotUpToDate() throws IOException {
-        if (!isTorUpToDate()) {
-            install();
+    public void installIfNotUpToDate() {
+        try {
+            if (!isTorUpToDate()) {
+                install();
+            }
+        } catch (IOException e) {
+            throw new CannotInstallBundledTor(e);
         }
     }
 

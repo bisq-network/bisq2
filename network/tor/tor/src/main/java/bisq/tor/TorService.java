@@ -145,11 +145,7 @@ public class TorService implements Service {
         var torInstallationFiles = new TorInstallationFiles(torDataDirPath);
 
         var torInstaller = new TorInstaller(torInstallationFiles);
-        try {
-            torInstaller.installIfNotUpToDate();
-        } catch (IOException e) {
-            throw new CannotInstallBundledTor(e);
-        }
+        torInstaller.installIfNotUpToDate();
     }
 
     private void createTorrcConfigFile(Path dataDir, int controlPort, PasswordDigest hashedControlPassword) {

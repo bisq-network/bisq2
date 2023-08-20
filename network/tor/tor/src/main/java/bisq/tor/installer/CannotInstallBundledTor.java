@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.tor.installer;
 
 public class CannotInstallBundledTor extends RuntimeException {
     public CannotInstallBundledTor(Throwable cause) {
