@@ -24,7 +24,6 @@ import bisq.tor.process.TorProcessBuilder;
 import bisq.tor.process.TorProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -49,7 +48,6 @@ class TorBootstrap {
     }
 
     int start() throws IOException, InterruptedException {
-        torInstallationFiles.removeCookieFileIfPresent();
         torInstaller.installIfNotUpToDate();
 
         Process torProcess = startTorProcess();
@@ -59,13 +57,8 @@ class TorBootstrap {
         int controlPort = waitForControlPort(torProcess);
         terminateProcessBuilder(torProcess);
 
-        waitForCookieInitialized();
         log.info("Cookie initialized");
         return controlPort;
-    }
-
-    File getCookieFile() {
-        return torInstallationFiles.getCookieFile();
     }
 
     void deleteVersionFile() {
@@ -134,17 +127,6 @@ class TorBootstrap {
             }
         }
         log.debug("Process builder terminated");
-    }
-
-    private void waitForCookieInitialized() throws InterruptedException, IOException {
-        long start = System.currentTimeMillis();
-        File cookieFile = torInstallationFiles.getCookieFile();
-        while (isRunning.get() && cookieFile.length() < 32 && !Thread.currentThread().isInterrupted()) {
-            if (System.currentTimeMillis() - start > 5000) {
-                throw new IOException("Auth cookie not created");
-            }
-            Thread.sleep(50);
-        }
     }
 
     void shutdown() {

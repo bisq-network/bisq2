@@ -79,8 +79,6 @@ public class TorrcConfigInstaller {
                     torInstallationFiles.getGeoIPv6File().getCanonicalPath());
             printWriter.println(Constants.TORRC_KEY_PID + " " +
                     torInstallationFiles.getPidFile().getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_COOKIE + " " +
-                    torInstallationFiles.getCookieFile().getCanonicalPath());
             printWriter.println("");
         }
     }

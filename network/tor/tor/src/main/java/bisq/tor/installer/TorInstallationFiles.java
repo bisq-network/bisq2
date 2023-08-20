@@ -30,30 +30,20 @@ import java.nio.file.Path;
 public class TorInstallationFiles {
     private final File torDir;
     private final File torBinary;
-    private final File dotTorDir;
     private final File pidFile;
     private final File geoIPFile;
     private final File geoIPv6File;
     private final File torrcFile;
-    private final File cookieFile;
     private final File versionFile;
 
     public TorInstallationFiles(Path torDirPath, OsType osType) {
         torDir = torDirPath.toFile();
         torBinary = new File(torDir, osType.getBinaryName());
-        dotTorDir = new File(torDir, Constants.DOT_TOR_DIR);
         pidFile = new File(torDir, Constants.PID);
         geoIPFile = new File(torDir, Constants.GEO_IP);
         geoIPv6File = new File(torDir, Constants.GEO_IPV_6);
         torrcFile = new File(torDir, Constants.TORRC);
-        cookieFile = new File(dotTorDir.getAbsoluteFile(), Constants.COOKIE);
         versionFile = new File(torDir, Constants.VERSION);
-    }
-
-    public void removeCookieFileIfPresent() throws IOException {
-        if (cookieFile.exists() && !cookieFile.delete()) {
-            throw new IOException("Cannot delete old cookie file.");
-        }
     }
 
     public void writePidToDisk(String ownerPid) throws IOException {

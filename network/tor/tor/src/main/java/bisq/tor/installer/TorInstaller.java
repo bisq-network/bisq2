@@ -56,9 +56,6 @@ public class TorInstaller {
             File torDir = torInstallationFiles.getTorDir();
             FileUtils.makeDirs(torDir);
 
-            File dotTorDir = torInstallationFiles.getDotTorDir();
-            FileUtils.makeDirs(dotTorDir);
-
             File destDir = torInstallationFiles.getTorDir();
             new TorBinaryZipExtractor(destDir).extractBinary();
             log.info("Tor files installed to {}", destDir.getAbsolutePath());

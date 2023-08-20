@@ -25,7 +25,6 @@ public class Constants {
     public final static String LOCALHOST = "127.0.0.1";
 
     // Directories
-    public final static String DOT_TOR_DIR = ".tor";
     public final static String HS_DIR = "hiddenservice";
     public final static String NATIVE_DIR = "native";
     public final static String WIN_DIR = "windows";
@@ -41,7 +40,6 @@ public class Constants {
     public final static String GEO_IPV_6 = "geoip6";
     public final static String TORRC = "torrc";
     public final static String PID = "pid";
-    public final static String COOKIE = "control_auth_cookie";
     public final static String HOSTNAME = "hostname";
     public final static String PRIV_KEY = "private_key";
     public final static String TOR_ARCHIVE = "tor.tar.xz";
@@ -53,7 +51,6 @@ public class Constants {
     public final static String TORRC_KEY_GEOIP = "GeoIPFile";
     public final static String TORRC_KEY_PID = "PidFile";
     public final static String TORRC_KEY_DATA_DIRECTORY = "DataDirectory";
-    public final static String TORRC_KEY_COOKIE = "CookieAuthFile";
 
     // Tor control connection
     public final static String CONTROL_PORT_LOG_SUB_STRING = "Control listener listening on port ";
