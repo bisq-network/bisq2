@@ -19,6 +19,7 @@ package bisq.tor;
 
 import bisq.common.application.Service;
 import bisq.common.util.NetworkUtils;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
