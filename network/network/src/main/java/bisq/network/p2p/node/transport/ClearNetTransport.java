@@ -1,5 +1,6 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,7 +23,7 @@ public class ClearNetTransport implements Transport {
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Config implements Transport.Config {
+    public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(dataDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
         }
@@ -36,10 +37,10 @@ public class ClearNetTransport implements Transport {
         }
     }
 
-    private final Transport.Config config;
+    private final TransportConfig config;
     private boolean initializeCalled;
 
-    public ClearNetTransport(Transport.Config config) {
+    public ClearNetTransport(TransportConfig config) {
         this.config = config;
     }
 

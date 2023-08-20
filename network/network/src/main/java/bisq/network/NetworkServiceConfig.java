@@ -18,6 +18,7 @@
 package bisq.network;
 
 import bisq.common.util.ConfigUtil;
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.ClearNetTransport;
@@ -89,7 +90,7 @@ public final class NetworkServiceConfig {
         }*/
 
 
-        Map<Transport.Type, Transport.Config> configByTransportType = createConfigByTransportType(config, baseDir);
+        Map<Transport.Type, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
 
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
@@ -119,15 +120,15 @@ public final class NetworkServiceConfig {
         return map;
     }
 
-    private static Map<Transport.Type, Transport.Config> createConfigByTransportType(Config config, Path baseDir) {
-        Map<Transport.Type, Transport.Config> map = new HashMap<>();
+    private static Map<Transport.Type, TransportConfig> createConfigByTransportType(Config config, Path baseDir) {
+        Map<Transport.Type, TransportConfig> map = new HashMap<>();
         map.put(Transport.Type.CLEAR, createTransportConfig(Transport.Type.CLEAR, config, baseDir));
         map.put(Transport.Type.TOR, createTransportConfig(Transport.Type.TOR, config, baseDir));
         map.put(Transport.Type.I2P, createTransportConfig(Transport.Type.I2P, config, baseDir));
         return map;
     }
 
-    private static Transport.Config createTransportConfig(Transport.Type type, Config config, Path baseDir) {
+    private static TransportConfig createTransportConfig(Transport.Type type, Config config, Path baseDir) {
         Config transportConfig = config.getConfig("configByTransportType." + type.name().toLowerCase());
         Path dataDir;
         switch (type) {
@@ -170,7 +171,7 @@ public final class NetworkServiceConfig {
 
     private final String baseDir;
     private final Set<Transport.Type> supportedTransportTypes;
-    private final Map<Transport.Type, Transport.Config> configByTransportType;
+    private final Map<Transport.Type, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
     private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
     private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
@@ -179,7 +180,7 @@ public final class NetworkServiceConfig {
 
     public NetworkServiceConfig(String baseDir,
                                 Set<Transport.Type> supportedTransportTypes,
-                                Map<Transport.Type, Transport.Config> configByTransportType,
+                                Map<Transport.Type, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
                                 Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                 Map<Transport.Type, Integer> defaultNodePortByTransportType,

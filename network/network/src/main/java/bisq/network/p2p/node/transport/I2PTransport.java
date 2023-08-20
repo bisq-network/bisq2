@@ -4,6 +4,7 @@ import bisq.common.util.NetworkUtils;
 import bisq.i2p.I2pClient;
 import bisq.i2p.I2pEmbeddedRouter;
 import bisq.network.NetworkService;
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
 import lombok.EqualsAndHashCode;
@@ -24,7 +25,7 @@ public class I2PTransport implements Transport {
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Config implements Transport.Config {
+    public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(dataDir,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
@@ -69,7 +70,7 @@ public class I2PTransport implements Transport {
 
     private I2PTransport.Config config;
 
-    public I2PTransport(Transport.Config config) {
+    public I2PTransport(TransportConfig config) {
         // Demonstrate potential usage of specific config.
         // Would be likely passed to i2p router not handled here...
 

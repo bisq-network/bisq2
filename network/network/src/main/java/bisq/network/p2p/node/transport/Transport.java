@@ -27,7 +27,6 @@ import lombok.ToString;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -51,12 +50,6 @@ public interface Transport {
                 throw new IllegalArgumentException("Could not resolve transportType from address " + address);
             }
         }
-    }
-
-    interface Config {
-        Path getDataDir();
-
-        int getSocketTimeout();
     }
 
     @Getter

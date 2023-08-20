@@ -8,8 +8,9 @@ dependencies {
     implementation 'bisq:security'
     implementation 'bisq:persistence'
 
-    implementation 'tor:tor'
+    implementation project(':common')
     implementation project(':i2p')
+    implementation 'tor:tor'
 
     implementation libs.failsafe
     implementation libs.google.guava

@@ -1,6 +1,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.network.NetworkService;
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.tor.DirectoryAuthority;
@@ -34,7 +35,7 @@ public class TorTransport implements Transport {
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Config implements Transport.Config {
+    public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(
                     dataDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")), config.getBoolean("testNetwork"),
@@ -96,7 +97,7 @@ public class TorTransport implements Transport {
 
     private final TorService torService;
 
-    public TorTransport(Transport.Config config) {
+    public TorTransport(TransportConfig config) {
         Path torDirPath = config.getDataDir();
         torService = new TorService(NetworkService.NETWORK_IO_POOL, torDirPath);
     }
