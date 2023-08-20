@@ -17,9 +17,10 @@
 
 package bisq.tor.local_network;
 
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
-import bisq.tor.local_network.torrc.TorrcFileGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,6 +29,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -86,7 +88,10 @@ public class RelayTorrcGeneratorTests {
 
         Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
         Path torrcPath = firstRelay.getTorrcPath();
-        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDirAuthorities);
+        Set<DirectoryAuthority> allDAs = allDirAuthorities.stream()
+                .map(TorNode::toDirectoryAuthority)
+                .collect(Collectors.toSet());
+        var torrcFileGenerator = new TorrcFileGenerator(torrcPath, torrcConfigs, allDAs);
         torrcFileGenerator.generate();
 
         assertThat(firstRelay.getTorrcPath())
