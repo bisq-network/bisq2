@@ -30,10 +30,6 @@ public class OnionAddress {
         return host;
     }
 
-    public String getServiceId() {
-        return host.replace(".onion", "");
-    }
-
     public int getPort() {
         return port;
     }
