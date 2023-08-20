@@ -142,8 +142,7 @@ public class TorService implements Service {
 
     private void installTorIfNotUpToDate() {
         Path torDataDirPath = transportConfig.getDataDir();
-        OsType osType = OsType.getOsType();
-        var torInstallationFiles = new TorInstallationFiles(torDataDirPath, osType);
+        var torInstallationFiles = new TorInstallationFiles(torDataDirPath);
 
         var torInstaller = new TorInstaller(torInstallationFiles);
         try {

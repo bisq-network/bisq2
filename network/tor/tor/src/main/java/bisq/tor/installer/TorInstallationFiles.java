@@ -18,7 +18,6 @@
 package bisq.tor.installer;
 
 import bisq.tor.Constants;
-import bisq.tor.OsType;
 import lombok.Getter;
 
 import java.io.File;
@@ -31,9 +30,9 @@ public class TorInstallationFiles {
     private final File torrcFile;
     private final File versionFile;
 
-    public TorInstallationFiles(Path torDirPath, OsType osType) {
+    public TorInstallationFiles(Path torDirPath) {
         torDir = torDirPath.toFile();
-        torBinary = new File(torDir, osType.getBinaryName());
+        torBinary = new File(torDir, "tor");
         torrcFile = new File(torDir, Constants.TORRC);
         versionFile = new File(torDir, Constants.VERSION);
     }

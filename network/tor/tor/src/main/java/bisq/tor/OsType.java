@@ -54,20 +54,6 @@ public enum OsType {
         return FILE_SEP + getOsDir(false) + FILE_SEP + TORRC_NATIVE;
     }
 
-    public String getBinaryName() {
-        switch (this) {
-            case WIN:
-                return "tor.exe";
-            case LINUX_32:
-            case LINUX_64:
-                return "tor";
-            case OSX:
-                return "tor.real";
-            default:
-                throw new RuntimeException("Not supported OS " + this);
-        }
-    }
-
     private String getOsDir() {
         return getOsDir(true);
     }
