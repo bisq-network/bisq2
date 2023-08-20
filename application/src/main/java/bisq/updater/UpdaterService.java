@@ -143,7 +143,7 @@ public class UpdaterService implements Service {
     public CompletableFuture<Void> downloadAndVerify() throws IOException {
         String version = releaseNotification.get().getVersionString();
         boolean isLauncherUpdate = releaseNotification.get().isLauncherUpdate();
-        String baseDir = config.getBaseDir();
+        String baseDir = config.getBaseDir().toAbsolutePath().toString();
         List<String> keyIds = config.getKeyIds();
         checkArgument(!keyIds.isEmpty());
 

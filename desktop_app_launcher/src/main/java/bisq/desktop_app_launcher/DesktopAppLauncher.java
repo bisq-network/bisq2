@@ -79,7 +79,7 @@ public class DesktopAppLauncher {
     private DesktopAppLauncher(String[] args) throws Exception {
         options = new Options(args);
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
-        String appDataDir = OsUtils.getUserDataDir().getAbsolutePath() + File.separator + appName;
+        String appDataDir = OsUtils.getUserDataDir().resolve(appName).toAbsolutePath().toString();
         LogSetup.setup(Paths.get(appDataDir, "bisq").toString());
         LogSetup.setLevel(Level.INFO);
         version = UpdaterUtils.readVersionFromVersionFile(appDataDir)

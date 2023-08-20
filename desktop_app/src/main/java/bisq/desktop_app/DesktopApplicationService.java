@@ -45,7 +45,6 @@ import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +94,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
                 break;
             case ELECTRUM:
-                walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), Path.of(config.getBaseDir())));
+                walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), config.getBaseDir()));
                 break;
             case NONE:
             default:
@@ -103,7 +102,8 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 break;
         }
 
-        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(), getConfig("network")),
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
+                getConfig("network")),
                 persistenceService,
                 securityService.getKeyPairService(),
                 securityService.getProofOfWorkService());

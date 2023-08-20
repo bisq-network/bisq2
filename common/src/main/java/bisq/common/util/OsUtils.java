@@ -33,17 +33,17 @@ public class OsUtils {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
 
-    public static File getUserDataDir() {
+    public static Path getUserDataDir() {
         if (isWindows()) {
-            return new File(System.getenv("APPDATA"));
+            return Paths.get(System.getenv("APPDATA"));
         }
 
         if (isMac()) {
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support");
         }
 
         // *nix
-        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
+        return Paths.get(System.getProperty("user.home"), ".local", "share");
     }
 
     public static int availableProcessors() {

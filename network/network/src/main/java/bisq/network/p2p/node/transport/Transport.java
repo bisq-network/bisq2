@@ -27,6 +27,7 @@ import lombok.ToString;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -53,7 +54,7 @@ public interface Transport {
     }
 
     interface Config {
-        String getBaseDir();
+        Path getDataDir();
 
         int getSocketTimeout();
     }

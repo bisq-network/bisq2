@@ -49,7 +49,7 @@ public class UtilsController implements Controller {
     private final PersistenceService persistenceService;
 
     public UtilsController(ServiceProvider serviceProvider) {
-        baseDir = serviceProvider.getConfig().getBaseDir();
+        baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
         appName = serviceProvider.getConfig().getAppName();
         persistenceService = serviceProvider.getPersistenceService();
 

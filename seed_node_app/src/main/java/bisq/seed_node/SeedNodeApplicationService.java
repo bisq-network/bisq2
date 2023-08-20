@@ -51,7 +51,8 @@ public class SeedNodeApplicationService extends ApplicationService {
 
         securityService = new SecurityService(persistenceService);
 
-        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(), getConfig("network"));
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(),
+                getConfig("network"));
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
                 securityService.getKeyPairService(),
