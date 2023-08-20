@@ -17,20 +17,17 @@
 
 package bisq.tor.installer;
 
-import bisq.common.util.FileUtils;
 import bisq.tor.Constants;
 import bisq.tor.OsType;
 import lombok.Getter;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 @Getter
 public class TorInstallationFiles {
     private final File torDir;
     private final File torBinary;
-    private final File pidFile;
     private final File geoIPFile;
     private final File geoIPv6File;
     private final File torrcFile;
@@ -39,14 +36,9 @@ public class TorInstallationFiles {
     public TorInstallationFiles(Path torDirPath, OsType osType) {
         torDir = torDirPath.toFile();
         torBinary = new File(torDir, osType.getBinaryName());
-        pidFile = new File(torDir, Constants.PID);
         geoIPFile = new File(torDir, Constants.GEO_IP);
         geoIPv6File = new File(torDir, Constants.GEO_IPV_6);
         torrcFile = new File(torDir, Constants.TORRC);
         versionFile = new File(torDir, Constants.VERSION);
-    }
-
-    public void writePidToDisk(String ownerPid) throws IOException {
-        FileUtils.writeToFile(ownerPid, pidFile);
     }
 }

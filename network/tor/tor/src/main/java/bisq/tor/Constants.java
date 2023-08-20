@@ -39,7 +39,6 @@ public class Constants {
     public final static String GEO_IP = "geoip";
     public final static String GEO_IPV_6 = "geoip6";
     public final static String TORRC = "torrc";
-    public final static String PID = "pid";
     public final static String HOSTNAME = "hostname";
     public final static String PRIV_KEY = "private_key";
     public final static String TOR_ARCHIVE = "tor.tar.xz";
@@ -49,7 +48,6 @@ public class Constants {
     public final static String TORRC_NATIVE = "torrc.native";
     public final static String TORRC_KEY_GEOIP6 = "GeoIPv6File";
     public final static String TORRC_KEY_GEOIP = "GeoIPFile";
-    public final static String TORRC_KEY_PID = "PidFile";
     public final static String TORRC_KEY_DATA_DIRECTORY = "DataDirectory";
 
     // Tor control connection

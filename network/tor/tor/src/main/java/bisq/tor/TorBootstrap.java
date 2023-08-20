@@ -73,7 +73,6 @@ class TorBootstrap {
     private Process startTorProcess() throws IOException {
         String ownerPid = Pid.getMyPid();
         log.debug("Owner pid {}", ownerPid);
-        torInstallationFiles.writePidToDisk(ownerPid);
 
         TorProcessConfig torProcessConfig = TorProcessConfig.builder()
                 .torrcFile(torInstallationFiles.getTorrcFile())

@@ -77,8 +77,6 @@ public class TorrcConfigInstaller {
                     torInstallationFiles.getGeoIPFile().getCanonicalPath());
             printWriter.println(Constants.TORRC_KEY_GEOIP6 + " " +
                     torInstallationFiles.getGeoIPv6File().getCanonicalPath());
-            printWriter.println(Constants.TORRC_KEY_PID + " " +
-                    torInstallationFiles.getPidFile().getCanonicalPath());
             printWriter.println("");
         }
     }
