@@ -17,21 +17,24 @@
 
 package bisq.network.tor.common.torrc;
 
-import bisq.common.util.NetworkUtils;
+import lombok.Builder;
 
 import java.util.Map;
 
+@Builder
 public class ClientTorrcGenerator implements TorrcConfigGenerator {
     private final TorrcConfigGenerator baseTorrcConfigGenerator;
+    private final int socksPort;
 
-    public ClientTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator) {
+    public ClientTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator, int socksPort) {
         this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
+        this.socksPort = socksPort;
     }
 
     @Override
     public Map<String, String> generate() {
         Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
-        torConfigMap.put("SocksPort", String.valueOf(NetworkUtils.findFreeSystemPort()));
+        torConfigMap.put("SocksPort", String.valueOf(socksPort));
         return torConfigMap;
     }
 }
