@@ -17,224 +17,115 @@
 
 package bisq.desktop.overlay.bisq_easy.components;
 
-import bisq.common.currency.Market;
-import bisq.common.monetary.Monetary;
-import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SmallAmountInput {
-    private final Controller controller;
+public class SmallAmountInput extends AmountInput {
+
+    private static final double ICON_SCALE = 0.8;
+    private static final double ICON_OPACITY = 0.5;
+    private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.marketPrice";
+    private static final String QUOTE_AMOUNT_ID = "quote-amount-text-field";
 
     public SmallAmountInput(boolean isBaseCurrency) {
-        controller = new Controller(isBaseCurrency);
-    }
-
-    public ReadOnlyObjectProperty<Monetary> amountProperty() {
-        return controller.model.amount;
-    }
-
-    public void setSelectedMarket(Market selectedMarket) {
-        controller.setSelectedMarket(selectedMarket);
-    }
-
-    public void setAmount(Monetary value) {
-        controller.model.amount.set(value);
+        super(isBaseCurrency);
+        this.controller.setModel(new SmallAmountInputModel(isBaseCurrency));
+        this.controller.setView(new SmallAmountInputView(controller.model, controller));
     }
 
     public void setTooltip(String tooltip) {
-        controller.model.tooltip.set(tooltip);
+        ((SmallAmountInputModel) controller.model).setTooltipText(tooltip);
     }
 
     public void setUseLowPrecision(boolean useLowPrecision) {
         controller.model.setUseLowPrecision(useLowPrecision);
     }
 
-    public Pane getRoot() {
-        return controller.view.getRoot();
-    }
+    private static class SmallAmountInputView extends View {
 
-    public ReadOnlyBooleanProperty focusedProperty() {
-        return controller.view.textInput.focusedProperty();
-    }
+        private BisqTooltip tooltip;
 
-    public void reset() {
-        controller.model.reset();
-    }
-
-    private static class Controller implements bisq.desktop.common.view.Controller {
-        private final Model model;
-        @Getter
-        private final View view;
-        private final MonetaryValidator validator = new MonetaryValidator();
-
-        private Controller(boolean isBaseCurrency) {
-            model = new Model(isBaseCurrency);
-            view = new View(model, this, validator);
+        protected SmallAmountInputView(Model model, Controller controller) {
+            super(model, controller);
         }
 
-        private void setSelectedMarket(Market selectedMarket) {
-            model.selectedMarket = selectedMarket;
-            model.amount.set(null);
-            updateModel();
-        }
-
-        @Override
-        public void onActivate() {
-            model.amount.set(null);
-            updateModel();
-        }
-
-        @Override
-        public void onDeactivate() {
-        }
-
-        // View events
-        private void onFocusChange(boolean hasFocus) {
-            model.hasFocus = hasFocus;
-        }
-
-        private void onAmount(String value) {
-            if (value == null) return;
-            if (model.hasFocus) return;
-            if (value.isEmpty()) {
-                model.amount.set(null);
-                return;
-            }
-            if (!validator.validate(value).isValid) {
-                model.amount.set(null);
-                return;
-            }
-            if (model.code.get() == null) return;
-            model.amount.set(AmountParser.parse(value, model.code.get()));
-        }
-
-        private void updateModel() {
-            if (model.selectedMarket == null) {
-                model.code.set("");
-                return;
-            }
-
-            model.code.set(model.isBaseCurrency ? model.selectedMarket.getBaseCurrencyCode() : model.selectedMarket.getQuoteCurrencyCode());
-        }
-    }
-
-    private static class Model implements bisq.desktop.common.view.Model {
-        @Setter
-        private boolean useLowPrecision;
-        private final boolean isBaseCurrency;
-        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
-        private final StringProperty code = new SimpleStringProperty();
-        private final StringProperty tooltip = new SimpleStringProperty(Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
-        private Market selectedMarket;
-        public boolean hasFocus;
-
-        private Model(boolean isBaseCurrency) {
-            this.isBaseCurrency = isBaseCurrency;
-        }
-
-        void reset() {
-            amount.set(null);
-            code.set(null);
-            selectedMarket = null;
-            hasFocus = false;
-        }
-    }
-
-    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final ChangeListener<String> textInputListener;
-        private final ChangeListener<Boolean> focusListener;
-        private final ChangeListener<Monetary> amountListener;
-        private final TextField textInput;
-        private final Label codeLabel;
-        private final BisqTooltip tooltip;
-
-        private View(Model model, Controller controller, MonetaryValidator validator) {
-            super(new HBox(), model, controller);
-
-            root.setAlignment(Pos.CENTER);
-            root.setSpacing(3);
-
-            // textInput would be black without setting a style on root. Not clear why...
-            root.setStyle("-fx-fill: -fx-light-text-color;");
-
-            textInput = new TextField();
-            textInput.setId("quote-amount-text-field");
-            textInput.setAlignment(Pos.CENTER_RIGHT);
-            textInput.setPadding(new Insets(0, 0, 0, 0));
-
-            codeLabel = new Label();
-            codeLabel.setAlignment(Pos.CENTER_LEFT);
-            codeLabel.setId("quote-amount-text-field");
-            codeLabel.setPadding(new Insets(0, 0, 0, 0));
-
+        private Button createIconButton() {
             Button iconButton = BisqIconButton.createIconButton("info");
-            iconButton.setScaleX(0.8);
-            iconButton.setScaleY(0.8);
-            iconButton.setOpacity(0.5);
+            iconButton.setScaleX(ICON_SCALE);
+            iconButton.setScaleY(ICON_SCALE);
+            iconButton.setOpacity(ICON_OPACITY);
             tooltip = new BisqTooltip();
             tooltip.getStyleClass().add("dark-tooltip");
             iconButton.setTooltip(tooltip);
+            return iconButton;
+        }
 
+        @Override
+        protected void initView() {
+            root.setAlignment(Pos.CENTER);
+            root.setSpacing(3);
+            Button iconButton = createIconButton();
             HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
             HBox.setMargin(iconButton, new Insets(-8, 0, 0, 1));
-            root.getChildren().addAll(textInput, codeLabel, iconButton);
+            root.getChildren().add(iconButton);
+        }
 
-            //  Listeners on view component events
-            focusListener = (o, oldValue, newValue) -> {
-                controller.onFocusChange(newValue);
-                if (oldValue) {
-                    controller.onAmount(textInput.getText());
-                }
-            };
-            textInputListener = (o, old, newValue) -> {
-                if (textInput.isFocused()) {
-                    controller.onAmount(textInput.getText());
-                }
-            };
+        @Override
+        protected TextField createTextInput() {
+            var textInput = new TextField();
+            textInput.setId(QUOTE_AMOUNT_ID);
+            textInput.setAlignment(Pos.CENTER_RIGHT);
+            textInput.setPadding(new Insets(0, 0, 0, 0));
+            return textInput;
+        }
 
-            // Listeners on model change
-            amountListener = (o, old, newValue) -> applyAmount(newValue);
+        @Override
+        protected Label createCodeLabel() {
+            var codeLabel = new Label();
+            codeLabel.setAlignment(Pos.CENTER_LEFT);
+            codeLabel.setId(QUOTE_AMOUNT_ID);
+            codeLabel.setPadding(new Insets(0, 0, 0, 0));
+            return codeLabel;
         }
 
         @Override
         protected void onViewAttached() {
-            tooltip.textProperty().bind(model.tooltip);
-            textInput.textProperty().addListener(textInputListener);
-            textInput.focusedProperty().addListener(focusListener);
-            codeLabel.textProperty().bind(model.code);
-            model.amount.addListener(amountListener);
-            applyAmount(model.amount.get());
+            super.onViewAttached();
+            tooltip.textProperty().bind(((SmallAmountInputModel) model).tooltipProperty());
         }
 
         @Override
         protected void onViewDetached() {
+            super.onViewDetached();
             tooltip.textProperty().unbind();
-            textInput.textProperty().removeListener(textInputListener);
-            textInput.focusedProperty().removeListener(focusListener);
-            codeLabel.textProperty().unbind();
-            model.amount.removeListener(amountListener);
+        }
+    }
+
+    private static class SmallAmountInputModel extends Model {
+
+        private final StringProperty tooltip = new SimpleStringProperty(Res.get(DEFAULT_TOOLTIP));
+
+        protected SmallAmountInputModel(boolean isBaseCurrency) {
+            super(isBaseCurrency);
         }
 
-        private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" :
-                    AmountFormatter.formatAmount(newValue, model.useLowPrecision));
+        public StringProperty tooltipProperty() {
+            return tooltip;
+        }
+
+        public void setTooltipText(String value) {
+            tooltip.set(value);
         }
     }
 }

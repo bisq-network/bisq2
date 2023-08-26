@@ -17,214 +17,64 @@
 
 package bisq.desktop.overlay.bisq_easy.components;
 
-import bisq.common.currency.Market;
-import bisq.common.monetary.Monetary;
-import bisq.desktop.common.validation.MonetaryValidator;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BigAmountInput {
-    private final Controller controller;
+public class BigAmountInput extends AmountInput {
+
+    private static final double TEXT_INPUT_PREF_WIDTH = 250;
+    private static final String BIG_TEXT_INPUT_ID = "base-amount-text-field";
+    private static final String SMALL_TEXT_INPUT_ID = "base-amount-text-field-small";
+    private static final int TEXT_LENGTH_THRESHOLD = 6;
 
     public BigAmountInput(boolean isBaseCurrency) {
-        controller = new Controller(isBaseCurrency);
+        super(isBaseCurrency);
+        this.controller.setView(new BigAmountInputView(controller.model, controller));
     }
 
-    public ReadOnlyObjectProperty<Monetary> amountProperty() {
-        return controller.model.amount;
-    }
+    private static class BigAmountInputView extends View {
 
-    public void setSelectedMarket(Market selectedMarket) {
-        controller.setSelectedMarket(selectedMarket);
-    }
-
-    public void setAmount(Monetary value) {
-        controller.model.amount.set(value);
-    }
-
-    public Pane getRoot() {
-        return controller.view.getRoot();
-    }
-
-    public ReadOnlyBooleanProperty focusedProperty() {
-        return controller.view.textInput.focusedProperty();
-    }
-
-    public void reset() {
-        controller.model.reset();
-    }
-
-    public void requestFocus() {
-        TextField textInput = controller.view.textInput;
-        textInput.requestFocus();
-        textInput.selectRange(textInput.getLength(), textInput.getLength());
-    }
-
-    private static class Controller implements bisq.desktop.common.view.Controller {
-        private final Model model;
-        @Getter
-        private final View view;
-        private final MonetaryValidator validator = new MonetaryValidator();
-
-        private Controller(boolean isBaseCurrency) {
-            model = new Model(isBaseCurrency);
-            view = new View(model, this, validator);
-        }
-
-        private void setSelectedMarket(Market selectedMarket) {
-            model.selectedMarket = selectedMarket;
-            model.amount.set(null);
-            updateModel();
+        protected BigAmountInputView(Model model, Controller controller) {
+            super(model, controller);
         }
 
         @Override
-        public void onActivate() {
-            model.amount.set(null);
-            updateModel();
-        }
-
-        @Override
-        public void onDeactivate() {
-        }
-
-        // View events
-        private void onFocusChange(boolean hasFocus) {
-            model.hasFocus = hasFocus;
-        }
-
-        private void onAmount(String value) {
-            if (value == null) return;
-            if (model.hasFocus) return;
-            if (value.isEmpty()) {
-                model.amount.set(null);
-                return;
-            }
-            if (!validator.validate(value).isValid) {
-                model.amount.set(null);
-                return;
-            }
-            if (model.code.get() == null) return;
-
-            model.amount.set(AmountParser.parse(value, model.code.get()));
-        }
-
-        private void updateModel() {
-            if (model.selectedMarket == null) {
-                model.code.set("");
-                return;
-            }
-
-            model.code.set(model.isBaseCurrency ? model.selectedMarket.getBaseCurrencyCode() : model.selectedMarket.getQuoteCurrencyCode());
-        }
-    }
-
-    private static class Model implements bisq.desktop.common.view.Model {
-        private final boolean isBaseCurrency;
-        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
-        private final StringProperty code = new SimpleStringProperty();
-        private Market selectedMarket;
-        public boolean hasFocus;
-
-        private Model(boolean isBaseCurrency) {
-            this.isBaseCurrency = isBaseCurrency;
-        }
-
-        void reset() {
-            amount.set(null);
-            code.set(null);
-            selectedMarket = null;
-            hasFocus = false;
-        }
-    }
-
-    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final ChangeListener<String> textInputListener;
-        private final ChangeListener<Boolean> focusListener;
-        private final ChangeListener<Monetary> amountListener;
-        private final TextField textInput;
-        private final Label codeLabel;
-
-        private View(Model model, Controller controller, MonetaryValidator validator) {
-            super(new HBox(), model, controller);
-
+        public void initView() {
+            HBox.setMargin(textInput, new Insets(0, 0, 0, -30));
             root.setAlignment(Pos.BASELINE_CENTER);
             root.setSpacing(10);
+        }
 
-            // textInput would be black without setting a style on root. Not clear why...
-            root.setStyle("-fx-fill: -fx-light-text-color;");
-
-            textInput = new TextField();
-            textInput.setPrefWidth(250);
-            textInput.setId("base-amount-text-field");
+        @Override
+        protected TextField createTextInput() {
+            var textInput = new TextField();
+            textInput.setPrefWidth(TEXT_INPUT_PREF_WIDTH);
+            textInput.setId(BIG_TEXT_INPUT_ID);
             textInput.setAlignment(Pos.BASELINE_RIGHT);
             textInput.setPadding(new Insets(0, 0, 5, 0));
+            return textInput;
+        }
 
-            codeLabel = new Label();
+        @Override
+        protected Label createCodeLabel() {
+            var codeLabel = new Label();
             codeLabel.setPadding(new Insets(0, 0, 0, 0));
             codeLabel.getStyleClass().add("bisq-text-9");
             codeLabel.setAlignment(Pos.BASELINE_LEFT);
-
-            HBox.setMargin(textInput, new Insets(0, 0, 0, -30));
-            root.getChildren().addAll(textInput, codeLabel);
-
-            //  Listeners on view component events
-            focusListener = (o, oldValue, newValue) -> {
-                controller.onFocusChange(newValue);
-                if (oldValue) {
-                    controller.onAmount(textInput.getText());
-                }
-            };
-            textInputListener = (o, old, newValue) -> {
-                if (textInput.isFocused()) {
-                    controller.onAmount(textInput.getText());
-                    adjustTextFieldStyle();
-                }
-            };
-            // Listeners on model change
-            amountListener = (o, old, newValue) -> applyAmount(newValue);
+            return codeLabel;
         }
 
         @Override
-        protected void onViewAttached() {
-            textInput.textProperty().addListener(textInputListener);
-            textInput.focusedProperty().addListener(focusListener);
-            codeLabel.textProperty().bind(model.code);
-            model.amount.addListener(amountListener);
-            applyAmount(model.amount.get());
-        }
-
-        @Override
-        protected void onViewDetached() {
-            textInput.textProperty().removeListener(textInputListener);
-            textInput.focusedProperty().removeListener(focusListener);
-
-            codeLabel.textProperty().unbind();
-            model.amount.removeListener(amountListener);
-        }
-
-        private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
-            // textInput.requestFocus();
-            textInput.selectRange(textInput.getLength(), textInput.getLength());
-            adjustTextFieldStyle();
-        }
-
-        private void adjustTextFieldStyle() {
-            if (textInput.getText().length() > 6) {
-                textInput.setId("base-amount-text-field-small");
+        protected void adjustTextFieldStyle() {
+            if (textInput.getText().length() > TEXT_LENGTH_THRESHOLD) {
+                textInput.setId(SMALL_TEXT_INPUT_ID);
             } else {
-                textInput.setId("base-amount-text-field");
+                textInput.setId(BIG_TEXT_INPUT_ID);
             }
         }
     }
