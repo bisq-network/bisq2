@@ -111,17 +111,14 @@ public abstract class AmountInput {
         }
 
         private void onAmount(String value) {
-            if (value == null) return;
-            if (model.hasFocus) return;
-            if (value.isEmpty()) {
+            if (value == null || model.hasFocus || model.code.get() == null) {
+                return;
+            }
+
+            if (value.isEmpty() || !validator.validate(value).isValid) {
                 model.amount.set(null);
                 return;
             }
-            if (!validator.validate(value).isValid) {
-                model.amount.set(null);
-                return;
-            }
-            if (model.code.get() == null) return;
 
             model.amount.set(AmountParser.parse(value, model.code.get()));
         }
