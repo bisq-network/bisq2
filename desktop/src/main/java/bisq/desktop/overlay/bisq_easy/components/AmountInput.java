@@ -117,16 +117,47 @@ public abstract class AmountInput {
         }
 
         private void onAmount(String value) {
-            if (value == null || model.hasFocus || model.code.get() == null) {
+            if (isValueOrCodeNull(value, model.code.get())) {
+                setAmountInvalid();
                 return;
             }
 
-            if (value.isEmpty() || !validator.validate(value).isValid) {
+            if (isValueInvalid(value)) {
+                handleInvalidValue();
+                return;
+            }
+
+            setAmountValid();
+            updateAmountIfNotFocused(value);
+        }
+
+        private boolean isValueOrCodeNull(String value, String code) {
+            return value == null || code == null;
+        }
+
+        private boolean isValueInvalid(String value) {
+            return value.isEmpty() || !validator.validate(value).isValid;
+        }
+
+        private void handleInvalidValue() {
+            if (!model.hasFocus) {
                 model.amount.set(null);
-                return;
             }
+            setAmountInvalid();
+        }
 
-            model.amount.set(AmountParser.parse(value, model.code.get()));
+        private void setAmountInvalid() {
+            model.isAmountValid.set(false);
+        }
+
+        private void setAmountValid() {
+            model.isAmountValid.set(true);
+        }
+
+        private void updateAmountIfNotFocused(String value) {
+            if (!model.hasFocus) {
+                model.amount.set(AmountParser.parse(value, model.code.get()));
+            }
         }
 
         private void updateModel() {
