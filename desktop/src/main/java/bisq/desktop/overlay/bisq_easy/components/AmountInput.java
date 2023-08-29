@@ -22,9 +22,11 @@ import bisq.common.monetary.Monetary;
 import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -49,6 +51,10 @@ public abstract class AmountInput {
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
         return controller.model.amount;
+    }
+
+    public BooleanProperty isAmountValidProperty() {
+        return controller.model.isAmountValid;
     }
 
     public void setSelectedMarket(Market selectedMarket) {
@@ -145,6 +151,7 @@ public abstract class AmountInput {
         protected boolean hasFocus;
         @Setter
         protected boolean useLowPrecision = true;
+        private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
 
         protected Model(boolean isBaseCurrency) {
             this.isBaseCurrency = isBaseCurrency;
