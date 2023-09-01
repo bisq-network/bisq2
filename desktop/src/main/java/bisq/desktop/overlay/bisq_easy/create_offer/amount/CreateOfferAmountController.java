@@ -272,17 +272,21 @@ public class CreateOfferAmountController implements Controller {
     }
 
     private void applyAmountSpec() {
-        long maxOrFixAmount = maxOrFixAmountComponent.getQuoteSideAmount().get().getValue();
+        if(maxOrFixAmountComponent.getQuoteSideAmount().get() != null) {
+            long maxOrFixAmount = maxOrFixAmountComponent.getQuoteSideAmount().get().getValue();
 
-        if (model.getIsMinAmountEnabled().get()) {
-            long minAmount = minAmountComponent.getQuoteSideAmount().get().getValue();
-            if (minAmount == maxOrFixAmount) {
-                model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+            if (model.getIsMinAmountEnabled().get()) {
+                if(minAmountComponent.getQuoteSideAmount().get() != null) {
+                    long minAmount = minAmountComponent.getQuoteSideAmount().get().getValue();
+                    if (minAmount == maxOrFixAmount) {
+                        model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+                    } else {
+                        model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+                    }
+                }
             } else {
-                model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+                model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
             }
-        } else {
-            model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
         }
     }
 
