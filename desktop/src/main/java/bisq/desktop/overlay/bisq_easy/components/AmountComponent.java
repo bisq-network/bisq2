@@ -86,6 +86,10 @@ public class AmountComponent {
         return controller.getQuoteSideAmount();
     }
 
+    public BooleanProperty areAmountsValid() {
+        return controller.model.isAmountValid;
+    }
+
     public void setBaseSideAmount(Monetary value) {
         controller.setBaseSideAmount(value);
     }
@@ -178,11 +182,6 @@ public class AmountComponent {
                     baseSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getBaseCurrencyCode()));
                 }
             };
-            var binding = EasyBind.combine(
-                    baseSideAmountInput.isAmountValidProperty(),
-                    quoteSideAmountInput.isAmountValidProperty(),
-                    (isBaseAmountValid, isQuoteAmountValid) -> isBaseAmountValid && isQuoteAmountValid);
-            isValidAmountPin = EasyBind.subscribe(binding, model.isAmountValid::set);
         }
 
         private void setBaseSideAmount(Monetary value) {
@@ -337,6 +336,12 @@ public class AmountComponent {
                     value -> applyInitialRangeValues());
             maxRangeCustomValuePin = EasyBind.subscribe(model.getMaxRangeMonetary(),
                     value -> applyInitialRangeValues());
+
+            var binding = EasyBind.combine(
+                    baseSideAmountInput.isAmountValidProperty(),
+                    quoteSideAmountInput.isAmountValidProperty(),
+                    (isBaseAmountValid, isQuoteAmountValid) -> isBaseAmountValid && isQuoteAmountValid);
+            isValidAmountPin = EasyBind.subscribe(binding, model.isAmountValid::set);
 
             model.getSliderValue().addListener(sliderListener);
         }
