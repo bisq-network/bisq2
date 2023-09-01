@@ -272,22 +272,42 @@ public class CreateOfferAmountController implements Controller {
     }
 
     private void applyAmountSpec() {
-        if(maxOrFixAmountComponent.getQuoteSideAmount().get() != null) {
-            long maxOrFixAmount = maxOrFixAmountComponent.getQuoteSideAmount().get().getValue();
+        Long maxOrFixAmount = getAmountValue(maxOrFixAmountComponent.getQuoteSideAmount());
+        if (maxOrFixAmount == null) {
+            return;
+        }
 
-            if (model.getIsMinAmountEnabled().get()) {
-                if(minAmountComponent.getQuoteSideAmount().get() != null) {
-                    long minAmount = minAmountComponent.getQuoteSideAmount().get().getValue();
-                    if (minAmount == maxOrFixAmount) {
-                        model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
-                    } else {
-                        model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
-                    }
-                }
+        if (model.getIsMinAmountEnabled().get()) {
+            Long minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
+            applyRangeOrFixedAmountSpec(minAmount, maxOrFixAmount);
+        } else {
+            applyFixedAmountSpec(maxOrFixAmount);
+        }
+    }
+
+    private Long getAmountValue(ReadOnlyObjectProperty<Monetary> amountProperty) {
+        if (amountProperty.get() == null) {
+            return null;
+        }
+        return amountProperty.get().getValue();
+    }
+
+    private void applyRangeOrFixedAmountSpec(Long minAmount, long maxOrFixAmount) {
+        if (minAmount != null) {
+            if (minAmount.equals(maxOrFixAmount)) {
+                applyFixedAmountSpec(maxOrFixAmount);
             } else {
-                model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+                applyRangeAmountSpec(minAmount, maxOrFixAmount);
             }
         }
+    }
+
+    private void applyFixedAmountSpec(long maxOrFixAmount) {
+        model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+    }
+
+    private void applyRangeAmountSpec(long minAmount, long maxOrFixAmount) {
+        model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
     }
 
     private void applyBestOfferQuote() {
