@@ -71,7 +71,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(firstBox, 0, 1, 2, 1);
 
         VBox secondBox = getWidgetBox(
-                "intro-3",
+                "fiat-btc",
                 Res.get("dashboard.second.headline"),
                 Res.get("dashboard.second.content"),
                 Res.get("dashboard.second.button"),
@@ -80,7 +80,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(secondBox, 0, 2, 1, 1);
 
         VBox thirdBox = getWidgetBox(
-                "intro-2",
+                "learn",
                 Res.get("dashboard.third.headline"),
                 Res.get("dashboard.third.content"),
                 Res.get("dashboard.third.button"),

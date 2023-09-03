@@ -315,16 +315,28 @@
 /* Onboarding */
 /* ------------------------------------------------------------------------------------ */
 
-#intro-1 {
-    -fx-image: url("/images/onboarding/intro-1-bisq-easy.png");
+#crowd {
+    -fx-image: url("/images/onboarding/crowd.png");
 }
 
-#intro-2 {
-    -fx-image: url("/images/onboarding/intro-2-learn.png");
+#bisq-easy {
+    -fx-image: url("/images/onboarding/bisq-easy.png");
 }
 
-#intro-3 {
-    -fx-image: url("/images/onboarding/intro-3-more.png");
+#chat {
+    -fx-image: url("/images/onboarding/chat.png");
+}
+
+#learn {
+    -fx-image: url("/images/onboarding/learn.png");
+}
+
+#dollar-btc {
+    -fx-image: url("/images/onboarding/dollar-btc.png");
+}
+
+#fiat-btc {
+    -fx-image: url("/images/onboarding/fiat-btc.png");
 }
 
 #onboarding-bisq-easy {
@@ -335,8 +347,8 @@
     -fx-image: url("/images/onboarding/onboarding-trade.png");
 }
 
-#onboarding-1-easy {
-    -fx-image: url("/images/onboarding/onboarding-1-easy.png");
+#thumbs-up {
+    -fx-image: url("/images/onboarding/thumbs-up.png");
 }
 
 #onboarding-1-fraction {
