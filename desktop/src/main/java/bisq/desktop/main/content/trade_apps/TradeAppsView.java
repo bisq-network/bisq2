@@ -36,7 +36,7 @@ public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> 
         addTab(Res.get("tradeApps.overview"), NavigationTarget.TRADE_PROTOCOLS_OVERVIEW);
         addTab(Res.get("tradeApps.multisig"), NavigationTarget.MULTISIG);
         addTab(Res.get("tradeApps.subMarine"), NavigationTarget.SUBMARINE);
-        addTab(Res.get("tradeApps.lightningFiat"), NavigationTarget.LIGHTNING_FIAT);
+        addTab(Res.get("tradeApps.bisqLightning"), NavigationTarget.BISQ_LIGHTNING);
         more = addTab(Res.get("tradeApps.more"), NavigationTarget.MORE_TRADE_PROTOCOLS);
     }
 

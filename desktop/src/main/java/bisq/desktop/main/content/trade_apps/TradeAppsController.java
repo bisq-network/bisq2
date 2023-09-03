@@ -80,8 +80,8 @@ public class TradeAppsController extends TabController<TradeAppsModel> {
                         "protocol-submarine",
                         "https://docs.lightning.engineering/the-lightning-network/multihop-payments/understanding-submarine-swaps"));
             }
-            case LIGHTNING_FIAT: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_FIAT,
+            case BISQ_LIGHTNING: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_LIGHTNING,
                         "protocol-lightning-fiat",
                         "https://bisq.wiki/ln-liquid"));
             }
