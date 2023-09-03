@@ -49,11 +49,11 @@ public class BisqEasyOnboardingController implements Controller {
     public void onDeactivate() {
     }
 
-    void onOpenChat() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_MARKETS);
+    void onOpenOfferbook() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
     }
 
-    void onCreateOffer() {
+    void onOpenTradeWizard() {
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(true));
     }
 

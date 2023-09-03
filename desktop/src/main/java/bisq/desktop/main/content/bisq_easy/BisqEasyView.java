@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -26,25 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
 
-    private final TabButton trades, privateChat;
-
     public BisqEasyView(BisqEasyModel model, BisqEasyController controller) {
         super(model, controller);
 
-        // headLine.setText(Res.get("bisqEasy.headline"));
-
         addTab(Res.get("bisqEasy.dashboard"), NavigationTarget.BISQ_EASY_ONBOARDING);
-        addTab(Res.get("bisqEasy.markets"), NavigationTarget.BISQ_EASY_MARKETS);
-        trades = addTab(Res.get("bisqEasy.trades"), NavigationTarget.BISQ_EASY_TRADES);
-        privateChat = addTab(Res.get("bisqEasy.privateChat"), NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+        addTab(Res.get("bisqEasy.offerbook"), NavigationTarget.BISQ_EASY_OFFERBOOK);
+        addTab(Res.get("bisqEasy.openTrades"), NavigationTarget.BISQ_EASY_OPEN_TRADES);
+        addTab(Res.get("bisqEasy.privateChat"), NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
     }
 
     @Override
     protected void onViewAttached() {
-        trades.visibleProperty().bind(model.getTradeTabVisible());
-        trades.managedProperty().bind(model.getTradeTabVisible());
-        privateChat.visibleProperty().bind(model.getPrivateChatTabVisible());
-        privateChat.managedProperty().bind(model.getPrivateChatTabVisible());
     }
 
     @Override

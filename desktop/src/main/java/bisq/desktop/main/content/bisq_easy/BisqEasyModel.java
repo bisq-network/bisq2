@@ -19,15 +19,10 @@ package bisq.desktop.main.content.bisq_easy;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
 public class BisqEasyModel extends TabModel {
-    private final BooleanProperty tradeTabVisible = new SimpleBooleanProperty();
-    private final BooleanProperty privateChatTabVisible = new SimpleBooleanProperty();
-
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.BISQ_EASY_ONBOARDING;

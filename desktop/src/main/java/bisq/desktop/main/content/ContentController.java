@@ -64,7 +64,9 @@ public class ContentController extends NavigationController {
     @Override
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget != NavigationTarget.BISQ_EASY &&
-                navigationTarget != NavigationTarget.BISQ_EASY_MARKETS &&
+                navigationTarget != NavigationTarget.BISQ_EASY_OFFERBOOK &&
+                navigationTarget != NavigationTarget.BISQ_EASY_OPEN_TRADES &&
+                navigationTarget != NavigationTarget.BISQ_EASY_PRIVATE_CHAT &&
                 navigationTarget != NavigationTarget.DISCUSSION &&
                 navigationTarget != NavigationTarget.EVENTS &&
                 navigationTarget != NavigationTarget.SUPPORT) {

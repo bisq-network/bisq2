@@ -132,7 +132,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
     protected void onViewAttached() {
         Transitions.removeEffect(content);
 
-        viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
+        viewOfferButton.setOnAction(e -> controller.onNavigateToOpenTrades());
         createOfferButton.setOnAction(e -> controller.onPublishOffer());
 
         createOfferText.setText(model.getMyOfferText());

@@ -51,19 +51,20 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
     }
 
     @Override
-    protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
-        if (!model.getTradeTabVisible().get()) {
-            model.getTradeTabVisible().set(navigationTarget == NavigationTarget.MORE_TRADE_PROTOCOLS);
-        }
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case BISQ_EASY_ONBOARDING: {
                 return Optional.of(new BisqEasyOnboardingController(serviceProvider));
             }
-            case BISQ_EASY_MARKETS: {
+            case BISQ_EASY_OFFERBOOK: {
+                return Optional.of(new BisqEasyChatController(serviceProvider));
+            }
+            case BISQ_EASY_OPEN_TRADES: {
+                //todo
+                return Optional.of(new BisqEasyChatController(serviceProvider));
+            }
+            case BISQ_EASY_PRIVATE_CHAT: {
+                //todo
                 return Optional.of(new BisqEasyChatController(serviceProvider));
             }
             default: {

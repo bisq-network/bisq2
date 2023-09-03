@@ -88,8 +88,8 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
             watchVideoButton.setDefaultButton(!videoSeen);
         });
 
-        startTradingButton.setOnAction(e -> controller.onCreateOffer());
-        openChatButton.setOnAction(e -> controller.onOpenChat());
+        startTradingButton.setOnAction(e -> controller.onOpenTradeWizard());
+        openChatButton.setOnAction(e -> controller.onOpenOfferbook());
         openTradeGuideButton.setOnAction(e -> controller.onOpenTradeGuide());
         watchVideoButton.setOnMouseClicked(e -> controller.onPlayVideo());
         videoImage.setOnMouseClicked(e -> controller.onPlayVideo());
