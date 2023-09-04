@@ -471,6 +471,11 @@ public class Transitions {
         }
     }
 
+    public static void slideInTop(Region node) {
+        slideInTop(node, DEFAULT_DURATION, () -> {
+        });
+    }
+
     public static void slideInTop(Region node, int duration) {
         slideInTop(node, duration, () -> {
         });
@@ -534,6 +539,11 @@ public class Transitions {
         }
     }
 
+    public static void slideOutBottom(Region node) {
+        slideOutBottom(node, () -> {
+        });
+    }
+
     public static void slideOutBottom(Region node, Runnable onFinishedHandler) {
         double end = node.getHeight();
         if (getUseAnimations()) {
@@ -560,6 +570,10 @@ public class Transitions {
         }
     }
 
+    public static void slideDownFromCenterTop(Region node) {
+        slideDownFromCenterTop(node, () -> {
+        });
+    }
 
     public static void slideDownFromCenterTop(Region node, Runnable onFinishedHandler) {
         double end = -node.getHeight();
@@ -743,6 +757,56 @@ public class Transitions {
             }
         } else {
             node.setPrefHeight(targetHeight);
+            if (onFinishedHandler != null) {
+                onFinishedHandler.run();
+            }
+        }
+    }
+
+    public static void animateMaxHeight(Region node, double startHeight, double targetHeight) {
+        animateMaxHeight(node, startHeight, targetHeight, DEFAULT_DURATION, () -> {
+        });
+    }
+
+    public static void animateMaxHeight(Region node, double startHeight, double targetHeight, double duration, @Nullable Runnable onFinishedHandler) {
+        if (getUseAnimations()) {
+            node.setMinHeight(startHeight);
+            node.setMaxHeight(startHeight);
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.minHeightProperty(), targetHeight, Interpolator.EASE_OUT)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.maxHeightProperty(), targetHeight, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
+            if (onFinishedHandler != null) {
+                timeline.setOnFinished(e -> onFinishedHandler.run());
+            }
+        } else {
+            node.setMinHeight(targetHeight);
+            node.setMaxHeight(targetHeight);
+            if (onFinishedHandler != null) {
+                onFinishedHandler.run();
+            }
+        }
+    }
+
+    public static void animateScaleY(Region node, double start, double target, double duration, @Nullable Runnable onFinishedHandler) {
+        if (getUseAnimations()) {
+            node.setScaleY(start);
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.scaleYProperty(), target, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
+            if (onFinishedHandler != null) {
+                timeline.setOnFinished(e -> onFinishedHandler.run());
+            }
+        } else {
+            node.setScaleY(target);
             if (onFinishedHandler != null) {
                 onFinishedHandler.run();
             }

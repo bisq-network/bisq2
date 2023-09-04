@@ -20,11 +20,13 @@ package bisq.desktop.main.content.bisq_easy.chat;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
@@ -45,7 +47,10 @@ import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -53,6 +58,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final SettingsService settingsService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
+    private final BisqEasyChatModel bisqEasyChatModel;
+    private final BisqEasyPublicChatChannelService chatChannelService;
     private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
     private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
 
@@ -62,8 +70,11 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public BisqEasyChatController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_OFFERBOOK);
 
+        bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         settingsService = serviceProvider.getSettingsService();
+        bisqEasyChatModel = getModel();
+        chatChannelService = bisqEasyPublicChatChannelService; //todo
     }
 
     @Override
@@ -109,6 +120,39 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         ObservableArray<BisqEasyPrivateTradeChatChannel> bisqEasyPrivateTradeChatChannels = chatService.getBisqEasyPrivateTradeChatChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyPrivateTradeChatChannels.addListener(() ->
                 model.getIsTradeChannelVisible().set(!bisqEasyPrivateTradeChatChannels.isEmpty()));
+
+        // bisqEasyChatModel.getSortedChannels().setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
+        // numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> UIThread.run(this::applyPredicate));
+
+        List<MarketChannelItem> marketChannelItems = chatChannelService.getChannels().stream()
+                .map(MarketChannelItem::new)
+                .collect(Collectors.toList());
+        model.getMarketChannelItems().setAll(marketChannelItems);
+
+        updateMarketItemsPredicate();
+
+        model.getSortedMarketChannelItems().setComparator((o1, o2) -> {
+            Comparator<MarketChannelItem> byNumMessages = (left, right) -> Integer.compare(
+                    getNumMessages(right.getMarket()),
+                    getNumMessages(left.getMarket()));
+
+            List<Market> majorMarkets = MarketRepository.getMajorMarkets();
+            Comparator<MarketChannelItem> byMajorMarkets = (left, right) -> {
+                int indexOfLeftMarket = majorMarkets.indexOf(left.getMarket());
+                int indexOfRightMarket = majorMarkets.indexOf(right.getMarket());
+                if (indexOfLeftMarket > -1 && indexOfRightMarket > -1) {
+                    return Integer.compare(indexOfLeftMarket, indexOfRightMarket);
+                } else {
+                    return -1;
+                }
+            };
+
+            Comparator<MarketChannelItem> byName = (left, right) -> left.getMarket().toString().compareTo(right.toString());
+            return byNumMessages
+                    .thenComparing(byMajorMarkets)
+                    .thenComparing(byName)
+                    .compare(o1, o2);
+        });
     }
 
     @Override
@@ -182,14 +226,47 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         });
     }
 
-    private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
-        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
-    }
-
     void onCreateOffer() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
         checkArgument(chatChannel instanceof BisqEasyPublicChatChannel,
                 "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
+    }
+
+    void onToggleFilter() {
+        bisqEasyChatModel.getShowFilterOverlay().set(!bisqEasyChatModel.getShowFilterOverlay().get());
+    }
+
+    void onCloseFilter() {
+        bisqEasyChatModel.getShowFilterOverlay().set(false);
+    }
+
+    void onSwitchMarketChannel(MarketChannelItem marketChannelItem) {
+        if (marketChannelItem != null) {
+            bisqEasyPublicChatChannelService.findChannel(marketChannelItem.getMarket())
+                    .ifPresent(channel -> {
+                        if (bisqEasyChatChannelSelectionService.getSelectedChannel() != null) {
+                            bisqEasyPublicChatChannelService.leaveChannel(bisqEasyChatChannelSelectionService.getSelectedChannel().get().getId());
+                        }
+                        bisqEasyPublicChatChannelService.joinChannel(channel);
+                        bisqEasyChatChannelSelectionService.selectChannel(channel);
+                    });
+            updateMarketItemsPredicate();
+        }
+    }
+
+
+    int getNumMessages(Market market) {
+        return bisqEasyPublicChatChannelService.findChannel(market)
+                .map(channel -> channel.getChatMessages().size())
+                .orElse(0);
+    }
+
+    private void updateMarketItemsPredicate() {
+        model.getFilteredMarketChannelItems().setPredicate(item -> !bisqEasyPublicChatChannelService.isVisible(item.getChannel()));
+    }
+
+    private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
+        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
     }
 }

@@ -30,9 +30,9 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
-
+//todo remove?
 @Slf4j
-public class PopOver {
+public class PopOver2 {
     private final Region owner;
     private final Region content;
     private final double offsetX;
@@ -47,11 +47,11 @@ public class PopOver {
     private double height;
     private UIScheduler fixPositionsScheduler;
 
-    public PopOver(Region owner, Region content) {
+    public PopOver2(Region owner, Region content) {
         this(owner, content, 0, 0);
     }
 
-    public PopOver(Region owner, Region content, double offsetX, double offsetY) {
+    public PopOver2(Region owner, Region content, double offsetX, double offsetY) {
         this.owner = owner;
         this.content = content;
         this.offsetX = offsetX;

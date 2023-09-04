@@ -560,8 +560,6 @@ public class ChatMessagesListView {
 
         private void scrollDown() {
             listView.scrollTo(listView.getItems().size() - 1);
-
-            UIScheduler.run(this::scrollDown).after(1000);
         }
 
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {

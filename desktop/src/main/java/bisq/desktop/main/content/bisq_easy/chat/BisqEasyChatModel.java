@@ -22,6 +22,10 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +38,10 @@ public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnlyVisible = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty isBisqEasyPrivateTradeChatChannel = new SimpleBooleanProperty();
+    private final BooleanProperty showFilterOverlay = new SimpleBooleanProperty();
+    private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
+    private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
 
     public BisqEasyChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

@@ -225,7 +225,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             addChannelIcon.setOpacity(0.5);
             addChannelIcon.setCursor(Cursor.HAND);
             addChannelIcon.setPadding(new Insets(24, 12, 0, 0));
-            Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.public.addMarketChannel"));
+            Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.public.switchMarketChannel"));
             tooltip.getStyleClass().add("dark-tooltip");
             addChannelIcon.setTooltip(tooltip);
             headerBox.getChildren().add(addChannelIcon);
@@ -240,7 +240,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                             model.sortedMarketChannelItems,
                             c -> getMarketListCell(),
                             controller::onJoinChannel,
-                            Res.get("bisqEasy.channelSelection.public.addMarketChannel").toUpperCase(),
+                            Res.get("bisqEasy.channelSelection.public.switchMarketChannel").toUpperCase(),
                             Res.get("action.search"),
                             350, 5, 23, 31.5)
                             .show());

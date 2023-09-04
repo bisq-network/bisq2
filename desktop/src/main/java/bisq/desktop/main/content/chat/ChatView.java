@@ -36,7 +36,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, ChatController<?, ?>> {
     protected final Label channelTitle = new Label();
-    protected Button helpButton, infoButton;
+    protected Button helpButton, infoButton, closeFilterButton;
     protected final VBox left = new VBox();
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
@@ -76,6 +76,7 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         left.setPrefWidth(210);
         left.setMinWidth(210);
         left.setFillWidth(true);
+        left.getStyleClass().add("bisq-grey-2-bg");
     }
 
     protected void configTitleHBox() {

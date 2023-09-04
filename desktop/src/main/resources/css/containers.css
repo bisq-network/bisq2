@@ -574,14 +574,12 @@ tree-table-view:focused {
 }
 
 .popover > .border {
-    -fx-stroke: linear-gradient(to bottom, rgba(0, 0, 0, .3), rgba(0, 0, 0, .7));
-    -fx-stroke-width: 0.5;
-    -fx-fill: rgba(255.0, 255.0, 255.0, .95);
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, .2), 10.0, 0.5, 2.0, 2.0);
+    -fx-stroke: transparent;
+    -fx-fill: transparent;
 }
 
 .popover > .content {
-    -fx-padding: 10;
+    -fx-padding: 0;
 }
 
 .popover > .detached {
@@ -607,8 +605,7 @@ tree-table-view:focused {
 }
 
 .popover > .content > .title > .icon > .graphics > .line {
-    -fx-stroke: -bisq-white;
-    -fx-stroke-width: 2;
+    -fx-stroke: transparent;
 }
 
 .popover > .border {

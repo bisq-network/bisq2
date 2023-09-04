@@ -555,6 +555,10 @@
     -fx-image: url("/images/chat/chat-send.png");
 }
 
+#filter {
+    -fx-image: url("/images/chat/filter.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
