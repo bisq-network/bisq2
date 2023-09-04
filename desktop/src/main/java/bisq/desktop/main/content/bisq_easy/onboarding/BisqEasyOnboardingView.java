@@ -17,10 +17,12 @@
 
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -143,7 +145,9 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         GridPane.setMargin(openTradeGuideButton, new Insets(10, 0, 0, 0));
         gridPane.add(openTradeGuideButton, 0, 2);
 
-        watchVideoButton = new Button(Res.get("bisqEasy.onboarding.watchVideo"));
+        Label icon = Icons.getIcon(AwesomeIcon.YOUTUBE_PLAY, "26");
+        watchVideoButton = new Button(Res.get("bisqEasy.onboarding.watchVideo"), icon);
+        watchVideoButton.setGraphicTextGap(10);
         watchVideoButton.getStyleClass().add("super-large-button");
         watchVideoButton.setMaxWidth(Double.MAX_VALUE);
         watchVideoButton.setTooltip(new Tooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));

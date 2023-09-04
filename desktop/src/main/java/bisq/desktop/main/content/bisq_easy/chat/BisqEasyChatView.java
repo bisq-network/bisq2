@@ -91,7 +91,6 @@ public class BisqEasyChatView extends ChatView {
     }
 
     protected void configTitleHBox() {
-        //titleHBox.getStyleClass().add("bisq-easy-chat-title-bg");
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
         titleHBox.getStyleClass().add("bisq-easy-chat-title-bg");

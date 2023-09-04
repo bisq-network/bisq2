@@ -39,7 +39,7 @@
 
 .bisq-easy-chat-tools-bg {
     -fx-background-color: -bisq-dark-grey;
-    /*  -fx-background-radius: 8 8 0 0;*/
+    -fx-background-radius: 8 8 0 0;
 }
 
 .bisq-easy-chat-messages-bg {
