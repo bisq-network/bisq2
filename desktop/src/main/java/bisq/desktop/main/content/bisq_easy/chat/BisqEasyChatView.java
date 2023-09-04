@@ -18,14 +18,16 @@
 package bisq.desktop.main.content.bisq_easy.chat;
 
 import bisq.desktop.common.Layout;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -33,12 +35,12 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatModel bisqEasyChatModel;
-    private final Switch offersOnlySwitch;
+    private Switch offersOnlySwitch;
     private final Region bisqEasyPrivateTradeChatChannelSelection;
     private final VBox tradeStateViewRoot;
     private final BisqEasyChatController bisqEasyChatController;
     private Subscription isBisqEasyPrivateTradeChatChannelPin;
-    private final Button createOfferButton;
+    private Button createOfferButton;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
@@ -55,31 +57,92 @@ public class BisqEasyChatView extends ChatView {
                 chatMessagesComponent,
                 channelSidebar);
 
-        //  root.setPadding(new Insets(-33, -67, -67, -67));
-        root.setPadding(new Insets(0, -67, -67, -67));
-
-        // StackPane.setMargin(newValue.getRoot(), new Insets(-33, -67, -67, -67));
-
-        bisqEasyChatController = controller;
         this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
         this.tradeStateViewRoot = tradeStateViewRoot;
-
-        left.getChildren().add(1, Layout.hLine());
-        left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
-
+        bisqEasyChatController = controller;
         bisqEasyChatModel = model;
+
+        root.setPadding(new Insets(0, 0, -67, 0));
+    }
+
+    protected void configLeftVBox(Region publicChannelSelection,
+                                  Region twoPartyPrivateChatChannelSelection) {
+    }
+
+    protected void configTitleHBox() {
+        titleHBox.getStyleClass().add("bisq-easy-chat-header-bg");
+        titleHBox.setAlignment(Pos.CENTER);
+        titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
+        titleHBox.getStyleClass().add("bisq-easy-chat-title-bg");
+
+        channelTitle.setId("chat-messages-headline");
+
+        int iconSize = 20;
+        double opacity = 0.3;
+        helpButton = BisqIconButton.createIconButton(AwesomeIcon.QUESTION_SIGN, model.getHelpTitle(), iconSize);
+        helpButton.setOpacity(opacity);
+        infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN, Res.get("chat.topMenu.channelInfoIcon.tooltip"), iconSize);
+        infoButton.setOpacity(opacity);
+
+        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 4));
+        HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
+        HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
+        titleHBox.getChildren().addAll(
+                channelTitle,
+                Spacer.fillHBox(),
+                helpButton,
+                infoButton
+        );
+    }
+
+    protected void configCenterVBox() {
+        centerVBox.setSpacing(0);
+        centerVBox.setFillWidth(true);
+
+        searchBox.setPrefWidth(200);
+        searchBox.setMinHeight(32);
+        searchBox.setMaxHeight(32);
+        searchBox.getStyleClass().add("small-search-box-light");
 
         offersOnlySwitch = new Switch();
         offersOnlySwitch.setText(Res.get("bisqEasy.topPane.filter.offersOnly"));
 
-        centerToolbar.getChildren().add(2, offersOnlySwitch);
-
-        createOfferButton = new Button(Res.get("offer.createOffer"));
+        createOfferButton = new Button();
+        createOfferButton.setText(Res.get("offer.createOffer"));
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
-        createOfferButton.setMinHeight(37);
-        createOfferButton.setDefaultButton(true);
-        VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
-        left.getChildren().add(createOfferButton);
+        createOfferButton.getStyleClass().add("outlined-button");
+
+        HBox.setMargin(searchBox, new Insets(0.5, 0, 0, 0));
+        HBox toolsHBox = new HBox(15, searchBox, offersOnlySwitch, Spacer.fillHBox(), createOfferButton);
+        toolsHBox.setAlignment(Pos.CENTER);
+        toolsHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
+        toolsHBox.getStyleClass().add("bisq-easy-chat-tools-bg");
+
+        VBox topPanelVBox = new VBox(10, titleHBox, toolsHBox);
+
+        chatMessagesComponent.setMinWidth(700);
+        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
+
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+        centerVBox.getChildren().addAll(topPanelVBox, Layout.hLine(), chatMessagesComponent);
+    }
+
+    protected void configSideBarVBox() {
+        sideBar.getChildren().add(channelSidebar);
+        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
+        sideBar.setAlignment(Pos.TOP_RIGHT);
+        sideBar.setFillWidth(true);
+    }
+
+    protected void configContainerHBox() {
+        containerHBox.setSpacing(10);
+        containerHBox.setFillHeight(true);
+        HBox.setHgrow(centerVBox, Priority.ALWAYS);
+        HBox.setHgrow(sideBar, Priority.NEVER);
+        containerHBox.getChildren().addAll(centerVBox, sideBar);
+
+        Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
+        root.getChildren().add(containerHBox);
     }
 
     @Override

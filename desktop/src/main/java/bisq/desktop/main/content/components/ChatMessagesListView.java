@@ -36,6 +36,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
@@ -519,6 +520,7 @@ public class ChatMessagesListView {
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
 
         private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
+        private UIScheduler scrollDelay;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -536,7 +538,13 @@ public class ChatMessagesListView {
             VBox.setVgrow(listView, Priority.ALWAYS);
             root.getChildren().add(listView);
 
-            messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
+            messagesListener = c -> {
+                UIThread.runOnNextRenderFrame(this::scrollDown);
+                if (scrollDelay != null) {
+                    scrollDelay.stop();
+                }
+                scrollDelay = UIScheduler.run(this::scrollDown).after(200);
+            };
         }
 
         @Override
@@ -552,6 +560,8 @@ public class ChatMessagesListView {
 
         private void scrollDown() {
             listView.scrollTo(listView.getItems().size() - 1);
+
+            UIScheduler.run(this::scrollDown).after(1000);
         }
 
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
