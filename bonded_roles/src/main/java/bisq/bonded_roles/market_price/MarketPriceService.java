@@ -113,6 +113,7 @@ public class MarketPriceService {
     private final Observable<Long> marketPriceUpdateTimestamp = new Observable<>(-1L);
     private volatile boolean shutdownStarted;
     private Scheduler scheduler;
+    private long initialDelay = 0;
 
     public MarketPriceService(Config conf, NetworkService networkService, Version version) {
         providers = new ArrayList<>(conf.providers);
@@ -138,11 +139,13 @@ public class MarketPriceService {
                                 if (scheduler != null) {
                                     scheduler.stop();
                                 }
+                                // Increase delay for retry each time it fails by 5 sec.
+                                initialDelay += 5;
                                 startRequesting();
                             }
                         });
             });
-        }).periodically(0, INTERVAL, TimeUnit.SECONDS);
+        }).periodically(initialDelay, INTERVAL, TimeUnit.SECONDS);
     }
 
     public CompletableFuture<Boolean> shutdown() {
