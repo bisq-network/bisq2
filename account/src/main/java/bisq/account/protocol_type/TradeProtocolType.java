@@ -24,7 +24,7 @@ public enum TradeProtocolType implements ProtocolType {
     MULTISIG,
     SUBMARINE,
     LIQUID_MULTISIG,
-    LIGHTNING_FIAT,
+    BISQ_LIGHTNING,
     LIQUID_SWAP,
     BSQ_SWAP,
     LIGHTNING_ESCROW,

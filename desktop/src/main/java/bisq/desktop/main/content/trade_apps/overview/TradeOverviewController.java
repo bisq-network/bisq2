@@ -75,9 +75,9 @@ public class TradeOverviewController implements Controller {
                 new Pair<>(10000L, 700000L),
                 "Q1/24"
         );
-        ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.LIGHTNING_FIAT,
-                NavigationTarget.LIGHTNING_FIAT,
-                TradeProtocolType.LIGHTNING_FIAT,
+        ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_LIGHTNING,
+                NavigationTarget.BISQ_LIGHTNING,
+                TradeProtocolType.BISQ_LIGHTNING,
                 new Pair<>(10000L, 700000L),
                 "Q3/24"
         );
