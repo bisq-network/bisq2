@@ -23,7 +23,6 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -35,13 +34,9 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
-import bisq.desktop.main.content.chat.channels.BisqEasyPublicChannelSelectionMenu;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.overlay.bisq_easy.create_offer.CreateOfferController;
-import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
@@ -60,11 +55,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     private final SettingsService settingsService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
-    private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
-
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
-    private TradeStateController tradeStateController;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -77,9 +68,6 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeStateController = new TradeStateController(serviceProvider, this::openUserProfileSidebar);
-        bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(serviceProvider);
-        bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(serviceProvider);
     }
 
     @Override
@@ -100,12 +88,8 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     public BisqEasyOfferbookView createAndGetView() {
         return new BisqEasyOfferbookView(model,
                 this,
-                bisqEasyPublicChannelSelectionMenu.getRoot(),
-                bisqEasyPrivateChannelSelectionMenu.getRoot(),
-                twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
-                channelSidebar.getRoot(),
-                tradeStateController.getView().getRoot());
+                channelSidebar.getRoot());
     }
 
     @Override
@@ -118,9 +102,6 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
         ObservableArray<BisqEasyPrivateTradeChatChannel> bisqEasyPrivateTradeChatChannels = chatService.getBisqEasyPrivateTradeChatChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyPrivateTradeChatChannels.addListener(() ->
                 model.getIsTradeChannelVisible().set(!bisqEasyPrivateTradeChatChannels.isEmpty()));
-
-        // bisqEasyChatModel.getSortedChannels().setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
-        // numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> UIThread.run(this::applyPredicate));
 
         List<MarketChannelItem> marketChannelItems = bisqEasyPublicChatChannelService.getChannels().stream()
                 .map(MarketChannelItem::new)
@@ -167,26 +148,8 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.chatChannelChanged(chatChannel);
 
-        boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyPublicChatChannel;
-        boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyPrivateTradeChatChannel;
-        boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
-
-        model.getIsBisqEasyPrivateTradeChatChannel().set(isBisqEasyPrivateTradeChatChannel);
-        model.getCreateOfferButtonVisible().set(isBisqEasyPublicChatChannel);
-        model.getTopSeparatorVisible().set(!isBisqEasyPrivateTradeChatChannel);
-        model.getOfferOnlyVisible().set(isBisqEasyPublicChatChannel);
-
-        //todo check if delay needed
-        UIThread.run(() -> {
-            if (chatChannel == null) {
-                model.getChannelIconNode().set(null);
-                return;
-            }
-
-            if (isBisqEasyPublicChatChannel) {
-                twoPartyPrivateChannelSelectionMenu.deSelectChannel();
-                bisqEasyPrivateChannelSelectionMenu.deSelectChannel();
-
+        if (chatChannel instanceof BisqEasyPublicChatChannel) {
+            UIThread.run(() -> {
                 resetSelectedChildTarget();
 
                 Market market = ((BisqEasyPublicChatChannel) chatChannel).getMarket();
@@ -198,30 +161,8 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
                 marketsImage.setScaleX(1.25);
                 marketsImage.setScaleY(1.25);
                 model.getChannelIconNode().set(marketsImage);
-            } else if (isBisqEasyPrivateTradeChatChannel) {
-                bisqEasyPublicChannelSelectionMenu.deSelectChannel();
-                twoPartyPrivateChannelSelectionMenu.deSelectChannel();
-
-                BisqEasyPrivateTradeChatChannel channel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                applyPeersIcon(channel);
-
-                BisqEasyOffer offer = channel.getBisqEasyOffer();
-                boolean isMaker = isMaker(offer);
-                String peer = ((BisqEasyPrivateTradeChatChannel) chatChannel).getPeer().getUserName();
-                String title = isMaker ?
-                        Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peer, offer.getShortId()) :
-                        Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peer, offer.getShortId());
-                model.getChannelTitle().set(title);
-
-                tradeStateController.setSelectedChannel(channel);
-            } else if (isTwoPartyPrivateChatChannel) {
-                bisqEasyPublicChannelSelectionMenu.deSelectChannel();
-                bisqEasyPrivateChannelSelectionMenu.deSelectChannel();
-
-                TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
-                applyPeersIcon(privateChannel);
-            }
-        });
+            });
+        }
     }
 
     void onCreateOffer() {

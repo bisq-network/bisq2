@@ -52,12 +52,10 @@ public class BisqEasyOfferbookView extends ChatView {
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Switch offersOnlySwitch;
-    private final Region bisqEasyPrivateTradeChatChannelSelection;
-    private final VBox tradeStateViewRoot;
+    private Button closeFilterButton;
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
-    private Subscription isBisqEasyPrivateTradeChatChannelPin;
     private Button createOfferButton;
-    protected Label switchChannelIcon;
+    private Label switchChannelIcon;
     private Button filterButton;
     private Pane filterPane;
     private Subscription showFilterOverlayPin;
@@ -65,21 +63,15 @@ public class BisqEasyOfferbookView extends ChatView {
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
-                                 Region bisqEasyPublicChatChannelSelection,
-                                 Region bisqEasyPrivateTradeChatChannelSelection,
-                                 Region twoPartyPrivateChatChannelSelection,
                                  VBox chatMessagesComponent,
-                                 Pane channelSidebar,
-                                 VBox tradeStateViewRoot) {
+                                 Pane channelSidebar) {
         super(model,
                 controller,
-                bisqEasyPublicChatChannelSelection,
-                twoPartyPrivateChatChannelSelection,
+                null,
+                null,
                 chatMessagesComponent,
                 channelSidebar);
 
-        this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
-        this.tradeStateViewRoot = tradeStateViewRoot;
         bisqEasyOfferbookController = controller;
         bisqEasyOfferbookModel = model;
 
@@ -197,28 +189,7 @@ public class BisqEasyOfferbookView extends ChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
-        topSeparator.visibleProperty().bind(bisqEasyOfferbookModel.getTopSeparatorVisible());
-        topSeparator.managedProperty().bind(bisqEasyOfferbookModel.getTopSeparatorVisible());
-        createOfferButton.visibleProperty().bind(bisqEasyOfferbookModel.getCreateOfferButtonVisible());
-        createOfferButton.managedProperty().bind(bisqEasyOfferbookModel.getCreateOfferButtonVisible());
-        offersOnlySwitch.visibleProperty().bind(bisqEasyOfferbookModel.getOfferOnlyVisible());
-        offersOnlySwitch.managedProperty().bind(bisqEasyOfferbookModel.getOfferOnlyVisible());
-        bisqEasyPrivateTradeChatChannelSelection.visibleProperty().bind(bisqEasyOfferbookModel.getIsTradeChannelVisible());
-        bisqEasyPrivateTradeChatChannelSelection.managedProperty().bind(bisqEasyOfferbookModel.getIsTradeChannelVisible());
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
-
-        isBisqEasyPrivateTradeChatChannelPin = EasyBind.subscribe(bisqEasyOfferbookModel.getIsBisqEasyPrivateTradeChatChannel(),
-                isBisqEasyPrivateTradeChatChannel -> {
-                    if (isBisqEasyPrivateTradeChatChannel) {
-                        if (!chatMessagesComponent.getChildren().contains(tradeStateViewRoot)) {
-                            chatMessagesComponent.getChildren().add(0, tradeStateViewRoot);
-                            VBox.setMargin(tradeStateViewRoot, new Insets(2, 25, 25, 25));
-                        }
-                    } else {
-                        chatMessagesComponent.getChildren().remove(tradeStateViewRoot);
-                    }
-                });
-
 
         createOfferButton.setOnAction(e -> bisqEasyOfferbookController.onCreateOffer());
         filterButton.setOnAction(e -> bisqEasyOfferbookController.onToggleFilter());
@@ -270,17 +241,7 @@ public class BisqEasyOfferbookView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
 
-        topSeparator.visibleProperty().unbind();
-        topSeparator.managedProperty().unbind();
-
-        createOfferButton.visibleProperty().unbind();
-        createOfferButton.managedProperty().unbind();
-        offersOnlySwitch.visibleProperty().unbind();
-        offersOnlySwitch.managedProperty().unbind();
-        bisqEasyPrivateTradeChatChannelSelection.visibleProperty().unbind();
-        bisqEasyPrivateTradeChatChannelSelection.managedProperty().unbind();
         offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
-        isBisqEasyPrivateTradeChatChannelPin.unsubscribe();
 
         createOfferButton.setOnAction(null);
         switchChannelIcon.setOnMouseClicked(null);

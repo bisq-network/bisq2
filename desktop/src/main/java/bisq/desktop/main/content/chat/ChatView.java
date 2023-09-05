@@ -33,10 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, ChatController<?, ?>> {
     protected final Label channelTitle = new Label();
-    protected Button helpButton, infoButton, closeFilterButton;
+    protected Button helpButton, infoButton;
     protected final VBox left = new VBox();
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
@@ -51,8 +53,8 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
     public ChatView(ChatModel model,
                     ChatController<?, ?> controller,
-                    Region publicChannelSelection,
-                    Region twoPartyPrivateChatChannelSelection,
+                    @Nullable Region publicChannelSelection,
+                    @Nullable Region twoPartyPrivateChatChannelSelection,
                     Pane chatMessagesComponent,
                     Pane channelSidebar) {
         super(new AnchorPane(), model, controller);
@@ -60,7 +62,10 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
 
-        configLeftVBox(publicChannelSelection, twoPartyPrivateChatChannelSelection);
+        if (publicChannelSelection != null && twoPartyPrivateChatChannelSelection != null) {
+            configLeftVBox(publicChannelSelection, twoPartyPrivateChatChannelSelection);
+        }
+
         configTitleHBox();
         configCenterVBox();
         configSideBarVBox();
@@ -137,8 +142,10 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
-        twoPartyPrivateChatChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
-        twoPartyPrivateChatChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+        if (twoPartyPrivateChatChannelSelection != null) {
+            twoPartyPrivateChatChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+            twoPartyPrivateChatChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+        }
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -172,9 +179,10 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         channelSidebar.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
-
-        twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
-        twoPartyPrivateChatChannelSelection.managedProperty().unbind();
+        if (twoPartyPrivateChatChannelSelection != null) {
+            twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
+            twoPartyPrivateChatChannelSelection.managedProperty().unbind();
+        }
 
         helpButton.setOnAction(null);
         infoButton.setOnAction(null);

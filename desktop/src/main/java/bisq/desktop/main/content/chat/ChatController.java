@@ -62,7 +62,6 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
 @Slf4j
 public abstract class ChatController<V extends ChatView, M extends ChatModel> extends NavigationController {
     protected final ChatService chatService;
@@ -132,7 +131,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     @Override
     public void onDeactivate() {
-        selectedChannelPin.unbind();
+        if (selectedChannelPin != null) {
+            selectedChannelPin.unbind();
+        }
         searchTextPin.unsubscribe();
         twoPartyPrivateChatChannelsPin.unbind();
     }
