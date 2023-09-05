@@ -40,8 +40,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
     final Observable<Long> requiredTotalReputationScore = new Observable<>(1000L);
-    final Observable<Boolean> offersOnly = new Observable<>(true);
-    final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
+    final Observable<Boolean> offersOnly = new Observable<>();
+    final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
     final Set<String> consumedAlertIds;
     boolean isTacAccepted;
@@ -57,7 +57,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
                 1000,
-                true,
+                false,
                 false,
                 ChatNotificationType.MENTION,
                 false,
