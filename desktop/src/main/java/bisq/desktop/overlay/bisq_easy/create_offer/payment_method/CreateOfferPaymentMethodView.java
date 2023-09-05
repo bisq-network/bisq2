@@ -99,7 +99,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
         custom.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(10, 160, 30, 160));
+        VBox.setMargin(flowPane, new Insets(10, 60, 30, 60));
         content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
         overlay = new VBox(20);
