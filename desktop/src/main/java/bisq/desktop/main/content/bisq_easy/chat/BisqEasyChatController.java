@@ -35,7 +35,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.bisq_easy.chat.trade_state.TradeStateController;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
 import bisq.desktop.main.content.chat.channels.BisqEasyPublicChannelSelectionMenu;
