@@ -22,9 +22,11 @@ import bisq.common.monetary.Monetary;
 import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -49,6 +51,10 @@ public abstract class AmountInput {
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
         return controller.model.amount;
+    }
+
+    public BooleanProperty isAmountValidProperty() {
+        return controller.model.isAmountValid;
     }
 
     public void setSelectedMarket(Market selectedMarket) {
@@ -111,19 +117,47 @@ public abstract class AmountInput {
         }
 
         private void onAmount(String value) {
-            if (value == null) return;
-            if (model.hasFocus) return;
-            if (value.isEmpty()) {
-                model.amount.set(null);
+            if (isValueOrCodeNull(value, model.code.get())) {
+                setAmountInvalid();
                 return;
             }
-            if (!validator.validate(value).isValid) {
-                model.amount.set(null);
-                return;
-            }
-            if (model.code.get() == null) return;
 
-            model.amount.set(AmountParser.parse(value, model.code.get()));
+            if (isValueInvalid(value)) {
+                handleInvalidValue();
+                return;
+            }
+
+            setAmountValid();
+            updateAmountIfNotFocused(value);
+        }
+
+        private boolean isValueOrCodeNull(String value, String code) {
+            return value == null || code == null;
+        }
+
+        private boolean isValueInvalid(String value) {
+            return value.isEmpty() || !validator.validate(value).isValid;
+        }
+
+        private void handleInvalidValue() {
+            if (!model.hasFocus) {
+                model.amount.set(null);
+            }
+            setAmountInvalid();
+        }
+
+        private void setAmountInvalid() {
+            model.isAmountValid.set(false);
+        }
+
+        private void setAmountValid() {
+            model.isAmountValid.set(true);
+        }
+
+        private void updateAmountIfNotFocused(String value) {
+            if (!model.hasFocus) {
+                model.amount.set(AmountParser.parse(value, model.code.get()));
+            }
         }
 
         private void updateModel() {
@@ -148,6 +182,7 @@ public abstract class AmountInput {
         protected boolean hasFocus;
         @Setter
         protected boolean useLowPrecision = true;
+        private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
 
         protected Model(boolean isBaseCurrency) {
             this.isBaseCurrency = isBaseCurrency;

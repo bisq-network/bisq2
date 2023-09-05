@@ -49,6 +49,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -73,7 +74,7 @@ public class CreateOfferAmountController implements Controller {
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
-            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
+            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, areAmountsValidPin;
 
     public CreateOfferAmountController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -163,6 +164,10 @@ public class CreateOfferAmountController implements Controller {
         return model.getIsMinAmountEnabled();
     }
 
+    public BooleanProperty areAmountsValid() {
+        return model.getAreAmountsValid();
+    }
+
     @Override
     public void onActivate() {
         model.setHeadline(model.getDirection().isBuy() ?
@@ -223,6 +228,15 @@ public class CreateOfferAmountController implements Controller {
             applyAmountSpec();
         });
 
+        var binding = EasyBind.combine(
+                minAmountComponent.areAmountsValid(),
+                maxOrFixAmountComponent.areAmountsValid(),
+                model.getIsMinAmountEnabled(),
+                (areMinAmountsValid, areMaxOrFixedAmountsValid, isMinAmountEnabled) ->
+                        areMaxOrFixedAmountsValid && (!isMinAmountEnabled | areMinAmountsValid)
+                );
+        areAmountsValidPin = EasyBind.subscribe(binding, areAmountsValid -> model.getAreAmountsValid().set(areAmountsValid));
+
         applyAmountSpec();
 
         if (model.getDirection().isSell()) {
@@ -248,6 +262,7 @@ public class CreateOfferAmountController implements Controller {
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
+        areAmountsValidPin.unsubscribe();;
     }
 
     void onToggleMinAmountVisibility() {
@@ -257,18 +272,42 @@ public class CreateOfferAmountController implements Controller {
     }
 
     private void applyAmountSpec() {
-        long maxOrFixAmount = maxOrFixAmountComponent.getQuoteSideAmount().get().getValue();
+        Long maxOrFixAmount = getAmountValue(maxOrFixAmountComponent.getQuoteSideAmount());
+        if (maxOrFixAmount == null) {
+            return;
+        }
 
         if (model.getIsMinAmountEnabled().get()) {
-            long minAmount = minAmountComponent.getQuoteSideAmount().get().getValue();
-            if (minAmount == maxOrFixAmount) {
-                model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
-            } else {
-                model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
-            }
+            Long minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
+            applyRangeOrFixedAmountSpec(minAmount, maxOrFixAmount);
         } else {
-            model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+            applyFixedAmountSpec(maxOrFixAmount);
         }
+    }
+
+    private Long getAmountValue(ReadOnlyObjectProperty<Monetary> amountProperty) {
+        if (amountProperty.get() == null) {
+            return null;
+        }
+        return amountProperty.get().getValue();
+    }
+
+    private void applyRangeOrFixedAmountSpec(Long minAmount, long maxOrFixAmount) {
+        if (minAmount != null) {
+            if (minAmount.equals(maxOrFixAmount)) {
+                applyFixedAmountSpec(maxOrFixAmount);
+            } else {
+                applyRangeAmountSpec(minAmount, maxOrFixAmount);
+            }
+        }
+    }
+
+    private void applyFixedAmountSpec(long maxOrFixAmount) {
+        model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+    }
+
+    private void applyRangeAmountSpec(long minAmount, long maxOrFixAmount) {
+        model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
     }
 
     private void applyBestOfferQuote() {

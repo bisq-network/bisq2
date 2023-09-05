@@ -26,7 +26,12 @@ import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,6 +45,7 @@ public class CreateOfferAmountModel implements Model {
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
+    private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
     @Setter
     private Direction direction;
     @Setter
@@ -64,5 +70,6 @@ public class CreateOfferAmountModel implements Model {
         market = MarketRepository.getDefault();
         fiatPaymentMethods = new ArrayList<>();
         priceSpec = new MarketPriceSpec();
+        areAmountsValid.set(true);
     }
 }

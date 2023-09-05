@@ -66,7 +66,8 @@ public class CreateOfferController extends NavigationController implements InitW
     private final CreateOfferReviewOfferController createOfferReviewOfferController;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
-            isMinAmountEnabledPin, priceSpecPin, showCustomMethodNotEmptyWarningPin;
+            isMinAmountEnabledPin, priceSpecPin, showCustomMethodNotEmptyWarningPin,
+            areAmountsValidPin;
 
     public CreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_OFFER);
@@ -143,6 +144,9 @@ public class CreateOfferController extends NavigationController implements InitW
 
         handlePaymentMethodsUpdate();
         createOfferPaymentMethodController.getFiatPaymentMethods().addListener(paymentMethodsListener);
+        areAmountsValidPin = EasyBind.subscribe(
+                createOfferAmountController.areAmountsValid(),
+                areAmountsValid -> model.getNextButtonDisabled().set(!areAmountsValid));
     }
 
     @Override
@@ -152,6 +156,7 @@ public class CreateOfferController extends NavigationController implements InitW
         amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
+        areAmountsValidPin.unsubscribe();
         showCustomMethodNotEmptyWarningPin.unsubscribe();
         createOfferPaymentMethodController.getFiatPaymentMethods().removeListener(paymentMethodsListener);
     }
