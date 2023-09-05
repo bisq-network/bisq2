@@ -19,6 +19,7 @@ package bisq.bonded_roles;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,6 +37,7 @@ public enum BondedRoleType implements ProtoEnum {
     EXPLORER_NODE(true),
     MARKET_PRICE_NODE(true);
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(BondedRoleType.class.getSimpleName()) + "_";
 
     @Getter
     private final boolean isNode;
@@ -54,11 +56,11 @@ public enum BondedRoleType implements ProtoEnum {
 
     @Override
     public bisq.bonded_roles.protobuf.BondedRoleType toProto() {
-        return bisq.bonded_roles.protobuf.BondedRoleType.valueOf(name());
+        return bisq.bonded_roles.protobuf.BondedRoleType.valueOf(protobufPrefix + name());
     }
 
     public static BondedRoleType fromProto(bisq.bonded_roles.protobuf.BondedRoleType proto) {
-        return ProtobufUtils.enumFromProto(BondedRoleType.class, proto.name());
+        return ProtobufUtils.enumFromProto(BondedRoleType.class, proto.name(), MEDIATOR);
     }
 
     public String getDisplayString() {

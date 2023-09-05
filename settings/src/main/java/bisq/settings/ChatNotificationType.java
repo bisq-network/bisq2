@@ -19,18 +19,21 @@ package bisq.settings;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 
 public enum ChatNotificationType implements ProtoEnum {
     ALL,
     MENTION,
     OFF;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(ChatNotificationType.class.getSimpleName()) + "_";
+
     @Override
     public bisq.settings.protobuf.ChatNotificationType toProto() {
-        return bisq.settings.protobuf.ChatNotificationType.valueOf(name());
+        return bisq.settings.protobuf.ChatNotificationType.valueOf(protobufPrefix + name());
     }
 
     public static ChatNotificationType fromProto(bisq.settings.protobuf.ChatNotificationType proto) {
-        return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name());
+        return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name(), ALL);
     }
 }

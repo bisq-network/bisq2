@@ -19,6 +19,7 @@ package bisq.bonded_roles.alert;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 
 public enum AlertType implements ProtoEnum {
     INFO,
@@ -26,12 +27,14 @@ public enum AlertType implements ProtoEnum {
     EMERGENCY,
     BAN;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(AlertType.class.getSimpleName()) + "_";
+
     @Override
     public bisq.bonded_roles.protobuf.AlertType toProto() {
-        return bisq.bonded_roles.protobuf.AlertType.valueOf(name());
+        return bisq.bonded_roles.protobuf.AlertType.valueOf(protobufPrefix + name());
     }
 
     public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) {
-        return ProtobufUtils.enumFromProto(AlertType.class, proto.name());
+        return ProtobufUtils.enumFromProto(AlertType.class, proto.name(), INFO);
     }
 }

@@ -19,19 +19,22 @@ package bisq.offer;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 
 public enum Direction implements ProtoEnum {
     BUY,
     SELL;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(Direction.class.getSimpleName()) + "_";
+
     @Override
     public bisq.offer.protobuf.Direction toProto() {
-        return bisq.offer.protobuf.Direction.valueOf(name());
+        return bisq.offer.protobuf.Direction.valueOf(protobufPrefix + name());
     }
 
     public static Direction fromProto(bisq.offer.protobuf.Direction proto) {
-        return ProtobufUtils.enumFromProto(Direction.class, proto.name());
+        return ProtobufUtils.enumFromProto(Direction.class, proto.name(), BUY);
     }
 
     public boolean isBuy() {

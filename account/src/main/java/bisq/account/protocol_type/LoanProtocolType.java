@@ -18,17 +18,21 @@
 package bisq.account.protocol_type;
 
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 
 public enum LoanProtocolType implements ProtocolType {
     COLLATERALIZED,
     REPUTATION;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(LoanProtocolType.class.getSimpleName()) + "_";
+
+
     @Override
     public bisq.account.protobuf.LoanProtocolType toProto() {
-        return bisq.account.protobuf.LoanProtocolType.valueOf(name());
+        return bisq.account.protobuf.LoanProtocolType.valueOf(protobufPrefix + name());
     }
 
     public static LoanProtocolType fromProto(bisq.account.protobuf.LoanProtocolType proto) {
-        return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name());
+        return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name(), COLLATERALIZED);
     }
 }

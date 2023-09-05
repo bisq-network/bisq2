@@ -19,6 +19,7 @@ package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 
 public enum ChatChannelNotificationType implements ProtoEnum {
     GLOBAL_DEFAULT, // As defined in settings
@@ -26,12 +27,14 @@ public enum ChatChannelNotificationType implements ProtoEnum {
     MENTION,
     OFF;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(ChatChannelNotificationType.class.getSimpleName()) + "_";
+
     @Override
     public bisq.chat.protobuf.ChatChannelNotificationType toProto() {
-        return bisq.chat.protobuf.ChatChannelNotificationType.valueOf(name());
+        return bisq.chat.protobuf.ChatChannelNotificationType.valueOf(protobufPrefix + name());
     }
 
     public static ChatChannelNotificationType fromProto(bisq.chat.protobuf.ChatChannelNotificationType proto) {
-        return ProtobufUtils.enumFromProto(ChatChannelNotificationType.class, proto.name());
+        return ProtobufUtils.enumFromProto(ChatChannelNotificationType.class, proto.name(), GLOBAL_DEFAULT);
     }
 }

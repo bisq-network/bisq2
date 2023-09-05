@@ -18,6 +18,7 @@
 package bisq.account.protocol_type;
 
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 
 public enum TradeProtocolType implements ProtocolType {
     BISQ_EASY,
@@ -30,12 +31,14 @@ public enum TradeProtocolType implements ProtocolType {
     LIGHTNING_ESCROW,
     MONERO_SWAP;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(TradeProtocolType.class.getSimpleName()) + "_";
+
     @Override
     public bisq.account.protobuf.TradeProtocolType toProto() {
-        return bisq.account.protobuf.TradeProtocolType.valueOf(name());
+        return bisq.account.protobuf.TradeProtocolType.valueOf(protobufPrefix + name());
     }
 
     public static TradeProtocolType fromProto(bisq.account.protobuf.TradeProtocolType proto) {
-        return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name());
+        return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name(), BISQ_EASY);
     }
 }

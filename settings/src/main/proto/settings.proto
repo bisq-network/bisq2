@@ -31,9 +31,10 @@ message Cookie {
 }
 
 enum ChatNotificationType {
-  ALL = 0;
-  MENTION = 1;
-  OFF = 2;
+  CHATNOTIFICATIONTYPE_UNSPECIFIED = 0;
+  CHATNOTIFICATIONTYPE_ALL = 1;
+  CHATNOTIFICATIONTYPE_MENTION = 2;
+  CHATNOTIFICATIONTYPE_OFF = 3;
 }
 
 message SettingsStore {

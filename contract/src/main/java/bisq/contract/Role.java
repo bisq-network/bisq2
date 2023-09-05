@@ -19,18 +19,21 @@ package bisq.contract;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.util.StringUtils;
 
 public enum Role implements ProtoEnum {
     MAKER,
     TAKER,
     ESCROW_AGENT;
 
+    private static final String protobufPrefix = StringUtils.capitalizeAll(Role.class.getSimpleName()) + "_";
+
     @Override
     public bisq.contract.protobuf.Role toProto() {
-        return bisq.contract.protobuf.Role.valueOf(name());
+        return bisq.contract.protobuf.Role.valueOf(protobufPrefix + name());
     }
 
     public static Role fromProto(bisq.contract.protobuf.Role proto) {
-        return ProtobufUtils.enumFromProto(Role.class, proto.name());
+        return ProtobufUtils.enumFromProto(Role.class, proto.name(), TAKER);
     }
 }
