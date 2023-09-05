@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat;
+package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
@@ -55,26 +55,24 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
+public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final SettingsService settingsService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private final BisqEasyChatModel bisqEasyChatModel;
-    private final BisqEasyPublicChatChannelService chatChannelService;
+    private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
     private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
 
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
     private TradeStateController tradeStateController;
 
-    public BisqEasyChatController(ServiceProvider serviceProvider) {
+    public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_OFFERBOOK);
 
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         settingsService = serviceProvider.getSettingsService();
-        bisqEasyChatModel = getModel();
-        chatChannelService = bisqEasyPublicChatChannelService; //todo
+        bisqEasyOfferbookModel = getModel();
     }
 
     @Override
@@ -94,13 +92,13 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     }
 
     @Override
-    public BisqEasyChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new BisqEasyChatModel(chatChannelDomain);
+    public BisqEasyOfferbookModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
+        return new BisqEasyOfferbookModel(chatChannelDomain);
     }
 
     @Override
-    public BisqEasyChatView createAndGetView() {
-        return new BisqEasyChatView(model,
+    public BisqEasyOfferbookView createAndGetView() {
+        return new BisqEasyOfferbookView(model,
                 this,
                 bisqEasyPublicChannelSelectionMenu.getRoot(),
                 bisqEasyPrivateChannelSelectionMenu.getRoot(),
@@ -124,7 +122,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         // bisqEasyChatModel.getSortedChannels().setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
         // numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> UIThread.run(this::applyPredicate));
 
-        List<MarketChannelItem> marketChannelItems = chatChannelService.getChannels().stream()
+        List<MarketChannelItem> marketChannelItems = bisqEasyPublicChatChannelService.getChannels().stream()
                 .map(MarketChannelItem::new)
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
@@ -234,11 +232,11 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     }
 
     void onToggleFilter() {
-        bisqEasyChatModel.getShowFilterOverlay().set(!bisqEasyChatModel.getShowFilterOverlay().get());
+        bisqEasyOfferbookModel.getShowFilterOverlay().set(!bisqEasyOfferbookModel.getShowFilterOverlay().get());
     }
 
     void onCloseFilter() {
-        bisqEasyChatModel.getShowFilterOverlay().set(false);
+        bisqEasyOfferbookModel.getShowFilterOverlay().set(false);
     }
 
     void onSwitchMarketChannel(MarketChannelItem marketChannelItem) {

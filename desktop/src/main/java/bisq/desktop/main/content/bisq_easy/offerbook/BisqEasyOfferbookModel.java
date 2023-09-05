@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat;
+package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyChatModel extends ChatModel {
+public class BisqEasyOfferbookModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty topSeparatorVisible = new SimpleBooleanProperty();
     private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
@@ -43,7 +43,7 @@ public class BisqEasyChatModel extends ChatModel {
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
 
-    public BisqEasyChatModel(ChatChannelDomain chatChannelDomain) {
+    public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }
 

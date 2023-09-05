@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.chat;
+package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.common.currency.Market;
