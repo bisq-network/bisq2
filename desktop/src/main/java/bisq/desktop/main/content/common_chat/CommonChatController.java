@@ -17,37 +17,42 @@
 
 package bisq.desktop.main.content.common_chat;
 
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.channel.pub.PublicChatChannel;
+import bisq.chat.message.ChatMessage;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.chat.PublicChatController;
+import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.chat.channels.CommonPublicChannelSelectionMenu;
 import bisq.desktop.main.content.chat.channels.PublicChannelSelectionMenu;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
-public class CommonChatController extends PublicChatController<CommonChatView, CommonChatModel> implements Controller {
+public class CommonChatController extends ChatController<CommonChatView, CommonChatModel> implements Controller {
+    protected ChatChannelSelectionService chatChannelSelectionService;
+    protected CommonPublicChatChannelService commonPublicChatChannelService;
+    protected PublicChannelSelectionMenu<?, ?, ?> publicChatChannelSelection;
+    private Pin selectedChannelPin;
 
     public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
         super(serviceProvider, chatChannelDomain, NavigationTarget.NONE);
     }
 
     @Override
-    public ChatChannelSelectionService getChannelSelectionService(ChatChannelDomain chatChannelDomain) {
-        return chatService.getChatChannelSelectionServices().get(chatChannelDomain);
-    }
-
-    @Override
-    public CommonPublicChatChannelService getPublicChannelService(ChatChannelDomain chatChannelDomain) {
-        return chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
-    }
-
-    @Override
-    public PublicChannelSelectionMenu<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain) {
-        return new CommonPublicChannelSelectionMenu(serviceProvider, chatChannelDomain);
+    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+        commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
+        chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        publicChatChannelSelection = new CommonPublicChannelSelectionMenu(serviceProvider, chatChannelDomain);
     }
 
     @Override
@@ -63,5 +68,40 @@ public class CommonChatController extends PublicChatController<CommonChatView, C
                 twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
+    }
+
+    @Override
+    public void onActivate() {
+        super.onActivate();
+
+        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+
+        selectedChannelPin.unbind();
+    }
+
+    @Override
+    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.chatChannelChanged(chatChannel);
+        if (chatChannel != null) {
+            UIThread.run(() -> {
+                if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+                    applyPeersIcon((PrivateChatChannel<?>) chatChannel);
+                    publicChatChannelSelection.deSelectChannel();
+                } else {
+                    applyDefaultPublicChannelIcon((PublicChatChannel<?>) chatChannel);
+                    twoPartyPrivateChannelSelectionMenu.deSelectChannel();
+                }
+            });
+        }
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        return Optional.empty();
     }
 }

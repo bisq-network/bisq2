@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.common_chat;
 
-import bisq.desktop.main.content.chat.PublicChatView;
+import bisq.desktop.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonChatView extends PublicChatView {
+public class CommonChatView extends ChatView {
     public CommonChatView(CommonChatModel model,
                           CommonChatController controller,
                           Region marketChannelSelection,

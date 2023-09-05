@@ -77,7 +77,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final ChannelSidebar channelSidebar;
     protected final CitationBlock citationBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
-    protected Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
+    protected Pin twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
     public ChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
@@ -131,9 +131,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     @Override
     public void onDeactivate() {
-        if (selectedChannelPin != null) {
-            selectedChannelPin.unbind();
-        }
         searchTextPin.unsubscribe();
         twoPartyPrivateChatChannelsPin.unbind();
     }

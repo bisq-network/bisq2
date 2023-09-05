@@ -55,7 +55,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     private final SettingsService settingsService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
+    private Pin selectedChannelPin, offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_OFFERBOOK);

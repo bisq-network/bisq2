@@ -19,18 +19,24 @@ package bisq.desktop.main.content.common_chat;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.desktop.main.content.chat.PublicChatModel;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.main.content.chat.ChatModel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class CommonChatModel extends PublicChatModel {
+public class CommonChatModel extends ChatModel {
     @Setter
     private TwoPartyPrivateChatChannel selectPrivateTwoPartyChannel;
 
     public CommonChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.NONE;
     }
 }
