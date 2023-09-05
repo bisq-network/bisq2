@@ -143,8 +143,7 @@ public class BisqEasyChatView extends ChatView {
         filterButton.getStyleClass().add("grey-transparent-outlined-button");
         filterButton.setStyle("-fx-padding: 5 12 5 12;");
 
-        offersOnlySwitch = new Switch();
-        offersOnlySwitch.setText(Res.get("bisqEasy.topPane.filter.offersOnly"));
+        offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
 
         createOfferButton = new Button(Res.get("offer.createOffer"));
         createOfferButton.getStyleClass().add("outlined-button");

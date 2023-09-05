@@ -39,8 +39,8 @@ public class PreferencesController implements Controller {
     private final PreferencesView view;
     private final SettingsService settingsService;
     private final PreferencesModel model;
-    private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, closeMyOfferWhenTakenPin,
-            getSupportedLanguageCodesPin;
+    private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, offerOnlyPin,
+            closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin;
     private Subscription notifyForPreReleasePin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
@@ -59,6 +59,7 @@ public class PreferencesController implements Controller {
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
         getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode()).to(settingsService.getPreventStandbyMode());
+        offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
         getSupportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes()).to(settingsService.getSupportedLanguageCodes());
 
@@ -73,6 +74,7 @@ public class PreferencesController implements Controller {
     public void onDeactivate() {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
+        offerOnlyPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
         getPreventStandbyModePin.unbind();
         getSupportedLanguageCodesPin.unbind();
