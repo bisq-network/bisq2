@@ -128,7 +128,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         gridPane.add(headlineLabel, 0, 0, 2, 1);
 
         HBox line1 = getIconAndText(Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");
-        HBox line2 = getIconAndText(Res.get("bisqEasy.onboarding.top.content2"), "onboarding-trade");
+        HBox line2 = getIconAndText(Res.get("bisqEasy.onboarding.top.content2"), "fiat-btc-small");
         HBox line3 = getIconAndText(Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-chat");
         VBox vBox = new VBox(15, Spacer.fillVBox(), line1, line2, line3, Spacer.fillVBox());
         gridPane.add(vBox, 0, 1);

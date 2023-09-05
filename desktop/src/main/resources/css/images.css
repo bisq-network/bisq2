@@ -339,12 +339,8 @@
     -fx-image: url("/images/onboarding/fiat-btc.png");
 }
 
-#onboarding-bisq-easy {
-    -fx-image: url("/images/onboarding/onboarding-bisq-easy.png");
-}
-
-#onboarding-trade {
-    -fx-image: url("/images/onboarding/onboarding-trade.png");
+#fiat-btc-small {
+    -fx-image: url("/images/onboarding/fiat-btc-small.png");
 }
 
 #thumbs-up {
