@@ -84,12 +84,11 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void onActivate() {
-        super.onActivate();
-
         channelItemPin = FxBindings.<BisqEasyPrivateTradeChatChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
                 .map(BisqEasyOpenTradesView.ChannelItem::new)
                 .to(bisqEasyPrivateTradeChatChannelService.getChannels());
 
+        //todo handle case when no channels are available
         if (model.getSelectedChannelItem().get() == null && !model.getChannelItems().isEmpty()) {
             model.getSelectedChannelItem().set(model.getChannelItems().get(0));
         }
@@ -99,8 +98,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void onDeactivate() {
-        super.onDeactivate();
-
         channelItemPin.unbind();
         selectedChannelItemPin.unsubscribe();
         resetSelectedChildTarget();

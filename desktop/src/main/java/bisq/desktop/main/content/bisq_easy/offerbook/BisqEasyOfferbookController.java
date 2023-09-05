@@ -41,6 +41,8 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
@@ -56,6 +58,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin selectedChannelPin, offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
+    private Subscription searchTextPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -94,8 +97,14 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
 
     @Override
     public void onActivate() {
-        super.onActivate();
-
+        model.getSearchText().set("");
+        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+            if (searchText == null || searchText.isEmpty()) {
+                chatMessagesComponent.setSearchPredicate(item -> true);
+            } else {
+                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
+            }
+        });
         selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
 
@@ -136,8 +145,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
 
     @Override
     public void onDeactivate() {
-        super.onDeactivate();
-
+        searchTextPin.unsubscribe();
         offerOnlySettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
 
@@ -150,6 +158,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
 
         if (chatChannel instanceof BisqEasyPublicChatChannel) {
             UIThread.run(() -> {
+                model.getSearchText().set("");
                 resetSelectedChildTarget();
 
                 Market market = ((BisqEasyPublicChatChannel) chatChannel).getMarket();

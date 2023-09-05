@@ -23,10 +23,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.Badge;
-import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.Switch;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
@@ -39,7 +36,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -51,12 +51,11 @@ public class BisqEasyOfferbookView extends ChatView {
     private static double filterPaneHeight;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private Switch offersOnlySwitch;
-    private Button closeFilterButton;
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
-    private Button createOfferButton;
+    private Switch offersOnlySwitch;
+    private Button closeFilterButton, createOfferButton, filterButton;
     private Label switchChannelIcon;
-    private Button filterButton;
+    private SearchBox searchBox;
     private Pane filterPane;
     private Subscription showFilterOverlayPin;
     private Subscription filterPaneHeightPin;
@@ -67,8 +66,6 @@ public class BisqEasyOfferbookView extends ChatView {
                                  Pane channelSidebar) {
         super(model,
                 controller,
-                null,
-                null,
                 chatMessagesComponent,
                 channelSidebar);
 
@@ -76,10 +73,6 @@ public class BisqEasyOfferbookView extends ChatView {
         bisqEasyOfferbookModel = model;
 
         root.setPadding(new Insets(0, 0, -67, 0));
-    }
-
-    protected void configLeftVBox(Region publicChannelSelection,
-                                  Region twoPartyPrivateChatChannelSelection) {
     }
 
     protected void configTitleHBox() {
@@ -119,6 +112,7 @@ public class BisqEasyOfferbookView extends ChatView {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
 
+        searchBox = new SearchBox();
         searchBox.setMaxWidth(200);
         searchBox.setMinHeight(32);
         searchBox.setMaxHeight(32);
@@ -189,6 +183,7 @@ public class BisqEasyOfferbookView extends ChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
+        searchBox.textProperty().bindBidirectional(bisqEasyOfferbookModel.getSearchText());
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
 
         createOfferButton.setOnAction(e -> bisqEasyOfferbookController.onCreateOffer());
@@ -241,6 +236,7 @@ public class BisqEasyOfferbookView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
 
+        searchBox.textProperty().unbindBidirectional(bisqEasyOfferbookModel.getSearchText());
         offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
 
         createOfferButton.setOnAction(null);

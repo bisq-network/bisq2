@@ -44,8 +44,6 @@ public class BisqEasyOpenTradesView extends ChatView {
                                   VBox tradeStateViewRoot) {
         super(model,
                 controller,
-                null,
-                null,
                 chatMessagesComponent,
                 channelSidebar);
 

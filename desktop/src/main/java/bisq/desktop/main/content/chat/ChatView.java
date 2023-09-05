@@ -17,54 +17,38 @@
 
 package bisq.desktop.main.content.chat;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.main.MainView;
-import bisq.i18n.Res;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, ChatController<?, ?>> {
     protected final Label channelTitle = new Label();
     protected Button helpButton, infoButton;
-    protected final VBox left = new VBox();
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
     protected final HBox titleHBox = new HBox(10);
     protected final HBox containerHBox = new HBox();
-    protected final Region twoPartyPrivateChatChannelSelection;
     protected final Pane channelSidebar, chatMessagesComponent;
-    protected final SearchBox searchBox = new SearchBox();
-    protected final Region topSeparator = Layout.hLine();
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
 
     public ChatView(ChatModel model,
                     ChatController<?, ?> controller,
-                    @Nullable Region publicChannelSelection,
-                    @Nullable Region twoPartyPrivateChatChannelSelection,
                     Pane chatMessagesComponent,
                     Pane channelSidebar) {
         super(new AnchorPane(), model, controller);
-        this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;
+
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
-
-        if (publicChannelSelection != null && twoPartyPrivateChatChannelSelection != null) {
-            configLeftVBox(publicChannelSelection, twoPartyPrivateChatChannelSelection);
-        }
 
         configTitleHBox();
         configCenterVBox();
@@ -72,62 +56,13 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         configContainerHBox();
     }
 
-    protected void configLeftVBox(Region publicChannelSelection, Region twoPartyPrivateChatChannelSelection) {
-        left.getChildren().addAll(
-                publicChannelSelection,
-                Layout.hLine(),
-                twoPartyPrivateChatChannelSelection,
-                Spacer.fillVBox());
-        left.setPrefWidth(210);
-        left.setMinWidth(210);
-        left.setFillWidth(true);
-        left.getStyleClass().add("bisq-grey-2-bg");
-    }
+    protected abstract void configTitleHBox();
 
-    protected void configTitleHBox() {
-        channelTitle.setId("chat-messages-headline");
-        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 0));
-        searchBox.setPrefWidth(200);
-        helpButton = BisqIconButton.createIconButton("icon-help", model.getHelpTitle());
-        infoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
-        HBox.setMargin(infoButton, new Insets(0, 0, 0, -5));
+    protected abstract void configCenterVBox();
 
-        titleHBox.getChildren().addAll(
-                channelTitle,
-                Spacer.fillHBox(),
-                searchBox,
-                helpButton,
-                infoButton
-        );
-        titleHBox.setAlignment(Pos.CENTER);
-        titleHBox.setMinHeight(64);
-        titleHBox.setPadding(new Insets(0, 20, 0, 25));
-    }
+    protected abstract void configSideBarVBox();
 
-    protected void configCenterVBox() {
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.setMinWidth(700);
-        centerVBox.getChildren().addAll(titleHBox, topSeparator, chatMessagesComponent);
-        centerVBox.setFillWidth(true);
-    }
-
-    protected void configSideBarVBox() {
-        sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-grey-2-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
-    }
-
-    protected void configContainerHBox() {
-        containerHBox.setFillHeight(true);
-        Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
-        root.getChildren().add(containerHBox);
-
-        HBox.setHgrow(left, Priority.NEVER);
-        HBox.setHgrow(centerVBox, Priority.ALWAYS);
-        HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(left, centerVBox, sideBar);
-    }
+    protected abstract void configContainerHBox();
 
     @Override
     protected void onViewAttached() {
@@ -140,12 +75,6 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
         helpButton.setOnAction(e -> controller.onOpenHelp());
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
-        searchBox.textProperty().bindBidirectional(model.getSearchText());
-
-        if (twoPartyPrivateChatChannelSelection != null) {
-            twoPartyPrivateChatChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
-            twoPartyPrivateChatChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
-        }
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -179,15 +108,9 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         channelSidebar.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
-        if (twoPartyPrivateChatChannelSelection != null) {
-            twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
-            twoPartyPrivateChatChannelSelection.managedProperty().unbind();
-        }
 
         helpButton.setOnAction(null);
         infoButton.setOnAction(null);
-
-        searchBox.textProperty().unbindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription.unsubscribe();
         channelIconPin.unsubscribe();

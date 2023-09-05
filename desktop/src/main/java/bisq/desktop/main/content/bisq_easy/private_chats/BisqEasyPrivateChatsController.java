@@ -40,6 +40,7 @@ import java.util.Optional;
 public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPrivateChatsView, BisqEasyPrivateChatsModel> {
     private final BisqEasyPrivateChatsModel bisqEasyPrivateChatsModel;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
+
     private Pin channelItemPin;
     private Subscription selectedChannelItemPin;
 
@@ -78,12 +79,11 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     @Override
     public void onActivate() {
-        super.onActivate();
-
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ChannelItem>bind(model.getChannelItems())
                 .map(BisqEasyPrivateChatsView.ChannelItem::new)
                 .to(twoPartyPrivateChatChannelService.getChannels());
 
+        //todo handle case when no channels are available
         if (model.getSelectedChannelItem().get() == null && !model.getChannelItems().isEmpty()) {
             model.getSelectedChannelItem().set(model.getChannelItems().get(0));
         }
@@ -93,8 +93,6 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     @Override
     public void onDeactivate() {
-        super.onDeactivate();
-
         channelItemPin.unbind();
         selectedChannelItemPin.unsubscribe();
         resetSelectedChildTarget();

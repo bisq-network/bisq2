@@ -25,7 +25,10 @@ import bisq.desktop.main.content.chat.ChatView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +44,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
                                     Pane channelSidebar) {
         super(model,
                 controller,
-                null,
-                null,
                 chatMessagesComponent,
                 channelSidebar);
 
@@ -50,10 +51,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
         bisqEasyPrivateChatsModel = model;
 
         root.setPadding(new Insets(0, 0, -67, 0));
-    }
-
-    protected void configLeftVBox(Region publicChannelSelection,
-                                  Region twoPartyPrivateChatChannelSelection) {
     }
 
     protected void configTitleHBox() {
@@ -85,11 +82,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
     protected void configCenterVBox() {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
-
-        searchBox.setMaxWidth(200);
-        searchBox.setMinHeight(32);
-        searchBox.setMaxHeight(32);
-        searchBox.getStyleClass().add("small-search-box-light");
 
         VBox topPanelVBox = new VBox(titleHBox); //todo
         topPanelVBox.getStyleClass().add("bisq-easy-chat-tools-bg");

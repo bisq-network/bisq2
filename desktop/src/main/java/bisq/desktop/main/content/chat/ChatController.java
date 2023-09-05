@@ -23,10 +23,7 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
@@ -34,15 +31,12 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.main.content.chat.channels.TwoPartyPrivateChannelSelectionMenu;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.main.content.components.ChatMessagesComponent;
-import bisq.desktop.main.content.components.CitationBlock;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -51,8 +45,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -64,21 +56,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class ChatController<V extends ChatView, M extends ChatModel> extends NavigationController {
-    protected final ChatService chatService;
     @Getter
     protected final M model;
-    protected final UserProfileService userProfileService;
-    private final ReputationService reputationService;
     @Getter
-    protected V view;
-    protected final UserIdentityService userIdentityService;
+    protected final V view;
     protected final ServiceProvider serviceProvider;
-    protected final TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
+    protected final ChatService chatService;
+    protected final UserIdentityService userIdentityService;
+    protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
-    protected final CitationBlock citationBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
-    protected Pin twoPartyPrivateChatChannelsPin;
-    private Subscription searchTextPin;
 
     public ChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
@@ -87,18 +74,16 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         chatService = serviceProvider.getChatService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        reputationService = serviceProvider.getUserService().getReputationService();
-        twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(serviceProvider, chatChannelDomain);
+
         chatMessagesComponent = new ChatMessagesComponent(serviceProvider,
                 chatChannelDomain,
                 this::openUserProfileSidebar);
         channelSidebar = new ChannelSidebar(serviceProvider,
                 () -> {
-                    onCloseSideBar();
+                    doCloseSideBar();
                     chatMessagesComponent.resetSelectedChatMessage();
                 },
                 this::openUserProfileSidebar);
-        citationBlock = new CitationBlock(serviceProvider);
 
         createDependencies(chatChannelDomain);
 
@@ -112,38 +97,15 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     public abstract V createAndGetView();
 
-    @Override
-    public void onActivate() {
-        model.getSearchText().set("");
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
-            if (searchText == null || searchText.isEmpty()) {
-                chatMessagesComponent.setSearchPredicate(item -> true);
-            } else {
-                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
-            }
-        });
-
-        ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
-        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addListener(() -> {
-            model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty());
-        });
-    }
-
-    @Override
-    public void onDeactivate() {
-        searchTextPin.unsubscribe();
-        twoPartyPrivateChatChannelsPin.unbind();
-    }
-
     protected void openUserProfileSidebar(UserProfile userProfile) {
-        onCloseSideBar();
+        doCloseSideBar();
         model.getSideBarVisible().set(true);
 
         UserProfileSidebar userProfileSidebar = new UserProfileSidebar(serviceProvider,
                 userProfile,
                 model.getSelectedChannel(),
                 () -> {
-                    onCloseSideBar();
+                    doCloseSideBar();
                     chatMessagesComponent.resetSelectedChatMessage();
                 });
         model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
@@ -156,8 +118,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     protected void chatChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
-            model.getSearchText().set("");
-
             model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
                     .map(service -> service.getChannelTitle(Objects.requireNonNull(chatChannel)))
                     .orElse(""));
@@ -170,49 +130,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                 showChannelInfo();
             }
         });
-    }
-
-    public void onToggleChannelInfo() {
-        boolean visible = !model.getChannelSidebarVisible().get();
-        onCloseSideBar();
-        chatMessagesComponent.resetSelectedChatMessage();
-        model.getChannelSidebarVisible().set(visible);
-        model.getSideBarVisible().set(visible);
-        if (visible) {
-            showChannelInfo();
-        }
-    }
-
-    public void onOpenHelp() {
-        if (model.chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
-        } else {
-            Navigation.navigateTo(NavigationTarget.CHAT_RULES);
-        }
-    }
-
-    public void onCloseSideBar() {
-        doCloseSideBar();
-    }
-
-    public void showChannelInfo() {
-        channelSidebar.setChannel(model.getSelectedChannel());
-        channelSidebar.setOnUndoIgnoreChatUser(() -> {
-            chatMessagesComponent.refreshMessages();
-            channelSidebar.setChannel(model.getSelectedChannel());
-        });
-    }
-
-    protected void cleanupChatUserDetails() {
-        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));
-        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessageHandler(null));
-        model.getChatUserDetails().ifPresent(e -> e.setIgnoreUserStateHandler(null));
-        model.setChatUserDetails(Optional.empty());
-        model.getChatUserDetailsRoot().set(null);
-    }
-
-    protected void cleanupChannelInfo() {
-        channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
@@ -266,16 +183,27 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         }
     }
 
-    protected void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
-        String iconId = "channels-" + channel.getId().replace(".", "-");
-        Button iconButton = BisqIconButton.createIconButton(iconId);
-        //todo get larger icons and dont use scaling
-        iconButton.setScaleX(1.25);
-        iconButton.setScaleY(1.25);
-        model.getChannelIconNode().set(iconButton);
+    void onToggleChannelInfo() {
+        boolean visible = !model.getChannelSidebarVisible().get();
+        doCloseSideBar();
+        chatMessagesComponent.resetSelectedChatMessage();
+        model.getChannelSidebarVisible().set(visible);
+        model.getSideBarVisible().set(visible);
+        if (visible) {
+            showChannelInfo();
+        }
     }
 
-    protected void doCloseSideBar() {
+    void onOpenHelp() {
+        if (model.chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+        } else {
+            Navigation.navigateTo(NavigationTarget.CHAT_RULES);
+        }
+    }
+    
+
+    private void doCloseSideBar() {
         model.getSideBarVisible().set(false);
         model.getSideBarWidth().set(0);
         model.getChannelSidebarVisible().set(false);
@@ -283,5 +211,25 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
         cleanupChatUserDetails();
         cleanupChannelInfo();
+    }
+
+    private void showChannelInfo() {
+        channelSidebar.setChannel(model.getSelectedChannel());
+        channelSidebar.setOnUndoIgnoreChatUser(() -> {
+            chatMessagesComponent.refreshMessages();
+            channelSidebar.setChannel(model.getSelectedChannel());
+        });
+    }
+
+    private void cleanupChatUserDetails() {
+        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessageHandler(null));
+        model.getChatUserDetails().ifPresent(e -> e.setIgnoreUserStateHandler(null));
+        model.setChatUserDetails(Optional.empty());
+        model.getChatUserDetailsRoot().set(null);
+    }
+
+    private void cleanupChannelInfo() {
+        channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 }

@@ -22,6 +22,8 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -38,7 +40,7 @@ public class BisqEasyOfferbookModel extends ChatModel {
     private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
-
+    private final StringProperty searchText = new SimpleStringProperty();
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

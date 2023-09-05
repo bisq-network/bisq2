@@ -38,6 +38,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public abstract class ChatModel extends NavigationModel {
+    protected final ChatChannelDomain chatChannelDomain;
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty channelTitle = new SimpleStringProperty("");
@@ -48,9 +49,6 @@ public abstract class ChatModel extends NavigationModel {
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelSidebarVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Node> channelIconNode = new SimpleObjectProperty<>();
-    private final StringProperty searchText = new SimpleStringProperty();
-    protected final BooleanProperty isTwoPartyPrivateChatChannelSelectionVisible = new SimpleBooleanProperty();
-    protected final ChatChannelDomain chatChannelDomain;
     private final String helpTitle;
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
