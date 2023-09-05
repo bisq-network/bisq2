@@ -105,10 +105,19 @@ public class ProgressBarWithLabel extends VBox {
             }
             scheduler = UIScheduler.run(() -> {
                 label.setText(getText() + postFix);
-                if (postFix.length() < 3) {
-                    postFix += ".";
-                } else {
-                    postFix = "";
+                switch (postFix) {
+                    case "   ":
+                        postFix = ".  ";
+                        break;
+                    case ".  ":
+                        postFix = ".. ";
+                        break;
+                    case ".. ":
+                        postFix = "...";
+                        break;
+                    default:
+                        postFix = "   ";
+                        break;
                 }
             }).periodically(300, TimeUnit.MILLISECONDS);
         } else {
