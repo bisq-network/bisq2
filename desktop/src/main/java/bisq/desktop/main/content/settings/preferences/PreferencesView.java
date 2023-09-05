@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -87,7 +89,10 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 return null;
             }
         });
-        addSupportedLanguageButton = new Button(Res.get("settings.preferences.language.supported.add"));
+
+        Label icon = Icons.getIcon(AwesomeIcon.CIRCLE_ARROW_RIGHT);
+        addSupportedLanguageButton = new Button(Res.get("settings.preferences.language.supported.add"), icon);
+        addSupportedLanguageButton.setGraphicTextGap(5);
         addSupportedLanguageButton.setDefaultButton(true);
         addSupportedLanguageButton.setMinWidth(240);
         HBox selectionAndButtonHBox = new HBox(20, supportedLanguageSelection, addSupportedLanguageButton);
