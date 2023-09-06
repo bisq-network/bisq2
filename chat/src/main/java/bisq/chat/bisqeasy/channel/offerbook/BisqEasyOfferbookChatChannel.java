@@ -30,7 +30,7 @@ import lombok.ToString;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
+public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase() + "." +
                 market.getBaseCurrencyCode() + "-" +
@@ -39,11 +39,11 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
 
     private final Market market;
 
-    public BisqEasyPublicChatChannel(Market market) {
+    public BisqEasyOfferbookChatChannel(Market market) {
         this(createId(market), market);
     }
 
-    private BisqEasyPublicChatChannel(String id, Market market) {
+    private BisqEasyOfferbookChatChannel(String id, Market market) {
         super(id, ChatChannelDomain.BISQ_EASY_OFFERBOOK, ChatChannelNotificationType.ALL);
 
         this.market = market;
@@ -56,9 +56,9 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
                 .build();
     }
 
-    public static BisqEasyPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                      bisq.chat.protobuf.BisqEasyPublicChatChannel proto) {
-        return new BisqEasyPublicChatChannel(
+    public static BisqEasyOfferbookChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                         bisq.chat.protobuf.BisqEasyPublicChatChannel proto) {
+        return new BisqEasyOfferbookChatChannel(
                 baseProto.getId(),
                 Market.fromProto(proto.getMarket()));
     }

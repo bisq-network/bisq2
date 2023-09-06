@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.components;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
@@ -192,8 +192,8 @@ public class ChatMessagesListView {
                         chatMessagesPin.unbind();
                     }
 
-                    if (channel instanceof BisqEasyPublicChatChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyPublicChatChannel) channel);
+                    if (channel instanceof BisqEasyOfferbookChatChannel) {
+                        chatMessagesPin = bindChatMessages((BisqEasyOfferbookChatChannel) channel);
                     } else if (channel instanceof BisqEasyPrivateTradeChatChannel) {
                         chatMessagesPin = bindChatMessages((BisqEasyPrivateTradeChatChannel) channel);
                     } else if (channel instanceof CommonPublicChatChannel) {
@@ -323,7 +323,7 @@ public class ChatMessagesListView {
 
             if (chatMessage instanceof BisqEasyPublicChatMessage) {
                 BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity.getNodeIdAndKeyPair())
+                chatService.getBisqEasyOfferbookChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity.getNodeIdAndKeyPair())
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
                                 log.error("We got an error at doDeleteMessage: " + throwable);
@@ -356,7 +356,7 @@ public class ChatMessagesListView {
             UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             if (chatMessage instanceof BisqEasyPublicChatMessage) {
                 BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                chatService.getBisqEasyPublicChatChannelService().publishEditedChatMessage(bisqEasyPublicChatMessage, editedText, userIdentity);
+                chatService.getBisqEasyOfferbookChatChannelService().publishEditedChatMessage(bisqEasyPublicChatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof CommonPublicChatMessage) {
                 CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
                 chatService.getCommonPublicChatChannelServices().get(model.chatChannelDomain).publishEditedChatMessage(commonPublicChatMessage, editedText, userIdentity);

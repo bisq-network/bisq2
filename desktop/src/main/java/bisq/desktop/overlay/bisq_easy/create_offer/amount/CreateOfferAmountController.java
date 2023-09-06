@@ -19,8 +19,8 @@ package bisq.desktop.overlay.bisq_easy.create_offer.amount;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -69,7 +69,7 @@ public class CreateOfferAmountController implements Controller {
     private final AmountComponent minAmountComponent, maxOrFixAmountComponent;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
-    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
+    private final BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
@@ -82,7 +82,7 @@ public class CreateOfferAmountController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        bisqEasyPublicChatChannelService = serviceProvider.getChatService().getBisqEasyPublicChatChannelService();
+        bisqEasyOfferbookChatChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChatChannelService();
         model = new CreateOfferAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
@@ -313,7 +313,7 @@ public class CreateOfferAmountController implements Controller {
     }
 
     private void applyBestOfferQuote() {
-        Optional<BisqEasyPublicChatChannel> optionalChannel = bisqEasyPublicChatChannelService.findChannel(model.getMarket());
+        Optional<BisqEasyOfferbookChatChannel> optionalChannel = bisqEasyOfferbookChatChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent() && model.getMarket() != null) {
             Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())

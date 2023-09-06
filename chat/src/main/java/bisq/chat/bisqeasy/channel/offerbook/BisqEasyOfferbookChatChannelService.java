@@ -42,17 +42,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class BisqEasyPublicChatChannelService extends PublicChatChannelService<BisqEasyPublicChatMessage, BisqEasyPublicChatChannel, BisqEasyPublicChatChannelStore> {
+public class BisqEasyOfferbookChatChannelService extends PublicChatChannelService<BisqEasyPublicChatMessage, BisqEasyOfferbookChatChannel, BisqEasyOfferbookChatChannelStore> {
     @Getter
-    private final BisqEasyPublicChatChannelStore persistableStore = new BisqEasyPublicChatChannelStore();
+    private final BisqEasyOfferbookChatChannelStore persistableStore = new BisqEasyOfferbookChatChannelStore();
     @Getter
-    private final Persistence<BisqEasyPublicChatChannelStore> persistence;
+    private final Persistence<BisqEasyOfferbookChatChannelStore> persistence;
     @Getter
     private final Observable<Integer> numVisibleChannels = new Observable<>(0);
 
-    public BisqEasyPublicChatChannelService(PersistenceService persistenceService,
-                                            NetworkService networkService,
-                                            UserService userService) {
+    public BisqEasyOfferbookChatChannelService(PersistenceService persistenceService,
+                                               NetworkService networkService,
+                                               UserService userService) {
         super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
 
@@ -62,21 +62,21 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     }
 
     @Override
-    public void onPersistedApplied(BisqEasyPublicChatChannelStore persisted) {
+    public void onPersistedApplied(BisqEasyOfferbookChatChannelStore persisted) {
     }
 
-    public void joinChannel(BisqEasyPublicChatChannel channel) {
+    public void joinChannel(BisqEasyOfferbookChatChannel channel) {
         getVisibleChannelIds().add(channel.getId());
         persist();
     }
 
     @Override
-    public void leaveChannel(BisqEasyPublicChatChannel channel) {
+    public void leaveChannel(BisqEasyOfferbookChatChannel channel) {
         getVisibleChannelIds().remove(channel.getId());
         persist();
     }
 
-    public boolean isVisible(BisqEasyPublicChatChannel channel) {
+    public boolean isVisible(BisqEasyOfferbookChatChannel channel) {
         return getVisibleChannelIds().contains(channel.getId());
     }
 
@@ -84,7 +84,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         return persistableStore.getVisibleChannelIds();
     }
 
-    public Set<BisqEasyPublicChatChannel> getVisibleChannels() {
+    public Set<BisqEasyOfferbookChatChannel> getVisibleChannels() {
         return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
     }
 
@@ -115,16 +115,16 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<BisqEasyPublicChatChannel> getChannels() {
+    public ObservableArray<BisqEasyOfferbookChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
-    public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
-        return findChannel(BisqEasyPublicChatChannel.createId(market));
+    public Optional<BisqEasyOfferbookChatChannel> findChannel(Market market) {
+        return findChannel(BisqEasyOfferbookChatChannel.createId(market));
     }
 
     @Override
-    public Optional<BisqEasyPublicChatChannel> getDefaultChannel() {
+    public Optional<BisqEasyOfferbookChatChannel> getDefaultChannel() {
         Market defaultMarket = MarketRepository.getDefault();
         return getChannels().stream()
                 .filter(this::isVisible)
@@ -149,7 +149,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     @Override
     protected BisqEasyPublicChatMessage createChatMessage(String text,
                                                           Optional<Citation> citation,
-                                                          BisqEasyPublicChatChannel publicChannel,
+                                                          BisqEasyOfferbookChatChannel publicChannel,
                                                           UserProfile userProfile) {
         return new BisqEasyPublicChatMessage(publicChannel.getId(),
                 userProfile.getId(),
@@ -176,19 +176,19 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     @Override
     protected void maybeAddDefaultChannels() {
         if (getChannels().isEmpty()) {
-            BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
+            BisqEasyOfferbookChatChannel defaultChannel = new BisqEasyOfferbookChatChannel(MarketRepository.getDefault());
             joinChannel(defaultChannel);
             maybeAddPublicTradeChannel(defaultChannel);
 
             List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
             allMarkets.remove(MarketRepository.getDefault());
-            allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyPublicChatChannel(market)));
+            allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChatChannel(market)));
         } else if (getNumVisibleChannels().get() == 0) {
             findChannel(MarketRepository.getDefault()).ifPresent(this::joinChannel);
         }
     }
 
-    private void maybeAddPublicTradeChannel(BisqEasyPublicChatChannel channel) {
+    private void maybeAddPublicTradeChannel(BisqEasyOfferbookChatChannel channel) {
         if (!getChannels().contains(channel)) {
             getChannels().add(channel);
         }

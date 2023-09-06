@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
@@ -185,8 +185,8 @@ public class ChannelSidebar {
                         .map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile))
                         .sorted()
                         .collect(Collectors.toList()));
-            } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
-                model.description.set(((BisqEasyPublicChatChannel) chatChannel).getDescription());
+            } else if (chatChannel instanceof BisqEasyOfferbookChatChannel) {
+                model.description.set(((BisqEasyOfferbookChatChannel) chatChannel).getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();

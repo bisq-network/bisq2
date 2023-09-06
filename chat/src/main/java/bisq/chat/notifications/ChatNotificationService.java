@@ -18,8 +18,8 @@
 package bisq.chat.notifications;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
@@ -128,9 +128,9 @@ public class ChatNotificationService implements Service {
         bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
                 onChatChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
 
-        BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
-        bisqEasyPublicChatChannelService.getChannels().addListener(() ->
-                onChatChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
+        BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService = chatService.getBisqEasyOfferbookChatChannelService();
+        bisqEasyOfferbookChatChannelService.getChannels().addListener(() ->
+                onChatChannelsChanged(bisqEasyOfferbookChatChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
                 .forEach(commonPublicChatChannelService -> {
@@ -297,8 +297,8 @@ public class ChatNotificationService implements Service {
                 if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasBisqEasyOffer()) {
                     return;
                 }
-                BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
-                if (!chatService.getBisqEasyPublicChatChannelService().isVisible(bisqEasyPublicChatChannel)) {
+                BisqEasyOfferbookChatChannel bisqEasyOfferbookChatChannel = (BisqEasyOfferbookChatChannel) chatChannel;
+                if (!chatService.getBisqEasyOfferbookChatChannelService().isVisible(bisqEasyOfferbookChatChannel)) {
                     return;
                 }
             }

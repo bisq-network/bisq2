@@ -21,7 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
@@ -205,7 +205,7 @@ public class ChatMessagesComponent {
                 model.selectedChannel.set(chatChannel);
                 applyUserProfileOrChannelChange();
 
-                boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyPublicChatChannel;
+                boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyOfferbookChatChannel;
                 boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyPrivateTradeChatChannel;
                 boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
                 model.getLeaveChannelButtonVisible().set(false);
@@ -400,7 +400,7 @@ public class ChatMessagesComponent {
                 return;
             }
 
-            if (chatChannel instanceof BisqEasyPublicChatChannel) {
+            if (chatChannel instanceof BisqEasyOfferbookChatChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("chat.message.send..offerOnly.warn"))
@@ -410,7 +410,7 @@ public class ChatMessagesComponent {
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
-                chatService.getBisqEasyPublicChatChannelService().publishChatMessage(text, citation, (BisqEasyPublicChatChannel) chatChannel, userIdentity);
+                chatService.getBisqEasyOfferbookChatChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChatChannel) chatChannel, userIdentity);
             } else if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
                 if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyPrivateTradeChatChannel) chatChannel).isMediator()) {
                     chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(text, citation, (BisqEasyPrivateTradeChatChannel) chatChannel);

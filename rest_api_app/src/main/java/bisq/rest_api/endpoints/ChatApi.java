@@ -62,7 +62,7 @@ public class ChatApi {
                     )}
     )
     public List<BisqEasyPublicChatChannelDto> getPublicTradeChannels() {
-        return chatService.getBisqEasyPublicChatChannelService().getChannels().stream()
+        return chatService.getBisqEasyOfferbookChatChannelService().getChannels().stream()
                 .map(chatChannel -> BisqEasyPublicChatChannelDto.from(chatService, chatChannel))
                 .collect(Collectors.toList());
     }

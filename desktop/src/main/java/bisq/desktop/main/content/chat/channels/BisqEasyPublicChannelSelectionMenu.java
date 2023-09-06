@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.chat.channels;
 
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
@@ -70,8 +70,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 //todo remove
 @Slf4j
 public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMenu<
-        BisqEasyPublicChatChannel,
-        BisqEasyPublicChatChannelService,
+        BisqEasyOfferbookChatChannel,
+        BisqEasyOfferbookChatChannelService,
         BisqEasyOfferbookChannelSelectionService
         > {
     @Getter
@@ -84,8 +84,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
     protected static class Controller extends PublicChannelSelectionMenu.Controller<
             View,
             Model,
-            BisqEasyPublicChatChannel,
-            BisqEasyPublicChatChannelService,
+            BisqEasyOfferbookChatChannel,
+            BisqEasyOfferbookChatChannelService,
             BisqEasyOfferbookChannelSelectionService
             > {
 
@@ -96,8 +96,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         }
 
         @Override
-        protected BisqEasyPublicChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
-            return chatService.getBisqEasyPublicChatChannelService();
+        protected BisqEasyOfferbookChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getBisqEasyOfferbookChatChannelService();
         }
 
         @Override
@@ -171,7 +171,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             }
         }
 
-        void onLeaveChannel(BisqEasyPublicChatChannel channel) {
+        void onLeaveChannel(BisqEasyOfferbookChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
                     .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
                     .filter(publicTradeChatMessage -> publicTradeChatMessage.isMyMessage(userIdentityService))
@@ -193,9 +193,9 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         @Override
         protected void applyPredicate() {
             model.filteredChannels.setPredicate(item -> {
-                checkArgument(item.getChatChannel() instanceof BisqEasyPublicChatChannel,
+                checkArgument(item.getChatChannel() instanceof BisqEasyOfferbookChatChannel,
                         "Channel must be type of PublicTradeChannel");
-                BisqEasyPublicChatChannel channel = (BisqEasyPublicChatChannel) item.getChatChannel();
+                BisqEasyOfferbookChatChannel channel = (BisqEasyOfferbookChatChannel) item.getChatChannel();
                 return chatChannelService.isVisible(channel);
             });
         }
@@ -341,9 +341,9 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChatChannel() instanceof BisqEasyPublicChatChannel) {
-                        BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) item.getChatChannel();
-                        Market market = bisqEasyPublicChatChannel.getMarket();
+                    if (item != null && !empty && item.getChatChannel() instanceof BisqEasyOfferbookChatChannel) {
+                        BisqEasyOfferbookChatChannel bisqEasyOfferbookChatChannel = (BisqEasyOfferbookChatChannel) item.getChatChannel();
+                        Market market = bisqEasyOfferbookChatChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());
 
@@ -362,7 +362,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                         });
 
                         removeChannelIcon.setOpacity(0);
-                        removeChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyPublicChatChannel));
+                        removeChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyOfferbookChatChannel));
                         setOnMouseClicked(e -> Transitions.fadeIn(removeChannelIcon));
                         setOnMouseEntered(e -> {
                             Transitions.fadeIn(removeChannelIcon);
@@ -419,9 +419,9 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         @Getter
         private static class MarketChannelItem {
             private final Market market;
-            private final BisqEasyPublicChatChannel channel;
+            private final BisqEasyOfferbookChatChannel channel;
 
-            public MarketChannelItem(BisqEasyPublicChatChannel channel) {
+            public MarketChannelItem(BisqEasyOfferbookChatChannel channel) {
                 this.channel = channel;
                 market = channel.getMarket();
             }
