@@ -17,7 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.contract.ContractService;

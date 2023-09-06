@@ -19,8 +19,8 @@ package bisq.desktop.overlay.bisq_easy.create_offer.market;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;

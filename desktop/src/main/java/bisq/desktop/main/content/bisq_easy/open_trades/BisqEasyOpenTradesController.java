@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;

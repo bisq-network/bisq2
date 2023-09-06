@@ -18,7 +18,7 @@
 package bisq.desktop.overlay.bisq_easy.create_offer.review;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;

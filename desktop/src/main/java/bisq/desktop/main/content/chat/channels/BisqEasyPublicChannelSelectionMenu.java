@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.chat.channels;
 
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;

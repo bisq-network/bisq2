@@ -19,8 +19,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.util.FileUtils;
 import bisq.desktop.ServiceProvider;

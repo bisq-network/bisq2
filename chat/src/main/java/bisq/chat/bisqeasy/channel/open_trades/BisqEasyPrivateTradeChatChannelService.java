@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisqeasy.channel.priv;
+package bisq.chat.bisqeasy.channel.open_trades;
 
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.channel.ChatChannelDomain;

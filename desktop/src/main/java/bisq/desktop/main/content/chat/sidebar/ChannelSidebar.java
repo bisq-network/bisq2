@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;

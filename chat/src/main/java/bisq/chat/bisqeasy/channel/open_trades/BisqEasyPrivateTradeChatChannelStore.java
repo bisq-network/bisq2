@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisqeasy.channel.priv;
+package bisq.chat.bisqeasy.channel.open_trades;
 
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.proto.ProtoResolver;

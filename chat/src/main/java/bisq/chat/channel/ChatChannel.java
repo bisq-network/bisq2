@@ -17,8 +17,8 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
