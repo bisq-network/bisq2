@@ -47,6 +47,8 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
     private final BisqEasyOfferbookChatChannelStore persistableStore = new BisqEasyOfferbookChatChannelStore();
     @Getter
     private final Persistence<BisqEasyOfferbookChatChannelStore> persistence;
+
+    //todo not useful anymore. consider to remove it
     @Getter
     private final Observable<Integer> numVisibleChannels = new Observable<>(0);
 
@@ -65,6 +67,7 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
     public void onPersistedApplied(BisqEasyOfferbookChatChannelStore persisted) {
     }
 
+    //todo not useful anymore. consider to remove it
     public void joinChannel(BisqEasyOfferbookChatChannel channel) {
         getVisibleChannelIds().add(channel.getId());
         persist();
@@ -76,14 +79,17 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
         persist();
     }
 
+    //todo not useful anymore. consider to remove it
     public boolean isVisible(BisqEasyOfferbookChatChannel channel) {
         return getVisibleChannelIds().contains(channel.getId());
     }
 
+    //todo not useful anymore. consider to remove it
     public ObservableSet<String> getVisibleChannelIds() {
         return persistableStore.getVisibleChannelIds();
     }
 
+    //todo not useful anymore. consider to remove it
     public Set<BisqEasyOfferbookChatChannel> getVisibleChannels() {
         return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
     }

@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 @Getter
 public class BisqEasyOfferbookChatChannelStore implements PersistableStore<BisqEasyOfferbookChatChannelStore> {
     private final ObservableArray<BisqEasyOfferbookChatChannel> channels = new ObservableArray<>();
+    //todo not useful anymore. consider to remove it
     private final ObservableSet<String> visibleChannelIds = new ObservableSet<>();
 
     public BisqEasyOfferbookChatChannelStore() {

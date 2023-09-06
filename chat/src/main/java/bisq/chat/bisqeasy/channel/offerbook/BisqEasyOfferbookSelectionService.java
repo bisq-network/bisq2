@@ -25,7 +25,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -47,8 +47,12 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel != null) {
+        if (chatChannel instanceof BisqEasyOfferbookChatChannel) {
             channelService.removeExpiredMessages(chatChannel);
+            if (selectedChannel.get() != null) {
+                channelService.leaveChannel(selectedChannel.get().getId());
+            }
+            channelService.joinChannel((BisqEasyOfferbookChatChannel) chatChannel);
         }
         super.selectChannel(chatChannel);
     }
@@ -61,17 +65,8 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
 
     @Override
     public void maybeSelectFirstChannel() {
-        Set<BisqEasyOfferbookChatChannel> visibleBisqEasyOfferbookChatChannels = getVisibleChannels();
-        if (!visibleBisqEasyOfferbookChatChannels.isEmpty()) {
-            selectChannel(getVisibleChannels().stream().findFirst().orElse(null));
-        } else if (!channelService.getChannels().isEmpty()) {
-            selectChannel(channelService.getChannels().stream().findFirst().orElse(null));
-        } else {
-            selectChannel(null);
-        }
-    }
-
-    private Set<BisqEasyOfferbookChatChannel> getVisibleChannels() {
-        return channelService.getVisibleChannels();
+        selectChannel(Optional.ofNullable((BisqEasyOfferbookChatChannel) getSelectedChannel().get())
+                .or(() -> channelService.getChannels().stream().findFirst())
+                .orElse(null));
     }
 }

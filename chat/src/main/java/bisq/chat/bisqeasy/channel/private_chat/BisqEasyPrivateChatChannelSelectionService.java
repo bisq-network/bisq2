@@ -54,8 +54,10 @@ public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelec
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
-        userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
+        if (chatChannel != null) {
+            PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
+            userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
+        }
         super.selectChannel(chatChannel);
     }
 
