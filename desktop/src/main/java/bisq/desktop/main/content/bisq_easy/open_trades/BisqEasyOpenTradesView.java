@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trade.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;

@@ -21,7 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trade.BisqEasyOpenTradeChannel;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.ServiceProvider;

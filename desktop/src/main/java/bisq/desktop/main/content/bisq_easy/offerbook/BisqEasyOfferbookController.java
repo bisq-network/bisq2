@@ -23,7 +23,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trade.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
