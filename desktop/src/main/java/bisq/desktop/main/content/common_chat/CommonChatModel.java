@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.common_chat;
 
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;

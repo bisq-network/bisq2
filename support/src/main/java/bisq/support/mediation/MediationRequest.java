@@ -17,7 +17,7 @@
 
 package bisq.support.mediation;
 
-import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyPrivateTradeChatMessage;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;

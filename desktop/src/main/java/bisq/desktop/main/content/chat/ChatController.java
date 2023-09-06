@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.chat;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.priv.PrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;

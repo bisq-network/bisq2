@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.chat.sidebar;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.Navigation;

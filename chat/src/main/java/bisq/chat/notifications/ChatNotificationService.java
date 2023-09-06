@@ -17,19 +17,14 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.ChatMessageType;
-import bisq.chat.message.PublicChatMessage;
+import bisq.chat.*;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.pub.PublicChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;

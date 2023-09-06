@@ -19,8 +19,8 @@ package bisq.desktop.overlay.bisq_easy.create_offer.amount;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;

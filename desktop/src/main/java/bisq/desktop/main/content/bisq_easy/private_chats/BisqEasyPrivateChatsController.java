@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.channel.private_chat.BisqEasyPrivateChatChannelSelectionService;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.private_chat.BisqEasyPrivateChatChannelSelectionService;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;

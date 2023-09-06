@@ -1,7 +1,7 @@
 package bisq.rest_api.endpoints;
 
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChatChannelDomain;
 import bisq.rest_api.RestApiApp;
 import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.BisqEasyPublicChatChannelDto;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.common.currency.Market;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

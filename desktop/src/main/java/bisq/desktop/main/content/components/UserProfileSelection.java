@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.priv.PrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;

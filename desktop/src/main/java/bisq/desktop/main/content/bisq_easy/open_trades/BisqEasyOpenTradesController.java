@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesSelectionService;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradesSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;

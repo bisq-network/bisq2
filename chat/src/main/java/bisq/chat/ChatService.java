@@ -17,24 +17,20 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookSelectionService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesSelectionService;
-import bisq.chat.bisqeasy.channel.private_chat.BisqEasyPrivateChatChannelSelectionService;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.ChatChannelService;
-import bisq.chat.channel.priv.PrivateChatChannelService;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
-import bisq.chat.channel.pub.CommonChannelSelectionService;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradesSelectionService;
+import bisq.chat.bisqeasy.private_chat.BisqEasyPrivateChatChannelSelectionService;
+import bisq.chat.common.CommonChannelSelectionService;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.PrivateChatChannelService;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;

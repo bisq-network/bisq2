@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.desktop.ServiceProvider;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

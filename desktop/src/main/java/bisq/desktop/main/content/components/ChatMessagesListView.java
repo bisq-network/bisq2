@@ -17,19 +17,19 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.chat.channel.pub.PublicChatChannel;
-import bisq.chat.message.*;
+import bisq.chat.*;
+import bisq.chat.bisqeasy.BisqEasyOfferMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.pub.PublicChatMessage;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;

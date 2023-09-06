@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.chat;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;

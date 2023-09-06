@@ -17,9 +17,9 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.PrivateChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
+import bisq.chat.priv.PrivateChatMessage;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;

@@ -19,8 +19,8 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;

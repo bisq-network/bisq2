@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.chat.sidebar;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.common.CommonPublicChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;

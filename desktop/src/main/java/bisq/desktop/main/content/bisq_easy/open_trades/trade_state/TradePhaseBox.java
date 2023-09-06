@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;

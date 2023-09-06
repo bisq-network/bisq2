@@ -17,14 +17,14 @@
 
 package bisq.desktop.main.content.common_chat;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.chat.channel.pub.PublicChatChannel;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.priv.PrivateChatChannel;
+import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;

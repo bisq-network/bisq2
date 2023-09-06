@@ -19,10 +19,10 @@ package bisq.desktop.overlay.bisq_easy.take_offer.review;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;

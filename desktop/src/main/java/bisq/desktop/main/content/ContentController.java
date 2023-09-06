@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content;
 
-import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;

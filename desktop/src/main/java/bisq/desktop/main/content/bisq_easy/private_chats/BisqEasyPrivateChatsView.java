@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;

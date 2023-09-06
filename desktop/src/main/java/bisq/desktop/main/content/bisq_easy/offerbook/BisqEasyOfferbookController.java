@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookSelectionService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;

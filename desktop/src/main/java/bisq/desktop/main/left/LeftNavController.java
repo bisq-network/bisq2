@@ -18,7 +18,7 @@
 package bisq.desktop.main.left;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;

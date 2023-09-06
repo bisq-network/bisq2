@@ -17,14 +17,10 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.ChatChannelService;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.channel.pub.PublicChatChannel;
-import bisq.chat.channel.pub.PublicChatChannelService;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.*;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.pub.PublicChatChannelService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
