@@ -197,23 +197,25 @@ public class CreateOfferAmountController implements Controller {
 
         minAmountCompQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
                 value -> {
-                    if (model.getIsMinAmountEnabled().get()) {
-                        if (value != null && maxOrFixAmountComponent.getQuoteSideAmount().get() != null &&
+                    if (value != null) {
+                        if (model.getIsMinAmountEnabled().get() &&
+                                maxOrFixAmountComponent.getQuoteSideAmount().get() != null &&
                                 value.getValue() > maxOrFixAmountComponent.getQuoteSideAmount().get().getValue()) {
                             maxOrFixAmountComponent.setQuoteSideAmount(value);
-
                         }
+                        applyAmountSpec();
                     }
-                    applyAmountSpec();
                 });
         maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getQuoteSideAmount(),
                 value -> {
-                    if (model.getIsMinAmountEnabled().get() &&
-                            value != null && minAmountComponent.getQuoteSideAmount().get() != null &&
-                            value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
-                        minAmountComponent.setQuoteSideAmount(value);
+                    if (value != null) {
+                        if (model.getIsMinAmountEnabled().get() &&
+                                minAmountComponent.getQuoteSideAmount().get() != null &&
+                                value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
+                            minAmountComponent.setQuoteSideAmount(value);
+                        }
+                        applyAmountSpec();
                     }
-                    applyAmountSpec();
                 });
 
         isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
