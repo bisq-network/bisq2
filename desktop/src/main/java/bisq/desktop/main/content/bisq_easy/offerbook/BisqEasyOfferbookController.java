@@ -158,6 +158,8 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
 
         if (chatChannel instanceof BisqEasyOfferbookChatChannel) {
             UIThread.run(() -> {
+                updateMarketItemsPredicate();
+
                 model.getSearchText().set("");
                 resetSelectedChildTarget();
 

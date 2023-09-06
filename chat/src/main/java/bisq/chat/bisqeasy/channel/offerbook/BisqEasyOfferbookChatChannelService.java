@@ -24,7 +24,6 @@ import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.Citation;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
@@ -48,19 +47,11 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
     @Getter
     private final Persistence<BisqEasyOfferbookChatChannelStore> persistence;
 
-    //todo not useful anymore. consider to remove it
-    @Getter
-    private final Observable<Integer> numVisibleChannels = new Observable<>(0);
-
     public BisqEasyOfferbookChatChannelService(PersistenceService persistenceService,
                                                NetworkService networkService,
                                                UserService userService) {
         super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-
-        getVisibleChannelIds().addListener(() -> {
-            numVisibleChannels.set(getVisibleChannelIds().size());
-        });
     }
 
     @Override
@@ -189,8 +180,6 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
             List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
             allMarkets.remove(MarketRepository.getDefault());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChatChannel(market)));
-        } else if (getNumVisibleChannels().get() == 0) {
-            findChannel(MarketRepository.getDefault()).ifPresent(this::joinChannel);
         }
     }
 

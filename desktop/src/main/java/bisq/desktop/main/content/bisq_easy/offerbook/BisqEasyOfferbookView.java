@@ -54,7 +54,7 @@ public class BisqEasyOfferbookView extends ChatView {
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
     private Switch offersOnlySwitch;
     private Button closeFilterButton, createOfferButton, filterButton;
-    private Label switchChannelIcon;
+    private Label marketSelectorIcon;
     private SearchBox searchBox;
     private Pane filterPane;
     private Subscription showFilterOverlayPin;
@@ -79,16 +79,16 @@ public class BisqEasyOfferbookView extends ChatView {
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
         titleHBox.getStyleClass().add("bisq-easy-chat-title-bg");
-        titleHBox.setCursor(Cursor.HAND);
 
-        switchChannelIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
-        switchChannelIcon.setCursor(Cursor.HAND);
-        switchChannelIcon.setPadding(new Insets(0, 0, 0, -2));
+        marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
+        marketSelectorIcon.setCursor(Cursor.HAND);
+        marketSelectorIcon.setPadding(new Insets(7, 10, 7, 10));
         Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.public.switchMarketChannel"));
         tooltip.getStyleClass().add("dark-tooltip");
-        switchChannelIcon.setTooltip(tooltip);
+        marketSelectorIcon.setTooltip(tooltip);
 
         channelTitle.setId("chat-messages-headline");
+        channelTitle.setCursor(Cursor.HAND);
 
         double scale = 1.15;
         helpButton = BisqIconButton.createIconButton("icon-help");
@@ -98,11 +98,11 @@ public class BisqEasyOfferbookView extends ChatView {
         infoButton.setScaleX(scale);
         infoButton.setScaleY(scale);
 
-        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 4));
+        HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
         HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
         HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
         titleHBox.getChildren().addAll(
-                channelTitle, switchChannelIcon,
+                channelTitle, marketSelectorIcon,
                 Spacer.fillHBox(),
                 helpButton, infoButton
         );
@@ -186,9 +186,6 @@ public class BisqEasyOfferbookView extends ChatView {
         searchBox.textProperty().bindBidirectional(bisqEasyOfferbookModel.getSearchText());
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
 
-        createOfferButton.setOnAction(e -> bisqEasyOfferbookController.onCreateOffer());
-        filterButton.setOnAction(e -> bisqEasyOfferbookController.onToggleFilter());
-        closeFilterButton.setOnAction(e -> bisqEasyOfferbookController.onCloseFilter());
         if (filterPaneHeight == 0) {
             filterPaneHeightPin = EasyBind.subscribe(filterPane.heightProperty(), h -> {
                 if (h.doubleValue() > 0) {
@@ -223,11 +220,18 @@ public class BisqEasyOfferbookView extends ChatView {
                     }
                 });
 
-        switchChannelIcon.setOnMouseClicked(e -> onSwitchChannel());
-        titleHBox.setOnMouseClicked(e -> {
-            // On click of icon we show channel info
+        createOfferButton.setOnAction(e -> bisqEasyOfferbookController.onCreateOffer());
+        filterButton.setOnAction(e -> bisqEasyOfferbookController.onToggleFilter());
+        closeFilterButton.setOnAction(e -> bisqEasyOfferbookController.onCloseFilter());
+        marketSelectorIcon.setOnMouseClicked(e -> {
+            onOpenMarketSelector();
+            e.consume();
+        });
+        channelTitle.setOnMouseClicked(e -> {
+            // Only handle click on text. On click of channel icon we show channel info
             if (e.getTarget() instanceof Text) {
-                onSwitchChannel();
+                onOpenMarketSelector();
+                e.consume();
             }
         });
     }
@@ -239,15 +243,18 @@ public class BisqEasyOfferbookView extends ChatView {
         searchBox.textProperty().unbindBidirectional(bisqEasyOfferbookModel.getSearchText());
         offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
 
+        showFilterOverlayPin.unsubscribe();
+
         createOfferButton.setOnAction(null);
-        switchChannelIcon.setOnMouseClicked(null);
-        titleHBox.setOnMouseClicked(null);
         filterButton.setOnAction(null);
         closeFilterButton.setOnAction(null);
+        marketSelectorIcon.setOnMouseClicked(null);
+        channelTitle.setOnMouseClicked(null);
     }
 
-    private void onSwitchChannel() {
-        new ComboBoxOverlay<>(switchChannelIcon,
+    private void onOpenMarketSelector() {
+        log.error("onOpenMarketSelector");
+        new ComboBoxOverlay<>(marketSelectorIcon,
                 bisqEasyOfferbookModel.getSortedMarketChannelItems(),
                 c -> getMarketListCell(),
                 bisqEasyOfferbookController::onSwitchMarketChannel,
