@@ -23,8 +23,8 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
@@ -50,9 +50,9 @@ public class ResolverConfig {
 
         // ChatMessage subclasses
         NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyPublicChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
         NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyPrivateTradeChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessage.class);
 
         // TradeMessage subclasses
         NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);

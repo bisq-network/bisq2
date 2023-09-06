@@ -67,8 +67,8 @@ message ChatMessage {
   oneof message {
     TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = 20;
     CommonPublicChatMessage commonPublicChatMessage = 21;
-    BisqEasyPrivateTradeChatMessage privateBisqEasyTradeChatMessage = 22;
-    BisqEasyPublicChatMessage publicBisqEasyOfferChatMessage = 23;
+    BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = 22;
+    BisqEasyOfferbookMessage bisqEasyOfferbookMessage = 23;
   }
 }
 
@@ -112,7 +112,7 @@ message CommonPublicChatChannelStore {
 }
 
 // BisqEasy
-message BisqEasyPrivateTradeChatMessage {
+message BisqEasyOpenTradeMessage {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
@@ -130,7 +130,7 @@ message BisqEasyOpenTradeChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 
-message BisqEasyPublicChatMessage {
+message BisqEasyOfferbookMessage {
   optional offer.Offer bisqEasyOffer = 1;
 }
 message BisqEasyOfferbookChatChannel {

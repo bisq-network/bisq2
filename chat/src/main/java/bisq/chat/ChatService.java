@@ -22,7 +22,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradesSelectionService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.chat.bisqeasy.private_chat.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
@@ -99,7 +99,7 @@ public class ChatService implements Service {
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                 new BisqEasyOfferbookSelectionService(persistenceService, bisqEasyOfferbookChatChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
-                new BisqEasyOpenTradesSelectionService(persistenceService, bisqEasyOpenTradeChatChannelService));
+                new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChatChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT,
                 new BisqEasyPrivateChatChannelSelectionService(persistenceService,
                         twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT),
@@ -216,8 +216,8 @@ public class ChatService implements Service {
         return (BisqEasyOfferbookSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
     }
 
-    public BisqEasyOpenTradesSelectionService getBisqEasyOpenTradesChannelSelectionService() {
-        return (BisqEasyOpenTradesSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
+    public BisqEasyOpenTradeSelectionService getBisqEasyOpenTradesChannelSelectionService() {
+        return (BisqEasyOpenTradeSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
     }
 
     public BisqEasyPrivateChatChannelSelectionService getBisqEasyPrivateChatChannelSelectionService() {

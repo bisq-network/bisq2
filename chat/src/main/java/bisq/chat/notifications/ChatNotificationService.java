@@ -20,10 +20,10 @@ package bisq.chat.notifications;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
@@ -276,9 +276,9 @@ public class ChatNotificationService implements Service {
         }
         String channelInfo;
         String title;
-        if (chatMessage instanceof BisqEasyPrivateTradeChatMessage) {
-            BisqEasyPrivateTradeChatMessage bisqEasyPrivateTradeChatMessage = (BisqEasyPrivateTradeChatMessage) chatMessage;
-            if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+        if (chatMessage instanceof BisqEasyOpenTradeMessage) {
+            BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = (BisqEasyOpenTradeMessage) chatMessage;
+            if (bisqEasyOpenTradeMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
                 BisqEasyOpenTradeChatChannel privateTradeChannel = (BisqEasyOpenTradeChatChannel) chatChannel;
                 title = Res.get("chat.notifications.offerTaken", privateTradeChannel.getPeer().getUserName());
                 notificationsService.sendNotification(notificationId, title, "");
@@ -287,9 +287,9 @@ public class ChatNotificationService implements Service {
         }
 
         if (chatMessage instanceof PublicChatMessage) {
-            if (chatMessage instanceof BisqEasyPublicChatMessage) {
-                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasBisqEasyOffer()) {
+            if (chatMessage instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                if (settingsService.getOffersOnly().get() && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
                     return;
                 }
                 BisqEasyOfferbookChatChannel bisqEasyOfferbookChatChannel = (BisqEasyOfferbookChatChannel) chatChannel;

@@ -30,11 +30,11 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class BisqEasyOpenTradesSelectionService extends ChatChannelSelectionService {
+public class BisqEasyOpenTradeSelectionService extends ChatChannelSelectionService {
     private final BisqEasyOpenTradeChatChannelService channelService;
 
-    public BisqEasyOpenTradesSelectionService(PersistenceService persistenceService,
-                                              BisqEasyOpenTradeChatChannelService channelService) {
+    public BisqEasyOpenTradeSelectionService(PersistenceService persistenceService,
+                                             BisqEasyOpenTradeChatChannelService channelService) {
         super(persistenceService, ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
         this.channelService = channelService;
     }

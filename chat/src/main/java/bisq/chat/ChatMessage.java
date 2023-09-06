@@ -17,8 +17,8 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.Proto;
@@ -104,11 +104,11 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
                 return TwoPartyPrivateChatMessage.fromProto(proto);
             }
 
-            case PUBLICBISQEASYOFFERCHATMESSAGE: {
-                return BisqEasyPublicChatMessage.fromProto(proto);
+            case BISQEASYOFFERBOOKMESSAGE: {
+                return BisqEasyOfferbookMessage.fromProto(proto);
             }
-            case PRIVATEBISQEASYTRADECHATMESSAGE: {
-                return BisqEasyPrivateTradeChatMessage.fromProto(proto);
+            case BISQEASYOPENTRADEMESSAGE: {
+                return BisqEasyOpenTradeMessage.fromProto(proto);
             }
 
             case COMMONPUBLICCHATMESSAGE: {
@@ -127,8 +127,8 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PUBLICBISQEASYOFFERCHATMESSAGE: {
-                        return BisqEasyPublicChatMessage.fromProto(proto);
+                    case BISQEASYOFFERBOOKMESSAGE: {
+                        return BisqEasyOfferbookMessage.fromProto(proto);
                     }
                     case COMMONPUBLICCHATMESSAGE: {
                         return CommonPublicChatMessage.fromProto(proto);
@@ -153,8 +153,8 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
                         return TwoPartyPrivateChatMessage.fromProto(proto);
                     }
 
-                    case PRIVATEBISQEASYTRADECHATMESSAGE: {
-                        return BisqEasyPrivateTradeChatMessage.fromProto(proto);
+                    case BISQEASYOPENTRADEMESSAGE: {
+                        return BisqEasyOpenTradeMessage.fromProto(proto);
                     }
 
                     case MESSAGE_NOT_SET: {

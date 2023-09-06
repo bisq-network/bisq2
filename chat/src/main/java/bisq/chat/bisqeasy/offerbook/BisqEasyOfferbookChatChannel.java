@@ -29,7 +29,7 @@ import lombok.ToString;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
+public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase() + "." +
                 market.getBaseCurrencyCode() + "-" +

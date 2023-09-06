@@ -22,7 +22,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradesSelectionService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -41,7 +41,7 @@ import java.util.Optional;
 public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final BisqEasyOpenTradesModel bisqEasyOpenTradesModel;
     private final BisqEasyOpenTradeChatChannelService channelService;
-    private final BisqEasyOpenTradesSelectionService selectionService;
+    private final BisqEasyOpenTradeSelectionService selectionService;
 
     private TradeStateController tradeStateController;
     private Pin channelItemPin, selectedChannelPin;

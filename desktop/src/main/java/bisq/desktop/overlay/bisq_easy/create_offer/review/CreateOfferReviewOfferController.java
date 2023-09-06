@@ -22,7 +22,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
@@ -193,7 +193,7 @@ public class CreateOfferReviewOfferController implements Controller {
             BisqEasyOfferbookChatChannel channel = optionalChannel.get();
             model.setSelectedChannel(channel);
 
-            BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
+            BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channel.getId(),
                     userIdentity.getUserProfile().getId(),
                     Optional.of(bisqEasyOffer),
                     Optional.of(chatMessageText),

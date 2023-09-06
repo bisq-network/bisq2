@@ -21,8 +21,8 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
@@ -88,12 +88,12 @@ public class CreateOfferMarketController implements Controller {
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<BisqEasyPublicChatMessage> allMessages = bisqEasyOfferbookChatChannelService.getChannels().stream()
+                    Set<BisqEasyOfferbookMessage> allMessages = bisqEasyOfferbookChatChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .collect(Collectors.toSet());
                     int numOffersInChannel = (int) allMessages.stream()
-                            .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
+                            .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                             .distinct()
                             .count();
                     int numUsersInChannel = (int) allMessages.stream()

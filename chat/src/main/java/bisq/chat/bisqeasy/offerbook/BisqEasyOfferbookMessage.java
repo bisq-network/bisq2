@@ -39,17 +39,17 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
+public final class BisqEasyOfferbookMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
-    public BisqEasyPublicChatMessage(String channelId,
-                                     String authorUserProfileId,
-                                     Optional<BisqEasyOffer> bisqEasyOffer,
-                                     Optional<String> text,
-                                     Optional<Citation> citation,
-                                     long date,
-                                     boolean wasEdited) {
+    public BisqEasyOfferbookMessage(String channelId,
+                                    String authorUserProfileId,
+                                    Optional<BisqEasyOffer> bisqEasyOffer,
+                                    Optional<String> text,
+                                    Optional<Citation> citation,
+                                    long date,
+                                    boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                 channelId,
@@ -62,16 +62,16 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 ChatMessageType.TEXT);
     }
 
-    private BisqEasyPublicChatMessage(String messageId,
-                                      ChatChannelDomain chatChannelDomain,
-                                      String channelId,
-                                      String authorUserProfileId,
-                                      Optional<BisqEasyOffer> bisqEasyOffer,
-                                      Optional<String> text,
-                                      Optional<Citation> citation,
-                                      long date,
-                                      boolean wasEdited,
-                                      ChatMessageType chatMessageType) {
+    private BisqEasyOfferbookMessage(String messageId,
+                                     ChatChannelDomain chatChannelDomain,
+                                     String channelId,
+                                     String authorUserProfileId,
+                                     Optional<BisqEasyOffer> bisqEasyOffer,
+                                     Optional<String> text,
+                                     Optional<Citation> citation,
+                                     long date,
+                                     boolean wasEdited,
+                                     ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -87,22 +87,22 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {
-        bisq.chat.protobuf.BisqEasyPublicChatMessage.Builder builder = bisq.chat.protobuf.BisqEasyPublicChatMessage.newBuilder();
+        bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookMessage.newBuilder();
         bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto()));
-        return getChatMessageBuilder().setPublicBisqEasyOfferChatMessage(builder).build();
+        return getChatMessageBuilder().setBisqEasyOfferbookMessage(builder).build();
     }
 
-    public static BisqEasyPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Citation> citation = baseProto.hasCitation() ?
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPublicBisqEasyOfferChatMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicBisqEasyOfferChatMessage().getBisqEasyOffer())) :
+        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
+                Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
                 Optional.empty();
-        return new BisqEasyPublicChatMessage(
+        return new BisqEasyOfferbookMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),

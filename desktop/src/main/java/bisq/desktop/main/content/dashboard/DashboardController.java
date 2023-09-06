@@ -20,7 +20,7 @@ package bisq.desktop.main.content.dashboard;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyPublicChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -107,7 +107,7 @@ public class DashboardController implements Controller {
         if (allowUpdateOffersOnline) {
             UIThread.run(() ->
                     model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChatChannelService.getChannels().stream().flatMap(channel -> channel.getChatMessages().stream())
-                            .filter(BisqEasyPublicChatMessage::hasBisqEasyOffer)
+                            .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                             .count())));
         }
     }

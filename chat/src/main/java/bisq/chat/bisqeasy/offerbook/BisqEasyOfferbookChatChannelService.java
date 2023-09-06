@@ -40,7 +40,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class BisqEasyOfferbookChatChannelService extends PublicChatChannelService<BisqEasyPublicChatMessage, BisqEasyOfferbookChatChannel, BisqEasyOfferbookChatChannelStore> {
+public class BisqEasyOfferbookChatChannelService extends PublicChatChannelService<BisqEasyOfferbookMessage, BisqEasyOfferbookChatChannel, BisqEasyOfferbookChatChannelStore> {
     @Getter
     private final BisqEasyOfferbookChatChannelStore persistableStore = new BisqEasyOfferbookChatChannelStore();
     @Getter
@@ -92,16 +92,16 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof BisqEasyPublicChatMessage) {
-            processAddedMessage((BisqEasyPublicChatMessage) distributedData);
+        if (distributedData instanceof BisqEasyOfferbookMessage) {
+            processAddedMessage((BisqEasyOfferbookMessage) distributedData);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof BisqEasyPublicChatMessage) {
-            processRemovedMessage((BisqEasyPublicChatMessage) distributedData);
+        if (distributedData instanceof BisqEasyOfferbookMessage) {
+            processRemovedMessage((BisqEasyOfferbookMessage) distributedData);
         }
     }
 
@@ -129,7 +129,7 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
                 .or(super::getDefaultChannel);
     }
 
-    public Optional<BisqEasyPublicChatMessage> findMessageByOffer(BisqEasyOffer offer) {
+    public Optional<BisqEasyOfferbookMessage> findMessageByOffer(BisqEasyOffer offer) {
         return findChannel(offer.getMarket())
                 .map(PublicChatChannel::getChatMessages).stream()
                 .flatMap(Collection::stream)
@@ -143,11 +143,11 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected BisqEasyPublicChatMessage createChatMessage(String text,
-                                                          Optional<Citation> citation,
-                                                          BisqEasyOfferbookChatChannel publicChannel,
-                                                          UserProfile userProfile) {
-        return new BisqEasyPublicChatMessage(publicChannel.getId(),
+    protected BisqEasyOfferbookMessage createChatMessage(String text,
+                                                         Optional<Citation> citation,
+                                                         BisqEasyOfferbookChatChannel publicChannel,
+                                                         UserProfile userProfile) {
+        return new BisqEasyOfferbookMessage(publicChannel.getId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -157,10 +157,10 @@ public class BisqEasyOfferbookChatChannelService extends PublicChatChannelServic
     }
 
     @Override
-    protected BisqEasyPublicChatMessage createEditedChatMessage(BisqEasyPublicChatMessage originalChatMessage,
-                                                                String editedText,
-                                                                UserProfile userProfile) {
-        return new BisqEasyPublicChatMessage(originalChatMessage.getChannelId(),
+    protected BisqEasyOfferbookMessage createEditedChatMessage(BisqEasyOfferbookMessage originalChatMessage,
+                                                               String editedText,
+                                                               UserProfile userProfile) {
+        return new BisqEasyOfferbookMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),

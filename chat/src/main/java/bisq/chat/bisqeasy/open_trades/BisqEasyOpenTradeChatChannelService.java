@@ -48,7 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannelService<BisqEasyPrivateTradeChatMessage, BisqEasyOpenTradeChatChannel, BisqEasyOpenTradeChatChannelStore> {
+public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannelService<BisqEasyOpenTradeMessage, BisqEasyOpenTradeChatChannel, BisqEasyOpenTradeChatChannelStore> {
 
     @Getter
     private final BisqEasyOpenTradeChatChannelStore persistableStore = new BisqEasyOpenTradeChatChannelStore();
@@ -71,8 +71,8 @@ public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannel
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof BisqEasyPrivateTradeChatMessage) {
-            processMessage((BisqEasyPrivateTradeChatMessage) networkMessage);
+        if (networkMessage instanceof BisqEasyOpenTradeMessage) {
+            processMessage((BisqEasyOpenTradeMessage) networkMessage);
         }
     }
 
@@ -128,7 +128,7 @@ public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannel
                             makerUserProfile,
                             mediator);
                     UserProfile maker = channel.getPeer();
-                    BisqEasyPrivateTradeChatMessage takeOfferMessage = BisqEasyPrivateTradeChatMessage.createTakeOfferMessage(
+                    BisqEasyOpenTradeMessage takeOfferMessage = BisqEasyOpenTradeMessage.createTakeOfferMessage(
                             channel.getId(),
                             myUserIdentity.getUserProfile(),
                             maker.getId(),
@@ -195,7 +195,7 @@ public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannel
     public void addMediatorsResponseMessage(BisqEasyOpenTradeChatChannel channel, String text) {
         setIsInMediation(channel, true);
         checkArgument(channel.getMediator().isPresent());
-        BisqEasyPrivateTradeChatMessage systemMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
+        BisqEasyOpenTradeMessage systemMessage = new BisqEasyOpenTradeMessage(StringUtils.createShortUid(),
                 channel.getId(),
                 channel.getMediator().get(),
                 channel.getMyUserIdentity().getUserProfile().getId(),
@@ -224,18 +224,18 @@ public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected BisqEasyPrivateTradeChatMessage createAndGetNewPrivateChatMessage(String messageId,
-                                                                                BisqEasyOpenTradeChatChannel channel,
-                                                                                UserProfile sender,
-                                                                                String receiverUserProfileId,
-                                                                                @Nullable String text,
-                                                                                Optional<Citation> citation,
-                                                                                long time,
-                                                                                boolean wasEdited,
-                                                                                ChatMessageType chatMessageType) {
+    protected BisqEasyOpenTradeMessage createAndGetNewPrivateChatMessage(String messageId,
+                                                                         BisqEasyOpenTradeChatChannel channel,
+                                                                         UserProfile sender,
+                                                                         String receiverUserProfileId,
+                                                                         @Nullable String text,
+                                                                         Optional<Citation> citation,
+                                                                         long time,
+                                                                         boolean wasEdited,
+                                                                         ChatMessageType chatMessageType) {
         // We send mediator only at first message
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
-        return new BisqEasyPrivateTradeChatMessage(
+        return new BisqEasyOpenTradeMessage(
                 messageId,
                 channel.getId(),
                 sender,
@@ -257,7 +257,7 @@ public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannel
     }
 
     @Override
-    protected void processMessage(BisqEasyPrivateTradeChatMessage message) {
+    protected void processMessage(BisqEasyOpenTradeMessage message) {
         if (canHandleChannelDomain(message) && isValid(message)) {
             findChannel(message)
                     .or(() -> {
