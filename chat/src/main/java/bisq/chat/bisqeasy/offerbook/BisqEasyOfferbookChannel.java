@@ -29,7 +29,7 @@ import lombok.ToString;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
+public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase() + "." +
                 market.getBaseCurrencyCode() + "-" +
@@ -38,11 +38,11 @@ public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEa
 
     private final Market market;
 
-    public BisqEasyOfferbookChatChannel(Market market) {
+    public BisqEasyOfferbookChannel(Market market) {
         this(createId(market), market);
     }
 
-    private BisqEasyOfferbookChatChannel(String id, Market market) {
+    private BisqEasyOfferbookChannel(String id, Market market) {
         super(id, ChatChannelDomain.BISQ_EASY_OFFERBOOK, ChatChannelNotificationType.ALL);
 
         this.market = market;
@@ -50,14 +50,14 @@ public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEa
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        return getChatChannelBuilder().setBisqEasyOfferbookChatChannel(bisq.chat.protobuf.BisqEasyOfferbookChatChannel.newBuilder()
+        return getChatChannelBuilder().setBisqEasyOfferbookChannel(bisq.chat.protobuf.BisqEasyOfferbookChannel.newBuilder()
                         .setMarket(market.toProto()))
                 .build();
     }
 
-    public static BisqEasyOfferbookChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                         bisq.chat.protobuf.BisqEasyOfferbookChatChannel proto) {
-        return new BisqEasyOfferbookChatChannel(
+    public static BisqEasyOfferbookChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                     bisq.chat.protobuf.BisqEasyOfferbookChannel proto) {
+        return new BisqEasyOfferbookChannel(
                 baseProto.getId(),
                 Market.fromProto(proto.getMarket()));
     }

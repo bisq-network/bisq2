@@ -20,8 +20,8 @@ package bisq.desktop.overlay.bisq_easy.create_offer.review;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -72,7 +72,7 @@ public class CreateOfferReviewOfferController implements Controller {
     private final Runnable resetHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
-    private final BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService;
+    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final UserProfileService userProfileService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
@@ -83,7 +83,7 @@ public class CreateOfferReviewOfferController implements Controller {
                                             Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         ChatService chatService = serviceProvider.getChatService();
-        bisqEasyOfferbookChatChannelService = chatService.getBisqEasyOfferbookChatChannelService();
+        bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -188,9 +188,9 @@ public class CreateOfferReviewOfferController implements Controller {
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 
-        Optional<BisqEasyOfferbookChatChannel> optionalChannel = bisqEasyOfferbookChatChannelService.findChannel(model.getMarket());
+        Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent()) {
-            BisqEasyOfferbookChatChannel channel = optionalChannel.get();
+            BisqEasyOfferbookChannel channel = optionalChannel.get();
             model.setSelectedChannel(channel);
 
             BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channel.getId(),
@@ -244,7 +244,7 @@ public class CreateOfferReviewOfferController implements Controller {
 
     void onPublishOffer() {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        bisqEasyOfferbookChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
+        bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
                     mainButtonsVisibleHandler.accept(false);

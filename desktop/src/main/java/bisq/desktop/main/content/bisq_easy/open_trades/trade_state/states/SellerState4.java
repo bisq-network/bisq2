@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 public class SellerState4 extends BaseState {
     private final Controller controller;
 
-    public SellerState4(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+    public SellerState4(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -62,14 +62,14 @@ public class SellerState4 extends BaseState {
         private final ExplorerService explorerService;
         private UIScheduler scheduler;
 
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             return new Model(bisqEasyTrade, channel);
         }
 
@@ -164,7 +164,7 @@ public class SellerState4 extends BaseState {
         private final StringProperty confirmationState = new SimpleStringProperty();
         private final BooleanProperty isConfirmed = new SimpleBooleanProperty();
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }

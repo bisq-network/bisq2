@@ -22,7 +22,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -68,7 +68,7 @@ public class TakeOfferReviewController implements Controller {
     private final TakeOfferReviewModel model;
     @Getter
     private final TakeOfferReviewView view;
-    private final BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService;
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final ChatService chatService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final PriceInput priceInput;
@@ -81,7 +81,7 @@ public class TakeOfferReviewController implements Controller {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatService = serviceProvider.getChatService();
-        bisqEasyOpenTradeChatChannelService = chatService.getBisqEasyOpenTradeChatChannelService();
+        bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
@@ -176,10 +176,10 @@ public class TakeOfferReviewController implements Controller {
             model.setBisqEasyTradeModel(bisqEasyTrade);
 
             BisqEasyContract contract = bisqEasyTrade.getContract();
-            bisqEasyOpenTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
+            bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
                     .thenAccept(result -> UIThread.run(() -> {
                         ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
-                        bisqEasyOpenTradeChatChannelService.findChannel(bisqEasyOffer)
+                        bisqEasyOpenTradeChannelService.findChannel(bisqEasyOffer)
                                 .ifPresent(chatChannelSelectionService::selectChannel);
                         model.getShowTakeOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);

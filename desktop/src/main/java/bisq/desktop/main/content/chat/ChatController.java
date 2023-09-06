@@ -21,7 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.ServiceProvider;
@@ -141,20 +141,20 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             imageView.setFitHeight(35);
             Button iconButton = BisqIconButton.createIconButton(imageView);
             model.getChannelIconNode().set(iconButton);
-        } else if (privateChatChannel instanceof BisqEasyOpenTradeChatChannel) {
-            BisqEasyOpenTradeChatChannel bisqEasyOpenTradeChatChannel = (BisqEasyOpenTradeChatChannel) privateChatChannel;
-            if (bisqEasyOpenTradeChatChannel.isInMediation() && bisqEasyOpenTradeChatChannel.getMediator().isPresent()) {
+        } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel) {
+            BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel = (BisqEasyOpenTradeChannel) privateChatChannel;
+            if (bisqEasyOpenTradeChannel.isInMediation() && bisqEasyOpenTradeChannel.getMediator().isPresent()) {
 
                 UserProfile left;
                 UserProfile right;
-                if (bisqEasyOpenTradeChatChannel.isMediator()) {
-                    List<UserProfile> traders = new ArrayList<>(bisqEasyOpenTradeChatChannel.getTraders());
+                if (bisqEasyOpenTradeChannel.isMediator()) {
+                    List<UserProfile> traders = new ArrayList<>(bisqEasyOpenTradeChannel.getTraders());
                     checkArgument(traders.size() == 2);
                     left = traders.get(0);
                     right = traders.get(1);
                 } else {
-                    left = bisqEasyOpenTradeChatChannel.getPeer();
-                    right = bisqEasyOpenTradeChatChannel.getMediator().get();
+                    left = bisqEasyOpenTradeChannel.getPeer();
+                    right = bisqEasyOpenTradeChannel.getMediator().get();
                 }
                 ImageView leftImageView = new ImageView(RoboHash.getImage(left.getPubKeyHash()));
                 leftImageView.setFitWidth(35);
@@ -173,7 +173,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 model.getChannelIconNode().set(hBox);
             } else {
-                Image image = RoboHash.getImage(bisqEasyOpenTradeChatChannel.getPeer().getPubKeyHash());
+                Image image = RoboHash.getImage(bisqEasyOpenTradeChannel.getPeer().getPubKeyHash());
                 ImageView imageView = new ImageView(image);
                 imageView.setFitWidth(35);
                 imageView.setFitHeight(35);

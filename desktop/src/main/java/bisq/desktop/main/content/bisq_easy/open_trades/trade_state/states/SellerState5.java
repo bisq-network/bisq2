@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.encoding.Csv;
 import bisq.common.util.FileUtils;
@@ -49,7 +49,7 @@ import java.util.List;
 public class SellerState5 extends BaseState {
     private final Controller controller;
 
-    public SellerState5(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+    public SellerState5(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -59,19 +59,19 @@ public class SellerState5 extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
-        private final BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService;
+        private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
         private final BisqEasyOpenTradeSelectionService bisqEasyOpenTradeSelectionService;
 
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
-            bisqEasyOpenTradeChatChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChatChannelService();
+            bisqEasyOpenTradeChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
             bisqEasyOpenTradeSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             return new Model(bisqEasyTrade, channel);
         }
 
@@ -107,7 +107,7 @@ public class SellerState5 extends BaseState {
         }
 
         private void doLeaveChannel() {
-            bisqEasyOpenTradeChatChannelService.leaveChannel(model.getChannel());
+            bisqEasyOpenTradeChannelService.leaveChannel(model.getChannel());
             bisqEasyOpenTradeSelectionService.maybeSelectFirstChannel();
         }
 
@@ -154,7 +154,7 @@ public class SellerState5 extends BaseState {
         @Setter
         protected String txId;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }

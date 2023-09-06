@@ -18,11 +18,11 @@
 package bisq.chat.notifications;
 
 import bisq.chat.*;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.application.Service;
@@ -119,13 +119,13 @@ public class ChatNotificationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService = chatService.getBisqEasyOpenTradeChatChannelService();
-        bisqEasyOpenTradeChatChannelService.getChannels().addListener(() ->
-                onChatChannelsChanged(bisqEasyOpenTradeChatChannelService.getChannels()));
+        BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        bisqEasyOpenTradeChannelService.getChannels().addListener(() ->
+                onChatChannelsChanged(bisqEasyOpenTradeChannelService.getChannels()));
 
-        BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService = chatService.getBisqEasyOfferbookChatChannelService();
-        bisqEasyOfferbookChatChannelService.getChannels().addListener(() ->
-                onChatChannelsChanged(bisqEasyOfferbookChatChannelService.getChannels()));
+        BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
+        bisqEasyOfferbookChannelService.getChannels().addListener(() ->
+                onChatChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
                 .forEach(commonPublicChatChannelService -> {
@@ -279,7 +279,7 @@ public class ChatNotificationService implements Service {
         if (chatMessage instanceof BisqEasyOpenTradeMessage) {
             BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = (BisqEasyOpenTradeMessage) chatMessage;
             if (bisqEasyOpenTradeMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
-                BisqEasyOpenTradeChatChannel privateTradeChannel = (BisqEasyOpenTradeChatChannel) chatChannel;
+                BisqEasyOpenTradeChannel privateTradeChannel = (BisqEasyOpenTradeChannel) chatChannel;
                 title = Res.get("chat.notifications.offerTaken", privateTradeChannel.getPeer().getUserName());
                 notificationsService.sendNotification(notificationId, title, "");
                 return;
@@ -292,8 +292,8 @@ public class ChatNotificationService implements Service {
                 if (settingsService.getOffersOnly().get() && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
                     return;
                 }
-                BisqEasyOfferbookChatChannel bisqEasyOfferbookChatChannel = (BisqEasyOfferbookChatChannel) chatChannel;
-                if (!chatService.getBisqEasyOfferbookChatChannelService().isVisible(bisqEasyOfferbookChatChannel)) {
+                BisqEasyOfferbookChannel bisqEasyOfferbookChannel = (BisqEasyOfferbookChannel) chatChannel;
+                if (!chatService.getBisqEasyOfferbookChannelService().isVisible(bisqEasyOfferbookChannel)) {
                     return;
                 }
             }

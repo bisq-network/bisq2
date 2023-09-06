@@ -20,8 +20,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -40,7 +40,7 @@ import java.util.Optional;
 @Slf4j
 public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final BisqEasyOpenTradesModel bisqEasyOpenTradesModel;
-    private final BisqEasyOpenTradeChatChannelService channelService;
+    private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
 
     private TradeStateController tradeStateController;
@@ -49,7 +49,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public BisqEasyOpenTradesController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
 
-        channelService = chatService.getBisqEasyOpenTradeChatChannelService();
+        channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
         bisqEasyOpenTradesModel = getModel();
     }
@@ -84,7 +84,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void onActivate() {
-        channelItemPin = FxBindings.<BisqEasyOpenTradeChatChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
+        channelItemPin = FxBindings.<BisqEasyOpenTradeChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
                 .map(BisqEasyOpenTradesView.ChannelItem::new)
                 .to(channelService.getChannels());
 
@@ -105,7 +105,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     }
 
     private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-        if (channel instanceof BisqEasyOpenTradeChatChannel) {
+        if (channel instanceof BisqEasyOpenTradeChannel) {
             chatChannelChanged(channel);
         }
     }
@@ -114,14 +114,14 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.chatChannelChanged(chatChannel);
 
-        if (chatChannel instanceof BisqEasyOpenTradeChatChannel) {
+        if (chatChannel instanceof BisqEasyOpenTradeChannel) {
             UIThread.run(() -> {
-                BisqEasyOpenTradeChatChannel channel = (BisqEasyOpenTradeChatChannel) chatChannel;
+                BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
                 applyPeersIcon(channel);
 
                 BisqEasyOffer offer = channel.getBisqEasyOffer();
                 boolean isMaker = isMaker(offer);
-                String peer = ((BisqEasyOpenTradeChatChannel) chatChannel).getPeer().getUserName();
+                String peer = ((BisqEasyOpenTradeChannel) chatChannel).getPeer().getUserName();
                 String title = isMaker ?
                         Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peer, offer.getShortId()) :
                         Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peer, offer.getShortId());

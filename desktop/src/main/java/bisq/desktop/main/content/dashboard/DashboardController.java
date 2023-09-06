@@ -19,7 +19,7 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
@@ -42,14 +42,14 @@ public class DashboardController implements Controller {
     private final MarketPriceService marketPriceService;
     private final DashboardModel model;
     private final UserProfileService userProfileService;
-    private final BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService;
+    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, getNumUserProfilesPin;
     private boolean allowUpdateOffersOnline;
 
     public DashboardController(ServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        bisqEasyOfferbookChatChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChatChannelService();
+        bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);
@@ -64,7 +64,7 @@ public class DashboardController implements Controller {
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
         // We listen on all channels, also hidden ones and use a weak reference listener
-        bisqEasyOfferbookChatChannelService.getChannels().forEach(publicTradeChannel ->
+        bisqEasyOfferbookChannelService.getChannels().forEach(publicTradeChannel ->
                 publicTradeChannel.getChatMessages().addListener(new WeakReference<Runnable>(this::updateOffersOnline).get()));
 
         // We trigger a call of updateOffersOnline for each channel when registering our observer. But we only want one call, 
@@ -106,7 +106,7 @@ public class DashboardController implements Controller {
     private void updateOffersOnline() {
         if (allowUpdateOffersOnline) {
             UIThread.run(() ->
-                    model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChatChannelService.getChannels().stream().flatMap(channel -> channel.getChatMessages().stream())
+                    model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChannelService.getChannels().stream().flatMap(channel -> channel.getChatMessages().stream())
                             .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                             .count())));
         }

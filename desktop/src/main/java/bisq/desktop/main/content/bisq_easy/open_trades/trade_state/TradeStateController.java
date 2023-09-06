@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
@@ -73,7 +73,7 @@ public class TradeStateController implements Controller {
         view = new TradeStateView(model, this, tradeWelcome.getView().getRoot(), tradePhaseBox.getView().getRoot());
     }
 
-    public void setSelectedChannel(BisqEasyOpenTradeChatChannel channel) {
+    public void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(bisqEasyOffer);

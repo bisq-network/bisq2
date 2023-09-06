@@ -19,8 +19,8 @@ package bisq.desktop.overlay.bisq_easy.create_offer.market;
 
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.common.currency.Market;
@@ -46,14 +46,14 @@ public class CreateOfferMarketController implements Controller {
     private final CreateOfferMarketView view;
     private final ChatService chatService;
     private final Runnable onNextHandler;
-    private final BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService;
+    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
     private Subscription searchTextPin;
 
     public CreateOfferMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
         chatService = serviceProvider.getChatService();
-        bisqEasyOfferbookChatChannelService = chatService.getBisqEasyOfferbookChatChannelService();
+        bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOfferbookSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
         model = new CreateOfferMarketModel();
         view = new CreateOfferMarketView(model, this);
@@ -79,16 +79,16 @@ public class CreateOfferMarketController implements Controller {
             // Use selected public channel or if private channel is selected we use any of the public channels for 
             // setting the default market 
             Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
-                    .filter(channel -> channel instanceof BisqEasyOfferbookChatChannel)
-                    .map(channel -> (BisqEasyOfferbookChatChannel) channel)
-                    .or(() -> bisqEasyOfferbookChatChannelService.getVisibleChannels().stream().findFirst())
-                    .map(BisqEasyOfferbookChatChannel::getMarket)
+                    .filter(channel -> channel instanceof BisqEasyOfferbookChannel)
+                    .map(channel -> (BisqEasyOfferbookChannel) channel)
+                    .or(() -> bisqEasyOfferbookChannelService.getVisibleChannels().stream().findFirst())
+                    .map(BisqEasyOfferbookChannel::getMarket)
                     .ifPresent(market -> model.getSelectedMarket().set(market));
         }
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<BisqEasyOfferbookMessage> allMessages = bisqEasyOfferbookChatChannelService.getChannels().stream()
+                    Set<BisqEasyOfferbookMessage> allMessages = bisqEasyOfferbookChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .collect(Collectors.toSet());
@@ -136,7 +136,7 @@ public class CreateOfferMarketController implements Controller {
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
-        bisqEasyOfferbookChatChannelService.findChannel(item.getMarket())
+        bisqEasyOfferbookChannelService.findChannel(item.getMarket())
                 .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
     }
 

@@ -31,39 +31,39 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
-public class BisqEasyOfferbookChatChannelStore implements PersistableStore<BisqEasyOfferbookChatChannelStore> {
-    private final ObservableArray<BisqEasyOfferbookChatChannel> channels = new ObservableArray<>();
+public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyOfferbookChannelStore> {
+    private final ObservableArray<BisqEasyOfferbookChannel> channels = new ObservableArray<>();
     //todo not useful anymore. consider to remove it
     private final ObservableSet<String> visibleChannelIds = new ObservableSet<>();
 
-    public BisqEasyOfferbookChatChannelStore() {
+    public BisqEasyOfferbookChannelStore() {
     }
 
-    private BisqEasyOfferbookChatChannelStore(List<BisqEasyOfferbookChatChannel> privateTradeChannels,
-                                              Set<String> visibleChannelIds) {
+    private BisqEasyOfferbookChannelStore(List<BisqEasyOfferbookChannel> privateTradeChannels,
+                                          Set<String> visibleChannelIds) {
         setAll(privateTradeChannels, visibleChannelIds);
     }
 
     @Override
-    public bisq.chat.protobuf.BisqEasyOfferbookChatChannelStore toProto() {
-        bisq.chat.protobuf.BisqEasyOfferbookChatChannelStore.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookChatChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(BisqEasyOfferbookChatChannel::toProto).collect(Collectors.toList()))
+    public bisq.chat.protobuf.BisqEasyOfferbookChannelStore toProto() {
+        bisq.chat.protobuf.BisqEasyOfferbookChannelStore.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookChannelStore.newBuilder()
+                .addAllChannels(channels.stream().map(BisqEasyOfferbookChannel::toProto).collect(Collectors.toList()))
                 .addAllVisibleChannelIds(visibleChannelIds);
         return builder.build();
     }
 
-    public static BisqEasyOfferbookChatChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChatChannelStore proto) {
-        List<BisqEasyOfferbookChatChannel> privateTradeChannels = proto.getChannelsList().stream()
-                .map(e -> (BisqEasyOfferbookChatChannel) BisqEasyOfferbookChatChannel.fromProto(e))
+    public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto) {
+        List<BisqEasyOfferbookChannel> privateTradeChannels = proto.getChannelsList().stream()
+                .map(e -> (BisqEasyOfferbookChannel) BisqEasyOfferbookChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new BisqEasyOfferbookChatChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelIdsList()));
+        return new BisqEasyOfferbookChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelIdsList()));
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.BisqEasyOfferbookChatChannelStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.BisqEasyOfferbookChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -71,16 +71,16 @@ public class BisqEasyOfferbookChatChannelStore implements PersistableStore<BisqE
     }
 
     @Override
-    public void applyPersisted(BisqEasyOfferbookChatChannelStore chatStore) {
+    public void applyPersisted(BisqEasyOfferbookChannelStore chatStore) {
         setAll(chatStore.getChannels(), chatStore.getVisibleChannelIds());
     }
 
     @Override
-    public BisqEasyOfferbookChatChannelStore getClone() {
-        return new BisqEasyOfferbookChatChannelStore(channels, visibleChannelIds);
+    public BisqEasyOfferbookChannelStore getClone() {
+        return new BisqEasyOfferbookChannelStore(channels, visibleChannelIds);
     }
 
-    public void setAll(List<BisqEasyOfferbookChatChannel> privateTradeChannels, Set<String> visibleChannelIds) {
+    public void setAll(List<BisqEasyOfferbookChannel> privateTradeChannels, Set<String> visibleChannelIds) {
         this.channels.setAll(privateTradeChannels);
         this.visibleChannelIds.clear();
         this.visibleChannelIds.addAll(visibleChannelIds);

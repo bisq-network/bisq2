@@ -32,10 +32,10 @@ import java.util.stream.Stream;
 @Slf4j
 @Getter
 public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionService {
-    private final BisqEasyOfferbookChatChannelService channelService;
+    private final BisqEasyOfferbookChannelService channelService;
 
     public BisqEasyOfferbookSelectionService(PersistenceService persistenceService,
-                                             BisqEasyOfferbookChatChannelService channelService) {
+                                             BisqEasyOfferbookChannelService channelService) {
         super(persistenceService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         this.channelService = channelService;
     }
@@ -47,12 +47,12 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof BisqEasyOfferbookChatChannel) {
+        if (chatChannel instanceof BisqEasyOfferbookChannel) {
             channelService.removeExpiredMessages(chatChannel);
             if (selectedChannel.get() != null) {
                 channelService.leaveChannel(selectedChannel.get().getId());
             }
-            channelService.joinChannel((BisqEasyOfferbookChatChannel) chatChannel);
+            channelService.joinChannel((BisqEasyOfferbookChannel) chatChannel);
         }
         super.selectChannel(chatChannel);
     }
@@ -65,7 +65,7 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
 
     @Override
     public void maybeSelectFirstChannel() {
-        selectChannel(Optional.ofNullable((BisqEasyOfferbookChatChannel) getSelectedChannel().get())
+        selectChannel(Optional.ofNullable((BisqEasyOfferbookChannel) getSelectedChannel().get())
                 .or(() -> channelService.getChannels().stream().findFirst())
                 .orElse(null));
     }

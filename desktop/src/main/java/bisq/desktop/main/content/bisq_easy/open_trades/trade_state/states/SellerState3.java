@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -45,7 +45,7 @@ import org.fxmisc.easybind.Subscription;
 public class SellerState3 extends BaseState {
     private final Controller controller;
 
-    public SellerState3(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+    public SellerState3(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -54,12 +54,12 @@ public class SellerState3 extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             return new Model(bisqEasyTrade, channel);
         }
 
@@ -112,7 +112,7 @@ public class SellerState3 extends BaseState {
         private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
         private final BooleanProperty fiatReceived = new SimpleBooleanProperty();
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }

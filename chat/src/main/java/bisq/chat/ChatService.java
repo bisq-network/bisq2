@@ -17,11 +17,11 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.chat.bisqeasy.private_chat.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.common.CommonChannelSelectionService;
@@ -60,8 +60,8 @@ public class ChatService implements Service {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ChatNotificationService chatNotificationService;
-    private final BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService;
-    private final BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService;
+    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices = new HashMap<>();
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices = new HashMap<>();
     private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices = new HashMap<>();
@@ -86,10 +86,10 @@ public class ChatService implements Service {
                 userProfileService);
 
         //BISQ_EASY
-        bisqEasyOfferbookChatChannelService = new BisqEasyOfferbookChatChannelService(persistenceService,
+        bisqEasyOfferbookChannelService = new BisqEasyOfferbookChannelService(persistenceService,
                 networkService,
                 userService);
-        bisqEasyOpenTradeChatChannelService = new BisqEasyOpenTradeChatChannelService(persistenceService,
+        bisqEasyOpenTradeChannelService = new BisqEasyOpenTradeChannelService(persistenceService,
                 networkService,
                 userService,
                 proofOfWorkService);
@@ -97,9 +97,9 @@ public class ChatService implements Service {
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
 
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
-                new BisqEasyOfferbookSelectionService(persistenceService, bisqEasyOfferbookChatChannelService));
+                new BisqEasyOfferbookSelectionService(persistenceService, bisqEasyOfferbookChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
-                new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChatChannelService));
+                new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT,
                 new BisqEasyPrivateChatChannelSelectionService(persistenceService,
                         twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT),
@@ -140,8 +140,8 @@ public class ChatService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChatChannelService.initialize(),
-                bisqEasyOpenTradeChatChannelService.initialize()));
+        List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChannelService.initialize(),
+                bisqEasyOpenTradeChannelService.initialize()));
         list.addAll(commonPublicChatChannelServices.values().stream()
                 .map(CommonPublicChatChannelService::initialize)
                 .collect(Collectors.toList()));
@@ -160,8 +160,8 @@ public class ChatService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChatChannelService.shutdown(),
-                bisqEasyOpenTradeChatChannelService.shutdown()));
+        List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChannelService.shutdown(),
+                bisqEasyOpenTradeChannelService.shutdown()));
         list.addAll(commonPublicChatChannelServices.values().stream()
                 .map(CommonPublicChatChannelService::shutdown)
                 .collect(Collectors.toList()));
@@ -185,10 +185,10 @@ public class ChatService implements Service {
             return Optional.of(commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
         } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
             return Optional.of(twoPartyPrivateChatChannelServices.get(chatChannel.getChatChannelDomain()));
-        } else if (chatChannel instanceof BisqEasyOfferbookChatChannel) {
-            return Optional.of(bisqEasyOfferbookChatChannelService);
-        } else if (chatChannel instanceof BisqEasyOpenTradeChatChannel) {
-            return Optional.of(bisqEasyOpenTradeChatChannelService);
+        } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
+            return Optional.of(bisqEasyOfferbookChannelService);
+        } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
+            return Optional.of(bisqEasyOpenTradeChannelService);
         } else {
             throw new RuntimeException("Unexpected chatChannel instance. chatChannel=" + chatChannel);
         }

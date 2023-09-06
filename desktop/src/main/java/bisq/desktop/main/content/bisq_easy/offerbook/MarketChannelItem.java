@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChatChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.common.currency.Market;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,9 +26,9 @@ import lombok.Getter;
 @Getter
 class MarketChannelItem {
     private final Market market;
-    private final BisqEasyOfferbookChatChannel channel;
+    private final BisqEasyOfferbookChannel channel;
 
-    public MarketChannelItem(BisqEasyOfferbookChatChannel channel) {
+    public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
     }

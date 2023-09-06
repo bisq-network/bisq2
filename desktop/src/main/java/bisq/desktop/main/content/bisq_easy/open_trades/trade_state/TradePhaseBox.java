@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -64,7 +64,7 @@ class TradePhaseBox {
         return controller.getView();
     }
 
-    void setSelectedChannel(BisqEasyOpenTradeChatChannel channel) {
+    void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
         controller.setSelectedChannel(channel);
     }
 
@@ -86,7 +86,7 @@ class TradePhaseBox {
             view = new View(model, this);
         }
 
-        private void setSelectedChannel(BisqEasyOpenTradeChatChannel channel) {
+        private void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
             model.setSelectedChannel(channel);
 
             if (isInMediationPin != null) {
@@ -183,7 +183,7 @@ class TradePhaseBox {
         }
 
         void onOpenDispute() {
-            BisqEasyOpenTradeChatChannel channel = model.getSelectedChannel();
+            BisqEasyOpenTradeChannel channel = model.getSelectedChannel();
             Optional<UserProfile> mediator = channel.getMediator();
             if (mediator.isPresent()) {
                 new Popup().headLine(Res.get("bisqEasy.mediation.request.confirm.headline"))
@@ -210,7 +210,7 @@ class TradePhaseBox {
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         @Setter
-        private BisqEasyOpenTradeChatChannel selectedChannel;
+        private BisqEasyOpenTradeChannel selectedChannel;
         @Setter
         private BisqEasyTrade bisqEasyTrade;
 

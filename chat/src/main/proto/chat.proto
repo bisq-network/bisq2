@@ -79,8 +79,8 @@ message ChatChannel {
   oneof message{
     TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = 10;
     CommonPublicChatChannel commonPublicChatChannel = 11;
-    BisqEasyOpenTradeChatChannel bisqEasyOpenTradeChatChannel = 12;
-    BisqEasyOfferbookChatChannel bisqEasyOfferbookChatChannel = 13;
+    BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel = 12;
+    BisqEasyOfferbookChannel bisqEasyOfferbookChannel = 13;
   }
 }
 
@@ -118,7 +118,7 @@ message BisqEasyOpenTradeMessage {
   optional user.UserProfile mediator = 3;
   optional offer.Offer bisqEasyOffer = 4;
 }
-message BisqEasyOpenTradeChatChannel {
+message BisqEasyOpenTradeChannel {
   offer.Offer bisqEasyOffer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated user.UserProfile traders = 3;
@@ -126,17 +126,17 @@ message BisqEasyOpenTradeChatChannel {
   repeated ChatMessage chatMessages = 5;
   bool isInMediation = 6;
 }
-message BisqEasyOpenTradeChatChannelStore {
+message BisqEasyOpenTradeChannelStore {
   repeated ChatChannel channels = 1;
 }
 
 message BisqEasyOfferbookMessage {
   optional offer.Offer bisqEasyOffer = 1;
 }
-message BisqEasyOfferbookChatChannel {
+message BisqEasyOfferbookChannel {
   common.Market market = 1;
 }
-message BisqEasyOfferbookChatChannelStore {
+message BisqEasyOfferbookChannelStore {
   repeated ChatChannel channels = 1;
   repeated string visibleChannelIds = 2;
 }

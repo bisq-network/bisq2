@@ -22,8 +22,8 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.Service;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
@@ -57,7 +57,7 @@ public class MediationService implements Service, MessageListener {
     private final NetworkService networkService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    private final BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService;
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
 
@@ -70,7 +70,7 @@ public class MediationService implements Service, MessageListener {
         userProfileService = userService.getUserProfileService();
         bannedUserService = userService.getBannedUserService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
-        bisqEasyOpenTradeChatChannelService = chatService.getBisqEasyOpenTradeChatChannelService();
+        bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
     }
 
 
@@ -109,7 +109,7 @@ public class MediationService implements Service, MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestMediation(BisqEasyOpenTradeChatChannel privateTradeChannel) {
+    public void requestMediation(BisqEasyOpenTradeChannel privateTradeChannel) {
         BisqEasyOffer bisqEasyOffer = privateTradeChannel.getBisqEasyOffer();
         UserIdentity myUserIdentity = privateTradeChannel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
@@ -162,41 +162,41 @@ public class MediationService implements Service, MessageListener {
 
         findMyMediatorUserIdentity().ifPresent(myUserIdentity -> {
             BisqEasyOffer bisqEasyOffer = mediationRequest.getBisqEasyOffer();
-            BisqEasyOpenTradeChatChannel channel = bisqEasyOpenTradeChatChannelService.mediatorFindOrCreatesChannel(
+            BisqEasyOpenTradeChannel channel = bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
                     bisqEasyOffer,
                     myUserIdentity,
                     mediationRequest.getRequester(),
                     mediationRequest.getPeer()
             );
 
-            bisqEasyOpenTradeChatChannelService.setIsInMediation(channel, true);
+            bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
 
-            mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyOpenTradeChatChannelService.addMessage(chatMessage, channel));
+            mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
             NetworkIdWithKeyPair myNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
             NetworkId receiverNetworkId = mediationRequest.getRequester().getNetworkId();
             networkService.confidentialSend(new MediationResponse(bisqEasyOffer),
                     receiverNetworkId,
                     myNodeIdAndKeyPair);
-            bisqEasyOpenTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
 
             receiverNetworkId = mediationRequest.getPeer().getNetworkId();
             networkService.confidentialSend(new MediationResponse(bisqEasyOffer),
                     receiverNetworkId,
                     myNodeIdAndKeyPair);
-            bisqEasyOpenTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
         });
     }
 
     private void processMediationResponse(MediationResponse mediationResponse) {
-        bisqEasyOpenTradeChatChannelService.findChannel(mediationResponse.getBisqEasyOffer())
+        bisqEasyOpenTradeChannelService.findChannel(mediationResponse.getBisqEasyOffer())
                 .ifPresent(channel -> {
                     // Requester had it activated at request time
                     if (channel.isInMediation()) {
-                        bisqEasyOpenTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
+                        bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
                     } else {
-                        bisqEasyOpenTradeChatChannelService.setIsInMediation(channel, true);
-                        bisqEasyOpenTradeChatChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
+                        bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
+                        bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
 
                         //todo
                         // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
