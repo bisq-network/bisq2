@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
@@ -65,7 +65,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelectionMenu<
         BisqEasyOpenTradeChatChannel,
         BisqEasyOpenTradeChatChannelService,
-        BisqEasyOfferbookChannelSelectionService
+        BisqEasyOfferbookSelectionService
         > {
     @Getter
     private final Controller controller;
@@ -79,7 +79,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
             Model,
             BisqEasyOpenTradeChatChannel,
             BisqEasyOpenTradeChatChannelService,
-            BisqEasyOfferbookChannelSelectionService
+            BisqEasyOfferbookSelectionService
             > {
 
         private Pin inMediationPin;
@@ -94,7 +94,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
         }
 
         @Override
-        protected BisqEasyOfferbookChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+        protected BisqEasyOfferbookSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
             return chatService.getBisqEasyOfferbookChannelSelectionService();
         }
 

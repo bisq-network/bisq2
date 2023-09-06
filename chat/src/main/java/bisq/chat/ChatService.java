@@ -17,9 +17,9 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesSelectionService;
@@ -101,7 +101,7 @@ public class ChatService implements Service {
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
 
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
-                new BisqEasyOfferbookChannelSelectionService(persistenceService, bisqEasyOfferbookChatChannelService));
+                new BisqEasyOfferbookSelectionService(persistenceService, bisqEasyOfferbookChatChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 new BisqEasyOpenTradesSelectionService(persistenceService, bisqEasyOpenTradeChatChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT,
@@ -216,8 +216,8 @@ public class ChatService implements Service {
         return chatChannelSelectionServices.get(chatChannelDomain);
     }
 
-    public BisqEasyOfferbookChannelSelectionService getBisqEasyOfferbookChannelSelectionService() {
-        return (BisqEasyOfferbookChannelSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
+    public BisqEasyOfferbookSelectionService getBisqEasyOfferbookChannelSelectionService() {
+        return (BisqEasyOfferbookSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
     }
 
     public BisqEasyOpenTradesSelectionService getBisqEasyOpenTradesChannelSelectionService() {

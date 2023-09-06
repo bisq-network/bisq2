@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
@@ -72,7 +72,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMenu<
         BisqEasyOfferbookChatChannel,
         BisqEasyOfferbookChatChannelService,
-        BisqEasyOfferbookChannelSelectionService
+        BisqEasyOfferbookSelectionService
         > {
     @Getter
     private final Controller controller;
@@ -86,7 +86,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             Model,
             BisqEasyOfferbookChatChannel,
             BisqEasyOfferbookChatChannelService,
-            BisqEasyOfferbookChannelSelectionService
+            BisqEasyOfferbookSelectionService
             > {
 
         private Pin numVisibleChannelsPin;
@@ -101,7 +101,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         }
 
         @Override
-        protected BisqEasyOfferbookChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+        protected BisqEasyOfferbookSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
             return chatService.getBisqEasyOfferbookChannelSelectionService();
         }
 

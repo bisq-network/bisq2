@@ -31,11 +31,11 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class BisqEasyOfferbookChannelSelectionService extends ChatChannelSelectionService {
+public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionService {
     private final BisqEasyOfferbookChatChannelService channelService;
 
-    public BisqEasyOfferbookChannelSelectionService(PersistenceService persistenceService,
-                                                    BisqEasyOfferbookChatChannelService channelService) {
+    public BisqEasyOfferbookSelectionService(PersistenceService persistenceService,
+                                             BisqEasyOfferbookChatChannelService channelService) {
         super(persistenceService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         this.channelService = channelService;
     }
@@ -47,7 +47,9 @@ public class BisqEasyOfferbookChannelSelectionService extends ChatChannelSelecti
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        channelService.removeExpiredMessages(chatChannel);
+        if (chatChannel != null) {
+            channelService.removeExpiredMessages(chatChannel);
+        }
         super.selectChannel(chatChannel);
     }
 
