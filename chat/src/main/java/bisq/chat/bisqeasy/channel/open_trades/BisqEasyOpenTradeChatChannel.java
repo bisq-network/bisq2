@@ -132,7 +132,7 @@ public final class BisqEasyOpenTradeChatChannel extends PrivateGroupChatChannel<
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel.Builder builder = bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel.newBuilder()
+        bisq.chat.protobuf.BisqEasyOpenTradeChatChannel.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeChatChannel.newBuilder()
                 .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .setMyUserIdentity(myUserIdentity.toProto())
                 .addAllTraders(getTraders().stream()
@@ -143,11 +143,11 @@ public final class BisqEasyOpenTradeChatChannel extends PrivateGroupChatChannel<
                         .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        return getChatChannelBuilder().setBisqEasyPrivateTradeChatChannel(builder).build();
+        return getChatChannelBuilder().setBisqEasyOpenTradeChatChannel(builder).build();
     }
 
     public static BisqEasyOpenTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                         bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel proto) {
+                                                         bisq.chat.protobuf.BisqEasyOpenTradeChatChannel proto) {
         return new BisqEasyOpenTradeChatChannel(
                 baseProto.getId(),
                 BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
@@ -192,7 +192,7 @@ public final class BisqEasyOpenTradeChatChannel extends PrivateGroupChatChannel<
 
     public UserProfile getPeer() {
         checkArgument(traders.size() >= 1,
-                "traders is expected to has at least size 1 at getPeer() in  BisqEasyPrivateTradeChatChannel");
+                "traders is expected to has at least size 1 at getPeer() in  BisqEasyOpenTradeChatChannel");
         return new ArrayList<>(traders).get(0);
     }
 

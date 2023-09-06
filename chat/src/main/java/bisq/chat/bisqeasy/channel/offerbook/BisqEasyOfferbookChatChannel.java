@@ -51,13 +51,13 @@ public final class BisqEasyOfferbookChatChannel extends PublicChatChannel<BisqEa
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        return getChatChannelBuilder().setBisqEasyPublicChatChannel(bisq.chat.protobuf.BisqEasyPublicChatChannel.newBuilder()
+        return getChatChannelBuilder().setBisqEasyOfferbookChatChannel(bisq.chat.protobuf.BisqEasyOfferbookChatChannel.newBuilder()
                         .setMarket(market.toProto()))
                 .build();
     }
 
     public static BisqEasyOfferbookChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                         bisq.chat.protobuf.BisqEasyPublicChatChannel proto) {
+                                                         bisq.chat.protobuf.BisqEasyOfferbookChatChannel proto) {
         return new BisqEasyOfferbookChatChannel(
                 baseProto.getId(),
                 Market.fromProto(proto.getMarket()));
