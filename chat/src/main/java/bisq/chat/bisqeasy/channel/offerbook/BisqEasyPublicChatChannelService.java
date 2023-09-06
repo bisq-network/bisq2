@@ -53,7 +53,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     public BisqEasyPublicChatChannelService(PersistenceService persistenceService,
                                             NetworkService networkService,
                                             UserService userService) {
-        super(networkService, userService, ChatChannelDomain.BISQ_EASY);
+        super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
 
         getVisibleChannelIds().addListener(() -> {

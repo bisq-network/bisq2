@@ -62,7 +62,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            ChatMessageType chatMessageType,
                                            Optional<BisqEasyOffer> bisqEasyOffer) {
         this(messageId,
-                ChatChannelDomain.BISQ_EASY,
+                ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
                 sender,
                 receiverUserProfileId,
@@ -115,7 +115,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            ChatMessageType chatMessageType,
                                            BisqEasyOffer bisqEasyOffer) {
         super(StringUtils.createShortUid(),
-                ChatChannelDomain.BISQ_EASY,
+                ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
                 sender,
                 receiverUserProfileId,

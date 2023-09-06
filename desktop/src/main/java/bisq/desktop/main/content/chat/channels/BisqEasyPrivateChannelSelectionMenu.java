@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
@@ -60,11 +60,12 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+//todo remove
 @Slf4j
 public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelectionMenu<
         BisqEasyPrivateTradeChatChannel,
         BisqEasyPrivateTradeChatChannelService,
-        BisqEasyChatChannelSelectionService
+        BisqEasyOfferbookChannelSelectionService
         > {
     @Getter
     private final Controller controller;
@@ -78,13 +79,13 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
             Model,
             BisqEasyPrivateTradeChatChannel,
             BisqEasyPrivateTradeChatChannelService,
-            BisqEasyChatChannelSelectionService
+            BisqEasyOfferbookChannelSelectionService
             > {
 
         private Pin inMediationPin;
 
         protected Controller(ServiceProvider serviceProvider) {
-            super(serviceProvider, ChatChannelDomain.BISQ_EASY);
+            super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
         }
 
         @Override
@@ -93,8 +94,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
         }
 
         @Override
-        protected BisqEasyChatChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
-            return chatService.getBisqEasyChatChannelSelectionService();
+        protected BisqEasyOfferbookChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getBisqEasyOfferbookChannelSelectionService();
         }
 
         @Override
@@ -152,7 +153,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
         private final BooleanProperty mediationActivated = new SimpleBooleanProperty();
 
         public Model() {
-            super(ChatChannelDomain.BISQ_EASY);
+            super(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
         }
     }
 

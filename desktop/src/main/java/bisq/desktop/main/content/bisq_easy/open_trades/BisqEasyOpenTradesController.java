@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesChannelSelectionService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
@@ -33,24 +34,23 @@ import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
 @Slf4j
 public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final BisqEasyOpenTradesModel bisqEasyOpenTradesModel;
-    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+    private final BisqEasyPrivateTradeChatChannelService channelService;
+    private final BisqEasyOpenTradesChannelSelectionService selectionService;
 
     private TradeStateController tradeStateController;
-    private Pin channelItemPin;
-    private Subscription selectedChannelItemPin;
+    private Pin channelItemPin, selectedChannelPin;
 
     public BisqEasyOpenTradesController(ServiceProvider serviceProvider) {
-        super(serviceProvider, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_OFFERBOOK);
+        super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
 
-        bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        channelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
         bisqEasyOpenTradesModel = getModel();
     }
 
@@ -86,26 +86,27 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public void onActivate() {
         channelItemPin = FxBindings.<BisqEasyPrivateTradeChatChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
                 .map(BisqEasyOpenTradesView.ChannelItem::new)
-                .to(bisqEasyPrivateTradeChatChannelService.getChannels());
+                .to(channelService.getChannels());
 
         //todo handle case when no channels are available
-        if (model.getSelectedChannelItem().get() == null && !model.getChannelItems().isEmpty()) {
-            model.getSelectedChannelItem().set(model.getChannelItems().get(0));
+        if (selectionService.getSelectedChannel().get() == null && !model.getChannelItems().isEmpty()) {
+            selectionService.getSelectedChannel().set(model.getChannelItems().get(0).getChannel());
         }
 
-        selectedChannelItemPin = EasyBind.subscribe(model.getSelectedChannelItem(), this::selectedChannelItemChanged);
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
     }
+
 
     @Override
     public void onDeactivate() {
         channelItemPin.unbind();
-        selectedChannelItemPin.unsubscribe();
+        selectedChannelPin.unbind();
         resetSelectedChildTarget();
     }
 
-    private void selectedChannelItemChanged(BisqEasyOpenTradesView.ChannelItem channelItem) {
-        if (channelItem != null) {
-            chatChannelChanged(channelItem.getChannel());
+    private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
+        if (channel instanceof BisqEasyPrivateTradeChatChannel) {
+            chatChannelChanged(channel);
         }
     }
 

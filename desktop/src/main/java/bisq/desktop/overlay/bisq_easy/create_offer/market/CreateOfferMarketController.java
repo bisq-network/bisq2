@@ -18,7 +18,7 @@
 package bisq.desktop.overlay.bisq_easy.create_offer.market;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
@@ -47,14 +47,14 @@ public class CreateOfferMarketController implements Controller {
     private final ChatService chatService;
     private final Runnable onNextHandler;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
+    private final BisqEasyOfferbookChannelSelectionService bisqEasyOfferbookChannelSelectionService;
     private Subscription searchTextPin;
 
     public CreateOfferMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
         chatService = serviceProvider.getChatService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
-        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
+        bisqEasyOfferbookChannelSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
         model = new CreateOfferMarketModel();
         view = new CreateOfferMarketView(model, this);
     }
@@ -78,7 +78,7 @@ public class CreateOfferMarketController implements Controller {
         if (model.getSelectedMarket().get() == null) {
             // Use selected public channel or if private channel is selected we use any of the public channels for 
             // setting the default market 
-            Optional.ofNullable(bisqEasyChatChannelSelectionService.getSelectedChannel().get())
+            Optional.ofNullable(bisqEasyOfferbookChannelSelectionService.getSelectedChannel().get())
                     .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
                     .map(channel -> (BisqEasyPublicChatChannel) channel)
                     .or(() -> bisqEasyPublicChatChannelService.getVisibleChannels().stream().findFirst())
@@ -136,6 +136,8 @@ public class CreateOfferMarketController implements Controller {
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
+        bisqEasyPublicChatChannelService.findChannel(item.getMarket())
+                .ifPresent(bisqEasyOfferbookChannelSelectionService::selectChannel);
     }
 
     private Optional<CreateOfferMarketView.MarketListItem> findMarketListItem(Market market) {

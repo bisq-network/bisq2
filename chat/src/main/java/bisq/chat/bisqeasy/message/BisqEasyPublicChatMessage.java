@@ -50,7 +50,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                                      long date,
                                      boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                ChatChannelDomain.BISQ_EASY,
+                ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                 channelId,
                 authorUserProfileId,
                 bisqEasyOffer,

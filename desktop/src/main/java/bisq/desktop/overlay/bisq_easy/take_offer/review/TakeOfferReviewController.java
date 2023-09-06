@@ -178,7 +178,7 @@ public class TakeOfferReviewController implements Controller {
             BisqEasyContract contract = bisqEasyTrade.getContract();
             bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(bisqEasyOffer, contract.getMediator())
                     .thenAccept(result -> UIThread.run(() -> {
-                        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY);
+                        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
                         bisqEasyPrivateTradeChatChannelService.findChannel(bisqEasyOffer)
                                 .ifPresent(chatChannelSelectionService::selectChannel);
                         model.getShowTakeOfferSuccess().set(true);
@@ -225,9 +225,9 @@ public class TakeOfferReviewController implements Controller {
     }
 
 
-    void onOpenPrivateChat() {
+    void onShowOpenTrades() {
         close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 
     private void close() {

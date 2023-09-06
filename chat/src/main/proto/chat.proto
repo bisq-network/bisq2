@@ -41,10 +41,12 @@ enum ChatChannelNotificationType {
 }
 
 enum ChatChannelDomain {
-  BISQ_EASY = 0;
-  DISCUSSION = 1;
-  EVENTS = 2;
-  SUPPORT = 3;
+  BISQ_EASY_OFFERBOOK = 0;
+  BISQ_EASY_OPEN_TRADES = 1;
+  BISQ_EASY_PRIVATE_CHAT = 2;
+  DISCUSSION = 3;
+  EVENTS = 4;
+  SUPPORT = 5;
 }
 
 message Citation {

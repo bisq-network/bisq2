@@ -195,10 +195,17 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     void onOpenHelp() {
-        if (model.chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
-        } else {
-            Navigation.navigateTo(NavigationTarget.CHAT_RULES);
+        switch (model.chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+            case BISQ_EASY_OPEN_TRADES:
+            case BISQ_EASY_PRIVATE_CHAT:
+                Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+                break;
+            case DISCUSSION:
+            case EVENTS:
+            case SUPPORT:
+                Navigation.navigateTo(NavigationTarget.CHAT_RULES);
+                break;
         }
     }
     

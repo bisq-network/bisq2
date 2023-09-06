@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
-import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesChannelSelectionService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
 import bisq.common.encoding.Csv;
@@ -60,15 +60,14 @@ public class BuyerState5 extends BaseState {
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
         private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
-        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
+        private final BisqEasyOpenTradesChannelSelectionService bisqEasyOpenTradesChannelSelectionService;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             bisqEasyPrivateTradeChatChannelService = serviceProvider.getChatService().getBisqEasyPrivateTradeChatChannelService();
-            bisqEasyChatChannelSelectionService = serviceProvider.getChatService().getBisqEasyChatChannelSelectionService();
-
+            bisqEasyOpenTradesChannelSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
         }
 
         @Override
@@ -109,7 +108,7 @@ public class BuyerState5 extends BaseState {
 
         private void doLeaveChannel() {
             bisqEasyPrivateTradeChatChannelService.leaveChannel(model.getChannel());
-            bisqEasyChatChannelSelectionService.maybeSelectFirstChannel();
+            bisqEasyOpenTradesChannelSelectionService.maybeSelectFirstChannel();
         }
 
         private void onExportTrade() {

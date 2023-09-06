@@ -226,7 +226,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         sellersPriceDetails.textProperty().bind(model.getSellersPriceDetails());
         sellersPremium.textProperty().bind(model.getSellersPremium());
 
-        takeOfferSuccessButton.setOnAction(e -> controller.onOpenPrivateChat());
+        takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());
 
         showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
                 show -> {

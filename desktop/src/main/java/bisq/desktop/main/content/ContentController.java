@@ -101,7 +101,6 @@ public class ContentController extends NavigationController {
             case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(serviceProvider));
             }
-
             case USER: {
                 return Optional.of(new UserController(serviceProvider));
             }

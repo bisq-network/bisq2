@@ -20,8 +20,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -31,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class BisqEasyOpenTradesModel extends ChatModel {
     private final ObservableList<BisqEasyOpenTradesView.ChannelItem> channelItems = FXCollections.observableArrayList();
-    private final ObjectProperty<BisqEasyOpenTradesView.ChannelItem> selectedChannelItem = new SimpleObjectProperty<>();
 
     public BisqEasyOpenTradesModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
     public static String createId(BisqEasyOffer bisqEasyOffer) {
-        return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." + bisqEasyOffer.getId();
+        return ChatChannelDomain.BISQ_EASY_OPEN_TRADES.name().toLowerCase() + "." + bisqEasyOffer.getId();
     }
 
     public static BisqEasyPrivateTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
@@ -119,7 +119,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                                             List<BisqEasyPrivateTradeChatMessage> chatMessages,
                                             boolean isInMediation,
                                             ChatChannelNotificationType chatChannelNotificationType) {
-        super(id, ChatChannelDomain.BISQ_EASY, myUserIdentity, chatMessages, chatChannelNotificationType);
+        super(id, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
         this.traders = traders;

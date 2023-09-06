@@ -60,7 +60,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                   NetworkService networkService,
                                                   UserService userService,
                                                   ProofOfWorkService proofOfWorkService) {
-        super(networkService, userService, proofOfWorkService, ChatChannelDomain.BISQ_EASY);
+        super(networkService, userService, proofOfWorkService, ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }

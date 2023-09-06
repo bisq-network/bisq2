@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
@@ -67,11 +67,12 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+//todo remove
 @Slf4j
 public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMenu<
         BisqEasyPublicChatChannel,
         BisqEasyPublicChatChannelService,
-        BisqEasyChatChannelSelectionService
+        BisqEasyOfferbookChannelSelectionService
         > {
     @Getter
     private final Controller controller;
@@ -85,13 +86,13 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             Model,
             BisqEasyPublicChatChannel,
             BisqEasyPublicChatChannelService,
-            BisqEasyChatChannelSelectionService
+            BisqEasyOfferbookChannelSelectionService
             > {
 
         private Pin numVisibleChannelsPin;
 
         protected Controller(ServiceProvider serviceProvider) {
-            super(serviceProvider, ChatChannelDomain.BISQ_EASY);
+            super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         }
 
         @Override
@@ -100,8 +101,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         }
 
         @Override
-        protected BisqEasyChatChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
-            return chatService.getBisqEasyChatChannelSelectionService();
+        protected BisqEasyOfferbookChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getBisqEasyOfferbookChannelSelectionService();
         }
 
         @Override
@@ -211,7 +212,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         private final SortedList<View.MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
 
         public Model() {
-            super(ChatChannelDomain.BISQ_EASY);
+            super(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         }
     }
 

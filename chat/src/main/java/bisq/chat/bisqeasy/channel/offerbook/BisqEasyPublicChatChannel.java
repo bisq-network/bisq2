@@ -32,7 +32,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
     static String createId(Market market) {
-        return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." +
+        return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase() + "." +
                 market.getBaseCurrencyCode() + "-" +
                 market.getQuoteCurrencyCode();
     }
@@ -44,7 +44,7 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
     }
 
     private BisqEasyPublicChatChannel(String id, Market market) {
-        super(id, ChatChannelDomain.BISQ_EASY, ChatChannelNotificationType.ALL);
+        super(id, ChatChannelDomain.BISQ_EASY_OFFERBOOK, ChatChannelNotificationType.ALL);
 
         this.market = market;
     }

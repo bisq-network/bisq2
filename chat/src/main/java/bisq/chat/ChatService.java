@@ -17,11 +17,13 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesChannelSelectionService;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.private_chat.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -29,6 +31,7 @@ import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.priv.PrivateChatChannelService;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
+import bisq.chat.channel.pub.CommonChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.notifications.ChatNotificationService;
@@ -94,12 +97,18 @@ public class ChatService implements Service {
                 networkService,
                 userService,
                 proofOfWorkService);
-        addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY);
-        chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY, new BisqEasyChatChannelSelectionService(persistenceService,
-                twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY),
-                bisqEasyPublicChatChannelService,
-                bisqEasyPrivateTradeChatChannelService,
-                userIdentityService));
+
+        addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
+
+        chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
+                new BisqEasyOfferbookChannelSelectionService(persistenceService, bisqEasyPublicChatChannelService));
+        chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
+                new BisqEasyOpenTradesChannelSelectionService(persistenceService, bisqEasyPrivateTradeChatChannelService));
+        chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT,
+                new BisqEasyPrivateChatChannelSelectionService(persistenceService,
+                        twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT),
+                        userIdentityService));
+
 
         // DISCUSSION
         addToCommonPublicChatChannelServices(ChatChannelDomain.DISCUSSION,
@@ -189,18 +198,34 @@ public class ChatService implements Service {
         }
     }
 
-    public void createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
-        TwoPartyPrivateChatChannelService chatChannelService = twoPartyPrivateChatChannelServices.get(chatChannelDomain);
-        chatChannelService.findOrCreateChannel(chatChannelDomain, peer)
-                .ifPresent(channel -> getChatChannelSelectionService(chatChannelDomain).selectChannel(channel));
+    public Optional<TwoPartyPrivateChatChannel> createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
+        if (chatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
+            Optional<TwoPartyPrivateChatChannel> optionalChannel = twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT).findOrCreateChannel(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, peer);
+            optionalChannel.ifPresent(channel -> getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT).selectChannel(channel));
+            return optionalChannel;
+        } else {
+            Optional<TwoPartyPrivateChatChannel> optionalChannel = twoPartyPrivateChatChannelServices.get(chatChannelDomain).findOrCreateChannel(chatChannelDomain, peer);
+            optionalChannel.ifPresent(channel -> getChatChannelSelectionService(chatChannelDomain).selectChannel(channel));
+            return optionalChannel;
+        }
+
     }
 
     public ChatChannelSelectionService getChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
         return chatChannelSelectionServices.get(chatChannelDomain);
     }
 
-    public BisqEasyChatChannelSelectionService getBisqEasyChatChannelSelectionService() {
-        return (BisqEasyChatChannelSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY);
+    public BisqEasyOfferbookChannelSelectionService getBisqEasyOfferbookChannelSelectionService() {
+        return (BisqEasyOfferbookChannelSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
+    }
+
+    public BisqEasyOpenTradesChannelSelectionService getBisqEasyOpenTradesChannelSelectionService() {
+        return (BisqEasyOpenTradesChannelSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
+    }
+
+    public BisqEasyPrivateChatChannelSelectionService getBisqEasyPrivateChatChannelSelectionService() {
+        return (BisqEasyPrivateChatChannelSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
     }
 
     private void addToTwoPartyPrivateChatChannelServices(ChatChannelDomain chatChannelDomain) {
@@ -223,7 +248,7 @@ public class ChatService implements Service {
 
     private void addToChatChannelSelectionServices(ChatChannelDomain chatChannelDomain) {
         chatChannelSelectionServices.put(chatChannelDomain,
-                new ChatChannelSelectionService(persistenceService,
+                new CommonChannelSelectionService(persistenceService,
                         twoPartyPrivateChatChannelServices.get(chatChannelDomain),
                         commonPublicChatChannelServices.get(chatChannelDomain),
                         chatChannelDomain,

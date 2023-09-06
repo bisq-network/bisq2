@@ -251,9 +251,9 @@ public class CreateOfferReviewOfferController implements Controller {
                 }));
     }
 
-    void onNavigateToOpenTrades() {
+    void onShowOfferbook() {
         close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
     }
 
     private void close() {

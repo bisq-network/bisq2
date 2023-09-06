@@ -56,10 +56,18 @@ public abstract class ChatModel extends NavigationModel {
     public ChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
 
-        if (chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
-            helpTitle = Res.get("chat.topMenu.tradeGuide.tooltip");
-        } else {
-            helpTitle = Res.get("chat.topMenu.chatRules.tooltip");
+        switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+            case BISQ_EASY_OPEN_TRADES:
+            case BISQ_EASY_PRIVATE_CHAT:
+                helpTitle = Res.get("chat.topMenu.tradeGuide.tooltip");
+                break;
+            case DISCUSSION:
+            case EVENTS:
+            case SUPPORT:
+            default:
+                helpTitle = Res.get("chat.topMenu.chatRules.tooltip");
+                break;
         }
     }
 
