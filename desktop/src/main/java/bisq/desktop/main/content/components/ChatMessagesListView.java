@@ -19,7 +19,7 @@ package bisq.desktop.main.content.components;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannel;
@@ -194,8 +194,8 @@ public class ChatMessagesListView {
 
                     if (channel instanceof BisqEasyOfferbookChatChannel) {
                         chatMessagesPin = bindChatMessages((BisqEasyOfferbookChatChannel) channel);
-                    } else if (channel instanceof BisqEasyPrivateTradeChatChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyPrivateTradeChatChannel) channel);
+                    } else if (channel instanceof BisqEasyOpenTradeChatChannel) {
+                        chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChatChannel) channel);
                     } else if (channel instanceof CommonPublicChatChannel) {
                         chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
                     } else if (channel instanceof TwoPartyPrivateChatChannel) {

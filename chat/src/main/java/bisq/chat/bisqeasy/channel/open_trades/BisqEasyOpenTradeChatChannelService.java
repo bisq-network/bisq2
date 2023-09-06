@@ -49,17 +49,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChannelService<BisqEasyPrivateTradeChatMessage, BisqEasyPrivateTradeChatChannel, BisqEasyPrivateTradeChatChannelStore> {
+public class BisqEasyOpenTradeChatChannelService extends PrivateGroupChatChannelService<BisqEasyPrivateTradeChatMessage, BisqEasyOpenTradeChatChannel, BisqEasyOpenTradeChatChannelStore> {
 
     @Getter
-    private final BisqEasyPrivateTradeChatChannelStore persistableStore = new BisqEasyPrivateTradeChatChannelStore();
+    private final BisqEasyOpenTradeChatChannelStore persistableStore = new BisqEasyOpenTradeChatChannelStore();
     @Getter
-    private final Persistence<BisqEasyPrivateTradeChatChannelStore> persistence;
+    private final Persistence<BisqEasyOpenTradeChatChannelStore> persistence;
 
-    public BisqEasyPrivateTradeChatChannelService(PersistenceService persistenceService,
-                                                  NetworkService networkService,
-                                                  UserService userService,
-                                                  ProofOfWorkService proofOfWorkService) {
+    public BisqEasyOpenTradeChatChannelService(PersistenceService persistenceService,
+                                               NetworkService networkService,
+                                               UserService userService,
+                                               ProofOfWorkService proofOfWorkService) {
         super(networkService, userService, proofOfWorkService, ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
@@ -82,31 +82,31 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqEasyPrivateTradeChatChannel traderFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
-                                                                      UserIdentity myUserIdentity,
-                                                                      UserProfile peer,
-                                                                      Optional<UserProfile> mediator) {
+    public BisqEasyOpenTradeChatChannel traderFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
+                                                                   UserIdentity myUserIdentity,
+                                                                   UserProfile peer,
+                                                                   Optional<UserProfile> mediator) {
         return findChannel(bisqEasyOffer)
                 .orElseGet(() -> traderCreatesChannel(bisqEasyOffer, myUserIdentity, peer, mediator));
     }
 
-    public BisqEasyPrivateTradeChatChannel traderCreatesChannel(BisqEasyOffer bisqEasyOffer,
-                                                                UserIdentity myUserIdentity,
-                                                                UserProfile peer,
-                                                                Optional<UserProfile> mediator) {
-        BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
+    public BisqEasyOpenTradeChatChannel traderCreatesChannel(BisqEasyOffer bisqEasyOffer,
+                                                             UserIdentity myUserIdentity,
+                                                             UserProfile peer,
+                                                             Optional<UserProfile> mediator) {
+        BisqEasyOpenTradeChatChannel channel = BisqEasyOpenTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
         getChannels().add(channel);
         persist();
         return channel;
     }
 
-    public BisqEasyPrivateTradeChatChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
-                                                                        UserIdentity myUserIdentity,
-                                                                        UserProfile requestingTrader,
-                                                                        UserProfile nonRequestingTrader) {
+    public BisqEasyOpenTradeChatChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
+                                                                     UserIdentity myUserIdentity,
+                                                                     UserProfile requestingTrader,
+                                                                     UserProfile nonRequestingTrader) {
         return findChannel(bisqEasyOffer)
                 .orElseGet(() -> {
-                    BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
+                    BisqEasyOpenTradeChatChannel channel = BisqEasyOpenTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
                     getChannels().add(channel);
                     persist();
                     return channel;
@@ -124,7 +124,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                     if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
                         return CompletableFuture.<NetworkService.SendMessageResult>failedFuture(new RuntimeException());
                     }
-                    BisqEasyPrivateTradeChatChannel channel = traderFindOrCreatesChannel(bisqEasyOffer,
+                    BisqEasyOpenTradeChatChannel channel = traderFindOrCreatesChannel(bisqEasyOffer,
                             myUserIdentity,
                             makerUserProfile,
                             mediator);
@@ -142,20 +142,20 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendSystemMessage(String text,
-                                                                                 BisqEasyPrivateTradeChatChannel channel) {
+                                                                                 BisqEasyOpenTradeChatChannel channel) {
         return sendMessage(text, Optional.empty(), ChatMessageType.SYSTEM_MESSAGE, channel);
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Citation> citation,
-                                                                               BisqEasyPrivateTradeChatChannel channel) {
+                                                                               BisqEasyOpenTradeChatChannel channel) {
         return sendMessage(text, citation, ChatMessageType.TEXT, channel);
     }
 
     private CompletableFuture<NetworkService.SendMessageResult> sendMessage(@Nullable String text,
                                                                             Optional<Citation> citation,
                                                                             ChatMessageType chatMessageType,
-                                                                            BisqEasyPrivateTradeChatChannel channel) {
+                                                                            BisqEasyOpenTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
         long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
@@ -173,7 +173,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
     @Override
-    public void leaveChannel(BisqEasyPrivateTradeChatChannel channel) {
+    public void leaveChannel(BisqEasyOpenTradeChatChannel channel) {
         super.leaveChannel(channel);
 
         // We want to send a leave message even the peer has not sent any message so far (is not participant yet).
@@ -184,16 +184,16 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
     @Override
-    public ObservableArray<BisqEasyPrivateTradeChatChannel> getChannels() {
+    public ObservableArray<BisqEasyOpenTradeChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
-    public void setIsInMediation(BisqEasyPrivateTradeChatChannel channel, boolean isInMediation) {
+    public void setIsInMediation(BisqEasyOpenTradeChatChannel channel, boolean isInMediation) {
         channel.setIsInMediation(isInMediation);
         persist();
     }
 
-    public void addMediatorsResponseMessage(BisqEasyPrivateTradeChatChannel channel, String text) {
+    public void addMediatorsResponseMessage(BisqEasyOpenTradeChatChannel channel, String text) {
         setIsInMediation(channel, true);
         checkArgument(channel.getMediator().isPresent());
         BisqEasyPrivateTradeChatMessage systemMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
@@ -215,8 +215,8 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public Optional<BisqEasyPrivateTradeChatChannel> findChannel(BisqEasyOffer bisqEasyOffer) {
-        return findChannel(BisqEasyPrivateTradeChatChannel.createId(bisqEasyOffer));
+    public Optional<BisqEasyOpenTradeChatChannel> findChannel(BisqEasyOffer bisqEasyOffer) {
+        return findChannel(BisqEasyOpenTradeChatChannel.createId(bisqEasyOffer));
     }
 
 
@@ -226,7 +226,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
 
     @Override
     protected BisqEasyPrivateTradeChatMessage createAndGetNewPrivateChatMessage(String messageId,
-                                                                                BisqEasyPrivateTradeChatChannel channel,
+                                                                                BisqEasyOpenTradeChatChannel channel,
                                                                                 UserProfile sender,
                                                                                 String receiverUserProfileId,
                                                                                 @Nullable String text,
@@ -252,7 +252,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
 
     //todo
     @Override
-    protected BisqEasyPrivateTradeChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    protected BisqEasyOpenTradeChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
@@ -291,7 +291,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         }
     }
 
-    private boolean allowSendLeaveMessage(BisqEasyPrivateTradeChatChannel channel, UserProfile userProfile) {
+    private boolean allowSendLeaveMessage(BisqEasyOpenTradeChatChannel channel, UserProfile userProfile) {
         return channel.getUserProfileIdsOfSendingLeaveMessage().contains(userProfile.getId());
     }
 }

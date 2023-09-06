@@ -21,7 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
@@ -49,7 +49,7 @@ public abstract class BaseState {
         protected final UserIdentityService userIdentityService;
         private final MarketPriceService marketPriceService;
 
-        protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
             chatService = serviceProvider.getChatService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             accountService = serviceProvider.getAccountService();
@@ -62,7 +62,7 @@ public abstract class BaseState {
 
         protected abstract V createView();
 
-        protected abstract M createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel);
+        protected abstract M createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel);
 
         @Override
         public void onActivate() {
@@ -88,14 +88,14 @@ public abstract class BaseState {
         }
 
         protected void sendSystemMessage(String message) {
-            chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(message, model.getChannel());
+            chatService.getBisqEasyOpenTradeChatChannelService().sendSystemMessage(message, model.getChannel());
         }
     }
 
     @Getter
     protected static class Model implements bisq.desktop.common.view.Model {
         protected final BisqEasyTrade bisqEasyTrade;
-        protected final BisqEasyPrivateTradeChatChannel channel;
+        protected final BisqEasyOpenTradeChatChannel channel;
         @Setter
         protected String quoteCode;
         @Setter
@@ -103,7 +103,7 @@ public abstract class BaseState {
         @Setter
         protected String formattedQuoteAmount;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
             this.bisqEasyTrade = bisqEasyTrade;
             this.channel = channel;
         }

@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.chat.channels;
 
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
@@ -63,8 +63,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 //todo remove
 @Slf4j
 public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelectionMenu<
-        BisqEasyPrivateTradeChatChannel,
-        BisqEasyPrivateTradeChatChannelService,
+        BisqEasyOpenTradeChatChannel,
+        BisqEasyOpenTradeChatChannelService,
         BisqEasyOfferbookChannelSelectionService
         > {
     @Getter
@@ -77,8 +77,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
     protected static class Controller extends PrivateChannelSelectionMenu.Controller<
             View,
             Model,
-            BisqEasyPrivateTradeChatChannel,
-            BisqEasyPrivateTradeChatChannelService,
+            BisqEasyOpenTradeChatChannel,
+            BisqEasyOpenTradeChatChannelService,
             BisqEasyOfferbookChannelSelectionService
             > {
 
@@ -89,8 +89,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
         }
 
         @Override
-        protected BisqEasyPrivateTradeChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
-            return chatService.getBisqEasyPrivateTradeChatChannelService();
+        protected BisqEasyOpenTradeChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getBisqEasyOpenTradeChatChannelService();
         }
 
         @Override
@@ -128,21 +128,21 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
             super.handleSelectedChannelChange(chatChannel);
 
             if (isChannelExpectedInstance(chatChannel)) {
-                BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                userIdentityService.selectChatUserIdentity(bisqEasyPrivateTradeChatChannel.getMyUserIdentity());
+                BisqEasyOpenTradeChatChannel bisqEasyOpenTradeChatChannel = (BisqEasyOpenTradeChatChannel) chatChannel;
+                userIdentityService.selectChatUserIdentity(bisqEasyOpenTradeChatChannel.getMyUserIdentity());
                 if (inMediationPin != null) {
                     inMediationPin.unbind();
                 }
-                inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.isInMediationObservable());
+                inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyOpenTradeChatChannel.isInMediationObservable());
             }
         }
 
         @Override
         protected boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel) {
-            return chatChannel instanceof BisqEasyPrivateTradeChatChannel;
+            return chatChannel instanceof BisqEasyOpenTradeChatChannel;
         }
 
-        public String getChannelTitle(BisqEasyPrivateTradeChatChannel chatChannel) {
+        public String getChannelTitle(BisqEasyOpenTradeChatChannel chatChannel) {
             return chatService.findChatChannelService(chatChannel)
                     .map(service -> service.getChannelTitle(chatChannel))
                     .orElse("");
@@ -243,8 +243,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
 
-                    if (item != null && !empty && item.getChatChannel() instanceof BisqEasyPrivateTradeChatChannel) {
-                        BisqEasyPrivateTradeChatChannel privateChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
+                    if (item != null && !empty && item.getChatChannel() instanceof BisqEasyOpenTradeChatChannel) {
+                        BisqEasyOpenTradeChatChannel privateChatChannel = (BisqEasyOpenTradeChatChannel) item.getChatChannel();
                         List<ImageView> icons = new ArrayList<>();
                         UserProfile peer = privateChatChannel.getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));

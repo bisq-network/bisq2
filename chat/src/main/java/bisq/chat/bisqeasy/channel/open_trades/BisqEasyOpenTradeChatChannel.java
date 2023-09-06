@@ -47,26 +47,26 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Slf4j
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
+public final class BisqEasyOpenTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
     public static String createId(BisqEasyOffer bisqEasyOffer) {
         return ChatChannelDomain.BISQ_EASY_OPEN_TRADES.name().toLowerCase() + "." + bisqEasyOffer.getId();
     }
 
-    public static BisqEasyPrivateTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
-                                                                 UserIdentity myUserIdentity,
-                                                                 UserProfile peer,
-                                                                 Optional<UserProfile> mediator) {
-        return new BisqEasyPrivateTradeChatChannel(bisqEasyOffer,
+    public static BisqEasyOpenTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
+                                                              UserIdentity myUserIdentity,
+                                                              UserProfile peer,
+                                                              Optional<UserProfile> mediator) {
+        return new BisqEasyOpenTradeChatChannel(bisqEasyOffer,
                 myUserIdentity,
                 peer,
                 mediator);
     }
 
-    public static BisqEasyPrivateTradeChatChannel createByMediator(BisqEasyOffer bisqEasyOffer,
-                                                                   UserIdentity myUserIdentity,
-                                                                   UserProfile requestingTrader,
-                                                                   UserProfile nonRequestingTrader) {
-        return new BisqEasyPrivateTradeChatChannel(bisqEasyOffer,
+    public static BisqEasyOpenTradeChatChannel createByMediator(BisqEasyOffer bisqEasyOffer,
+                                                                UserIdentity myUserIdentity,
+                                                                UserProfile requestingTrader,
+                                                                UserProfile nonRequestingTrader) {
+        return new BisqEasyOpenTradeChatChannel(bisqEasyOffer,
                 myUserIdentity,
                 requestingTrader,
                 nonRequestingTrader);
@@ -81,10 +81,10 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Optional<UserProfile> mediator;
 
     // Called from trader
-    private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
-                                            UserIdentity myUserIdentity,
-                                            UserProfile peer,
-                                            Optional<UserProfile> mediator) {
+    private BisqEasyOpenTradeChatChannel(BisqEasyOffer bisqEasyOffer,
+                                         UserIdentity myUserIdentity,
+                                         UserProfile peer,
+                                         Optional<UserProfile> mediator) {
         this(createId(bisqEasyOffer),
                 bisqEasyOffer,
                 myUserIdentity,
@@ -96,10 +96,10 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     }
 
     // Called from mediator
-    private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
-                                            UserIdentity myUserIdentity,
-                                            UserProfile requestingTrader,
-                                            UserProfile nonRequestingTrader) {
+    private BisqEasyOpenTradeChatChannel(BisqEasyOffer bisqEasyOffer,
+                                         UserIdentity myUserIdentity,
+                                         UserProfile requestingTrader,
+                                         UserProfile nonRequestingTrader) {
         this(createId(bisqEasyOffer),
                 bisqEasyOffer,
                 myUserIdentity,
@@ -111,14 +111,14 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     }
 
     // From proto
-    private BisqEasyPrivateTradeChatChannel(String id,
-                                            BisqEasyOffer bisqEasyOffer,
-                                            UserIdentity myUserIdentity,
-                                            Set<UserProfile> traders,
-                                            Optional<UserProfile> mediator,
-                                            List<BisqEasyPrivateTradeChatMessage> chatMessages,
-                                            boolean isInMediation,
-                                            ChatChannelNotificationType chatChannelNotificationType) {
+    private BisqEasyOpenTradeChatChannel(String id,
+                                         BisqEasyOffer bisqEasyOffer,
+                                         UserIdentity myUserIdentity,
+                                         Set<UserProfile> traders,
+                                         Optional<UserProfile> mediator,
+                                         List<BisqEasyPrivateTradeChatMessage> chatMessages,
+                                         boolean isInMediation,
+                                         ChatChannelNotificationType chatChannelNotificationType) {
         super(id, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
@@ -146,9 +146,9 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         return getChatChannelBuilder().setBisqEasyPrivateTradeChatChannel(builder).build();
     }
 
-    public static BisqEasyPrivateTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                            bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel proto) {
-        return new BisqEasyPrivateTradeChatChannel(
+    public static BisqEasyOpenTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                         bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel proto) {
+        return new BisqEasyOpenTradeChatChannel(
                 baseProto.getId(),
                 BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),

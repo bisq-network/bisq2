@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesChannelSelectionService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
@@ -40,8 +40,8 @@ import java.util.Optional;
 @Slf4j
 public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final BisqEasyOpenTradesModel bisqEasyOpenTradesModel;
-    private final BisqEasyPrivateTradeChatChannelService channelService;
-    private final BisqEasyOpenTradesChannelSelectionService selectionService;
+    private final BisqEasyOpenTradeChatChannelService channelService;
+    private final BisqEasyOpenTradesSelectionService selectionService;
 
     private TradeStateController tradeStateController;
     private Pin channelItemPin, selectedChannelPin;
@@ -49,7 +49,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public BisqEasyOpenTradesController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
 
-        channelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        channelService = chatService.getBisqEasyOpenTradeChatChannelService();
         selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
         bisqEasyOpenTradesModel = getModel();
     }
@@ -84,7 +84,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void onActivate() {
-        channelItemPin = FxBindings.<BisqEasyPrivateTradeChatChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
+        channelItemPin = FxBindings.<BisqEasyOpenTradeChatChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
                 .map(BisqEasyOpenTradesView.ChannelItem::new)
                 .to(channelService.getChannels());
 
@@ -105,7 +105,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     }
 
     private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-        if (channel instanceof BisqEasyPrivateTradeChatChannel) {
+        if (channel instanceof BisqEasyOpenTradeChatChannel) {
             chatChannelChanged(channel);
         }
     }
@@ -114,14 +114,14 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.chatChannelChanged(chatChannel);
 
-        if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+        if (chatChannel instanceof BisqEasyOpenTradeChatChannel) {
             UIThread.run(() -> {
-                BisqEasyPrivateTradeChatChannel channel = (BisqEasyPrivateTradeChatChannel) chatChannel;
+                BisqEasyOpenTradeChatChannel channel = (BisqEasyOpenTradeChatChannel) chatChannel;
                 applyPeersIcon(channel);
 
                 BisqEasyOffer offer = channel.getBisqEasyOffer();
                 boolean isMaker = isMaker(offer);
-                String peer = ((BisqEasyPrivateTradeChatChannel) chatChannel).getPeer().getUserName();
+                String peer = ((BisqEasyOpenTradeChatChannel) chatChannel).getPeer().getUserName();
                 String title = isMaker ?
                         Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peer, offer.getShortId()) :
                         Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peer, offer.getShortId());

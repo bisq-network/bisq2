@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChannelSelectionService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
@@ -108,9 +108,9 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
         selectedChannelPin = bisqEasyOfferbookChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
 
-        ObservableArray<BisqEasyPrivateTradeChatChannel> bisqEasyPrivateTradeChatChannels = chatService.getBisqEasyPrivateTradeChatChannelService().getChannels();
-        bisqEasyPrivateTradeChatChannelsPin = bisqEasyPrivateTradeChatChannels.addListener(() ->
-                model.getIsTradeChannelVisible().set(!bisqEasyPrivateTradeChatChannels.isEmpty()));
+        ObservableArray<BisqEasyOpenTradeChatChannel> bisqEasyOpenTradeChatChannels = chatService.getBisqEasyOpenTradeChatChannelService().getChannels();
+        bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChatChannels.addListener(() ->
+                model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChatChannels.isEmpty()));
 
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChatChannelService.getChannels().stream()
                 .map(MarketChannelItem::new)

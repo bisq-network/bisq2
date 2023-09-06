@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -124,9 +124,9 @@ public class BisqEasyOpenTradesView extends ChatView {
     @Getter
     @EqualsAndHashCode
     static class ChannelItem {
-        private final BisqEasyPrivateTradeChatChannel channel;
+        private final BisqEasyOpenTradeChatChannel channel;
 
-        public ChannelItem(BisqEasyPrivateTradeChatChannel channel) {
+        public ChannelItem(BisqEasyOpenTradeChatChannel channel) {
             this.channel = channel;
         }
     }

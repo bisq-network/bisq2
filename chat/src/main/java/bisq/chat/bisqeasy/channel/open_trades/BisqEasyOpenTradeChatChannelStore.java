@@ -28,28 +28,28 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class BisqEasyPrivateTradeChatChannelStore implements PersistableStore<BisqEasyPrivateTradeChatChannelStore> {
-    private final ObservableArray<BisqEasyPrivateTradeChatChannel> channels = new ObservableArray<>();
+public class BisqEasyOpenTradeChatChannelStore implements PersistableStore<BisqEasyOpenTradeChatChannelStore> {
+    private final ObservableArray<BisqEasyOpenTradeChatChannel> channels = new ObservableArray<>();
 
-    public BisqEasyPrivateTradeChatChannelStore() {
+    public BisqEasyOpenTradeChatChannelStore() {
     }
 
-    private BisqEasyPrivateTradeChatChannelStore(List<BisqEasyPrivateTradeChatChannel> privateTradeChannels) {
+    private BisqEasyOpenTradeChatChannelStore(List<BisqEasyOpenTradeChatChannel> privateTradeChannels) {
         setAll(privateTradeChannels);
     }
 
     @Override
     public bisq.chat.protobuf.BisqEasyPrivateTradeChatChannelStore toProto() {
         bisq.chat.protobuf.BisqEasyPrivateTradeChatChannelStore.Builder builder = bisq.chat.protobuf.BisqEasyPrivateTradeChatChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(BisqEasyPrivateTradeChatChannel::toProto).collect(Collectors.toList()));
+                .addAllChannels(channels.stream().map(BisqEasyOpenTradeChatChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static BisqEasyPrivateTradeChatChannelStore fromProto(bisq.chat.protobuf.BisqEasyPrivateTradeChatChannelStore proto) {
-        List<BisqEasyPrivateTradeChatChannel> privateTradeChannels = proto.getChannelsList().stream()
-                .map(e -> (BisqEasyPrivateTradeChatChannel) BisqEasyPrivateTradeChatChannel.fromProto(e))
+    public static BisqEasyOpenTradeChatChannelStore fromProto(bisq.chat.protobuf.BisqEasyPrivateTradeChatChannelStore proto) {
+        List<BisqEasyOpenTradeChatChannel> privateTradeChannels = proto.getChannelsList().stream()
+                .map(e -> (BisqEasyOpenTradeChatChannel) BisqEasyOpenTradeChatChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new BisqEasyPrivateTradeChatChannelStore(privateTradeChannels);
+        return new BisqEasyOpenTradeChatChannelStore(privateTradeChannels);
     }
 
     @Override
@@ -64,16 +64,16 @@ public class BisqEasyPrivateTradeChatChannelStore implements PersistableStore<Bi
     }
 
     @Override
-    public void applyPersisted(BisqEasyPrivateTradeChatChannelStore chatStore) {
+    public void applyPersisted(BisqEasyOpenTradeChatChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public BisqEasyPrivateTradeChatChannelStore getClone() {
-        return new BisqEasyPrivateTradeChatChannelStore(channels);
+    public BisqEasyOpenTradeChatChannelStore getClone() {
+        return new BisqEasyOpenTradeChatChannelStore(channels);
     }
 
-    public void setAll(List<BisqEasyPrivateTradeChatChannel> privateTradeChannels) {
+    public void setAll(List<BisqEasyOpenTradeChatChannel> privateTradeChannels) {
         this.channels.setAll(privateTradeChannels);
     }
 }

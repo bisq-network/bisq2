@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
 import bisq.chat.bisqeasy.channel.private_chat.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
@@ -101,7 +101,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     }
 
     private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-        if (channel instanceof BisqEasyPrivateTradeChatChannel) {
+        if (channel instanceof BisqEasyOpenTradeChatChannel) {
             chatChannelChanged(channel);
         }
     }

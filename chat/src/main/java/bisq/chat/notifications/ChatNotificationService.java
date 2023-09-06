@@ -20,8 +20,8 @@ package bisq.chat.notifications;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannel;
 import bisq.chat.bisqeasy.channel.offerbook.BisqEasyOfferbookChatChannelService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannel;
@@ -124,9 +124,9 @@ public class ChatNotificationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
-                onChatChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
+        BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService = chatService.getBisqEasyOpenTradeChatChannelService();
+        bisqEasyOpenTradeChatChannelService.getChannels().addListener(() ->
+                onChatChannelsChanged(bisqEasyOpenTradeChatChannelService.getChannels()));
 
         BisqEasyOfferbookChatChannelService bisqEasyOfferbookChatChannelService = chatService.getBisqEasyOfferbookChatChannelService();
         bisqEasyOfferbookChatChannelService.getChannels().addListener(() ->
@@ -284,7 +284,7 @@ public class ChatNotificationService implements Service {
         if (chatMessage instanceof BisqEasyPrivateTradeChatMessage) {
             BisqEasyPrivateTradeChatMessage bisqEasyPrivateTradeChatMessage = (BisqEasyPrivateTradeChatMessage) chatMessage;
             if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
-                BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
+                BisqEasyOpenTradeChatChannel privateTradeChannel = (BisqEasyOpenTradeChatChannel) chatChannel;
                 title = Res.get("chat.notifications.offerTaken", privateTradeChannel.getPeer().getUserName());
                 notificationsService.sendNotification(notificationId, title, "");
                 return;

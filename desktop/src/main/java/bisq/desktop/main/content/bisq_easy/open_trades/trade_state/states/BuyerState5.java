@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesChannelSelectionService;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.open_trades.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannel;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.open_trades.BisqEasyOpenTradesSelectionService;
 import bisq.common.encoding.Csv;
 import bisq.common.util.FileUtils;
 import bisq.desktop.ServiceProvider;
@@ -49,7 +49,7 @@ import java.util.List;
 public class BuyerState5 extends BaseState {
     private final Controller controller;
 
-    public BuyerState5(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+    public BuyerState5(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -59,19 +59,19 @@ public class BuyerState5 extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
-        private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
-        private final BisqEasyOpenTradesChannelSelectionService bisqEasyOpenTradesChannelSelectionService;
+        private final BisqEasyOpenTradeChatChannelService bisqEasyOpenTradeChatChannelService;
+        private final BisqEasyOpenTradesSelectionService bisqEasyOpenTradesSelectionService;
 
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
-            bisqEasyPrivateTradeChatChannelService = serviceProvider.getChatService().getBisqEasyPrivateTradeChatChannelService();
-            bisqEasyOpenTradesChannelSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
+            bisqEasyOpenTradeChatChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChatChannelService();
+            bisqEasyOpenTradesSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
         }
 
         @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
             return new Model(bisqEasyTrade, channel);
         }
 
@@ -107,8 +107,8 @@ public class BuyerState5 extends BaseState {
         }
 
         private void doLeaveChannel() {
-            bisqEasyPrivateTradeChatChannelService.leaveChannel(model.getChannel());
-            bisqEasyOpenTradesChannelSelectionService.maybeSelectFirstChannel();
+            bisqEasyOpenTradeChatChannelService.leaveChannel(model.getChannel());
+            bisqEasyOpenTradesSelectionService.maybeSelectFirstChannel();
         }
 
         private void onExportTrade() {
@@ -154,7 +154,7 @@ public class BuyerState5 extends BaseState {
         @Setter
         protected String txId;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyPrivateTradeChatChannel channel) {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChatChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
