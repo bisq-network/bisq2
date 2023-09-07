@@ -195,7 +195,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
         if (marketChannelItem != null) {
             bisqEasyOfferbookChannelService.findChannel(marketChannelItem.getMarket())
                     .ifPresent(channel -> {
-                        if (bisqEasyOfferbookSelectionService.getSelectedChannel() != null) {
+                        if (bisqEasyOfferbookSelectionService.getSelectedChannel().get() != null) {
                             bisqEasyOfferbookChannelService.leaveChannel(bisqEasyOfferbookSelectionService.getSelectedChannel().get().getId());
                         }
                         bisqEasyOfferbookChannelService.joinChannel(channel);

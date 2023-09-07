@@ -39,8 +39,10 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class MediationResponse implements MailboxMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
+    private final String tradeId;
 
-    public MediationResponse(BisqEasyOffer bisqEasyOffer) {
+    public MediationResponse(String tradeId, BisqEasyOffer bisqEasyOffer) {
+        this.tradeId = tradeId;
         this.bisqEasyOffer = bisqEasyOffer;
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //425
@@ -56,12 +58,13 @@ public final class MediationResponse implements MailboxMessage {
 
     private bisq.support.protobuf.MediationResponse toMediationResponseProto() {
         return bisq.support.protobuf.MediationResponse.newBuilder()
+                .setTradeId(tradeId)
                 .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .build();
     }
 
     public static MediationResponse fromProto(bisq.support.protobuf.MediationResponse proto) {
-        return new MediationResponse(BisqEasyOffer.fromProto(proto.getBisqEasyOffer()));
+        return new MediationResponse(proto.getTradeId(), BisqEasyOffer.fromProto(proto.getBisqEasyOffer()));
     }
 
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {

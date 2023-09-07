@@ -45,11 +45,17 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class MediationRequest implements MailboxMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
+    private final String tradeId;
     private final UserProfile requester;
     private final UserProfile peer;
     private final List<BisqEasyOpenTradeMessage> chatMessages;
 
-    public MediationRequest(BisqEasyOffer bisqEasyOffer, UserProfile requester, UserProfile peer, List<BisqEasyOpenTradeMessage> chatMessages) {
+    public MediationRequest(String tradeId,
+                            BisqEasyOffer bisqEasyOffer,
+                            UserProfile requester,
+                            UserProfile peer,
+                            List<BisqEasyOpenTradeMessage> chatMessages) {
+        this.tradeId = tradeId;
         this.bisqEasyOffer = bisqEasyOffer;
         this.requester = requester;
         this.peer = peer;
@@ -71,6 +77,7 @@ public final class MediationRequest implements MailboxMessage {
 
     private bisq.support.protobuf.MediationRequest toMediationRequestProto() {
         return bisq.support.protobuf.MediationRequest.newBuilder()
+                .setTradeId(tradeId)
                 .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .setRequester(requester.toProto())
                 .setPeer(peer.toProto())
@@ -81,7 +88,8 @@ public final class MediationRequest implements MailboxMessage {
     }
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new MediationRequest(BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
+        return new MediationRequest(proto.getTradeId(),
+                BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()

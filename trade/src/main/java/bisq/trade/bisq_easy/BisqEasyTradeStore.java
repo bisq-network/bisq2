@@ -83,6 +83,6 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
     }
 
     public Optional<BisqEasyTrade> findTrade(String tradeId) {
-        return trades.stream().filter(e -> e.getOffer().getId().equals(tradeId)).findAny();
+        return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
     }
 }

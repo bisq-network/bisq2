@@ -89,12 +89,12 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public void onActivate() {
         model.getFilteredList().setPredicate(e -> false);
         channelItemPin = FxBindings.<BisqEasyOpenTradeChannel, BisqEasyOpenTradesView.ListItem>bind(model.getListItems())
-                .map(channel -> new BisqEasyOpenTradesView.ListItem(channel, bisqEasyTradeService))
+                .map(channel -> new BisqEasyOpenTradesView.ListItem(channel, bisqEasyTradeService.findTrade(channel.getId()).orElseThrow()))
                 .to(channelService.getChannels());
 
         bisqEasyTradeService.getTrades().addListener(() -> {
             model.getFilteredList()
-                    .setPredicate(e -> bisqEasyTradeService.findTrade(e.getChannel().getBisqEasyOffer().getId()).isPresent());
+                    .setPredicate(e -> bisqEasyTradeService.findTrade(e.getTradeId()).isPresent());
         });
 
         //todo handle case when no channels are available
@@ -103,6 +103,19 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         }
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+
+
+        if (!model.getSortedList().isEmpty()) {
+            BisqEasyOpenTradesView.ListItem listItem = model.getSortedList().get(0);
+            BisqEasyOpenTradeChannel channel = listItem.getChannel();
+            selectionService.selectChannel(channel);
+            tradeStateController.setSelectedChannel(channel);
+
+            // If there is only one item we do not select it in the tableview
+            if (model.getSortedList().size() > 1) {
+                model.getSelectedItem().set(listItem);
+            }
+        }
     }
 
 
@@ -113,8 +126,11 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         resetSelectedChildTarget();
     }
 
-    void onSelectTrade(String offerId) {
-        channelService.findChannelByOfferId(offerId).ifPresent(selectionService::selectChannel);
+    void onSelectTrade(String tradeId) {
+        channelService.findChannelByOfferId(tradeId).ifPresent(channel -> {
+            selectionService.selectChannel(channel);
+            tradeStateController.setSelectedChannel(channel);
+        });
     }
 
     @Override
@@ -125,7 +141,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             UIThread.run(() -> {
                 BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
                 applyPeersIcon(channel);
-
                 BisqEasyOffer offer = channel.getBisqEasyOffer();
                 boolean isMaker = isMaker(offer);
                 String peer = ((BisqEasyOpenTradeChannel) chatChannel).getPeer().getUserName();
@@ -133,8 +148,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                         Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peer, offer.getShortId()) :
                         Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peer, offer.getShortId());
                 model.getChannelTitle().set(title);
-
-                tradeStateController.setSelectedChannel(channel);
             });
         }
     }

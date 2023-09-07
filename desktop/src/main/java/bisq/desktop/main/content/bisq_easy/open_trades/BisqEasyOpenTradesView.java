@@ -18,11 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.bisqeasy.open_trade.BisqEasyOpenTradeChannel;
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.Layout;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
@@ -31,11 +28,9 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -61,7 +56,7 @@ import java.util.Comparator;
 @Slf4j
 public class BisqEasyOpenTradesView extends ChatView {
     private BisqTableView<ListItem> tableView;
-    private Subscription selectedTradePin;
+    private Subscription selectedTradePin, selectedItemPin;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -73,6 +68,8 @@ public class BisqEasyOpenTradesView extends ChatView {
                 chatMessagesComponent,
                 channelSidebar);
 
+
+        centerVBox.getChildren().add(2, tradeStateViewRoot);
 
         root.setPadding(new Insets(0, 0, -67, 0));
     }
@@ -107,9 +104,8 @@ public class BisqEasyOpenTradesView extends ChatView {
     @Override
     protected void configCenterVBox() {
         tableView = new BisqTableView<>(getBisqEasyOpenTradesModel().getSortedList());
-        tableView.setMinHeight(150);
-        tableView.setPrefHeight(250);
         tableView.getStyleClass().add("bisq-easy-open-trades-table-view");
+        tableView.adjustHeightToNumRows();
         configTableView();
 
         centerVBox.setSpacing(0);
@@ -154,6 +150,8 @@ public class BisqEasyOpenTradesView extends ChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
+        selectedItemPin = EasyBind.subscribe(getBisqEasyOpenTradesModel().getSelectedItem(), selected ->
+                tableView.getSelectionModel().select(selected));
         selectedTradePin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                 item -> {
                     if (item != null) {
@@ -166,6 +164,7 @@ public class BisqEasyOpenTradesView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
 
+        selectedItemPin.unsubscribe();
         selectedTradePin.unsubscribe();
     }
 
@@ -173,22 +172,25 @@ public class BisqEasyOpenTradesView extends ChatView {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
                 .minWidth(100)
-                .left()
                 .comparator(Comparator.comparing(ListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
                 .minWidth(75)
-                .comparator(Comparator.comparing(ListItem::getOfferId))
-                .valueSupplier(ListItem::getShortOfferId)
+                .comparator(Comparator.comparing(ListItem::getTradeId))
+                .valueSupplier(ListItem::getShortTradeId)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+
+        BisqTableColumn<ListItem> column = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("temporal.date"))
-                .minWidth(160)
-                .comparator(Comparator.comparing(ListItem::getDate))
+                .minWidth(170)
+                .comparator(Comparator.comparing(ListItem::getDate).reversed())
                 .valueSupplier(ListItem::getDateString)
-                .build());
+                .build();
+        tableView.getColumns().add(column);
+        tableView.getSortOrder().add(column);
+
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.market"))
                 .minWidth(120)
@@ -197,7 +199,7 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
-                .minWidth(80)
+                .minWidth(130)
                 .comparator(Comparator.comparing(ListItem::getPrice))
                 .valueSupplier(ListItem::getPriceString)
                 .build());
@@ -222,7 +224,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.myRole"))
                 .minWidth(110)
-                .right()
                 .comparator(Comparator.comparing(ListItem::getMyRole))
                 .valueSupplier(ListItem::getMyRole)
                 .build());
@@ -237,12 +238,11 @@ public class BisqEasyOpenTradesView extends ChatView {
 
                 if (item != null && !empty) {
                     BisqEasyOpenTradeChannel channel = item.getChannel();
-                    Label label = new Label(channel.getPeer().getUserName());
                     Image image = RoboHash.getImage(channel.getPeer().getPubKeyHash());
                     ImageView imageView = new ImageView(image);
                     imageView.setFitWidth(35);
                     imageView.setFitHeight(35);
-                    label.setGraphic(imageView);
+                    Label label = new Label(channel.getPeer().getUserName(), imageView);
                     label.setGraphicTextGap(10);
                     setGraphic(label);
                 } else {
@@ -264,47 +264,24 @@ public class BisqEasyOpenTradesView extends ChatView {
     @EqualsAndHashCode
     static class ListItem implements TableItem {
         private final BisqEasyOpenTradeChannel channel;
-        private final String offerId, shortOfferId;
+        private final BisqEasyTrade trade;
+        private final String offerId;
+        private final String tradeId;
+        private final String shortTradeId;
         private final String peersUserName;
-
-        private String dateString, market, priceString,
+        private final String dateString, market, priceString,
                 baseAmountString, quoteAmountString, paymentMethod, myRole;
-        private long date, price, baseAmount, quoteAmount;
-        private Pin pin;
+        private final long date, price, baseAmount, quoteAmount;
 
-        public ListItem(BisqEasyOpenTradeChannel channel, BisqEasyTradeService bisqEasyTradeService) {
+        public ListItem(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade) {
             this.channel = channel;
+            this.trade = trade;
 
-            BisqEasyOffer offer = channel.getBisqEasyOffer();
-            offerId = offer.getId();
-            shortOfferId = offer.getId().substring(0, 8);
             peersUserName = channel.getPeer().getUserName();
+            offerId = channel.getBisqEasyOffer().getId();
+            this.tradeId = trade.getId();
+            shortTradeId = tradeId.substring(0, 8);
 
-            bisqEasyTradeService.findTrade(offerId)
-                    .ifPresentOrElse(this::applyTrade,
-                            () -> {
-                                pin = bisqEasyTradeService.getTrades().addListener(new CollectionObserver<>() {
-                                    @Override
-                                    public void add(BisqEasyTrade trade) {
-                                        UIThread.runOnNextRenderFrame(() -> {
-                                            applyTrade(trade);
-                                            pin.unbind();
-                                        });
-                                    }
-
-                                    @Override
-                                    public void remove(Object element) {
-                                    }
-
-                                    @Override
-                                    public void clear() {
-                                    }
-                                });
-                            });
-
-        }
-
-        private void applyTrade(BisqEasyTrade trade) {
             BisqEasyContract contract = trade.getContract();
             date = trade.getDate();
             dateString = DateFormatter.formatDateTime(trade.getDate());

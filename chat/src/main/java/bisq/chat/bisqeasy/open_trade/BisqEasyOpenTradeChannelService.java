@@ -81,38 +81,46 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqEasyOpenTradeChannel traderFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
+    public BisqEasyOpenTradeChannel traderFindOrCreatesChannel(String tradeId,
+                                                               BisqEasyOffer bisqEasyOffer,
                                                                UserIdentity myUserIdentity,
                                                                UserProfile peer,
                                                                Optional<UserProfile> mediator) {
-        return findChannel(bisqEasyOffer)
-                .orElseGet(() -> traderCreatesChannel(bisqEasyOffer, myUserIdentity, peer, mediator));
+        return findChannel(tradeId)
+                .orElseGet(() -> traderCreatesChannel(tradeId, bisqEasyOffer, myUserIdentity, peer, mediator));
     }
 
-    public BisqEasyOpenTradeChannel traderCreatesChannel(BisqEasyOffer bisqEasyOffer,
+    public BisqEasyOpenTradeChannel traderCreatesChannel(String tradeId,
+                                                         BisqEasyOffer bisqEasyOffer,
                                                          UserIdentity myUserIdentity,
                                                          UserProfile peer,
                                                          Optional<UserProfile> mediator) {
-        BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
+        BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByTrader(tradeId, bisqEasyOffer, myUserIdentity, peer, mediator);
         getChannels().add(channel);
         persist();
         return channel;
     }
 
-    public BisqEasyOpenTradeChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
+    public BisqEasyOpenTradeChannel mediatorFindOrCreatesChannel(String tradeId,
+                                                                 BisqEasyOffer bisqEasyOffer,
                                                                  UserIdentity myUserIdentity,
                                                                  UserProfile requestingTrader,
                                                                  UserProfile nonRequestingTrader) {
-        return findChannel(bisqEasyOffer)
+        return findChannel(tradeId)
                 .orElseGet(() -> {
-                    BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
+                    BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByMediator(tradeId,
+                            bisqEasyOffer,
+                            myUserIdentity,
+                            requestingTrader,
+                            nonRequestingTrader);
                     getChannels().add(channel);
                     persist();
                     return channel;
                 });
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(BisqEasyOffer bisqEasyOffer,
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(String tradeId,
+                                                                                    BisqEasyOffer bisqEasyOffer,
                                                                                     Optional<UserProfile> mediator) {
         return userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                 .map(makerUserProfile -> {
@@ -123,7 +131,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
                         return CompletableFuture.<NetworkService.SendMessageResult>failedFuture(new RuntimeException());
                     }
-                    BisqEasyOpenTradeChannel channel = traderFindOrCreatesChannel(bisqEasyOffer,
+                    BisqEasyOpenTradeChannel channel = traderFindOrCreatesChannel(tradeId,
+                            bisqEasyOffer,
                             myUserIdentity,
                             makerUserProfile,
                             mediator);
@@ -216,16 +225,6 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public Optional<BisqEasyOpenTradeChannel> findChannel(BisqEasyOffer bisqEasyOffer) {
-        return findChannel(BisqEasyOpenTradeChannel.createId(bisqEasyOffer));
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +277,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                             return Optional.empty();
                         } else if (message.getBisqEasyOffer().isPresent()) {
                             return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                                    .map(myUserIdentity -> traderCreatesChannel(message.getBisqEasyOffer().get(),
+                                    .map(myUserIdentity -> traderCreatesChannel(message.getChannelId(),
+                                            message.getBisqEasyOffer().get(),
                                             myUserIdentity,
                                             message.getSender(),
                                             message.getMediator()));
