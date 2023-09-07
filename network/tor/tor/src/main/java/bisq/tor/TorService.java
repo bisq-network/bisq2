@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class TorService implements Service {
@@ -48,6 +49,8 @@ public class TorService implements Service {
     private final Path torDataDirPath;
     private final NativeTorController nativeTorController = new NativeTorController();
     private final OnionServicePublishService onionServicePublishService;
+
+    private final AtomicBoolean isRunning = new AtomicBoolean();
 
     private Optional<NativeTorProcess> torProcess = Optional.empty();
     private Optional<Integer> socksPort = Optional.empty();
@@ -61,6 +64,11 @@ public class TorService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        boolean isAlreadyRunning = isRunning.getAndSet(true);
+        if (isAlreadyRunning) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         installTorIfNotUpToDate();
 
         int controlPort = NetworkUtils.findFreeSystemPort();
