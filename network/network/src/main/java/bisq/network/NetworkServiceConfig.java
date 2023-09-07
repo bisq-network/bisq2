@@ -188,11 +188,19 @@ public final class NetworkServiceConfig {
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
         this.supportedTransportTypes = supportedTransportTypes;
-        this.configByTransportType = configByTransportType;
+        this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;
-        this.peerGroupServiceConfigByTransport = peerGroupServiceConfigByTransport;
-        this.defaultNodePortByTransportType = defaultNodePortByTransportType;
-        this.seedAddressesByTransport = seedAddressesByTransport;
+        this.peerGroupServiceConfigByTransport = filterMap(supportedTransportTypes, peerGroupServiceConfigByTransport);
+        this.defaultNodePortByTransportType = filterMap(supportedTransportTypes, defaultNodePortByTransportType);
+        this.seedAddressesByTransport = filterMap(supportedTransportTypes, seedAddressesByTransport);
         this.socks5ProxyAddress = socks5ProxyAddress;
+    }
+
+    // In case our config contains not supported transport types we remove them
+    private <V> Map<Transport.Type, V> filterMap(Set<Transport.Type> supportedTransportTypes,
+                                                 Map<Transport.Type, V> map) {
+        return map.entrySet().stream()
+                .filter(e -> supportedTransportTypes.contains(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

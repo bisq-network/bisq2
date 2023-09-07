@@ -83,7 +83,7 @@ public class PeerExchangeService implements Node.Listener {
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
                         .collect(Collectors.toList())
-                        .toString()));
+                        .toString(), 100));
 
         CompletableFuture<Void> resultFuture = new CompletableFuture<>();
         AtomicInteger numSuccess = new AtomicInteger();

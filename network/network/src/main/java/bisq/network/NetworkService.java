@@ -219,7 +219,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .thenApply(list -> findNetworkId(nodeId, pubKey)
                         .or(() -> createNetworkId(nodeId, pubKey))
                         .orElseThrow(() -> {
-                            String errorMsg = "Unexpected case. No networkId available after all initializeNode calls are completed.";
+                            String errorMsg = "getInitializedNetworkId failed. No networkId available after all initializeNode calls are completed. nodeId=" + nodeId;
                             log.error(errorMsg);
                             return new RuntimeException(errorMsg);
                         }));

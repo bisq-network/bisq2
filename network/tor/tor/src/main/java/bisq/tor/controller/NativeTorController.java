@@ -49,6 +49,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
 
     public void connect(int controlPort, PasswordDigest controlConnectionSecret) {
+        log.info("connect with controlPort {}", controlPort);
         boolean readyToStart = isRunning.compareAndSet(false, true);
         if (!readyToStart) {
             return;
@@ -63,6 +64,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
 
         } catch (IOException e) {
             isRunning.set(false);
+            log.error("Connect failed using controlPort {}", controlPort);
             throw new ControlCommandFailedException("Couldn't connect to control port.", e);
         }
     }
