@@ -23,8 +23,11 @@ import net.freehaven.tor.control.TorControlConnection;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class OnionServicePublishService {
@@ -32,19 +35,22 @@ public class OnionServicePublishService {
 
     private final NativeTorController nativeTorController;
     private final Path torDirPath;
-    private Optional<OnionAddress> onionAddress = Optional.empty();
+    private final Map<String, CompletableFuture<OnionAddress>> onionAddressByNodeId = new HashMap<>();
 
     public OnionServicePublishService(NativeTorController nativeTorController, Path torDirPath) {
         this.nativeTorController = nativeTorController;
         this.torDirPath = torDirPath;
     }
 
-    public synchronized CompletableFuture<OnionAddress> initialize(String nodeId, int onionServicePort, int localPort) {
-        if (onionAddress.isPresent()) {
-            return CompletableFuture.completedFuture(onionAddress.get());
+    public synchronized CompletableFuture<OnionAddress> publish(String nodeId, int onionServicePort, int localPort) {
+        boolean isNodeIdAlreadyPublished = onionAddressByNodeId.containsKey(nodeId);
+        if (isNodeIdAlreadyPublished) {
+            return onionAddressByNodeId.get(nodeId);
         }
 
         CompletableFuture<OnionAddress> completableFuture = new CompletableFuture<>();
+        onionAddressByNodeId.put(nodeId, completableFuture);
+
         try {
             OnionServiceDataDirManager onionDataDirManager = new OnionServiceDataDirManager(
                     torDirPath.resolve(HS_DIR_NANE).resolve(nodeId)
@@ -54,18 +60,31 @@ public class OnionServicePublishService {
                     nativeTorController.createHiddenService(onionServicePort, localPort, privateKey);
 
             CreateHiddenServiceResult result = new CreateHiddenServiceResult(jTorResult);
-
             onionDataDirManager.persist(result);
 
             var onionAddress = new OnionAddress(jTorResult.serviceID + ".onion", onionServicePort);
-            this.onionAddress = Optional.of(onionAddress);
             completableFuture.complete(onionAddress);
 
         } catch (IOException e) {
-            log.error("Couldn't initialize onion service {}", onionAddress);
+            log.error("Couldn't initialize nodeId {}", nodeId);
             completableFuture.completeExceptionally(e);
         }
 
         return completableFuture;
+    }
+
+    public synchronized Optional<OnionAddress> getOnionAddressForNode(String nodeId) {
+        try {
+            CompletableFuture<OnionAddress> completableFuture = onionAddressByNodeId.get(nodeId);
+            if (completableFuture == null) {
+                return Optional.empty();
+            }
+
+            OnionAddress onionAddress = completableFuture.get();
+            return Optional.of(onionAddress);
+
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

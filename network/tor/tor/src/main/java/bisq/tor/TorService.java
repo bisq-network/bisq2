@@ -47,15 +47,16 @@ public class TorService implements Service {
     private final TorTransportConfig transportConfig;
     private final Path torDataDirPath;
     private final NativeTorController nativeTorController = new NativeTorController();
+    private final OnionServicePublishService onionServicePublishService;
 
     private Optional<NativeTorProcess> torProcess = Optional.empty();
     private Optional<Integer> socksPort = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
-    private Optional<OnionAddress> onionAddress = Optional.empty();
 
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
         this.torDataDirPath = transportConfig.getDataDir();
+        this.onionServicePublishService = new OnionServicePublishService(nativeTorController, torDataDirPath);
     }
 
     @Override
@@ -108,12 +109,10 @@ public class TorService implements Service {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
 
-            var onionServicePublishService = new OnionServicePublishService(nativeTorController, torDataDirPath);
-            return onionServicePublishService.initialize(nodeId, port, localPort)
+            return onionServicePublishService.publish(nodeId, port, localPort)
                     .thenApply(onionAddress -> {
                                 log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
                                         System.currentTimeMillis() - ts, onionAddress, nodeId);
-                                this.onionAddress = Optional.of(onionAddress);
                                 return new CreateOnionServiceResponse(nodeId, localServerSocket, onionAddress);
                             }
                     );
@@ -128,8 +127,8 @@ public class TorService implements Service {
         return nativeTorController.isHiddenServiceAvailable(onionUrl);
     }
 
-    public Optional<String> getHostName(String serverId) {
-        return onionAddress.map(OnionAddress::getHost);
+    public Optional<OnionAddress> getOnionAddressForNode(String nodeId) {
+        return onionServicePublishService.getOnionAddressForNode(nodeId);
     }
 
     public Socket getSocket(String streamId) throws IOException {
