@@ -209,6 +209,13 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         channel.addChatMessage(systemMessage);
     }
 
+    public Optional<BisqEasyOpenTradeChannel> findChannelByOfferId(String offerId) {
+        return getChannels().stream()
+                .filter(channel -> channel.getBisqEasyOffer().getId().equals(offerId))
+                .findAny();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////

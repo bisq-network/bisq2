@@ -83,6 +83,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         tableHeadline.getStyleClass().add("bisq-content-headline-label");
 
         tableView = new BisqTableView<>(model.getSortedList());
+        tableView.getStyleClass().add("user-reputation-table-view");
         tableView.setMinHeight(200);
         configTableView();
 

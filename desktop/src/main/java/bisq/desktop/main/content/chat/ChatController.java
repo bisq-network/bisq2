@@ -144,7 +144,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel) {
             BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel = (BisqEasyOpenTradeChannel) privateChatChannel;
             if (bisqEasyOpenTradeChannel.isInMediation() && bisqEasyOpenTradeChannel.getMediator().isPresent()) {
-
                 UserProfile left;
                 UserProfile right;
                 if (bisqEasyOpenTradeChannel.isMediator()) {

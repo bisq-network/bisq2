@@ -75,6 +75,7 @@ public class BisqEasyOfferbookView extends ChatView {
         root.setPadding(new Insets(0, 0, -67, 0));
     }
 
+    @Override
     protected void configTitleHBox() {
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
@@ -83,7 +84,7 @@ public class BisqEasyOfferbookView extends ChatView {
         marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
         marketSelectorIcon.setCursor(Cursor.HAND);
         marketSelectorIcon.setPadding(new Insets(7, 10, 7, 10));
-        Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.public.switchMarketChannel"));
+        Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"));
         tooltip.getStyleClass().add("dark-tooltip");
         marketSelectorIcon.setTooltip(tooltip);
 
@@ -108,6 +109,7 @@ public class BisqEasyOfferbookView extends ChatView {
         );
     }
 
+    @Override
     protected void configCenterVBox() {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
@@ -161,6 +163,7 @@ public class BisqEasyOfferbookView extends ChatView {
         centerVBox.getChildren().addAll(topPanelVBox, Layout.hLine(), chatMessagesComponent);
     }
 
+    @Override
     protected void configSideBarVBox() {
         sideBar.getChildren().add(channelSidebar);
         sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
@@ -168,6 +171,7 @@ public class BisqEasyOfferbookView extends ChatView {
         sideBar.setFillWidth(true);
     }
 
+    @Override
     protected void configContainerHBox() {
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
@@ -258,7 +262,7 @@ public class BisqEasyOfferbookView extends ChatView {
                 bisqEasyOfferbookModel.getSortedMarketChannelItems(),
                 c -> getMarketListCell(),
                 bisqEasyOfferbookController::onSwitchMarketChannel,
-                Res.get("bisqEasy.channelSelection.public.switchMarketChannel").toUpperCase(),
+                Res.get("bisqEasy.offerbook.selectMarket").toUpperCase(),
                 Res.get("action.search"),
                 350, 5, 23, 31.5)
                 .show();
@@ -275,7 +279,7 @@ public class BisqEasyOfferbookView extends ChatView {
                 setPrefHeight(40);
                 setPadding(new Insets(0, 0, -20, 0));
 
-                badge.setTooltip(Res.get("bisqEasy.channelSelection.public.numMessages"));
+                badge.setTooltip(Res.get("bisqEasy.offerbook.marketListCell.numMessages"));
                 badge.setPosition(Pos.CENTER_RIGHT);
 
                 hBox.setSpacing(10);

@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.NetworkId;
@@ -75,7 +76,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public CompletableFuture<Boolean> initialize() {
         serviceProvider.getNetworkService().addMessageListener(this);
 
-        persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
+        persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
         return CompletableFuture.completedFuture(true);
     }
@@ -134,6 +135,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             return;
         }
         persistableStore.add(tradeModel);
+
 
         Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
         try {
@@ -293,6 +295,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.findTrade(tradeId);
     }
 
+    public ObservableSet<BisqEasyTrade> getTrades() {
+        return persistableStore.getTrades();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol factory

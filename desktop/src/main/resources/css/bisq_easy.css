@@ -1,34 +1,4 @@
 /*******************************************************************************
- *                                                                             *
- * Trade state                                                                 *
- *                                                                             *
- ******************************************************************************/
-
-.bisq-easy-trade-state-bg {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8;
-}
-
-.bisq-easy-trade-state-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.5em;
-}
-
-/*******************************************************************************
- * Getting started                                                              *
- ******************************************************************************/
-
-.bisq-easy-trade-state-welcome-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2.3em;
-}
-
-
-/*******************************************************************************
  * Chat                                                              *
  ******************************************************************************/
 
@@ -67,6 +37,56 @@
     -fx-font-size: 1.4em;
 }
 
+
+/*******************************************************************************
+ * Offerbook                                                           *
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Open trades                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-easy-open-trades-table-view {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.bisq-easy-open-trades-table-view .table-row-cell:hover .table-cell,
+.bisq-easy-open-trades-table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-green;
+    -fx-border-color: transparent;
+}
+
+
+/*******************************************************************************
+ * Getting started                                                              *
+ ******************************************************************************/
+
+.bisq-easy-trade-state-welcome-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.3em;
+}
+
+/*******************************************************************************
+ * Trade state                                                                 *
+ ******************************************************************************/
+
+.bisq-easy-trade-state-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-trade-state-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.5em;
+}
 
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *
@@ -327,4 +347,15 @@
 #bisq-easy-trade-info-content-label {
     -fx-font-size: 1.1em;
     -fx-text-fill: -fx-light-text-color;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Private chat                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-easy-private-chats-table-view {
+    -fx-background-color: -bisq-grey-2;
 }

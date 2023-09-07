@@ -80,13 +80,13 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     @Override
     public void onActivate() {
-        channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ChannelItem>bind(model.getChannelItems())
-                .map(BisqEasyPrivateChatsView.ChannelItem::new)
+        channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
+                .map(BisqEasyPrivateChatsView.ListItem::new)
                 .to(channelService.getChannels());
 
         //todo handle case when no channels are available
-        if (selectionService.getSelectedChannel().get() == null && !model.getChannelItems().isEmpty()) {
-            selectionService.getSelectedChannel().set(model.getChannelItems().get(0).getChannel());
+        if (selectionService.getSelectedChannel().get() == null && !model.getListItems().isEmpty()) {
+            selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
         }
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);

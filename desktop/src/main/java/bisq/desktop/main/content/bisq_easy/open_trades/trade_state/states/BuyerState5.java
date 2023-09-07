@@ -94,11 +94,11 @@ public class BuyerState5 extends BaseState {
         private void onLeaveChannel() {
             String dontShowAgainId = "leaveTradeChannel";
             if (DontShowAgainService.showAgain(dontShowAgainId)) {
-                new Popup().warning(Res.get("bisqEasy.channelSelection.private.leave.warn",
+                new Popup().warning(Res.get("bisqEasy.privateChats.leave.warn",
                                 model.getChannel().getPeer().getUserName()))
                         .dontShowAgainId(dontShowAgainId)
                         .closeButtonText(Res.get("action.cancel"))
-                        .actionButtonText(Res.get("bisqEasy.channelSelection.private.leave"))
+                        .actionButtonText(Res.get("bisqEasy.privateChats.leave"))
                         .onAction(this::doLeaveChannel)
                         .show();
             } else {

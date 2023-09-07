@@ -22,13 +22,17 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class BisqEasyPrivateChatsModel extends ChatModel {
-    private final ObservableList<BisqEasyPrivateChatsView.ChannelItem> channelItems = FXCollections.observableArrayList();
+    private final ObservableList<BisqEasyPrivateChatsView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<BisqEasyPrivateChatsView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<BisqEasyPrivateChatsView.ListItem> sortedList = new SortedList<>(filteredList);
 
     public BisqEasyPrivateChatsModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

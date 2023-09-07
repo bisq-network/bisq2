@@ -168,18 +168,20 @@ public class AmountComponent {
                 UIThread.runOnNextRenderFrame(this::applyQuote);
             };
             sliderListener = (observable, oldValue, newValue) -> {
-                double sliderValue = newValue.doubleValue();
-                long min = model.useQuoteCurrencyForMinMaxRange ?
-                        model.getMinRangeQuoteSideValue().get().getValue() :
-                        model.getMinRangeBaseSideValue().get().getValue();
-                long max = model.useQuoteCurrencyForMinMaxRange ?
-                        model.getMaxRangeQuoteSideValue().get().getValue() :
-                        model.getMaxRangeBaseSideValue().get().getValue();
-                long value = Math.round(sliderValue * (max - min)) + min;
-                if (model.useQuoteCurrencyForMinMaxRange) {
-                    quoteSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
-                } else {
-                    baseSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getBaseCurrencyCode()));
+                if (model.getMinRangeQuoteSideValue().get() != null && model.getMinRangeBaseSideValue().get() != null) {
+                    double sliderValue = newValue.doubleValue();
+                    long min = model.useQuoteCurrencyForMinMaxRange ?
+                            model.getMinRangeQuoteSideValue().get().getValue() :
+                            model.getMinRangeBaseSideValue().get().getValue();
+                    long max = model.useQuoteCurrencyForMinMaxRange ?
+                            model.getMaxRangeQuoteSideValue().get().getValue() :
+                            model.getMaxRangeBaseSideValue().get().getValue();
+                    long value = Math.round(sliderValue * (max - min)) + min;
+                    if (model.useQuoteCurrencyForMinMaxRange) {
+                        quoteSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
+                    } else {
+                        baseSideAmountInput.setAmount(Monetary.from(value, model.getMarket().getBaseCurrencyCode()));
+                    }
                 }
             };
         }
@@ -317,11 +319,11 @@ public class AmountComponent {
                     amount -> {
                         Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
                         Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
-                        if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
+                        if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
                             model.getQuoteSideAmount().set(maxRangeValue);
                             setBaseFromQuote();
                             quoteSideAmountInput.setAmount(maxRangeValue);
-                        } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
+                        } else if (minRangeValue != null && amount != null && amount.getValue() < minRangeValue.getValue()) {
                             model.getQuoteSideAmount().set(minRangeValue);
                             setBaseFromQuote();
                             quoteSideAmountInput.setAmount(minRangeValue);

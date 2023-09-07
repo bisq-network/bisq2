@@ -170,9 +170,9 @@ tree-table-view:focused {
 }
 
 /* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
-.table-view > .scroll-bar:horizontal {
+/*.table-view > .scroll-bar:horizontal {
     -fx-opacity: 0;
-}
+}*/
 
 .table-view .filler {
     -fx-opacity: 0;
@@ -202,23 +202,24 @@ tree-table-view:focused {
     -fx-alignment: center-left;
 }
 
-.table-view .table-cell.left {
-    -fx-alignment: center-left;
-}
-
 /* right */
 .table-view .column-header.right .label {
     -fx-alignment: center-right;
 }
 
-.table-view .table-cell.right {
-    -fx-alignment: center-right;
-}
 
 /* table-cell */
 .table-view .table-cell {
     -fx-alignment: center;
-    -fx-padding: 0 10 0 10;
+    -fx-padding: 0 5 0 5;
+}
+
+.table-view .table-cell.left {
+    -fx-alignment: center-left;
+}
+
+.table-view .table-cell.right {
+    -fx-alignment: center-right;
 }
 
 /* row-cell */
@@ -536,6 +537,7 @@ tree-table-view:focused {
 .bisq-green-line {
     -fx-background-color: -bisq-green;
 }
+
 .bisq-white-bg {
     -fx-background-color: -bisq-white;
 }

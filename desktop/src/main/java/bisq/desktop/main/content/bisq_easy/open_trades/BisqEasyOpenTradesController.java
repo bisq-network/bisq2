@@ -33,6 +33,7 @@ import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateCon
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -42,6 +43,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     private final BisqEasyOpenTradesModel bisqEasyOpenTradesModel;
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
+    private final BisqEasyTradeService bisqEasyTradeService;
 
     private TradeStateController tradeStateController;
     private Pin channelItemPin, selectedChannelPin;
@@ -51,6 +53,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bisqEasyOpenTradesModel = getModel();
     }
 
@@ -84,13 +87,19 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void onActivate() {
-        channelItemPin = FxBindings.<BisqEasyOpenTradeChannel, BisqEasyOpenTradesView.ChannelItem>bind(model.getChannelItems())
-                .map(BisqEasyOpenTradesView.ChannelItem::new)
+        model.getFilteredList().setPredicate(e -> false);
+        channelItemPin = FxBindings.<BisqEasyOpenTradeChannel, BisqEasyOpenTradesView.ListItem>bind(model.getListItems())
+                .map(channel -> new BisqEasyOpenTradesView.ListItem(channel, bisqEasyTradeService))
                 .to(channelService.getChannels());
 
+        bisqEasyTradeService.getTrades().addListener(() -> {
+            model.getFilteredList()
+                    .setPredicate(e -> bisqEasyTradeService.findTrade(e.getChannel().getBisqEasyOffer().getId()).isPresent());
+        });
+
         //todo handle case when no channels are available
-        if (selectionService.getSelectedChannel().get() == null && !model.getChannelItems().isEmpty()) {
-            selectionService.getSelectedChannel().set(model.getChannelItems().get(0).getChannel());
+        if (selectionService.getSelectedChannel().get() == null && !model.getListItems().isEmpty()) {
+            selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
         }
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
@@ -102,6 +111,10 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         channelItemPin.unbind();
         selectedChannelPin.unbind();
         resetSelectedChildTarget();
+    }
+
+    void onSelectTrade(String offerId) {
+        channelService.findChannelByOfferId(offerId).ifPresent(selectionService::selectChannel);
     }
 
     @Override

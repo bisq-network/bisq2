@@ -554,7 +554,7 @@ public class ChatMessagesComponent {
             HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -25));
             HBox bottomHBox = new HBox(10);
 
-            leaveChannelButton = createAndGetChatButton(Res.get("bisqEasy.channelSelection.private.leave"), 120);
+            leaveChannelButton = createAndGetChatButton(Res.get("bisqEasy.privateChats.leave"), 120);
             leaveChannelButton.getStyleClass().add("outlined-button");
 
             bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);

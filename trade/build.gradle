@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':persistence')
+    implementation project(':i18n')
     implementation project(':security')
     implementation project(':identity')
     implementation project(':user')
@@ -14,6 +15,7 @@ dependencies {
     implementation project(':support')
     implementation project(':chat')
     implementation project(':settings')
+    implementation project(':presentation')
     implementation project(':bonded_roles')
 
     implementation("network:network")

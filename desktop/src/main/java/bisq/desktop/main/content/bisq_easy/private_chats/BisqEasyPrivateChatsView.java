@@ -21,10 +21,15 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.chat.ChatView;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -33,10 +38,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
+
 @Slf4j
 public class BisqEasyPrivateChatsView extends ChatView {
-    private final BisqEasyPrivateChatsModel bisqEasyPrivateChatsModel;
-    private final BisqEasyPrivateChatsController bisqEasyPrivateChatsController;
+    private BisqTableView<ListItem> tableView;
 
     public BisqEasyPrivateChatsView(BisqEasyPrivateChatsModel model,
                                     BisqEasyPrivateChatsController controller,
@@ -47,12 +53,10 @@ public class BisqEasyPrivateChatsView extends ChatView {
                 chatMessagesComponent,
                 channelSidebar);
 
-        bisqEasyPrivateChatsController = controller;
-        bisqEasyPrivateChatsModel = model;
-
         root.setPadding(new Insets(0, 0, -67, 0));
     }
 
+    @Override
     protected void configTitleHBox() {
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
@@ -72,6 +76,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
         HBox.setMargin(channelTitle, new Insets(0, 0, 0, 4));
         HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
         HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
+
         titleHBox.getChildren().addAll(
                 channelTitle,
                 Spacer.fillHBox(),
@@ -79,7 +84,16 @@ public class BisqEasyPrivateChatsView extends ChatView {
         );
     }
 
+    @Override
     protected void configCenterVBox() {
+        Label tableHeadline = new Label(Res.get("bisqEasy.privateChats.table.headline"));
+        tableHeadline.getStyleClass().add("bisq-content-headline-label");
+
+        tableView = new BisqTableView<>(getBisqEasyPrivateChatsModel().getSortedList());
+        tableView.setMinHeight(200);
+        tableView.getStyleClass().add("bisq-easy-private-chats-table-view");
+        configTableView();
+
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
 
@@ -89,10 +103,16 @@ public class BisqEasyPrivateChatsView extends ChatView {
         chatMessagesComponent.setMinWidth(700);
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
 
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(topPanelVBox, Layout.hLine(), chatMessagesComponent);
+        centerVBox.getChildren().addAll(
+                tableHeadline, tableView,
+                topPanelVBox,
+                Layout.hLine(),
+                chatMessagesComponent);
     }
 
+    @Override
     protected void configSideBarVBox() {
         sideBar.getChildren().add(channelSidebar);
         sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
@@ -100,6 +120,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
         sideBar.setFillWidth(true);
     }
 
+    @Override
     protected void configContainerHBox() {
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
@@ -121,13 +142,29 @@ public class BisqEasyPrivateChatsView extends ChatView {
         super.onViewDetached();
     }
 
+    private void configTableView() {
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("user.reputation.table.columns.profileAge"))
+                .left()
+                .comparator(Comparator.comparing(ListItem::getPeerUserName))
+                .valueSupplier(ListItem::getPeerUserName)
+                .build());
+    }
+
+    private BisqEasyPrivateChatsModel getBisqEasyPrivateChatsModel() {
+        return (BisqEasyPrivateChatsModel) model;
+    }
+
     @Getter
     @EqualsAndHashCode
-    static class ChannelItem {
+    static class ListItem implements TableItem {
         private final TwoPartyPrivateChatChannel channel;
+        private final String peerUserName;
 
-        public ChannelItem(TwoPartyPrivateChatChannel channel) {
+        public ListItem(TwoPartyPrivateChatChannel channel) {
             this.channel = channel;
+
+            peerUserName = "TODO";
         }
     }
 }
