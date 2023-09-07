@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.private_chats;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.open_trade.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.private_chat.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -90,7 +89,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
             selectionService.getSelectedChannel().set(model.getChannelItems().get(0).getChannel());
         }
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
     }
 
     @Override
@@ -100,22 +99,15 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         resetSelectedChildTarget();
     }
 
-    private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-        if (channel instanceof BisqEasyOpenTradeChannel) {
-            chatChannelChanged(channel);
-        }
-    }
-
 
     @Override
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.chatChannelChanged(chatChannel);
-
         if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+            super.chatChannelChanged(chatChannel);
+
             UIThread.run(() -> {
                 TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
-
             });
         }
     }

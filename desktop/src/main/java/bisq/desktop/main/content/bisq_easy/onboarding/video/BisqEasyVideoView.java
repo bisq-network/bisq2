@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.video;
+package bisq.desktop.main.content.bisq_easy.onboarding.video;
 
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.common.view.View;

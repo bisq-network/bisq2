@@ -93,7 +93,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             selectionService.getSelectedChannel().set(model.getChannelItems().get(0).getChannel());
         }
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
     }
 
 
@@ -104,17 +104,11 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         resetSelectedChildTarget();
     }
 
-    private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-        if (channel instanceof BisqEasyOpenTradeChannel) {
-            chatChannelChanged(channel);
-        }
-    }
-
     @Override
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.chatChannelChanged(chatChannel);
-
         if (chatChannel instanceof BisqEasyOpenTradeChannel) {
+            super.chatChannelChanged(chatChannel);
+
             UIThread.run(() -> {
                 BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
                 applyPeersIcon(channel);
