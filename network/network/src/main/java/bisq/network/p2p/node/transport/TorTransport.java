@@ -23,10 +23,12 @@ import java.util.concurrent.TimeoutException;
 public class TorTransport implements Transport {
     public final static int DEFAULT_PORT = 9999;
 
-    private final TorService torService;
+    private static TorService torService;
 
     public TorTransport(TransportConfig config) {
-        torService = new TorService((TorTransportConfig) config);
+        if (torService == null) {
+            torService = new TorService((TorTransportConfig) config);
+        }
     }
 
     @Override
