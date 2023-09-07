@@ -18,6 +18,7 @@
 package bisq.network.p2p;
 
 import bisq.common.util.OsUtils;
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
@@ -41,8 +42,8 @@ public abstract class BaseNetworkTest {
     }
 
 
-    protected Transport.Config getTransportConfig(Path dataDir) {
-        return new Transport.Config() {
+    protected TransportConfig getTransportConfig(Path dataDir) {
+        return new TransportConfig() {
             @Override
             public Path getDataDir() {
                 return dataDir;
