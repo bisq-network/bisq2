@@ -36,8 +36,9 @@ public final class ProofOfWork implements Proto {
     // payload is usually the pubKeyHash
     private final byte[] payload;       // message of 1000 chars has about 1300 bytes
     // If challenge does not make sense we set it null
+    // Challenge need to be hashed to 256 bits
     @Nullable
-    private final byte[] challenge; // 15 or 16 bytes
+    private final byte[] challenge; // 32 bytes
     private final double difficulty;
     private final byte[] solution; // 72 bytes
 
@@ -52,7 +53,7 @@ public final class ProofOfWork implements Proto {
 
         NetworkDataValidation.validateByteArray(payload, 20_000);
         if (challenge != null) {
-            NetworkDataValidation.validateByteArray(challenge, 20);
+            NetworkDataValidation.validateByteArray(challenge, 32);
         }
         NetworkDataValidation.validateByteArray(solution, 75);
     }

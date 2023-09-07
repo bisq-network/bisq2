@@ -20,6 +20,7 @@ package bisq.network.p2p.node.authorization;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Load;
+import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import com.google.common.base.Charsets;
@@ -98,8 +99,8 @@ public class AuthorizationService {
     }
 
     private byte[] getChallenge(String peerAddress, int messageCounter) {
-        return ByteArrayUtils.concat(peerAddress.getBytes(Charsets.UTF_8),
-                BigInteger.valueOf(messageCounter).toByteArray());
+        return DigestUtil.sha256(ByteArrayUtils.concat(peerAddress.getBytes(Charsets.UTF_8),
+                BigInteger.valueOf(messageCounter).toByteArray()));
     }
 
     private double calculateDifficulty(NetworkMessage message, Load load) {
