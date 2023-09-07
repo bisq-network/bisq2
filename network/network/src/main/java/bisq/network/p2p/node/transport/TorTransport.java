@@ -74,7 +74,7 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public Optional<Address> getServerAddress(String serverId) {
-        return torService.getHostName(serverId).map(hostName -> new Address(hostName, TorTransport.DEFAULT_PORT));
+    public Optional<Address> getServerAddress(String nodeId) {
+        return torService.getOnionAddressForNode(nodeId).map(onionAddress -> new Address(onionAddress.getHost(), TorTransport.DEFAULT_PORT));
     }
 }
