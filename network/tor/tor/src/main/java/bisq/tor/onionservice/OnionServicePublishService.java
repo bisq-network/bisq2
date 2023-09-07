@@ -32,7 +32,6 @@ public class OnionServicePublishService {
 
     private final NativeTorController nativeTorController;
     private final Path torDirPath;
-    private Optional<OnionServiceDataDirManager> onionDataDirManager = Optional.empty();
     private Optional<OnionAddress> onionAddress = Optional.empty();
 
     public OnionServicePublishService(NativeTorController nativeTorController, Path torDirPath) {
@@ -47,19 +46,16 @@ public class OnionServicePublishService {
 
         CompletableFuture<OnionAddress> completableFuture = new CompletableFuture<>();
         try {
-            Optional<String> privateKey = onionDataDirManager.orElseThrow().getPrivateKey();
+            OnionServiceDataDirManager onionDataDirManager = new OnionServiceDataDirManager(
+                    torDirPath.resolve(HS_DIR_NANE).resolve(nodeId)
+            );
+            Optional<String> privateKey = onionDataDirManager.getPrivateKey();
             TorControlConnection.CreateHiddenServiceResult jTorResult =
                     nativeTorController.createHiddenService(onionServicePort, localPort, privateKey);
 
             CreateHiddenServiceResult result = new CreateHiddenServiceResult(jTorResult);
 
-            onionDataDirManager = Optional.of(
-                    new OnionServiceDataDirManager(
-                            torDirPath.resolve(HS_DIR_NANE).resolve(nodeId)
-                    )
-            );
-            onionDataDirManager.ifPresent(dataDirManager -> dataDirManager.persist(result));
-
+            onionDataDirManager.persist(result);
 
             var onionAddress = new OnionAddress(jTorResult.serviceID + ".onion", onionServicePort);
             this.onionAddress = Optional.of(onionAddress);
