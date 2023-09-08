@@ -95,6 +95,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         bisqEasyTradeService.getTrades().addListener(() -> {
             model.getFilteredList()
                     .setPredicate(e -> bisqEasyTradeService.findTrade(e.getTradeId()).isPresent());
+            model.getHasOpenTrades().set(!model.getFilteredList().isEmpty());
         });
 
         //todo handle case when no channels are available

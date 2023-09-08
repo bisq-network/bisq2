@@ -2,6 +2,7 @@
  * Chat                                                              *
  ******************************************************************************/
 
+
 .bisq-easy-chat-title-bg {
     -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 8 8 0 0;
@@ -48,6 +49,13 @@
  * Open trades                                                                 *
  *                                                                             *
  ******************************************************************************/
+
+.bisq-easy-open-trades-no-data {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.6em;
+}
 
 .bisq-easy-open-trades-table-view {
     -fx-background-color: -bisq-grey-2;

@@ -40,10 +40,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,7 +53,8 @@ import java.util.Comparator;
 @Slf4j
 public class BisqEasyOpenTradesView extends ChatView {
     private BisqTableView<ListItem> tableView;
-    private Subscription selectedTradePin, selectedItemPin;
+    private Subscription hasOpenTradesPin, selectedTradePin, selectedItemPin;
+    private StackPane noOpenTradesStackPane;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -136,19 +134,34 @@ public class BisqEasyOpenTradesView extends ChatView {
 
     @Override
     protected void configContainerHBox() {
+        Label noOpenTradesLabel = new Label(Res.get("bisqEasy.openTrades.noData"));
+        noOpenTradesLabel.getStyleClass().add("bisq-easy-open-trades-no-data");
+        noOpenTradesStackPane = new StackPane(noOpenTradesLabel);
+        noOpenTradesStackPane.setAlignment(Pos.TOP_CENTER);
+
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
+        HBox.setHgrow(noOpenTradesStackPane, Priority.ALWAYS);
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
 
         Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
-        root.getChildren().add(containerHBox);
+        Layout.pinToAnchorPane(noOpenTradesStackPane, 100, 0, 0, 0);
+        root.getChildren().addAll(noOpenTradesStackPane, containerHBox);
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
+
+        hasOpenTradesPin = EasyBind.subscribe(getBisqEasyOpenTradesModel().getHasOpenTrades(),
+                hasOpenTrades -> {
+                    noOpenTradesStackPane.setVisible(!hasOpenTrades);
+                    noOpenTradesStackPane.setManaged(!hasOpenTrades);
+                    containerHBox.setVisible(hasOpenTrades);
+                    containerHBox.setManaged(hasOpenTrades);
+                });
 
         selectedItemPin = EasyBind.subscribe(getBisqEasyOpenTradesModel().getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
@@ -164,6 +177,7 @@ public class BisqEasyOpenTradesView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
 
+        hasOpenTradesPin.unsubscribe();
         selectedItemPin.unsubscribe();
         selectedTradePin.unsubscribe();
     }
