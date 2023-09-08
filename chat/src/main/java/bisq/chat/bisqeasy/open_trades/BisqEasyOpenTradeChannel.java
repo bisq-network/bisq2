@@ -127,12 +127,6 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                                      boolean isInMediation,
                                      ChatChannelNotificationType chatChannelNotificationType) {
         super(channelId, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, myUserIdentity, chatMessages, chatChannelNotificationType);
-        log.error("channelId {}", channelId);
-        log.error("tradeId {}", tradeId);
-        if (!channelId.endsWith(tradeId)) {
-            log.error("saf");
-        }
-
 
         this.tradeId = tradeId;
         this.bisqEasyOffer = bisqEasyOffer;

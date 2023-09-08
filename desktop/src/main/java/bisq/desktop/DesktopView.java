@@ -17,20 +17,17 @@
 
 package bisq.desktop;
 
-import bisq.common.util.OsUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.utils.SceneUtil;
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import static java.util.Objects.requireNonNull;
 
 @Slf4j
 public class DesktopView extends NavigationView<AnchorPane, DesktopModel, DesktopController> {
@@ -48,7 +45,7 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
         scene = new Scene(root); // takes about  50 ms
         try {
             stage.setTitle(model.getTitle());
-            stage.getIcons().add(getApplicationIconImage());
+            stage.getIcons().add(ImageUtil.getWindowTitleIcon());
 
             configCss();
             configSizeAndPosition();
@@ -90,17 +87,7 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
     }
 
     private void configCss() {
-        scene.getStylesheets().setAll(
-                requireNonNull(getClass().getResource("/css/base.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/text.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/controls.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/containers.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/application.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/chat.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/user.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/bisq_easy.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/trade_apps.css")).toExternalForm(),
-                requireNonNull(getClass().getResource("/css/images.css")).toExternalForm());
+        SceneUtil.configCss(scene);
     }
 
     private void configSizeAndPosition() {
@@ -123,17 +110,5 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
-    }
-
-    private Image getApplicationIconImage() {
-        String iconPath;
-        if (OsUtils.isMac())
-            iconPath = ImageUtil.isRetina() ? "images/window_icon@2x.png" : "images/window_icon.png";
-        else if (OsUtils.isWindows())
-            iconPath = "images/task_bar_icon_windows.png";
-        else
-            iconPath = "images/task_bar_icon_linux.png";
-
-        return ImageUtil.getImageByPath(iconPath);
     }
 }

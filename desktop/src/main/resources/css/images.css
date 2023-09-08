@@ -563,6 +563,14 @@
     -fx-image: url("/images/chat/filter.png");
 }
 
+#detach {
+    -fx-image: url("/images/chat/detach.png");
+}
+
+#attach {
+    -fx-image: url("/images/chat/attach.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
@@ -836,6 +844,7 @@
 #channels-support-support-grey {
     -fx-image: url("/images/channels/support/support/support-grey.png");
 }
+
 
 
 

@@ -25,6 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,11 +35,16 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     @Getter
     private final ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
 
+    // We keep track of all trades by storing the trade IDs to avoid that the same trade can be taken again.
+    @Getter
+    private final ObservableSet<String> tradeIds = new ObservableSet<>();
+
     BisqEasyTradeStore() {
     }
 
-    private BisqEasyTradeStore(Set<BisqEasyTrade> trades) {
+    private BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds) {
         this.trades.setAll(trades);
+        this.tradeIds.setAll(tradeIds);
     }
 
     @Override
@@ -47,6 +53,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
                 .addAllTrades(trades.stream()
                         .map(BisqEasyTrade::toProto)
                         .collect(Collectors.toList()))
+                .addAllTradeIds(tradeIds)
                 .build();
     }
 
@@ -54,7 +61,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
         var trades = proto.getTradesList().stream()
                 .map(BisqEasyTrade::fromProto)
                 .collect(Collectors.toSet());
-        return new BisqEasyTradeStore(trades);
+        return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()));
     }
 
     @Override
@@ -70,16 +77,18 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     @Override
     public BisqEasyTradeStore getClone() {
-        return new BisqEasyTradeStore(trades);
+        return new BisqEasyTradeStore(trades, tradeIds);
     }
 
     @Override
     public void applyPersisted(BisqEasyTradeStore persisted) {
         trades.setAll(persisted.getTrades());
+        tradeIds.setAll(persisted.getTradeIds());
     }
 
     void add(BisqEasyTrade trade) {
         trades.add(trade);
+        tradeIds.add(trade.getId());
     }
 
     void removeTrade(BisqEasyTrade trade) {
@@ -88,5 +97,9 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     Optional<BisqEasyTrade> findTrade(String tradeId) {
         return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
+    }
+
+    boolean hadTrade(String tradeId) {
+        return tradeIds.contains(tradeId);
     }
 }

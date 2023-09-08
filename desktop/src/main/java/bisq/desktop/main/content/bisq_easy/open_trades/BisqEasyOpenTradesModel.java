@@ -26,6 +26,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,12 +39,14 @@ public class BisqEasyOpenTradesModel extends ChatModel {
     private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
     private final BooleanProperty tableViewDisabled = new SimpleBooleanProperty();
     private final StringProperty chatHeadline = new SimpleStringProperty();
+    private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObservableList<BisqEasyOpenTradesView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<BisqEasyOpenTradesView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<BisqEasyOpenTradesView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfileDisplay> peerUserProfileDisplay = new SimpleObjectProperty<>();
-
+    private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
+    
     public BisqEasyOpenTradesModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

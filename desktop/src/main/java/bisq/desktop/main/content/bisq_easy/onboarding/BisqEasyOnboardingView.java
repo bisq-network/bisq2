@@ -21,6 +21,7 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
@@ -135,7 +136,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         videoImage = ImageUtil.getImageViewById("video");
         videoImage.setCursor(Cursor.HAND);
-        Tooltip.install(videoImage, new Tooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));
+        Tooltip.install(videoImage, new BisqTooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));
         GridPane.setHalignment(videoImage, HPos.CENTER);
         gridPane.add(videoImage, 1, 1);
 
@@ -150,7 +151,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         watchVideoButton.setGraphicTextGap(10);
         watchVideoButton.getStyleClass().add("super-large-button");
         watchVideoButton.setMaxWidth(Double.MAX_VALUE);
-        watchVideoButton.setTooltip(new Tooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));
+        watchVideoButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.onboarding.watchVideo.tooltip")));
         GridPane.setMargin(watchVideoButton, new Insets(10, 0, 0, 0));
         gridPane.add(watchVideoButton, 1, 2);
     }

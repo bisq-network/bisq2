@@ -80,6 +80,7 @@ message BisqEasyTrade {
 
 message BisqEasyTradeStore {
   repeated Trade trades = 1;
+  repeated string tradeIds = 2;
 }
 
 // BisqEasy messages

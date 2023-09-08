@@ -676,7 +676,7 @@ public class ChatMessagesListView {
 
                                 if (isBisqEasyPublicChatMessageWithOffer) {
                                     supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) chatMessage)));
-                                    supportedLanguages.setTooltip(new Tooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
+                                    supportedLanguages.setTooltip(new BisqTooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
                                 }
 
                                 dateTime.setVisible(false);
@@ -1039,7 +1039,7 @@ public class ChatMessagesListView {
                     NetworkId takerNetworkId = userProfile.getNetworkId();
                     BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
                     String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                    canTakeOffer = bisqEasyTradeService.findTrade(tradeId).isEmpty();
+                    canTakeOffer = !bisqEasyTradeService.hadTrade(tradeId);
                 } else {
                     canTakeOffer = false;
                 }

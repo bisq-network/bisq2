@@ -25,10 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UserProfileDisplay extends Label {
+    public static final double DEFAULT_ICON_SIZE = 30;
     private UserProfileIcon userProfileIcon;
 
     public UserProfileDisplay(UserProfile userProfile) {
-        this(userProfile, 30);
+        this(userProfile, DEFAULT_ICON_SIZE);
     }
 
     public UserProfileDisplay(UserProfile userProfile, double size) {
@@ -41,5 +42,10 @@ public class UserProfileDisplay extends Label {
         BisqTooltip tooltip = new BisqTooltip(userProfile.getTooltipString());
         tooltip.getStyleClass().add("medium-dark-tooltip");
         Tooltip.install(this, tooltip);
+    }
+
+    public void setIconSize(double size) {
+        userProfileIcon.setFitWidth(size);
+        userProfileIcon.setFitHeight(size);
     }
 }

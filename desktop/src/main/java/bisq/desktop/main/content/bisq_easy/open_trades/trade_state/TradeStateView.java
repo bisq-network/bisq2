@@ -55,6 +55,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         headline.getStyleClass().add("bisq-easy-trade-state-headline");
 
         closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
+        closeButton.setMinWidth(130);
         closeButton.getStyleClass().add("outlined-button");
         HBox headerHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
         headerHBox.setAlignment(Pos.CENTER);

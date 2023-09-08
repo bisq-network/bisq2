@@ -20,7 +20,11 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.SceneUtil;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -32,12 +36,13 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.Modality;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -51,10 +56,11 @@ import java.util.Comparator;
 public class BisqEasyOpenTradesView extends ChatView {
     private final VBox tradeStateViewRoot, tradeWelcomeViewRoot;
     private VBox tableViewVBox, chatVBox;
-    private BisqTableView<ListItem> tableView;
-    private Subscription noOpenTradesPin, selectedTradePin, selectedItemPin, peerUserProfileDisplayPin;
-    private Label chatHeadline;
     private HBox chatHeaderHBox;
+    private Label chatHeadline;
+    private BisqTableView<ListItem> tableView;
+    private Subscription noOpenTradesPin, selectedTradePin, selectedItemPin, peerUserProfileDisplayPin, chatWindowPin;
+    private Button toggleChatWindowButton;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -97,15 +103,20 @@ public class BisqEasyOpenTradesView extends ChatView {
         tableViewVBox.getStyleClass().add("bisq-easy-open-trades-chat-bg");
 
         chatHeadline = new Label();
-        chatHeadline.getStyleClass().add("bisq-easy-trade-state-headline");
-        Button detachButton = new Button(Res.get("bisqEasy.openTrades.chat.detach"));
-        detachButton.getStyleClass().add("outlined-button");
-        chatHeaderHBox = new HBox(10, chatHeadline, Spacer.fillHBox(), detachButton);
+        chatHeadline.setContentDisplay(ContentDisplay.RIGHT);
+        chatHeadline.setGraphicTextGap(10);
+        chatHeadline.getStyleClass().add("bisq-easy-open-trades-chat-headline");
+
+        toggleChatWindowButton = new Button();
+        toggleChatWindowButton.setGraphicTextGap(10);
+        toggleChatWindowButton.getStyleClass().add("outlined-button");
+        chatHeaderHBox = new HBox(10, chatHeadline, Spacer.fillHBox(), toggleChatWindowButton);
         chatHeaderHBox.setAlignment(Pos.CENTER);
         chatHeaderHBox.setPadding(new Insets(0, 30, 0, 30));
         chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
         VBox.setMargin(chatHeaderHBox, new Insets(2.5, 0, 15, -2));
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
         chatVBox.setPadding(new Insets(15, 0, 0, 0));
         chatVBox.getStyleClass().add("bisq-easy-open-trades-chat-bg");
@@ -157,7 +168,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         selectedTradePin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                 item -> {
                     if (item != null) {
-                        getBisqEasyOpenTradesController().onSelectTrade(item.getOfferId());
+                        getOpenTradesController().onSelectTrade(item.getOfferId());
                     }
                 });
 
@@ -176,16 +187,86 @@ public class BisqEasyOpenTradesView extends ChatView {
                 });
         peerUserProfileDisplayPin = EasyBind.subscribe(openTradesModel.getPeerUserProfileDisplay(),
                 peerUserProfileDisplay -> {
-                    if (chatHeaderHBox.getChildren().size() == 4) {
-                        chatHeaderHBox.getChildren().remove(1);
+                    if (peerUserProfileDisplay != null) {
+                        chatHeadline.setGraphic(peerUserProfileDisplay);
+                       /* if (chatHeaderHBox.getChildren().size() == 4) {
+                            chatHeaderHBox.getChildren().remove(1);
+                        }
+                        chatHeaderHBox.getChildren().add(1, peerUserProfileDisplay);*/
                     }
-                    chatHeaderHBox.getChildren().add(1, peerUserProfileDisplay);
                 });
+
+        chatWindowPin = EasyBind.subscribe(openTradesModel.getChatWindow(),
+                chatWindow -> {
+                    if (chatWindow == null) {
+                        ImageView icon = ImageUtil.getImageViewById("detach");
+                        toggleChatWindowButton.setText(Res.get("bisqEasy.openTrades.chat.detach"));
+                        toggleChatWindowButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.openTrades.chat.detach.tooltip")));
+                        toggleChatWindowButton.setGraphic(icon);
+
+                        if (!centerVBox.getChildren().contains(chatVBox)) {
+                            centerVBox.getChildren().add(3, chatVBox);
+                        }
+                    } else {
+                        ImageView icon = ImageUtil.getImageViewById("attach");
+                        toggleChatWindowButton.setText(Res.get("bisqEasy.openTrades.chat.attach"));
+                        toggleChatWindowButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.openTrades.chat.attach.tooltip")));
+                        toggleChatWindowButton.setGraphic(icon);
+
+                        chatWindow.titleProperty().bind(getOpenTradesModel().getChatWindowTitle());
+                        chatWindow.getIcons().add(ImageUtil.getWindowTitleIcon());
+                        chatWindow.initModality(Modality.NONE);
+
+                        // We open the window at the button position (need to be done before we remove the chatVBox
+                        // TODO we could persist the position and size of the window and use it for next time opening...
+                        Point2D windowPoint = new Point2D(root.getScene().getWindow().getX(), root.getScene().getWindow().getY());
+                        Point2D scenePoint = new Point2D(root.getScene().getX(), root.getScene().getY());
+                        Point2D buttonPoint = toggleChatWindowButton.localToScene(0.0, 0.0);
+                        double x = Math.round(windowPoint.getX() + scenePoint.getX() + buttonPoint.getX());
+                        double y = Math.round(windowPoint.getY() + scenePoint.getY() + buttonPoint.getY());
+                        chatWindow.setX(x);
+                        chatWindow.setY(y);
+                        chatWindow.setMinWidth(600);
+                        chatWindow.setMinHeight(400);
+                        chatWindow.setWidth(800);
+                        chatWindow.setHeight(600);
+
+                        chatWindow.setOnCloseRequest(event -> {
+                            event.consume();
+                            chatWindow.titleProperty().unbind();
+                            getOpenTradesController().onCloseChatWindow();
+                            chatWindow.hide();
+                        });
+
+                        chatWindow.show();
+
+                        centerVBox.getChildren().remove(chatVBox);
+
+                        Layout.pinToAnchorPane(chatVBox, 0, 0, 0, 0);
+                        AnchorPane windowRoot = new AnchorPane(chatVBox);
+                        windowRoot.getStyleClass().add("bisq-popup");
+
+                        Scene scene = new Scene(windowRoot);
+                        SceneUtil.configCss(scene);
+                        chatWindow.setScene(scene);
+
+                        // Avoid flicker
+                        chatWindow.setOpacity(0);
+                        UIThread.runOnNextRenderFrame(() -> chatWindow.setOpacity(1));
+                    }
+                });
+
+        toggleChatWindowButton.setOnAction(e -> getOpenTradesController().onToggleChatWindow());
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+
+        // TODO would be nice to keep it open or allow multiple windows... but for now keep it simple...
+        getOpenTradesController().onCloseChatWindow();
+
+        tableView.removeListeners();
 
         tradeWelcomeViewRoot.visibleProperty().unbind();
         tradeWelcomeViewRoot.managedProperty().unbind();
@@ -200,8 +281,9 @@ public class BisqEasyOpenTradesView extends ChatView {
         selectedTradePin.unsubscribe();
         noOpenTradesPin.unsubscribe();
         peerUserProfileDisplayPin.unsubscribe();
+        chatWindowPin.unsubscribe();
 
-        tableView.removeListeners();
+        toggleChatWindowButton.setOnAction(null);
     }
 
     private void configTableView() {
@@ -287,7 +369,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         return (BisqEasyOpenTradesModel) model;
     }
 
-    private BisqEasyOpenTradesController getBisqEasyOpenTradesController() {
+    private BisqEasyOpenTradesController getOpenTradesController() {
         return (BisqEasyOpenTradesController) controller;
     }
 
