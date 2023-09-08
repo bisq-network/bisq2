@@ -39,7 +39,6 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, BisqEasyTradeParty> {
-
     @Getter
     private final Observable<String> paymentAccountData = new Observable<>();
     @Getter

@@ -24,6 +24,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
+import bisq.security.DigestUtil;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.multisig.MultisigTrade;
 import bisq.trade.submarine.SubmarineTrade;
@@ -32,14 +33,17 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements Proto {
     public static String createId(String offerId, String takerPubKeyHash) {
-        // Do not use a dot here as separator, as it would break the handling of notifications
-        return offerId + "#" + takerPubKeyHash;
+        String combined = offerId + takerPubKeyHash;
+        return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }
 
     private static TradeRole createRole(boolean isBuyer, boolean isTaker) {

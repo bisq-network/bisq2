@@ -17,66 +17,52 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.desktop.common.Layout;
+import bisq.common.data.Triple;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
+public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel, bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController> {
     private final Label headline;
     private final HBox phaseAndInfoHBox;
-    private final VBox tradeWelcome;
     private final Button closeButton;
     private Subscription stateInfoVBoxPin;
 
-    public TradeStateView(TradeStateModel model,
-                          TradeStateController controller,
-                          VBox tradeWelcome,
+    public TradeStateView(bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel model,
+                          bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController controller,
                           VBox tradePhaseBox) {
         super(new VBox(0), model, controller);
-        this.tradeWelcome = tradeWelcome;
-
-        root.getStyleClass().addAll("bisq-easy-trade-state-bg");
-        root.setPadding(new Insets(15, 30, 20, 30));
-
-        headline = new Label();
-        headline.getStyleClass().add("bisq-easy-trade-state-headline");
-
-        closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
-        closeButton.setMinWidth(130);
-        closeButton.getStyleClass().add("outlined-button");
-        HBox headerHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
-        headerHBox.setAlignment(Pos.CENTER);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
-        Region hLine = Layout.hLine();
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer("", phaseAndInfoHBox);
 
-        VBox.setMargin(hLine, new Insets(0, -30, 0, -30));
-        VBox.setMargin(headerHBox, new Insets(2.5, 0, 15, -2));
-        VBox.setVgrow(tradeWelcome, Priority.ALWAYS);
-        root.getChildren().addAll(headerHBox, hLine, tradeWelcome, phaseAndInfoHBox);
+        headline = triple.getFirst();
+
+        closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
+        closeButton.setMinWidth(130);
+        closeButton.getStyleClass().add("outlined-button");
+        triple.getSecond().getChildren().addAll(Spacer.fillHBox(), closeButton);
+
+        VBox vBox = triple.getThird();
+        vBox.getStyleClass().add("bisq-easy-container");
+        root.getChildren().add(vBox);
     }
 
     @Override
     protected void onViewAttached() {
-        tradeWelcome.visibleProperty().bind(model.getTradeWelcomeVisible());
-        tradeWelcome.managedProperty().bind(model.getTradeWelcomeVisible());
-        phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoBoxVisible());
-        phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoBoxVisible());
         headline.textProperty().bind(model.getHeadline());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
@@ -96,10 +82,6 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewDetached() {
-        tradeWelcome.visibleProperty().unbind();
-        tradeWelcome.managedProperty().unbind();
-        phaseAndInfoHBox.visibleProperty().unbind();
-        phaseAndInfoHBox.managedProperty().unbind();
         headline.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();

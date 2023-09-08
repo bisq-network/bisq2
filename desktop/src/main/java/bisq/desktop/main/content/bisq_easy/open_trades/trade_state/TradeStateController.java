@@ -27,14 +27,12 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.open_trades.OpenTradesWelcome;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -50,30 +48,27 @@ import java.util.function.Consumer;
 @Slf4j
 public class TradeStateController implements Controller {
     @Getter
-    private final TradeStateView view;
-    private final TradeStateModel model;
+    private final bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateView view;
+    private final bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel model;
     private final UserIdentityService userIdentityService;
-    private final SettingsService settingsService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ServiceProvider serviceProvider;
     private final TradePhaseBox tradePhaseBox;
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
-    private Pin tradeRulesConfirmedPin, bisqEasyTradeStatePin;
+    private Pin bisqEasyTradeStatePin;
 
     public TradeStateController(ServiceProvider serviceProvider, Consumer<UserProfile> openUserProfileSidebarHandler) {
         this.serviceProvider = serviceProvider;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        settingsService = serviceProvider.getSettingsService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
         selectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
 
-        OpenTradesWelcome openTradesWelcome = new OpenTradesWelcome();
         tradePhaseBox = new TradePhaseBox(serviceProvider);
 
-        model = new TradeStateModel();
-        view = new TradeStateView(model, this, openTradesWelcome.getView().getRoot(), tradePhaseBox.getView().getRoot());
+        model = new bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel();
+        view = new bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateView(model, this, tradePhaseBox.getView().getRoot());
     }
 
     public void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
@@ -174,12 +169,10 @@ public class TradeStateController implements Controller {
 
     @Override
     public void onActivate() {
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> UIThread.run(this::applyVisibility));
     }
 
     @Override
     public void onDeactivate() {
-        tradeRulesConfirmedPin.unbind();
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
         }
@@ -203,11 +196,5 @@ public class TradeStateController implements Controller {
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
-    }
-
-    private void applyVisibility() {
-        boolean tradeRulesConfirmed = settingsService.getTradeRulesConfirmed().get();
-        model.getTradeWelcomeVisible().set(!tradeRulesConfirmed);
-        model.getPhaseAndInfoBoxVisible().set(tradeRulesConfirmed);
     }
 }

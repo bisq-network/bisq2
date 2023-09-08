@@ -20,7 +20,10 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,6 +38,4 @@ public class TradeStateModel implements Model {
     private BisqEasyOpenTradeChannel channel;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final StringProperty headline = new SimpleStringProperty();
-    private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
-    private final BooleanProperty phaseAndInfoBoxVisible = new SimpleBooleanProperty();
 }
