@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.private_chats;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.private_chat.BisqEasyPrivateChatChannelSelectionService;
+import bisq.chat.bisqeasy.private_chats.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.observable.Pin;
