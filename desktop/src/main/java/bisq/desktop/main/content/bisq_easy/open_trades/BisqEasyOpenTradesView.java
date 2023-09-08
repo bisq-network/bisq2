@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.data.Triple;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
@@ -28,6 +29,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -84,48 +86,48 @@ public class BisqEasyOpenTradesView extends ChatView {
         root.setPadding(new Insets(0, 0, -67, 0));
     }
 
+
     @Override
     protected void configTitleHBox() {
     }
 
     @Override
     protected void configCenterVBox() {
-        Label tableHeadline = new Label(Res.get("bisqEasy.openTrades.table.headline"));
-        tableHeadline.getStyleClass().add("bisq-easy-trade-state-headline");
-        VBox.setMargin(tableHeadline, new Insets(2.5, 0, 15, -2));
-        Region hLine = Layout.hLine();
+        addTableBox();
+        addChatBox();
+    }
+
+    private void addTableBox() {
         tableView = new BisqTableView<>(getOpenTradesModel().getSortedList());
         tableView.getStyleClass().add("bisq-easy-open-trades-table-view");
         configTableView();
-        VBox.setMargin(hLine, new Insets(0, -30, 10, -30));
-        tableViewVBox = new VBox(tableHeadline, hLine, tableView);
-        tableViewVBox.setPadding(new Insets(15, 30, 15, 30));
-        tableViewVBox.getStyleClass().add("bisq-easy-open-trades-chat-bg");
 
-        chatHeadline = new Label();
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
+        tableViewVBox = triple.getThird();
+        VBox.setMargin(tableViewVBox, new Insets(0, 0, 10, 0));
+        centerVBox.getChildren().add(tableViewVBox);
+    }
+
+    private void addChatBox() {
+        chatMessagesComponent.setMinHeight(200);
+        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer("", chatMessagesComponent);
+        chatHeadline = triple.getFirst();
         chatHeadline.setContentDisplay(ContentDisplay.RIGHT);
         chatHeadline.setGraphicTextGap(10);
-        chatHeadline.getStyleClass().add("bisq-easy-open-trades-chat-headline");
 
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
         toggleChatWindowButton.getStyleClass().add("outlined-button");
-        chatHeaderHBox = new HBox(10, chatHeadline, Spacer.fillHBox(), toggleChatWindowButton);
-        chatHeaderHBox.setAlignment(Pos.CENTER);
-        chatHeaderHBox.setPadding(new Insets(0, 30, 0, 30));
-        chatMessagesComponent.setMinHeight(200);
-        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
-        VBox.setMargin(chatHeaderHBox, new Insets(2.5, 0, 15, -2));
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
-        chatVBox.setPadding(new Insets(15, 0, 0, 0));
-        chatVBox.getStyleClass().add("bisq-easy-open-trades-chat-bg");
+        chatHeaderHBox = triple.getSecond();
+        chatHeaderHBox.getChildren().addAll(Spacer.fillHBox(), toggleChatWindowButton);
 
-        centerVBox.setSpacing(0);
-        centerVBox.setFillWidth(true);
-        VBox.setMargin(tableViewVBox, new Insets(0, 0, 10, 0));
+        chatVBox = triple.getThird();
+        chatVBox.getStyleClass().add("bisq-easy-container");
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(tableViewVBox, chatVBox);
+        centerVBox.getChildren().add(chatVBox);
     }
 
     @Override
