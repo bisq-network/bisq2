@@ -182,10 +182,6 @@ public class ChatService implements Service {
             return Optional.empty();
         }
         if (chatChannel instanceof CommonPublicChatChannel) {
-            log.error("## {} {}", chatChannel.getChatChannelDomain(), commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
-            if (commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()) == null) {
-                log.error("saf");
-            }
             return Optional.of(commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
         } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
             return Optional.of(twoPartyPrivateChatChannelServices.get(chatChannel.getChatChannelDomain()));

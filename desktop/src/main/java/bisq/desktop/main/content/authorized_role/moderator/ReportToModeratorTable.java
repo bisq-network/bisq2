@@ -127,11 +127,7 @@ public class ReportToModeratorTable {
         private void navigateToChannel(ChatChannelDomain chatChannelDomain) {
             switch (chatChannelDomain) {
                 case BISQ_EASY_OFFERBOOK:
-                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
-                    break;
                 case BISQ_EASY_OPEN_TRADES:
-                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
-                    break;
                 case BISQ_EASY_PRIVATE_CHAT:
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                     break;

@@ -138,6 +138,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                             mediator);
                     UserProfile maker = channel.getPeer();
                     BisqEasyOpenTradeMessage takeOfferMessage = BisqEasyOpenTradeMessage.createTakeOfferMessage(
+                            tradeId,
                             channel.getId(),
                             myUserIdentity.getUserProfile(),
                             maker.getId(),
@@ -204,7 +205,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     public void addMediatorsResponseMessage(BisqEasyOpenTradeChannel channel, String text) {
         setIsInMediation(channel, true);
         checkArgument(channel.getMediator().isPresent());
-        BisqEasyOpenTradeMessage systemMessage = new BisqEasyOpenTradeMessage(StringUtils.createShortUid(),
+        BisqEasyOpenTradeMessage systemMessage = new BisqEasyOpenTradeMessage(channel.getTradeId(),
+                StringUtils.createShortUid(),
                 channel.getId(),
                 channel.getMediator().get(),
                 channel.getMyUserIdentity().getUserProfile().getId(),
@@ -242,6 +244,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         // We send mediator only at first message
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         return new BisqEasyOpenTradeMessage(
+                channel.getTradeId(),
                 messageId,
                 channel.getId(),
                 sender,
@@ -277,7 +280,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                             return Optional.empty();
                         } else if (message.getBisqEasyOffer().isPresent()) {
                             return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                                    .map(myUserIdentity -> traderCreatesChannel(message.getChannelId(),
+                                    .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
                                             message.getBisqEasyOffer().get(),
                                             myUserIdentity,
                                             message.getSender(),

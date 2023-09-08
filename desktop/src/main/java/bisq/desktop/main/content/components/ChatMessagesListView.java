@@ -415,7 +415,11 @@ public class ChatMessagesListView {
 
         private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
             chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
-                    .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT));
+                    .ifPresent(channel -> {
+                        if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
+                            Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+                        }
+                    });
         }
 
         private void applyPredicate() {

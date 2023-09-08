@@ -69,7 +69,8 @@ public class BisqEasyOpenTradesView extends ChatView {
                 channelSidebar);
 
 
-        centerVBox.getChildren().add(2, tradeStateViewRoot);
+        VBox.setMargin(tradeStateViewRoot, new Insets(0, 0, 10, 0));
+        centerVBox.getChildren().add(1, tradeStateViewRoot);
 
         root.setPadding(new Insets(0, 0, -67, 0));
     }
@@ -111,8 +112,8 @@ public class BisqEasyOpenTradesView extends ChatView {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
 
-        VBox topPanelVBox = new VBox(titleHBox); //todo
-        topPanelVBox.getStyleClass().add("bisq-easy-chat-tools-bg");
+       /* VBox topPanelVBox = new VBox(titleHBox); //todo
+        topPanelVBox.getStyleClass().add("bisq-easy-chat-tools-bg");*/
 
         chatMessagesComponent.setMinWidth(700);
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
@@ -121,8 +122,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         centerVBox.getChildren().addAll(
                 tableView,
-                titleHBox,
-                Layout.hLine(),
+                /* titleHBox,*/
                 chatMessagesComponent);
     }
 

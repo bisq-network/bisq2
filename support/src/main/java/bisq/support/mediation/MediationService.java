@@ -116,7 +116,7 @@ public class MediationService implements Service, MessageListener {
 
         UserProfile peer = bisqEasyOpenTradeChannel.getPeer();
         UserProfile mediator = bisqEasyOpenTradeChannel.getMediator().orElseThrow();
-        MediationRequest networkMessage = new MediationRequest(bisqEasyOpenTradeChannel.getId(),
+        MediationRequest networkMessage = new MediationRequest(bisqEasyOpenTradeChannel.getTradeId(),
                 bisqEasyOffer,
                 myUserIdentity.getUserProfile(),
                 peer,

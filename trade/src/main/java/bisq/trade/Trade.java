@@ -38,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements Proto {
     public static String createId(String offerId, String takerPubKeyHash) {
-        return offerId + "." + takerPubKeyHash;
+        // Do not use a dot here as separator, as it would break the handling of notifications
+        return offerId + "#" + takerPubKeyHash;
     }
 
     private static TradeRole createRole(boolean isBuyer, boolean isTaker) {

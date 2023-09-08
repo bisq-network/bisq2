@@ -113,18 +113,20 @@ message CommonPublicChatChannelStore {
 
 // BisqEasy
 message BisqEasyOpenTradeMessage {
-  string receiverUserProfileId = 1;
-  user.UserProfile sender = 2;
-  optional user.UserProfile mediator = 3;
-  optional offer.Offer bisqEasyOffer = 4;
+  string tradeId = 1;
+  string receiverUserProfileId = 2;
+  user.UserProfile sender = 3;
+  optional user.UserProfile mediator = 4;
+  optional offer.Offer bisqEasyOffer = 5;
 }
 message BisqEasyOpenTradeChannel {
-  offer.Offer bisqEasyOffer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated user.UserProfile traders = 3;
-  optional user.UserProfile mediator = 4;
-  repeated ChatMessage chatMessages = 5;
-  bool isInMediation = 6;
+  string tradeId = 1;
+  offer.Offer bisqEasyOffer = 2;
+  user.UserIdentity myUserIdentity = 3;
+  repeated user.UserProfile traders = 4;
+  optional user.UserProfile mediator = 5;
+  repeated ChatMessage chatMessages = 6;
+  bool isInMediation = 7;
 }
 message BisqEasyOpenTradeChannelStore {
   repeated ChatChannel channels = 1;

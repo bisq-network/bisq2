@@ -89,7 +89,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public void onActivate() {
         model.getFilteredList().setPredicate(e -> false);
         channelItemPin = FxBindings.<BisqEasyOpenTradeChannel, BisqEasyOpenTradesView.ListItem>bind(model.getListItems())
-                .map(channel -> new BisqEasyOpenTradesView.ListItem(channel, bisqEasyTradeService.findTrade(channel.getId()).orElseThrow()))
+                .map(channel -> new BisqEasyOpenTradesView.ListItem(channel, bisqEasyTradeService.findTrade(channel.getTradeId()).orElseThrow()))
                 .to(channelService.getChannels());
 
         bisqEasyTradeService.getTrades().addListener(() -> {

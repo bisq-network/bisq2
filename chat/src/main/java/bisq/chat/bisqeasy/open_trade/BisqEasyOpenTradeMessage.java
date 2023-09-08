@@ -46,12 +46,29 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
+    public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
+                                                                  String channelId,
+                                                                  UserProfile sender,
+                                                                  String receiverUserProfileId,
+                                                                  Optional<UserProfile> mediator,
+                                                                  BisqEasyOffer bisqEasyOffer) {
+        return new BisqEasyOpenTradeMessage(tradeId,
+                channelId,
+                sender,
+                receiverUserProfileId,
+                mediator,
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                bisqEasyOffer);
+    }
+
     private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
+    private final String tradeId;
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
-    public BisqEasyOpenTradeMessage(String messageId,
+    public BisqEasyOpenTradeMessage(String tradeId,
+                                    String messageId,
                                     String channelId,
                                     UserProfile sender,
                                     String receiverUserProfileId,
@@ -62,7 +79,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                     Optional<UserProfile> mediator,
                                     ChatMessageType chatMessageType,
                                     Optional<BisqEasyOffer> bisqEasyOffer) {
-        this(messageId,
+        this(tradeId,
+                messageId,
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
                 sender,
@@ -76,7 +94,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 bisqEasyOffer);
     }
 
-    private BisqEasyOpenTradeMessage(String messageId,
+    private BisqEasyOpenTradeMessage(String tradeId,
+                                     String messageId,
                                      ChatChannelDomain chatChannelDomain,
                                      String channelId,
                                      UserProfile sender,
@@ -89,32 +108,20 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                      ChatMessageType chatMessageType,
                                      Optional<BisqEasyOffer> bisqEasyOffer) {
         super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType);
+        this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
-
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //908
     }
 
-    public static BisqEasyOpenTradeMessage createTakeOfferMessage(String channelId,
-                                                                  UserProfile sender,
-                                                                  String receiverUserProfileId,
-                                                                  Optional<UserProfile> mediator,
-                                                                  BisqEasyOffer bisqEasyOffer) {
-        return new BisqEasyOpenTradeMessage(channelId,
-                sender,
-                receiverUserProfileId,
-                mediator,
-                ChatMessageType.TAKE_BISQ_EASY_OFFER,
-                bisqEasyOffer);
-    }
-
-    public BisqEasyOpenTradeMessage(String channelId,
-                                    UserProfile sender,
-                                    String receiverUserProfileId,
-                                    Optional<UserProfile> mediator,
-                                    ChatMessageType chatMessageType,
-                                    BisqEasyOffer bisqEasyOffer) {
+    private BisqEasyOpenTradeMessage(String tradeId,
+                                     String channelId,
+                                     UserProfile sender,
+                                     String receiverUserProfileId,
+                                     Optional<UserProfile> mediator,
+                                     ChatMessageType chatMessageType,
+                                     BisqEasyOffer bisqEasyOffer) {
         super(StringUtils.createShortUid(),
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
@@ -125,6 +132,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 new Date().getTime(),
                 false,
                 chatMessageType);
+        this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //884
@@ -144,6 +152,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
 
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
+                .setTradeId(tradeId)
                 .setReceiverUserProfileId(receiverUserProfileId)
                 .setSender(sender.toProto());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
@@ -165,6 +174,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOpenTradeMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new BisqEasyOpenTradeMessage(
+                protoMessage.getTradeId(),
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
