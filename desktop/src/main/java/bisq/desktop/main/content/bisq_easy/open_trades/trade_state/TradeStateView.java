@@ -57,7 +57,6 @@ public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_ea
         triple.getSecond().getChildren().addAll(Spacer.fillHBox(), closeButton);
 
         VBox vBox = triple.getThird();
-        vBox.getStyleClass().add("bisq-easy-container");
         root.getChildren().add(vBox);
     }
 

@@ -84,16 +84,6 @@
  * Table                                                            *
  ******************************************************************************/
 
-/*.bisq-easy-open-trades-table-bg {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8;
-}*/
-
-/*.bisq-easy-open-trades-table-view {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8 8 0 0;
-}*/
-
 .bisq-easy-open-trades-table-view .table-row-cell:hover .table-cell,
 .bisq-easy-open-trades-table-view .table-row-cell:selected .table-cell {
     -fx-background-color: -bisq-green;
@@ -101,16 +91,11 @@
 }
 
 /*******************************************************************************
- * Chat                                                              *
+ * Container boxes                                                              *
  ******************************************************************************/
 
-.bisq-easy-container-dark {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8;
-}
-
 .bisq-easy-container {
-    -fx-background-color: -bisq-grey-3;
+    -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 8;
 }
 
@@ -121,35 +106,11 @@
     -fx-font-size: 1.5em;
 }
 
-.bisq-easy-open-trades-chat-bg {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8;
-}
-
-
-.bisq-easy-open-trades-chat-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.5em;
-}
 
 
 /*******************************************************************************
  * Trade state                                                                 *
  ******************************************************************************/
-
-.bisq-easy-trade-state-bg {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8;
-}
-
-.bisq-easy-trade-state-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.5em;
-}
 
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *

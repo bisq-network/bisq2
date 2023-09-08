@@ -102,6 +102,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         tableView.getStyleClass().add("bisq-easy-open-trades-table-view");
         configTableView();
 
+        VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
         Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
         tableViewVBox = triple.getThird();
         VBox.setMargin(tableViewVBox, new Insets(0, 0, 10, 0));
@@ -112,7 +113,9 @@ public class BisqEasyOpenTradesView extends ChatView {
         chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-
+        // VBox.setMargin(content, new Insets(0, 30, 15, 30));
+        //VBox.setMargin(chatMessagesComponent, new Insets(0, -25, -20, -30));
+        chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
         Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer("", chatMessagesComponent);
         chatHeadline = triple.getFirst();
         chatHeadline.setContentDisplay(ContentDisplay.RIGHT);
@@ -125,7 +128,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         chatHeaderHBox.getChildren().addAll(Spacer.fillHBox(), toggleChatWindowButton);
 
         chatVBox = triple.getThird();
-        chatVBox.getStyleClass().add("bisq-easy-container");
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
         centerVBox.getChildren().add(chatVBox);
     }

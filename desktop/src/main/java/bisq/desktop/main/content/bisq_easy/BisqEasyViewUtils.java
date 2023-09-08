@@ -35,9 +35,9 @@ public class BisqEasyViewUtils {
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(15, 30, 15, 30));
 
-        VBox.setMargin(content, new Insets(10, 30, 15, 30));
+        VBox.setMargin(content, new Insets(0, 30, 15, 30));
         VBox vBox = new VBox(header, Layout.hLine(), content);
-        vBox.getStyleClass().add("bisq-easy-container-dark");
+        vBox.getStyleClass().add("bisq-easy-container");
 
         return new Triple<>(headlineLabel, header, vBox);
     }
