@@ -26,11 +26,11 @@ import bisq.common.util.FileUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.FileChooserUtil;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -92,23 +92,14 @@ public class BuyerState5 extends BaseState {
         }
 
         private void onLeaveChannel() {
-            String dontShowAgainId = "leaveTradeChannel";
-            if (DontShowAgainService.showAgain(dontShowAgainId)) {
-                new Popup().warning(Res.get("bisqEasy.privateChats.leave.warn",
-                                model.getChannel().getPeer().getUserName()))
-                        .dontShowAgainId(dontShowAgainId)
-                        .closeButtonText(Res.get("action.cancel"))
-                        .actionButtonText(Res.get("bisqEasy.privateChats.leave"))
-                        .onAction(this::doLeaveChannel)
-                        .show();
-            } else {
-                doLeaveChannel();
-            }
-        }
-
-        private void doLeaveChannel() {
-            bisqEasyOpenTradeChannelService.leaveChannel(model.getChannel());
-            bisqEasyOpenTradeSelectionService.maybeSelectFirstChannel();
+            new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.warning"))
+                    .actionButtonText(Res.get("confirmation.yes"))
+                    .onAction(() -> {
+                        channelService.leaveChannel(model.getChannel());
+                        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade());
+                    })
+                    .closeButtonText(Res.get("confirmation.no"))
+                    .show();
         }
 
         private void onExportTrade() {
@@ -172,6 +163,7 @@ public class BuyerState5 extends BaseState {
 
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.exportTrade"));
             leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.leaveChannel"));
+            leaveButton.getStyleClass().add("outlined-button");
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase5.quoteAmount"), "", false);
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase5.baseAmount"), "", false);
 
@@ -179,7 +171,7 @@ public class BuyerState5 extends BaseState {
             txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
             txId.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
 
-            HBox buttons = new HBox(20, exportButton, leaveButton);
+            HBox buttons = new HBox(20, leaveButton, Spacer.fillHBox(), exportButton);
             VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
                     infoHeadline,

@@ -84,6 +84,11 @@
  * Table                                                            *
  ******************************************************************************/
 
+.bisq-easy-open-trades-table-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
 .bisq-easy-open-trades-table-view {
     -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 8 8 0 0;
@@ -95,7 +100,14 @@
     -fx-border-color: transparent;
 }
 
+/*******************************************************************************
+ * Chat                                                              *
+ ******************************************************************************/
 
+.bisq-easy-open-trades-chat-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8 8 0 0;
+}
 
 /*******************************************************************************
  * Trade state                                                                 *

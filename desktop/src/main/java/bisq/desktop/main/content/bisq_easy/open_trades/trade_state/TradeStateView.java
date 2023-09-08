@@ -22,6 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -47,8 +48,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         super(new VBox(0), model, controller);
         this.tradeWelcome = tradeWelcome;
 
-        this.root.getStyleClass().addAll("bisq-easy-trade-state-bg");
-        this.root.setPadding(new Insets(15, 30, 20, 30));
+        root.getStyleClass().addAll("bisq-easy-trade-state-bg");
+        root.setPadding(new Insets(15, 30, 20, 30));
 
         headline = new Label();
         headline.getStyleClass().add("bisq-easy-trade-state-headline");
@@ -56,6 +57,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
         closeButton.getStyleClass().add("outlined-button");
         HBox headerHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
+        headerHBox.setAlignment(Pos.CENTER);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);

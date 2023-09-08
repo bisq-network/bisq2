@@ -22,6 +22,7 @@ import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
@@ -48,12 +49,14 @@ public abstract class BaseState {
         protected final AccountService accountService;
         protected final UserIdentityService userIdentityService;
         private final MarketPriceService marketPriceService;
+        protected final BisqEasyOpenTradeChannelService channelService;
 
         protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             chatService = serviceProvider.getChatService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
             marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
 
             model = createModel(bisqEasyTrade, channel);

@@ -20,10 +20,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import bisq.desktop.main.content.components.UserProfileDisplay;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -39,10 +37,12 @@ public class BisqEasyOpenTradesModel extends ChatModel {
     private final BooleanProperty chatVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
     private final BooleanProperty tableViewDisabled = new SimpleBooleanProperty();
+    private final StringProperty chatHeadline = new SimpleStringProperty();
     private final ObservableList<BisqEasyOpenTradesView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<BisqEasyOpenTradesView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<BisqEasyOpenTradesView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserProfileDisplay> peerUserProfileDisplay = new SimpleObjectProperty<>();
 
     public BisqEasyOpenTradesModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

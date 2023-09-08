@@ -31,11 +31,13 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
@@ -198,11 +200,14 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                 applyPeersIcon(channel);
                 BisqEasyOffer offer = channel.getBisqEasyOffer();
                 boolean isMaker = isMaker(offer);
-                String peer = ((BisqEasyOpenTradeChannel) chatChannel).getPeer().getUserName();
+                UserProfile peerUserProfile = ((BisqEasyOpenTradeChannel) chatChannel).getPeer();
+                String peerUserName = peerUserProfile.getUserName();
                 String title = isMaker ?
-                        Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peer, offer.getShortId()) :
-                        Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peer, offer.getShortId());
+                        Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peerUserName, offer.getShortId()) :
+                        Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peerUserName, offer.getShortId());
                 model.getChannelTitle().set(title);
+                model.getChatHeadline().set(Res.get("bisqEasy.openTrades.chat.headline"));
+                model.getPeerUserProfileDisplay().set(new UserProfileDisplay(peerUserProfile));
             });
         }
     }
