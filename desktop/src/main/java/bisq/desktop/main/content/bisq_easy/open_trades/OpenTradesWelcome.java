@@ -88,17 +88,17 @@ public class OpenTradesWelcome {
             infoHeadline.setWrapText(true);
             infoHeadline.getStyleClass().add("bisq-easy-open-trades-welcome-info");
 
-            HBox line1 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line1"), "reputation");
-            HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "fiat-btc-small");
-            HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "thumbs-up");
+            HBox line1 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line1"), "reputation-white");
+            HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "fiat-btc-small-white");
+            HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "thumbs-up-white");
 
             button = new Button(Res.get("bisqEasy.openTrades.welcome.button"));
             button.setDefaultButton(true);
             button.getStyleClass().add("super-large-button");
             button.setMaxWidth(Double.MAX_VALUE);
 
-            VBox.setMargin(infoHeadline, new Insets(10, 0, 20, 0));
-            VBox.setMargin(button, new Insets(10, 0, 0, 0));
+            VBox.setMargin(infoHeadline, new Insets(5, 0, 20, 0));
+            VBox.setMargin(button, new Insets(20, 0, 0, 0));
             root.getChildren().addAll(headlineLabel, infoHeadline, line1, line2, line3, button);
         }
 

@@ -71,9 +71,6 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
     public void adjustHeightToNumRows(double scrollbarHeight,
                                       double headerHeight,
                                       double rowHeight) {
-        // As we adjust height we do not need the vertical scrollbar. 
-        getStyleClass().add("hide-vertical-scrollbar");
-
         removeListeners();
         listChangeListener = c -> {
             adjustHeight(scrollbarHeight, headerHeight, rowHeight);
@@ -90,18 +87,35 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         adjustHeight(scrollbarHeight, headerHeight, rowHeight);
     }
 
+    public void hideVerticalScrollbar() {
+        // As we adjust height we do not need the vertical scrollbar. 
+        getStyleClass().add("hide-vertical-scrollbar");
+    }
+
+    public void allowVerticalScrollbar() {
+        getStyleClass().remove("hide-vertical-scrollbar");
+    }
+
     public void removeListeners() {
         if (listChangeListener != null) {
             getItems().removeListener(listChangeListener);
+            listChangeListener = null;
+        }
+        if (widthChangeListener != null) {
             widthProperty().removeListener(widthChangeListener);
+            widthChangeListener = null;
         }
     }
 
     private void adjustHeight(double scrollbarHeight, double headerHeight, double rowHeight) {
+        int numItems = getItems().size();
+        if (numItems == 0) {
+            return;
+        }
         double realScrollbarHeight = TableViewUtil.findScrollbar(BisqTableView.this, Orientation.HORIZONTAL)
                 .map(e -> scrollbarHeight)
                 .orElse(0d);
-        double height = headerHeight + getItems().size() * rowHeight + realScrollbarHeight;
+        double height = headerHeight + numItems * rowHeight + realScrollbarHeight;
         setFixHeight(height);
     }
 }

@@ -73,8 +73,12 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
-        helpButton.setOnAction(e -> controller.onOpenHelp());
-        infoButton.setOnAction(e -> controller.onToggleChannelInfo());
+        if (helpButton != null) {
+            helpButton.setOnAction(e -> controller.onOpenHelp());
+        }
+        if (infoButton != null) {
+            infoButton.setOnAction(e -> controller.onToggleChannelInfo());
+        }
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -109,8 +113,12 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
 
-        helpButton.setOnAction(null);
-        infoButton.setOnAction(null);
+        if (helpButton != null) {
+            helpButton.setOnAction(null);
+        }
+        if (infoButton != null) {
+            infoButton.setOnAction(null);
+        }
 
         chatUserOverviewRootSubscription.unsubscribe();
         channelIconPin.unsubscribe();

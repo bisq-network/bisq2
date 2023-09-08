@@ -19,7 +19,10 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -34,6 +37,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private final Label headline;
     private final HBox phaseAndInfoHBox;
     private final VBox tradeWelcome;
+    private final Button closeButton;
     private Subscription stateInfoVBoxPin;
 
     public TradeStateView(TradeStateModel model,
@@ -49,15 +53,19 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         headline = new Label();
         headline.getStyleClass().add("bisq-easy-trade-state-headline");
 
+        closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
+        closeButton.getStyleClass().add("outlined-button");
+        HBox headerHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
+
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         Region hLine = Layout.hLine();
 
         VBox.setMargin(hLine, new Insets(0, -30, 0, -30));
-        VBox.setMargin(headline, new Insets(2.5, 0, 15, -2));
+        VBox.setMargin(headerHBox, new Insets(2.5, 0, 15, -2));
         VBox.setVgrow(tradeWelcome, Priority.ALWAYS);
-        root.getChildren().addAll(headline, hLine, tradeWelcome, phaseAndInfoHBox);
+        root.getChildren().addAll(headerHBox, hLine, tradeWelcome, phaseAndInfoHBox);
     }
 
     @Override
@@ -79,6 +87,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                         phaseAndInfoHBox.getChildren().add(stateInfoVBox);
                     }
                 });
+
+        closeButton.setOnAction(e -> controller.onCloseTrade());
     }
 
     @Override
@@ -90,5 +100,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         headline.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
+
+        closeButton.setOnAction(null);
     }
 }

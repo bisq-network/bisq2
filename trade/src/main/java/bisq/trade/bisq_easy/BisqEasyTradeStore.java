@@ -30,11 +30,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
+final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     @Getter
     private final ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
 
-    public BisqEasyTradeStore() {
+    BisqEasyTradeStore() {
     }
 
     private BisqEasyTradeStore(Set<BisqEasyTrade> trades) {
@@ -78,11 +78,15 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         trades.setAll(persisted.getTrades());
     }
 
-    public void add(BisqEasyTrade trade) {
+    void add(BisqEasyTrade trade) {
         trades.add(trade);
     }
 
-    public Optional<BisqEasyTrade> findTrade(String tradeId) {
+    void removeTrade(BisqEasyTrade trade) {
+        trades.remove(trade);
+    }
+
+    Optional<BisqEasyTrade> findTrade(String tradeId) {
         return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
     }
 }

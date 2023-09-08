@@ -299,6 +299,12 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.getTrades();
     }
 
+    public void removeTrade(BisqEasyTrade trade) {
+        persistableStore.removeTrade(trade);
+        persist();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol factory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
