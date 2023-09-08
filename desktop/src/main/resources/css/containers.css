@@ -211,7 +211,7 @@ tree-table-view:focused {
 /* table-cell */
 .table-view .table-cell {
     -fx-alignment: center;
-    -fx-padding: 0 5 0 5;
+    -fx-padding: 0 10 0 10;
 }
 
 .table-view .table-cell.left {
@@ -335,6 +335,19 @@ tree-table-view:focused {
 .table-view .table-row-cell .hyperlink:focused {
     -fx-border-style: none;
     -fx-border-width: 0px;
+}
+
+.table-view /*> column-header-background > nested-column-header >*/ .arrow {
+    -fx-background-color: -fx-mid-text-color;
+    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+}
+
+.table-view > .placeholder > .label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.3em;
 }
 
 .hide-vertical-scrollbar .scroll-bar:vertical * {

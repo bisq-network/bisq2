@@ -50,12 +50,39 @@
  *                                                                             *
  ******************************************************************************/
 
-.bisq-easy-open-trades-no-data {
+/*******************************************************************************
+ * OpenTradesWelcome                                                            *
+ ******************************************************************************/
+
+.bisq-easy-open-trades-welcome-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-open-trades-welcome-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.6em;
+    -fx-font-size: 2.3em;
 }
+
+.bisq-easy-open-trades-welcome-info {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-easy-open-trades-welcome-lines {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+/*******************************************************************************
+ * Table                                                            *
+ ******************************************************************************/
 
 .bisq-easy-open-trades-table-view {
     -fx-background-color: -bisq-grey-2;
@@ -69,16 +96,6 @@
 }
 
 
-/*******************************************************************************
- * Getting started                                                              *
- ******************************************************************************/
-
-.bisq-easy-trade-state-welcome-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2.3em;
-}
 
 /*******************************************************************************
  * Trade state                                                                 *

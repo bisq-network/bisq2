@@ -24,13 +24,13 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.bisq_easy.open_trades.OpenTradesWelcome;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -40,8 +40,6 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -56,7 +54,6 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ServiceProvider serviceProvider;
     private final TradePhaseBox tradePhaseBox;
-    private Subscription isCollapsedPin;
     private Pin tradeRulesConfirmedPin, bisqEasyTradeStatePin;
 
     public TradeStateController(ServiceProvider serviceProvider, Consumer<UserProfile> openUserProfileSidebarHandler) {
@@ -65,11 +62,11 @@ public class TradeStateController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
-        TradeWelcome tradeWelcome = new TradeWelcome();
+        OpenTradesWelcome openTradesWelcome = new OpenTradesWelcome();
         tradePhaseBox = new TradePhaseBox(serviceProvider);
 
         model = new TradeStateModel();
-        view = new TradeStateView(model, this, tradeWelcome.getView().getRoot(), tradePhaseBox.getView().getRoot());
+        view = new TradeStateView(model, this, openTradesWelcome.getView().getRoot(), tradePhaseBox.getView().getRoot());
     }
 
     public void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
@@ -81,17 +78,8 @@ public class TradeStateController implements Controller {
                 myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(tradeId);
-        boolean isMyRoleMediator = channel.getMediator().map(mediatorUserProfile -> myUserIdentity.getUserProfile().equals(mediatorUserProfile)).orElse(false);
-        //todo handle mediator case
-        if (isMyRoleMediator) {
-            model.getIsCollapsed().set(true); //todo
-            return;
-        }
+        /*   boolean isMyRoleMediator = channel.getMediator().map(mediatorUserProfile -> myUserIdentity.getUserProfile().equals(mediatorUserProfile)).orElse(false);*/
 
-        if (optionalBisqEasyTrade.isEmpty()) {
-            //new Popup().warning(Res.get("bisqEasy.tradeState.warn.noTradeFound")).show();
-            return;
-        }
         BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
 
         tradePhaseBox.setSelectedChannel(channel);
@@ -156,8 +144,8 @@ public class TradeStateController implements Controller {
         });
 
         String directionString = isSeller ?
-                Res.get("offer.selling").toUpperCase() :
-                Res.get("offer.buying").toUpperCase();
+                Res.get("offer.selling") :
+                Res.get("offer.buying");
         FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
         String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
 
@@ -174,35 +162,15 @@ public class TradeStateController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_ASSISTANT_COLLAPSED).orElse(false));
         tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> UIThread.run(this::applyVisibility));
-        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> applyVisibility());
     }
 
     @Override
     public void onDeactivate() {
         tradeRulesConfirmedPin.unbind();
-        isCollapsedPin.unsubscribe();
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
         }
-    }
-
-    void onExpand() {
-        setIsCollapsed(false);
-    }
-
-    void onCollapse() {
-        setIsCollapsed(true);
-    }
-
-    void onHeaderClicked() {
-        setIsCollapsed(!model.getIsCollapsed().get());
-    }
-
-    private void setIsCollapsed(boolean value) {
-        model.getIsCollapsed().set(value);
-        settingsService.setCookie(CookieKey.TRADE_ASSISTANT_COLLAPSED, value);
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
@@ -211,8 +179,7 @@ public class TradeStateController implements Controller {
 
     private void applyVisibility() {
         boolean tradeRulesConfirmed = settingsService.getTradeRulesConfirmed().get();
-        boolean isExpanded = !model.getIsCollapsed().get();
-        model.getTradeWelcomeVisible().set(isExpanded && !tradeRulesConfirmed);
-        model.getPhaseAndInfoBoxVisible().set(isExpanded && tradeRulesConfirmed);
+        model.getTradeWelcomeVisible().set(!tradeRulesConfirmed);
+        model.getPhaseAndInfoBoxVisible().set(tradeRulesConfirmed);
     }
 }

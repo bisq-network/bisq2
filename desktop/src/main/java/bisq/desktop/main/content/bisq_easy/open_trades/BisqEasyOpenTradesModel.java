@@ -34,7 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class BisqEasyOpenTradesModel extends ChatModel {
-    private final BooleanProperty hasOpenTrades = new SimpleBooleanProperty();
+    private final BooleanProperty noOpenTrades = new SimpleBooleanProperty();
+    private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
+    private final BooleanProperty chatVisible = new SimpleBooleanProperty();
+    private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
     private final ObservableList<BisqEasyOpenTradesView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<BisqEasyOpenTradesView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<BisqEasyOpenTradesView.ListItem> sortedList = new SortedList<>(filteredList);

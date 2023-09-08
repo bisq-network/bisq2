@@ -27,11 +27,11 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String formatQuoteSideAmount(BisqEasyTrade trade) {
-        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade), false);
+        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade), true);
     }
 
     public static String formatQuoteSideAmountWithCode(BisqEasyTrade trade) {
-        return AmountFormatter.formatAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(trade), false);
+        return AmountFormatter.formatAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(trade), true);
     }
 
     public static String formatPriceWithCode(BisqEasyTrade trade) {

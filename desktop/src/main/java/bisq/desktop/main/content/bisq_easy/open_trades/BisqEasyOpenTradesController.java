@@ -33,6 +33,7 @@ import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateCon
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,9 +45,11 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final BisqEasyTradeService bisqEasyTradeService;
+    private final SettingsService settingsService;
 
     private TradeStateController tradeStateController;
-    private Pin channelItemPin, selectedChannelPin;
+    private Pin channelItemPin, selectedChannelPin, tradeRulesConfirmedPin;
+    private OpenTradesWelcome openTradesWelcome;
 
     public BisqEasyOpenTradesController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
@@ -54,12 +57,14 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        settingsService = serviceProvider.getSettingsService();
         bisqEasyOpenTradesModel = getModel();
     }
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
         tradeStateController = new TradeStateController(serviceProvider, this::openUserProfileSidebar);
+        openTradesWelcome = new OpenTradesWelcome();
     }
 
     @Override
@@ -82,7 +87,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                 this,
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot(),
-                tradeStateController.getView().getRoot());
+                tradeStateController.getView().getRoot(),
+                openTradesWelcome.getView().getRoot());
     }
 
     @Override
@@ -92,10 +98,12 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                 .map(channel -> new BisqEasyOpenTradesView.ListItem(channel, bisqEasyTradeService.findTrade(channel.getTradeId()).orElseThrow()))
                 .to(channelService.getChannels());
 
+        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> UIThread.run(this::applyVisibility));
+
         bisqEasyTradeService.getTrades().addListener(() -> {
             model.getFilteredList()
                     .setPredicate(e -> bisqEasyTradeService.findTrade(e.getTradeId()).isPresent());
-            model.getHasOpenTrades().set(!model.getFilteredList().isEmpty());
+            applyVisibility();
         });
 
         //todo handle case when no channels are available
@@ -122,6 +130,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void onDeactivate() {
+        tradeRulesConfirmedPin.unbind();
         channelItemPin.unbind();
         selectedChannelPin.unbind();
         resetSelectedChildTarget();
@@ -155,5 +164,15 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+    }
+
+    private void applyVisibility() {
+        boolean openTradesAvailable = !model.getFilteredList().isEmpty();
+        model.getNoOpenTrades().set(!openTradesAvailable);
+
+        boolean tradeRuleConfirmed = settingsService.getTradeRulesConfirmed().get();
+        model.getTradeWelcomeVisible().set(openTradesAvailable && !tradeRuleConfirmed);
+        model.getTradeStateVisible().set(openTradesAvailable && tradeRuleConfirmed);
+        model.getChatVisible().set(openTradesAvailable && tradeRuleConfirmed);
     }
 }

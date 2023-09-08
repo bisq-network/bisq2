@@ -155,7 +155,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 headlineLabel,
                 getIconAndText(Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
                 getIconAndText(Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
-                getIconAndText(Res.get("dashboard.main.content3"), "onboarding-1-reputation-white"),
+                getIconAndText(Res.get("dashboard.main.content3"), "reputation-white"),
                 button);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30, 48, 44, 48));

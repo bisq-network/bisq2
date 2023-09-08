@@ -24,22 +24,22 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Orientation;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import lombok.extern.slf4j.Slf4j;
-
-import java.lang.ref.WeakReference;
 
 @Slf4j
 public class BisqTableView<S extends TableItem> extends TableView<S> {
     private final static double TABLE_HEADER_HEIGHT = 36;
     private final static double TABLE_ROW_HEIGHT = 54;
     private final static double TABLE_SCROLLBAR_HEIGHT = 16;
+    private ListChangeListener<S> listChangeListener;
+    private ChangeListener<Number> widthChangeListener;
 
     public BisqTableView() {
         super();
 
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        //setPlaceholder(new Label(Res.get("data.noDataAvailable")));
     }
 
     public BisqTableView(ObservableList<S> list) {
@@ -50,9 +50,11 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         super(sortedList);
 
         sortedList.comparatorProperty().bind(comparatorProperty());
-
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        //setPlaceholder(new Label(Res.get("data.noDataAvailable")));
+    }
+
+    public void setPlaceholderText(String placeHolderText) {
+        setPlaceholder(new Label(placeHolderText));
     }
 
     public void setFixHeight(double value) {
@@ -72,11 +74,27 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         // As we adjust height we do not need the vertical scrollbar. 
         getStyleClass().add("hide-vertical-scrollbar");
 
-        getItems().addListener(new WeakReference<>((ListChangeListener<S>) c ->
-                adjustHeight(scrollbarHeight, headerHeight, rowHeight)).get());
-        widthProperty().addListener(new WeakReference<>((ChangeListener<Number>) (observable, oldValue, newValue) ->
-                UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight))).get());
+        removeListeners();
+        listChangeListener = c -> {
+            adjustHeight(scrollbarHeight, headerHeight, rowHeight);
+            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight));
+        };
+        getItems().addListener(listChangeListener);
+
+        widthChangeListener = (observable, oldValue, newValue) -> {
+            adjustHeight(scrollbarHeight, headerHeight, rowHeight);
+            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight));
+        };
+        widthProperty().addListener(widthChangeListener);
+
         adjustHeight(scrollbarHeight, headerHeight, rowHeight);
+    }
+
+    public void removeListeners() {
+        if (listChangeListener != null) {
+            getItems().removeListener(listChangeListener);
+            widthProperty().removeListener(widthChangeListener);
+        }
     }
 
     private void adjustHeight(double scrollbarHeight, double headerHeight, double rowHeight) {
@@ -84,7 +102,6 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
                 .map(e -> scrollbarHeight)
                 .orElse(0d);
         double height = headerHeight + getItems().size() * rowHeight + realScrollbarHeight;
-        setMinHeight(height);
-        setMaxHeight(height);
+        setFixHeight(height);
     }
 }

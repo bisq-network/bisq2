@@ -343,6 +343,14 @@
     -fx-image: url("/images/onboarding/fiat-btc-small.png");
 }
 
+#fiat-btc-small-white {
+    -fx-image: url("/images/onboarding/fiat-btc-small-white.png");
+}
+
+#thumbs-up-white {
+    -fx-image: url("/images/onboarding/thumbs-up-white.png");
+}
+
 #thumbs-up {
     -fx-image: url("/images/onboarding/thumbs-up.png");
 }
@@ -351,12 +359,12 @@
     -fx-image: url("/images/onboarding/onboarding-1-fraction.png");
 }
 
-#onboarding-1-reputation {
-    -fx-image: url("/images/onboarding/onboarding-1-reputation.png");
+#reputation {
+    -fx-image: url("/images/onboarding/reputation.png");
 }
 
-#onboarding-1-reputation-white {
-    -fx-image: url("/images/onboarding/onboarding-1-reputation-white.png");
+#reputation-white {
+    -fx-image: url("/images/onboarding/reputation-white.png");
 }
 
 #onboarding-2-chat {

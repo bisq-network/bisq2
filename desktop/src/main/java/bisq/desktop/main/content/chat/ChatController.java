@@ -208,7 +208,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         }
     }
     
-
     private void doCloseSideBar() {
         model.getSideBarVisible().set(false);
         model.getSideBarWidth().set(0);

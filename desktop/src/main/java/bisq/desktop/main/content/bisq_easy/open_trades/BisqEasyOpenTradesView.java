@@ -40,7 +40,10 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,23 +55,29 @@ import java.util.Comparator;
 
 @Slf4j
 public class BisqEasyOpenTradesView extends ChatView {
+    private final VBox tradeStateViewRoot;
+    private final VBox tradeWelcomeViewRoot;
     private BisqTableView<ListItem> tableView;
-    private Subscription hasOpenTradesPin, selectedTradePin, selectedItemPin;
-    private StackPane noOpenTradesStackPane;
+    private Subscription noOpenTradesPin, selectedTradePin, selectedItemPin;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
                                   VBox chatMessagesComponent,
                                   Pane channelSidebar,
-                                  VBox tradeStateViewRoot) {
+                                  VBox tradeStateViewRoot,
+                                  VBox tradeWelcomeViewRoot) {
         super(model,
                 controller,
                 chatMessagesComponent,
                 channelSidebar);
+        this.tradeStateViewRoot = tradeStateViewRoot;
+        this.tradeWelcomeViewRoot = tradeWelcomeViewRoot;
 
+        VBox.setMargin(tradeWelcomeViewRoot, new Insets(0, 0, 10, 0));
+        centerVBox.getChildren().add(0, tradeWelcomeViewRoot);
 
         VBox.setMargin(tradeStateViewRoot, new Insets(0, 0, 10, 0));
-        centerVBox.getChildren().add(1, tradeStateViewRoot);
+        centerVBox.getChildren().add(2, tradeStateViewRoot);
 
         root.setPadding(new Insets(0, 0, -67, 0));
     }
@@ -102,26 +111,20 @@ public class BisqEasyOpenTradesView extends ChatView {
 
     @Override
     protected void configCenterVBox() {
-        tableView = new BisqTableView<>(getBisqEasyOpenTradesModel().getSortedList());
+        tableView = new BisqTableView<>(getOpenTradesModel().getSortedList());
         tableView.getStyleClass().add("bisq-easy-open-trades-table-view");
-        tableView.adjustHeightToNumRows();
         configTableView();
 
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
 
-       /* VBox topPanelVBox = new VBox(titleHBox); //todo
-        topPanelVBox.getStyleClass().add("bisq-easy-chat-tools-bg");*/
-
-        chatMessagesComponent.setMinWidth(700);
+        //chatMessagesComponent.setMinWidth(700);
+        chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
 
         VBox.setMargin(tableView, new Insets(0, 0, 10, 0));
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(
-                tableView,
-                /* titleHBox,*/
-                chatMessagesComponent);
+        centerVBox.getChildren().addAll(tableView, chatMessagesComponent);
     }
 
     @Override
@@ -134,36 +137,30 @@ public class BisqEasyOpenTradesView extends ChatView {
 
     @Override
     protected void configContainerHBox() {
-        Label noOpenTradesLabel = new Label(Res.get("bisqEasy.openTrades.noData"));
-        noOpenTradesLabel.getStyleClass().add("bisq-easy-open-trades-no-data");
-        noOpenTradesStackPane = new StackPane(noOpenTradesLabel);
-        noOpenTradesStackPane.setAlignment(Pos.TOP_CENTER);
-
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
-        HBox.setHgrow(noOpenTradesStackPane, Priority.ALWAYS);
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
 
         Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
-        Layout.pinToAnchorPane(noOpenTradesStackPane, 100, 0, 0, 0);
-        root.getChildren().addAll(noOpenTradesStackPane, containerHBox);
+        root.getChildren().add(containerHBox);
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
 
-        hasOpenTradesPin = EasyBind.subscribe(getBisqEasyOpenTradesModel().getHasOpenTrades(),
-                hasOpenTrades -> {
-                    noOpenTradesStackPane.setVisible(!hasOpenTrades);
-                    noOpenTradesStackPane.setManaged(!hasOpenTrades);
-                    containerHBox.setVisible(hasOpenTrades);
-                    containerHBox.setManaged(hasOpenTrades);
-                });
+        BisqEasyOpenTradesModel openTradesModel = getOpenTradesModel();
 
-        selectedItemPin = EasyBind.subscribe(getBisqEasyOpenTradesModel().getSelectedItem(), selected ->
+        tradeWelcomeViewRoot.visibleProperty().bind(openTradesModel.getTradeWelcomeVisible());
+        tradeWelcomeViewRoot.managedProperty().bind(openTradesModel.getTradeWelcomeVisible());
+        tradeStateViewRoot.visibleProperty().bind(openTradesModel.getTradeStateVisible());
+        tradeStateViewRoot.managedProperty().bind(openTradesModel.getTradeStateVisible());
+        chatMessagesComponent.visibleProperty().bind(openTradesModel.getChatVisible());
+        chatMessagesComponent.managedProperty().bind(openTradesModel.getChatVisible());
+
+        selectedItemPin = EasyBind.subscribe(openTradesModel.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
         selectedTradePin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                 item -> {
@@ -171,29 +168,43 @@ public class BisqEasyOpenTradesView extends ChatView {
                         getBisqEasyOpenTradesController().onSelectTrade(item.getOfferId());
                     }
                 });
+
+        noOpenTradesPin = EasyBind.subscribe(openTradesModel.getNoOpenTrades(), noOpenTrades -> {
+            if (noOpenTrades) {
+                tableView.removeListeners();
+                tableView.setFixHeight(150);
+                tableView.setPlaceholderText(Res.get("bisqEasy.openTrades.noData"));
+            } else {
+                tableView.setPlaceholder(null);
+                tableView.adjustHeightToNumRows();
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
 
-        hasOpenTradesPin.unsubscribe();
+        tradeWelcomeViewRoot.visibleProperty().unbind();
+        tradeWelcomeViewRoot.managedProperty().unbind();
+        tradeStateViewRoot.visibleProperty().unbind();
+        tradeStateViewRoot.managedProperty().unbind();
+        chatMessagesComponent.visibleProperty().unbind();
+        chatMessagesComponent.managedProperty().unbind();
+
         selectedItemPin.unsubscribe();
         selectedTradePin.unsubscribe();
+
+        tableView.removeListeners();
     }
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
                 .minWidth(100)
+                .left()
                 .comparator(Comparator.comparing(ListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.tradeId"))
-                .minWidth(75)
-                .comparator(Comparator.comparing(ListItem::getTradeId))
-                .valueSupplier(ListItem::getShortTradeId)
                 .build());
 
         BisqTableColumn<ListItem> column = new BisqTableColumn.Builder<ListItem>()
@@ -206,11 +217,18 @@ public class BisqEasyOpenTradesView extends ChatView {
         tableView.getSortOrder().add(column);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.tradeId"))
+                .minWidth(80)
+                .comparator(Comparator.comparing(ListItem::getTradeId))
+                .valueSupplier(ListItem::getShortTradeId)
+                .build());
+      
+       /* tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.market"))
                 .minWidth(120)
                 .comparator(Comparator.comparing(ListItem::getMarket))
                 .valueSupplier(ListItem::getMarket)
-                .build());
+                .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
                 .minWidth(130)
@@ -225,11 +243,11 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .minWidth(100)
+                .minWidth(90)
                 .comparator(Comparator.comparing(ListItem::getQuoteAmount))
                 .valueSupplier(ListItem::getQuoteAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+       /* tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
                 .minWidth(130)
                 .comparator(Comparator.comparing(ListItem::getPaymentMethod))
@@ -240,7 +258,7 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .minWidth(110)
                 .comparator(Comparator.comparing(ListItem::getMyRole))
                 .valueSupplier(ListItem::getMyRole)
-                .build());
+                .build());*/
     }
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
@@ -266,7 +284,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         };
     }
 
-    private BisqEasyOpenTradesModel getBisqEasyOpenTradesModel() {
+    private BisqEasyOpenTradesModel getOpenTradesModel() {
         return (BisqEasyOpenTradesModel) model;
     }
 

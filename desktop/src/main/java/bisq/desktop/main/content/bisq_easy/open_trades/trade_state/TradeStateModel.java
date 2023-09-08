@@ -31,7 +31,6 @@ public class TradeStateModel implements Model {
     @Setter
     private BisqEasyTrade bisqEasyTrade;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
-    private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();
     private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoBoxVisible = new SimpleBooleanProperty();
