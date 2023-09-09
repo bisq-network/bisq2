@@ -17,45 +17,51 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.trade.Trade;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
+final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     @Getter
-    private final Map<String, BisqEasyTrade> tradeById = new ConcurrentHashMap<>();
+    private final ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
 
-    public BisqEasyTradeStore() {
+    // We keep track of all trades by storing the trade IDs to avoid that the same trade can be taken again.
+    @Getter
+    private final ObservableSet<String> tradeIds = new ObservableSet<>();
+
+    BisqEasyTradeStore() {
     }
 
-    private BisqEasyTradeStore(Map<String, BisqEasyTrade> tradeById) {
-        this.tradeById.putAll(tradeById);
+    private BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds) {
+        this.trades.setAll(trades);
+        this.tradeIds.setAll(tradeIds);
     }
 
     @Override
     public bisq.trade.protobuf.BisqEasyTradeStore toProto() {
         return bisq.trade.protobuf.BisqEasyTradeStore.newBuilder()
-                .putAllTradeById(tradeById.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto())))
+                .addAllTrades(trades.stream()
+                        .map(BisqEasyTrade::toProto)
+                        .collect(Collectors.toList()))
+                .addAllTradeIds(tradeIds)
                 .build();
     }
 
     public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto) {
-        var tradeById = proto.getTradeByIdMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> Trade.protoToBisqEasyTrade(e.getValue())));
-        return new BisqEasyTradeStore(tradeById);
+        var trades = proto.getTradesList().stream()
+                .map(BisqEasyTrade::fromProto)
+                .collect(Collectors.toSet());
+        return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()));
     }
 
     @Override
@@ -71,23 +77,29 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
 
     @Override
     public BisqEasyTradeStore getClone() {
-        return new BisqEasyTradeStore(tradeById);
+        return new BisqEasyTradeStore(trades, tradeIds);
     }
 
     @Override
     public void applyPersisted(BisqEasyTradeStore persisted) {
-        tradeById.clear();
-        tradeById.putAll(persisted.getTradeById());
+        trades.setAll(persisted.getTrades());
+        tradeIds.setAll(persisted.getTradeIds());
     }
 
-    public void add(BisqEasyTrade trade) {
-        String tradeId = trade.getId();
-        if (!tradeById.containsKey(tradeId)) {
-            tradeById.put(tradeId, trade);
-        }
+    void add(BisqEasyTrade trade) {
+        trades.add(trade);
+        tradeIds.add(trade.getId());
     }
 
-    public Optional<BisqEasyTrade> findTrade(String tradeId) {
-        return Optional.ofNullable(tradeById.get(tradeId));
+    void removeTrade(BisqEasyTrade trade) {
+        trades.remove(trade);
+    }
+
+    Optional<BisqEasyTrade> findTrade(String tradeId) {
+        return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
+    }
+
+    boolean hadTrade(String tradeId) {
+        return tradeIds.contains(tradeId);
     }
 }

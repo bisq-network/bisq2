@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.priv.PrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -187,9 +187,15 @@ public class UserProfileSelection {
             }
             pinnedPrivateChannelUserProfile = Optional.empty();
             switch (navigationTarget) {
-                case BISQ_EASY:
-                case BISQ_EASY_MARKETS:
-                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY));
+                //case BISQ_EASY:
+                case BISQ_EASY_OFFERBOOK:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY_OFFERBOOK));
+                    return;
+                case BISQ_EASY_OPEN_TRADES:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES));
+                    return;
+                case BISQ_EASY_PRIVATE_CHAT:
+                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT));
                     return;
                 case DISCUSSION:
                     selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.DISCUSSION));
@@ -261,17 +267,18 @@ public class UserProfileSelection {
             selectedUserProfilePin = EasyBind.subscribe(model.selectedUserProfile,
                     selected -> {
                         UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected));
+                        if (selected != null) {
+                            UserIdentity userIdentity = selected.userIdentity;
+                            if (userIdentity != null) {
+                                boolean multipleItems = model.userProfiles.size() > 1;
+                                comboBox.setManaged(multipleItems);
+                                comboBox.setVisible(multipleItems);
+                                userNameAndIcon.setManaged(!multipleItems);
+                                userNameAndIcon.setVisible(!multipleItems);
 
-                        UserIdentity userIdentity = selected.userIdentity;
-                        if (userIdentity != null) {
-                            boolean multipleItems = model.userProfiles.size() > 1;
-                            comboBox.setManaged(multipleItems);
-                            comboBox.setVisible(multipleItems);
-                            userNameAndIcon.setManaged(!multipleItems);
-                            userNameAndIcon.setVisible(!multipleItems);
-
-                            userName.setText(comboBox.getConverter().toString(selected));
-                            icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                                userName.setText(comboBox.getConverter().toString(selected));
+                                icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                            }
                         }
                     });
             isLeftAlignedPin = EasyBind.subscribe(model.isLeftAligned, isLeftAligned -> {

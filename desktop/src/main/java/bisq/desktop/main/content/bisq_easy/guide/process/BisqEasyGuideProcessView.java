@@ -40,13 +40,13 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.process.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        Label headline = new Label(Res.get("bisqEasy.tradeGuide.process.headline"));
+        headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
-        Label content = new Label(Res.get("tradeGuide.process.content"));
+        Label content = new Label(Res.get("bisqEasy.tradeGuide.process.content"));
         content.setWrapText(true);
-        content.getStyleClass().addAll("bisq-text-13");
-        OrderedList rules = new OrderedList(Res.get("tradeGuide.process.steps"), "bisq-text-13");
+        content.getStyleClass().add("bisq-easy-trade-guide-content");
+        OrderedList rules = new OrderedList(Res.get("bisqEasy.tradeGuide.process.steps"), "bisq-easy-trade-guide-content");
 
         backButton = new Button(Res.get("action.back"));
 
@@ -57,7 +57,7 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(10, 0, -5, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
         root.getChildren().addAll(headline, content, rules, learnMore, buttons);
     }

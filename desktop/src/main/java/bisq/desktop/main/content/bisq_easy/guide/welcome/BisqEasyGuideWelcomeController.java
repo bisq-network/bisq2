@@ -41,7 +41,7 @@ public class BisqEasyGuideWelcomeController implements Controller {
 
     @Override
     public void onActivate() {
-        String content = Res.get("tradeGuide.welcome.content");
+        String content = Res.get("bisqEasy.tradeGuide.welcome.content");
         model.getContentText().setValue(content);
       /*  model.getContentText().setValue(settingsService.getTradeRulesConfirmed().get() ?
                 content :

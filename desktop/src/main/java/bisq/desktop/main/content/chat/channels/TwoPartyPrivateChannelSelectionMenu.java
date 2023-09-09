@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.chat.channels;
 
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.priv.PrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
@@ -149,7 +149,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
                     leaveChannelIcon.setCursor(Cursor.HAND);
                     leaveChannelIcon.setId("icon-label-grey");
-                    Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.channelSelection.private.leave"));
+                    Tooltip tooltip = new BisqTooltip(Res.get("chat.leave"));
                     tooltip.getStyleClass().add("dark-tooltip");
                     leaveChannelIcon.setTooltip(tooltip);
                     HBox.setMargin(leaveChannelIcon, new Insets(0, 12, 0, -20));

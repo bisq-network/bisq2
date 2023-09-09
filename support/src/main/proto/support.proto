@@ -8,10 +8,11 @@ import "offer.proto";
 import "network.proto";
 
 message MediationRequest {
-  offer.Offer bisqEasyOffer = 1;
-  user.UserProfile requester = 2;
-  user.UserProfile peer = 3;
-  repeated chat.ChatMessage chatMessages = 4;
+  string tradeId = 1;
+  offer.Offer bisqEasyOffer = 2;
+  user.UserProfile requester = 3;
+  user.UserProfile peer = 4;
+  repeated chat.ChatMessage chatMessages = 5;
 }
 
 message ReportToModeratorMessage {
@@ -22,7 +23,8 @@ message ReportToModeratorMessage {
   chat.ChatChannelDomain chatChannelDomain = 5;
 }
 message MediationResponse {
-  offer.Offer bisqEasyOffer = 1;
+  string tradeId = 1;
+  offer.Offer bisqEasyOffer = 2;
 }
 
 message ModeratorStore {

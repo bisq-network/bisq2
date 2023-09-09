@@ -40,8 +40,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
     final Observable<Long> requiredTotalReputationScore = new Observable<>(1000L);
-    final Observable<Boolean> offersOnly = new Observable<>(true);
-    final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
+    final Observable<Boolean> offersOnly = new Observable<>();
+    final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
     final Set<String> consumedAlertIds;
     boolean isTacAccepted;
@@ -57,7 +57,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
                 1000,
-                true,
+                false,
                 false,
                 ChatNotificationType.MENTION,
                 false,
@@ -172,22 +172,26 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
 
     @Override
     public void applyPersisted(SettingsStore persisted) {
-        cookie.putAll(persisted.cookie.getMap());
-        dontShowAgainMap.putAll(persisted.dontShowAgainMap);
-        useAnimations.set(persisted.useAnimations.get());
-        markets.clear();
-        markets.addAll(persisted.markets);
-        selectedMarket.set(persisted.selectedMarket.get());
-        requiredTotalReputationScore.set(persisted.requiredTotalReputationScore.get());
-        offersOnly.set(persisted.offersOnly.get());
-        tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
-        chatNotificationType.set(persisted.chatNotificationType.get());
-        isTacAccepted = persisted.isTacAccepted;
-        consumedAlertIds.clear();
-        consumedAlertIds.addAll(persisted.consumedAlertIds);
-        closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
-        languageCode = persisted.languageCode;
-        preventStandbyMode.set(persisted.preventStandbyMode.get());
-        supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
+        try {
+            cookie.putAll(persisted.cookie.getMap());
+            dontShowAgainMap.putAll(persisted.dontShowAgainMap);
+            useAnimations.set(persisted.useAnimations.get());
+            markets.clear();
+            markets.addAll(persisted.markets);
+            selectedMarket.set(persisted.selectedMarket.get());
+            requiredTotalReputationScore.set(persisted.requiredTotalReputationScore.get());
+            offersOnly.set(persisted.offersOnly.get());
+            tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
+            chatNotificationType.set(persisted.chatNotificationType.get());
+            isTacAccepted = persisted.isTacAccepted;
+            consumedAlertIds.clear();
+            consumedAlertIds.addAll(persisted.consumedAlertIds);
+            closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
+            languageCode = persisted.languageCode;
+            preventStandbyMode.set(persisted.preventStandbyMode.get());
+            supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
+        } catch (Exception e) {
+            log.error("Exception at applyPersisted", e);
+        }
     }
 }

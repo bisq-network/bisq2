@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.chat.sidebar;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.Navigation;
@@ -106,9 +106,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                            UserProfile userProfile,
                            ChatChannel<? extends ChatMessage> selectedChannel,
                            Runnable closeHandler) {
-            this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-            this.userProfileService = serviceProvider.getUserService().getUserProfileService();
-            this.reputationService = serviceProvider.getUserService().getReputationService();
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
+            reputationService = serviceProvider.getUserService().getReputationService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
             this.closeHandler = closeHandler;
             model = new Model(serviceProvider.getChatService(), userProfile, selectedChannel);

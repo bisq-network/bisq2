@@ -39,7 +39,6 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, BisqEasyTradeParty> {
-
     @Getter
     private final Observable<String> paymentAccountData = new Observable<>();
     @Getter
@@ -60,7 +59,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 myIdentity,
                 contract,
                 new BisqEasyTradeParty(takerNetworkId),
-                new BisqEasyTradeParty(contract.getMaker().getNetworkId()));
+                new BisqEasyTradeParty(contract.getMaker().getNetworkId()),
+                System.currentTimeMillis());
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -71,8 +71,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           Identity myIdentity,
                           BisqEasyContract contract,
                           BisqEasyTradeParty taker,
-                          BisqEasyTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, contract, taker, maker);
+                          BisqEasyTradeParty maker,
+                          long date) {
+        super(state, id, tradeRole, myIdentity, contract, taker, maker, date);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -94,7 +95,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 Identity.fromProto(proto.getMyIdentity()),
                 BisqEasyContract.fromProto(proto.getContract()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
-                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
+                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
+                proto.getDate());
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
         if (bisqEasyTradeProto.hasPaymentAccountData()) {
             bisqEasyTrade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());

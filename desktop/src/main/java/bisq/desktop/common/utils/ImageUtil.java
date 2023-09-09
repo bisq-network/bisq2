@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.utils;
 
+import bisq.common.util.OsUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -70,6 +71,18 @@ public class ImageUtil {
     // https://stackoverflow.com/questions/20767708/how-do-you-detect-a-retina-display-in-java#20767802
     public static boolean isRetina() {
         return Screen.getPrimary().getOutputScaleX() > 1.5;
+    }
+
+    public static Image getWindowTitleIcon() {
+        String iconPath;
+        if (OsUtils.isMac())
+            iconPath = ImageUtil.isRetina() ? "images/window_icon@2x.png" : "images/window_icon.png";
+        else if (OsUtils.isWindows())
+            iconPath = "images/task_bar_icon_windows.png";
+        else
+            iconPath = "images/task_bar_icon_linux.png";
+
+        return ImageUtil.getImageByPath(iconPath);
     }
 
     public static Image composeImage(String[] paths, int width, int height) {

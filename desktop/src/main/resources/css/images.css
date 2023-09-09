@@ -315,40 +315,56 @@
 /* Onboarding */
 /* ------------------------------------------------------------------------------------ */
 
-#intro-1 {
-    -fx-image: url("/images/onboarding/intro-1-bisq-easy.png");
+#crowd {
+    -fx-image: url("/images/onboarding/crowd.png");
 }
 
-#intro-2 {
-    -fx-image: url("/images/onboarding/intro-2-learn.png");
+#bisq-easy {
+    -fx-image: url("/images/onboarding/bisq-easy.png");
 }
 
-#intro-3 {
-    -fx-image: url("/images/onboarding/intro-3-more.png");
+#chat {
+    -fx-image: url("/images/onboarding/chat.png");
 }
 
-#onboarding-bisq-easy {
-    -fx-image: url("/images/onboarding/onboarding-bisq-easy.png");
+#learn {
+    -fx-image: url("/images/onboarding/learn.png");
 }
 
-#onboarding-trade {
-    -fx-image: url("/images/onboarding/onboarding-trade.png");
+#dollar-btc {
+    -fx-image: url("/images/onboarding/dollar-btc.png");
 }
 
-#onboarding-1-easy {
-    -fx-image: url("/images/onboarding/onboarding-1-easy.png");
+#fiat-btc {
+    -fx-image: url("/images/onboarding/fiat-btc.png");
+}
+
+#fiat-btc-small {
+    -fx-image: url("/images/onboarding/fiat-btc-small.png");
+}
+
+#fiat-btc-small-white {
+    -fx-image: url("/images/onboarding/fiat-btc-small-white.png");
+}
+
+#thumbs-up-white {
+    -fx-image: url("/images/onboarding/thumbs-up-white.png");
+}
+
+#thumbs-up {
+    -fx-image: url("/images/onboarding/thumbs-up.png");
 }
 
 #onboarding-1-fraction {
     -fx-image: url("/images/onboarding/onboarding-1-fraction.png");
 }
 
-#onboarding-1-reputation {
-    -fx-image: url("/images/onboarding/onboarding-1-reputation.png");
+#reputation {
+    -fx-image: url("/images/onboarding/reputation.png");
 }
 
-#onboarding-1-reputation-white {
-    -fx-image: url("/images/onboarding/onboarding-1-reputation-white.png");
+#reputation-white {
+    -fx-image: url("/images/onboarding/reputation-white.png");
 }
 
 #onboarding-2-chat {
@@ -493,8 +509,8 @@
     -fx-image: url("/images/protocols/protocol-liquid-multisig.png");
 }
 
-#protocol-lightning-fiat {
-    -fx-image: url("/images/protocols/protocol-lightning-fiat.png");
+#protocol-bisq-lightning {
+    -fx-image: url("/images/protocols/protocol-bisq-lightning.png");
 }
 
 #protocol-liquid-swap {
@@ -541,6 +557,18 @@
 
 #chat-send {
     -fx-image: url("/images/chat/chat-send.png");
+}
+
+#filter {
+    -fx-image: url("/images/chat/filter.png");
+}
+
+#detach {
+    -fx-image: url("/images/chat/detach.png");
+}
+
+#attach {
+    -fx-image: url("/images/chat/attach.png");
 }
 
 
@@ -816,6 +844,7 @@
 #channels-support-support-grey {
     -fx-image: url("/images/channels/support/support/support-grey.png");
 }
+
 
 
 

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.trade_apps.roadmap;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
 
@@ -27,9 +28,10 @@ public class ProtocolRoadmapModel implements Model {
     private final String iconId;
     private final String url;
 
+    //todo
     public ProtocolRoadmapModel(TradeProtocolType tradeProtocolType, String iconId, String url) {
         this.tradeProtocolType = tradeProtocolType;
-        this.iconId = iconId;
         this.url = url;
+        this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(tradeProtocolType.name().toLowerCase());
     }
 }

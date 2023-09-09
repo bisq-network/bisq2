@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.chat.sidebar;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.common.CommonPublicChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -185,8 +185,8 @@ public class ChannelSidebar {
                         .map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile))
                         .sorted()
                         .collect(Collectors.toList()));
-            } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
-                model.description.set(((BisqEasyPublicChatChannel) chatChannel).getDescription());
+            } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
+                model.description.set(((BisqEasyOfferbookChannel) chatChannel).getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();
@@ -233,7 +233,7 @@ public class ChannelSidebar {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ListView<ChannelSidebarUserProfile> participants;
-        private final Label headline, descriptionText;
+        private final Label headline, descriptionLabel;
         private final Button closeButton;
 
         private View(Model model, Controller controller, Pane notificationsSidebar) {
@@ -252,9 +252,9 @@ public class ChannelSidebar {
             HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
             HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
-            descriptionText = new Label();
-            descriptionText.setWrapText(true);
-            descriptionText.setId("chat-sidebar-text");
+            descriptionLabel = new Label();
+            descriptionLabel.setWrapText(true);
+            descriptionLabel.setId("chat-sidebar-text");
 
             Label participantsLabel = new Label(Res.get("chat.sideBar.channelInfo.participants"));
             participantsLabel.setId("chat-sidebar-title");
@@ -265,24 +265,24 @@ public class ChannelSidebar {
 
             VBox.setMargin(topHBox, new Insets(0, -20, 0, 0));
             VBox.setMargin(notificationsSidebar, new Insets(20, 0, 20, 0));
-            root.getChildren().addAll(topHBox, descriptionText, notificationsSidebar, participantsLabel, participants);
+            root.getChildren().addAll(topHBox, descriptionLabel, notificationsSidebar, participantsLabel, participants);
         }
 
         @Override
         protected void onViewAttached() {
             headline.textProperty().bind(model.channelTitle);
-            descriptionText.textProperty().bind(model.description);
-            descriptionText.visibleProperty().bind(model.descriptionVisible);
-            descriptionText.managedProperty().bind(model.descriptionVisible);
+            descriptionLabel.textProperty().bind(model.description);
+            descriptionLabel.visibleProperty().bind(model.descriptionVisible);
+            descriptionLabel.managedProperty().bind(model.descriptionVisible);
             closeButton.setOnAction(e -> controller.onClose());
         }
 
         @Override
         protected void onViewDetached() {
             headline.textProperty().unbind();
-            descriptionText.textProperty().unbind();
-            descriptionText.visibleProperty().unbind();
-            descriptionText.managedProperty().unbind();
+            descriptionLabel.textProperty().unbind();
+            descriptionLabel.visibleProperty().unbind();
+            descriptionLabel.managedProperty().unbind();
             closeButton.setOnAction(null);
         }
 

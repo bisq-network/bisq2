@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.authorized_role.moderator;
 
 import bisq.bonded_roles.bonded_role.BondedRole;
-import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.ChatChannelDomain;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -126,8 +126,10 @@ public class ReportToModeratorTable {
 
         private void navigateToChannel(ChatChannelDomain chatChannelDomain) {
             switch (chatChannelDomain) {
-                case BISQ_EASY:
-                    Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+                case BISQ_EASY_OFFERBOOK:
+                case BISQ_EASY_OPEN_TRADES:
+                case BISQ_EASY_PRIVATE_CHAT:
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                     break;
                 case DISCUSSION:
                     Navigation.navigateTo(NavigationTarget.DISCUSSION);

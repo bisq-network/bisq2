@@ -21,8 +21,10 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.bisq_easy.chat.BisqEasyChatController;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
+import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
+import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,20 +53,19 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
     }
 
     @Override
-    protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
-        if (!model.getTradeTabVisible().get()) {
-            model.getTradeTabVisible().set(navigationTarget == NavigationTarget.MORE_TRADE_PROTOCOLS);
-        }
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case BISQ_EASY_ONBOARDING: {
                 return Optional.of(new BisqEasyOnboardingController(serviceProvider));
             }
-            case BISQ_EASY_MARKETS: {
-                return Optional.of(new BisqEasyChatController(serviceProvider));
+            case BISQ_EASY_OFFERBOOK: {
+                return Optional.of(new BisqEasyOfferbookController(serviceProvider));
+            }
+            case BISQ_EASY_OPEN_TRADES: {
+                return Optional.of(new BisqEasyOpenTradesController(serviceProvider));
+            }
+            case BISQ_EASY_PRIVATE_CHAT: {
+                return Optional.of(new BisqEasyPrivateChatsController(serviceProvider));
             }
             default: {
                 return Optional.empty();

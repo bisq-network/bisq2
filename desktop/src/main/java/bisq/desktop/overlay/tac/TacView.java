@@ -53,7 +53,8 @@ public class TacView extends View<VBox, TacModel, TacController> {
         root.setPadding(new Insets(PADDING));
 
         Label headline = new Label(Res.get("tac.headline"));
-        headline.getStyleClass().addAll("tac-headline", "wrap-text");
+        headline.getStyleClass().add("tac-headline");
+        headline.setWrapText(true);
 
         String text = "1. The user is responsible for using the software in compliance with local laws. Don't use the software if using it is not legal in your jurisdiction.\n\n" +
 
@@ -94,13 +95,13 @@ public class TacView extends View<VBox, TacModel, TacController> {
         rejectButton = new Button(Res.get("tac.reject"));
         rejectButton.getStyleClass().add("outlined-button");
 
-        HBox.setMargin(confirmCheckBox, new Insets(0, 0, 0, 10));
-        HBox buttons = new HBox(20, confirmCheckBox, Spacer.fillHBox(), acceptButton, rejectButton);
+        HBox buttons = new HBox(20, acceptButton, Spacer.fillHBox(), rejectButton);
         VBox.setMargin(rulesList, new Insets(-20, 0, 0, 20));
-        VBox.setMargin(buttons, new Insets(30, 0, 15, 0));
+        VBox.setMargin(confirmCheckBox, new Insets(20, 0, 0, 0));
         root.getChildren().addAll(headline,
                 textList,
                 rulesList,
+                confirmCheckBox,
                 buttons);
     }
 

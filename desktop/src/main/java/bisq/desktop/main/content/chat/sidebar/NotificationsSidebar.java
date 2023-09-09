@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.chat.sidebar;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;

@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.NetworkId;
@@ -75,7 +76,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public CompletableFuture<Boolean> initialize() {
         serviceProvider.getNetworkService().addMessageListener(this);
 
-        persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
+        persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
         return CompletableFuture.completedFuture(true);
     }
@@ -127,15 +128,16 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         BisqEasyContract bisqEasyContract = checkNotNull(message.getBisqEasyContract());
         boolean isBuyer = bisqEasyContract.getOffer().getMakersDirection().isBuy();
         Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyContract.getOffer().getMakerNetworkId().getNodeId()).orElseThrow();
-        BisqEasyTrade tradeModel = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
 
-        if (findProtocol(tradeModel.getId()).isPresent()) {
+        if (findProtocol(bisqEasyTrade.getId()).isPresent()) {
             log.error("We received the BisqEasyTakeOfferRequest for an already existing protocol");
             return;
         }
-        persistableStore.add(tradeModel);
+        checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
+        persistableStore.add(bisqEasyTrade);
 
-        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(tradeModel);
+        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(bisqEasyTrade);
         try {
             protocol.handle(message);
             persist();
@@ -236,6 +238,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(findProtocol(bisqEasyTrade.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
+        checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
         persistableStore.add(bisqEasyTrade);
 
         Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(bisqEasyTrade);
@@ -293,26 +296,40 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.findTrade(tradeId);
     }
 
+    public boolean hadTrade(String tradeId) {
+        return persistableStore.hadTrade(tradeId);
+    }
+
+    public ObservableSet<BisqEasyTrade> getTrades() {
+        return persistableStore.getTrades();
+    }
+
+    public void removeTrade(BisqEasyTrade trade) {
+        persistableStore.removeTrade(trade);
+        tradeProtocolById.remove(trade.getId());
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol factory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade model) {
-        String id = model.getId();
+    private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
+        String id = trade.getId();
         BisqEasyProtocol tradeProtocol;
-        boolean isBuyer = model.isBuyer();
-        if (model.isTaker()) {
+        boolean isBuyer = trade.isBuyer();
+        if (trade.isTaker()) {
             if (isBuyer) {
-                tradeProtocol = new BisqEasyBuyerAsTakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqEasyBuyerAsTakerProtocol(serviceProvider, trade);
             } else {
-                tradeProtocol = new BisqEasySellerAsTakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqEasySellerAsTakerProtocol(serviceProvider, trade);
             }
         } else {
             if (isBuyer) {
-                tradeProtocol = new BisqEasyBuyerAsMakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqEasyBuyerAsMakerProtocol(serviceProvider, trade);
             } else {
-                tradeProtocol = new BisqEasySellerAsMakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqEasySellerAsMakerProtocol(serviceProvider, trade);
             }
         }
         tradeProtocolById.put(id, tradeProtocol);

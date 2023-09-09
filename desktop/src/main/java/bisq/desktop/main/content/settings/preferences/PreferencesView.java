@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
     private final Button resetDontShowAgain, addSupportedLanguageButton;
-    private final Switch useAnimations, preventStandbyMode, closeMyOfferWhenTaken, notifyForPreRelease;
+    private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -87,7 +89,10 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 return null;
             }
         });
-        addSupportedLanguageButton = new Button(Res.get("settings.preferences.language.supported.add"));
+
+        Label icon = Icons.getIcon(AwesomeIcon.CIRCLE_ARROW_RIGHT);
+        addSupportedLanguageButton = new Button(Res.get("settings.preferences.language.supported.add"), icon);
+        addSupportedLanguageButton.setGraphicTextGap(5);
         addSupportedLanguageButton.setDefaultButton(true);
         addSupportedLanguageButton.setMinWidth(240);
         HBox selectionAndButtonHBox = new HBox(20, supportedLanguageSelection, addSupportedLanguageButton);
@@ -148,9 +153,10 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         // Trade
         Label tradeHeadline = new Label(Res.get("settings.preferences.trade.headline"));
         tradeHeadline.getStyleClass().addAll("settings-headline");
+        offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
 
-        VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken);
+        VBox tradeVBox = new VBox(10, offersOnlySwitch, closeMyOfferWhenTaken);
         tradeVBox.setPadding(new Insets(10));
         tradeVBox.getStyleClass().add("settings-box-bg");
 
@@ -176,8 +182,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notifyForPreRelease.selectedProperty().bindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
+        offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
-
         addSupportedLanguageButton.disableProperty().bind(model.getAddSupportedLanguageButtonDisabled());
         languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
         languageSelection.setOnChangeConfirmed(e -> {
@@ -213,6 +219,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notifyForPreRelease.selectedProperty().unbindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
+        offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         languageSelection.setOnChangeConfirmed(null);

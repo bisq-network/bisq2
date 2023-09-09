@@ -17,19 +17,14 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
-import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.ChatMessageType;
-import bisq.chat.message.PublicChatMessage;
+import bisq.chat.*;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.pub.PublicChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -124,13 +119,13 @@ public class ChatNotificationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-        bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
-                onChatChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
+        BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        bisqEasyOpenTradeChannelService.getChannels().addListener(() ->
+                onChatChannelsChanged(bisqEasyOpenTradeChannelService.getChannels()));
 
-        BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
-        bisqEasyPublicChatChannelService.getChannels().addListener(() ->
-                onChatChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
+        BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
+        bisqEasyOfferbookChannelService.getChannels().addListener(() ->
+                onChatChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
                 .forEach(commonPublicChatChannelService -> {
@@ -281,10 +276,10 @@ public class ChatNotificationService implements Service {
         }
         String channelInfo;
         String title;
-        if (chatMessage instanceof BisqEasyPrivateTradeChatMessage) {
-            BisqEasyPrivateTradeChatMessage bisqEasyPrivateTradeChatMessage = (BisqEasyPrivateTradeChatMessage) chatMessage;
-            if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
-                BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
+        if (chatMessage instanceof BisqEasyOpenTradeMessage) {
+            BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = (BisqEasyOpenTradeMessage) chatMessage;
+            if (bisqEasyOpenTradeMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+                BisqEasyOpenTradeChannel privateTradeChannel = (BisqEasyOpenTradeChannel) chatChannel;
                 title = Res.get("chat.notifications.offerTaken", privateTradeChannel.getPeer().getUserName());
                 notificationsService.sendNotification(notificationId, title, "");
                 return;
@@ -292,13 +287,13 @@ public class ChatNotificationService implements Service {
         }
 
         if (chatMessage instanceof PublicChatMessage) {
-            if (chatMessage instanceof BisqEasyPublicChatMessage) {
-                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasBisqEasyOffer()) {
+            if (chatMessage instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                if (settingsService.getOffersOnly().get() && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
                     return;
                 }
-                BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
-                if (!chatService.getBisqEasyPublicChatChannelService().isVisible(bisqEasyPublicChatChannel)) {
+                BisqEasyOfferbookChannel bisqEasyOfferbookChannel = (BisqEasyOfferbookChannel) chatChannel;
+                if (!chatService.getBisqEasyOfferbookChannelService().isVisible(bisqEasyOfferbookChannel)) {
                     return;
                 }
             }

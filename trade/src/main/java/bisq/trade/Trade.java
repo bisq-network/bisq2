@@ -24,6 +24,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
+import bisq.security.DigestUtil;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.multisig.MultisigTrade;
 import bisq.trade.submarine.SubmarineTrade;
@@ -32,12 +33,17 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
 @Slf4j
+@Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements Proto {
     public static String createId(String offerId, String takerPubKeyHash) {
-        return offerId + "." + takerPubKeyHash;
+        String combined = offerId + takerPubKeyHash;
+        return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }
 
     private static TradeRole createRole(boolean isBuyer, boolean isTaker) {
@@ -50,30 +56,40 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                         TradeRole.SELLER_AS_MAKER);
     }
 
-    @Getter
     private final String id;
-    @Getter
     private final Identity myIdentity;
-    @Getter
     private final C contract;
-    @Getter
     private final P taker;
-    @Getter
     private final P maker;
-    @Getter
+    private final long date;
     private transient final TradeRole tradeRole;
 
-    public Trade(State state, boolean isBuyer, boolean isTaker, Identity myIdentity, C contract, P taker, P maker) {
+    public Trade(State state,
+                 boolean isBuyer,
+                 boolean isTaker,
+                 Identity myIdentity,
+                 C contract,
+                 P taker,
+                 P maker,
+                 long date) {
         this(state,
                 createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 contract,
                 taker,
-                maker);
+                maker,
+                date);
     }
 
-    protected Trade(State state, String id, TradeRole tradeRole, Identity myIdentity, C contract, P taker, P maker) {
+    protected Trade(State state,
+                    String id,
+                    TradeRole tradeRole,
+                    Identity myIdentity,
+                    C contract,
+                    P taker,
+                    P maker,
+                    long date) {
         super(state);
 
         this.id = id;
@@ -82,6 +98,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.contract = contract;
         this.taker = taker;
         this.maker = maker;
+        this.date = date;
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
@@ -92,7 +109,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setContract(contract.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
-                .setState(getState().name());
+                .setState(getState().name())
+                .setDate(date);
     }
 
     public static BisqEasyTrade protoToBisqEasyTrade(bisq.trade.protobuf.Trade proto) {

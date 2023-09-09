@@ -41,10 +41,10 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.security.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        Label headline = new Label(Res.get("bisqEasy.tradeGuide.security.headline"));
+        headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
-        UnorderedList content = new UnorderedList(Res.get("tradeGuide.security.content"), "bisq-text-13");
+        UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.security.content"), "bisq-easy-trade-guide-content");
 
         backButton = new Button(Res.get("action.back"));
 
@@ -55,7 +55,7 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(10, 0, -5, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
         root.getChildren().addAll(headline, content, learnMore, buttons);
     }

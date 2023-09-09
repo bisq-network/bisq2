@@ -82,7 +82,7 @@ public class TradeAppsController extends TabController<TradeAppsModel> {
             }
             case BISQ_LIGHTNING: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_LIGHTNING,
-                        "protocol-lightning-fiat",
+                        "protocol-bisq-lightning",
                         "https://bisq.wiki/ln-liquid"));
             }
             case MORE_TRADE_PROTOCOLS: {

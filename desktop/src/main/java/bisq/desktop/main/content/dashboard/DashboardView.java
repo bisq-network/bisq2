@@ -71,7 +71,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(firstBox, 0, 1, 2, 1);
 
         VBox secondBox = getWidgetBox(
-                "intro-3",
+                "fiat-btc",
                 Res.get("dashboard.second.headline"),
                 Res.get("dashboard.second.content"),
                 Res.get("dashboard.second.button"),
@@ -80,7 +80,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(secondBox, 0, 2, 1, 1);
 
         VBox thirdBox = getWidgetBox(
-                "intro-2",
+                "learn",
                 Res.get("dashboard.third.headline"),
                 Res.get("dashboard.third.content"),
                 Res.get("dashboard.third.button"),
@@ -155,7 +155,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 headlineLabel,
                 getIconAndText(Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
                 getIconAndText(Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
-                getIconAndText(Res.get("dashboard.main.content3"), "onboarding-1-reputation-white"),
+                getIconAndText(Res.get("dashboard.main.content3"), "reputation-white"),
                 button);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30, 48, 44, 48));
@@ -164,7 +164,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
     private HBox getIconAndText(String text, String imageId) {
         Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
+        label.getStyleClass().add("bisq-easy-onboarding-big-box-bullet-point");
         label.setWrapText(true);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
         HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));

@@ -17,7 +17,7 @@
 
 package bisq.support.mediation;
 
-import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -45,11 +45,17 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class MediationRequest implements MailboxMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final BisqEasyOffer bisqEasyOffer;
+    private final String tradeId;
     private final UserProfile requester;
     private final UserProfile peer;
-    private final List<BisqEasyPrivateTradeChatMessage> chatMessages;
+    private final List<BisqEasyOpenTradeMessage> chatMessages;
 
-    public MediationRequest(BisqEasyOffer bisqEasyOffer, UserProfile requester, UserProfile peer, List<BisqEasyPrivateTradeChatMessage> chatMessages) {
+    public MediationRequest(String tradeId,
+                            BisqEasyOffer bisqEasyOffer,
+                            UserProfile requester,
+                            UserProfile peer,
+                            List<BisqEasyOpenTradeMessage> chatMessages) {
+        this.tradeId = tradeId;
         this.bisqEasyOffer = bisqEasyOffer;
         this.requester = requester;
         this.peer = peer;
@@ -71,21 +77,23 @@ public final class MediationRequest implements MailboxMessage {
 
     private bisq.support.protobuf.MediationRequest toMediationRequestProto() {
         return bisq.support.protobuf.MediationRequest.newBuilder()
+                .setTradeId(tradeId)
                 .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .setRequester(requester.toProto())
                 .setPeer(peer.toProto())
                 .addAllChatMessages(chatMessages.stream()
-                        .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
+                        .map(BisqEasyOpenTradeMessage::toChatMessageProto)
                         .collect(Collectors.toList()))
                 .build();
     }
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new MediationRequest(BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
+        return new MediationRequest(proto.getTradeId(),
+                BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()
-                        .map(BisqEasyPrivateTradeChatMessage::fromProto)
+                        .map(BisqEasyOpenTradeMessage::fromProto)
                         .collect(Collectors.toList()));
     }
 
@@ -100,9 +108,9 @@ public final class MediationRequest implements MailboxMessage {
         };
     }
 
-    private List<BisqEasyPrivateTradeChatMessage> maybePrune(List<BisqEasyPrivateTradeChatMessage> chatMessages) {
+    private List<BisqEasyOpenTradeMessage> maybePrune(List<BisqEasyOpenTradeMessage> chatMessages) {
         StringBuilder sb = new StringBuilder();
-        List<BisqEasyPrivateTradeChatMessage> result = chatMessages.stream()
+        List<BisqEasyOpenTradeMessage> result = chatMessages.stream()
                 .filter(message -> {
                     sb.append(message.getText());
                     return sb.toString().length() < 10_000;

@@ -18,7 +18,7 @@
 package bisq.desktop.main.left;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -153,7 +153,9 @@ public class LeftNavController implements Controller {
 
     private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
         switch (chatChannelDomain) {
-            case BISQ_EASY:
+            case BISQ_EASY_OFFERBOOK:
+            case BISQ_EASY_OPEN_TRADES:
+            case BISQ_EASY_PRIVATE_CHAT:
                 return Optional.of(NavigationTarget.BISQ_EASY);
             case DISCUSSION:
                 return Optional.of(NavigationTarget.DISCUSSION);

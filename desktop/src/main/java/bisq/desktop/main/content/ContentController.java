@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content;
 
-import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -64,7 +64,9 @@ public class ContentController extends NavigationController {
     @Override
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget != NavigationTarget.BISQ_EASY &&
-                navigationTarget != NavigationTarget.BISQ_EASY_MARKETS &&
+                navigationTarget != NavigationTarget.BISQ_EASY_OFFERBOOK &&
+                navigationTarget != NavigationTarget.BISQ_EASY_OPEN_TRADES &&
+                navigationTarget != NavigationTarget.BISQ_EASY_PRIVATE_CHAT &&
                 navigationTarget != NavigationTarget.DISCUSSION &&
                 navigationTarget != NavigationTarget.EVENTS &&
                 navigationTarget != NavigationTarget.SUPPORT) {
@@ -99,7 +101,6 @@ public class ContentController extends NavigationController {
             case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(serviceProvider));
             }
-
             case USER: {
                 return Optional.of(new UserController(serviceProvider));
             }

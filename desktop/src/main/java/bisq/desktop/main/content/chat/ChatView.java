@@ -17,111 +17,52 @@
 
 package bisq.desktop.main.content.chat;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.main.MainView;
-import bisq.i18n.Res;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, ChatController<?, ?>> {
-    private final Label channelTitle;
-    private final Button helpButton, channelInfoButton;
-    protected final VBox left;
-    private final VBox sideBar;
-    private final Region twoPartyPrivateChannelSelection;
-    protected final Pane chatMessagesComponent;
-    private final Pane channelSidebar;
-    protected final HBox centerToolbar;
-
-    protected final VBox centerVBox;
-    private final SearchBox searchBox;
-    protected final Region topSeparator;
-    private Pane chatUserOverviewRoot;
-    private Subscription chatUserOverviewRootSubscription;
-    private Subscription channelIconPin;
+    protected final Label channelTitle = new Label();
+    protected Button helpButton, infoButton;
+    protected final VBox sideBar = new VBox();
+    protected final VBox centerVBox = new VBox();
+    protected final HBox titleHBox = new HBox(10);
+    protected final HBox containerHBox = new HBox();
+    protected final Pane channelSidebar, chatMessagesComponent;
+    protected Pane chatUserOverviewRoot;
+    protected Subscription channelIconPin, chatUserOverviewRootSubscription;
 
     public ChatView(ChatModel model,
                     ChatController<?, ?> controller,
-                    Region publicChannelSelection,
-                    Region twoPartyPrivateChatChannelSelection,
                     Pane chatMessagesComponent,
                     Pane channelSidebar) {
         super(new AnchorPane(), model, controller);
 
-        this.twoPartyPrivateChannelSelection = twoPartyPrivateChatChannelSelection;
         this.chatMessagesComponent = chatMessagesComponent;
-
         this.channelSidebar = channelSidebar;
 
-        HBox hBox = new HBox();
-        hBox.setFillHeight(true);
-        Layout.pinToAnchorPane(hBox, 0, 0, 0, 0);
-        root.getChildren().add(hBox);
-
-        // Left
-        left = new VBox(
-                publicChannelSelection,
-                Layout.hLine(),
-                twoPartyPrivateChatChannelSelection,
-                Spacer.fillVBox());
-        //left.getStyleClass().add("bisq-grey-2-bg");
-        left.setPrefWidth(210);
-        left.setMinWidth(210);
-        left.setFillWidth(true);
-
-        // Center toolbar
-        channelTitle = new Label();
-        channelTitle.setId("chat-messages-headline");
-        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 0));
-
-        searchBox = new SearchBox();
-        searchBox.setPrefWidth(200);
-        helpButton = BisqIconButton.createIconButton("icon-help", model.getHelpTitle());
-        channelInfoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
-        HBox.setMargin(channelInfoButton, new Insets(0, 0, 0, -5));
-
-        centerToolbar = new HBox(
-                10,
-                channelTitle,
-                Spacer.fillHBox(),
-                searchBox,
-                helpButton,
-                channelInfoButton
-        );
-        centerToolbar.setAlignment(Pos.CENTER);
-        centerToolbar.setMinHeight(64);
-        centerToolbar.setPadding(new Insets(0, 20, 0, 25));
-
-        topSeparator = Layout.hLine();
-        centerVBox = new VBox(centerToolbar, topSeparator, chatMessagesComponent);
-        centerVBox.setFillWidth(true);
-        //chatMessagesComponent.getStyleClass().add("bisq-grey-2-bg");
-        // centerVBox.getStyleClass().add("bisq-grey-2-bg");
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.setMinWidth(700);
-
-        // sideBar
-        sideBar = new VBox(channelSidebar);
-        sideBar.getStyleClass().add("bisq-grey-2-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
-
-        HBox.setHgrow(left, Priority.NEVER);
-        HBox.setHgrow(centerVBox, Priority.ALWAYS);
-        HBox.setHgrow(sideBar, Priority.NEVER);
-        hBox.getChildren().addAll(left, centerVBox, sideBar);
+        configTitleHBox();
+        configCenterVBox();
+        configSideBarVBox();
+        configContainerHBox();
     }
+
+    protected abstract void configTitleHBox();
+
+    protected abstract void configCenterVBox();
+
+    protected abstract void configSideBarVBox();
+
+    protected abstract void configContainerHBox();
 
     @Override
     protected void onViewAttached() {
@@ -132,12 +73,12 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
-        helpButton.setOnAction(e -> controller.onOpenHelp());
-        channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
-        searchBox.textProperty().bindBidirectional(model.getSearchText());
-
-        twoPartyPrivateChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
-        twoPartyPrivateChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+        if (helpButton != null) {
+            helpButton.setOnAction(e -> controller.onOpenHelp());
+        }
+        if (infoButton != null) {
+            infoButton.setOnAction(e -> controller.onToggleChannelInfo());
+        }
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -172,13 +113,12 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
 
-        twoPartyPrivateChannelSelection.visibleProperty().unbind();
-        twoPartyPrivateChannelSelection.managedProperty().unbind();
-
-        helpButton.setOnAction(null);
-        channelInfoButton.setOnAction(null);
-
-        searchBox.textProperty().unbindBidirectional(model.getSearchText());
+        if (helpButton != null) {
+            helpButton.setOnAction(null);
+        }
+        if (infoButton != null) {
+            infoButton.setOnAction(null);
+        }
 
         chatUserOverviewRootSubscription.unsubscribe();
         channelIconPin.unsubscribe();

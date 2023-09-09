@@ -50,6 +50,7 @@ message Trade {
   contract.Contract contract = 5;
   TradeParty taker = 6;
   TradeParty maker = 7;
+  sint64 date = 8;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 20;
@@ -78,7 +79,8 @@ message BisqEasyTrade {
 }
 
 message BisqEasyTradeStore {
-  map<string, Trade> tradeById = 1;
+  repeated Trade trades = 1;
+  repeated string tradeIds = 2;
 }
 
 // BisqEasy messages

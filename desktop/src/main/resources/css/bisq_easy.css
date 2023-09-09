@@ -1,42 +1,168 @@
 /*******************************************************************************
- *                                                                             *
- * Trade state                                                                 *
- *                                                                             *
+ * Chat                                                              *
  ******************************************************************************/
 
-.bisq-easy-trade-state-bg {
+.bisq-easy-chat-title-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.bisq-easy-chat-tools-bg {
+    -fx-background-color: -bisq-dark-grey;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.bisq-easy-chat-messages-bg {
+    -fx-background-color: -bisq-dark-grey;
+    -fx-background-radius: 0;
+}
+
+.bisq-easy-chat-sidebar-bg {
     -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 8;
 }
 
-.bisq-easy-trade-state-headline {
+.bisq-easy-chat-filter-panel-bg {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4;
+    -fx-background-insets: 0 25 10 25;
+    -fx-border-color: transparent;
+    -fx-border-insets: 0 25 10 25;
+}
+
+.bisq-easy-chat-filter-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.4em;
 }
 
+
 /*******************************************************************************
- * Welcome                                                              *
+ * Onboarding                                                           *
  ******************************************************************************/
 
-.bisq-easy-trade-state-welcome-headline {
+.bisq-easy-onboarding-big-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-onboarding-big-box-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 3.1em;
+}
+
+.bisq-easy-onboarding-big-box-bullet-point {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-onboarding-small-box {
+    -fx-background-color: -bisq-dark-grey;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-onboarding-small-box-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+}
+
+.bisq-easy-onboarding-small-box-text {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
+ * Offerbook                                                           *
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Open trades                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+/*******************************************************************************
+ * OpenTradesWelcome                                                            *
+ ******************************************************************************/
+
+.bisq-easy-open-trades-welcome-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-open-trades-welcome-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.3em;
 }
 
+.bisq-easy-open-trades-welcome-info {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-easy-open-trades-welcome-lines {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+/*******************************************************************************
+ * Trade guide                                                            *
+ ******************************************************************************/
+
+.bisq-easy-trade-guide-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.8em;
+}
+
+.bisq-easy-trade-guide-content {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+}
+
+
+/*******************************************************************************
+ * Container boxes                                                              *
+ ******************************************************************************/
+
+.bisq-easy-container {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-container-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.8em;
+}
+
+
+/*******************************************************************************
+ * Trade state                                                                 *
+ ******************************************************************************/
+
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *
  ******************************************************************************/
-
-.bisq-easy-trade-state-phase-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.5em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
 
 .bisq-easy-trade-state-phase {
     -fx-font-size: 0.93em;
@@ -184,6 +310,11 @@
     -fx-border-width: 0;
 }
 
+.small-search-box-light {
+    -fx-background-color: -bisq-grey-25;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Trade domain                                                                   *
@@ -245,19 +376,6 @@
  ******************************************************************************/
 
 
-#bisq-easy-onboarding-headline-label {
-    -fx-font-size: 2.15em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-green;
-}
-
-#bisq-easy-onboarding-label {
-    -fx-font-size: 1.2em;
-    -fx-font-family: "IBM Plex Sans";
-    -fx-text-fill: -fx-light-text-color;
-}
-
-
 #bisq-easy-next-button {
     -fx-background-color: transparent;
     -fx-background-radius: 4;
@@ -281,4 +399,15 @@
 #bisq-easy-trade-info-content-label {
     -fx-font-size: 1.1em;
     -fx-text-fill: -fx-light-text-color;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Private chat                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-easy-private-chats-table-view {
+    -fx-background-color: -bisq-grey-2;
 }

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.Citation;
+import bisq.chat.Citation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;

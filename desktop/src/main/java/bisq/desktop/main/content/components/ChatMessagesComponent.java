@@ -20,19 +20,13 @@ package bisq.desktop.main.content.components;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.channel.pub.PublicChatChannel;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.ChatMessageType;
-import bisq.chat.message.Citation;
+import bisq.chat.*;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.priv.PrivateChatChannel;
+import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -205,8 +199,8 @@ public class ChatMessagesComponent {
                 model.selectedChannel.set(chatChannel);
                 applyUserProfileOrChannelChange();
 
-                boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyPublicChatChannel;
-                boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyPrivateTradeChatChannel;
+                boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyOfferbookChannel;
+                boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyOpenTradeChannel;
                 boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
                 model.getLeaveChannelButtonVisible().set(false);
                 model.getCreateOfferButtonVisible().set(isBisqEasyPublicChatChannel);
@@ -218,8 +212,8 @@ public class ChatMessagesComponent {
                     chatMessagesPin.unbind();
                 }
                 if (isBisqEasyPrivateTradeChatChannel) {
-                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> privateTradeMessagesChanged((BisqEasyPrivateTradeChatChannel) chatChannel));
-                    BisqEasyPrivateTradeChatChannel privateChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
+                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> privateTradeMessagesChanged((BisqEasyOpenTradeChannel) chatChannel));
+                    BisqEasyOpenTradeChannel privateChannel = (BisqEasyOpenTradeChannel) chatChannel;
                     if (inMediationPin != null) {
                         inMediationPin.unbind();
                     }
@@ -238,7 +232,12 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
-            chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer);
+            chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
+                    .ifPresent(channel -> {
+                        if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
+                            Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+                        }
+                    });
         }
 
 
@@ -289,7 +288,7 @@ public class ChatMessagesComponent {
         // Change handlers from service or model
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void privateTradeMessagesChanged(BisqEasyPrivateTradeChatChannel chatChannel) {
+        private void privateTradeMessagesChanged(BisqEasyOpenTradeChannel chatChannel) {
             UIThread.run(() -> {
                 BisqEasyOffer bisqEasyOffer = chatChannel.getBisqEasyOffer();
                 boolean isMaker = bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
@@ -320,7 +319,7 @@ public class ChatMessagesComponent {
         private void accountsChanged() {
             UIThread.run(() ->
                     model.getPaymentAccountSelectionVisible().set(
-                            model.getSelectedChannel().get() instanceof BisqEasyPrivateTradeChatChannel &&
+                            model.getSelectedChannel().get() instanceof BisqEasyOpenTradeChannel &&
                                     accountService.getAccounts().size() > 1));
         }
 
@@ -399,7 +398,7 @@ public class ChatMessagesComponent {
                 return;
             }
 
-            if (chatChannel instanceof BisqEasyPublicChatChannel) {
+            if (chatChannel instanceof BisqEasyOfferbookChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("chat.message.send..offerOnly.warn"))
@@ -409,13 +408,13 @@ public class ChatMessagesComponent {
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
-                chatService.getBisqEasyPublicChatChannelService().publishChatMessage(text, citation, (BisqEasyPublicChatChannel) chatChannel, userIdentity);
-            } else if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
-                if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyPrivateTradeChatChannel) chatChannel).isMediator()) {
-                    chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(text, citation, (BisqEasyPrivateTradeChatChannel) chatChannel);
+                chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);
+            } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
+                if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
+                    chatService.getBisqEasyOpenTradeChannelService().sendTextMessage(text, citation, (BisqEasyOpenTradeChannel) chatChannel);
                 } else {
-                    new Popup().information(Res.get("bisqEasy.privateChannel.send.tradeRulesNotConfirmed.warn"))
-                            .actionButtonText(Res.get("bisqEasy.privateChannel.send.tradeRulesNotConfirmed.popup.openGuide"))
+                    new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
+                            .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
                             .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                             .show();
                 }
@@ -559,7 +558,7 @@ public class ChatMessagesComponent {
             HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -25));
             HBox bottomHBox = new HBox(10);
 
-            leaveChannelButton = createAndGetChatButton(Res.get("bisqEasy.channelSelection.private.leave"), 120);
+            leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
             leaveChannelButton.getStyleClass().add("outlined-button");
 
             bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);

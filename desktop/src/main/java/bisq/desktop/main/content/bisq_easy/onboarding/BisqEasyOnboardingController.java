@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.bisq_easy.create_offer.CreateOfferController;
+import bisq.desktop.main.content.bisq_easy.create_offer.CreateOfferController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -49,11 +49,11 @@ public class BisqEasyOnboardingController implements Controller {
     public void onDeactivate() {
     }
 
-    void onOpenChat() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_MARKETS);
+    void onOpenOfferbook() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
     }
 
-    void onCreateOffer() {
+    void onOpenTradeWizard() {
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(true));
     }
 

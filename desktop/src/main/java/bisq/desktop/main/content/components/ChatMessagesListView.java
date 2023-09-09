@@ -17,25 +17,26 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
-import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.chat.channel.pub.PublicChatChannel;
-import bisq.chat.message.*;
+import bisq.chat.*;
+import bisq.chat.bisqeasy.BisqEasyOfferMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.pub.PublicChatMessage;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
@@ -45,7 +46,7 @@ import bisq.desktop.components.controls.*;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
-import bisq.desktop.overlay.bisq_easy.take_offer.TakeOfferController;
+import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -191,10 +192,10 @@ public class ChatMessagesListView {
                         chatMessagesPin.unbind();
                     }
 
-                    if (channel instanceof BisqEasyPublicChatChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyPublicChatChannel) channel);
-                    } else if (channel instanceof BisqEasyPrivateTradeChatChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyPrivateTradeChatChannel) channel);
+                    if (channel instanceof BisqEasyOfferbookChannel) {
+                        chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
+                    } else if (channel instanceof BisqEasyOpenTradeChannel) {
+                        chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChannel) channel);
                     } else if (channel instanceof CommonPublicChatChannel) {
                         chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
                     } else if (channel instanceof TwoPartyPrivateChatChannel) {
@@ -280,7 +281,7 @@ public class ChatMessagesListView {
         // UI - handler
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void onTakeOffer(BisqEasyPublicChatMessage chatMessage, boolean canTakeOffer) {
+        private void onTakeOffer(BisqEasyOfferbookMessage chatMessage, boolean canTakeOffer) {
             if (userIdentityService.getSelectedUserIdentity() == null ||
                     bannedUserService.isUserProfileBanned(chatMessage.getAuthorUserProfileId()) ||
                     bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile())) {
@@ -320,9 +321,9 @@ public class ChatMessagesListView {
         private void doDeleteMessage(ChatMessage chatMessage, UserIdentity userIdentity) {
             checkArgument(chatMessage instanceof PublicChatMessage);
 
-            if (chatMessage instanceof BisqEasyPublicChatMessage) {
-                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity.getNodeIdAndKeyPair())
+            if (chatMessage instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                chatService.getBisqEasyOfferbookChannelService().deleteChatMessage(bisqEasyOfferbookMessage, userIdentity.getNodeIdAndKeyPair())
                         .whenComplete((result, throwable) -> {
                             if (throwable != null) {
                                 log.error("We got an error at doDeleteMessage: " + throwable);
@@ -353,9 +354,9 @@ public class ChatMessagesListView {
             }
 
             UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-            if (chatMessage instanceof BisqEasyPublicChatMessage) {
-                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                chatService.getBisqEasyPublicChatChannelService().publishEditedChatMessage(bisqEasyPublicChatMessage, editedText, userIdentity);
+            if (chatMessage instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                chatService.getBisqEasyOfferbookChannelService().publishEditedChatMessage(bisqEasyOfferbookMessage, editedText, userIdentity);
             } else if (chatMessage instanceof CommonPublicChatMessage) {
                 CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
                 chatService.getCommonPublicChatChannelServices().get(model.chatChannelDomain).publishEditedChatMessage(commonPublicChatMessage, editedText, userIdentity);
@@ -413,7 +414,12 @@ public class ChatMessagesListView {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
-            chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer);
+            chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
+                    .ifPresent(channel -> {
+                        if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
+                            Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+                        }
+                    });
         }
 
         private void applyPredicate() {
@@ -429,9 +435,9 @@ public class ChatMessagesListView {
                 }
 
                 boolean offerOnlyPredicate = true;
-                if (item.getChatMessage() instanceof BisqEasyPublicChatMessage) {
-                    BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) item.getChatMessage();
-                    offerOnlyPredicate = !offerOnly || bisqEasyPublicChatMessage.hasBisqEasyOffer();
+                if (item.getChatMessage() instanceof BisqEasyOfferbookMessage) {
+                    BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+                    offerOnlyPredicate = !offerOnly || bisqEasyOfferbookMessage.hasBisqEasyOffer();
                 }
                 // We do not display the take offer message as it has no text and is used only for sending the offer 
                 // to the peer and signalling the take offer event.
@@ -459,17 +465,17 @@ public class ChatMessagesListView {
                     .orElse(Res.get("data.na"));
         }
 
-        private String getSupportedLanguageCodes(BisqEasyPublicChatMessage chatMessage) {
+        private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage) {
             String result = getSupportedLanguageCodes(chatMessage, ", ", LanguageRepository::getDisplayLanguage);
             return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + " " + StringUtils.truncate(result, 100);
         }
 
-        private String getSupportedLanguageCodesForTooltip(BisqEasyPublicChatMessage chatMessage) {
+        private String getSupportedLanguageCodesForTooltip(BisqEasyOfferbookMessage chatMessage) {
             String result = getSupportedLanguageCodes(chatMessage, "\n", LanguageRepository::getDisplayString);
             return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
         }
 
-        private String getSupportedLanguageCodes(BisqEasyPublicChatMessage chatMessage, String separator, Function<String, String> toStringFunction) {
+        private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {
             return chatMessage.getBisqEasyOffer()
                     .map(BisqEasyOffer::getSupportedLanguageCodes)
                     .map(supportedLanguageCodes -> Joiner.on(separator)
@@ -519,6 +525,7 @@ public class ChatMessagesListView {
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
 
         private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
+        private UIScheduler scrollDelay;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -536,7 +543,13 @@ public class ChatMessagesListView {
             VBox.setVgrow(listView, Priority.ALWAYS);
             root.getChildren().add(listView);
 
-            messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
+            messagesListener = c -> {
+                UIThread.runOnNextRenderFrame(this::scrollDown);
+                if (scrollDelay != null) {
+                    scrollDelay.stop();
+                }
+                scrollDelay = UIScheduler.run(this::scrollDown).after(200);
+            };
         }
 
         @Override
@@ -599,6 +612,7 @@ public class ChatMessagesListView {
                             editInputField = new BisqTextArea();
                             //editInputField.getStyleClass().addAll("text-fill-white", "font-size-13", "font-default");
                             editInputField.setId("chat-messages-edit-text-area");
+                            editInputField.setMinWidth(150);
                             editInputField.setVisible(false);
                             editInputField.setManaged(false);
 
@@ -658,12 +672,12 @@ public class ChatMessagesListView {
                                     return;
 
                                 boolean hasTradeChatOffer = model.hasTradeChatOffer(chatMessage);
-                                boolean isBisqEasyPublicChatMessageWithOffer = chatMessage instanceof BisqEasyPublicChatMessage && hasTradeChatOffer;
+                                boolean isBisqEasyPublicChatMessageWithOffer = chatMessage instanceof BisqEasyOfferbookMessage && hasTradeChatOffer;
                                 boolean isMyMessage = model.isMyMessage(chatMessage);
 
                                 if (isBisqEasyPublicChatMessageWithOffer) {
-                                    supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyPublicChatMessage) chatMessage)));
-                                    supportedLanguages.setTooltip(new Tooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyPublicChatMessage) chatMessage))));
+                                    supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) chatMessage)));
+                                    supportedLanguages.setTooltip(new BisqTooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
                                 }
 
                                 dateTime.setVisible(false);
@@ -749,8 +763,8 @@ public class ChatMessagesListView {
                                         VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
                                         reputationVBox.setAlignment(Pos.CENTER_LEFT);
 
-                                        BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyPublicChatMessage, item.isCanTakeOffer()));
+                                        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
                                         takeOfferButton.setDefaultButton(item.isCanTakeOffer());
 
                                         VBox messageVBox = new VBox(quotedMessageVBox, message);
@@ -853,9 +867,9 @@ public class ChatMessagesListView {
 
                             boolean isPublicChannel = model.isPublicChannel.get();
                             boolean allowEditing = isPublicChannel;
-                            if (chatMessage instanceof BisqEasyPublicChatMessage) {
-                                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                                allowEditing = allowEditing && bisqEasyPublicChatMessage.getBisqEasyOffer().isEmpty();
+                            if (chatMessage instanceof BisqEasyOfferbookMessage) {
+                                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                                allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
                             }
                             if (isMyMessage) {
                                 copyIcon.setOnMouseClicked(e -> controller.onCopyMessage(chatMessage));
@@ -1019,14 +1033,14 @@ public class ChatMessagesListView {
 
             reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
 
-            if (chatMessage instanceof BisqEasyPublicChatMessage) {
-                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
-                if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyPublicChatMessage.getBisqEasyOffer().isPresent()) {
+            if (chatMessage instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
                     UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                     NetworkId takerNetworkId = userProfile.getNetworkId();
-                    BisqEasyOffer bisqEasyOffer = bisqEasyPublicChatMessage.getBisqEasyOffer().get();
+                    BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
                     String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                    canTakeOffer = bisqEasyTradeService.findTrade(tradeId).isEmpty();
+                    canTakeOffer = !bisqEasyTradeService.hadTrade(tradeId);
                 } else {
                     canTakeOffer = false;
                 }

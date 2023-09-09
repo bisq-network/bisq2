@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.chat;
 
-import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.ChatMessage;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;
@@ -38,6 +38,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public abstract class ChatModel extends NavigationModel {
+    protected final ChatChannelDomain chatChannelDomain;
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty channelTitle = new SimpleStringProperty("");
@@ -48,9 +49,6 @@ public abstract class ChatModel extends NavigationModel {
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelSidebarVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Node> channelIconNode = new SimpleObjectProperty<>();
-    private final StringProperty searchText = new SimpleStringProperty();
-    protected final BooleanProperty isTwoPartyPrivateChatChannelSelectionVisible = new SimpleBooleanProperty();
-    protected final ChatChannelDomain chatChannelDomain;
     private final String helpTitle;
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
@@ -58,10 +56,18 @@ public abstract class ChatModel extends NavigationModel {
     public ChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
 
-        if (chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
-            helpTitle = Res.get("chat.topMenu.tradeGuide.tooltip");
-        } else {
-            helpTitle = Res.get("chat.topMenu.chatRules.tooltip");
+        switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+            case BISQ_EASY_OPEN_TRADES:
+            case BISQ_EASY_PRIVATE_CHAT:
+                helpTitle = Res.get("chat.topMenu.tradeGuide.tooltip");
+                break;
+            case DISCUSSION:
+            case EVENTS:
+            case SUPPORT:
+            default:
+                helpTitle = Res.get("chat.topMenu.chatRules.tooltip");
+                break;
         }
     }
 

@@ -139,16 +139,19 @@
 }
 
 .grey-transparent-outlined-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
     -fx-border-color: rgba(255, 255, 255, 0.33);
     -fx-text-fill: rgba(255, 255, 255, 0.33);
 }
 
 .grey-transparent-outlined-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.025);
     -fx-border-color: rgba(255, 255, 255, 0.27);
     -fx-text-fill: rgba(255, 255, 255, 0.27);
 }
 
 .grey-transparent-outlined-button:disabled {
+    -fx-background-color: transparent;
     -fx-border-color: rgba(255, 255, 255, 0.15);
     -fx-text-fill: rgba(255, 255, 255, 0.15);
 }
@@ -598,6 +601,7 @@
 .tooltip .dark-tooltip {
     -fx-text-fill: -bisq-grey-11;
     -fx-background-color: -bisq-grey-2;
+    -fx-font-size: 0.85em;
 }
 
 .tooltip .medium-dark-tooltip {

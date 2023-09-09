@@ -44,5 +44,4 @@ public class StageUtil {
         stage.show();
         return stage;
     }
-
 }

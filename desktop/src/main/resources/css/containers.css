@@ -43,7 +43,7 @@
 
 .list-view .list-cell {
     -fx-background-color: -bisq-dark-grey;
-    -fx-font-size: 1.05em;
+    -fx-font-size: 1em;
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0;
 }
@@ -60,6 +60,9 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.list-view .list-cell:empty:hover {
+    -fx-background-color: transparent;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -170,9 +173,9 @@ tree-table-view:focused {
 }
 
 /* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
-.table-view > .scroll-bar:horizontal {
+/*.table-view > .scroll-bar:horizontal {
     -fx-opacity: 0;
-}
+}*/
 
 .table-view .filler {
     -fx-opacity: 0;
@@ -202,30 +205,33 @@ tree-table-view:focused {
     -fx-alignment: center-left;
 }
 
-.table-view .table-cell.left {
-    -fx-alignment: center-left;
-}
-
 /* right */
 .table-view .column-header.right .label {
     -fx-alignment: center-right;
+}
+
+
+/* table-cell */
+.table-view .table-cell {
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+    -fx-padding: 0 10 0 10;
+}
+
+.table-view .table-cell.left {
+    -fx-alignment: center-left;
 }
 
 .table-view .table-cell.right {
     -fx-alignment: center-right;
 }
 
-/* table-cell */
-.table-view .table-cell {
-    -fx-alignment: center;
-    -fx-padding: 0 10 0 10;
-}
-
 /* row-cell */
 .table-row-cell {
+    -fx-background-color: transparent;
     -fx-border-width: 1 0 0 0;
     -fx-pref-height: 54px;
-    -fx-border-color: -bisq-dark-grey;
+    -fx-border-color: transparent;
 }
 
 .table-view .table-row-cell .table-cell {
@@ -240,16 +246,6 @@ tree-table-view:focused {
 /* empty */
 .table-row-cell:empty {
     -fx-border-width: 0;
-}
-
-/* even */
-.table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bisq-grey-24;
-}
-
-/* odd */
-.table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-grey-24;
 }
 
 .table-view .table-row-cell:empty .table-cell {
@@ -273,10 +269,15 @@ tree-table-view:focused {
     -fx-text-fill: -fx-light-text-color;
 }
 
-.table-view .table-row-cell:hover .table-cell,
-.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-darker-grey;
+.table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-grey-5;
     -fx-border-color: transparent;
+}
+
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-grey-19;
+    -fx-border-color: -bisq-green;
+    -fx-border-width: 0 0 2 0;
 }
 
 /* button */
@@ -336,6 +337,27 @@ tree-table-view:focused {
     -fx-border-width: 0px;
 }
 
+.table-view /*> column-header-background > nested-column-header >*/ .arrow {
+    -fx-background-color: -fx-mid-text-color;
+    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+}
+
+.table-view > .placeholder > .label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.3em;
+}
+
+.hide-vertical-scrollbar .scroll-bar:vertical * {
+    -fx-min-width: 0;
+    -fx-pref-width: 0;
+    -fx-max-width: 0;
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+}
 
 /*******************************************************************************
  * Containers                                            *
@@ -499,6 +521,30 @@ tree-table-view:focused {
     -fx-background-insets: 10;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * TabView                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.tab-view {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.8em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.tab-view-line {
+    -fx-background-color: -bisq-dark-grey;
+}
+
+.tab-view-line-light {
+    -fx-background-color: -bisq-grey-20;
+}
+
+.tab-view-selection {
+    -fx-background-color: -bisq-green;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -536,6 +582,7 @@ tree-table-view:focused {
 .bisq-green-line {
     -fx-background-color: -bisq-green;
 }
+
 .bisq-white-bg {
     -fx-background-color: -bisq-white;
 }
@@ -574,14 +621,12 @@ tree-table-view:focused {
 }
 
 .popover > .border {
-    -fx-stroke: linear-gradient(to bottom, rgba(0, 0, 0, .3), rgba(0, 0, 0, .7));
-    -fx-stroke-width: 0.5;
-    -fx-fill: rgba(255.0, 255.0, 255.0, .95);
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, .2), 10.0, 0.5, 2.0, 2.0);
+    -fx-stroke: transparent;
+    -fx-fill: transparent;
 }
 
 .popover > .content {
-    -fx-padding: 10;
+    -fx-padding: 0;
 }
 
 .popover > .detached {
@@ -607,8 +652,7 @@ tree-table-view:focused {
 }
 
 .popover > .content > .title > .icon > .graphics > .line {
-    -fx-stroke: -bisq-white;
-    -fx-stroke-width: 2;
+    -fx-stroke: transparent;
 }
 
 .popover > .border {
@@ -624,22 +668,20 @@ tree-table-view:focused {
  ********************************************************************************************************************/
 
 .overlay-headline {
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.8em;
     -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 .overlay-headline-information {
-    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-green;
 }
 
 .overlay-headline-warning {
-    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-warning;
 }
 
 .overlay-headline-error {
-    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-red;
 }
 
@@ -655,10 +697,14 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-red;
 }
 
+.overlay-message {
+    -fx-font-size: 1.2em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 .overlay-bg {
     -fx-background-color: -bisq-popup-bg-grey;
-    -fx-font-size: 1.1em;
-    -fx-text-fill: -bisq-grey-11;
     -fx-background-insets: 25;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.75), 40, 0.5, 0, 0);
 }

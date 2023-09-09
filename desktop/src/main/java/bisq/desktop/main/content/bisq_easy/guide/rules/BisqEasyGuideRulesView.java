@@ -27,7 +27,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -46,20 +45,19 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.rules.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        Label headline = new Label(Res.get("bisqEasy.tradeGuide.rules.headline"));
+        headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
-        UnorderedList content = new UnorderedList(Res.get("tradeGuide.rules.content"), "bisq-text-13");
+        UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.rules.content"), "bisq-easy-trade-guide-content");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
         backButton = new Button(Res.get("action.back"));
         closeButton = new Button(Res.get("action.close"));
-        confirmCheckBox = new CheckBox(Res.get("tradeGuide.rules.confirm"));
+        confirmCheckBox = new CheckBox(Res.get("bisqEasy.tradeGuide.rules.confirm"));
 
         HBox buttons = new HBox(20, backButton, closeButton);
-        VBox.setVgrow(content, Priority.ALWAYS);
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(10, 0, -5, 0));
         VBox.setMargin(confirmCheckBox, new Insets(0, 0, 10, 0));
         root.getChildren().addAll(headline, content, learnMore, confirmCheckBox, buttons);
     }

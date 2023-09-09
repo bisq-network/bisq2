@@ -56,14 +56,14 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
 
         Label headline = new Label(Res.get("tradeApps.overview.headline"));
         headline.setWrapText(true);
-        headline.getStyleClass().add("bisq-text-headline-4");
+        headline.getStyleClass().add("trade-protocols-overview-headline");
         headline.setMinHeight(55);
         root.add(headline, 0, 0, 2, 1);
 
         Label subHeadline = new Label(Res.get("tradeApps.overview.subHeadline"));
         subHeadline.setWrapText(true);
-        subHeadline.getStyleClass().add("bisq-text-16");
-        GridPane.setMargin(subHeadline, new Insets(0, 0, 10, 0));
+        subHeadline.getStyleClass().add("trade-protocols-overview-sub-headline");
+        GridPane.setMargin(subHeadline, new Insets(-10, 0, 0, 0));
         root.add(subHeadline, 0, 1, 2, 1);
 
 
@@ -80,7 +80,7 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
 
         Label more = new Label(Res.get("tradeApps.overview.more"));
         more.setWrapText(true);
-        more.getStyleClass().add("bisq-text-16");
+        more.getStyleClass().add("trade-protocols-overview-sub-headline");
         GridPane.setMargin(more, new Insets(20, 0, 10, 0));
         root.add(more, 0, root.getRowCount(), 2, 1);
 
@@ -142,7 +142,6 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
         Label subTitleLabel = new Label(protocolListItem.getBasicInfo());
         subTitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         subTitleLabel.setAlignment(Pos.TOP_LEFT);
-        subTitleLabel.setMaxWidth(384);
         subTitleLabel.setMinHeight(40);
         GridPane.setMargin(subTitleLabel, new Insets(-5, 0, 0, 0));
         gridPane.add(subTitleLabel, 0, ++rowIndex, 3, 1);

@@ -73,14 +73,13 @@ public class ProgressBarWithLabel extends VBox {
         progressBar.setMaxHeight(progressBar.getMinHeight());
         getChildren().addAll(label, progressBar);
 
-        widthPin = EasyBind.subscribe(label.widthProperty(), w -> {
-            if (w.doubleValue() > 0) {
-                label.setMinWidth(w.doubleValue());
+        widthPin = EasyBind.subscribe(label.widthProperty(), width -> {
+            if (width.doubleValue() > 0) {
+                label.setMinWidth(width.doubleValue());
+                progressBar.setPrefWidth(width.doubleValue());
                 unsubscribe();
             }
         });
-        label.widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                progressBar.setPrefWidth(newValue.doubleValue())).get());
 
         textProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 label.setText(newValue + ellipsis)).get());
@@ -88,8 +87,6 @@ public class ProgressBarWithLabel extends VBox {
         if (animateEllipsis) {
             progressBar.progressProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                     animatePostfix()).get());
-        }
-        if (animateEllipsis) {
             animatePostfix();
         }
     }
@@ -99,16 +96,25 @@ public class ProgressBarWithLabel extends VBox {
     }
 
     private void animatePostfix() {
-        if (progressBar.getProgress() == -1) {
+        if (progressBar.getProgress() == -11) {
             if (scheduler != null) {
                 scheduler.stop();
             }
             scheduler = UIScheduler.run(() -> {
                 label.setText(getText() + postFix);
-                if (postFix.length() < 3) {
-                    postFix += ".";
-                } else {
-                    postFix = "";
+                switch (postFix) {
+                    case "   ":
+                        postFix = ".  ";
+                        break;
+                    case ".  ":
+                        postFix = ".. ";
+                        break;
+                    case ".. ":
+                        postFix = "...";
+                        break;
+                    default:
+                        postFix = "   ";
+                        break;
                 }
             }).periodically(300, TimeUnit.MILLISECONDS);
         } else {
