@@ -2,7 +2,6 @@
  * Chat                                                              *
  ******************************************************************************/
 
-
 .bisq-easy-chat-title-bg {
     -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 8 8 0 0;
@@ -153,7 +152,7 @@
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.8em;
 }
 
 
@@ -164,13 +163,6 @@
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *
  ******************************************************************************/
-
-.bisq-easy-trade-state-phase-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.2em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
 
 .bisq-easy-trade-state-phase {
     -fx-font-size: 0.93em;

@@ -237,9 +237,6 @@ class TradePhaseBox {
             root.setMinWidth(300);
             root.setMaxWidth(root.getMinWidth());
 
-            Label phaseHeadline = new Label(Res.get("bisqEasy.tradeState.phase.headline"));
-            phaseHeadline.getStyleClass().add("bisq-easy-trade-state-phase-headline");
-
             Triple<HBox, Label, Badge> phaseItem1 = getPhaseItem(1);
             Triple<HBox, Label, Badge> phaseItem2 = getPhaseItem(2);
             Triple<HBox, Label, Badge> phaseItem3 = getPhaseItem(3);
@@ -265,12 +262,11 @@ class TradePhaseBox {
             disputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
             disputeButton.getStyleClass().add("outlined-button");
 
-            VBox.setMargin(phaseHeadline, new Insets(20, 0, 20, 0));
+            VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
             VBox.setMargin(disputeButton, new Insets(15, 0, 0, 0));
             VBox.setMargin(openTradeGuide, new Insets(30, 0, 0, 2));
 
             root.getChildren().addAll(
-                    phaseHeadline,
                     phase1HBox,
                     getVLine(),
                     phase2HBox,
