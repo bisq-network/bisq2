@@ -101,7 +101,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
     protected void setupLineAndMarker() {
         super.setupLineAndMarker();
 
-        line.getStyleClass().remove("tab-view-line-dark");
-        line.getStyleClass().add("tab-view-line");
+        line.getStyleClass().remove("tab-view-line");
+        line.getStyleClass().add("tab-view-line-light");
     }
 }

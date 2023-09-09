@@ -31,6 +31,7 @@ import java.util.List;
 
 public abstract class TextList extends VBox {
     public TextList(String text, @Nullable String style, double gap, double vSpacing, String regex, @Nullable String mark) {
+        setFillWidth(true);
         setSpacing(vSpacing);
         List<String> list = List.of(text.split(regex));
         if (list.size() == 1 && list.get(0).equals(text)) {
@@ -60,6 +61,7 @@ public abstract class TextList extends VBox {
                 content.getStyleClass().add(style);
             }
             HBox.setHgrow(markText, Priority.ALWAYS);
+            HBox.setHgrow(content, Priority.ALWAYS);
             getChildren().add(new HBox(gap, markText, content));
         }
     }

@@ -152,7 +152,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     protected void setupLineAndMarker() {
         line = new Region();
-        line.getStyleClass().add("tab-view-line-dark");
+        line.getStyleClass().add("tab-view-line");
         double lineHeight = 1;
         line.setMinHeight(lineHeight);
 

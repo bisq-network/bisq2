@@ -537,12 +537,12 @@ tree-table-view:focused {
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.tab-view-line-dark {
+.tab-view-line {
     -fx-background-color: -bisq-dark-grey;
 }
 
-.tab-view-line {
-    -fx-background-color: -bisq-mid-grey;
+.tab-view-line-light {
+    -fx-background-color: -bisq-grey-20;
 }
 
 .tab-view-selection {
