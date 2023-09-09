@@ -40,6 +40,47 @@
 
 
 /*******************************************************************************
+ * Onboarding                                                           *
+ ******************************************************************************/
+
+.bisq-easy-onboarding-big-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-onboarding-big-box-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 3.1em;
+}
+
+.bisq-easy-onboarding-big-box-bullet-point {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-onboarding-small-box {
+    -fx-background-color: -bisq-dark-grey;
+    -fx-background-radius: 8;
+}
+
+.bisq-easy-onboarding-small-box-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+}
+
+.bisq-easy-onboarding-small-box-text {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
  * Offerbook                                                           *
  ******************************************************************************/
 
@@ -98,15 +139,6 @@
     -fx-font-size: 1.1em;
 }
 
-/*******************************************************************************
- * Table                                                            *
- ******************************************************************************/
-
-.bisq-easy-table-view .table-row-cell:hover .table-cell,
-.bisq-easy-table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-green;
-    -fx-border-color: transparent;
-}
 
 /*******************************************************************************
  * Container boxes                                                              *
@@ -125,7 +157,6 @@
 }
 
 
-
 /*******************************************************************************
  * Trade state                                                                 *
  ******************************************************************************/
@@ -137,7 +168,7 @@
 .bisq-easy-trade-state-phase-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.2em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -351,19 +382,6 @@
  * Misc                                                                 *
  *                                                                             *
  ******************************************************************************/
-
-
-#bisq-easy-onboarding-headline-label {
-    -fx-font-size: 2.15em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-green;
-}
-
-#bisq-easy-onboarding-label {
-    -fx-font-size: 1.2em;
-    -fx-font-family: "IBM Plex Sans";
-    -fx-text-fill: -fx-light-text-color;
-}
 
 
 #bisq-easy-next-button {

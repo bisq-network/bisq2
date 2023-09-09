@@ -145,7 +145,7 @@
 .bisq-text-3 {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.1em;
+    -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -309,7 +309,7 @@
 .take-offer-review-subtitle {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.05em;
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 

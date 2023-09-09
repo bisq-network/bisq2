@@ -133,7 +133,7 @@
 #chat-sidebar-text {
     -fx-text-fill: -fx-light-text-color;
     -fx-fill: -fx-light-text-color;
-    -fx-font-size: 1.05em;
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -190,7 +190,7 @@
 
 #bisq-combo-box-list-view .list-cell:odd, #bisq-combo-box-list-view .list-cell:even {
     -fx-background-color: -bisq-dark-grey;
-    -fx-font-size: 1.05em;
+    -fx-font-size: 1em;
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0 0 1 0;
     -fx-pref-height: 40px;

@@ -1,5 +1,25 @@
 /*******************************************************************************
  *                                                                             *
+ * TradeOverviewView                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.trade-protocols-overview-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 3.15em;
+}
+
+.trade-protocols-overview-sub-headline {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+/*******************************************************************************
+ *                                                                             *
  * Protocol roadmap                                                            *
  *                                                                             *
  ******************************************************************************/

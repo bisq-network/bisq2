@@ -509,8 +509,8 @@
     -fx-image: url("/images/protocols/protocol-liquid-multisig.png");
 }
 
-#protocol-lightning-fiat {
-    -fx-image: url("/images/protocols/protocol-lightning-fiat.png");
+#protocol-bisq-lightning {
+    -fx-image: url("/images/protocols/protocol-bisq-lightning.png");
 }
 
 #protocol-liquid-swap {

@@ -55,7 +55,7 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(10, 0, -5, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
         root.getChildren().addAll(headline, content, learnMore, buttons);
     }

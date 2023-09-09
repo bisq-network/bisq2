@@ -213,6 +213,7 @@ tree-table-view:focused {
 
 /* table-cell */
 .table-view .table-cell {
+    -fx-background-color: transparent;
     -fx-alignment: center;
     -fx-padding: 0 10 0 10;
 }
@@ -227,9 +228,10 @@ tree-table-view:focused {
 
 /* row-cell */
 .table-row-cell {
+    -fx-background-color: transparent;
     -fx-border-width: 1 0 0 0;
     -fx-pref-height: 54px;
-    -fx-border-color: -bisq-dark-grey;
+    -fx-border-color: transparent;
 }
 
 .table-view .table-row-cell .table-cell {
@@ -244,16 +246,6 @@ tree-table-view:focused {
 /* empty */
 .table-row-cell:empty {
     -fx-border-width: 0;
-}
-
-/* even */
-.table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bisq-grey-24;
-}
-
-/* odd */
-.table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-grey-24;
 }
 
 .table-view .table-row-cell:empty .table-cell {
@@ -277,10 +269,15 @@ tree-table-view:focused {
     -fx-text-fill: -fx-light-text-color;
 }
 
-.table-view .table-row-cell:hover .table-cell,
-.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-darker-grey;
+.table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-grey-5;
     -fx-border-color: transparent;
+}
+
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-grey-19;
+    -fx-border-color: -bisq-green;
+    -fx-border-width: 0 0 2 0;
 }
 
 /* button */

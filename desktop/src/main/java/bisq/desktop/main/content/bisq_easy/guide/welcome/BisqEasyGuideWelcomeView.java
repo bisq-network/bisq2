@@ -48,7 +48,7 @@ public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeMod
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(10, 0, -5, 0));
         VBox.setMargin(nextButton, new Insets(10, 0, 0, 0));
         root.getChildren().addAll(headline, content, nextButton);
     }

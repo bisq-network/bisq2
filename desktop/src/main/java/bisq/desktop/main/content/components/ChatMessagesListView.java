@@ -612,6 +612,7 @@ public class ChatMessagesListView {
                             editInputField = new BisqTextArea();
                             //editInputField.getStyleClass().addAll("text-fill-white", "font-size-13", "font-default");
                             editInputField.setId("chat-messages-edit-text-area");
+                            editInputField.setMinWidth(150);
                             editInputField.setVisible(false);
                             editInputField.setManaged(false);
 

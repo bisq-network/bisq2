@@ -66,7 +66,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         root.add(gridPane, 0, 2, 2, 1);
 
         startTradingButton = new Button(Res.get("bisqEasy.onboarding.left.button"));
-        fillWidgetBox(gridPane,
+        fillSmallBox(gridPane,
                 0,
                 startTradingButton,
                 Res.get("bisqEasy.onboarding.left.headline"),
@@ -75,7 +75,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         );
 
         openChatButton = new Button(Res.get("bisqEasy.onboarding.right.button"));
-        fillWidgetBox(gridPane,
+        fillSmallBox(gridPane,
                 1,
                 openChatButton,
                 Res.get("bisqEasy.onboarding.right.headline"),
@@ -113,7 +113,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         GridPane gridPane = new GridPane();
         gridPane.setHgap(48);
         gridPane.setVgap(15);
-        gridPane.getStyleClass().add("bisq-box-2");
+        gridPane.getStyleClass().add("bisq-easy-onboarding-big-box");
         gridPane.setPadding(new Insets(30, 48, 44, 48));
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(50);
@@ -123,14 +123,14 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         root.add(gridPane, 0, 0, 2, 1);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.top.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-4");
+        headlineLabel.getStyleClass().add("bisq-easy-onboarding-big-box-headline");
         headlineLabel.setWrapText(true);
         //GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         gridPane.add(headlineLabel, 0, 0, 2, 1);
 
-        HBox line1 = getIconAndText(Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");
-        HBox line2 = getIconAndText(Res.get("bisqEasy.onboarding.top.content2"), "fiat-btc-small");
-        HBox line3 = getIconAndText(Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-chat");
+        HBox line1 = getBulletPoint(Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");
+        HBox line2 = getBulletPoint(Res.get("bisqEasy.onboarding.top.content2"), "onboarding-2-payment");
+        HBox line3 = getBulletPoint(Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-chat");
         VBox vBox = new VBox(15, Spacer.fillVBox(), line1, line2, line3, Spacer.fillVBox());
         gridPane.add(vBox, 0, 1);
 
@@ -169,14 +169,14 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         return gridPane;
     }
 
-    private void fillWidgetBox(GridPane gridPane,
-                               int columnIndex,
-                               Button button,
-                               String headline,
-                               String headlineImageId,
-                               String info) {
+    private void fillSmallBox(GridPane gridPane,
+                              int columnIndex,
+                              Button button,
+                              String headline,
+                              String headlineImageId,
+                              String info) {
         Pane group = new Pane();
-        group.getStyleClass().add("bisq-box-1");
+        group.getStyleClass().add("bisq-easy-onboarding-small-box");
         if (columnIndex == 0) {
             GridPane.setMargin(group, new Insets(-36, -48, -44, -48));
         } else {
@@ -186,13 +186,13 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(headlineImageId));
         headlineLabel.setGraphicTextGap(16.0);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
+        headlineLabel.getStyleClass().add("bisq-easy-onboarding-small-box-headline");
         headlineLabel.setWrapText(true);
         GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         gridPane.add(headlineLabel, columnIndex, 0);
 
         Label infoLabel = new Label(info);
-        infoLabel.setId("bisq-easy-onboarding-label");
+        infoLabel.getStyleClass().add("bisq-easy-onboarding-small-box-text");
         infoLabel.setWrapText(true);
         gridPane.add(infoLabel, columnIndex, 1);
 
@@ -202,9 +202,9 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         gridPane.add(button, columnIndex, 2);
     }
 
-    private HBox getIconAndText(String text, String imageId) {
+    private HBox getBulletPoint(String text, String imageId) {
         Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
+        label.getStyleClass().add("bisq-easy-onboarding-big-box-bullet-point");
         label.setWrapText(true);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
         HBox.setMargin(bulletPoint, new Insets(-2, 0, 0, 4));

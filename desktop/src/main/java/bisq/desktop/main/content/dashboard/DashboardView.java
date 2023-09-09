@@ -164,7 +164,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
     private HBox getIconAndText(String text, String imageId) {
         Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
+        label.getStyleClass().add("bisq-easy-onboarding-big-box-bullet-point");
         label.setWrapText(true);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
         HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));

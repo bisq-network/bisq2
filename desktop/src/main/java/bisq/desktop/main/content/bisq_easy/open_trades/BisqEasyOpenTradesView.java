@@ -99,7 +99,6 @@ public class BisqEasyOpenTradesView extends ChatView {
 
     private void addTableBox() {
         tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.getStyleClass().add("bisq-easy-table-view");
         configTableView();
 
         VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
