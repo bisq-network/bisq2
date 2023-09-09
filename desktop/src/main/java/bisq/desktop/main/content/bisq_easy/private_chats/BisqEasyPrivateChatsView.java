@@ -161,6 +161,8 @@ public class BisqEasyPrivateChatsView extends ChatView {
                         tableView.adjustHeightToNumRows();
                         tableView.hideVerticalScrollbar();
                     }
+                    chatVBox.setVisible(!noOpenTrades);
+                    chatVBox.setManaged(!noOpenTrades);
                 });
         peerUserProfileDisplayPin = EasyBind.subscribe(model.getPeerUserProfileDisplay(),
                 peerUserProfileDisplay -> {
