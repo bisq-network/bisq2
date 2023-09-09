@@ -267,17 +267,18 @@ public class UserProfileSelection {
             selectedUserProfilePin = EasyBind.subscribe(model.selectedUserProfile,
                     selected -> {
                         UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected));
+                        if (selected != null) {
+                            UserIdentity userIdentity = selected.userIdentity;
+                            if (userIdentity != null) {
+                                boolean multipleItems = model.userProfiles.size() > 1;
+                                comboBox.setManaged(multipleItems);
+                                comboBox.setVisible(multipleItems);
+                                userNameAndIcon.setManaged(!multipleItems);
+                                userNameAndIcon.setVisible(!multipleItems);
 
-                        UserIdentity userIdentity = selected.userIdentity;
-                        if (userIdentity != null) {
-                            boolean multipleItems = model.userProfiles.size() > 1;
-                            comboBox.setManaged(multipleItems);
-                            comboBox.setVisible(multipleItems);
-                            userNameAndIcon.setManaged(!multipleItems);
-                            userNameAndIcon.setVisible(!multipleItems);
-
-                            userName.setText(comboBox.getConverter().toString(selected));
-                            icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                                userName.setText(comboBox.getConverter().toString(selected));
+                                icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                            }
                         }
                     });
             isLeftAlignedPin = EasyBind.subscribe(model.isLeftAligned, isLeftAligned -> {
