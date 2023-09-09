@@ -46,7 +46,7 @@ import bisq.desktop.components.controls.*;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
-import bisq.desktop.overlay.bisq_easy.take_offer.TakeOfferController;
+import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
