@@ -42,9 +42,9 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("bisqEasy.tradeGuide.security.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
-        UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.security.content"), "bisq-text-13");
+        UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.security.content"), "bisq-easy-trade-guide-content");
 
         backButton = new Button(Res.get("action.back"));
 

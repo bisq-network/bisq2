@@ -18,31 +18,49 @@
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
+import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
+import bisq.desktop.main.content.components.ReputationScoreDisplay;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public class BisqEasyPrivateChatsView extends ChatView {
     private BisqTableView<ListItem> tableView;
+    private VBox tableViewVBox, chatVBox;
+    private Subscription noOpenChatsPin, selectedTableViewItemPin, selectedModelItemPin, peerUserProfileDisplayPin;
+    private Label chatHeadline;
+
 
     public BisqEasyPrivateChatsView(BisqEasyPrivateChatsModel model,
                                     BisqEasyPrivateChatsController controller,
@@ -58,58 +76,42 @@ public class BisqEasyPrivateChatsView extends ChatView {
 
     @Override
     protected void configTitleHBox() {
-        titleHBox.setAlignment(Pos.CENTER);
-        titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
-        titleHBox.getStyleClass().add("bisq-easy-chat-title-bg");
-        titleHBox.setCursor(Cursor.HAND);
-
-        channelTitle.setId("chat-messages-headline");
-
-        double scale = 1.15;
-        helpButton = BisqIconButton.createIconButton("icon-help");
-        helpButton.setScaleX(scale);
-        helpButton.setScaleY(scale);
-        infoButton = BisqIconButton.createIconButton("icon-info");
-        infoButton.setScaleX(scale);
-        infoButton.setScaleY(scale);
-
-        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 4));
-        HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
-        HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
-
-        titleHBox.getChildren().addAll(
-                channelTitle,
-                Spacer.fillHBox(),
-                helpButton, infoButton
-        );
     }
 
     @Override
     protected void configCenterVBox() {
-        Label tableHeadline = new Label(Res.get("bisqEasy.privateChats.table.headline"));
-        tableHeadline.getStyleClass().add("bisq-content-headline-label");
+        addTableBox();
+        addChatBox();
+    }
 
-        tableView = new BisqTableView<>(getBisqEasyPrivateChatsModel().getSortedList());
-        tableView.setMinHeight(200);
-        tableView.getStyleClass().add("bisq-easy-private-chats-table-view");
+    private void addTableBox() {
+        tableView = new BisqTableView<>(getModel().getSortedList());
+        tableView.getStyleClass().add("bisq-easy-table-view");
         configTableView();
 
-        centerVBox.setSpacing(0);
-        centerVBox.setFillWidth(true);
+        VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.privateChats.table.headline"), tableView);
+        tableViewVBox = triple.getThird();
+        VBox.setMargin(tableViewVBox, new Insets(0, 0, 10, 0));
+        centerVBox.getChildren().add(tableViewVBox);
+    }
 
-        VBox topPanelVBox = new VBox(titleHBox); //todo
-        topPanelVBox.getStyleClass().add("bisq-easy-chat-tools-bg");
-
-        chatMessagesComponent.setMinWidth(700);
+    private void addChatBox() {
+        chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
-
-        VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(
-                tableHeadline, tableView,
-                topPanelVBox,
-                Layout.hLine(),
-                chatMessagesComponent);
+        chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer("", chatMessagesComponent);
+        chatHeadline = triple.getFirst();
+        chatHeadline.setContentDisplay(ContentDisplay.RIGHT);
+        chatHeadline.setGraphicTextGap(10);
+
+        triple.getSecond().getChildren().addAll(Spacer.fillHBox());
+
+
+        chatVBox = triple.getThird();
+        VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        centerVBox.getChildren().add(chatVBox);
     }
 
     @Override
@@ -135,36 +137,149 @@ public class BisqEasyPrivateChatsView extends ChatView {
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
+
+        BisqEasyPrivateChatsModel model = getModel();
+
+        selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
+                tableView.getSelectionModel().select(selected));
+        selectedTableViewItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
+                item -> {
+                    if (item != null) {
+                        getController().onSelectItem(item);
+                    }
+                });
+
+        noOpenChatsPin = EasyBind.subscribe(model.getNoOpenChats(),
+                noOpenTrades -> {
+                    if (noOpenTrades) {
+                        tableView.removeListeners();
+                        tableView.setPlaceholderText(Res.get("bisqEasy.privateChats.noChats"));
+                        tableView.allowVerticalScrollbar();
+                        tableView.setFixHeight(150);
+                    } else {
+                        tableView.setPlaceholder(null);
+                        tableView.adjustHeightToNumRows();
+                        tableView.hideVerticalScrollbar();
+                    }
+                });
+        peerUserProfileDisplayPin = EasyBind.subscribe(model.getPeerUserProfileDisplay(),
+                peerUserProfileDisplay -> {
+                    if (peerUserProfileDisplay != null) {
+                        chatHeadline.setGraphic(peerUserProfileDisplay);
+                    }
+                });
+
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+
+        tableView.removeListeners();
+
+        selectedModelItemPin.unsubscribe();
+        selectedTableViewItemPin.unsubscribe();
+        noOpenChatsPin.unsubscribe();
+        peerUserProfileDisplayPin.unsubscribe();
     }
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.reputation.table.columns.profileAge"))
+                .title(Res.get("bisqEasy.privateChats.table.peer"))
+                .minWidth(100)
                 .left()
-                .comparator(Comparator.comparing(ListItem::getPeerUserName))
-                .valueSupplier(ListItem::getPeerUserName)
+                .comparator(Comparator.comparing(ListItem::getPeersUserName))
+                .setCellFactory(getTradePeerCellFactory())
+                .build());
+
+        //bisqEasy.privateChats.table.reputation=Chat peer
+        //bisqEasy.privateChats.table.reputationScore=Reputation score
+        //bisqEasy.privateChats.table.age=Profile age
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.privateChats.table.reputation"))
+                .minWidth(100)
+                .comparator(Comparator.comparing(ListItem::getTotalReputationScore))
+                .setCellFactory(getReputationScoreCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.privateChats.table.totalReputationScore"))
+                .minWidth(100)
+                .comparator(Comparator.comparing(ListItem::getTotalReputationScore))
+                .valueSupplier(ListItem::getTotalReputationScoreString)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.privateChats.table.age"))
+                .minWidth(100)
+                .right()
+                .comparator(Comparator.comparing(ListItem::getProfileAge))
+                .valueSupplier(ListItem::getProfileAgeString)
                 .build());
     }
 
-    private BisqEasyPrivateChatsModel getBisqEasyPrivateChatsModel() {
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getReputationScoreCellFactory() {
+        return column -> new TableCell<>() {
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    setGraphic(new ReputationScoreDisplay(item.getReputationScore()));
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
+        return column -> new TableCell<>() {
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    setGraphic(new UserProfileDisplay(item.getChannel().getPeer()));
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private BisqEasyPrivateChatsModel getModel() {
         return (BisqEasyPrivateChatsModel) model;
+    }
+
+    private BisqEasyPrivateChatsController getController() {
+        return (BisqEasyPrivateChatsController) controller;
     }
 
     @Getter
     @EqualsAndHashCode
     static class ListItem implements TableItem {
         private final TwoPartyPrivateChatChannel channel;
-        private final String peerUserName;
+        private final String peersUserName;
+        private final long totalReputationScore, profileAge;
+        private final String totalReputationScoreString, profileAgeString;
+        private final ReputationScore reputationScore;
 
-        public ListItem(TwoPartyPrivateChatChannel channel) {
+        public ListItem(TwoPartyPrivateChatChannel channel, UserProfileService userProfileService, ReputationService reputationService) {
             this.channel = channel;
 
-            peerUserName = "TODO";
+            UserProfile userProfile = channel.getPeer();
+            peersUserName = userProfile.getUserName();
+
+            reputationScore = reputationService.getReputationScore(userProfile);
+            totalReputationScore = reputationScore.getTotalScore();
+            totalReputationScoreString = String.valueOf(totalReputationScore);
+
+            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
+            profileAge = optionalProfileAge.orElse(0L);
+            profileAgeString = optionalProfileAge
+                    .map(TimeFormatter::formatAgeInDays)
+                    .orElse(Res.get("data.na"));
         }
     }
 }

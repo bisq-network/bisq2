@@ -106,9 +106,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                            UserProfile userProfile,
                            ChatChannel<? extends ChatMessage> selectedChannel,
                            Runnable closeHandler) {
-            this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-            this.userProfileService = serviceProvider.getUserService().getUserProfileService();
-            this.reputationService = serviceProvider.getUserService().getReputationService();
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
+            reputationService = serviceProvider.getUserService().getReputationService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
             this.closeHandler = closeHandler;
             model = new Model(serviceProvider.getChatService(), userProfile, selectedChannel);

@@ -30,7 +30,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -40,15 +41,16 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     private final BisqEasyPrivateChatsModel bisqEasyPrivateChatsModel;
     private final TwoPartyPrivateChatChannelService channelService;
     private final BisqEasyPrivateChatChannelSelectionService selectionService;
+    private final ReputationService reputationService;
 
-    private Pin channelItemPin, selectedChannelPin;
+    private Pin channelItemPin, selectedChannelPin, channelsPin;
 
     public BisqEasyPrivateChatsController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
 
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
         selectionService = chatService.getBisqEasyPrivateChatChannelSelectionService();
-
+        reputationService = serviceProvider.getUserService().getReputationService();
         bisqEasyPrivateChatsModel = getModel();
     }
 
@@ -81,21 +83,35 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     @Override
     public void onActivate() {
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
-                .map(BisqEasyPrivateChatsView.ListItem::new)
+                .map(c -> new BisqEasyPrivateChatsView.ListItem(c, userProfileService, reputationService))
                 .to(channelService.getChannels());
 
-        //todo handle case when no channels are available
+        channelsPin = channelService.getChannels().addListener(this::updateVisibility);
         if (selectionService.getSelectedChannel().get() == null && !model.getListItems().isEmpty()) {
             selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
         }
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+
+        if (!model.getSortedList().isEmpty()) {
+            BisqEasyPrivateChatsView.ListItem listItem = model.getSortedList().get(0);
+            TwoPartyPrivateChatChannel channel = listItem.getChannel();
+            selectionService.selectChannel(channel);
+
+            // If there is only one item we do not select it in the tableview
+            if (model.getSortedList().size() > 1) {
+                model.getSelectedItem().set(listItem);
+            }
+        }
+        updateVisibility();
     }
 
     @Override
     public void onDeactivate() {
         channelItemPin.unbind();
+        channelsPin.unbind();
         selectedChannelPin.unbind();
+        model.getListItems().clear();
         resetSelectedChildTarget();
     }
 
@@ -108,11 +124,17 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
             UIThread.run(() -> {
                 TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
+
+                model.getPeerUserProfileDisplay().set(new UserProfileDisplay(privateChannel.getPeer()));
             });
         }
     }
 
-    private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
-        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+    void onSelectItem(BisqEasyPrivateChatsView.ListItem item) {
+        selectionService.selectChannel(item.getChannel());
+    }
+
+    private void updateVisibility() {
+        model.getNoOpenChats().set(model.getFilteredList().isEmpty());
     }
 }

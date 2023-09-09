@@ -79,8 +79,8 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("bisqEasy.tradeGuide.headline"));
-        headLine.getStyleClass().addAll("font-size-18", "font-light");
+        headLine.setText(Res.get("bisqEasy.tradeGuide.tabs.headline"));
+        headLine.getStyleClass().add("tab-view");
 
         closeIconButton = BisqIconButton.createIconButton("close");
 
@@ -101,7 +101,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
     protected void setupLineAndMarker() {
         super.setupLineAndMarker();
 
-        line.getStyleClass().remove("bisq-dark-bg");
-        line.getStyleClass().add("bisq-mid-grey");
+        line.getStyleClass().remove("tab-view-line-dark");
+        line.getStyleClass().add("tab-view-line");
     }
 }

@@ -43,7 +43,6 @@ import bisq.user.profile.UserProfile;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 
 @Slf4j
@@ -152,7 +151,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             });
         });
 
-        //todo handle case when no channels are available
         if (selectionService.getSelectedChannel().get() == null
                 && !model.getListItems().isEmpty()) {
             selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
@@ -173,14 +171,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         }
         updateVisibility();
     }
-
-    @Nonnull
-    private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {
-        return model.getListItems().stream()
-                .filter(e -> e.getTrade().equals(trade))
-                .findAny();
-    }
-
 
     @Override
     public void onDeactivate() {
@@ -245,6 +235,12 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             model.getChatWindow().get().hide();
         }
         model.getChatWindow().set(null);
+    }
+
+    private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {
+        return model.getListItems().stream()
+                .filter(e -> e.getTrade().equals(trade))
+                .findAny();
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {

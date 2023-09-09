@@ -39,11 +39,11 @@ public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeMod
         root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("bisqEasy.tradeGuide.welcome.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
         content = new Label();
         content.setWrapText(true);
-        content.getStyleClass().addAll("bisq-text-13");
+        content.getStyleClass().add("bisq-easy-trade-guide-content");
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);

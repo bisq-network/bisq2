@@ -20,19 +20,28 @@ package bisq.desktop.main.content.bisq_easy.private_chats;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
+import bisq.desktop.main.content.components.UserProfileDisplay;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class BisqEasyPrivateChatsModel extends ChatModel {
+
+    private final BooleanProperty noOpenChats = new SimpleBooleanProperty();
+    private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObservableList<BisqEasyPrivateChatsView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<BisqEasyPrivateChatsView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<BisqEasyPrivateChatsView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final ObjectProperty<BisqEasyPrivateChatsView.ListItem> selectedItem = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserProfileDisplay> peerUserProfileDisplay = new SimpleObjectProperty<>();
+    private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
 
     public BisqEasyPrivateChatsModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

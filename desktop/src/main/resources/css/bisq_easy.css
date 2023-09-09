@@ -81,11 +81,29 @@
 }
 
 /*******************************************************************************
+ * Trade guide                                                            *
+ ******************************************************************************/
+
+.bisq-easy-trade-guide-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.8em;
+}
+
+.bisq-easy-trade-guide-content {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+}
+
+/*******************************************************************************
  * Table                                                            *
  ******************************************************************************/
 
-.bisq-easy-open-trades-table-view .table-row-cell:hover .table-cell,
-.bisq-easy-open-trades-table-view .table-row-cell:selected .table-cell {
+.bisq-easy-table-view .table-row-cell:hover .table-cell,
+.bisq-easy-table-view .table-row-cell:selected .table-cell {
     -fx-background-color: -bisq-green;
     -fx-border-color: transparent;
 }

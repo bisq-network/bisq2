@@ -149,7 +149,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
                     leaveChannelIcon.setCursor(Cursor.HAND);
                     leaveChannelIcon.setId("icon-label-grey");
-                    Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.privateChats.leave"));
+                    Tooltip tooltip = new BisqTooltip(Res.get("chat.leave"));
                     tooltip.getStyleClass().add("dark-tooltip");
                     leaveChannelIcon.setTooltip(tooltip);
                     HBox.setMargin(leaveChannelIcon, new Insets(0, 12, 0, -20));

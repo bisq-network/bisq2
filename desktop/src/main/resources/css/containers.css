@@ -43,7 +43,7 @@
 
 .list-view .list-cell {
     -fx-background-color: -bisq-dark-grey;
-    -fx-font-size: 1.05em;
+    -fx-font-size: 1em;
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0;
 }
@@ -60,6 +60,9 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.list-view .list-cell:empty:hover {
+    -fx-background-color: transparent;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -521,6 +524,30 @@ tree-table-view:focused {
     -fx-background-insets: 10;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * TabView                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.tab-view {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.8em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.tab-view-line-dark {
+    -fx-background-color: -bisq-dark-grey;
+}
+
+.tab-view-line {
+    -fx-background-color: -bisq-mid-grey;
+}
+
+.tab-view-selection {
+    -fx-background-color: -bisq-green;
+}
 
 /*******************************************************************************
  *                                                                             *

@@ -135,7 +135,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     protected void setupTopBox(boolean isRightSide) {
         headLine = new Label();
-        headLine.getStyleClass().add("bisq-content-headline-label");
+        headLine.getStyleClass().add("tab-view");
         headLine.setMinWidth(90);
 
         tabs.setFillHeight(true);
@@ -152,12 +152,12 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     protected void setupLineAndMarker() {
         line = new Region();
-        line.getStyleClass().add("bisq-dark-bg");
+        line.getStyleClass().add("tab-view-line-dark");
         double lineHeight = 1;
         line.setMinHeight(lineHeight);
 
         selectionMarker = new Region();
-        selectionMarker.getStyleClass().add("bisq-green-line");
+        selectionMarker.getStyleClass().add("tab-view-selection");
         selectionMarker.setMinHeight(lineHeight);
 
         lineAndMarker = new Pane();
