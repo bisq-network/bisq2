@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.market;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.market;
 
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.Market;
@@ -46,12 +46,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 
 @Slf4j
-public class CreateOfferMarketView extends View<VBox, CreateOfferMarketModel, CreateOfferMarketController> {
+public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, TradeWizardMarketController> {
     private final BisqTableView<MarketListItem> tableView;
     private final SearchBox searchBox;
     private final Label headLineLabel;
 
-    public CreateOfferMarketView(CreateOfferMarketModel model, CreateOfferMarketController controller) {
+    public TradeWizardMarketView(TradeWizardMarketModel model, TradeWizardMarketController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

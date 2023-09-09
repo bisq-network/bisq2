@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.payment_method;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
@@ -43,18 +43,18 @@ import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
-public class CreateOfferPaymentMethodController implements Controller {
-    private final CreateOfferPaymentMethodModel model;
+public class TradeWizardPaymentMethodController implements Controller {
+    private final TradeWizardPaymentMethodModel model;
     @Getter
-    private final CreateOfferPaymentMethodView view;
+    private final TradeWizardPaymentMethodView view;
     private final SettingsService settingsService;
     private Subscription customMethodPin;
 
-    public CreateOfferPaymentMethodController(ServiceProvider serviceProvider) {
+    public TradeWizardPaymentMethodController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
 
-        model = new CreateOfferPaymentMethodModel();
-        view = new CreateOfferPaymentMethodView(model, this);
+        model = new TradeWizardPaymentMethodModel();
+        view = new TradeWizardPaymentMethodView(model, this);
     }
 
     public ObservableList<FiatPaymentMethod> getFiatPaymentMethods() {

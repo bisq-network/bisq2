@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.direction;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.create_offer.CreateOfferView;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.geometry.Insets;
@@ -38,7 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirectionModel, CreateOfferDirectionController> {
+public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirectionModel, TradeWizardDirectionController> {
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
@@ -46,7 +46,7 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
     private Button withoutReputationButton, backToBuyButton;
     private Hyperlink gainReputationHyperlink;
 
-    public CreateOfferDirectionView(CreateOfferDirectionModel model, CreateOfferDirectionController controller) {
+    public TradeWizardDirectionView(TradeWizardDirectionModel model, TradeWizardDirectionController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -79,7 +79,7 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         reputationInfo = new VBox(20);
         setupReputationInfo();
 
-        StackPane.setMargin(reputationInfo, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfo);
     }
 

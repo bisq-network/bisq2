@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.price;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class CreateOfferPriceModel implements Model {
+public class TradeWizardPriceModel implements Model {
     @Setter
     private Market market = null;
     private final DoubleProperty percentage = new SimpleDoubleProperty();

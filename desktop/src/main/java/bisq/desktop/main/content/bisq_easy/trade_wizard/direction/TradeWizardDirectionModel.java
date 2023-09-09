@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.direction;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
@@ -26,7 +26,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class CreateOfferDirectionModel implements Model {
+public class TradeWizardDirectionModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();

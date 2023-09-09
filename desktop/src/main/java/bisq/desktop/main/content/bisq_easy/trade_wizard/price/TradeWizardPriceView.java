@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.price;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -37,14 +37,14 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateOfferPriceView extends View<VBox, CreateOfferPriceModel, CreateOfferPriceController> {
+public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private final MaterialTextField percentage;
     private final ToggleButton useFixPriceToggle;
     private final VBox fieldsBox;
     private final PriceInput priceInput;
     private Subscription percentageFocussedPin, useFixPricePin;
 
-    public CreateOfferPriceView(CreateOfferPriceModel model, CreateOfferPriceController controller, PriceInput priceInput) {
+    public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
         super(new VBox(10), model, controller);
         this.priceInput = priceInput;
 

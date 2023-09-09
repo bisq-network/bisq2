@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.monetary.Monetary;
@@ -27,7 +27,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.main.content.bisq_easy.create_offer.CreateOfferView;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -64,7 +64,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferModel, CreateOfferReviewOfferController> {
+class TradeWizardReviewOfferView extends View<StackPane, TradeWizardReviewOfferModel, TradeWizardReviewController> {
     private final static int BUTTON_WIDTH = 140;
     private final static int FEEDBACK_WIDTH = 700;
     private final static int TABLE_WIDTH = 800;
@@ -80,7 +80,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
     private final VBox content, createOfferSuccess;
     private Subscription showCreateOfferSuccessPin;
 
-    CreateOfferReviewOfferView(CreateOfferReviewOfferModel model, CreateOfferReviewOfferController controller) {
+    TradeWizardReviewOfferView(TradeWizardReviewOfferModel model, TradeWizardReviewController controller) {
         super(new StackPane(), model, controller);
 
         content = new VBox(10);
@@ -118,13 +118,13 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
         createOfferHBox.setAlignment(Pos.CENTER_LEFT);
 
         // margin is set in onViewAttached
-        content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, createOfferLabel, createOfferHBox, Spacer.fillVBox());
+        content.getChildren().addAll(new Label("REVIEW"), Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, createOfferLabel, createOfferHBox, Spacer.fillVBox());
 
         viewOfferButton = new Button(Res.get("bisqEasy.createOffer.review.createOfferSuccess.viewOffer"));
         createOfferSuccess = new VBox(20);
         configCreateOfferSuccess();
 
-        StackPane.setMargin(createOfferSuccess, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, createOfferSuccess);
     }
 
@@ -378,7 +378,7 @@ class CreateOfferReviewOfferView extends View<StackPane, CreateOfferReviewOfferM
         private final BisqEasyOffer bisqEasyOffer;
 
         public ListItem(BisqEasyOffer bisqEasyOffer,
-                        CreateOfferReviewOfferModel model,
+                        TradeWizardReviewOfferModel model,
                         UserProfileService userProfileService,
                         ReputationService reputationService,
                         MarketPriceService marketPriceService) {

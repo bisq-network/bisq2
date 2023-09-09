@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -30,7 +30,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -64,10 +63,10 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class CreateOfferReviewOfferController implements Controller {
-    private final CreateOfferReviewOfferModel model;
+public class TradeWizardTakeOfferController implements Controller {
+    private final TradeWizardTakeOfferModel model;
     @Getter
-    private final CreateOfferReviewOfferView view;
+    private final TradeWizardTakeOfferView view;
     private final ReputationService reputationService;
     private final Runnable resetHandler;
     private final SettingsService settingsService;
@@ -78,9 +77,9 @@ public class CreateOfferReviewOfferController implements Controller {
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
 
-    public CreateOfferReviewOfferController(ServiceProvider serviceProvider,
-                                            Consumer<Boolean> mainButtonsVisibleHandler,
-                                            Runnable resetHandler) {
+    public TradeWizardTakeOfferController(ServiceProvider serviceProvider,
+                                          Consumer<Boolean> mainButtonsVisibleHandler,
+                                          Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
@@ -92,8 +91,8 @@ public class CreateOfferReviewOfferController implements Controller {
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         this.resetHandler = resetHandler;
 
-        model = new CreateOfferReviewOfferModel();
-        view = new CreateOfferReviewOfferView(model, this);
+        model = new TradeWizardTakeOfferModel();
+        view = new TradeWizardTakeOfferView(model, this);
     }
 
     public void setDirection(Direction direction) {
@@ -205,13 +204,13 @@ public class CreateOfferReviewOfferController implements Controller {
 
             model.getMatchingOffers().setAll(channel.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                    .map(chatMessage -> new CreateOfferReviewOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                    .map(chatMessage -> new TradeWizardTakeOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
                             model,
                             userProfileService,
                             reputationService,
                             marketPriceService))
                     .filter(getTakeOfferPredicate())
-                    .sorted(Comparator.comparing(CreateOfferReviewOfferView.ListItem::getReputationScore))
+                    .sorted(Comparator.comparing(TradeWizardTakeOfferView.ListItem::getReputationScore))
                     .limit(3)
                     .collect(Collectors.toList()));
         } else {
@@ -225,7 +224,7 @@ public class CreateOfferReviewOfferController implements Controller {
     public void onDeactivate() {
     }
 
-    void onTakeOffer(CreateOfferReviewOfferView.ListItem listItem) {
+    void onTakeOffer(TradeWizardTakeOfferView.ListItem listItem) {
         UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         if (bannedUserService.isNetworkIdBanned(listItem.getBisqEasyOffer().getMakerNetworkId()) ||
                 bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
@@ -233,9 +232,9 @@ public class CreateOfferReviewOfferController implements Controller {
         }
 
         OverlayController.hide(() -> {
-                    TakeOfferController.InitData initData = new TakeOfferController.InitData(listItem.getBisqEasyOffer(),
-                            Optional.of(model.getAmountSpec()),
-                            model.getFiatPaymentMethods());
+            bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController.InitData initData = new bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController.InitData(listItem.getBisqEasyOffer(),
+                    Optional.of(model.getAmountSpec()),
+                    model.getFiatPaymentMethods());
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, initData);
                     resetHandler.run();
                 }
@@ -262,7 +261,7 @@ public class CreateOfferReviewOfferController implements Controller {
     }
 
     @SuppressWarnings("RedundantIfStatement")
-    private Predicate<? super CreateOfferReviewOfferView.ListItem> getTakeOfferPredicate() {
+    private Predicate<? super TradeWizardTakeOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
             try {

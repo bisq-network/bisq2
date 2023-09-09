@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -38,7 +38,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-class CreateOfferReviewOfferModel implements Model {
+class TradeWizardTakeOfferModel implements Model {
     @Setter
     private boolean showMatchingOffers;
     @Setter
@@ -67,8 +67,8 @@ class CreateOfferReviewOfferModel implements Model {
     private AmountSpec amountSpec;
     private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-    private final ObservableList<CreateOfferReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
-    private final SortedList<CreateOfferReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
+    private final ObservableList<TradeWizardTakeOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
+    private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
 
     void reset() {
         showMatchingOffers = false;

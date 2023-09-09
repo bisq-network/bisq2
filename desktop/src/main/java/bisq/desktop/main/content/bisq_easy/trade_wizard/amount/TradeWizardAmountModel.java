@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Getter
-public class CreateOfferAmountModel implements Model {
+public class TradeWizardAmountModel implements Model {
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
@@ -52,7 +52,7 @@ public class CreateOfferAmountModel implements Model {
     @Setter
     private String headline;
     @Setter
-    private boolean isOpenedFromDashboard;
+    private boolean isCreateOfferMode;
     @Setter
     private Optional<PriceQuote> bestOffersPrice = Optional.empty();
 

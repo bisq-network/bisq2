@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer;
+package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
@@ -45,7 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
+public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, TradeWizardController> {
     public static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
     public static final double TOP_PANE_HEIGHT = 55;
     public static final double BUTTON_HEIGHT = 32;
@@ -63,17 +63,19 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private Label priceProgressItemLabel;
     private Region priceProgressItemLine;
     private Subscription priceProgressItemVisiblePin;
+    private Label takeOfferProgressItem;
+    private Region takeOfferProgressLine;
 
-    public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
+    public TradeWizardView(TradeWizardModel model, TradeWizardController controller) {
         super(new VBox(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Triple<HBox, Button, List<Label>> topPane = getProgressItems();
-        progressItemsBox = topPane.getFirst();
-        closeButton = topPane.getSecond();
-        progressLabelList = topPane.getThird();
+        Triple<HBox, Button, List<Label>> triple = getProgressItems();
+        progressItemsBox = triple.getFirst();
+        closeButton = triple.getSecond();
+        progressLabelList = triple.getThird();
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
@@ -115,6 +117,19 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
     @Override
     protected void onViewAttached() {
+        if (model.isCreateOfferMode()) {
+            progressLabelList.remove(takeOfferProgressItem);
+        } else {
+            progressLabelList.add(4, takeOfferProgressItem);
+        }
+
+        log.error("progressLabelList " + progressLabelList.size());
+
+        takeOfferProgressItem.setVisible(!model.isCreateOfferMode());
+        takeOfferProgressItem.setManaged(!model.isCreateOfferMode());
+        takeOfferProgressLine.setVisible(!model.isCreateOfferMode());
+        takeOfferProgressLine.setManaged(!model.isCreateOfferMode());
+
         nextButton.textProperty().bind(model.getNextButtonText());
         backButton.textProperty().bind(model.getBackButtonText());
 
@@ -180,7 +195,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         priceProgressItemLine = getHLine();
         Label amount = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.amount"));
         Label method = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.method"));
-        Label complete = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
+        takeOfferProgressItem = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.takeOffer"));
+        takeOfferProgressLine = getHLine();
+        Label review = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
 
         Button closeButton = BisqIconButton.createIconButton("close");
 
@@ -190,6 +207,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));
+
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 direction,
                 getHLine(),
@@ -198,11 +216,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 method,
                 getHLine(),
                 amount,
+                takeOfferProgressLine,
+                takeOfferProgressItem,
                 getHLine(),
-                complete,
-                Spacer.fillHBox(), closeButton);
+                review,
+                Spacer.fillHBox(),
+                closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, complete)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, review)));
     }
 
     private Region getHLine() {

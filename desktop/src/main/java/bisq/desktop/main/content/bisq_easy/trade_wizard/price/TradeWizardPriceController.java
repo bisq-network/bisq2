@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.price;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
@@ -42,21 +42,21 @@ import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWi
 import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
-public class CreateOfferPriceController implements Controller {
-    private final CreateOfferPriceModel model;
+public class TradeWizardPriceController implements Controller {
+    private final TradeWizardPriceModel model;
     @Getter
-    private final CreateOfferPriceView view;
+    private final TradeWizardPriceView view;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Subscription priceInputPin;
 
-    public CreateOfferPriceController(ServiceProvider serviceProvider) {
+    public TradeWizardPriceController(ServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
-        model = new CreateOfferPriceModel();
-        view = new CreateOfferPriceView(model, this, priceInput);
+        model = new TradeWizardPriceModel();
+        view = new TradeWizardPriceView(model, this, priceInput);
     }
 
     public void setMarket(Market market) {

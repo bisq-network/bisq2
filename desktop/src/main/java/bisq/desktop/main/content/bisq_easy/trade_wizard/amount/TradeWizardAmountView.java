@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -30,12 +30,12 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateOfferAmountView extends View<VBox, CreateOfferAmountModel, CreateOfferAmountController> {
+public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, TradeWizardAmountController> {
     private final Button toggleButton;
     private final VBox minAmountRoot;
     private final Label headLineLabel;
 
-    public CreateOfferAmountView(CreateOfferAmountModel model, CreateOfferAmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
+    public TradeWizardAmountView(TradeWizardAmountModel model, TradeWizardAmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

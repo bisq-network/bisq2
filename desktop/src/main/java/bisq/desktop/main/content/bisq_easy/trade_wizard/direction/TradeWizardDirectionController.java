@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.direction;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -35,16 +35,16 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class CreateOfferDirectionController implements Controller {
-    private final CreateOfferDirectionModel model;
+public class TradeWizardDirectionController implements Controller {
+    private final TradeWizardDirectionModel model;
     @Getter
-    private final CreateOfferDirectionView view;
+    private final TradeWizardDirectionView view;
     private final Runnable onNextHandler;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
 
-    public CreateOfferDirectionController(ServiceProvider serviceProvider,
+    public TradeWizardDirectionController(ServiceProvider serviceProvider,
                                           Runnable onNextHandler,
                                           Consumer<Boolean> navigationButtonsVisibleHandler) {
         this.onNextHandler = onNextHandler;
@@ -52,8 +52,8 @@ public class CreateOfferDirectionController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
 
-        model = new CreateOfferDirectionModel();
-        view = new CreateOfferDirectionView(model, this);
+        model = new TradeWizardDirectionModel();
+        view = new TradeWizardDirectionView(model, this);
         setDirection(Direction.BUY);
         applyShowReputationInfo();
     }

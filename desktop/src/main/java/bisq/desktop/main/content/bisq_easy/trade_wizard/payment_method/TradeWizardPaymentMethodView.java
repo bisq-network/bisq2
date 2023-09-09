@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.payment_method;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
@@ -27,7 +27,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.bisq_easy.create_offer.CreateOfferView;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -44,7 +44,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPaymentMethodModel, CreateOfferPaymentMethodController> {
+public class TradeWizardPaymentMethodView extends View<StackPane, TradeWizardPaymentMethodModel, TradeWizardPaymentMethodController> {
 
     private final MaterialTextField custom;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
@@ -58,7 +58,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
     private Subscription showCustomMethodNotEmptyWarning;
     private Button closeOverlayButton;
 
-    public CreateOfferPaymentMethodView(CreateOfferPaymentMethodModel model, CreateOfferPaymentMethodController controller) {
+    public TradeWizardPaymentMethodView(TradeWizardPaymentMethodModel model, TradeWizardPaymentMethodController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -105,7 +105,7 @@ public class CreateOfferPaymentMethodView extends View<StackPane, CreateOfferPay
         overlay = new VBox(20);
         setupOverlay();
 
-        StackPane.setMargin(overlay, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        StackPane.setMargin(overlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, overlay);
 
         paymentMethodListener = c -> {
