@@ -37,7 +37,6 @@ public class BisqEasyOpenTradesModel extends ChatModel {
     private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty chatVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
-    private final BooleanProperty tableViewDisabled = new SimpleBooleanProperty();
     private final StringProperty chatHeadline = new SimpleStringProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObservableList<BisqEasyOpenTradesView.ListItem> listItems = FXCollections.observableArrayList();

@@ -769,6 +769,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (headLineLabel != null) {
             headlineIcon.setManaged(true);
             headlineIcon.setVisible(true);
+            headLineLabel.getStyleClass().add("overlay-headline");
             switch (type) {
                 case INFORMATION:
                 case BACKGROUND_INFO:
@@ -791,8 +792,6 @@ public abstract class Overlay<T extends Overlay<T>> {
                     headLineLabel.getStyleClass().add("overlay-headline-error");
                     headlineIcon.getStyleClass().add("overlay-icon-error");
                     break;
-                default:
-                    headLineLabel.getStyleClass().add("overlay-headline");
             }
         }
     }
@@ -834,8 +833,9 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected void addContent() {
         if (message != null) {
             messageLabel = new Label(truncatedMessage);
-            messageLabel.setMinWidth(width);
+            messageLabel.getStyleClass().add("overlay-message");
             messageLabel.setWrapText(true);
+            messageLabel.setMinWidth(width);
             GridPane.setHalignment(messageLabel, HPos.LEFT);
             GridPane.setHgrow(messageLabel, Priority.ALWAYS);
             GridPane.setMargin(messageLabel, new Insets(3, 0, 0, 0));

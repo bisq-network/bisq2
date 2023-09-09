@@ -644,22 +644,20 @@ tree-table-view:focused {
  ********************************************************************************************************************/
 
 .overlay-headline {
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.8em;
     -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 .overlay-headline-information {
-    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-green;
 }
 
 .overlay-headline-warning {
-    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-warning;
 }
 
 .overlay-headline-error {
-    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-red;
 }
 
@@ -675,10 +673,14 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-red;
 }
 
+.overlay-message {
+    -fx-font-size: 1.2em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 .overlay-bg {
     -fx-background-color: -bisq-popup-bg-grey;
-    -fx-font-size: 1.1em;
-    -fx-text-fill: -bisq-grey-11;
     -fx-background-insets: 25;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.75), 40, 0.5, 0, 0);
 }

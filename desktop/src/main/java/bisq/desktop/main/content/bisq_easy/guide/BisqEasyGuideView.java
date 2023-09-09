@@ -42,16 +42,16 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         VBox.setMargin(contentPane, new Insets(10, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
-        addTab(Res.get("tradeGuide.welcome"),
+        addTab(Res.get("bisqEasy.tradeGuide.welcome"),
                 NavigationTarget.BISQ_EASY_GUIDE_WELCOME,
                 styles);
-        addTab(Res.get("tradeGuide.security"),
+        addTab(Res.get("bisqEasy.tradeGuide.security"),
                 NavigationTarget.BISQ_EASY_GUIDE_SECURITY,
                 styles);
-        addTab(Res.get("tradeGuide.process"),
+        addTab(Res.get("bisqEasy.tradeGuide.process"),
                 NavigationTarget.BISQ_EASY_GUIDE_PROCESS,
                 styles);
-        addTab(Res.get("tradeGuide.rules"),
+        addTab(Res.get("bisqEasy.tradeGuide.rules"),
                 NavigationTarget.BISQ_EASY_GUIDE_RULES,
                 styles);
     }
@@ -79,7 +79,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("tradeGuide.headline"));
+        headLine.setText(Res.get("bisqEasy.tradeGuide.headline"));
         headLine.getStyleClass().addAll("font-size-18", "font-light");
 
         closeIconButton = BisqIconButton.createIconButton("close");

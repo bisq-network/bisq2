@@ -38,7 +38,7 @@ public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeMod
         root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.welcome.headline"));
+        Label headline = new Label(Res.get("bisqEasy.tradeGuide.welcome.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
         content = new Label();

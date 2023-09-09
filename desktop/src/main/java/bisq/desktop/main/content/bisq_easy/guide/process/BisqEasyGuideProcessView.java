@@ -40,13 +40,13 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("tradeGuide.process.headline"));
+        Label headline = new Label(Res.get("bisqEasy.tradeGuide.process.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label content = new Label(Res.get("tradeGuide.process.content"));
+        Label content = new Label(Res.get("bisqEasy.tradeGuide.process.content"));
         content.setWrapText(true);
         content.getStyleClass().addAll("bisq-text-13");
-        OrderedList rules = new OrderedList(Res.get("tradeGuide.process.steps"), "bisq-text-13");
+        OrderedList rules = new OrderedList(Res.get("bisqEasy.tradeGuide.process.steps"), "bisq-text-13");
 
         backButton = new Button(Res.get("action.back"));
 

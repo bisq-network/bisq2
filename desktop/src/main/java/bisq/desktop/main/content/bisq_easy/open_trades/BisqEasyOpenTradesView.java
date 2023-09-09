@@ -164,7 +164,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         tradeStateViewRoot.managedProperty().bind(openTradesModel.getTradeStateVisible());
         chatVBox.visibleProperty().bind(openTradesModel.getChatVisible());
         chatVBox.managedProperty().bind(openTradesModel.getChatVisible());
-        tableView.mouseTransparentProperty().bind(openTradesModel.getTableViewDisabled());
         chatHeadline.textProperty().bind(openTradesModel.getChatHeadline());
 
         selectedItemPin = EasyBind.subscribe(openTradesModel.getSelectedItem(), selected ->
@@ -278,7 +277,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         tradeStateViewRoot.managedProperty().unbind();
         chatVBox.visibleProperty().unbind();
         chatVBox.managedProperty().unbind();
-        tableView.mouseTransparentProperty().unbind();
         chatHeadline.textProperty().unbind();
 
         selectedItemPin.unsubscribe();

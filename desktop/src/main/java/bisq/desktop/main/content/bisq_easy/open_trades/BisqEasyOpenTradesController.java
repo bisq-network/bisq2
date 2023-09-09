@@ -28,7 +28,9 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
@@ -216,10 +218,17 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     }
 
     void onSelectTrade(String tradeId) {
-        channelService.findChannelByOfferId(tradeId).ifPresent(channel -> {
-            selectionService.selectChannel(channel);
-            tradeStateController.setSelectedChannel(channel);
-        });
+        if (!model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
+            new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
+                    .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
+                    .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
+                    .show();
+        } else {
+            channelService.findChannelByOfferId(tradeId).ifPresent(channel -> {
+                selectionService.selectChannel(channel);
+                tradeStateController.setSelectedChannel(channel);
+            });
+        }
     }
 
     void onToggleChatWindow() {
@@ -250,6 +259,5 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         model.getTradeWelcomeVisible().set(openTradesAvailable && !tradeRuleConfirmed);
         model.getTradeStateVisible().set(openTradesAvailable && tradeRuleConfirmed);
         model.getChatVisible().set(openTradesAvailable && tradeRuleConfirmed);
-        model.getTableViewDisabled().set(openTradesAvailable && !tradeRuleConfirmed);
     }
 }

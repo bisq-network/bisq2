@@ -92,7 +92,7 @@ public class OpenTradesWelcome {
             HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "fiat-btc-small-white");
             HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "thumbs-up-white");
 
-            button = new Button(Res.get("bisqEasy.openTrades.welcome.button"));
+            button = new Button(Res.get("bisqEasy.tradeGuide.open"));
             button.setDefaultButton(true);
             button.getStyleClass().add("super-large-button");
             button.setMaxWidth(Double.MAX_VALUE);

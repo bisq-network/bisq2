@@ -260,7 +260,7 @@ class TradePhaseBox {
 
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4, phaseItem5);
 
-            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeState.openTradeGuide"));
+            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"));
 
             disputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
             disputeButton.getStyleClass().add("outlined-button");

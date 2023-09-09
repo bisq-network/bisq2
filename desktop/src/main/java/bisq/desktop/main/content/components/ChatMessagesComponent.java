@@ -413,8 +413,8 @@ public class ChatMessagesComponent {
                 if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
                     chatService.getBisqEasyOpenTradeChannelService().sendTextMessage(text, citation, (BisqEasyOpenTradeChannel) chatChannel);
                 } else {
-                    new Popup().information(Res.get("bisqEasy.privateChannel.send.tradeRulesNotConfirmed.warn"))
-                            .actionButtonText(Res.get("bisqEasy.privateChannel.send.tradeRulesNotConfirmed.popup.openGuide"))
+                    new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
+                            .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
                             .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                             .show();
                 }
