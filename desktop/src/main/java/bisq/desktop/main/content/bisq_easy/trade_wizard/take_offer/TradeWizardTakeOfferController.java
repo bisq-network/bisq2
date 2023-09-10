@@ -26,11 +26,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
@@ -52,10 +48,14 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -74,13 +74,16 @@ public class TradeWizardTakeOfferController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final UserProfileService userProfileService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
+    private final Runnable onNextHandler;
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
 
     public TradeWizardTakeOfferController(ServiceProvider serviceProvider,
                                           Consumer<Boolean> mainButtonsVisibleHandler,
+                                          Runnable onNextHandler,
                                           Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+        this.onNextHandler = onNextHandler;
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
@@ -93,6 +96,10 @@ public class TradeWizardTakeOfferController implements Controller {
 
         model = new TradeWizardTakeOfferModel();
         view = new TradeWizardTakeOfferView(model, this);
+    }
+
+    public ReadOnlyObjectProperty<BisqEasyOffer> getSelectedBisqEasyOffer() {
+        return model.getSelectedBisqEasyOffer();
     }
 
     public void setDirection(Direction direction) {
@@ -121,10 +128,6 @@ public class TradeWizardTakeOfferController implements Controller {
         model.setPriceSpec(priceSpec);
     }
 
-    public void setShowMatchingOffers(boolean showMatchingOffers) {
-        model.setShowMatchingOffers(showMatchingOffers);
-    }
-
     public void setIsMinAmountEnabled(boolean isMinAmountEnabled) {
         model.setMinAmountEnabled(isMinAmountEnabled);
     }
@@ -135,7 +138,6 @@ public class TradeWizardTakeOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getShowCreateOfferSuccess().set(false);
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         String priceInfo;
         PriceSpec priceSpec = model.getPriceSpec();
@@ -162,9 +164,6 @@ public class TradeWizardTakeOfferController implements Controller {
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
         model.setQuoteAmountAsString(quoteAmountAsString);
 
-        model.setTakeOfferHeadline(model.getDirection().isBuy() ?
-                Res.get("bisqEasy.createOffer.review.headline.buy", quoteAmountAsString) :
-                Res.get("bisqEasy.createOffer.review.headline.sell", quoteAmountAsString));
 
         String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethod(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
@@ -209,55 +208,73 @@ public class TradeWizardTakeOfferController implements Controller {
                             userProfileService,
                             reputationService,
                             marketPriceService))
-                    .filter(getTakeOfferPredicate())
-                    .sorted(Comparator.comparing(TradeWizardTakeOfferView.ListItem::getReputationScore))
-                    .limit(3)
+                    /* .filter(getTakeOfferPredicate())
+                     .sorted(Comparator.comparing(TradeWizardTakeOfferView.ListItem::getReputationScore))
+                     .limit(3)*/
                     .collect(Collectors.toList()));
+            model.getFilteredList().setPredicate(getTakeOfferPredicate());
         } else {
             log.warn("optionalChannel not present");
         }
 
-        model.getMatchingOffersVisible().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
+        boolean showOffers = !model.getFilteredList().isEmpty();
+        model.getShowOffers().set(showOffers);
+
+        if (showOffers) {
+            model.setHeadLine(model.getDirection().isBuy() ?
+                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.buy", quoteAmountAsString) :
+                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.sell", quoteAmountAsString));
+            model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.subHeadline"));
+        } else {
+            model.setHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.headline", quoteAmountAsString));
+            model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.subHeadline"));
+        }
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    void onTakeOffer(TradeWizardTakeOfferView.ListItem listItem) {
-        UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+    void onSelectRow(TradeWizardTakeOfferView.ListItem listItem) {
+        if (listItem == null) {
+            selectListItem(listItem);
+            return;
+        }
+        if (listItem.equals(model.getSelectedItem())) {
+            onSelect(listItem);
+        } else {
+            selectListItem(listItem);
+        }
+    }
+
+    void onSelect(TradeWizardTakeOfferView.ListItem listItem) {
+        if (listItem == null) {
+            return;
+        }
+        selectListItem(listItem);
+
+        onNextHandler.run();
+
+       
+      /*  UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         if (bannedUserService.isNetworkIdBanned(listItem.getBisqEasyOffer().getMakerNetworkId()) ||
                 bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
             return;
         }
 
         OverlayController.hide(() -> {
-            bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController.InitData initData = new bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController.InitData(listItem.getBisqEasyOffer(),
-                    Optional.of(model.getAmountSpec()),
-                    model.getFiatPaymentMethods());
+                    bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController.InitData initData = new bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController.InitData(listItem.getBisqEasyOffer(),
+                            Optional.of(model.getAmountSpec()),
+                            model.getFiatPaymentMethods());
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, initData);
                     resetHandler.run();
                 }
-        );
+        );*/
     }
 
-    void onPublishOffer() {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
-                .thenAccept(result -> UIThread.run(() -> {
-                    model.getShowCreateOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
-                }));
-    }
-
-    void onShowOfferbook() {
-        close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
-    }
-
-    private void close() {
-        resetHandler.run();
-        OverlayController.hide();
+    private void selectListItem(TradeWizardTakeOfferView.ListItem listItem) {
+        model.setSelectedItem(listItem);
+        model.getSelectedBisqEasyOffer().set(listItem.getBisqEasyOffer());
     }
 
     @SuppressWarnings("RedundantIfStatement")

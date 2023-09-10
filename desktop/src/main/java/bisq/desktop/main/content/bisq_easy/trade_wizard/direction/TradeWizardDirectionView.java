@@ -62,11 +62,13 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"), Res.get("bisqEasy.createOffer.direction.buy.info"));
+        Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"),
+                Res.get("bisqEasy.createOffer.direction.buy.info"), "card-toggle-button");
         VBox buyBox = buyPair.getFirst();
         buyButton = buyPair.getSecond();
 
-        Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"), Res.get("bisqEasy.createOffer.direction.sell.info"));
+        Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"),
+                Res.get("bisqEasy.createOffer.direction.sell.info"), "white-transparent-outlined-button");
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
@@ -133,9 +135,9 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         showReputationInfoPin.unsubscribe();
     }
 
-    private Pair<VBox, Button> getBoxPair(String title, String info) {
+    private Pair<VBox, Button> getBoxPair(String title, String info, String style) {
         Button button = new Button(title);
-        button.getStyleClass().setAll("card-toggle-button");
+        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-direction-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);

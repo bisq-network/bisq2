@@ -96,6 +96,10 @@ public class TradeWizardReviewController implements Controller {
         view = new TradeWizardReviewOfferView(model, this);
     }
 
+    public void setSelectedBisqEasyOffer(BisqEasyOffer bisqEasyOffer) {
+        model.setSelectedBisqEasyOffer(bisqEasyOffer);
+    }
+
     public void setDirection(Direction direction) {
         model.setDirection(direction);
     }

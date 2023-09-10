@@ -40,6 +40,8 @@ import java.util.List;
 @Getter
 class TradeWizardReviewOfferModel implements Model {
     @Setter
+    private BisqEasyOffer selectedBisqEasyOffer;
+    @Setter
     private boolean showMatchingOffers;
     @Setter
     private BisqEasyOfferbookChannel selectedChannel;

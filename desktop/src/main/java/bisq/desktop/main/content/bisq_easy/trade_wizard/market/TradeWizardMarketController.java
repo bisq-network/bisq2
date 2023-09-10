@@ -139,10 +139,4 @@ public class TradeWizardMarketController implements Controller {
         bisqEasyOfferbookChannelService.findChannel(item.getMarket())
                 .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
     }
-
-    private Optional<TradeWizardMarketView.MarketListItem> findMarketListItem(Market market) {
-        return model.getListItems().stream()
-                .filter(marketListItem -> marketListItem.getMarket().equals(market))
-                .findAny();
-    }
 }

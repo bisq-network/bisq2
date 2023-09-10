@@ -28,9 +28,12 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,8 +42,6 @@ import java.util.List;
 
 @Getter
 class TradeWizardTakeOfferModel implements Model {
-    @Setter
-    private boolean showMatchingOffers;
     @Setter
     private BisqEasyOfferbookChannel selectedChannel;
     @Setter
@@ -52,7 +53,9 @@ class TradeWizardTakeOfferModel implements Model {
     @Setter
     private String quoteAmountAsString;
     @Setter
-    private String takeOfferHeadline;
+    private String headLine;
+    @Setter
+    private String subHeadLine;
     @Setter
     private String myOfferText;
     @Setter
@@ -65,13 +68,15 @@ class TradeWizardTakeOfferModel implements Model {
     private PriceSpec priceSpec = new MarketPriceSpec();
     @Setter
     private AmountSpec amountSpec;
-    private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
+    private final BooleanProperty showOffers = new SimpleBooleanProperty();
     private final ObservableList<TradeWizardTakeOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
-    private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
+    private final FilteredList<TradeWizardTakeOfferView.ListItem> filteredList = new FilteredList<>(matchingOffers);
+    private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(filteredList);
+    @Setter
+    private TradeWizardTakeOfferView.ListItem selectedItem;
+    private final ObjectProperty<BisqEasyOffer> selectedBisqEasyOffer = new SimpleObjectProperty<>();
 
     void reset() {
-        showMatchingOffers = false;
         selectedChannel = null;
         direction = null;
         market = null;
@@ -81,8 +86,7 @@ class TradeWizardTakeOfferModel implements Model {
         isMinAmountEnabled = false;
         priceSpec = new MarketPriceSpec();
         amountSpec = null;
-        matchingOffersVisible.set(false);
-        showCreateOfferSuccess.set(false);
+        showOffers.set(false);
         matchingOffers.clear();
 
     }

@@ -20,14 +20,12 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -42,14 +40,10 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
@@ -64,45 +58,52 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-class TradeWizardTakeOfferView extends View<StackPane, TradeWizardTakeOfferModel, TradeWizardTakeOfferController> {
+class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, TradeWizardTakeOfferController> {
     private final static int BUTTON_WIDTH = 140;
-    private final static int FEEDBACK_WIDTH = 700;
     private final static int TABLE_WIDTH = 800;
     private final static int OFFER_BOX_WIDTH = 700;
 
-    private final Label headLineLabel, createOfferLabel;
-    private final BisqTableView<ListItem> tableView;
-    private final Button createOfferButton, viewOfferButton;
-    private final Label createOfferText;
-    private final HBox createOfferHBox;
-    private final Label subtitleLabel;
+    private BisqTableView<ListItem> tableView;
+    private Button createOfferButton;
+    private Label headLineLabel, subtitleLabel, createOfferLabel, createOfferText;
+    private HBox createOfferHBox;
     private Subscription matchingOffersFoundPin;
-    private final VBox content, createOfferSuccess;
-    private Subscription showCreateOfferSuccessPin;
 
     TradeWizardTakeOfferView(TradeWizardTakeOfferModel model, TradeWizardTakeOfferController controller) {
-        super(new StackPane(), model, controller);
+        super(new VBox(10), model, controller);
 
-        content = new VBox(10);
-        content.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.TOP_CENTER);
 
         headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
 
         subtitleLabel = new Label();
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-3");
+    }
 
+    private void addTakeOfferElements() {
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("offer-review");
-
+        tableView.getStyleClass().add("bisq-easy-trade-wizard-take-offer-table-view");
         tableView.setMinWidth(TABLE_WIDTH);
         tableView.setMaxWidth(tableView.getMinWidth());
+        tableView.setMaxHeight(206);
+        tableView.getSelectionModel().select(model.getSelectedItem());
 
+        maybeConfigTableView();
+
+        root.getChildren().clear();
+        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, Spacer.fillVBox());
+    }
+
+    private void addCreateOfferElements() {
         createOfferLabel = new Label();
         createOfferLabel.getStyleClass().add("bisq-text-headline-2");
 
+        createOfferText = new Label(model.getMyOfferText());
         createOfferText = new Label();
         createOfferText.setWrapText(true);
         createOfferText.setId("chat-messages-message");
@@ -111,52 +112,36 @@ class TradeWizardTakeOfferView extends View<StackPane, TradeWizardTakeOfferModel
         createOfferButton.setDefaultButton(true);
         createOfferButton.setMinWidth(BUTTON_WIDTH);
         createOfferButton.setMaxWidth(BUTTON_WIDTH);
+        //createOfferButton.setOnAction(e -> controller.onPublishOffer());
 
         HBox.setHgrow(createOfferText, Priority.ALWAYS);
         createOfferHBox = new HBox(15, createOfferText, Spacer.fillHBox(), createOfferButton);
         createOfferHBox.getStyleClass().add("create-offer-message-my-offer");
         createOfferHBox.setAlignment(Pos.CENTER_LEFT);
 
-        // margin is set in onViewAttached
-        content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, createOfferLabel, createOfferHBox, Spacer.fillVBox());
+        createOfferHBox.setPadding(new Insets(15, 26, 15, 15));
 
-        viewOfferButton = new Button(Res.get("bisqEasy.createOffer.review.createOfferSuccess.viewOffer"));
-        createOfferSuccess = new VBox(20);
-        configCreateOfferSuccess();
+        root.getChildren().clear();
+        root.getChildren().addAll(Spacer.fillVBox(), createOfferLabel, createOfferHBox, Spacer.fillVBox());
 
-        StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, createOfferSuccess);
     }
 
     @Override
     protected void onViewAttached() {
-        Transitions.removeEffect(content);
+        headLineLabel.setText(model.getHeadLine());
+        subtitleLabel.setText(model.getSubHeadLine());
 
-        viewOfferButton.setOnAction(e -> controller.onShowOfferbook());
-        createOfferButton.setOnAction(e -> controller.onPublishOffer());
-
-        createOfferText.setText(model.getMyOfferText());
-        subtitleLabel.setText(model.isShowMatchingOffers() ?
-                Res.get("bisqEasy.createOffer.review.noMatchingOffers") :
-                Res.get("bisqEasy.createOffer.review.createOfferMode")
-        );
-
-        matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersVisible(), matchingOffersVisible -> {
-            tableView.setVisible(matchingOffersVisible);
-            tableView.setManaged(matchingOffersVisible);
-            createOfferLabel.setVisible(matchingOffersVisible);
-            createOfferLabel.setManaged(matchingOffersVisible);
-            subtitleLabel.setVisible(!matchingOffersVisible);
-            subtitleLabel.setManaged(!matchingOffersVisible);
-
-            createOfferHBox.setPadding(new Insets(15, 26, 15, 15));
-
+        if (model.getShowOffers().get()) {
+            addTakeOfferElements();
+        } else {
+            addCreateOfferElements();
+        }
+/*
+        matchingOffersFoundPin = EasyBind.subscribe(model.getShowOffers(), matchingOffersVisible -> {
             if (matchingOffersVisible) {
-                maybeConfigTableView();
-                createOfferHBox.setMinWidth(tableView.getMaxWidth());
+                *//*createOfferHBox.setMinWidth(tableView.getMaxWidth());
                 createOfferHBox.setMaxWidth(tableView.getMaxWidth());
-                headLineLabel.setText(model.getTakeOfferHeadline());
-                createOfferLabel.setText(Res.get("bisqEasy.createOffer.review.headLine2.createOffer"));
+                createOfferLabel.setText(Res.get("bisqEasy.createOffer.review.headLine2.createOffer"));*//*
 
                 int numMatchingOffers = model.getMatchingOffers().size();
                 if (numMatchingOffers > 0) {
@@ -193,25 +178,12 @@ class TradeWizardTakeOfferView extends View<StackPane, TradeWizardTakeOfferModel
                 VBox.setMargin(headLineLabel, new Insets(-100, 0, 0, 0));
                 VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
             }
-        });
-
-        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
-                show -> {
-                    createOfferSuccess.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(createOfferSuccess, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                    }
-                });
+        });*/
     }
 
     @Override
     protected void onViewDetached() {
-        viewOfferButton.setOnAction(null);
-        matchingOffersFoundPin.unsubscribe();
-        showCreateOfferSuccessPin.unsubscribe();
+        //matchingOffersFoundPin.unsubscribe();
     }
 
     private void maybeConfigTableView() {
@@ -308,62 +280,79 @@ class TradeWizardTakeOfferView extends View<StackPane, TradeWizardTakeOfferModel
                 .comparator(Comparator.comparing(ListItem::getBaseAmountAsLong))
                 .build());
 
-        // Action button
-        String buttonText = model.getDirection().isBuy() ?
-                Res.get("bisqEasy.createOffer.review.table.actionButton.buy") :
-                Res.get("bisqEasy.createOffer.review.table.actionButton.sell");
-        BisqTableColumn<ListItem> takeOffer = new BisqTableColumn.Builder<ListItem>()
-                .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
-                .value(buttonText)
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .minWidth(150)
-                .actionHandler(controller::onTakeOffer)
-                .updateItemWithButtonHandler((item, button) -> {
-                    Button takeOfferButton = (Button) button;
-                    takeOfferButton.setDefaultButton(true);
-                    takeOfferButton.setMinWidth(BUTTON_WIDTH);
-                    takeOfferButton.setMaxWidth(BUTTON_WIDTH);
-                })
+                .isSortable(false)
+                .setCellFactory(getSelectButtonCellFactory())
                 .right()
-                .build();
-        tableView.getColumns().add(takeOffer);
+                .build());
 
 
     }
 
-    private void configCreateOfferSuccess() {
-        VBox contentBox = getFeedbackContentBox();
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSelectButtonCellFactory() {
+        return column -> new TableCell<>() {
 
-        createOfferSuccess.setVisible(false);
-        createOfferSuccess.setAlignment(Pos.TOP_CENTER);
+            private Button button;
+            private TableRow<ListItem> tableRow;
+            private Subscription selectedItemPin;
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.review.createOfferSuccess.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.review.createOfferSuccess.subTitle"));
-        configFeedbackSubtitleLabel(subtitleLabel);
+                if (item != null && !empty) {
+                    button = new Button(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
+                    button.setOnAction(e -> {
+                        tableView.getSelectionModel().select(item);
+                        controller.onSelect(item);
+                    });
 
-        viewOfferButton.setDefaultButton(true);
-        VBox.setMargin(viewOfferButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
-        createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
-    }
+                    tableRow = getTableRow();
+                    tableRow.setOnMouseEntered(e -> {
+                        if (!tableRow.isSelected()) {
+                            button.setVisible(true);
+                            button.getStyleClass().remove("white-button");
+                            button.getStyleClass().add("outlined-button");
+                        }
+                    });
+                    tableRow.setOnMouseExited(e -> {
+                        button.getStyleClass().remove("outlined-button");
+                        if (!tableRow.isSelected()) {
+                            button.setVisible(false);
+                            button.getStyleClass().remove("white-button");
+                        }
+                    });
+                    tableRow.setOnMouseClicked(e -> controller.onSelectRow(item));
 
-    private VBox getFeedbackContentBox() {
-        VBox contentBox = new VBox(20);
-        contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
-        contentBox.setPadding(new Insets(30));
-        contentBox.setMaxWidth(FEEDBACK_WIDTH);
-        return contentBox;
-    }
+                    selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
+                            selectedItem -> {
+                                button.setVisible(item.equals(selectedItem));
+                                if (item.equals(selectedItem)) {
+                                    button.getStyleClass().remove("outlined-button");
+                                    button.getStyleClass().add("white-button");
+                                } else {
+                                    button.getStyleClass().remove("white-button");
+                                }
+                            });
 
-    private void configFeedbackSubtitleLabel(Label subtitleLabel) {
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
-        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
+                    setGraphic(button);
+                } else {
+                    button.setOnAction(null);
+                    if (tableRow != null) {
+                        tableRow.setOnMouseEntered(null);
+                        tableRow.setOnMouseExited(null);
+                        tableRow.setOnMouseClicked(null);
+                        tableRow = null;
+                    }
+                    if (selectedItemPin != null) {
+                        selectedItemPin.unsubscribe();
+                        selectedItemPin = null;
+                    }
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     @ToString

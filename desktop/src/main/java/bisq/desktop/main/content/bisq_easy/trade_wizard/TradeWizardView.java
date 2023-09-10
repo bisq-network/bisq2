@@ -117,14 +117,6 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
     @Override
     protected void onViewAttached() {
-        if (model.isCreateOfferMode()) {
-            progressLabelList.remove(takeOfferProgressItem);
-        } else {
-            progressLabelList.add(4, takeOfferProgressItem);
-        }
-
-        log.error("progressLabelList " + progressLabelList.size());
-
         takeOfferProgressItem.setVisible(!model.isCreateOfferMode());
         takeOfferProgressItem.setManaged(!model.isCreateOfferMode());
         takeOfferProgressLine.setVisible(!model.isCreateOfferMode());
@@ -223,7 +215,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {
