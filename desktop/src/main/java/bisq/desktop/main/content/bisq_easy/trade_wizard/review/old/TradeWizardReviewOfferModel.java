@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.review.old;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -86,6 +86,5 @@ class TradeWizardReviewOfferModel implements Model {
         matchingOffersVisible.set(false);
         showCreateOfferSuccess.set(false);
         matchingOffers.clear();
-
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.review.old;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.monetary.Monetary;

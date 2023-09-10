@@ -51,29 +51,31 @@ class TradeWizardTakeOfferModel implements Model {
     @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods;
     @Setter
+    private PriceSpec priceSpec = new MarketPriceSpec();
+    @Setter
+    private AmountSpec amountSpec;
+    @Setter
+    private boolean isMinAmountEnabled;
+
+    @Setter
+    private BisqEasyOffer bisqEasyOffer;
+    @Setter
+    private BisqEasyOfferbookMessage myOfferMessage;
+    @Setter
     private String quoteAmountAsString;
+    @Setter
+    private String myOfferText;
     @Setter
     private String headLine;
     @Setter
     private String subHeadLine;
+
     @Setter
-    private String myOfferText;
-    @Setter
-    private BisqEasyOfferbookMessage myOfferMessage;
-    @Setter
-    private BisqEasyOffer bisqEasyOffer;
-    @Setter
-    private boolean isMinAmountEnabled;
-    @Setter
-    private PriceSpec priceSpec = new MarketPriceSpec();
-    @Setter
-    private AmountSpec amountSpec;
+    private TradeWizardTakeOfferView.ListItem selectedItem;
     private final BooleanProperty showOffers = new SimpleBooleanProperty();
     private final ObservableList<TradeWizardTakeOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
     private final FilteredList<TradeWizardTakeOfferView.ListItem> filteredList = new FilteredList<>(matchingOffers);
     private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(filteredList);
-    @Setter
-    private TradeWizardTakeOfferView.ListItem selectedItem;
     private final ObjectProperty<BisqEasyOffer> selectedBisqEasyOffer = new SimpleObjectProperty<>();
 
     void reset() {
@@ -81,13 +83,20 @@ class TradeWizardTakeOfferModel implements Model {
         direction = null;
         market = null;
         fiatPaymentMethods.clear();
-        myOfferText = null;
-        myOfferMessage = null;
-        isMinAmountEnabled = false;
         priceSpec = new MarketPriceSpec();
         amountSpec = null;
+        isMinAmountEnabled = false;
+
+        bisqEasyOffer = null;
+        myOfferMessage = null;
+        quoteAmountAsString = null;
+        myOfferText = null;
+        headLine = null;
+        subHeadLine = null;
+
+        selectedItem = null;
         showOffers.set(false);
         matchingOffers.clear();
-
+        selectedBisqEasyOffer.set(null);
     }
 }

@@ -68,7 +68,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         buyButton = buyPair.getSecond();
 
         Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"),
-                Res.get("bisqEasy.createOffer.direction.sell.info"), "white-transparent-outlined-button");
+                Res.get("bisqEasy.createOffer.direction.sell.info"), "grey-transparent-outlined-button");
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 

@@ -173,7 +173,7 @@ public class TakeOfferReviewController implements Controller {
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
                     model.getFiatPaymentMethodSpec());
 
-            model.setBisqEasyTradeModel(bisqEasyTrade);
+            model.setBisqEasyTrade(bisqEasyTrade);
 
             BisqEasyContract contract = bisqEasyTrade.getContract();
             String tradeId = bisqEasyTrade.getId();

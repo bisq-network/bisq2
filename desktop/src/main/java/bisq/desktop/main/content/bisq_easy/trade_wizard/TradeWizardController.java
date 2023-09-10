@@ -120,7 +120,6 @@ public class TradeWizardController extends NavigationController implements InitW
         directionPin = EasyBind.subscribe(tradeWizardDirectionController.getDirection(), direction -> {
             tradeWizardMarketController.setDirection(direction);
             tradeWizardTakeOfferController.setDirection(direction);
-            tradeWizardReviewController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
             tradeWizardPaymentMethodController.setDirection(direction);
             model.getPriceProgressItemVisible().set(direction == Direction.SELL);
@@ -132,7 +131,6 @@ public class TradeWizardController extends NavigationController implements InitW
         });
         marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
             tradeWizardTakeOfferController.setMarket(market);
-            tradeWizardReviewController.setMarket(market);
             tradeWizardPaymentMethodController.setMarket(market);
             tradeWizardPriceController.setMarket(market);
             tradeWizardAmountController.setMarket(market);
@@ -141,18 +139,15 @@ public class TradeWizardController extends NavigationController implements InitW
         amountSpecPin = EasyBind.subscribe(tradeWizardAmountController.getAmountSpec(),
                 amountSpec -> {
                     tradeWizardTakeOfferController.setAmountSpec(amountSpec);
-                    tradeWizardReviewController.setAmountSpec(amountSpec);
                 });
         isMinAmountEnabledPin = EasyBind.subscribe(tradeWizardAmountController.getIsMinAmountEnabled(),
                 isMinAmountEnabled -> {
                     tradeWizardTakeOfferController.setIsMinAmountEnabled(isMinAmountEnabled);
-                    tradeWizardReviewController.setIsMinAmountEnabled(isMinAmountEnabled);
                 });
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
                 priceSpec -> {
                     tradeWizardAmountController.setPriceSpec(priceSpec);
                     tradeWizardTakeOfferController.setPriceSpec(priceSpec);
-                    tradeWizardReviewController.setPriceSpec(priceSpec);
                 });
         showCustomMethodNotEmptyWarningPin = EasyBind.subscribe(tradeWizardPaymentMethodController.getShowCustomMethodNotEmptyWarning(),
                 showCustomMethodNotEmptyWarning -> {
@@ -164,7 +159,12 @@ public class TradeWizardController extends NavigationController implements InitW
 
         selectedBisqEasyOfferPin = EasyBind.subscribe(tradeWizardTakeOfferController.getSelectedBisqEasyOffer(),
                 selectedBisqEasyOffer -> {
-                    tradeWizardReviewController.setSelectedBisqEasyOffer(selectedBisqEasyOffer);
+                    tradeWizardReviewController.onTakeOffer(selectedBisqEasyOffer,
+                            tradeWizardAmountController.getAmountSpec().get(),
+                            tradeWizardPriceController.getPriceSpec().get(),
+                            tradeWizardPaymentMethodController.getFiatPaymentMethods()
+                    );
+                    updateNextButtonDisabledState();
                 });
 
 
@@ -294,6 +294,8 @@ public class TradeWizardController extends NavigationController implements InitW
             model.getNextButtonDisabled().set(tradeWizardMarketController.getMarket().get() == null);
         } else if (NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(tradeWizardPaymentMethodController.getFiatPaymentMethods().isEmpty());
+        } else if (NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(tradeWizardTakeOfferController.getSelectedBisqEasyOffer().get() == null);
         } else {
             model.getNextButtonDisabled().set(false);
         }
@@ -307,7 +309,6 @@ public class TradeWizardController extends NavigationController implements InitW
 
     private void handlePaymentMethodsUpdate() {
         tradeWizardTakeOfferController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
-        tradeWizardReviewController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
         tradeWizardAmountController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
         updateNextButtonDisabledState();
     }

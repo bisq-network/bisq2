@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.take_offer.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
@@ -34,32 +34,44 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-class TakeOfferReviewModel implements Model {
+class TradeWizardReviewModel implements Model {
     @Setter
     private BisqEasyOffer bisqEasyOffer;
+    @Setter
+    private FiatPaymentMethodSpec paymentMethodSpec;
+    @Setter
+    private List<String> paymentMethodNames;
+
     @Setter
     private BisqEasyTrade bisqEasyTrade;
     @Setter
     private UserProfile peersUserProfile;
-    private final StringProperty fiatPaymentMethodDisplayString = new SimpleStringProperty();
-    @Setter
-    private List<String> paymentMethodNames;
+
+    private final BooleanProperty requirePaymentMethodSelection = new SimpleBooleanProperty();
+    private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
+    private final StringProperty fiatPaymentMethodDisplayString = new SimpleStringProperty();
     private final StringProperty subtitle = new SimpleStringProperty();
     private final StringProperty amountDescription = new SimpleStringProperty();
     private final StringProperty toPay = new SimpleStringProperty();
     private final StringProperty toReceive = new SimpleStringProperty();
-    private final StringProperty method = new SimpleStringProperty();
     private final StringProperty sellersPrice = new SimpleStringProperty();
     private final StringProperty sellersPriceDetails = new SimpleStringProperty();
     private final StringProperty sellersPremium = new SimpleStringProperty();
 
-    @Setter
-    private FiatPaymentMethodSpec fiatPaymentMethodSpec;
     @Setter
     private Monetary takersBaseSideAmount;
     @Setter
     private Monetary takersQuoteSideAmount;
     @Setter
     private PriceSpec sellersPriceSpec;
+
+    public void reset() {
+        bisqEasyOffer = null;
+        paymentMethodSpec = null;
+        paymentMethodNames = null;
+
+        peersUserProfile = null;
+        bisqEasyTrade = null;
+    }
 }
