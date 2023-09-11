@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -110,6 +111,16 @@ public class TorService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
+    public CompletableFuture<Boolean> startNode(TorIdentity torIdentity) {
+        try {
+            ServerSocket serverSocket = createOnionService(torIdentity).get();
+            return CompletableFuture.completedFuture(true);
+
+        } catch (ExecutionException | InterruptedException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
     public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, String nodeId) {
         log.info("Start hidden service with port {} and nodeId {}", port, nodeId);
         long ts = System.currentTimeMillis();
@@ -124,6 +135,26 @@ public class TorService implements Service {
                                 return new CreateOnionServiceResponse(nodeId, localServerSocket, onionAddress);
                             }
                     );
+
+        } catch (IOException e) {
+            log.error("Can't create onion service", e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    public CompletableFuture<ServerSocket> createOnionService(TorIdentity torIdentity) {
+        log.info("Start hidden service with {}", torIdentity);
+        long ts = System.currentTimeMillis();
+        try {
+            @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
+            int localPort = localServerSocket.getLocalPort();
+
+            return onionServicePublishService.publish(torIdentity, localPort)
+                    .thenApply(unused -> {
+                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
+                                System.currentTimeMillis() - ts, torIdentity);
+                        return localServerSocket;
+                    });
 
         } catch (IOException e) {
             log.error("Can't create onion service", e);
