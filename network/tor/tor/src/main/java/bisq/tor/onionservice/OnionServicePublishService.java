@@ -17,6 +17,7 @@
 
 package bisq.tor.onionservice;
 
+import bisq.tor.TorIdentity;
 import bisq.tor.controller.NativeTorController;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
@@ -71,6 +72,18 @@ public class OnionServicePublishService {
         }
 
         return completableFuture;
+    }
+
+    public synchronized CompletableFuture<Void> publish(TorIdentity torIdentity, int localPort) {
+        try {
+            Optional<String> privateKey = Optional.of(torIdentity.getPrivateKey());
+            nativeTorController.createHiddenService(torIdentity.getPort(), localPort, privateKey);
+            return CompletableFuture.completedFuture(null);
+
+        } catch (IOException e) {
+            log.error("Couldn't create onion service {}", torIdentity);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     public synchronized Optional<OnionAddress> getOnionAddressForNode(String nodeId) {
