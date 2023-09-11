@@ -250,7 +250,6 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     void onNext() {
-        log.error("onNext {}", model.getSelectedChildTarget().get());
         if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_REVIEW_OFFER) {
             if (model.isCreateOfferMode()) {
                 tradeWizardReviewController.publishOffer();

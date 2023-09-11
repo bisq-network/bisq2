@@ -20,14 +20,11 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -41,19 +38,16 @@ class TradeWizardReviewModel implements Model {
     private boolean isCreateOfferMode;
 
     @Setter
-    private Market market;
-    @Setter
     private BisqEasyOffer bisqEasyOffer;
-    @Setter
-    private FiatPaymentMethodSpec paymentMethodSpec;
-
     @Setter
     private BisqEasyTrade bisqEasyTrade;
     @Setter
-    private UserProfile peersUserProfile;
-
+    private BisqEasyOfferbookChannel selectedChannel;
+    private final ObservableList<FiatPaymentMethod> takersPaymentMethods = FXCollections.observableArrayList();
+    @Setter
+    private FiatPaymentMethod takersSelectedPaymentMethod;
+    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-
 
     @Setter
     private Monetary minBaseSideAmount;
@@ -73,8 +67,6 @@ class TradeWizardReviewModel implements Model {
 
     @Setter
     private BisqEasyOfferbookMessage myOfferMessage;
-    @Setter
-    private boolean noTradePriceAvailable;
 
     @Setter
     private String headline;
@@ -102,30 +94,25 @@ class TradeWizardReviewModel implements Model {
     private String paymentMethodDescription;
     @Setter
     private String paymentMethod;
-
     @Setter
     private String fee;
 
-    @Setter
-    private String myOfferText;
-    @Setter
-    private BisqEasyOfferbookChannel selectedChannel;
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-
-    @Setter
-    private FiatPaymentMethod selectedFiatPaymentMethod;
-    private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
-
-    // todo
-    @Setter
-    private String quoteAmountAsString;
 
     public void reset() {
         bisqEasyOffer = null;
-        paymentMethodSpec = null;
-        takersFiatPaymentMethods.clear();
-
-        peersUserProfile = null;
         bisqEasyTrade = null;
+        selectedChannel = null;
+        takersPaymentMethods.clear();
+        takersSelectedPaymentMethod = null;
+        showCreateOfferSuccess.set(false);
+        showTakeOfferSuccess.set(false);
+        minBaseSideAmount = null;
+        maxBaseSideAmount = null;
+        fixBaseSideAmount = null;
+        minQuoteSideAmount = null;
+        maxQuoteSideAmount = null;
+        fixQuoteSideAmount = null;
+        priceSpec = null;
+        myOfferMessage = null;
     }
 }

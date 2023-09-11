@@ -238,8 +238,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                     }
                 });
 
-        if (model.getTakersFiatPaymentMethods().size() > 1) {
-            takersFiatPaymentMethods = new ComboBox<>(model.getTakersFiatPaymentMethods());
+        if (model.getTakersPaymentMethods().size() > 1) {
+            takersFiatPaymentMethods = new ComboBox<>(model.getTakersPaymentMethods());
             takersFiatPaymentMethods.getStyleClass().add("trade-wizard-review-value");
             StackPane.setMargin(takersFiatPaymentMethods, new Insets(0, 0, 0, -9));
             paymentMethodValuePane.getChildren().setAll(takersFiatPaymentMethods);
@@ -255,10 +255,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                 }
             });
 
-            takersFiatPaymentMethods.getSelectionModel().select(model.getSelectedFiatPaymentMethod());
+            takersFiatPaymentMethods.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
             takersFiatPaymentMethods.setOnAction(e -> {
                 if (takersFiatPaymentMethods.getSelectionModel().getSelectedItem() == null) {
-                    takersFiatPaymentMethods.getSelectionModel().select(model.getSelectedFiatPaymentMethod());
+                    takersFiatPaymentMethods.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
                     return;
                 }
                 controller.onSelectFiatPaymentMethod(takersFiatPaymentMethods.getSelectionModel().getSelectedItem());

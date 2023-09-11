@@ -118,7 +118,7 @@ public class TradeWizardReviewController implements Controller {
 
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
-            model.setSelectedFiatPaymentMethod(null);
+            model.setTakersSelectedPaymentMethod(null);
         }
     }
 
@@ -128,7 +128,6 @@ public class TradeWizardReviewController implements Controller {
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         model.setCreateOfferMode(true);
-        model.setMarket(market);
 
         String priceInfo;
         if (direction.isSell()) {
@@ -150,7 +149,6 @@ public class TradeWizardReviewController implements Controller {
         String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        model.setQuoteAmountAsString(quoteAmountAsString);
 
         String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, true);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
@@ -158,8 +156,6 @@ public class TradeWizardReviewController implements Controller {
                 quoteAmountAsString,
                 paymentMethodNames,
                 priceInfo);
-
-        model.setMyOfferText(chatMessageText);
 
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(
@@ -209,7 +205,6 @@ public class TradeWizardReviewController implements Controller {
 
         model.setCreateOfferMode(false);
         model.setBisqEasyOffer(bisqEasyOffer);
-        model.setMarket(bisqEasyOffer.getMarket());
         Direction direction = bisqEasyOffer.getTakersDirection();
         Market market = bisqEasyOffer.getMarket();
 
@@ -257,7 +252,6 @@ public class TradeWizardReviewController implements Controller {
                 .map(PriceFormatter::formatWithCode)
                 .orElse(Res.get("data.na")));
         applyPriceDetails(direction, model.getPriceSpec(), market);
-        model.setNoTradePriceAvailable(isCreateOfferMode && direction.isBuy());
         String formattedBaseAmount, formattedQuoteAmount;
         if (amountSpec instanceof RangeAmountSpec) {
             Monetary minBaseSideAmount = OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
@@ -282,25 +276,6 @@ public class TradeWizardReviewController implements Controller {
             Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixQuoteSideAmount(fixQuoteSideAmount);
             formattedQuoteAmount = AmountFormatter.formatAmountWithCode(fixQuoteSideAmount);
-
-            /*if (priceSpec != null) {
-                Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
-                String sellersPremium;
-                if (percentFromMarketPrice.isPresent()) {
-                    double percentage = percentFromMarketPrice.get();
-                    long quoteSidePremium = MathUtils.roundDoubleToLong(fixBaseSideAmount.getValue() * percentage);
-                    Monetary quoteSidePremiumAsMonetary = Fiat.fromValue(quoteSidePremium, fixBaseSideAmount.getCode());
-                    long baseSidePremium = MathUtils.roundDoubleToLong(fixQuoteSideAmount.getValue() * percentage);
-                    Monetary baseSidePremiumAsMonetary = Coin.fromValue(baseSidePremium, fixQuoteSideAmount.getCode());
-                    sellersPremium = AmountFormatter.formatAmountWithCode(quoteSidePremiumAsMonetary) + " / " +
-                            AmountFormatter.formatAmountWithCode(baseSidePremiumAsMonetary, false);
-                } else {
-                    sellersPremium = Res.get("data.na");
-                }
-                model.setSellersPremium(sellersPremium);
-            } else {
-                model.setSellersPremium("TODO");
-            }*/
         }
 
         String equalSign = model.isCreateOfferMode() && direction.isBuy() ? " ~ " : " = ";
@@ -345,16 +320,16 @@ public class TradeWizardReviewController implements Controller {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.taker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.taker").toUpperCase());
             model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker"));
-            model.getTakersFiatPaymentMethods().setAll(fiatPaymentMethods);
-            if (model.getSelectedFiatPaymentMethod() == null) {
-                model.setSelectedFiatPaymentMethod(fiatPaymentMethods.get(0));
+            model.getTakersPaymentMethods().setAll(fiatPaymentMethods);
+            if (model.getTakersSelectedPaymentMethod() == null) {
+                model.setTakersSelectedPaymentMethod(fiatPaymentMethods.get(0));
             }
             model.setPaymentMethodDescription(
                     fiatPaymentMethods.size() == 1 ?
                             Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription") :
                             Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.taker")
             );
-            model.setPaymentMethod(model.getSelectedFiatPaymentMethod().getDisplayString());
+            model.setPaymentMethod(model.getTakersSelectedPaymentMethod().getDisplayString());
 
             if (direction.isSell()) {
                 // Taker as seller
@@ -397,11 +372,6 @@ public class TradeWizardReviewController implements Controller {
     }
 
     public void takeOffer() {
-        return;
-    }
-
-    //todo
-    public void takeOffer_() {
         try {
             UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             if (bannedUserService.isNetworkIdBanned(model.getBisqEasyOffer().getMakerNetworkId()) ||
@@ -409,12 +379,13 @@ public class TradeWizardReviewController implements Controller {
                 return;
             }
             BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+            FiatPaymentMethodSpec paymentMethodSpec = new FiatPaymentMethodSpec(model.getTakersSelectedPaymentMethod());
             BisqEasyTrade bisqEasyTrade = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
                     bisqEasyOffer,
                     model.getFixBaseSideAmount(),
                     model.getFixQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    model.getPaymentMethodSpec());
+                    paymentMethodSpec);
 
             model.setBisqEasyTrade(bisqEasyTrade);
 
@@ -454,7 +425,7 @@ public class TradeWizardReviewController implements Controller {
     }
 
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
-        model.setSelectedFiatPaymentMethod(paymentMethod);
+        model.setTakersSelectedPaymentMethod(paymentMethod);
     }
 
     private void close() {
