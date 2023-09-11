@@ -341,6 +341,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private void handlePaymentMethodsUpdate() {
         tradeWizardTakeOfferController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
         tradeWizardAmountController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
+        tradeWizardReviewController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
         updateNextButtonDisabledState();
     }
 }

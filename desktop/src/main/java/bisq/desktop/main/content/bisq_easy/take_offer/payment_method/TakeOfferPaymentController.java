@@ -78,7 +78,7 @@ public class TakeOfferPaymentController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onTogglePaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
+    void onTogglePaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedSpec().set(spec);
         } else {

@@ -46,14 +46,12 @@ class TradeWizardReviewModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     @Setter
     private FiatPaymentMethodSpec paymentMethodSpec;
-    private final ObservableList<FiatPaymentMethod> paymentMethods = FXCollections.observableArrayList();
 
     @Setter
     private BisqEasyTrade bisqEasyTrade;
     @Setter
     private UserProfile peersUserProfile;
 
-    private final BooleanProperty requirePaymentMethodSelection = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
 
 
@@ -114,6 +112,10 @@ class TradeWizardReviewModel implements Model {
     private BisqEasyOfferbookChannel selectedChannel;
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
 
+    @Setter
+    private FiatPaymentMethod selectedFiatPaymentMethod;
+    private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
+
     // todo
     @Setter
     private String quoteAmountAsString;
@@ -121,7 +123,7 @@ class TradeWizardReviewModel implements Model {
     public void reset() {
         bisqEasyOffer = null;
         paymentMethodSpec = null;
-        paymentMethods.clear();
+        takersFiatPaymentMethods.clear();
 
         peersUserProfile = null;
         bisqEasyTrade = null;

@@ -303,6 +303,27 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.trade-wizard-review-value .combo-box > .list-cell,
+.trade-wizard-review-value .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 10 10 10 10;
+}
+
+.trade-wizard-review-value .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: transparent;
+}
+
+.trade-wizard-review-value .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
+.trade-wizard-review-value .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background-color: -bisq-grey-16;
+    -fx-background: transparent;
+}
+
+
 .trade-wizard-review-details {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
@@ -315,9 +336,6 @@
     -fx-font-size: 1.46em;
 }
 
-.bisq-easy-trade-wizard-direction-button {
-    -fx-font-size: 1.46em;
-}
 
 .table-view.offer-review .column-header {
     -fx-pref-height: 40px;

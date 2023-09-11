@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -27,12 +28,16 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, TradeWizardReviewController> {
@@ -44,6 +49,9 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final VBox createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
+    private final StackPane paymentMethodValuePane;
+    @Nullable
+    private ComboBox<FiatPaymentMethod> takersFiatPaymentMethods;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
     TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller) {
@@ -148,8 +156,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         paymentMethod = new Label();
         paymentMethod.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(paymentMethod, 3);
-        content.add(paymentMethod, 1, rowIndex);
+        paymentMethodValuePane = new StackPane(paymentMethod);
+        paymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnSpan(paymentMethodValuePane, 3);
+        content.add(paymentMethodValuePane, 1, rowIndex);
 
 
         rowIndex++;
@@ -227,6 +237,35 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                         Transitions.removeEffect(content);
                     }
                 });
+
+        if (model.getTakersFiatPaymentMethods().size() > 1) {
+            takersFiatPaymentMethods = new ComboBox<>(model.getTakersFiatPaymentMethods());
+            takersFiatPaymentMethods.getStyleClass().add("trade-wizard-review-value");
+            StackPane.setMargin(takersFiatPaymentMethods, new Insets(0, 0, 0, -9));
+            paymentMethodValuePane.getChildren().setAll(takersFiatPaymentMethods);
+            takersFiatPaymentMethods.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(FiatPaymentMethod method) {
+                    return method != null ? method.getShortDisplayString() : "";
+                }
+
+                @Override
+                public FiatPaymentMethod fromString(String string) {
+                    return null;
+                }
+            });
+
+            takersFiatPaymentMethods.getSelectionModel().select(model.getSelectedFiatPaymentMethod());
+            takersFiatPaymentMethods.setOnAction(e -> {
+                if (takersFiatPaymentMethods.getSelectionModel().getSelectedItem() == null) {
+                    takersFiatPaymentMethods.getSelectionModel().select(model.getSelectedFiatPaymentMethod());
+                    return;
+                }
+                controller.onSelectFiatPaymentMethod(takersFiatPaymentMethods.getSelectionModel().getSelectedItem());
+            });
+        } else {
+            paymentMethodValuePane.getChildren().setAll(paymentMethod);
+        }
     }
 
     @Override
@@ -236,6 +275,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         showCreateOfferSuccessPin.unsubscribe();
         showTakeOfferSuccessPin.unsubscribe();
+
+        if (takersFiatPaymentMethods != null) {
+            takersFiatPaymentMethods.setOnAction(null);
+        }
     }
 
     private void configCreateOfferSuccess() {
