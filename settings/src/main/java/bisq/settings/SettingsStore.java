@@ -39,7 +39,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> useAnimations = new Observable<>(true);
     final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
-    final Observable<Long> requiredTotalReputationScore = new Observable<>(1000L);
+    //TODO 
+    final Observable<Long> requiredTotalReputationScore = new Observable<>(0L);
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);

@@ -39,6 +39,7 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -322,28 +323,22 @@ public class TradeWizardTakeOfferController implements Controller {
                 if (item.getAuthorUserProfile().isEmpty()) {
                     return false;
                 }
-                UserProfile authorUserProfile = item.getAuthorUserProfile().get();
-                if (userProfileService.isChatUserIgnored(authorUserProfile)) {
+                UserProfile makerUserProfile = item.getAuthorUserProfile().get();
+                if (userProfileService.isChatUserIgnored(makerUserProfile)) {
                     return false;
                 }
                 // Ignore own offers
                 if (userIdentityService.getUserIdentities().stream()
                         .map(userIdentity -> userIdentity.getUserProfile().getId())
-                        .anyMatch(userProfileId -> userProfileId.equals(authorUserProfile.getId()))) {
+                        .anyMatch(userProfileId -> userProfileId.equals(makerUserProfile.getId()))) {
                     return false;
                 }
-               /* if (model.getMyOfferMessage() == null) {
-                    return false;
-                }
-                if (model.getMyOfferMessage().getBisqEasyOffer().isEmpty()) {
-                    return false;
-                }*/
 
 
                 if (userIdentityService.getSelectedUserIdentity() == null ||
                         bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile()) ||
-                        bannedUserService.isNetworkIdBanned(authorUserProfile.getNetworkId()) ||
-                        bannedUserService.isUserProfileBanned(authorUserProfile)) {
+                        bannedUserService.isNetworkIdBanned(makerUserProfile.getNetworkId()) ||
+                        bannedUserService.isUserProfileBanned(makerUserProfile)) {
                     return false;
                 }
 
@@ -381,10 +376,21 @@ public class TradeWizardTakeOfferController implements Controller {
                     return false;
                 }
 
-                //todo
-           /* if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
-                return false;
-            }*/
+                if (bisqEasyOffer.getDirection().mirror().isBuy()) {
+                    long makersScore = reputationService.getReputationScore(makerUserProfile).getTotalScore();
+                    long myRequiredReputationScore = settingsService.getRequiredTotalReputationScore().get();
+                    // Makers score must be > than my required score (as buyer)
+                    if (makersScore < myRequiredReputationScore) {
+                        return false;
+                    }
+                } else {
+                    // My score (as seller) must be > as offers required score
+                    long myScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+                    long offersRequiredReputationScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer).orElse(0L);
+                    if (myScore < offersRequiredReputationScore) {
+                        return false;
+                    }
+                }
 
 
                 return true;
