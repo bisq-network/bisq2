@@ -64,7 +64,9 @@ public class TradeWizardMarketController implements Controller {
     }
 
     public void setDirection(Direction direction) {
-        model.setDirection(direction);
+        if (direction != null) {
+            model.setDirection(direction);
+        }
     }
 
     public void reset() {

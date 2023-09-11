@@ -17,6 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -26,21 +30,23 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 class TradeWizardReviewModel implements Model {
     @Setter
+    private boolean isCreateOfferMode;
+
+    @Setter
+    private Market market;
+    @Setter
     private BisqEasyOffer bisqEasyOffer;
     @Setter
     private FiatPaymentMethodSpec paymentMethodSpec;
-    @Setter
-    private List<String> paymentMethodNames;
+    private final ObservableList<FiatPaymentMethod> paymentMethods = FXCollections.observableArrayList();
 
     @Setter
     private BisqEasyTrade bisqEasyTrade;
@@ -48,28 +54,74 @@ class TradeWizardReviewModel implements Model {
     private UserProfile peersUserProfile;
 
     private final BooleanProperty requirePaymentMethodSelection = new SimpleBooleanProperty();
-    private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-    private final StringProperty fiatPaymentMethodDisplayString = new SimpleStringProperty();
-    private final StringProperty subtitle = new SimpleStringProperty();
-    private final StringProperty amountDescription = new SimpleStringProperty();
-    private final StringProperty toPay = new SimpleStringProperty();
-    private final StringProperty toReceive = new SimpleStringProperty();
-    private final StringProperty sellersPrice = new SimpleStringProperty();
-    private final StringProperty sellersPriceDetails = new SimpleStringProperty();
-    private final StringProperty sellersPremium = new SimpleStringProperty();
+
 
     @Setter
-    private Monetary takersBaseSideAmount;
+    private Monetary minBaseSideAmount;
     @Setter
-    private Monetary takersQuoteSideAmount;
+    private Monetary maxBaseSideAmount;
     @Setter
-    private PriceSpec sellersPriceSpec;
+    private Monetary fixBaseSideAmount;
+    @Setter
+    private Monetary minQuoteSideAmount;
+    @Setter
+    private Monetary maxQuoteSideAmount;
+    @Setter
+    private Monetary fixQuoteSideAmount;
+
+    @Setter
+    private PriceSpec priceSpec;
+
+    @Setter
+    private BisqEasyOfferbookMessage myOfferMessage;
+    @Setter
+    private boolean noTradePriceAvailable;
+
+    @Setter
+    private String headline;
+    @Setter
+    private String directionHeadline;
+    @Setter
+    private String amountsHeadline;
+    @Setter
+    private String detailsHeadline;
+    @Setter
+    private String toSendAmountDescription;
+    @Setter
+    private String toSendAmount;
+    @Setter
+    private String toReceiveAmountDescription;
+    @Setter
+    private String toReceiveAmount;
+    @Setter
+    private String priceDescription;
+    @Setter
+    private String price;
+    @Setter
+    private String priceDetails;
+    @Setter
+    private String paymentMethodDescription;
+    @Setter
+    private String paymentMethod;
+
+    @Setter
+    private String fee;
+
+    @Setter
+    private String myOfferText;
+    @Setter
+    private BisqEasyOfferbookChannel selectedChannel;
+    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
+
+    // todo
+    @Setter
+    private String quoteAmountAsString;
 
     public void reset() {
         bisqEasyOffer = null;
         paymentMethodSpec = null;
-        paymentMethodNames = null;
+        paymentMethods.clear();
 
         peersUserProfile = null;
         bisqEasyTrade = null;

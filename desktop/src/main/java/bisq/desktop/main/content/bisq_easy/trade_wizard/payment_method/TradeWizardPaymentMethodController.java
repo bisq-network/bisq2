@@ -70,10 +70,9 @@ public class TradeWizardPaymentMethodController implements Controller {
     }
 
     public void setDirection(Direction direction) {
-        if (direction == null) {
-            return;
+        if (direction != null) {
+            model.setDirection(direction);
         }
-        model.setDirection(direction);
     }
 
     public ReadOnlyBooleanProperty getShowCustomMethodNotEmptyWarning() {

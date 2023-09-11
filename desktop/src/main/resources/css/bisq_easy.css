@@ -260,6 +260,57 @@
  *                                                                             *
  ******************************************************************************/
 
+
+.trade-wizard-review-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 2.5em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-review-direction {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-review-amounts {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-review-details-headline {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.8em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-review-description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-review-value {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-review-details {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
 .bisq-easy-trade-wizard-direction-button {
     -fx-font-size: 1.46em;
 }

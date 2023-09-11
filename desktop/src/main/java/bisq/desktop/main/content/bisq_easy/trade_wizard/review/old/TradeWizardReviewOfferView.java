@@ -351,7 +351,7 @@ class TradeWizardReviewOfferView extends View<StackPane, TradeWizardReviewOfferM
     private VBox getFeedbackContentBox() {
         VBox contentBox = new VBox(20);
         contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(FEEDBACK_WIDTH);
         return contentBox;

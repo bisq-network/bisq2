@@ -66,13 +66,13 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         col4.setPercentWidth(25);
         gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
 
-        String descriptionStyle = "take-offer-review-description";
-        String valueStyle = "take-offer-review-value";
-        String valueDetailsStyle = "take-offer-review-value-details";
+        String descriptionStyle = "trade-wizard-review-description";
+        String valueStyle = "trade-wizard-review-value";
+        String valueDetailsStyle = "trade-wizard-review-details";
 
         int rowIndex = 0;
         Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
-        headline.getStyleClass().add("take-offer-review-headline");
+        headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         // GridPane.setMargin(headline, new Insets(-TakeOfferView.TOP_PANE_HEIGHT + 5, 20, 20, 0));
         GridPane.setMargin(headline, new Insets(0, 20, 10, 0));
@@ -90,7 +90,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         rowIndex++;
         subtitle = new Label();
-        subtitle.getStyleClass().addAll("take-offer-review-subtitle");
+        subtitle.getStyleClass().addAll("trade-wizard-review-direction");
         GridPane.setMargin(subtitle, new Insets(16, 0, 0, 0));
         GridPane.setRowIndex(subtitle, rowIndex);
         GridPane.setColumnSpan(subtitle, 4);
@@ -98,7 +98,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         rowIndex++;
         amounts = new Label();
-        amounts.getStyleClass().add("take-offer-review-subtitle-value");
+        amounts.getStyleClass().add("trade-wizard-review-amounts");
         GridPane.setMargin(amounts, new Insets(-7, 0, 17, 0));
         GridPane.setRowIndex(amounts, rowIndex);
         GridPane.setColumnSpan(amounts, 4);
@@ -106,7 +106,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         rowIndex++;
         Label gridPaneHeadline = new Label(Res.get("bisqEasy.takeOffer.review.gridPaneHeadline").toUpperCase());
-        gridPaneHeadline.getStyleClass().add("take-offer-review-grid-headline");
+        gridPaneHeadline.getStyleClass().add("trade-wizard-review-details-headline");
         GridPane.setMargin(gridPaneHeadline, new Insets(0, 0, -2, 0));
         GridPane.setRowIndex(gridPaneHeadline, rowIndex);
         GridPane.setColumnSpan(gridPaneHeadline, 4);
@@ -278,7 +278,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private VBox getFeedbackContentBox() {
         VBox contentBox = new VBox(20);
         contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(FEEDBACK_WIDTH);
         return contentBox;

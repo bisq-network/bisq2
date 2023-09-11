@@ -68,7 +68,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         buyButton = buyPair.getSecond();
 
         Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"),
-                Res.get("bisqEasy.createOffer.direction.sell.info"), "grey-transparent-outlined-button");
+                Res.get("bisqEasy.createOffer.direction.sell.info"), "card-toggle-button");
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
@@ -160,7 +160,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         double width = 700;
         VBox contentBox = new VBox(20);
         contentBox.setAlignment(Pos.TOP_LEFT);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(width);
 

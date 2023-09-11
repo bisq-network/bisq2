@@ -212,7 +212,7 @@ public class TradeWizardPaymentMethodView extends View<StackPane, TradeWizardPay
         double width = 700;
         VBox contentBox = new VBox(20);
         contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(width);
 

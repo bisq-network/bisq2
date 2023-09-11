@@ -21,6 +21,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -37,25 +38,20 @@ import org.fxmisc.easybind.Subscription;
 class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, TradeWizardReviewController> {
     private final static int FEEDBACK_WIDTH = 700;
 
-    private final Label subtitle;
-    private final VBox takeOfferSuccess;
-    private final Button takeOfferSuccessButton;
-    private final Label amounts;
-    private final Label toPay;
-    private final Label toReceive;
-    private final Label method;
-    private final Label sellersPrice;
-    private final Label sellersPriceDetails;
-    private final Label sellersPremium;
-    private final GridPane gridPane;
-    private Subscription showTakeOfferSuccessPin;
+    private final Label headline, detailsHeadline, directionHeadline, amountsHeadline, toSendAmount, toReceiveAmount,
+            paymentMethod, price, paymentMethodDescription, feeInfoDescription, fee,
+            priceDetails, toReceiveAmountDescription, toSendAmountDescription, priceDescription;
+    private final VBox createOfferSuccess, takeOfferSuccess;
+    private final Button createOfferSuccessButton, takeOfferSuccessButton;
+    private final GridPane content;
+    private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
     TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller) {
         super(new StackPane(), model, controller);
 
-        gridPane = new GridPane();
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
+        content = new GridPane();
+        content.setHgap(10);
+        content.setVgap(10);
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(25);
         ColumnConstraints col2 = new ColumnConstraints();
@@ -64,196 +60,200 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         col3.setPercentWidth(25);
         ColumnConstraints col4 = new ColumnConstraints();
         col4.setPercentWidth(25);
-        gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
+        content.getColumnConstraints().addAll(col1, col2, col3, col4);
 
-        String descriptionStyle = "take-offer-review-description";
-        String valueStyle = "take-offer-review-value";
-        String valueDetailsStyle = "take-offer-review-value-details";
+        String descriptionStyle = "trade-wizard-review-description";
+        String valueStyle = "trade-wizard-review-value";
+        String detailsStyle = "trade-wizard-review-details";
 
         int rowIndex = 0;
-        Label headline = new Label(Res.get("bisqEasy.tradeWizard.review.headline"));
-        headline.getStyleClass().add("take-offer-review-headline");
+        headline = new Label();
+        headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        // GridPane.setMargin(headline, new Insets(-TakeOfferView.TOP_PANE_HEIGHT + 5, 20, 20, 0));
         GridPane.setMargin(headline, new Insets(0, 20, 10, 0));
-        GridPane.setRowIndex(headline, rowIndex);
-        GridPane.setColumnIndex(headline, 1);
-        GridPane.setColumnSpan(headline, 2);
-        gridPane.getChildren().add(headline);
-        gridPane.setMouseTransparent(true);
+        GridPane.setColumnSpan(headline, 4);
+        content.add(headline, 0, rowIndex);
+        content.setMouseTransparent(true);
 
         rowIndex++;
         Region line1 = getLine();
-        GridPane.setRowIndex(line1, rowIndex);
         GridPane.setColumnSpan(line1, 4);
-        gridPane.getChildren().add(line1);
+        content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        subtitle = new Label();
-        subtitle.getStyleClass().addAll("take-offer-review-subtitle");
-        GridPane.setMargin(subtitle, new Insets(16, 0, 0, 0));
-        GridPane.setRowIndex(subtitle, rowIndex);
-        GridPane.setColumnSpan(subtitle, 4);
-        gridPane.getChildren().add(subtitle);
+        directionHeadline = new Label();
+        directionHeadline.getStyleClass().addAll("trade-wizard-review-direction");
+        GridPane.setMargin(directionHeadline, new Insets(16, 0, 0, 0));
+        GridPane.setColumnSpan(directionHeadline, 4);
+        content.add(directionHeadline, 0, rowIndex);
 
         rowIndex++;
-        amounts = new Label();
-        amounts.getStyleClass().add("take-offer-review-subtitle-value");
-        GridPane.setMargin(amounts, new Insets(-7, 0, 17, 0));
-        GridPane.setRowIndex(amounts, rowIndex);
-        GridPane.setColumnSpan(amounts, 4);
-        gridPane.getChildren().add(amounts);
+        amountsHeadline = new Label();
+        amountsHeadline.getStyleClass().add("trade-wizard-review-amounts");
+        GridPane.setMargin(amountsHeadline, new Insets(-7, 0, 17, 0));
+        GridPane.setColumnSpan(amountsHeadline, 4);
+        content.add(amountsHeadline, 0, rowIndex);
 
         rowIndex++;
-        Label gridPaneHeadline = new Label(Res.get("bisqEasy.tradeWizard.review.gridPaneHeadline").toUpperCase());
-        gridPaneHeadline.getStyleClass().add("take-offer-review-grid-headline");
-        GridPane.setMargin(gridPaneHeadline, new Insets(0, 0, -2, 0));
-        GridPane.setRowIndex(gridPaneHeadline, rowIndex);
-        GridPane.setColumnSpan(gridPaneHeadline, 4);
-        gridPane.getChildren().add(gridPaneHeadline);
+        detailsHeadline = new Label();
+        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setMargin(detailsHeadline, new Insets(0, 0, -2, 0));
+        GridPane.setColumnSpan(detailsHeadline, 4);
+        content.add(detailsHeadline, 0, rowIndex);
 
         rowIndex++;
         Region line2 = getLine();
         GridPane.setMargin(line2, new Insets(0, 0, 3, 0));
-        GridPane.setRowIndex(line2, rowIndex);
         GridPane.setColumnSpan(line2, 4);
-        gridPane.getChildren().add(line2);
+        content.add(line2, 0, rowIndex);
 
         rowIndex++;
-        Label toPayDescription = new Label(Res.get("bisqEasy.tradeWizard.review.toPay"));
-        toPayDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(toPayDescription, rowIndex);
-        GridPane.setColumnIndex(toPayDescription, 0);
-        gridPane.getChildren().add(toPayDescription);
+        toSendAmountDescription = new Label();
+        toSendAmountDescription.getStyleClass().add(descriptionStyle);
+        content.add(toSendAmountDescription, 0, rowIndex);
 
-        toPay = new Label();
-        toPay.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(toPay, rowIndex);
-        GridPane.setColumnIndex(toPay, 1);
-        gridPane.getChildren().add(toPay);
+        toSendAmount = new Label();
+        toSendAmount.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(toSendAmount, 2);
+        content.add(toSendAmount, 1, rowIndex);
 
         rowIndex++;
-        Label toReceiveDescription = new Label(Res.get("bisqEasy.tradeWizard.review.toReceive"));
-        toReceiveDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(toReceiveDescription, rowIndex);
-        GridPane.setColumnIndex(toReceiveDescription, 0);
-        gridPane.getChildren().add(toReceiveDescription);
+        toReceiveAmountDescription = new Label();
+        toReceiveAmountDescription.getStyleClass().add(descriptionStyle);
+        content.add(toReceiveAmountDescription, 0, rowIndex);
 
-        toReceive = new Label();
-        toReceive.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(toReceive, rowIndex);
-        GridPane.setColumnIndex(toReceive, 1);
-        gridPane.getChildren().add(toReceive);
+        toReceiveAmount = new Label();
+        toReceiveAmount.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(toReceiveAmount, 2);
+        content.add(toReceiveAmount, 1, rowIndex);
 
         rowIndex++;
-        Label methodDescription = new Label(Res.get("bisqEasy.tradeWizard.review.method"));
-        methodDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(methodDescription, rowIndex);
-        GridPane.setColumnIndex(methodDescription, 0);
-        gridPane.getChildren().add(methodDescription);
+        priceDescription = new Label();
+        priceDescription.getStyleClass().add(descriptionStyle);
+        content.add(priceDescription, 0, rowIndex);
 
-        method = new Label();
-        method.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(method, rowIndex);
-        GridPane.setColumnIndex(method, 1);
-        gridPane.getChildren().add(method);
+        price = new Label();
+        price.getStyleClass().add(valueStyle);
+        content.add(price, 1, rowIndex);
 
-        rowIndex++;
-        Label sellersPriceDescription = new Label(Res.get("bisqEasy.tradeWizard.review.price.sellersPrice"));
-        sellersPriceDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(sellersPriceDescription, rowIndex);
-        GridPane.setColumnIndex(sellersPriceDescription, 0);
-        gridPane.getChildren().add(sellersPriceDescription);
-
-        sellersPrice = new Label();
-        sellersPrice.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(sellersPrice, rowIndex);
-        GridPane.setColumnIndex(sellersPrice, 1);
-        gridPane.getChildren().add(sellersPrice);
-
-        sellersPriceDetails = new Label();
-        sellersPriceDetails.getStyleClass().add(valueDetailsStyle);
-        GridPane.setRowIndex(sellersPriceDetails, rowIndex);
-        GridPane.setColumnIndex(sellersPriceDetails, 2);
-        GridPane.setColumnSpan(sellersPriceDetails, 2);
-        gridPane.getChildren().add(sellersPriceDetails);
+        priceDetails = new Label();
+        priceDetails.getStyleClass().add(detailsStyle);
+        GridPane.setColumnSpan(priceDetails, 2);
+        content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        Label sellersPremiumDescription = new Label(Res.get("bisqEasy.tradeWizard.review.sellersPremium"));
-        sellersPremiumDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(sellersPremiumDescription, rowIndex);
-        GridPane.setColumnIndex(sellersPremiumDescription, 0);
-        gridPane.getChildren().add(sellersPremiumDescription);
+        paymentMethodDescription = new Label();
+        paymentMethodDescription.getStyleClass().add(descriptionStyle);
+        content.add(paymentMethodDescription, 0, rowIndex);
 
-        sellersPremium = new Label();
-        sellersPremium.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(sellersPremium, rowIndex);
-        GridPane.setColumnIndex(sellersPremium, 1);
-        gridPane.getChildren().add(sellersPremium);
+        paymentMethod = new Label();
+        paymentMethod.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(paymentMethod, 3);
+        content.add(paymentMethod, 1, rowIndex);
 
-        Label sellersPremiumDetails = new Label(Res.get("bisqEasy.tradeWizard.review.sellersPremium.details"));
-        sellersPremiumDetails.getStyleClass().add(valueDetailsStyle);
-        GridPane.setRowIndex(sellersPremiumDetails, rowIndex);
-        GridPane.setColumnIndex(sellersPremiumDetails, 2);
-        GridPane.setColumnSpan(sellersPremiumDetails, 2);
-        gridPane.getChildren().add(sellersPremiumDetails);
+
+        rowIndex++;
+        feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
+        feeInfoDescription.getStyleClass().add(descriptionStyle);
+        content.add(feeInfoDescription, 0, rowIndex);
+
+        fee = new Label();
+        fee.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(fee, 3);
+        content.add(fee, 1, rowIndex);
 
         rowIndex++;
         Region line3 = getLine();
         GridPane.setMargin(line3, new Insets(2, 0, 0, 0));
-        GridPane.setRowIndex(line3, rowIndex);
         GridPane.setColumnSpan(line3, 4);
-        gridPane.getChildren().add(line3);
+        content.add(line3, 0, rowIndex);
+
+
+        // Feedback overlays
+        createOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.createOfferSuccessButton"));
+        createOfferSuccess = new VBox(20);
+        configCreateOfferSuccess();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccessButton"));
         takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
 
+        StackPane.setMargin(content, new Insets(40));
+        StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        StackPane.setMargin(gridPane, new Insets(40));
-        root.getChildren().addAll(gridPane, takeOfferSuccess);
+        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
     }
 
     @Override
     protected void onViewAttached() {
-        subtitle.textProperty().bind(model.getSubtitle());
-        amounts.textProperty().bind(model.getAmountDescription());
-        toPay.textProperty().bind(model.getToPay());
-        toReceive.textProperty().bind(model.getToReceive());
-        method.textProperty().bind(model.getFiatPaymentMethodDisplayString());
-        sellersPrice.textProperty().bind(model.getSellersPrice());
-        sellersPriceDetails.textProperty().bind(model.getSellersPriceDetails());
-        sellersPremium.textProperty().bind(model.getSellersPremium());
+        headline.setText(model.getHeadline());
+        directionHeadline.setText(model.getDirectionHeadline());
+        amountsHeadline.setText(model.getAmountsHeadline());
+        detailsHeadline.setText(model.getDetailsHeadline());
 
+        toSendAmountDescription.setText(model.getToSendAmountDescription());
+        toSendAmount.setText(model.getToSendAmount());
+        toReceiveAmountDescription.setText(model.getToReceiveAmountDescription());
+        toReceiveAmount.setText(model.getToReceiveAmount());
+
+        priceDescription.setText(model.getPriceDescription());
+        price.setText(model.getPrice());
+        priceDetails.setText(model.getPriceDetails());
+
+        paymentMethodDescription.setText(model.getPaymentMethodDescription());
+        paymentMethod.setText(model.getPaymentMethod());
+        fee.setText(model.getFee());
+
+        createOfferSuccessButton.setOnAction(e -> controller.onShowOfferbook());
         takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());
 
+        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
+                show -> {
+                    createOfferSuccess.setVisible(show);
+                    if (show) {
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(createOfferSuccess, 450);
+                    } else {
+                        Transitions.removeEffect(content);
+                    }
+                });
         showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
                 show -> {
                     takeOfferSuccess.setVisible(show);
                     if (show) {
-                        Transitions.blurStrong(gridPane, 0);
+                        Transitions.blurStrong(content, 0);
                         Transitions.slideInTop(takeOfferSuccess, 450);
                     } else {
-                        Transitions.removeEffect(gridPane);
+                        Transitions.removeEffect(content);
                     }
                 });
     }
 
     @Override
     protected void onViewDetached() {
-        subtitle.textProperty().unbind();
-        amounts.textProperty().unbind();
-        toPay.textProperty().unbind();
-        toReceive.textProperty().unbind();
-        method.textProperty().unbind();
-        sellersPrice.textProperty().unbind();
-        sellersPriceDetails.textProperty().unbind();
-        sellersPremium.textProperty().unbind();
-        //sellersPremiumValueDetails.textProperty().unbind();
-
+        createOfferSuccessButton.setOnAction(null);
         takeOfferSuccessButton.setOnAction(null);
 
+        showCreateOfferSuccessPin.unsubscribe();
         showTakeOfferSuccessPin.unsubscribe();
+    }
+
+    private void configCreateOfferSuccess() {
+        VBox contentBox = getFeedbackContentBox();
+
+        createOfferSuccess.setVisible(false);
+        createOfferSuccess.setAlignment(Pos.TOP_CENTER);
+
+        Label headLineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.headline"));
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle"));
+        configFeedbackSubtitleLabel(subtitleLabel);
+
+        createOfferSuccessButton.setDefaultButton(true);
+        VBox.setMargin(createOfferSuccessButton, new Insets(10, 0, 0, 0));
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, createOfferSuccessButton);
+        createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private void configTakeOfferSuccess() {
@@ -277,7 +277,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private VBox getFeedbackContentBox() {
         VBox contentBox = new VBox(20);
         contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(FEEDBACK_WIDTH);
         return contentBox;
@@ -289,7 +289,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        subtitleLabel.getStyleClass().addAll("bisq-text-21");
+        subtitleLabel.setWrapText(true);
     }
 
     private Region getLine() {

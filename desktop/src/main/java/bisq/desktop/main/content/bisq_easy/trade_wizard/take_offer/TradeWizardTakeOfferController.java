@@ -103,33 +103,43 @@ public class TradeWizardTakeOfferController implements Controller {
     }
 
     public void setDirection(Direction direction) {
-        model.setDirection(direction);
+        if (direction != null) {
+            model.setDirection(direction);
+            resetSelectedOffer();
+        }
     }
 
     public void setMarket(Market market) {
         if (market != null) {
             model.setMarket(market);
+            resetSelectedOffer();
         }
     }
 
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
+            resetSelectedOffer();
         }
     }
 
     public void setAmountSpec(AmountSpec amountSpec) {
         if (amountSpec != null) {
             model.setAmountSpec(amountSpec);
+            resetSelectedOffer();
         }
     }
 
     public void setPriceSpec(PriceSpec priceSpec) {
-        model.setPriceSpec(priceSpec);
+        if (priceSpec != null) {
+            model.setPriceSpec(priceSpec);
+            resetSelectedOffer();
+        }
     }
 
     public void setIsMinAmountEnabled(boolean isMinAmountEnabled) {
         model.setMinAmountEnabled(isMinAmountEnabled);
+        resetSelectedOffer();
     }
 
     public void reset() {
@@ -165,7 +175,7 @@ public class TradeWizardTakeOfferController implements Controller {
         model.setQuoteAmountAsString(quoteAmountAsString);
 
 
-        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethod(model.getFiatPaymentMethods(), true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
                 quoteAmountAsString,
@@ -222,8 +232,8 @@ public class TradeWizardTakeOfferController implements Controller {
 
         if (showOffers) {
             model.setHeadLine(model.getDirection().isBuy() ?
-                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.buy", quoteAmountAsString) :
-                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.sell", quoteAmountAsString));
+                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.buyer", quoteAmountAsString) :
+                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.seller", quoteAmountAsString));
             model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.subHeadline"));
         } else {
             model.setHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.headline", quoteAmountAsString));
@@ -341,5 +351,10 @@ public class TradeWizardTakeOfferController implements Controller {
                 return false;
             }
         };
+    }
+
+    private void resetSelectedOffer() {
+        model.setSelectedItem(null);
+        model.getSelectedBisqEasyOffer().set(null);
     }
 }

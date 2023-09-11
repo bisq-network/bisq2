@@ -151,7 +151,8 @@ public class TakeOfferController extends NavigationController implements InitWit
         methodNamePin.unsubscribe();
     }
 
-    public void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
+    @Override
+    protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCloseButtonVisible().set(true);
         boolean isTakeOfferReview = navigationTarget == NavigationTarget.TAKE_OFFER_REVIEW;
         model.getNextButtonText().set(isTakeOfferReview ?

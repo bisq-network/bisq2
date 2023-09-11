@@ -293,7 +293,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSelectButtonCellFactory() {
         return column -> new TableCell<>() {
 
-            private Button button;
+            private Button button = new Button(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
             private TableRow<ListItem> tableRow;
             private Subscription selectedItemPin;
 
@@ -302,7 +302,6 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    button = new Button(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
                     button.setOnAction(e -> {
                         tableView.getSelectionModel().select(item);
                         controller.onSelect(item);
@@ -311,7 +310,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                     tableRow = getTableRow();
                     tableRow.setOnMouseEntered(e -> {
                         if (!tableRow.isSelected()) {
-                            button.setVisible(true);
+                            // button.setVisible(true);
                             button.getStyleClass().remove("white-button");
                             button.getStyleClass().add("outlined-button");
                         }
@@ -319,7 +318,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                     tableRow.setOnMouseExited(e -> {
                         button.getStyleClass().remove("outlined-button");
                         if (!tableRow.isSelected()) {
-                            button.setVisible(false);
+                            // button.setVisible(false);
                             button.getStyleClass().remove("white-button");
                         }
                     });
@@ -327,7 +326,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
 
                     selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                             selectedItem -> {
-                                button.setVisible(item.equals(selectedItem));
+                                //button.setVisible(item.equals(selectedItem));
                                 if (item.equals(selectedItem)) {
                                     button.getStyleClass().remove("outlined-button");
                                     button.getStyleClass().add("white-button");

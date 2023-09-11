@@ -101,7 +101,9 @@ public class TradeWizardReviewController implements Controller {
     }
 
     public void setDirection(Direction direction) {
-        model.setDirection(direction);
+        if (direction != null) {
+            model.setDirection(direction);
+        }
     }
 
     public void setMarket(Market market) {
@@ -171,7 +173,7 @@ public class TradeWizardReviewController implements Controller {
                 Res.get("bisqEasy.createOffer.review.headline.buy", quoteAmountAsString) :
                 Res.get("bisqEasy.createOffer.review.headline.sell", quoteAmountAsString));
 
-        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethod(model.getFiatPaymentMethods(), true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(model.getFiatPaymentMethods(), true);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
                 quoteAmountAsString,
