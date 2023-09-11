@@ -78,6 +78,8 @@ class TradeWizardTakeOfferModel implements Model {
     private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyOffer> selectedBisqEasyOffer = new SimpleObjectProperty<>();
 
+    private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
+
     void reset() {
         selectedChannel = null;
         direction = null;
@@ -96,6 +98,7 @@ class TradeWizardTakeOfferModel implements Model {
 
         selectedItem = null;
         showOffers.set(false);
+        isBackButtonHighlighted.set(false);
         matchingOffers.clear();
         selectedBisqEasyOffer.set(null);
     }

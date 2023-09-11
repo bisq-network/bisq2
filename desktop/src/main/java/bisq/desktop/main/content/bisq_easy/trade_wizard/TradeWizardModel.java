@@ -44,6 +44,7 @@ public class TradeWizardModel extends NavigationModel {
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
     private boolean animateRightOut = true;
+    private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
 
     public TradeWizardModel() {
     }

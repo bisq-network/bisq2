@@ -26,7 +26,11 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
@@ -48,6 +52,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +65,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static bisq.desktop.common.Transitions.DEFAULT_DURATION;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -74,15 +80,18 @@ public class TradeWizardTakeOfferController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final UserProfileService userProfileService;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
+    private final Runnable onBackHandler;
     private final Runnable onNextHandler;
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
 
     public TradeWizardTakeOfferController(ServiceProvider serviceProvider,
                                           Consumer<Boolean> mainButtonsVisibleHandler,
+                                          Runnable onBackHandler,
                                           Runnable onNextHandler,
                                           Runnable resetHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
+        this.onBackHandler = onBackHandler;
         this.onNextHandler = onNextHandler;
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
@@ -100,6 +109,10 @@ public class TradeWizardTakeOfferController implements Controller {
 
     public ReadOnlyObjectProperty<BisqEasyOffer> getSelectedBisqEasyOffer() {
         return model.getSelectedBisqEasyOffer();
+    }
+
+    public ReadOnlyBooleanProperty getIsBackButtonHighlighted() {
+        return model.getIsBackButtonHighlighted();
     }
 
     public void setDirection(Direction direction) {
@@ -229,6 +242,7 @@ public class TradeWizardTakeOfferController implements Controller {
 
         boolean showOffers = !model.getFilteredList().isEmpty();
         model.getShowOffers().set(showOffers);
+        model.getIsBackButtonHighlighted().set(!showOffers);
 
         if (showOffers) {
             model.setHeadLine(model.getDirection().isBuy() ?
@@ -243,6 +257,7 @@ public class TradeWizardTakeOfferController implements Controller {
 
     @Override
     public void onDeactivate() {
+        model.getIsBackButtonHighlighted().set(false);
     }
 
     void onSelectRow(TradeWizardTakeOfferView.ListItem listItem) {
@@ -280,6 +295,16 @@ public class TradeWizardTakeOfferController implements Controller {
                     resetHandler.run();
                 }
         );*/
+    }
+
+    void onGoBack() {
+        onBackHandler.run();
+    }
+
+    void onOpenOfferbook() {
+        resetHandler.run();
+        OverlayController.hide();
+        UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK)).after(DEFAULT_DURATION / 2);
     }
 
     private void selectListItem(TradeWizardTakeOfferView.ListItem listItem) {

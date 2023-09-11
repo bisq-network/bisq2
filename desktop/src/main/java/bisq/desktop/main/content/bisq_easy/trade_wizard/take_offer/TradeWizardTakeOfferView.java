@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.View;
@@ -43,7 +44,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
@@ -59,131 +59,107 @@ import java.util.Optional;
 
 @Slf4j
 class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, TradeWizardTakeOfferController> {
-    private final static int BUTTON_WIDTH = 140;
     private final static int TABLE_WIDTH = 800;
-    private final static int OFFER_BOX_WIDTH = 700;
+    private final HBox noMatchingOffersBox;
 
     private BisqTableView<ListItem> tableView;
-    private Button createOfferButton;
-    private Label headLineLabel, subtitleLabel, createOfferLabel, createOfferText;
-    private HBox createOfferHBox;
-    private Subscription matchingOffersFoundPin;
+    private final Label headLineLabel, subtitleLabel;
+    private Button goBackButton, browseOfferbookButton;
 
     TradeWizardTakeOfferView(TradeWizardTakeOfferModel model, TradeWizardTakeOfferController controller) {
         super(new VBox(10), model, controller);
 
-        root.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.CENTER);
 
         headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
-        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
 
         subtitleLabel = new Label();
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setWrapText(true);
         subtitleLabel.getStyleClass().add("bisq-text-3");
-    }
 
-    private void addTakeOfferElements() {
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-take-offer-table-view");
         tableView.setMinWidth(TABLE_WIDTH);
         tableView.setMaxWidth(tableView.getMinWidth());
         tableView.setMaxHeight(206);
-        tableView.getSelectionModel().select(model.getSelectedItem());
 
-        maybeConfigTableView();
+        noMatchingOffersBox = new HBox(25);
 
-        root.getChildren().clear();
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, Spacer.fillVBox());
-    }
-
-    private void addCreateOfferElements() {
-        createOfferLabel = new Label();
-        createOfferLabel.getStyleClass().add("bisq-text-headline-2");
-
-        createOfferText = new Label(model.getMyOfferText());
-        createOfferText = new Label();
-        createOfferText.setWrapText(true);
-        createOfferText.setId("chat-messages-message");
-
-        createOfferButton = new Button(Res.get("offer.createOffer"));
-        createOfferButton.setDefaultButton(true);
-        createOfferButton.setMinWidth(BUTTON_WIDTH);
-        createOfferButton.setMaxWidth(BUTTON_WIDTH);
-        //createOfferButton.setOnAction(e -> controller.onPublishOffer());
-
-        HBox.setHgrow(createOfferText, Priority.ALWAYS);
-        createOfferHBox = new HBox(15, createOfferText, Spacer.fillHBox(), createOfferButton);
-        createOfferHBox.getStyleClass().add("create-offer-message-my-offer");
-        createOfferHBox.setAlignment(Pos.CENTER_LEFT);
-
-        createOfferHBox.setPadding(new Insets(15, 26, 15, 15));
-
-        root.getChildren().clear();
-        root.getChildren().addAll(Spacer.fillVBox(), createOfferLabel, createOfferHBox, Spacer.fillVBox());
-
+        VBox.setMargin(noMatchingOffersBox, new Insets(10, 0, 0, 0));
+        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, noMatchingOffersBox, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
+        boolean showOffers = model.getShowOffers().get();
+
+        tableView.setVisible(showOffers);
+        tableView.setManaged(showOffers);
+        noMatchingOffersBox.setVisible(!showOffers);
+        noMatchingOffersBox.setManaged(!showOffers);
+        if (showOffers) {
+            VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
+            maybeConfigTableView();
+            tableView.getSelectionModel().select(model.getSelectedItem());
+        } else {
+            VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
+            if (noMatchingOffersBox.getChildren().isEmpty()) {
+                Pair<VBox, Button> goBackPair = getBoxPair(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack"),
+                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack.info"),
+                        "outlined-button");
+                VBox goBackBox = goBackPair.getFirst();
+                goBackButton = goBackPair.getSecond();
+
+                Pair<VBox, Button> browseOfferbookPair = getBoxPair(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook"),
+                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook.info"),
+                        "grey-transparent-outlined-button");
+                VBox browseOfferbookBox = browseOfferbookPair.getFirst();
+                browseOfferbookButton = browseOfferbookPair.getSecond();
+
+                noMatchingOffersBox.getChildren().addAll(goBackBox, browseOfferbookBox);
+                noMatchingOffersBox.setAlignment(Pos.CENTER);
+            }
+
+            goBackButton.setOnAction(e -> controller.onGoBack());
+            browseOfferbookButton.setOnAction(e -> controller.onOpenOfferbook());
+        }
+
         headLineLabel.setText(model.getHeadLine());
         subtitleLabel.setText(model.getSubHeadLine());
-
-        if (model.getShowOffers().get()) {
-            addTakeOfferElements();
-        } else {
-            addCreateOfferElements();
-        }
-/*
-        matchingOffersFoundPin = EasyBind.subscribe(model.getShowOffers(), matchingOffersVisible -> {
-            if (matchingOffersVisible) {
-                *//*createOfferHBox.setMinWidth(tableView.getMaxWidth());
-                createOfferHBox.setMaxWidth(tableView.getMaxWidth());
-                createOfferLabel.setText(Res.get("bisqEasy.createOffer.review.headLine2.createOffer"));*//*
-
-                int numMatchingOffers = model.getMatchingOffers().size();
-                if (numMatchingOffers > 0) {
-                    createOfferButton.setDefaultButton(false);
-                    createOfferButton.getStyleClass().add("outlined-button");
-                    tableView.setMaxHeight(42 + numMatchingOffers * 55);
-                    VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
-                    // Aligned with take offer button
-                    createOfferHBox.setPadding(new Insets(12));
-                    if (numMatchingOffers == 3) {
-                        VBox.setMargin(tableView, new Insets(-5, 0, 10, 0));
-                        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
-                    } else if (numMatchingOffers == 2) {
-                        VBox.setMargin(tableView, new Insets(-5, 0, 30, 0));
-                        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
-                    } else if (numMatchingOffers == 1) {
-                        VBox.setMargin(tableView, new Insets(-5, 0, 50, 0));
-                        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
-                    }
-                } else {
-                    createOfferButton.setDefaultButton(true);
-                    createOfferButton.getStyleClass().remove("outlined-button");
-                    VBox.setMargin(headLineLabel, new Insets(70, 0, 0, 0));
-                    VBox.setMargin(subtitleLabel, new Insets(20, 0, 10, 0));
-                    VBox.setMargin(createOfferHBox, new Insets(40, 0, 0, 0));
-                }
-            } else {
-                createOfferButton.setDefaultButton(true);
-                createOfferButton.getStyleClass().remove("outlined-button");
-                createOfferHBox.setMinWidth(OFFER_BOX_WIDTH);
-                createOfferHBox.setMaxWidth(createOfferHBox.getMinWidth());
-                headLineLabel.setText(Res.get("offer.createOffer"));
-
-                VBox.setMargin(headLineLabel, new Insets(-100, 0, 0, 0));
-                VBox.setMargin(createOfferHBox, new Insets(10, 0, 0, 0));
-            }
-        });*/
     }
 
     @Override
     protected void onViewDetached() {
-        //matchingOffersFoundPin.unsubscribe();
+        if (goBackButton != null) {
+            goBackButton.setOnAction(null);
+        }
+        if (browseOfferbookButton != null) {
+            browseOfferbookButton.setOnAction(null);
+        }
+    }
+
+    private Pair<VBox, Button> getBoxPair(String title, String info, String style) {
+        Button button = new Button(title);
+        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-direction-button");
+        button.setAlignment(Pos.CENTER);
+        int width = 235;
+        button.setMinWidth(width);
+        button.setMinHeight(112);
+
+        Label infoLabel = new Label(info);
+        infoLabel.getStyleClass().add("bisq-text-3");
+        infoLabel.setMaxWidth(width);
+        infoLabel.setWrapText(true);
+        infoLabel.setTextAlignment(TextAlignment.CENTER);
+        infoLabel.setAlignment(Pos.CENTER);
+
+        VBox vBox = new VBox(8, button, infoLabel);
+        vBox.setAlignment(Pos.CENTER);
+
+        return new Pair<>(vBox, button);
     }
 
     private void maybeConfigTableView() {

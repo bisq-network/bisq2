@@ -27,6 +27,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
+import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -65,6 +66,8 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     private Subscription priceProgressItemVisiblePin;
     private Label takeOfferProgressItem;
     private Region takeOfferProgressLine;
+    private UIScheduler progressLabelAnimationScheduler;
+    private FadeTransition progressLabelAnimation;
 
     public TradeWizardView(TradeWizardModel model, TradeWizardController controller) {
         super(new VBox(), model, controller);
@@ -124,6 +127,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
         nextButton.textProperty().bind(model.getNextButtonText());
         backButton.textProperty().bind(model.getBackButtonText());
+        backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
 
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
@@ -162,6 +166,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
         backButton.textProperty().unbind();
+        backButton.defaultButtonProperty().unbind();
 
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
@@ -178,6 +183,15 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
+
+        if (progressLabelAnimationScheduler != null) {
+            progressLabelAnimationScheduler.stop();
+            progressLabelAnimationScheduler = null;
+        }
+        if (progressLabelAnimation != null) {
+            progressLabelAnimation.stop();
+            progressLabelAnimation = null;
+        }
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
@@ -236,9 +250,19 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     private void applyProgress(int progressIndex, boolean delay) {
         if (progressIndex < progressLabelList.size()) {
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
+
+            if (progressLabelAnimation != null) {
+                progressLabelAnimation.stop();
+                progressLabelAnimation.getNode().setOpacity(OPACITY);
+            }
             Label label = progressLabelList.get(progressIndex);
             if (delay) {
-                UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
+                if (progressLabelAnimationScheduler != null) {
+                    progressLabelAnimationScheduler.stop();
+                }
+                progressLabelAnimationScheduler = UIScheduler.run(() -> {
+                            progressLabelAnimation = Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2);
+                        })
                         .after(Transitions.DEFAULT_DURATION / 2);
             } else {
                 label.setOpacity(1);

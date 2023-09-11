@@ -231,6 +231,7 @@
     -fx-text-fill: rgba(255, 255, 255, 0.55);
 }
 
+
 .red-outlined-button {
     -fx-background-color: transparent;
     -fx-border-color: -bisq-red;
