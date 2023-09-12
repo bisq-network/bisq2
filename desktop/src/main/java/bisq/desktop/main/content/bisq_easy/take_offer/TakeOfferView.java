@@ -187,12 +187,12 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
 
-        if (!model.getShowProgressBox().get()) {
+      /*  if (!model.getShowProgressBox().get()) {
             progressBox.setOpacity(0);
             topPane.setStyle("-fx-background-color: transparent");
-        }
+        }*/
         showProgressBoxPin = EasyBind.subscribe(model.getShowProgressBox(), showProgressBox -> {
-            if (showProgressBox) {
+           /* if (showProgressBox) {
                 // VBox.setMargin(content, new Insets(0, 0, 0, 0));
                 Transitions.fadeIn(progressBox, 200);
                 topPane.setStyle("-fx-background-color: -bisq-grey-23");
@@ -200,7 +200,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
                 // VBox.setMargin(content, new Insets(0, 40, 0, 40));
                 Transitions.fadeOut(progressBox, 200);
                 topPane.setStyle("-fx-background-color: transparent");
-            }
+            }*/
         });
 
         nextButton.setOnAction(e -> controller.onNext());

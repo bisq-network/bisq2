@@ -44,7 +44,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final static int FEEDBACK_WIDTH = 700;
 
     private final Label headline, detailsHeadline, directionHeadline, amountsHeadline, toSendAmount, toReceiveAmount,
-            paymentMethod, price, paymentMethodDescription, feeInfoDescription, fee,
+            paymentMethod, price, paymentMethodDescription, fee,
             priceDetails, toReceiveAmountDescription, toSendAmountDescription, priceDescription;
     private final VBox createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
@@ -161,9 +161,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         GridPane.setColumnSpan(paymentMethodValuePane, 3);
         content.add(paymentMethodValuePane, 1, rowIndex);
 
-
         rowIndex++;
-        feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
+        Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(descriptionStyle);
         content.add(feeInfoDescription, 0, rowIndex);
 

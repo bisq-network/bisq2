@@ -342,7 +342,6 @@ public class TradeWizardController extends NavigationController implements InitW
     private void closeAndNavigateTo(NavigationTarget NavigationTarget) {
         reset();
         OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget));
-        // UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget)).after(DEFAULT_DURATION / 2);
     }
 
     private void setMainButtonsVisibleState(boolean value) {

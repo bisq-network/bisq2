@@ -52,7 +52,6 @@ class TakeOfferReviewModel implements Model {
     private final StringProperty method = new SimpleStringProperty();
     private final StringProperty sellersPrice = new SimpleStringProperty();
     private final StringProperty sellersPriceDetails = new SimpleStringProperty();
-    private final StringProperty sellersPremium = new SimpleStringProperty();
 
     @Setter
     private FiatPaymentMethodSpec fiatPaymentMethodSpec;
@@ -62,4 +61,6 @@ class TakeOfferReviewModel implements Model {
     private Monetary takersQuoteSideAmount;
     @Setter
     private PriceSpec sellersPriceSpec;
+    @Setter
+    private String fee;
 }

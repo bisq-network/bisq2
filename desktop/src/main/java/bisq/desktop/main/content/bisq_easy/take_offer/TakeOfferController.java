@@ -86,7 +86,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         takeOfferPriceController = new TakeOfferPriceController(serviceProvider);
         takeOfferAmountController = new TakeOfferAmountController(serviceProvider);
         takeOfferPaymentController = new TakeOfferPaymentController(serviceProvider);
-        takeOfferReviewController = new TakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState);
+        takeOfferReviewController = new TakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState, this::closeAndNavigateTo);
     }
 
     @Override
@@ -232,7 +232,12 @@ public class TakeOfferController extends NavigationController implements InitWit
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
+    }
+
+    private void closeAndNavigateTo(NavigationTarget NavigationTarget) {
+        //reset();
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget));
     }
 
     private void updateNextButtonDisabledState() {
