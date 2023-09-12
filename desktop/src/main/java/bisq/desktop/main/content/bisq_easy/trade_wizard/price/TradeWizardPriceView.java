@@ -56,7 +56,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3");
+        subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(400);
 

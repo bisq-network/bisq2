@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.take_offer.review;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MultiStyleLabelPane;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
@@ -37,11 +38,11 @@ import org.fxmisc.easybind.Subscription;
 class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOfferReviewController> {
     private final static int FEEDBACK_WIDTH = 700;
 
-    private final Label subtitle;
     private final VBox takeOfferSuccess;
     private final Button takeOfferSuccessButton;
     private final Label amounts, toPay, toReceive, method, sellersPrice, sellersPriceDetails, fee;
     private final GridPane content;
+    private final MultiStyleLabelPane multiStyleDirectionHeadline;
     private Subscription showTakeOfferSuccessPin;
 
     TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller) {
@@ -83,12 +84,11 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.getChildren().add(line1);
 
         rowIndex++;
-        subtitle = new Label();
-        subtitle.getStyleClass().addAll("trade-wizard-review-direction");
-        GridPane.setMargin(subtitle, new Insets(16, 0, 0, 0));
-        GridPane.setRowIndex(subtitle, rowIndex);
-        GridPane.setColumnSpan(subtitle, 4);
-        content.getChildren().add(subtitle);
+        multiStyleDirectionHeadline = new MultiStyleLabelPane();
+        multiStyleDirectionHeadline.getStyleClass().add("trade-wizard-review-direction");
+        GridPane.setMargin(multiStyleDirectionHeadline, new Insets(16, 0, 10, 0));
+        GridPane.setColumnSpan(multiStyleDirectionHeadline, 4);
+        content.add(multiStyleDirectionHeadline, 0, rowIndex);
 
         rowIndex++;
         amounts = new Label();
@@ -199,7 +199,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
-        subtitle.textProperty().bind(model.getSubtitle());
+        multiStyleDirectionHeadline.textProperty().bind(model.getMultiStyleDirectionHeadline());
         amounts.textProperty().bind(model.getAmountDescription());
         toPay.textProperty().bind(model.getToPay());
         toReceive.textProperty().bind(model.getToReceive());
@@ -224,7 +224,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewDetached() {
-        subtitle.textProperty().unbind();
+        multiStyleDirectionHeadline.textProperty().unbind();
         amounts.textProperty().unbind();
         toPay.textProperty().unbind();
         toReceive.textProperty().unbind();
@@ -270,7 +270,8 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-21");
     }
 
     private Region getLine() {

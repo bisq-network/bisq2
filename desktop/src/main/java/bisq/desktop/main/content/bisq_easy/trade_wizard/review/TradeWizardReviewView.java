@@ -21,6 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MultiStyleLabelPane;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
@@ -43,13 +44,14 @@ import javax.annotation.Nullable;
 class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, TradeWizardReviewController> {
     private final static int FEEDBACK_WIDTH = 700;
 
-    private final Label headline, detailsHeadline, directionHeadline, amountsHeadline, toSendAmount, toReceiveAmount,
+    private final Label headline, detailsHeadline, amountsHeadline, toSendAmount, toReceiveAmount,
             paymentMethod, price, paymentMethodDescription, fee,
             priceDetails, toReceiveAmountDescription, toSendAmountDescription, priceDescription;
     private final VBox createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
     private final StackPane paymentMethodValuePane;
+    private final MultiStyleLabelPane multiStyleDirectionHeadline;
     @Nullable
     private ComboBox<FiatPaymentMethod> takersFiatPaymentMethods;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
@@ -89,11 +91,11 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        directionHeadline = new Label();
-        directionHeadline.getStyleClass().addAll("trade-wizard-review-direction");
-        GridPane.setMargin(directionHeadline, new Insets(16, 0, 0, 0));
-        GridPane.setColumnSpan(directionHeadline, 4);
-        content.add(directionHeadline, 0, rowIndex);
+        multiStyleDirectionHeadline = new MultiStyleLabelPane();
+        multiStyleDirectionHeadline.getStyleClass().add("trade-wizard-review-direction");
+        GridPane.setMargin(multiStyleDirectionHeadline, new Insets(16, 0, 10, 0));
+        GridPane.setColumnSpan(multiStyleDirectionHeadline, 4);
+        content.add(multiStyleDirectionHeadline, 0, rowIndex);
 
         rowIndex++;
         amountsHeadline = new Label();
@@ -196,7 +198,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     @Override
     protected void onViewAttached() {
         headline.setText(model.getHeadline());
-        directionHeadline.setText(model.getDirectionHeadline());
+        multiStyleDirectionHeadline.setText(model.getMultiStyleDirectionHeadline());
         amountsHeadline.setText(model.getAmountsHeadline());
         detailsHeadline.setText(model.getDetailsHeadline());
 
@@ -331,7 +333,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 150);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().addAll("bisq-text-21");
+        subtitleLabel.getStyleClass().add("bisq-text-21");
         subtitleLabel.setWrapText(true);
     }
 

@@ -156,8 +156,8 @@ public class TakeOfferReviewController implements Controller {
             model.getFiatPaymentMethodDisplayString().set(spec.getDisplayString());
 
             String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("offer.buying") : Res.get("offer.selling");
-            model.getSubtitle().set(Res.get("bisqEasy.takeOffer.review.subtitle",
-                    direction, model.getFiatPaymentMethodDisplayString().get()));
+            model.getMultiStyleDirectionHeadline().set(Res.get("bisqEasy.takeOffer.review.multiStyleDirectionHeadline",
+                    direction.toUpperCase(), model.getFiatPaymentMethodDisplayString().get()));
             model.getMethod().set(model.getFiatPaymentMethodDisplayString().get());
         }
     }

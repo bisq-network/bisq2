@@ -40,7 +40,7 @@ public class ImageUtil {
 
     // Does not resolve the @2x automatically
     public static Image getImageByPath(String path) {
-        try (InputStream resourceAsStream = ImageView.class.getClassLoader().getResourceAsStream(path)) {
+        try (InputStream resourceAsStream = ImageUtil.class.getClassLoader().getResourceAsStream(path)) {
             if (resourceAsStream == null) {
                 return null;
             }
@@ -53,7 +53,7 @@ public class ImageUtil {
     }
 
     public static Image getImageByPath(String path, int width, int height) {
-        try (InputStream resourceAsStream = ImageView.class.getClassLoader().getResourceAsStream(path)) {
+        try (InputStream resourceAsStream = ImageUtil.class.getClassLoader().getResourceAsStream(path)) {
             if (resourceAsStream == null) {
                 return null;
             }

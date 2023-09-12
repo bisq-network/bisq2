@@ -271,7 +271,6 @@
 }
 
 
-
 /* Generic Label properties */
 
 /* colors */
@@ -368,6 +367,9 @@
     -fx-font-size: 0.7em !Important;
 }
 
+.font-size-large {
+    -fx-font-size: 1.7em !Important;
+}
 /* fonts */
 .font-light {
     -fx-font-family: "IBM Plex Sans Light" !Important;
@@ -389,6 +391,15 @@
     -fx-underline: true;
 }
 
+.text-color-light {
+    -fx-fill: -fx-light-text-color !Important;
+    -fx-text-fill: -fx-light-text-color !Important;
+}
+
+.text-color-green {
+    -fx-fill: -bisq-green !Important;
+    -fx-text-fill: -bisq-green !Important;
+}
 
 .text-input {
     -fx-highlight-fill: -bisq-green;

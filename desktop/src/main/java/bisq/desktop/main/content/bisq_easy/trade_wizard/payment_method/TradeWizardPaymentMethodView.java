@@ -74,7 +74,7 @@ public class TradeWizardPaymentMethodView extends View<StackPane, TradeWizardPay
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3");
+        subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(450);
 

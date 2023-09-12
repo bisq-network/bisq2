@@ -348,9 +348,9 @@ public class TradeWizardReviewController implements Controller {
         }
 
         String postFix = fiatPaymentMethods.size() == 1 ?
-                Res.get("bisqEasy.tradeWizard.review.directionHeadline.payment", fiatPaymentMethods.get(0).getDisplayString()) :
+                " " + Res.get("bisqEasy.tradeWizard.review.directionHeadline.payment", fiatPaymentMethods.get(0).getDisplayString()) :
                 "";
-        model.setDirectionHeadline(directionHeadline + " " + postFix);
+        model.setMultiStyleDirectionHeadline(directionHeadline + postFix);
     }
 
     public void reset() {

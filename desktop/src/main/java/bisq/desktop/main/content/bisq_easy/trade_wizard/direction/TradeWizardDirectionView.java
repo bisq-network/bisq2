@@ -59,7 +59,8 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.direction.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-3");
 
         Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"),
                 Res.get("bisqEasy.createOffer.direction.buy.info"), "card-toggle-button");

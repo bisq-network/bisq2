@@ -242,7 +242,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         Label label = new Label(text.toUpperCase());
         label.setTextAlignment(TextAlignment.CENTER);
         label.setAlignment(Pos.CENTER);
-        label.getStyleClass().addAll("bisq-text-14");
+        label.getStyleClass().add("bisq-text-14");
         label.setOpacity(OPACITY);
         return label;
     }
