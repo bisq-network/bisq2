@@ -39,6 +39,7 @@ import bisq.presentation.notifications.NotificationsService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -154,6 +155,8 @@ public class ChatService implements Service {
 
         list.add(chatNotificationService.initialize());
 
+        userIdentityService.setIsIdentityUsed(this::isIdentityUsed);
+
         return CompletableFutureUtils.allOf(list).thenApply(result -> true);
     }
 
@@ -173,6 +176,10 @@ public class ChatService implements Service {
                 .collect(Collectors.toList()));
 
         list.add(chatNotificationService.shutdown());
+
+        if (userIdentityService != null) {
+            userIdentityService.setIsIdentityUsed(e -> true);
+        }
 
         return CompletableFutureUtils.allOf(list).thenApply(result -> true);
     }
@@ -249,5 +256,20 @@ public class ChatService implements Service {
                         commonPublicChatChannelServices.get(chatChannelDomain),
                         chatChannelDomain,
                         userIdentityService));
+    }
+
+    private boolean isIdentityUsed(UserIdentity userIdentity) {
+        boolean usedInPrivateChannel = twoPartyPrivateChatChannelServices.values().stream().flatMap(c -> c.getChannels().stream())
+                .anyMatch(c -> c.getMyUserIdentity().equals(userIdentity)) ||
+                bisqEasyOpenTradeChannelService.getChannels().stream()
+                        .anyMatch(c -> c.getMyUserIdentity().equals(userIdentity));
+
+        boolean usedInMessage = bisqEasyOfferbookChannelService.getChannels().stream()
+                .flatMap(c -> c.getChatMessages().stream())
+                .anyMatch(m -> m.getAuthorUserProfileId().equals(userIdentity.getId())) ||
+                commonPublicChatChannelServices.values().stream().flatMap(c -> c.getChannels().stream())
+                        .flatMap(c -> c.getChatMessages().stream())
+                        .anyMatch(m -> m.getAuthorUserProfileId().equals(userIdentity.getId()));
+        return usedInPrivateChannel || usedInMessage;
     }
 }

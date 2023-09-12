@@ -23,6 +23,7 @@ import bisq.user.reputation.ReputationScore;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,4 +43,6 @@ public class UserProfileModel implements Model {
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final StringProperty profileAge = new SimpleStringProperty();
     private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
+    private final ObjectProperty<Tooltip> deleteTooltip = new SimpleObjectProperty<>();
 }

@@ -34,6 +34,7 @@ import bisq.security.EncryptedData;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +46,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -77,6 +79,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
+    @Setter
+    private Predicate<UserIdentity> isIdentityUsed = e -> true;
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
@@ -215,14 +219,21 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair()));
     }
 
+    public boolean allowDeleteUserIdentity(UserIdentity userIdentity) {
+        if (isIdentityUsed.test(userIdentity))
+            return false;
+
+        return getUserIdentities().size() > 1;
+    }
+
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
-        //todo add more checks if deleting profile is permitted (e.g. not used in trades, PM,...)
-        if (getUserIdentities().size() <= 1) {
-            return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
+        if (!allowDeleteUserIdentity(userIdentity)) {
+            return CompletableFuture.failedFuture(new RuntimeException("Deactivating userProfile is not permitted if we only have one left or if it's used in trades or private chats."));
         }
 
         synchronized (lock) {
             getUserIdentities().remove(userIdentity);
+
             getUserIdentities().stream().findAny()
                     .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
                             () -> persistableStore.setSelectedUserIdentity(null));

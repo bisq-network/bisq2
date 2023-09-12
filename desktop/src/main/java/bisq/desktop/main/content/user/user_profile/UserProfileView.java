@@ -28,6 +28,7 @@ import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -43,7 +44,8 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
-    private final Button createNewProfileButton, deletedButton, saveButton;
+    private final Button createNewProfileButton, deleteButton, saveButton;
+    private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
     private final ImageView roboIconImageView;
     private final MaterialTextArea terms;
@@ -110,11 +112,10 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
-        deletedButton = new Button(Res.get("user.userProfile.deleteProfile"));
+        deleteButton = new Button(Res.get("user.userProfile.deleteProfile"));
+        deleteWrapper = new SplitPane(deleteButton);
 
-        // todo For now we hide the deletedButton because it comes with some complexities
-        // See https://github.com/bisq-network/bisq2/issues/794
-        HBox buttonsHBox = new HBox(20, saveButton/*, deletedButton*/);
+        HBox buttonsHBox = new HBox(20, saveButton, deleteWrapper);
         formVBox.getChildren().add(buttonsHBox);
     }
 
@@ -128,6 +129,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         terms.textProperty().bindBidirectional(model.getTerms());
         roboIconImageView.imageProperty().bind(model.getRoboHash());
         saveButton.disableProperty().bind(model.getSaveButtonDisabled());
+        deleteButton.disableProperty().bind(model.getDeleteButtonDisabled());
+        deleteWrapper.tooltipProperty().bind(model.getDeleteTooltip());
 
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
@@ -135,7 +138,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
         });
 
-        deletedButton.setOnAction(e -> controller.onDelete());
+        deleteButton.setOnAction(e -> controller.onDeleteProfile());
         saveButton.setOnAction(e -> controller.onSave());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
         comboBox.setOnChangeConfirmed(e -> {
@@ -160,11 +163,13 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         terms.textProperty().unbindBidirectional(model.getTerms());
         roboIconImageView.imageProperty().unbind();
         saveButton.disableProperty().unbind();
+        deleteButton.disableProperty().unbind();
+        deleteWrapper.tooltipProperty().unbind();
 
         reputationScorePin.unsubscribe();
         selectedChatUserIdentityPin.unsubscribe();
 
-        deletedButton.setOnAction(null);
+        deleteButton.setOnAction(null);
         saveButton.setOnAction(null);
         createNewProfileButton.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);

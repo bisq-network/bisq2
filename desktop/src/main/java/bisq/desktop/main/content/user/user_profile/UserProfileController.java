@@ -23,6 +23,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
@@ -34,6 +35,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ProfileAgeService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.scene.control.Tooltip;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -42,6 +44,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE_STEP1;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -71,6 +74,7 @@ public class UserProfileController implements Controller {
 
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 userIdentity -> {
+                    updateButtons();
                     if (userIdentity == null) {
                         return;
                     }
@@ -94,9 +98,14 @@ public class UserProfileController implements Controller {
         reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
 
         statementPin = EasyBind.subscribe(model.getStatement(),
-                statement -> updateSaveButtonState());
+                statement -> updateButtons());
         termsPin = EasyBind.subscribe(model.getTerms(),
-                terms -> updateSaveButtonState());
+                terms -> updateButtons());
+    }
+
+    private void updateButtons() {
+        updateSaveButtonState();
+        updateDeleteButtonState();
     }
 
     private void updateSaveButtonState() {
@@ -110,6 +119,19 @@ public class UserProfileController implements Controller {
         String terms = model.getTerms().get();
         model.getSaveButtonDisabled().set(statement.equals(userProfile.getStatement()) &&
                 terms.equals(userProfile.getTerms()));
+    }
+
+    private void updateDeleteButtonState() {
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        if (userIdentity == null || !userIdentityService.allowDeleteUserIdentity(userIdentity)) {
+            Tooltip deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.unable.warning"));
+            deleteTooltip.getStyleClass().add("medium-dark-tooltip");
+            model.getDeleteTooltip().set(deleteTooltip);
+            model.getDeleteButtonDisabled().set(true);
+            return;
+        }
+        model.getDeleteTooltip().set(null);
+        model.getDeleteButtonDisabled().set(false);
     }
 
     @Override
@@ -146,24 +168,21 @@ public class UserProfileController implements Controller {
                     UIThread.runOnNextRenderFrame(() -> {
                         UserIdentity value = userIdentityService.getSelectedUserIdentity();
                         model.getSelectedUserIdentity().set(value);
-                        updateSaveButtonState();
+                        updateButtons();
                     });
                 });
     }
 
-    public void onDelete() {
-        if (userIdentityService.getUserIdentities().size() < 2) {
-            new Popup().warning(Res.get("user.userProfile.deleteProfile.lastProfile.warning")).show();
-        } else {
-            new Popup().warning(Res.get("user.userProfile.deleteProfile.warning"))
-                    .onAction(this::doDelete)
-                    .actionButtonText(Res.get("user.userProfile.deleteProfile.warning.yes"))
-                    .closeButtonText(Res.get("action.cancel"))
-                    .show();
-        }
+    public void onDeleteProfile() {
+        String profileName = checkNotNull(userIdentityService.getSelectedUserIdentity()).getUserName();
+        new Popup().warning(Res.get("user.userProfile.deleteProfile.warning", profileName))
+                .onAction(this::doDeleteProfile)
+                .actionButtonText(Res.get("user.userProfile.deleteProfile.warning.yes"))
+                .closeButtonText(Res.get("action.cancel"))
+                .show();
     }
 
-    private CompletableFuture<DataService.BroadCastDataResult> doDelete() {
+    private CompletableFuture<DataService.BroadCastDataResult> doDeleteProfile() {
         return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserIdentity())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
@@ -173,7 +192,7 @@ public class UserProfileController implements Controller {
                             UIThread.runOnNextRenderFrame(() -> {
                                 UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
-                                updateSaveButtonState();
+                                updateButtons();
                             });
                         }
                     }
