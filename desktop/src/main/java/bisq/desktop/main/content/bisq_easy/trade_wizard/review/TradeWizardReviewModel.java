@@ -63,9 +63,13 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private String headline;
     @Setter
-    private String multiStyleDirectionHeadline;
+    private String directionHeadline;
     @Setter
-    private String amountsHeadline;
+    private String minAmountsHeadline;
+    @Setter
+    private String maxAmountsHeadline;
+    @Setter
+    private String fixAmountsHeadline;
     @Setter
     private String detailsHeadline;
     @Setter
@@ -107,8 +111,10 @@ class TradeWizardReviewModel implements Model {
         priceSpec = null;
         myOfferMessage = null;
         headline = null;
-        multiStyleDirectionHeadline = null;
-        amountsHeadline = null;
+        directionHeadline = null;
+        minAmountsHeadline = null;
+        maxAmountsHeadline = null;
+        fixAmountsHeadline = null;
         detailsHeadline = null;
         toSendAmountDescription = null;
         toSendAmount = null;

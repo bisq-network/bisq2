@@ -42,7 +42,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final Button takeOfferSuccessButton;
     private final Label amounts, toPay, toReceive, method, sellersPrice, sellersPriceDetails, fee;
     private final GridPane content;
-    private final MultiStyleLabelPane multiStyleDirectionHeadline;
+    private final MultiStyleLabelPane directionHeadline;
     private Subscription showTakeOfferSuccessPin;
 
     TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller) {
@@ -84,15 +84,15 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.getChildren().add(line1);
 
         rowIndex++;
-        multiStyleDirectionHeadline = new MultiStyleLabelPane();
-        multiStyleDirectionHeadline.getStyleClass().add("trade-wizard-review-direction");
-        GridPane.setMargin(multiStyleDirectionHeadline, new Insets(16, 0, 10, 0));
-        GridPane.setColumnSpan(multiStyleDirectionHeadline, 4);
-        content.add(multiStyleDirectionHeadline, 0, rowIndex);
+        directionHeadline = new MultiStyleLabelPane();
+        directionHeadline.getStyleClass().add("trade-wizard-review-direction");
+        GridPane.setMargin(directionHeadline, new Insets(16, 0, 10, 0));
+        GridPane.setColumnSpan(directionHeadline, 4);
+        content.add(directionHeadline, 0, rowIndex);
 
         rowIndex++;
         amounts = new Label();
-        amounts.getStyleClass().add("trade-wizard-review-amounts");
+        amounts.getStyleClass().add("trade-wizard-review-fix-amounts");
         GridPane.setMargin(amounts, new Insets(-7, 0, 17, 0));
         GridPane.setRowIndex(amounts, rowIndex);
         GridPane.setColumnSpan(amounts, 4);
@@ -199,7 +199,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
-        multiStyleDirectionHeadline.textProperty().bind(model.getMultiStyleDirectionHeadline());
+        directionHeadline.textProperty().bind(model.getDirectionHeadline());
         amounts.textProperty().bind(model.getAmountDescription());
         toPay.textProperty().bind(model.getToPay());
         toReceive.textProperty().bind(model.getToReceive());
@@ -224,7 +224,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewDetached() {
-        multiStyleDirectionHeadline.textProperty().unbind();
+        directionHeadline.textProperty().unbind();
         amounts.textProperty().unbind();
         toPay.textProperty().unbind();
         toReceive.textProperty().unbind();

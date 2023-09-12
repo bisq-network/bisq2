@@ -45,7 +45,7 @@ class TakeOfferReviewModel implements Model {
     @Setter
     private List<String> paymentMethodNames;
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-    private final StringProperty multiStyleDirectionHeadline = new SimpleStringProperty();
+    private final StringProperty directionHeadline = new SimpleStringProperty();
     private final StringProperty amountDescription = new SimpleStringProperty();
     private final StringProperty toPay = new SimpleStringProperty();
     private final StringProperty toReceive = new SimpleStringProperty();

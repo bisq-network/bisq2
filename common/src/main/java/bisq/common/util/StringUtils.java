@@ -158,8 +158,9 @@ public class StringUtils {
             result.add(new Pair<>("", List.of()));
             return result;
         }
+        input = input.replace("/", "|");
+        Pattern pattern = Pattern.compile("<([^<>/]+)\\s+style=([^<>/]+)\\s*>");
 
-        Pattern pattern = Pattern.compile("<([^<>/]+)\\s+style=([^<>/]+)\\s*/>");
         Matcher matcher = pattern.matcher(input);
         int prevEnd = 0;
         while (matcher.find()) {
@@ -168,6 +169,8 @@ public class StringUtils {
                 result.add(new Pair<>(text, null));
             }
             text = matcher.group(1);
+
+            text = text.replace("|", "/");
             String style = matcher.group(2);
 
             if (!style.contains(",")) {

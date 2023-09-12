@@ -67,10 +67,8 @@ public class MultiStyleLabelPane extends FlowPane {
                         }
                         List<String> styles = pair.getSecond();
                         if (styles != null) {
-                            styles.stream().filter(style -> style != null &&
-                                            !style.isEmpty() &&
-                                            !style.contains("<") &&
-                                            !style.contains(">"))
+                            styles.stream()
+                                    .filter(style -> style != null && !style.isEmpty())
                                     .forEach(style -> label.getStyleClass().add(style));
                         }
                         getChildren().add(label);
