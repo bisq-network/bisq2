@@ -34,20 +34,21 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class SettingsStore implements PersistableStore<SettingsStore> {
+    public final static long DEFAULT_REQUIRED_TOTAL_REPUTATION_SCORE = 0;
+
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
-    final Observable<Boolean> useAnimations = new Observable<>(true);
+    final Observable<Boolean> useAnimations = new Observable<>();
     final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
-    //TODO 
-    final Observable<Long> requiredTotalReputationScore = new Observable<>(0L);
+    final Observable<Long> requiredTotalReputationScore = new Observable<>();
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
     final Set<String> consumedAlertIds;
     boolean isTacAccepted;
-    final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>(true);
-    final Observable<Boolean> preventStandbyMode = new Observable<>(true);
+    final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
+    final Observable<Boolean> preventStandbyMode = new Observable<>();
     String languageCode;
     final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
 
@@ -57,7 +58,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 true,
                 new HashSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
-                1000,
+                DEFAULT_REQUIRED_TOTAL_REPUTATION_SCORE,
                 false,
                 false,
                 ChatNotificationType.MENTION,

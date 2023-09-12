@@ -19,9 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.OverlayController;
 import bisq.offer.Direction;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationScore;
@@ -42,15 +40,18 @@ public class TradeWizardDirectionController implements Controller {
     private final Runnable onNextHandler;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final ReputationService reputationService;
+    private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final UserIdentityService userIdentityService;
 
     public TradeWizardDirectionController(ServiceProvider serviceProvider,
                                           Runnable onNextHandler,
-                                          Consumer<Boolean> navigationButtonsVisibleHandler) {
+                                          Consumer<Boolean> navigationButtonsVisibleHandler,
+                                          Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.onNextHandler = onNextHandler;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        this.closeAndNavigateToHandler = closeAndNavigateToHandler;
 
         model = new TradeWizardDirectionModel();
         view = new TradeWizardDirectionView(model, this);
@@ -90,11 +91,11 @@ public class TradeWizardDirectionController implements Controller {
     }
 
     void onGainReputation() {
-        OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.REPUTATION);
+        closeAndNavigateToHandler.accept(NavigationTarget.REPUTATION);
     }
 
-    void onIgnoreReputation() {
+    void onTradeWithoutReputation() {
+        navigationButtonsVisibleHandler.accept(true);
         onNextHandler.run();
     }
 

@@ -46,6 +46,8 @@ public class TradeWizardMarketModel implements Model {
 
 
     void reset() {
+        direction = null;
+        headline = null;
         selectedMarketListItem.set(null);
         searchText.set(null);
         selectedMarket.set(null);

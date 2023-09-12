@@ -37,8 +37,10 @@ public class TradeWizardPriceModel implements Model {
 
     public void reset() {
         market = null;
+        percentage.set(0d);
         percentageAsString.set(null);
         priceAsString.set(null);
+        useFixPrice.set(false);
         priceSpec.set(new MarketPriceSpec());
     }
 }

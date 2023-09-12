@@ -329,7 +329,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private void configFeedbackSubtitleLabel(Label subtitleLabel) {
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
+        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 150);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
         subtitleLabel.getStyleClass().addAll("bisq-text-21");

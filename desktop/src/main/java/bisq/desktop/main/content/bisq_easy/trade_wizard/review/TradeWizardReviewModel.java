@@ -36,19 +36,14 @@ import lombok.Setter;
 class TradeWizardReviewModel implements Model {
     @Setter
     private boolean isCreateOfferMode;
-
     @Setter
     private BisqEasyOffer bisqEasyOffer;
     @Setter
     private BisqEasyTrade bisqEasyTrade;
     @Setter
     private BisqEasyOfferbookChannel selectedChannel;
-    private final ObservableList<FiatPaymentMethod> takersPaymentMethods = FXCollections.observableArrayList();
     @Setter
     private FiatPaymentMethod takersSelectedPaymentMethod;
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-
     @Setter
     private Monetary minBaseSideAmount;
     @Setter
@@ -61,13 +56,10 @@ class TradeWizardReviewModel implements Model {
     private Monetary maxQuoteSideAmount;
     @Setter
     private Monetary fixQuoteSideAmount;
-
     @Setter
     private PriceSpec priceSpec;
-
     @Setter
     private BisqEasyOfferbookMessage myOfferMessage;
-
     @Setter
     private String headline;
     @Setter
@@ -96,16 +88,16 @@ class TradeWizardReviewModel implements Model {
     private String paymentMethod;
     @Setter
     private String fee;
-
+    private final ObservableList<FiatPaymentMethod> takersPaymentMethods = FXCollections.observableArrayList();
+    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
+    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
 
     public void reset() {
+        isCreateOfferMode = false;
         bisqEasyOffer = null;
         bisqEasyTrade = null;
         selectedChannel = null;
-        takersPaymentMethods.clear();
         takersSelectedPaymentMethod = null;
-        showCreateOfferSuccess.set(false);
-        showTakeOfferSuccess.set(false);
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
         fixBaseSideAmount = null;
@@ -114,5 +106,23 @@ class TradeWizardReviewModel implements Model {
         fixQuoteSideAmount = null;
         priceSpec = null;
         myOfferMessage = null;
+        headline = null;
+        directionHeadline = null;
+        amountsHeadline = null;
+        detailsHeadline = null;
+        toSendAmountDescription = null;
+        toSendAmount = null;
+        toReceiveAmountDescription = null;
+        toReceiveAmount = null;
+        priceDescription = null;
+        price = null;
+        priceDetails = null;
+        paymentMethodDescription = null;
+        paymentMethod = null;
+        fee = null;
+        takersPaymentMethods.clear();
+        showCreateOfferSuccess.set(false);
+        showTakeOfferSuccess.set(false);
+
     }
 }

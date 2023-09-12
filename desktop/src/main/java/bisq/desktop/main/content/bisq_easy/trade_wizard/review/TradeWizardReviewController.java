@@ -34,11 +34,9 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
@@ -65,7 +63,6 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,7 +80,7 @@ public class TradeWizardReviewController implements Controller {
     private final TradeWizardReviewView view;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final ChatService chatService;
-    private final Runnable resetHandler;
+    private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
@@ -92,13 +89,12 @@ public class TradeWizardReviewController implements Controller {
     private final BannedUserService bannedUserService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final SettingsService settingsService;
-    private final UserProfileService userProfileService;
 
     public TradeWizardReviewController(ServiceProvider serviceProvider,
                                        Consumer<Boolean> mainButtonsVisibleHandler,
-                                       Runnable resetHandler) {
+                                       Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
-        this.resetHandler = resetHandler;
+        this.closeAndNavigateToHandler = closeAndNavigateToHandler;
 
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatService = serviceProvider.getChatService();
@@ -108,7 +104,6 @@ public class TradeWizardReviewController implements Controller {
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         settingsService = serviceProvider.getSettingsService();
-        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
@@ -415,22 +410,15 @@ public class TradeWizardReviewController implements Controller {
     }
 
     void onShowOfferbook() {
-        close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
+        closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY_OFFERBOOK);
     }
 
     void onShowOpenTrades() {
-        close();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
+        closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
         model.setTakersSelectedPaymentMethod(paymentMethod);
-    }
-
-    private void close() {
-        resetHandler.run();
-        OverlayController.hide();
     }
 
     private void applyPriceDetails(Direction direction, PriceSpec priceSpec, Market market) {

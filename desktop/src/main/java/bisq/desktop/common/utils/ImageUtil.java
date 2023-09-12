@@ -18,12 +18,17 @@
 package bisq.desktop.common.utils;
 
 import bisq.common.util.OsUtils;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.StrokeType;
 import javafx.stage.Screen;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,5 +111,22 @@ public class ImageUtil {
         SnapshotParameters snapshotParameters = new SnapshotParameters();
         snapshotParameters.setFill(Color.TRANSPARENT);
         return canvas.snapshot(snapshotParameters, null);
+    }
+
+    /**
+     * @param size
+     * @param cssStrokeColor E.g. -bisq-green
+     */
+    public static StackPane addRingToNode(Node node, double size, double strokeWidth, String cssStrokeColor) {
+        StackPane pane = new StackPane();
+        pane.setAlignment(Pos.CENTER);
+        Circle circle = new Circle(size / 2);
+        circle.setSmooth(true);
+        circle.setStrokeWidth(strokeWidth);
+        circle.setStrokeType(StrokeType.OUTSIDE);
+        circle.setFill(Color.TRANSPARENT);
+        pane.getChildren().addAll(node, circle);
+        circle.setStyle("-fx-stroke: " + cssStrokeColor);
+        return pane;
     }
 }

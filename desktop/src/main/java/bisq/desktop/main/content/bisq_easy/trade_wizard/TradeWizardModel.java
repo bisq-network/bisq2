@@ -56,7 +56,16 @@ public class TradeWizardModel extends NavigationModel {
 
     public void reset() {
         currentIndex.set(0);
-        selectedChildTarget.set(childTargets.get(0));
+        nextButtonText.set(null);
+        backButtonText.set(null);
+        closeButtonVisible.set(false);
+        nextButtonVisible.set(true);
+        nextButtonDisabled.set(true);
+        backButtonVisible.set(true);
+        priceProgressItemVisible.set(true);
+        childTargets.clear();
+        selectedChildTarget.set(null);
         animateRightOut = true;
+        isBackButtonHighlighted.set(false);
     }
 }

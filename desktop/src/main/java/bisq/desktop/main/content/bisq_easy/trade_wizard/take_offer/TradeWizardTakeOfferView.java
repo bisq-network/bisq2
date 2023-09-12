@@ -21,6 +21,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
@@ -44,6 +45,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
@@ -62,7 +64,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     private final static int TABLE_WIDTH = 800;
     private final HBox noMatchingOffersBox;
 
-    private BisqTableView<ListItem> tableView;
+    private final BisqTableView<ListItem> tableView;
     private final Label headLineLabel, subtitleLabel;
     private Button goBackButton, browseOfferbookButton;
 
@@ -175,61 +177,15 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                 .title(peer)
                 .left()
                 .minWidth(100)
-                .setCellFactory(new Callback<>() {
-                    @Override
-                    public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
-                        return new TableCell<>() {
-                            private final Label userName = new Label();
-                            private final ImageView roboIcon = new ImageView();
-                            private final HBox hBox = new HBox(10, roboIcon, userName);
-
-                            @Override
-                            public void updateItem(final ListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                {
-                                    roboIcon.setFitWidth(20);
-                                    roboIcon.setFitHeight(20);
-                                    userName.setId("chat-user-name");
-                                    hBox.setAlignment(Pos.CENTER_LEFT);
-                                }
-                                if (item != null && !empty) {
-                                    userName.setText(item.getUserName());
-                                    item.getAuthorUserProfile().ifPresent(userProfile ->
-                                            roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash())));
-                                    setGraphic(hBox);
-                                } else {
-                                    setGraphic(null);
-                                }
-                            }
-                        };
-                    }
-                })
-                .comparator(Comparator.comparing(ListItem::getUserName))
+                .setCellFactory(getMakerCellFactory())
+                .comparator(Comparator.comparing(ListItem::getMakerUserName))
                 .build());
 
         // Reputation
         BisqTableColumn<ListItem> reputationColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.createOffer.review.table.reputation"))
                 .minWidth(120)
-                .setCellFactory(new Callback<>() {
-                    @Override
-                    public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
-                        return new TableCell<>() {
-                            private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-
-                            @Override
-                            public void updateItem(final ListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    reputationScoreDisplay.applyReputationScore(item.getReputationScore());
-                                    setGraphic(reputationScoreDisplay);
-                                } else {
-                                    setGraphic(null);
-                                }
-                            }
-                        };
-                    }
-                })
+                .setCellFactory(getReputationCellFactory())
                 .comparator(Comparator.comparing(ListItem::getReputationScore).reversed())
                 .build();
         tableView.getColumns().add(reputationColumn);
@@ -257,21 +213,84 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .minWidth(150)
+                .minWidth(170)
                 .isSortable(false)
                 .setCellFactory(getSelectButtonCellFactory())
                 .right()
                 .build());
+    }
 
 
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMakerCellFactory() {
+        return new Callback<>() {
+            @Override
+            public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
+                return new TableCell<>() {
+                    private final Label userName = new Label();
+                    private final ImageView roboIcon = new ImageView();
+                    private final HBox hBox;
+
+                    {
+                        userName.setId("chat-user-name");
+                        int size = 20;
+                        roboIcon.setFitWidth(size);
+                        roboIcon.setFitHeight(size);
+                        StackPane roboIconWithRing = ImageUtil.addRingToNode(roboIcon, size, 1.5, "-bisq-grey-5");
+                        hBox = new HBox(10, roboIconWithRing, userName);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
+                    }
+
+                    @Override
+                    public void updateItem(final ListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            userName.setText(item.getMakerUserName());
+                            item.getAuthorUserProfile().ifPresent(userProfile ->
+                                    roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash())));
+                            setGraphic(hBox);
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getReputationCellFactory() {
+        return new Callback<>() {
+            @Override
+            public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
+                return new TableCell<>() {
+                    private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
+
+                    @Override
+                    public void updateItem(final ListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            reputationScoreDisplay.applyReputationScore(item.getReputationScore());
+                            setGraphic(reputationScoreDisplay);
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        };
     }
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSelectButtonCellFactory() {
         return column -> new TableCell<>() {
 
-            private Button button = new Button(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
+            private final Button button = new Button(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
             private TableRow<ListItem> tableRow;
             private Subscription selectedItemPin;
+
+            {
+                button.setMinWidth(160);
+                button.setMaxWidth(160);
+            }
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
@@ -286,7 +305,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                     tableRow = getTableRow();
                     tableRow.setOnMouseEntered(e -> {
                         if (!tableRow.isSelected()) {
-                            // button.setVisible(true);
+                            button.setVisible(true);
                             button.getStyleClass().remove("white-button");
                             button.getStyleClass().add("outlined-button");
                         }
@@ -294,7 +313,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                     tableRow.setOnMouseExited(e -> {
                         button.getStyleClass().remove("outlined-button");
                         if (!tableRow.isSelected()) {
-                            // button.setVisible(false);
+                            button.setVisible(tableView.getSelectionModel().getSelectedItem() == null);
                             button.getStyleClass().remove("white-button");
                         }
                     });
@@ -302,12 +321,15 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
 
                     selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                             selectedItem -> {
-                                //button.setVisible(item.equals(selectedItem));
                                 if (item.equals(selectedItem)) {
+                                    button.setVisible(true);
                                     button.getStyleClass().remove("outlined-button");
                                     button.getStyleClass().add("white-button");
+                                    button.setText(Res.get("bisqEasy.tradeWizard.takeOffer.table.takeOffer"));
                                 } else {
+                                    button.setVisible(selectedItem == null);
                                     button.getStyleClass().remove("white-button");
+                                    button.setText(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
                                 }
                             });
 
@@ -335,7 +357,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     @Getter
     static class ListItem implements TableItem {
         private final Optional<UserProfile> authorUserProfile;
-        private final String userName, baseAmountDisplayString, priceDisplayString;
+        private final String makerUserName, baseAmountDisplayString, priceDisplayString;
         private final long priceAsLong, baseAmountAsLong;
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
@@ -348,7 +370,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                         MarketPriceService marketPriceService) {
             this.bisqEasyOffer = bisqEasyOffer;
             authorUserProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
-            userName = authorUserProfile.map(UserProfile::getUserName).orElse("");
+            makerUserName = authorUserProfile.map(UserProfile::getUserName).orElse("");
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
             Monetary baseAmountAsMonetary = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService,

@@ -56,7 +56,6 @@ class TradeWizardTakeOfferModel implements Model {
     private AmountSpec amountSpec;
     @Setter
     private boolean isMinAmountEnabled;
-
     @Setter
     private BisqEasyOffer bisqEasyOffer;
     @Setter
@@ -69,7 +68,6 @@ class TradeWizardTakeOfferModel implements Model {
     private String headLine;
     @Setter
     private String subHeadLine;
-
     @Setter
     private TradeWizardTakeOfferView.ListItem selectedItem;
     private final BooleanProperty showOffers = new SimpleBooleanProperty();
@@ -77,7 +75,6 @@ class TradeWizardTakeOfferModel implements Model {
     private final FilteredList<TradeWizardTakeOfferView.ListItem> filteredList = new FilteredList<>(matchingOffers);
     private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyOffer> selectedBisqEasyOffer = new SimpleObjectProperty<>();
-
     private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
 
     void reset() {
@@ -88,18 +85,16 @@ class TradeWizardTakeOfferModel implements Model {
         priceSpec = new MarketPriceSpec();
         amountSpec = null;
         isMinAmountEnabled = false;
-
         bisqEasyOffer = null;
         myOfferMessage = null;
         quoteAmountAsString = null;
         myOfferText = null;
         headLine = null;
         subHeadLine = null;
-
         selectedItem = null;
         showOffers.set(false);
-        isBackButtonHighlighted.set(false);
         matchingOffers.clear();
         selectedBisqEasyOffer.set(null);
+        isBackButtonHighlighted.set(false);
     }
 }

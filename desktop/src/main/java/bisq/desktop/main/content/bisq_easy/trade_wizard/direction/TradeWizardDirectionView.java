@@ -27,7 +27,6 @@ import bisq.offer.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -44,7 +43,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
     private final VBox content;
     private Subscription directionSubscription, showReputationInfoPin;
     private Button withoutReputationButton, backToBuyButton;
-    private Hyperlink gainReputationHyperlink;
+    private Button gainReputationButton;
 
     public TradeWizardDirectionView(TradeWizardDirectionModel model, TradeWizardDirectionController controller) {
         super(new StackPane(), model, controller);
@@ -90,8 +89,8 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
-        gainReputationHyperlink.setOnAction(evt -> controller.onGainReputation());
-        withoutReputationButton.setOnAction(evt -> controller.onIgnoreReputation());
+        gainReputationButton.setOnAction(evt -> controller.onGainReputation());
+        withoutReputationButton.setOnAction(evt -> controller.onTradeWithoutReputation());
         backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
@@ -127,7 +126,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
 
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
-        gainReputationHyperlink.setOnAction(null);
+        gainReputationButton.setOnAction(null);
         withoutReputationButton.setOnAction(null);
         backToBuyButton.setOnAction(null);
 
@@ -159,7 +158,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
     private void setupReputationInfo() {
         double width = 700;
         VBox contentBox = new VBox(20);
-        contentBox.setAlignment(Pos.TOP_LEFT);
+        contentBox.setAlignment(Pos.TOP_CENTER);
         contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(width);
@@ -177,8 +176,8 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         subtitleLabel1.setMaxWidth(width - 60);
         subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        gainReputationHyperlink = new Hyperlink(Res.get("bisqEasy.createOffer.direction.feedback.gainReputation"));
-        gainReputationHyperlink.getStyleClass().addAll("bisq-text-21");
+        gainReputationButton = new Button(Res.get("bisqEasy.createOffer.direction.feedback.gainReputation"));
+        gainReputationButton.getStyleClass().add("outlined-button");
 
         Label subtitleLabel2 = new Label(Res.get("bisqEasy.createOffer.direction.feedback.subTitle2"));
         subtitleLabel2.setMaxWidth(width - 60);
@@ -190,9 +189,13 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(gainReputationHyperlink, new Insets(-10, 0, 20, -2));
+        VBox.setMargin(gainReputationButton, new Insets(10, 0, 20, 0));
         VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationHyperlink, subtitleLabel2, buttons);
+        contentBox.getChildren().addAll(headLineLabel,
+                subtitleLabel1,
+                gainReputationButton,
+                subtitleLabel2,
+                buttons);
         reputationInfo.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 }

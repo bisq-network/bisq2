@@ -45,6 +45,8 @@ public class TradeWizardPaymentMethodModel implements Model {
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
+        direction = null;
+        headline = null;
         fiatPaymentMethods.clear();
         selectedFiatPaymentMethods.clear();
         addedCustomFiatPaymentMethods.clear();

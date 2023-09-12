@@ -36,11 +36,6 @@ import java.util.Optional;
 
 @Getter
 public class TradeWizardAmountModel implements Model {
-    private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
-    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
-    private final StringProperty toggleButtonText = new SimpleStringProperty();
-    private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
-    private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
     @Setter
     private Direction direction;
     @Setter
@@ -55,16 +50,24 @@ public class TradeWizardAmountModel implements Model {
     private boolean isCreateOfferMode;
     @Setter
     private Optional<PriceQuote> bestOffersPrice = Optional.empty();
+    private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
+    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final StringProperty toggleButtonText = new SimpleStringProperty();
+    private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
+    private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
 
     public void reset() {
-        showRangeAmounts.set(false);
-        isMinAmountEnabled.set(false);
-        toggleButtonText.set(null);
-        amountSpec.set(null);
         direction = null;
         market = MarketRepository.getDefault();
         fiatPaymentMethods = new ArrayList<>();
         priceSpec = new MarketPriceSpec();
+        headline = null;
+        isCreateOfferMode = false;
+        bestOffersPrice = Optional.empty();
+        showRangeAmounts.set(false);
+        isMinAmountEnabled.set(false);
+        toggleButtonText.set(null);
+        amountSpec.set(null);
         areAmountsValid.set(true);
     }
 }

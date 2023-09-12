@@ -80,26 +80,21 @@ public class TradeWizardController extends NavigationController implements InitW
         model = new TradeWizardModel();
         view = new TradeWizardView(model, this);
 
-        model.getChildTargets().addAll(List.of(
-                NavigationTarget.TRADE_WIZARD_DIRECTION,
-                NavigationTarget.TRADE_WIZARD_MARKET,
-                NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
-                NavigationTarget.TRADE_WIZARD_AMOUNT,
-                NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
-                NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
-        ));
-
-        tradeWizardDirectionController = new TradeWizardDirectionController(serviceProvider, this::onNext, this::setMainButtonsVisibleState);
+        tradeWizardDirectionController = new TradeWizardDirectionController(serviceProvider,
+                this::onNext,
+                this::setMainButtonsVisibleState,
+                this::closeAndNavigateTo);
         tradeWizardMarketController = new TradeWizardMarketController(serviceProvider, this::onNext);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider);
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider);
         tradeWizardPaymentMethodController = new TradeWizardPaymentMethodController(serviceProvider);
         tradeWizardTakeOfferController = new TradeWizardTakeOfferController(serviceProvider,
-                this::setMainButtonsVisibleState,
                 this::onBack,
                 this::onNext,
-                this::reset);
-        tradeWizardReviewController = new TradeWizardReviewController(serviceProvider, this::setMainButtonsVisibleState, this::reset);
+                this::closeAndNavigateTo);
+        tradeWizardReviewController = new TradeWizardReviewController(serviceProvider,
+                this::setMainButtonsVisibleState,
+                this::closeAndNavigateTo);
 
         paymentMethodsListener = c -> {
             c.next();
@@ -117,6 +112,15 @@ public class TradeWizardController extends NavigationController implements InitW
     @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
+        model.getChildTargets().clear();
+        model.getChildTargets().addAll(List.of(
+                NavigationTarget.TRADE_WIZARD_DIRECTION,
+                NavigationTarget.TRADE_WIZARD_MARKET,
+                NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
+                NavigationTarget.TRADE_WIZARD_AMOUNT,
+                NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
+                NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
+        ));
 
         directionPin = EasyBind.subscribe(tradeWizardDirectionController.getDirection(), direction -> {
             tradeWizardMarketController.setDirection(direction);
@@ -297,11 +301,10 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private boolean isTakeOfferItem(int index) {
-        return model.isCreateOfferMode() && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
+        return model.isCreateOfferMode() && !model.getChildTargets().isEmpty() && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
     }
 
     void onClose() {
-        // Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
         reset();
     }
@@ -336,9 +339,15 @@ public class TradeWizardController extends NavigationController implements InitW
         }
     }
 
+    private void closeAndNavigateTo(NavigationTarget NavigationTarget) {
+        reset();
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget));
+        // UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget)).after(DEFAULT_DURATION / 2);
+    }
+
     private void setMainButtonsVisibleState(boolean value) {
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TRADE_WIZARD_DIRECTION);
-        //model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TRADE_WIZARD_REVIEW_OFFER);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TRADE_WIZARD_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
     }
 
