@@ -220,9 +220,10 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         channel.addChatMessage(systemMessage);
     }
 
-    public Optional<BisqEasyOpenTradeChannel> findChannelByOfferId(String offerId) {
+    public Optional<BisqEasyOpenTradeChannel> findChannel(String offerId, String peersUserProfileId) {
         return getChannels().stream()
                 .filter(channel -> channel.getBisqEasyOffer().getId().equals(offerId))
+                .filter(channel -> channel.getPeer().getId().equals(peersUserProfileId))
                 .findAny();
     }
 

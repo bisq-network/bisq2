@@ -69,7 +69,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeStateController = new TradeStateController(serviceProvider, this::onTradeClosed);
+        tradeStateController = new TradeStateController(serviceProvider, this::handleTradeClosed);
         openTradesWelcome = new OpenTradesWelcome();
     }
 
@@ -141,7 +141,12 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             }
         });
 
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> UIThread.run(this::updateVisibility));
+        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(isConfirmed ->
+                UIThread.run(() -> {
+                    if (isConfirmed) {
+                        maybeSelectFirstItem();
+                    }
+                }));
 
         bisqEasyTradeService.getTrades().addListener(() -> {
             UIThread.run(() -> {
@@ -158,17 +163,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
 
-        if (!model.getSortedList().isEmpty()) {
-            BisqEasyOpenTradesView.ListItem listItem = model.getSortedList().get(0);
-            BisqEasyOpenTradeChannel channel = listItem.getChannel();
-            selectionService.selectChannel(channel);
-            tradeStateController.setSelectedChannel(channel);
-
-            // If there is only one item we do not select it in the tableview
-            if (model.getSortedList().size() > 1 && settingsService.getTradeRulesConfirmed().get()) {
-                model.getSelectedItem().set(listItem);
-            }
-        }
+        maybeSelectFirstItem();
         updateVisibility();
     }
 
@@ -214,33 +209,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                     .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                     .show();
         } else {
-            model.getSelectedItem().set(item);
-            selectTrade(item.getOfferId());
+            doSelectItem(item);
         }
-    }
-
-    private void onTradeClosed(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
-        bisqEasyTradeService.removeTrade(trade);
-        channelService.leaveChannel(channel);
-        if (!channelService.getChannels().isEmpty()) {
-            selectionService.getSelectedChannel().set(channelService.getChannels().get(0));
-        }
-
-        if (model.getFilteredList().isEmpty()) {
-            selectTrade(null);
-            model.getSelectedItem().set(null);
-        } else {
-            BisqEasyOpenTradesView.ListItem firstItem = model.getSortedList().get(0);
-            selectTrade(firstItem.getOfferId());
-            model.getSelectedItem().set(firstItem);
-        }
-    }
-
-    private void selectTrade(String offerId) {
-        BisqEasyOpenTradeChannel channel = channelService.findChannelByOfferId(offerId).orElse(null);
-        selectionService.selectChannel(channel);
-        tradeStateController.setSelectedChannel(channel);
-        updateVisibility();
     }
 
     void onToggleChatWindow() {
@@ -257,6 +227,33 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             model.getChatWindow().get().hide();
         }
         model.getChatWindow().set(null);
+    }
+
+    private void handleTradeClosed(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+        bisqEasyTradeService.removeTrade(trade);
+        channelService.leaveChannel(channel);
+        maybeSelectFirstItem();
+
+        if (model.getFilteredList().isEmpty()) {
+            doSelectItem(null);
+        } else {
+            BisqEasyOpenTradesView.ListItem firstItem = model.getSortedList().get(0);
+            doSelectItem(firstItem);
+        }
+    }
+
+    private void doSelectItem(BisqEasyOpenTradesView.ListItem item) {
+        BisqEasyOpenTradeChannel channel = item != null ? item.getChannel() : null;
+        selectionService.selectChannel(channel);
+        tradeStateController.setSelectedChannel(channel);
+        model.getSelectedItem().set(item);
+        updateVisibility();
+    }
+
+    private void maybeSelectFirstItem() {
+        if (!model.getSortedList().isEmpty() && settingsService.getTradeRulesConfirmed().get()) {
+            doSelectItem(model.getSortedList().get(0));
+        }
     }
 
     private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {

@@ -37,6 +37,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -370,12 +371,14 @@ public class BisqEasyOpenTradesView extends ChatView {
         private final String dateString, market, priceString,
                 baseAmountString, quoteAmountString, paymentMethod, myRole;
         private final long date, price, baseAmount, quoteAmount;
+        private final UserProfile peersUserProfile;
 
         public ListItem(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade) {
             this.channel = channel;
             this.trade = trade;
 
-            peersUserName = channel.getPeer().getUserName();
+            peersUserProfile = channel.getPeer();
+            peersUserName = peersUserProfile.getUserName();
             offerId = channel.getBisqEasyOffer().getId();
             this.tradeId = trade.getId();
             shortTradeId = tradeId.substring(0, 8);
