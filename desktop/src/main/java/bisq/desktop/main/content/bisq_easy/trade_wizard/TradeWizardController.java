@@ -69,7 +69,7 @@ public class TradeWizardController extends NavigationController implements InitW
 
     private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
-            isMinAmountEnabledPin, priceSpecPin, showCustomMethodNotEmptyWarningPin,
+            isMinAmountEnabledPin, priceSpecPin,
             selectedBisqEasyOfferPin, isBackButtonHighlightedPin, areAmountsValidPin;
 
     public TradeWizardController(ServiceProvider serviceProvider) {
@@ -87,7 +87,7 @@ public class TradeWizardController extends NavigationController implements InitW
         tradeWizardMarketController = new TradeWizardMarketController(serviceProvider, this::onNext);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider);
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider);
-        tradeWizardPaymentMethodController = new TradeWizardPaymentMethodController(serviceProvider);
+        tradeWizardPaymentMethodController = new TradeWizardPaymentMethodController(serviceProvider, this::onNext);
         tradeWizardTakeOfferController = new TradeWizardTakeOfferController(serviceProvider,
                 this::onBack,
                 this::onNext,
@@ -158,13 +158,6 @@ public class TradeWizardController extends NavigationController implements InitW
                 selectedBisqEasyOffer -> updateNextButtonDisabledState());
         isBackButtonHighlightedPin = EasyBind.subscribe(tradeWizardTakeOfferController.getIsBackButtonHighlighted(),
                 isBackButtonHighlighted -> model.getIsBackButtonHighlighted().set(isBackButtonHighlighted));
-        showCustomMethodNotEmptyWarningPin = EasyBind.subscribe(tradeWizardPaymentMethodController.getShowCustomMethodNotEmptyWarning(),
-                showCustomMethodNotEmptyWarning -> {
-                    if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
-                        model.getNextButtonVisible().set(!showCustomMethodNotEmptyWarning);
-                        model.getBackButtonVisible().set(!showCustomMethodNotEmptyWarning);
-                    }
-                });
 
         handlePaymentMethodsUpdate();
         tradeWizardPaymentMethodController.getFiatPaymentMethods().addListener(paymentMethodsListener);
@@ -181,7 +174,6 @@ public class TradeWizardController extends NavigationController implements InitW
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
         areAmountsValidPin.unsubscribe();
-        showCustomMethodNotEmptyWarningPin.unsubscribe();
         selectedBisqEasyOfferPin.unsubscribe();
         isBackButtonHighlightedPin.unsubscribe();
         tradeWizardPaymentMethodController.getFiatPaymentMethods().removeListener(paymentMethodsListener);

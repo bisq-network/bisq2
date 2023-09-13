@@ -30,6 +30,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -250,28 +251,25 @@ public class TradeWizardReviewController implements Controller {
         model.setPrice(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode", formattedPrice, codes));
 
         applyPriceDetails(direction, model.getPriceSpec(), market);
-        String equalSign = model.isCreateOfferMode() && direction.isBuy() ? " ~ " : " = ";
-        // String formattedBaseAmount, formattedQuoteAmount;
+        String equalSign = priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec ||
+                (model.isCreateOfferMode() && direction.isBuy()) ? " ~ " : " = ";
+
         if (amountSpec instanceof RangeAmountSpec) {
             Monetary minBaseSideAmount = OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMinBaseSideAmount(minBaseSideAmount);
             Monetary maxBaseSideAmount = OfferAmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMaxBaseSideAmount(maxBaseSideAmount);
-           /* formattedBaseAmount = AmountFormatter.formatAmount(minBaseSideAmount, false) + " - " +
-                    AmountFormatter.formatAmountWithCode(maxBaseSideAmount, false);*/
 
             Monetary minQuoteSideAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMinQuoteSideAmount(minQuoteSideAmount);
             Monetary maxQuoteSideAmount = OfferAmountUtil.findQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMaxQuoteSideAmount(maxQuoteSideAmount);
-         /*   formattedQuoteAmount = AmountFormatter.formatAmount(minQuoteSideAmount) + " - " +
-                    AmountFormatter.formatAmountWithCode(maxQuoteSideAmount);*/
 
             model.setFixAmountsHeadline(null);
             String minAmount = Res.get("bisqEasy.tradeWizard.review.minAmount");
             String maxAmount = Res.get("bisqEasy.tradeWizard.review.maxAmount");
-            String formattedMinQuoteAmount = AmountFormatter.formatAmount(minQuoteSideAmount, false);
-            String formattedMinBaseAmount = AmountFormatter.formatAmount(minBaseSideAmount);
+            String formattedMinQuoteAmount = AmountFormatter.formatAmount(minQuoteSideAmount, true);
+            String formattedMinBaseAmount = AmountFormatter.formatAmount(minBaseSideAmount, false);
             model.setMinAmountsHeadline(Res.get("bisqEasy.tradeWizard.review.rangeAmount",
                     minAmount,
                     formattedMinQuoteAmount,
@@ -280,8 +278,8 @@ public class TradeWizardReviewController implements Controller {
                     formattedMinBaseAmount,
                     minBaseSideAmount.getCode()
             ));
-            String formattedMaxQuoteAmount = AmountFormatter.formatAmount(maxQuoteSideAmount, false);
-            String formattedMaxBaseAmount = AmountFormatter.formatAmount(maxBaseSideAmount);
+            String formattedMaxQuoteAmount = AmountFormatter.formatAmount(maxQuoteSideAmount, true);
+            String formattedMaxBaseAmount = AmountFormatter.formatAmount(maxBaseSideAmount, false);
             model.setMaxAmountsHeadline(Res.get("bisqEasy.tradeWizard.review.rangeAmount",
                     maxAmount,
                     formattedMaxQuoteAmount,
@@ -296,7 +294,7 @@ public class TradeWizardReviewController implements Controller {
                         Res.get("bisqEasy.tradeWizard.review.rangeValueWithCode",
                                 formattedMinBaseAmount,
                                 minBaseSideAmount.getCode(),
-                                equalSign,
+                                " - ",
                                 formattedMaxBaseAmount,
                                 maxBaseSideAmount.getCode()
                         ));
@@ -304,7 +302,7 @@ public class TradeWizardReviewController implements Controller {
                         Res.get("bisqEasy.tradeWizard.review.rangeValueWithCode",
                                 formattedMinQuoteAmount,
                                 minQuoteSideAmount.getCode(),
-                                equalSign,
+                                " - ",
                                 formattedMaxQuoteAmount,
                                 maxQuoteSideAmount.getCode()
                         ));
@@ -313,7 +311,7 @@ public class TradeWizardReviewController implements Controller {
                         Res.get("bisqEasy.tradeWizard.review.rangeValueWithCode",
                                 formattedMinQuoteAmount,
                                 minQuoteSideAmount.getCode(),
-                                equalSign,
+                                " - ",
                                 formattedMaxQuoteAmount,
                                 maxQuoteSideAmount.getCode()
                         ));
@@ -321,7 +319,7 @@ public class TradeWizardReviewController implements Controller {
                         Res.get("bisqEasy.tradeWizard.review.rangeValueWithCode",
                                 formattedMinBaseAmount,
                                 minBaseSideAmount.getCode(),
-                                equalSign,
+                                " - ",
                                 formattedMaxBaseAmount,
                                 maxBaseSideAmount.getCode()
                         ));
@@ -333,15 +331,15 @@ public class TradeWizardReviewController implements Controller {
 
             Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixQuoteSideAmount(fixQuoteSideAmount);
-            String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
+            String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount, true);
 
             model.setMinAmountsHeadline(null);
             model.setMaxAmountsHeadline(null);
             model.setFixAmountsHeadline(Res.get("bisqEasy.tradeWizard.review.fixAmount",
-                    AmountFormatter.formatAmount(fixQuoteSideAmount),
+                    formattedQuoteAmount,
                     fixQuoteSideAmount.getCode(),
                     equalSign,
-                    AmountFormatter.formatAmount(fixBaseSideAmount, false),
+                    formattedBaseAmount,
                     fixBaseSideAmount.getCode()
             ));
 
@@ -378,8 +376,6 @@ public class TradeWizardReviewController implements Controller {
             if (direction.isSell()) {
                 // Maker as seller
                 model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.seller"));
-                //model.setToSendAmount(formattedBaseAmount);
-                // model.setToReceiveAmount(formattedQuoteAmount);
 
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toSend"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
@@ -388,8 +384,6 @@ public class TradeWizardReviewController implements Controller {
             } else {
                 // Maker as buyer
                 model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.buyer"));
-                //  model.setToSendAmount(formattedQuoteAmount);
-                // model.setToReceiveAmount(formattedBaseAmount);
 
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toPay"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
@@ -413,18 +407,12 @@ public class TradeWizardReviewController implements Controller {
 
             if (direction.isSell()) {
                 // Taker as seller
-              /*  model.setToSendAmount(formattedBaseAmount);
-                model.setToReceiveAmount(formattedQuoteAmount);*/
-
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toSend"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
 
                 directionHeadline = Res.get("bisqEasy.tradeWizard.review.directionHeadline.taker.seller");
             } else {
                 // Taker as buyer
-              /*  model.setToSendAmount(formattedQuoteAmount);
-                model.setToReceiveAmount(formattedBaseAmount);*/
-
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toPay"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
 
@@ -432,10 +420,17 @@ public class TradeWizardReviewController implements Controller {
             }
         }
 
-        String postFix = fiatPaymentMethods.size() == 1 ?
-                " " + Res.get("bisqEasy.tradeWizard.review.directionHeadline.payment", fiatPaymentMethods.get(0).getDisplayString()) :
-                "";
-        model.setDirectionHeadline(directionHeadline + postFix);
+        String fiatPaymentMethodsString;
+        if (fiatPaymentMethods.size() > 2) {
+            fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods.stream()
+                    .limit(2)
+                    .collect(Collectors.toList())) + ",...";
+        } else {
+            fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
+        }
+        fiatPaymentMethodsString = StringUtils.truncate(fiatPaymentMethodsString, 40);
+        model.setDirectionHeadline(directionHeadline + " " +
+                Res.get("bisqEasy.tradeWizard.review.directionHeadline.payment", fiatPaymentMethodsString));
     }
 
     public void reset() {

@@ -41,7 +41,6 @@ public class TradeWizardPaymentMethodModel implements Model {
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
-    private final BooleanProperty showCustomMethodNotEmptyWarning = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
@@ -53,7 +52,6 @@ public class TradeWizardPaymentMethodModel implements Model {
         customFiatPaymentMethodName.set("");
         isPaymentMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
-        showCustomMethodNotEmptyWarning.set(false);
         market.set(null);
     }
 }

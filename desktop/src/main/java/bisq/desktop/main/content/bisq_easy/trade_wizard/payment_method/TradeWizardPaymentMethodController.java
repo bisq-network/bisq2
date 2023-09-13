@@ -31,7 +31,6 @@ import bisq.offer.Direction;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import com.google.common.base.Joiner;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,10 +47,12 @@ public class TradeWizardPaymentMethodController implements Controller {
     @Getter
     private final TradeWizardPaymentMethodView view;
     private final SettingsService settingsService;
+    private final Runnable onNextHandler;
     private Subscription customMethodPin;
 
-    public TradeWizardPaymentMethodController(ServiceProvider serviceProvider) {
+    public TradeWizardPaymentMethodController(ServiceProvider serviceProvider, Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
+        this.onNextHandler = onNextHandler;
 
         model = new TradeWizardPaymentMethodModel();
         view = new TradeWizardPaymentMethodView(model, this);
@@ -66,17 +67,15 @@ public class TradeWizardPaymentMethodController implements Controller {
     }
 
     public void showCustomMethodNotEmptyWarning() {
-        model.getShowCustomMethodNotEmptyWarning().set(true);
+        if (doAddCustomMethod()) {
+            onNextHandler.run();
+        }
     }
 
     public void setDirection(Direction direction) {
         if (direction != null) {
             model.setDirection(direction);
         }
-    }
-
-    public ReadOnlyBooleanProperty getShowCustomMethodNotEmptyWarning() {
-        return model.getShowCustomMethodNotEmptyWarning();
     }
 
     public void setMarket(Market market) {
@@ -101,7 +100,6 @@ public class TradeWizardPaymentMethodController implements Controller {
                 Res.get("bisqEasy.createOffer.paymentMethod.headline.buyer", model.getMarket().get().getQuoteCurrencyCode()) :
                 Res.get("bisqEasy.createOffer.paymentMethod.headline.seller", model.getMarket().get().getQuoteCurrencyCode()));
         model.getCustomFiatPaymentMethodName().set("");
-        model.getShowCustomMethodNotEmptyWarning().set(false);
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
                 .ifPresent(names -> {
@@ -142,15 +140,20 @@ public class TradeWizardPaymentMethodController implements Controller {
     }
 
     void onAddCustomMethod() {
-        if (model.getSelectedFiatPaymentMethods().size() >= 4) {
-            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.maxMethodsReached")).show();
-            return;
-        }
-        maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(model.getCustomFiatPaymentMethodName().get()));
+        doAddCustomMethod();
     }
 
-    void onCloseOverlay() {
-        model.getShowCustomMethodNotEmptyWarning().set(false);
+    private boolean doAddCustomMethod() {
+        if (model.getSelectedFiatPaymentMethods().size() >= 4) {
+            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.maxMethodsReached")).show();
+            return false;
+        }
+        String customName = model.getCustomFiatPaymentMethodName().get();
+        if (customName == null || customName.trim().isEmpty()) {
+            return false;
+        }
+        maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(customName));
+        return true;
     }
 
     private void maybeAddFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {

@@ -268,20 +268,6 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.fix-width-90 {
-    -fx-min-width: 90;
-    -fx-max-width: 90;
-}
-
-.fix-width-100 {
-    -fx-min-width: 100;
-    -fx-max-width: 100;
-}
-
-.fix-width-65 {
-    -fx-min-width: 65;
-    -fx-max-width: 65;
-}
 
 .trade-wizard-review-direction {
     -fx-fill: -fx-mid-text-color;
@@ -294,7 +280,7 @@
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 23;
-    -fx-padding: 0 1.5 3 1.5;
+    -fx-padding: 0 1.5 2.5 1.5;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -305,31 +291,45 @@
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
+.trade-wizard-review-range-amount-desc {
+    -fx-min-width: 90;
+    -fx-max-width: 90;
+}
+
 .trade-wizard-review-range-amounts-value {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 18;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-padding: 0 5 3 1;
+    -fx-padding: 0 0 3 0;
     -fx-alignment: center-right;
     -fx-text-alignment: right;
+}
+
+.trade-wizard-review-range-quote-amount {
+    -fx-min-width: 60;
+    -fx-max-width: 60;
+}
+
+.trade-wizard-review-range-base-amount {
+    -fx-min-width: 105;
+    -fx-max-width: 105;
 }
 
 .trade-wizard-review-range-amounts-code {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 15.5;
-    -fx-padding: 0 0 1.5 0;
+    -fx-padding: 0 2 1.5 5;
     -fx-font-family: "IBM Plex Sans Light";
 }
-
 
 .trade-wizard-review-fix-amounts-value {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 23;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-padding: 0 4 3 0;
+    -fx-padding: 0 0 2.5 0;
     -fx-alignment: center-right;
     -fx-text-alignment: right;
 }
@@ -338,6 +338,7 @@
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 20;
+    -fx-padding: 0 3 0 5;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
