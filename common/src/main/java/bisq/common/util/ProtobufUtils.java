@@ -17,6 +17,7 @@
 
 package bisq.common.util;
 
+import bisq.common.proto.ProtoEnum;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,8 @@ public class ProtobufUtils {
         checkNotNull(name, "Enum name must not be null. "+info);
         checkArgument(!name.endsWith("_UNSPECIFIED"), "Unspecified enum. "+info);
 
-        String protobufEnumPrefix = StringUtils.capitalizeAll(enumType.getSimpleName()) + "_";
-        String enumName = name.replace(protobufEnumPrefix,"");
+        //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
+        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType),"");
         E result = Enums.getIfPresent(enumType, enumName).orNull();
         checkNotNull(result, "Enum could not be resolved. "+info);
         return result;
@@ -54,8 +55,7 @@ public class ProtobufUtils {
             return fallBack;
         }
         //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
-        String protobufEnumPrefix = StringUtils.capitalizeAll(enumType.getSimpleName()) + "_";
-        String enumName = name.replace(protobufEnumPrefix,"");
+        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType),"");
         E result = Enums.getIfPresent(enumType, enumName).orNull();
         if (result == null) {
             log.error("Enum could not be resolved. We use the fallback value instead. {}", info);

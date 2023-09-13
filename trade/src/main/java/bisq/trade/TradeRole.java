@@ -19,8 +19,6 @@ package bisq.trade;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
-import bisq.common.util.StringUtils;
-import bisq.contract.Role;
 import lombok.Getter;
 
 @Getter
@@ -33,8 +31,6 @@ public enum TradeRole implements ProtoEnum {
     private final boolean isBuyer;
     private final boolean isTaker;
 
-    private static final String protobufPrefix = StringUtils.capitalizeAll(TradeRole.class.getSimpleName()) + "_";
-
     TradeRole(boolean isBuyer, boolean isTaker) {
         this.isBuyer = isBuyer;
         this.isTaker = isTaker;
@@ -42,7 +38,7 @@ public enum TradeRole implements ProtoEnum {
 
     @Override
     public bisq.trade.protobuf.TradeRole toProto() {
-        return bisq.trade.protobuf.TradeRole.valueOf(protobufPrefix + name());
+        return bisq.trade.protobuf.TradeRole.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static TradeRole fromProto(bisq.trade.protobuf.TradeRole proto) {

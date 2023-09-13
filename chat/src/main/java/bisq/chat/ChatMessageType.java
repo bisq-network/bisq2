@@ -19,7 +19,6 @@ package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
-import bisq.common.util.StringUtils;
 
 public enum ChatMessageType implements ProtoEnum {
     TEXT,
@@ -27,11 +26,9 @@ public enum ChatMessageType implements ProtoEnum {
     TAKE_BISQ_EASY_OFFER,
     SYSTEM_MESSAGE;
 
-    private static final String protobufPrefix = StringUtils.capitalizeAll(ChatMessageType.class.getSimpleName()) + "_";
-
     @Override
     public bisq.chat.protobuf.ChatMessageType toProto() {
-        return bisq.chat.protobuf.ChatMessageType.valueOf(protobufPrefix + name());
+        return bisq.chat.protobuf.ChatMessageType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static ChatMessageType fromProto(bisq.chat.protobuf.ChatMessageType proto) {
