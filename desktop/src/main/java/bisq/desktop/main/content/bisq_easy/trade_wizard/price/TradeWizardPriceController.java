@@ -83,7 +83,7 @@ public class TradeWizardPriceController implements Controller {
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
 
         String marketCodes = model.getMarket().getMarketCodes();
-        priceInput.setDescription(Res.get("bisqEasy.price.sellersPrice", marketCodes));
+        priceInput.setDescription(Res.get("bisqEasy.price.tradePrice", marketCodes));
 
         applyPriceSpec();
     }

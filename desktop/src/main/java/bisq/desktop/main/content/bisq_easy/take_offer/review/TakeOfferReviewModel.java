@@ -26,8 +26,6 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,18 +39,8 @@ class TakeOfferReviewModel implements Model {
     private BisqEasyTrade bisqEasyTrade;
     @Setter
     private UserProfile peersUserProfile;
-    private final StringProperty fiatPaymentMethodDisplayString = new SimpleStringProperty();
     @Setter
     private List<String> paymentMethodNames;
-    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-    private final StringProperty directionHeadline = new SimpleStringProperty();
-    private final StringProperty amountDescription = new SimpleStringProperty();
-    private final StringProperty toPay = new SimpleStringProperty();
-    private final StringProperty toReceive = new SimpleStringProperty();
-    private final StringProperty method = new SimpleStringProperty();
-    private final StringProperty sellersPrice = new SimpleStringProperty();
-    private final StringProperty sellersPriceDetails = new SimpleStringProperty();
-
     @Setter
     private FiatPaymentMethodSpec fiatPaymentMethodSpec;
     @Setter
@@ -61,6 +49,29 @@ class TakeOfferReviewModel implements Model {
     private Monetary takersQuoteSideAmount;
     @Setter
     private PriceSpec sellersPriceSpec;
+
+    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
+
+    @Setter
+    private String directionHeadline;
+    @Setter
+    private String fixAmountsHeadline;
+    @Setter
+    private String toSendAmountDescription;
+    @Setter
+    private String toSendAmount;
+    @Setter
+    private String toReceiveAmountDescription;
+    @Setter
+    private String toReceiveAmount;
+    @Setter
+    private String price;
+    @Setter
+    private String priceDetails;
+    @Setter
+    private String paymentMethod;
     @Setter
     private String fee;
+    @Setter
+    private String feeDetails;
 }

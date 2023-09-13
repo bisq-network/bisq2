@@ -292,8 +292,8 @@
 }
 
 .trade-wizard-review-range-amount-desc {
-    -fx-min-width: 90;
-    -fx-max-width: 90;
+    -fx-min-width: 95;
+    -fx-max-width: 95;
 }
 
 .trade-wizard-review-range-amounts-value {
