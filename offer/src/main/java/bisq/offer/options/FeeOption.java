@@ -19,7 +19,6 @@ package bisq.offer.options;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
-import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,11 +32,9 @@ public final class FeeOption implements OfferOption {
         BTC,
         BSQ;
 
-        private static final String protobufPrefix = StringUtils.capitalizeAll(FeeType.class.getSimpleName()) + "_";
-
         @Override
         public bisq.offer.protobuf.FeeOption.FeeType toProto() {
-            return bisq.offer.protobuf.FeeOption.FeeType.valueOf(protobufPrefix + name());
+            return bisq.offer.protobuf.FeeOption.FeeType.valueOf(getProtobufEnumPrefix() + name());
         }
 
         public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto) {
