@@ -45,7 +45,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final static int FEEDBACK_WIDTH = 700;
 
     private final Label headline, detailsHeadline,
-            paymentMethod, paymentMethodDescription, fee,
+            paymentMethod, paymentMethodDescription, fee, feeDetails,
             priceDetails, toReceiveAmountDescription, toSendAmountDescription, priceDescription;
     private final VBox createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
@@ -181,8 +181,12 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         fee = new Label();
         fee.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(fee, 3);
         content.add(fee, 1, rowIndex);
+
+        feeDetails = new Label();
+        feeDetails.getStyleClass().add(detailsStyle);
+        GridPane.setColumnSpan(feeDetails, 2);
+        content.add(feeDetails, 2, rowIndex);
 
         rowIndex++;
         Region line3 = getLine();
@@ -238,6 +242,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         paymentMethodDescription.setText(model.getPaymentMethodDescription());
         paymentMethod.setText(model.getPaymentMethod());
         fee.setText(model.getFee());
+        feeDetails.setText(model.getFeeDetails());
 
         createOfferSuccessButton.setOnAction(e -> controller.onShowOfferbook());
         takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());

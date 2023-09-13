@@ -361,6 +361,10 @@ public class TradeWizardReviewController implements Controller {
                 Res.get("bisqEasy.tradeWizard.review.fee.buyer") :
                 Res.get("bisqEasy.tradeWizard.review.fee.seller"));
 
+        model.setFeeDetails(direction.isBuy() ?
+                Res.get("bisqEasy.tradeWizard.review.feeDetails.buyer") :
+                Res.get("bisqEasy.tradeWizard.review.feeDetails.seller"));
+
         String directionHeadline;
         if (isCreateOfferMode) {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));

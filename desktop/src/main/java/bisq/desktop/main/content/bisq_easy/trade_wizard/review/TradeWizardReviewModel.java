@@ -92,6 +92,8 @@ class TradeWizardReviewModel implements Model {
     private String paymentMethod;
     @Setter
     private String fee;
+    @Setter
+    private String feeDetails;
     private final ObservableList<FiatPaymentMethod> takersPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
@@ -126,6 +128,7 @@ class TradeWizardReviewModel implements Model {
         paymentMethodDescription = null;
         paymentMethod = null;
         fee = null;
+        feeDetails = null;
         takersPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
         showTakeOfferSuccess.set(false);
