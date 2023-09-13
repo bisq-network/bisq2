@@ -152,6 +152,10 @@ public class TradeWizardPaymentMethodController implements Controller {
         if (customName == null || customName.trim().isEmpty()) {
             return false;
         }
+        if (customName.length() > 20) {
+            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.tooLong")).show();
+            return false;
+        }
         maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(customName));
         return true;
     }
