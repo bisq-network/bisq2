@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
@@ -38,12 +36,11 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 @Slf4j
 public class TradeStateController implements Controller {
@@ -54,18 +51,17 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ServiceProvider serviceProvider;
     private final TradePhaseBox tradePhaseBox;
-    private final BisqEasyOpenTradeChannelService channelService;
-    private final BisqEasyOpenTradeSelectionService selectionService;
+    private final BiConsumer<BisqEasyTrade, BisqEasyOpenTradeChannel> onTradeClosedHandler;
     private Pin bisqEasyTradeStatePin;
 
-    public TradeStateController(ServiceProvider serviceProvider, Consumer<UserProfile> openUserProfileSidebarHandler) {
+    public TradeStateController(ServiceProvider serviceProvider,
+                                BiConsumer<BisqEasyTrade, BisqEasyOpenTradeChannel> onTradeClosedHandler) {
         this.serviceProvider = serviceProvider;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
-        channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-        selectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
+        this.onTradeClosedHandler = onTradeClosedHandler;
 
         model = new bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel();
         view = new bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateView(model, this, tradePhaseBox.getView().getRoot());
@@ -73,6 +69,13 @@ public class TradeStateController implements Controller {
 
     public void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
         model.setChannel(channel);
+        if (channel == null) {
+            tradePhaseBox.setSelectedChannel(null);
+            tradePhaseBox.setBisqEasyTrade(null);
+            model.setBisqEasyTrade(null);
+            model.getStateInfoVBox().set(null);
+            return;
+        }
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(bisqEasyOffer);
@@ -184,14 +187,16 @@ public class TradeStateController implements Controller {
                 .onAction(() -> {
                     BisqEasyOpenTradeChannel channel = model.getChannel();
                     BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
-                    bisqEasyTradeService.removeTrade(bisqEasyTrade);
-                    channelService.leaveChannel(channel);
-                    if (!channelService.getChannels().isEmpty()) {
-                        selectionService.getSelectedChannel().set(channelService.getChannels().get(0));
-                    }
+                    reset();
+                    onTradeClosedHandler.accept(bisqEasyTrade, channel);
                 })
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    private void reset() {
+        model.reset();
+        tradePhaseBox.reset();
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {

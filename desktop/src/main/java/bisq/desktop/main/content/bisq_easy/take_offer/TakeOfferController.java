@@ -228,6 +228,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     void onTakeOffer() {
         takeOfferReviewController.doTakeOffer();
+        model.getBackButtonVisible().set(false);
         model.getTakeOfferButtonVisible().set(false);
     }
 

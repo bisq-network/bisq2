@@ -69,7 +69,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeStateController = new TradeStateController(serviceProvider, this::openUserProfileSidebar);
+        tradeStateController = new TradeStateController(serviceProvider, this::onTradeClosed);
         openTradesWelcome = new OpenTradesWelcome();
     }
 
@@ -207,18 +207,40 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         }
     }
 
-    void onSelectTrade(String tradeId) {
+    void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
         if (!model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
             new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
                     .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
                     .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                     .show();
         } else {
-            channelService.findChannelByOfferId(tradeId).ifPresent(channel -> {
-                selectionService.selectChannel(channel);
-                tradeStateController.setSelectedChannel(channel);
-            });
+            model.getSelectedItem().set(item);
+            selectTrade(item.getOfferId());
         }
+    }
+
+    private void onTradeClosed(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+        bisqEasyTradeService.removeTrade(trade);
+        channelService.leaveChannel(channel);
+        if (!channelService.getChannels().isEmpty()) {
+            selectionService.getSelectedChannel().set(channelService.getChannels().get(0));
+        }
+
+        if (model.getFilteredList().isEmpty()) {
+            selectTrade(null);
+            model.getSelectedItem().set(null);
+        } else {
+            BisqEasyOpenTradesView.ListItem firstItem = model.getSortedList().get(0);
+            selectTrade(firstItem.getOfferId());
+            model.getSelectedItem().set(firstItem);
+        }
+    }
+
+    private void selectTrade(String offerId) {
+        BisqEasyOpenTradeChannel channel = channelService.findChannelByOfferId(offerId).orElse(null);
+        selectionService.selectChannel(channel);
+        tradeStateController.setSelectedChannel(channel);
+        updateVisibility();
     }
 
     void onToggleChatWindow() {
