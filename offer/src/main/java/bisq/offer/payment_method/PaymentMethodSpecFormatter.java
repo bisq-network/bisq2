@@ -37,11 +37,11 @@ public class PaymentMethodSpecFormatter {
                 .collect(Collectors.toList()));
     }
 
-    public static String fromPaymentMethod(List<? extends PaymentMethod<?>> paymentMethods) {
-        return fromPaymentMethod(paymentMethods, true);
+    public static String fromPaymentMethods(List<? extends PaymentMethod<?>> paymentMethods) {
+        return fromPaymentMethods(paymentMethods, true);
     }
 
-    public static String fromPaymentMethod(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
+    public static String fromPaymentMethods(List<? extends PaymentMethod<?>> paymentMethods, boolean useShortDisplayString) {
         return toCommaSeparatedString(paymentMethods.stream()
                 .map(method -> useShortDisplayString ? method.getShortDisplayString() : method.getDisplayString())
                 .collect(Collectors.toList()));

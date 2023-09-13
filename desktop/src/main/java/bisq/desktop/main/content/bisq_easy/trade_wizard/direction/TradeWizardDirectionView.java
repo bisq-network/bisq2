@@ -15,19 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.direction;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.create_offer.CreateOfferView;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -38,15 +37,15 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirectionModel, CreateOfferDirectionController> {
+public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirectionModel, TradeWizardDirectionController> {
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
     private Subscription directionSubscription, showReputationInfoPin;
     private Button withoutReputationButton, backToBuyButton;
-    private Hyperlink gainReputationHyperlink;
+    private Button gainReputationButton;
 
-    public CreateOfferDirectionView(CreateOfferDirectionModel model, CreateOfferDirectionController controller) {
+    public TradeWizardDirectionView(TradeWizardDirectionModel model, TradeWizardDirectionController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -60,13 +59,16 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.direction.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-3");
 
-        Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"), Res.get("bisqEasy.createOffer.direction.buy.info"));
+        Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"),
+                Res.get("bisqEasy.createOffer.direction.buy.info"), "card-toggle-button");
         VBox buyBox = buyPair.getFirst();
         buyButton = buyPair.getSecond();
 
-        Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"), Res.get("bisqEasy.createOffer.direction.sell.info"));
+        Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"),
+                Res.get("bisqEasy.createOffer.direction.sell.info"), "card-toggle-button");
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
@@ -79,7 +81,7 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         reputationInfo = new VBox(20);
         setupReputationInfo();
 
-        StackPane.setMargin(reputationInfo, new Insets(-CreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfo);
     }
 
@@ -88,8 +90,8 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
-        gainReputationHyperlink.setOnAction(evt -> controller.onGainReputation());
-        withoutReputationButton.setOnAction(evt -> controller.onIgnoreReputation());
+        gainReputationButton.setOnAction(evt -> controller.onGainReputation());
+        withoutReputationButton.setOnAction(evt -> controller.onTradeWithoutReputation());
         backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
@@ -125,7 +127,7 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
 
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
-        gainReputationHyperlink.setOnAction(null);
+        gainReputationButton.setOnAction(null);
         withoutReputationButton.setOnAction(null);
         backToBuyButton.setOnAction(null);
 
@@ -133,9 +135,9 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         showReputationInfoPin.unsubscribe();
     }
 
-    private Pair<VBox, Button> getBoxPair(String title, String info) {
+    private Pair<VBox, Button> getBoxPair(String title, String info, String style) {
         Button button = new Button(title);
-        button.getStyleClass().setAll("card-toggle-button");
+        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-direction-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);
@@ -157,8 +159,8 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
     private void setupReputationInfo() {
         double width = 700;
         VBox contentBox = new VBox(20);
-        contentBox.setAlignment(Pos.TOP_LEFT);
-        contentBox.getStyleClass().setAll("create-offer-feedback-bg");
+        contentBox.setAlignment(Pos.TOP_CENTER);
+        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(width);
 
@@ -175,8 +177,8 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         subtitleLabel1.setMaxWidth(width - 60);
         subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        gainReputationHyperlink = new Hyperlink(Res.get("bisqEasy.createOffer.direction.feedback.gainReputation"));
-        gainReputationHyperlink.getStyleClass().addAll("bisq-text-21");
+        gainReputationButton = new Button(Res.get("bisqEasy.createOffer.direction.feedback.gainReputation"));
+        gainReputationButton.getStyleClass().add("outlined-button");
 
         Label subtitleLabel2 = new Label(Res.get("bisqEasy.createOffer.direction.feedback.subTitle2"));
         subtitleLabel2.setMaxWidth(width - 60);
@@ -188,9 +190,13 @@ public class CreateOfferDirectionView extends View<StackPane, CreateOfferDirecti
         HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(gainReputationHyperlink, new Insets(-10, 0, 20, -2));
+        VBox.setMargin(gainReputationButton, new Insets(10, 0, 20, 0));
         VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationHyperlink, subtitleLabel2, buttons);
+        contentBox.getChildren().addAll(headLineLabel,
+                subtitleLabel1,
+                gainReputationButton,
+                subtitleLabel2,
+                buttons);
         reputationInfo.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 }

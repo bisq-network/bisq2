@@ -52,7 +52,7 @@ public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_ea
         headline = triple.getFirst();
 
         closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
-        closeButton.setMinWidth(130);
+        closeButton.setMinWidth(150);
         closeButton.getStyleClass().add("outlined-button");
         triple.getSecond().getChildren().addAll(Spacer.fillHBox(), closeButton);
 

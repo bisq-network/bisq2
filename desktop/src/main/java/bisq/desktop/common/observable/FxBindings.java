@@ -45,6 +45,10 @@ public class FxBindings {
         return new LongPropertyBindings(observer);
     }
 
+    public static LongBiDirPropertyBindings bindBiDir(LongProperty observer) {
+        return new LongBiDirPropertyBindings(observer);
+    }
+
     public static DoublePropertyBindings bind(DoubleProperty observer) {
         return new DoublePropertyBindings(observer);
     }
@@ -60,6 +64,7 @@ public class FxBindings {
     public static BooleanBiDirPropertyBindings bindBiDir(BooleanProperty observer) {
         return new BooleanBiDirPropertyBindings(observer);
     }
+
 
     public static <S> ObjectBiDirPropertyBindings<S> bindBiDir(ObjectProperty<S> observer) {
         return new ObjectBiDirPropertyBindings<>(observer);
@@ -217,6 +222,25 @@ public class FxBindings {
             };
         }
     }
+
+    public static final class LongBiDirPropertyBindings {
+        private final LongProperty observer;
+
+        public LongBiDirPropertyBindings(LongProperty observer) {
+            this.observer = observer;
+        }
+
+        public Pin to(Observable<Long> observable) {
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set((Long) newValue);
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
+    }
+
 
     public static final class ObjectBiDirPropertyBindings<S> {
         private final ObjectProperty<S> observer;

@@ -41,7 +41,8 @@
     /* Colors */
     -bisq-green: #56ae48; /* rgb(86,174,72) */
     -bisq-green-lighter: #53a746;
-    -bisq-green-darker: #488e3e;
+    -bisq-green-dark: #488e3e;
+    -bisq-green-darker: rgba(86, 174, 72, 0.75);
     -bisq-white: white;
     -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
@@ -75,7 +76,7 @@
     -bisq-grey-22: #707070;
     -bisq-grey-23: #1e1e1e;
     -bisq-grey-24: #2c2c2c;
-    -bisq-grey-25: #3b3b3b;
+    -bisq-grey-25: #313131;
 
 
     /* Background colors */

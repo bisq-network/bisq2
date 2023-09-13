@@ -1,15 +1,50 @@
 package bisq.common.util;
 
+import bisq.common.data.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class StringUtilsTest {
+    @Test
+    public void splitStringsByTags() {
+        List<Pair<String, List<String>>> textWithStyleAndRest;
+
+        textWithStyleAndRest = StringUtils.getTextStylePairs("<EUR/BTC style=text-color-light>");
+        assertEquals("EUR/BTC", textWithStyleAndRest.get(0).getFirst());
+        assertEquals("text-color-light", textWithStyleAndRest.get(0).getSecond().get(0));
+        assertEquals(1, textWithStyleAndRest.size());
+
+        textWithStyleAndRest = StringUtils.getTextStylePairs("You are <SELLING style=text-color-light> Bitcoin with <SEPA style=text-color-mid, text-underline> and <SEPA INSTANT style=text-color-mid,text-underline>");
+        assertEquals(6, textWithStyleAndRest.size());
+
+        assertEquals("You are ", textWithStyleAndRest.get(0).getFirst());
+        assertNull(textWithStyleAndRest.get(0).getSecond());
+
+        assertEquals("SELLING", textWithStyleAndRest.get(1).getFirst());
+        assertEquals("text-color-light", textWithStyleAndRest.get(1).getSecond().get(0));
+
+        assertEquals(" Bitcoin with ", textWithStyleAndRest.get(2).getFirst());
+        assertNull(textWithStyleAndRest.get(2).getSecond());
+
+        assertEquals("SEPA", textWithStyleAndRest.get(3).getFirst());
+        assertEquals("text-color-mid", textWithStyleAndRest.get(3).getSecond().get(0));
+        assertEquals("text-underline", textWithStyleAndRest.get(3).getSecond().get(1));
+
+        assertEquals(" and ", textWithStyleAndRest.get(4).getFirst());
+        assertNull(textWithStyleAndRest.get(4).getSecond());
+
+        assertEquals("SEPA INSTANT", textWithStyleAndRest.get(5).getFirst());
+        assertEquals("text-color-mid", textWithStyleAndRest.get(5).getSecond().get(0));
+        assertEquals("text-underline", textWithStyleAndRest.get(5).getSecond().get(1));
+    }
 
     @Test
     public void deriveWordStartingWith() {

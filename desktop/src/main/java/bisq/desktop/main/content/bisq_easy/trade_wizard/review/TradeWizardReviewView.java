@@ -15,38 +15,49 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.take_offer.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MultiStyleLabelPane;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
+
 @Slf4j
-class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOfferReviewController> {
+class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, TradeWizardReviewController> {
     private final static int FEEDBACK_WIDTH = 700;
 
-    private final VBox takeOfferSuccess;
-    private final Button takeOfferSuccessButton;
-    private final Label toReceiveAmountDescription, toSendAmountDescription, priceDetails, paymentMethod, fee, feeDetails;
+    private final Label headline, detailsHeadline,
+            paymentMethod, paymentMethodDescription, fee, feeDetails,
+            priceDetails, toReceiveAmountDescription, toSendAmountDescription, priceDescription;
+    private final VBox createOfferSuccess, takeOfferSuccess;
+    private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
-    private final MultiStyleLabelPane directionHeadlineWithMethod, fixAmountsHeadline, toSendAmount,
-            toReceiveAmount, price;
-    private Subscription showTakeOfferSuccessPin;
+    private final StackPane paymentMethodValuePane;
+    private final MultiStyleLabelPane directionHeadlineWithMethod, minAmountsHeadline, maxAmountsHeadline,
+            fixAmountsHeadline, toSendAmount, toReceiveAmount, price;
+    @Nullable
+    private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
+    private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
-    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller) {
+    TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller) {
         super(new StackPane(), model, controller);
 
         content = new GridPane();
@@ -68,7 +79,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         String detailsStyle = "trade-wizard-review-details";
 
         int rowIndex = 0;
-        Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
+        headline = new Label();
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
@@ -83,18 +94,28 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         rowIndex++;
         directionHeadlineWithMethod = new MultiStyleLabelPane();
         directionHeadlineWithMethod.getStyleClass().add("trade-wizard-review-direction");
-        GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 5, 0));
         GridPane.setColumnSpan(directionHeadlineWithMethod, 4);
         content.add(directionHeadlineWithMethod, 0, rowIndex);
 
         rowIndex++;
+        minAmountsHeadline = new MultiStyleLabelPane();
+        GridPane.setMargin(minAmountsHeadline, new Insets(-15, 0, -10, 0));
+        GridPane.setColumnSpan(minAmountsHeadline, 4);
+        content.add(minAmountsHeadline, 0, rowIndex);
+
+        rowIndex++;
+        maxAmountsHeadline = new MultiStyleLabelPane();
+        GridPane.setColumnSpan(maxAmountsHeadline, 4);
+        content.add(maxAmountsHeadline, 0, rowIndex);
+
+        rowIndex++;
         fixAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setMargin(fixAmountsHeadline, new Insets(-5, 0, 15, 0));
+        GridPane.setMargin(fixAmountsHeadline, new Insets(-25, 0, 15, 0));
         GridPane.setColumnSpan(fixAmountsHeadline, 4);
         content.add(fixAmountsHeadline, 0, rowIndex);
 
         rowIndex++;
-        Label detailsHeadline = new Label(Res.get("bisqEasy.takeOffer.review.detailsHeadline").toUpperCase());
+        detailsHeadline = new Label();
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
         GridPane.setColumnSpan(detailsHeadline, 4);
         content.add(detailsHeadline, 0, rowIndex);
@@ -106,7 +127,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(line2, 0, rowIndex);
 
         rowIndex++;
-        toSendAmountDescription = new Label(Res.get("bisqEasy.takeOffer.review.toPay"));
+        toSendAmountDescription = new Label();
         toSendAmountDescription.getStyleClass().add(descriptionStyle);
         content.add(toSendAmountDescription, 0, rowIndex);
 
@@ -116,7 +137,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(toSendAmount, 1, rowIndex);
 
         rowIndex++;
-        toReceiveAmountDescription = new Label(Res.get("bisqEasy.takeOffer.review.toReceive"));
+        toReceiveAmountDescription = new Label();
         toReceiveAmountDescription.getStyleClass().add(descriptionStyle);
         content.add(toReceiveAmountDescription, 0, rowIndex);
 
@@ -126,7 +147,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(toReceiveAmount, 1, rowIndex);
 
         rowIndex++;
-        Label priceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.price"));
+        priceDescription = new Label();
         priceDescription.getStyleClass().add(descriptionStyle);
         content.add(priceDescription, 0, rowIndex);
 
@@ -140,13 +161,16 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        Label paymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method"));
+        paymentMethodDescription = new Label();
         paymentMethodDescription.getStyleClass().add(descriptionStyle);
         content.add(paymentMethodDescription, 0, rowIndex);
 
         paymentMethod = new Label();
         paymentMethod.getStyleClass().add(valueStyle);
-        content.add(paymentMethod, 1, rowIndex);
+        paymentMethodValuePane = new StackPane(paymentMethod);
+        paymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnSpan(paymentMethodValuePane, 3);
+        content.add(paymentMethodValuePane, 1, rowIndex);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
@@ -167,35 +191,69 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         GridPane.setColumnSpan(line3, 4);
         content.add(line3, 0, rowIndex);
 
-        // Feedback overlay
-        takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
+
+        // Feedback overlays
+        createOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.createOfferSuccessButton"));
+        createOfferSuccess = new VBox(20);
+        configCreateOfferSuccess();
+
+        takeOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccessButton"));
         takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
 
         StackPane.setMargin(content, new Insets(40));
+        StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, takeOfferSuccess);
+        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
     }
 
     @Override
     protected void onViewAttached() {
-        directionHeadlineWithMethod.setText(model.getDirectionHeadlineWithMethod());
+        headline.setText(model.getHeadline());
+        directionHeadlineWithMethod.textProperty().bind((model.getDirectionHeadlineWithMethod()));
+        minAmountsHeadline.setText(model.getMinAmountsHeadline());
+        minAmountsHeadline.setManaged(model.getMinAmountsHeadline() != null);
+        minAmountsHeadline.setVisible(model.getMinAmountsHeadline() != null);
+        maxAmountsHeadline.setText(model.getMaxAmountsHeadline());
+        maxAmountsHeadline.setManaged(model.getMaxAmountsHeadline() != null);
+        maxAmountsHeadline.setVisible(model.getMaxAmountsHeadline() != null);
         fixAmountsHeadline.setText(model.getFixAmountsHeadline());
+        fixAmountsHeadline.setManaged(model.getFixAmountsHeadline() != null);
+        fixAmountsHeadline.setVisible(model.getFixAmountsHeadline() != null);
+        if (model.getFixAmountsHeadline() == null) {
+            GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 10, 0));
+        } else {
+            GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 5, 0));
+        }
+        detailsHeadline.setText(model.getDetailsHeadline());
 
         toSendAmountDescription.setText(model.getToSendAmountDescription());
         toSendAmount.setText(model.getToSendAmount());
         toReceiveAmountDescription.setText(model.getToReceiveAmountDescription());
         toReceiveAmount.setText(model.getToReceiveAmount());
 
+        priceDescription.setText(model.getPriceDescription());
         price.setText(model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
+        paymentMethodDescription.setText(model.getPaymentMethodDescription());
         paymentMethod.setText(model.getPaymentMethod());
-
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
 
+        createOfferSuccessButton.setOnAction(e -> controller.onShowOfferbook());
         takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());
+
+        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
+                show -> {
+                    createOfferSuccess.setVisible(show);
+                    if (show) {
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(createOfferSuccess, 450);
+                    } else {
+                        Transitions.removeEffect(content);
+                    }
+                });
         showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
                 show -> {
                     takeOfferSuccess.setVisible(show);
@@ -206,12 +264,69 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
                         Transitions.removeEffect(content);
                     }
                 });
+
+        if (model.getTakersPaymentMethods().size() > 1) {
+            paymentMethodsComboBox = new ComboBox<>(model.getTakersPaymentMethods());
+            paymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
+            GridPane.setMargin(paymentMethodValuePane, new Insets(-8, 0, -8, 0));
+            paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
+            paymentMethodsComboBox.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(FiatPaymentMethod method) {
+                    return method != null ? method.getDisplayString() : "";
+                }
+
+                @Override
+                public FiatPaymentMethod fromString(String string) {
+                    return null;
+                }
+            });
+
+            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
+            paymentMethodsComboBox.setOnAction(e -> {
+                if (paymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
+                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
+                    return;
+                }
+                controller.onSelectFiatPaymentMethod(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
+            });
+        } else {
+            GridPane.setMargin(paymentMethodValuePane, new Insets(0, 0, 0, 0));
+            paymentMethodValuePane.getChildren().setAll(paymentMethod);
+        }
     }
 
     @Override
     protected void onViewDetached() {
+        directionHeadlineWithMethod.textProperty().unbind();
+
+        createOfferSuccessButton.setOnAction(null);
         takeOfferSuccessButton.setOnAction(null);
+
+        showCreateOfferSuccessPin.unsubscribe();
         showTakeOfferSuccessPin.unsubscribe();
+
+        if (paymentMethodsComboBox != null) {
+            paymentMethodsComboBox.setOnAction(null);
+        }
+    }
+
+    private void configCreateOfferSuccess() {
+        VBox contentBox = getFeedbackContentBox();
+
+        createOfferSuccess.setVisible(false);
+        createOfferSuccess.setAlignment(Pos.TOP_CENTER);
+
+        Label headLineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.headline"));
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle"));
+        configFeedbackSubtitleLabel(subtitleLabel);
+
+        createOfferSuccessButton.setDefaultButton(true);
+        VBox.setMargin(createOfferSuccessButton, new Insets(10, 0, 0, 0));
+        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, createOfferSuccessButton);
+        createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private void configTakeOfferSuccess() {
@@ -220,10 +335,10 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         takeOfferSuccess.setVisible(false);
         takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.headline"));
+        Label headLineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
         takeOfferSuccessButton.setDefaultButton(true);

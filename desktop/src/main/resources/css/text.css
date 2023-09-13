@@ -271,55 +271,6 @@
 }
 
 
-.take-offer-review-description {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 0.9em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.take-offer-review-grid-headline {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 0.8em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.take-offer-review-value {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.1em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.take-offer-review-value-details {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.1em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.take-offer-review-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 2.5em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.take-offer-review-subtitle {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.take-offer-review-subtitle-value {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.7em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
 /* Generic Label properties */
 
 /* colors */
@@ -416,6 +367,9 @@
     -fx-font-size: 0.7em !Important;
 }
 
+.font-size-large {
+    -fx-font-size: 1.7em !Important;
+}
 /* fonts */
 .font-light {
     -fx-font-family: "IBM Plex Sans Light" !Important;
@@ -437,6 +391,15 @@
     -fx-underline: true;
 }
 
+.text-color-light {
+    -fx-fill: -fx-light-text-color !Important;
+    -fx-text-fill: -fx-light-text-color !Important;
+}
+
+.text-color-green {
+    -fx-fill: -bisq-green !Important;
+    -fx-text-fill: -bisq-green !Important;
+}
 
 .text-input {
     -fx-highlight-fill: -bisq-green;

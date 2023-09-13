@@ -12,12 +12,12 @@
 .button {
     -fx-background-color: rgba(255, 255, 255, 0.1);
     -fx-background-radius: 4;
+    -fx-background-insets: 0;
     -fx-border-color: transparent;
     -fx-border-radius: 4;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-padding: 5 32 5 32;
-    -fx-cursor: hand;
 }
 
 .button:hover {
@@ -27,7 +27,7 @@
 
 .button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.1);
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 1), 20, 0.5, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 10, 0.5, 0, 2);
 }
 
 .button:disabled {
@@ -43,12 +43,10 @@
 
 .button:default:hover {
     -fx-background-color: -bisq-green-lighter;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
 }
 
 .button:default:pressed {
-    -fx-background-color: -bisq-green-darker;
-    fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);
+    -fx-background-color: -bisq-green-dark;
 }
 
 .button:default:disabled {
@@ -76,6 +74,55 @@
 }
 
 
+.white-button {
+    -fx-background-color: -bisq-white;
+    -fx-fill: -bisq-black !important;
+    -fx-text-fill: -bisq-black !important;
+}
+
+.white-button > .text {
+    -fx-fill: -bisq-black !important;
+    -fx-text-fill: -bisq-black !important;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.white-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+}
+
+.white-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+}
+
+.white-button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.7);
+}
+
+.dark-grey-button {
+    -fx-background-color: -bisq-grey-4;
+    -fx-border-color: transparent;
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
+}
+
+.dark-grey-button:hover {
+    -fx-background-color: -bisq-grey-3;
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
+    -fx-effect: none;
+}
+
+.dark-grey-button:pressed {
+    -fx-background-color: -bisq-grey-2;
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+    -fx-effect: none;
+}
+
+.dark-grey-button:disabled {
+    -fx-background-color: -bisq-grey-7;
+    -fx-text-fill: rgba(255, 255, 255, 0.3);
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Outlined-Button                                                                  *
@@ -90,7 +137,6 @@
     -fx-text-fill: -bisq-green;
     -fx-font-size: 1em;
     -fx-padding: 5 32 5 32;
-    -fx-cursor: hand;
 }
 
 .outlined-button:hover {
@@ -98,11 +144,10 @@
     -fx-effect: none;
 }
 
-
 .outlined-button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.025);
-    -fx-border-color: -bisq-green-darker;
-    -fx-text-fill: -bisq-green-darker;
+    -fx-border-color: -bisq-green-dark;
+    -fx-text-fill: -bisq-green-dark;
     -fx-effect: none;
 }
 
@@ -132,6 +177,7 @@
     -fx-text-fill: rgba(255, 255, 255, 0.15);
 }
 
+
 .grey-transparent-outlined-button {
     -fx-background-color: transparent;
     -fx-border-color: rgba(255, 255, 255, 0.3);
@@ -155,6 +201,32 @@
     -fx-border-color: rgba(255, 255, 255, 0.15);
     -fx-text-fill: rgba(255, 255, 255, 0.15);
 }
+
+
+.white-transparent-outlined-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-white;
+    -fx-text-fill: -bisq-white;
+}
+
+.white-transparent-outlined-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-border-color: rgba(255, 255, 255, 0.93);
+    -fx-text-fill: rgba(255, 255, 255, 0.93);
+}
+
+.white-transparent-outlined-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.025);
+    -fx-border-color: rgba(255, 255, 255, 0.87);
+    -fx-text-fill: rgba(255, 255, 255, 0.87);
+}
+
+.white-transparent-outlined-button:disabled {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255, 255, 255, 0.55);
+    -fx-text-fill: rgba(255, 255, 255, 0.55);
+}
+
 
 .red-outlined-button {
     -fx-background-color: transparent;
@@ -216,7 +288,7 @@
 .text-button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.05);
     -fx-effect: none;
-    -fx-text-fill: -bisq-green-darker;
+    -fx-text-fill: -bisq-green-dark;
 }
 
 .text-button:disabled {
@@ -270,7 +342,7 @@
 }
 
 .chips-button-selected-pressed {
-    -fx-background-color: -bisq-green-darker;
+    -fx-background-color: -bisq-green-dark;
 }
 
 .chips-button-selected-hover {
@@ -362,7 +434,7 @@
 }
 
 .toggle-button:selected:pressed {
-    -fx-background-color: -bisq-green-darker;
+    -fx-background-color: -bisq-green-dark;
     /* fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);*/
 }
 
@@ -557,6 +629,16 @@
  *                                                                             *
  ******************************************************************************/
 
+.combo-box > .list-cell,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 10;
+}
+
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background-color: transparent;
 }
@@ -566,6 +648,7 @@
     -fx-background-color: -bisq-grey-16;
     -fx-background: transparent;
 }
+
 
 .combo-box-base,
 .combo-box-base:editable > .arrow-button {
@@ -728,3 +811,25 @@
 }
 
 
+.search-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * SearchBox                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.search-text-field {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+    -fx-font-size: 1em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-prompt-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}

@@ -190,15 +190,20 @@ public class Transitions {
         }
     }
 
-    public static void fade(Node node, double fromValue, double toValue, int duration) {
-        if (node == null) {
-            return;
-        }
+    public static FadeTransition fade(Node node, double fromValue, double toValue, int duration) {
+        return fade(node, fromValue, toValue, duration, null);
+    }
+
+    public static FadeTransition fade(Node node, double fromValue, double toValue, int duration, @Nullable Runnable finishedHandler) {
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
         node.setOpacity(fromValue);
         fade.setFromValue(fromValue);
         fade.setToValue(toValue);
         fade.play();
+        if (finishedHandler != null) {
+            fade.setOnFinished(actionEvent -> finishedHandler.run());
+        }
+        return fade;
     }
 
     public static FadeTransition fadeOut(Node node) {

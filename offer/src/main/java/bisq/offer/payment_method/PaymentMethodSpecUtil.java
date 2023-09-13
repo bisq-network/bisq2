@@ -26,8 +26,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class PaymentMethodSpecUtil {
     public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentRail> bitcoinPaymentRails) {
         return bitcoinPaymentRails.stream()
@@ -41,7 +39,6 @@ public class PaymentMethodSpecUtil {
     }
 
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {
-        checkArgument(!paymentMethods.isEmpty());
         return paymentMethods.stream()
                 .map(FiatPaymentMethodSpec::new)
                 .collect(Collectors.toList());

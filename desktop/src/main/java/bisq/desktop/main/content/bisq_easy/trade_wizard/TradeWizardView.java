@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer;
+package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
@@ -27,6 +27,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
+import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -45,7 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
+public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, TradeWizardController> {
     public static final double POPUP_HEIGHT = OverlayModel.HEIGHT;
     public static final double TOP_PANE_HEIGHT = 55;
     public static final double BUTTON_HEIGHT = 32;
@@ -63,17 +64,21 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private Label priceProgressItemLabel;
     private Region priceProgressItemLine;
     private Subscription priceProgressItemVisiblePin;
+    private Label takeOfferProgressItem;
+    private Region takeOfferProgressLine;
+    private UIScheduler progressLabelAnimationScheduler;
+    private FadeTransition progressLabelAnimation;
 
-    public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
+    public TradeWizardView(TradeWizardModel model, TradeWizardController controller) {
         super(new VBox(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Triple<HBox, Button, List<Label>> topPane = getProgressItems();
-        progressItemsBox = topPane.getFirst();
-        closeButton = topPane.getSecond();
-        progressLabelList = topPane.getThird();
+        Triple<HBox, Button, List<Label>> triple = getProgressItems();
+        progressItemsBox = triple.getFirst();
+        closeButton = triple.getSecond();
+        progressLabelList = triple.getThird();
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
@@ -115,8 +120,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
     @Override
     protected void onViewAttached() {
+        takeOfferProgressItem.setVisible(!model.isCreateOfferMode());
+        takeOfferProgressItem.setManaged(!model.isCreateOfferMode());
+        takeOfferProgressLine.setVisible(!model.isCreateOfferMode());
+        takeOfferProgressLine.setManaged(!model.isCreateOfferMode());
+
         nextButton.textProperty().bind(model.getNextButtonText());
         backButton.textProperty().bind(model.getBackButtonText());
+        backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
 
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
@@ -155,6 +166,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
         backButton.textProperty().unbind();
+        backButton.defaultButtonProperty().unbind();
 
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
@@ -171,6 +183,15 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
+
+        if (progressLabelAnimationScheduler != null) {
+            progressLabelAnimationScheduler.stop();
+            progressLabelAnimationScheduler = null;
+        }
+        if (progressLabelAnimation != null) {
+            progressLabelAnimation.stop();
+            progressLabelAnimation = null;
+        }
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
@@ -180,7 +201,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         priceProgressItemLine = getHLine();
         Label amount = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.amount"));
         Label method = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.method"));
-        Label complete = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
+        takeOfferProgressItem = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.takeOffer"));
+        takeOfferProgressLine = getHLine();
+        Label review = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
 
         Button closeButton = BisqIconButton.createIconButton("close");
 
@@ -190,6 +213,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));
+
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 direction,
                 getHLine(),
@@ -198,11 +222,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 method,
                 getHLine(),
                 amount,
+                takeOfferProgressLine,
+                takeOfferProgressItem,
                 getHLine(),
-                complete,
-                Spacer.fillHBox(), closeButton);
+                review,
+                Spacer.fillHBox(),
+                closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, complete)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {
@@ -215,7 +242,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         Label label = new Label(text.toUpperCase());
         label.setTextAlignment(TextAlignment.CENTER);
         label.setAlignment(Pos.CENTER);
-        label.getStyleClass().addAll("bisq-text-14");
+        label.getStyleClass().add("bisq-text-14");
         label.setOpacity(OPACITY);
         return label;
     }
@@ -223,9 +250,19 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private void applyProgress(int progressIndex, boolean delay) {
         if (progressIndex < progressLabelList.size()) {
             progressLabelList.forEach(label -> label.setOpacity(OPACITY));
+
+            if (progressLabelAnimation != null) {
+                progressLabelAnimation.stop();
+                progressLabelAnimation.getNode().setOpacity(OPACITY);
+            }
             Label label = progressLabelList.get(progressIndex);
             if (delay) {
-                UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
+                if (progressLabelAnimationScheduler != null) {
+                    progressLabelAnimationScheduler.stop();
+                }
+                progressLabelAnimationScheduler = UIScheduler.run(() -> {
+                            progressLabelAnimation = Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2);
+                        })
                         .after(Transitions.DEFAULT_DURATION / 2);
             } else {
                 label.setOpacity(1);

@@ -40,7 +40,7 @@ public class PreferencesController implements Controller {
     private final SettingsService settingsService;
     private final PreferencesModel model;
     private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, offerOnlyPin,
-            closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin;
+            closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin, requiredTotalReputationScorePin;
     private Subscription notifyForPreReleasePin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
@@ -56,12 +56,20 @@ public class PreferencesController implements Controller {
         model.getAddSupportedLanguageButtonDisabled().set(true);
         model.getSupportedLanguageCodes().setAll(LanguageRepository.CODES);
 
-        chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
-        useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
-        getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode()).to(settingsService.getPreventStandbyMode());
-        offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
-        closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken()).to(settingsService.getCloseMyOfferWhenTaken());
-        getSupportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes()).to(settingsService.getSupportedLanguageCodes());
+        chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType())
+                .to(settingsService.getChatNotificationType());
+        useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations())
+                .to(settingsService.getUseAnimations());
+        getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
+                .to(settingsService.getPreventStandbyMode());
+        requiredTotalReputationScorePin = FxBindings.bindBiDir(model.getRequiredTotalReputationScore())
+                .to(settingsService.getRequiredTotalReputationScore());
+        offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly())
+                .to(settingsService.getOffersOnly());
+        closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
+                .to(settingsService.getCloseMyOfferWhenTaken());
+        getSupportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes())
+                .to(settingsService.getSupportedLanguageCodes());
 
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
@@ -74,6 +82,7 @@ public class PreferencesController implements Controller {
     public void onDeactivate() {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
+        requiredTotalReputationScorePin.unbind();
         offerOnlyPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
         getPreventStandbyModePin.unbind();

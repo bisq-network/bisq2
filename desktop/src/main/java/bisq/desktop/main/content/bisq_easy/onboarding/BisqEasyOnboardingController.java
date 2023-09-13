@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.bisq_easy.create_offer.CreateOfferController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -54,7 +54,7 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     void onOpenTradeWizard() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(true));
+        Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(false));
     }
 
     void onOpenTradeGuide() {

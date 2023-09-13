@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.market;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.market;
 
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
@@ -40,23 +40,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class CreateOfferMarketController implements Controller {
-    private final CreateOfferMarketModel model;
+public class TradeWizardMarketController implements Controller {
+    private final TradeWizardMarketModel model;
     @Getter
-    private final CreateOfferMarketView view;
+    private final TradeWizardMarketView view;
     private final ChatService chatService;
     private final Runnable onNextHandler;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
     private Subscription searchTextPin;
 
-    public CreateOfferMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
+    public TradeWizardMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
         chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOfferbookSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
-        model = new CreateOfferMarketModel();
-        view = new CreateOfferMarketView(model, this);
+        model = new TradeWizardMarketModel();
+        view = new TradeWizardMarketView(model, this);
     }
 
     public ReadOnlyObjectProperty<Market> getMarket() {
@@ -64,7 +64,9 @@ public class CreateOfferMarketController implements Controller {
     }
 
     public void setDirection(Direction direction) {
-        model.setDirection(direction);
+        if (direction != null) {
+            model.setDirection(direction);
+        }
     }
 
     public void reset() {
@@ -100,7 +102,7 @@ public class CreateOfferMarketController implements Controller {
                             .map(ChatMessage::getAuthorUserProfileId)
                             .distinct()
                             .count();
-                    CreateOfferMarketView.MarketListItem item = new CreateOfferMarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
+                    TradeWizardMarketView.MarketListItem item = new TradeWizardMarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
                     if (market.equals(model.getSelectedMarket().get())) {
                         model.getSelectedMarketListItem().set(item);
                     }
@@ -127,7 +129,7 @@ public class CreateOfferMarketController implements Controller {
         searchTextPin.unsubscribe();
     }
 
-    void onMarketListItemClicked(CreateOfferMarketView.MarketListItem item) {
+    void onMarketListItemClicked(TradeWizardMarketView.MarketListItem item) {
         if (item == null) {
             return;
         }
@@ -138,11 +140,5 @@ public class CreateOfferMarketController implements Controller {
         model.getSelectedMarket().set(item.getMarket());
         bisqEasyOfferbookChannelService.findChannel(item.getMarket())
                 .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
-    }
-
-    private Optional<CreateOfferMarketView.MarketListItem> findMarketListItem(Market market) {
-        return model.getListItems().stream()
-                .filter(marketListItem -> marketListItem.getMarket().equals(market))
-                .findAny();
     }
 }

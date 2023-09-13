@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer;
+package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
@@ -29,7 +29,9 @@ import java.util.List;
 
 @Slf4j
 @Getter
-public class CreateOfferModel extends NavigationModel {
+public class TradeWizardModel extends NavigationModel {
+    @Setter
+    private boolean isCreateOfferMode;
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
@@ -42,18 +44,28 @@ public class CreateOfferModel extends NavigationModel {
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
     private boolean animateRightOut = true;
+    private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
 
-    public CreateOfferModel() {
+    public TradeWizardModel() {
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CREATE_OFFER_DIRECTION;
+        return NavigationTarget.TRADE_WIZARD_DIRECTION;
     }
 
     public void reset() {
         currentIndex.set(0);
-        selectedChildTarget.set(childTargets.get(0));
+        nextButtonText.set(null);
+        backButtonText.set(null);
+        closeButtonVisible.set(false);
+        nextButtonVisible.set(true);
+        nextButtonDisabled.set(true);
+        backButtonVisible.set(true);
+        priceProgressItemVisible.set(true);
+        childTargets.clear();
+        selectedChildTarget.set(null);
         animateRightOut = true;
+        isBackButtonHighlighted.set(false);
     }
 }
