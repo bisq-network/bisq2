@@ -27,10 +27,14 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 class TradeWizardReviewModel implements Model {
@@ -59,11 +63,14 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
+    private List<FiatPaymentMethod> fiatPaymentMethods;
+    @Setter
     private BisqEasyOfferbookMessage myOfferMessage;
     @Setter
     private String headline;
     @Setter
     private String directionHeadline;
+    private final StringProperty directionHeadlineWithMethod = new SimpleStringProperty();
     @Setter
     private String minAmountsHeadline;
     @Setter
@@ -111,9 +118,11 @@ class TradeWizardReviewModel implements Model {
         maxQuoteSideAmount = null;
         fixQuoteSideAmount = null;
         priceSpec = null;
+        fiatPaymentMethods = null;
         myOfferMessage = null;
         headline = null;
         directionHeadline = null;
+        directionHeadlineWithMethod.set(null);
         minAmountsHeadline = null;
         maxAmountsHeadline = null;
         fixAmountsHeadline = null;
@@ -132,6 +141,5 @@ class TradeWizardReviewModel implements Model {
         takersPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
         showTakeOfferSuccess.set(false);
-
     }
 }

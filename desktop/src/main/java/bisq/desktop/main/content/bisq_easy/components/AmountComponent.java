@@ -565,7 +565,7 @@ public class AmountComponent {
             VBox sliderBox = new VBox(2, slider, new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
             sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH);
 
-            VBox.setMargin(amountPane, new Insets(0, 0, 28, 0));
+            VBox.setMargin(amountPane, new Insets(0, 0, 20, 0));
             root.getChildren().addAll(description, amountPane, sliderBox);
         }
 

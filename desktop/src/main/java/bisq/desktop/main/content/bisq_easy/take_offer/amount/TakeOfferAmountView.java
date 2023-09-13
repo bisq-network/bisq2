@@ -38,7 +38,7 @@ public class TakeOfferAmountView extends View<VBox, TakeOfferAmountModel, TakeOf
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, Spacer.fillVBox());
     }
 

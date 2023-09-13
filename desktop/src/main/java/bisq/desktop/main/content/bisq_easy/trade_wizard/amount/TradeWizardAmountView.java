@@ -51,8 +51,8 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         toggleButton.getStyleClass().add("outlined-button");
         toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 
-        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(toggleButton, new Insets(15, 0, 0, 0));
+        VBox.setMargin(headLineLabel, new Insets(-30, 0, 10, 0));
+        VBox.setMargin(toggleButton, new Insets(25, 0, 0, 0));
         root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, amountBox, toggleButton, Spacer.fillVBox());
     }
 

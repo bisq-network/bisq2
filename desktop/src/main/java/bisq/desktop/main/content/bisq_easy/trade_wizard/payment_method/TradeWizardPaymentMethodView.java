@@ -61,7 +61,7 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(450);
+        subtitleLabel.setMaxWidth(600);
 
         nonFoundLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");
@@ -84,7 +84,7 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         custom.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(10, 60, 30, 60));
+        VBox.setMargin(flowPane, new Insets(25, 60, 30, 60));
         root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
         paymentMethodListener = c -> {

@@ -53,7 +53,7 @@ class TakeOfferReviewModel implements Model {
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
 
     @Setter
-    private String directionHeadline;
+    private String directionHeadlineWithMethod;
     @Setter
     private String fixAmountsHeadline;
     @Setter

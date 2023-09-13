@@ -42,7 +42,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private final Button takeOfferSuccessButton;
     private final Label toReceiveAmountDescription, toSendAmountDescription, priceDetails, paymentMethod, fee, feeDetails;
     private final GridPane content;
-    private final MultiStyleLabelPane directionHeadline, fixAmountsHeadline, toSendAmount,
+    private final MultiStyleLabelPane directionHeadlineWithMethod, fixAmountsHeadline, toSendAmount,
             toReceiveAmount, price;
     private Subscription showTakeOfferSuccessPin;
 
@@ -52,6 +52,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content = new GridPane();
         content.setHgap(10);
         content.setVgap(10);
+        content.setMouseTransparent(true);
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(25);
         ColumnConstraints col2 = new ColumnConstraints();
@@ -70,114 +71,90 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(0, 20, 10, 0));
-        GridPane.setRowIndex(headline, rowIndex);
-        GridPane.setColumnIndex(headline, 1);
-        GridPane.setColumnSpan(headline, 2);
-        content.getChildren().add(headline);
-        content.setMouseTransparent(true);
+        GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
+        GridPane.setColumnSpan(headline, 4);
+        content.add(headline, 0, rowIndex);
 
         rowIndex++;
         Region line1 = getLine();
-        GridPane.setRowIndex(line1, rowIndex);
         GridPane.setColumnSpan(line1, 4);
-        content.getChildren().add(line1);
+        content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        directionHeadline = new MultiStyleLabelPane();
-        directionHeadline.getStyleClass().add("trade-wizard-review-direction");
-        GridPane.setMargin(directionHeadline, new Insets(16, 0, 10, 0));
-        GridPane.setColumnSpan(directionHeadline, 4);
-        content.add(directionHeadline, 0, rowIndex);
+        directionHeadlineWithMethod = new MultiStyleLabelPane();
+        directionHeadlineWithMethod.getStyleClass().add("trade-wizard-review-direction");
+        GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 5, 0));
+        GridPane.setColumnSpan(directionHeadlineWithMethod, 4);
+        content.add(directionHeadlineWithMethod, 0, rowIndex);
 
         rowIndex++;
         fixAmountsHeadline = new MultiStyleLabelPane();
-        // GridPane.setMargin(fixAmountsHeadline, new Insets(-27, 0, 17, 0));
-        GridPane.setMargin(fixAmountsHeadline, new Insets(-7, 0, 17, 0));
-        GridPane.setRowIndex(fixAmountsHeadline, rowIndex);
+        GridPane.setMargin(fixAmountsHeadline, new Insets(-5, 0, 15, 0));
         GridPane.setColumnSpan(fixAmountsHeadline, 4);
-        content.getChildren().add(fixAmountsHeadline);
+        content.add(fixAmountsHeadline, 0, rowIndex);
 
         rowIndex++;
-        Label gridPaneHeadline = new Label(Res.get("bisqEasy.takeOffer.review.gridPaneHeadline").toUpperCase());
-        gridPaneHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        GridPane.setMargin(gridPaneHeadline, new Insets(0, 0, -2, 0));
-        GridPane.setRowIndex(gridPaneHeadline, rowIndex);
-        GridPane.setColumnSpan(gridPaneHeadline, 4);
-        content.getChildren().add(gridPaneHeadline);
+        Label detailsHeadline = new Label(Res.get("bisqEasy.takeOffer.review.detailsHeadline").toUpperCase());
+        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setColumnSpan(detailsHeadline, 4);
+        content.add(detailsHeadline, 0, rowIndex);
 
         rowIndex++;
         Region line2 = getLine();
-        GridPane.setMargin(line2, new Insets(0, 0, 3, 0));
-        GridPane.setRowIndex(line2, rowIndex);
+        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
         GridPane.setColumnSpan(line2, 4);
-        content.getChildren().add(line2);
+        content.add(line2, 0, rowIndex);
 
         rowIndex++;
         toSendAmountDescription = new Label(Res.get("bisqEasy.takeOffer.review.toPay"));
         toSendAmountDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(toSendAmountDescription, rowIndex);
-        GridPane.setColumnIndex(toSendAmountDescription, 0);
-        content.getChildren().add(toSendAmountDescription);
+        content.add(toSendAmountDescription, 0, rowIndex);
 
         toSendAmount = new MultiStyleLabelPane();
         toSendAmount.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(toSendAmount, rowIndex);
-        GridPane.setColumnIndex(toSendAmount, 1);
-        content.getChildren().add(toSendAmount);
+        GridPane.setColumnSpan(toSendAmount, 2);
+        content.add(toSendAmount, 1, rowIndex);
 
         rowIndex++;
         toReceiveAmountDescription = new Label(Res.get("bisqEasy.takeOffer.review.toReceive"));
         toReceiveAmountDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(toReceiveAmountDescription, rowIndex);
-        GridPane.setColumnIndex(toReceiveAmountDescription, 0);
-        content.getChildren().add(toReceiveAmountDescription);
+        content.add(toReceiveAmountDescription, 0, rowIndex);
 
         toReceiveAmount = new MultiStyleLabelPane();
         toReceiveAmount.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(toReceiveAmount, rowIndex);
-        GridPane.setColumnIndex(toReceiveAmount, 1);
-        content.getChildren().add(toReceiveAmount);
+        GridPane.setColumnSpan(toReceiveAmount, 2);
+        content.add(toReceiveAmount, 1, rowIndex);
 
         rowIndex++;
-        Label methodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method"));
-        methodDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(methodDescription, rowIndex);
-        GridPane.setColumnIndex(methodDescription, 0);
-        content.getChildren().add(methodDescription);
-
-        paymentMethod = new Label();
-        paymentMethod.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(paymentMethod, rowIndex);
-        GridPane.setColumnIndex(paymentMethod, 1);
-        content.getChildren().add(paymentMethod);
-
-        rowIndex++;
-        Label sellersPriceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.price"));
-        sellersPriceDescription.getStyleClass().add(descriptionStyle);
-        GridPane.setRowIndex(sellersPriceDescription, rowIndex);
-        GridPane.setColumnIndex(sellersPriceDescription, 0);
-        content.getChildren().add(sellersPriceDescription);
+        Label priceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.price"));
+        priceDescription.getStyleClass().add(descriptionStyle);
+        content.add(priceDescription, 0, rowIndex);
 
         price = new MultiStyleLabelPane();
         price.getStyleClass().add(valueStyle);
-        GridPane.setRowIndex(price, rowIndex);
-        GridPane.setColumnIndex(price, 1);
-        content.getChildren().add(price);
+        content.add(price, 1, rowIndex);
 
         priceDetails = new Label();
         priceDetails.getStyleClass().add(detailsStyle);
-        GridPane.setColumnSpan(priceDetails, 3);
+        GridPane.setColumnSpan(priceDetails, 2);
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        Label feeInfoDescription = new Label(Res.get("bisqEasy.takeOffer.review.feeDescription"));
+        Label paymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method"));
+        paymentMethodDescription.getStyleClass().add(descriptionStyle);
+        content.add(paymentMethodDescription, 0, rowIndex);
+
+        paymentMethod = new Label();
+        paymentMethod.getStyleClass().add(valueStyle);
+        content.add(paymentMethod, 1, rowIndex);
+
+        rowIndex++;
+        Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(descriptionStyle);
         content.add(feeInfoDescription, 0, rowIndex);
 
         fee = new Label();
         fee.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(fee, 3);
         content.add(fee, 1, rowIndex);
 
         feeDetails = new Label();
@@ -187,11 +164,10 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         rowIndex++;
         Region line3 = getLine();
-        GridPane.setMargin(line3, new Insets(2, 0, 0, 0));
-        GridPane.setRowIndex(line3, rowIndex);
         GridPane.setColumnSpan(line3, 4);
-        content.getChildren().add(line3);
+        content.add(line3, 0, rowIndex);
 
+        // Feedback overlay
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
         takeOfferSuccess = new VBox(20);
         configTakeOfferSuccess();
@@ -201,10 +177,9 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         root.getChildren().addAll(content, takeOfferSuccess);
     }
 
-
     @Override
     protected void onViewAttached() {
-        directionHeadline.setText(model.getDirectionHeadline());
+        directionHeadlineWithMethod.setText(model.getDirectionHeadlineWithMethod());
         fixAmountsHeadline.setText(model.getFixAmountsHeadline());
 
         toSendAmountDescription.setText(model.getToSendAmountDescription());
@@ -269,7 +244,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
     private void configFeedbackSubtitleLabel(Label subtitleLabel) {
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
+        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 150);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
         subtitleLabel.setWrapText(true);

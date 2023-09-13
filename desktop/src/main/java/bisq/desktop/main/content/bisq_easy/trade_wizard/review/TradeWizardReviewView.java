@@ -51,10 +51,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
     private final StackPane paymentMethodValuePane;
-    private final MultiStyleLabelPane directionHeadline, minAmountsHeadline, maxAmountsHeadline,
+    private final MultiStyleLabelPane directionHeadlineWithMethod, minAmountsHeadline, maxAmountsHeadline,
             fixAmountsHeadline, toSendAmount, toReceiveAmount, price;
     @Nullable
-    private ComboBox<FiatPaymentMethod> takersFiatPaymentMethods;
+    private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
     TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller) {
@@ -63,6 +63,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         content = new GridPane();
         content.setHgap(10);
         content.setVgap(10);
+        content.setMouseTransparent(true);
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(25);
         ColumnConstraints col2 = new ColumnConstraints();
@@ -81,10 +82,9 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         headline = new Label();
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(0, 20, 10, 0));
+        GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
         GridPane.setColumnSpan(headline, 4);
         content.add(headline, 0, rowIndex);
-        content.setMouseTransparent(true);
 
         rowIndex++;
         Region line1 = getLine();
@@ -92,15 +92,14 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        directionHeadline = new MultiStyleLabelPane();
-        directionHeadline.getStyleClass().add("trade-wizard-review-direction");
-        GridPane.setMargin(directionHeadline, new Insets(16, 0, 10, 0));
-        GridPane.setColumnSpan(directionHeadline, 4);
-        content.add(directionHeadline, 0, rowIndex);
+        directionHeadlineWithMethod = new MultiStyleLabelPane();
+        directionHeadlineWithMethod.getStyleClass().add("trade-wizard-review-direction");
+        GridPane.setColumnSpan(directionHeadlineWithMethod, 4);
+        content.add(directionHeadlineWithMethod, 0, rowIndex);
 
         rowIndex++;
         minAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setMargin(minAmountsHeadline, new Insets(-15, 0, -18, 0));
+        GridPane.setMargin(minAmountsHeadline, new Insets(-15, 0, -10, 0));
         GridPane.setColumnSpan(minAmountsHeadline, 4);
         content.add(minAmountsHeadline, 0, rowIndex);
 
@@ -111,20 +110,19 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         rowIndex++;
         fixAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setMargin(fixAmountsHeadline, new Insets(-27, 0, 17, 0));
+        GridPane.setMargin(fixAmountsHeadline, new Insets(-25, 0, 15, 0));
         GridPane.setColumnSpan(fixAmountsHeadline, 4);
         content.add(fixAmountsHeadline, 0, rowIndex);
 
         rowIndex++;
         detailsHeadline = new Label();
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        GridPane.setMargin(detailsHeadline, new Insets(0, 0, -2, 0));
         GridPane.setColumnSpan(detailsHeadline, 4);
         content.add(detailsHeadline, 0, rowIndex);
 
         rowIndex++;
         Region line2 = getLine();
-        GridPane.setMargin(line2, new Insets(0, 0, 3, 0));
+        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
         GridPane.setColumnSpan(line2, 4);
         content.add(line2, 0, rowIndex);
 
@@ -190,7 +188,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         rowIndex++;
         Region line3 = getLine();
-        GridPane.setMargin(line3, new Insets(2, 0, 0, 0));
         GridPane.setColumnSpan(line3, 4);
         content.add(line3, 0, rowIndex);
 
@@ -213,7 +210,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     @Override
     protected void onViewAttached() {
         headline.setText(model.getHeadline());
-        directionHeadline.setText(model.getDirectionHeadline());
+        directionHeadlineWithMethod.textProperty().bind((model.getDirectionHeadlineWithMethod()));
         minAmountsHeadline.setText(model.getMinAmountsHeadline());
         minAmountsHeadline.setManaged(model.getMinAmountsHeadline() != null);
         minAmountsHeadline.setVisible(model.getMinAmountsHeadline() != null);
@@ -224,9 +221,9 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         fixAmountsHeadline.setManaged(model.getFixAmountsHeadline() != null);
         fixAmountsHeadline.setVisible(model.getFixAmountsHeadline() != null);
         if (model.getFixAmountsHeadline() == null) {
-            GridPane.setMargin(directionHeadline, new Insets(9, 0, 10, 0));
+            GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 10, 0));
         } else {
-            GridPane.setMargin(directionHeadline, new Insets(16, 0, 10, 0));
+            GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 5, 0));
         }
         detailsHeadline.setText(model.getDetailsHeadline());
 
@@ -269,11 +266,11 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                 });
 
         if (model.getTakersPaymentMethods().size() > 1) {
-            takersFiatPaymentMethods = new ComboBox<>(model.getTakersPaymentMethods());
-            takersFiatPaymentMethods.getStyleClass().add("trade-wizard-review-value");
-            StackPane.setMargin(takersFiatPaymentMethods, new Insets(0, 0, 0, -9));
-            paymentMethodValuePane.getChildren().setAll(takersFiatPaymentMethods);
-            takersFiatPaymentMethods.setConverter(new StringConverter<>() {
+            paymentMethodsComboBox = new ComboBox<>(model.getTakersPaymentMethods());
+            paymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
+            GridPane.setMargin(paymentMethodValuePane, new Insets(-8, 0, -8, 0));
+            paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
+            paymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(FiatPaymentMethod method) {
                     return method != null ? method.getDisplayString() : "";
@@ -285,29 +282,32 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                 }
             });
 
-            takersFiatPaymentMethods.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
-            takersFiatPaymentMethods.setOnAction(e -> {
-                if (takersFiatPaymentMethods.getSelectionModel().getSelectedItem() == null) {
-                    takersFiatPaymentMethods.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
+            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
+            paymentMethodsComboBox.setOnAction(e -> {
+                if (paymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
+                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
                     return;
                 }
-                controller.onSelectFiatPaymentMethod(takersFiatPaymentMethods.getSelectionModel().getSelectedItem());
+                controller.onSelectFiatPaymentMethod(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
             });
         } else {
+            GridPane.setMargin(paymentMethodValuePane, new Insets(0, 0, 0, 0));
             paymentMethodValuePane.getChildren().setAll(paymentMethod);
         }
     }
 
     @Override
     protected void onViewDetached() {
+        directionHeadlineWithMethod.textProperty().unbind();
+
         createOfferSuccessButton.setOnAction(null);
         takeOfferSuccessButton.setOnAction(null);
 
         showCreateOfferSuccessPin.unsubscribe();
         showTakeOfferSuccessPin.unsubscribe();
 
-        if (takersFiatPaymentMethods != null) {
-            takersFiatPaymentMethods.setOnAction(null);
+        if (paymentMethodsComboBox != null) {
+            paymentMethodsComboBox.setOnAction(null);
         }
     }
 
@@ -362,8 +362,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 150);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         subtitleLabel.setMinHeight(100);
-        subtitleLabel.getStyleClass().add("bisq-text-21");
         subtitleLabel.setWrapText(true);
+        subtitleLabel.getStyleClass().add("bisq-text-21");
     }
 
     private Region getLine() {

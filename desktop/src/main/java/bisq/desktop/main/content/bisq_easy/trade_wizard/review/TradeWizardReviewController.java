@@ -114,7 +114,13 @@ public class TradeWizardReviewController implements Controller {
 
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
-            model.setTakersSelectedPaymentMethod(null);
+            resetSelectedPaymentMethod();
+        }
+    }
+
+    public void setSelectedBisqEasyOffer(BisqEasyOffer selectedBisqEasyOffer) {
+        if (selectedBisqEasyOffer != null) {
+            resetSelectedPaymentMethod();
         }
     }
 
@@ -238,6 +244,7 @@ public class TradeWizardReviewController implements Controller {
 
         String marketCodes = market.getMarketCodes();
 
+        model.setFiatPaymentMethods(fiatPaymentMethods);
         model.setPriceSpec(priceSpec);
         priceInput.setMarket(market);
         priceInput.setDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker", marketCodes));
@@ -343,7 +350,6 @@ public class TradeWizardReviewController implements Controller {
                     fixBaseSideAmount.getCode()
             ));
 
-
             if (isCreateOfferMode && direction.isSell()) {
                 model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
                         formattedBaseAmount, fixBaseSideAmount.getCode()));
@@ -365,7 +371,6 @@ public class TradeWizardReviewController implements Controller {
                 Res.get("bisqEasy.tradeWizard.review.feeDetails.buyer") :
                 Res.get("bisqEasy.tradeWizard.review.feeDetails.seller"));
 
-        String directionHeadline;
         if (isCreateOfferMode) {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
@@ -376,7 +381,6 @@ public class TradeWizardReviewController implements Controller {
             );
             model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false));
 
-
             if (direction.isSell()) {
                 // Maker as seller
                 model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.seller"));
@@ -384,7 +388,7 @@ public class TradeWizardReviewController implements Controller {
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toSend"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
 
-                directionHeadline = Res.get("bisqEasy.tradeWizard.review.directionHeadline.maker.seller");
+                model.setDirectionHeadline(Res.get("bisqEasy.tradeWizard.review.directionHeadline.maker.seller"));
             } else {
                 // Maker as buyer
                 model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.buyer"));
@@ -392,7 +396,7 @@ public class TradeWizardReviewController implements Controller {
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toPay"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
 
-                directionHeadline = Res.get("bisqEasy.tradeWizard.review.directionHeadline.maker.buyer");
+                model.setDirectionHeadline(Res.get("bisqEasy.tradeWizard.review.directionHeadline.maker.buyer"));
             }
         } else {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.taker"));
@@ -414,27 +418,17 @@ public class TradeWizardReviewController implements Controller {
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toSend"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
 
-                directionHeadline = Res.get("bisqEasy.tradeWizard.review.directionHeadline.taker.seller");
+                model.setDirectionHeadline(Res.get("bisqEasy.tradeWizard.review.directionHeadline.taker.seller"));
             } else {
                 // Taker as buyer
                 model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toPay"));
                 model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
 
-                directionHeadline = Res.get("bisqEasy.tradeWizard.review.directionHeadline.taker.buyer");
+                model.setDirectionHeadline(Res.get("bisqEasy.tradeWizard.review.directionHeadline.taker.buyer"));
             }
         }
 
-        String fiatPaymentMethodsString;
-        if (fiatPaymentMethods.size() > 2) {
-            fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods.stream()
-                    .limit(2)
-                    .collect(Collectors.toList()), false) + ",...";
-        } else {
-            fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false);
-        }
-        fiatPaymentMethodsString = StringUtils.truncate(fiatPaymentMethodsString, 40);
-        model.setDirectionHeadline(directionHeadline + " " +
-                Res.get("bisqEasy.tradeWizard.review.directionHeadline.payment", fiatPaymentMethodsString));
+        applyDirectionHeadlineWithMethod();
     }
 
     public void reset() {
@@ -503,6 +497,31 @@ public class TradeWizardReviewController implements Controller {
 
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
         model.setTakersSelectedPaymentMethod(paymentMethod);
+        applyDirectionHeadlineWithMethod();
+    }
+
+    private void resetSelectedPaymentMethod() {
+        model.setTakersSelectedPaymentMethod(null);
+    }
+
+    private void applyDirectionHeadlineWithMethod() {
+        String directionHeadline = model.getDirectionHeadline();
+        List<FiatPaymentMethod> fiatPaymentMethods = model.getFiatPaymentMethods();
+        String fiatPaymentMethodsString;
+        if (model.isCreateOfferMode()) {
+            if (fiatPaymentMethods.size() > 2) {
+                fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods.stream()
+                        .limit(2)
+                        .collect(Collectors.toList()), false) + ",...";
+            } else {
+                fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false);
+            }
+            fiatPaymentMethodsString = StringUtils.truncate(fiatPaymentMethodsString, 40);
+        } else {
+            fiatPaymentMethodsString = model.getTakersSelectedPaymentMethod().getDisplayString();
+        }
+        model.getDirectionHeadlineWithMethod().set(directionHeadline + " " +
+                Res.get("bisqEasy.tradeWizard.review.directionHeadline.payment", fiatPaymentMethodsString));
     }
 
     private void applyPriceDetails(Direction direction, PriceSpec priceSpec, Market market) {
