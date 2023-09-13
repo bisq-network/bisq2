@@ -25,6 +25,6 @@ import lombok.Getter;
 public class BisqEasyModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY_OFFERBOOK;
+        return NavigationTarget.BISQ_EASY_ONBOARDING;
     }
 }

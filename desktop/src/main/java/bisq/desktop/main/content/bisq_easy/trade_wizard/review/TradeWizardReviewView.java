@@ -276,7 +276,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             takersFiatPaymentMethods.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(FiatPaymentMethod method) {
-                    return method != null ? method.getShortDisplayString() : "";
+                    return method != null ? method.getDisplayString() : "";
                 }
 
                 @Override

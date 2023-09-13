@@ -374,7 +374,7 @@ public class TradeWizardReviewController implements Controller {
                             Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription") :
                             Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.maker")
             );
-            model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
+            model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false));
 
 
             if (direction.isSell()) {
@@ -428,9 +428,9 @@ public class TradeWizardReviewController implements Controller {
         if (fiatPaymentMethods.size() > 2) {
             fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods.stream()
                     .limit(2)
-                    .collect(Collectors.toList())) + ",...";
+                    .collect(Collectors.toList()), false) + ",...";
         } else {
-            fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
+            fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false);
         }
         fiatPaymentMethodsString = StringUtils.truncate(fiatPaymentMethodsString, 40);
         model.setDirectionHeadline(directionHeadline + " " +

@@ -83,6 +83,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         centerVBox.getChildren().add(0, tradeWelcomeViewRoot);
 
         VBox.setMargin(tradeStateViewRoot, new Insets(0, 0, 10, 0));
+        VBox.setVgrow(tradeStateViewRoot, Priority.ALWAYS);
         centerVBox.getChildren().add(2, tradeStateViewRoot);
     }
 

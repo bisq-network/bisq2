@@ -103,10 +103,10 @@
 }
 
 .bisq-easy-open-trades-welcome-info {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.2em;
-    -fx-font-family: "IBM Plex Sans";
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-easy-open-trades-welcome-lines {

@@ -59,7 +59,7 @@ public class TakeOfferPriceView extends View<VBox, TakeOfferPriceModel, TakeOffe
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(400);
+        subtitleLabel.setMaxWidth(500);
 
         percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage"));
 
