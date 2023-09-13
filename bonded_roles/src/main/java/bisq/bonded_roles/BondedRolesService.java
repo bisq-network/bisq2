@@ -29,6 +29,7 @@ import bisq.network.NetworkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -36,20 +37,20 @@ import java.util.concurrent.CompletableFuture;
 public class BondedRolesService implements Service {
     @Getter
     public static class Config {
-        private final com.typesafe.config.Config marketPrice;
+        private final List<? extends com.typesafe.config.Config> marketPriceServiceProviders;
         private final com.typesafe.config.Config blockchainExplorer;
         private final boolean ignoreSecurityManager;
 
-        public Config(com.typesafe.config.Config marketPrice,
+        public Config(List<? extends com.typesafe.config.Config> marketPriceServiceProviders,
                       com.typesafe.config.Config blockchainExplorer,
                       boolean ignoreSecurityManager) {
-            this.marketPrice = marketPrice;
+            this.marketPriceServiceProviders = marketPriceServiceProviders;
             this.blockchainExplorer = blockchainExplorer;
             this.ignoreSecurityManager = ignoreSecurityManager;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getConfig("marketPrice"),
+            return new Config(config.getConfigList("marketPriceServiceProviders"),
                     config.getConfig("blockchainExplorer"),
                     config.getBoolean("ignoreSecurityManager"));
         }
@@ -65,7 +66,7 @@ public class BondedRolesService implements Service {
     public BondedRolesService(Config config, Version version, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
-        marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
+        marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPriceServiceProviders()),
                 networkService,
                 version);
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
