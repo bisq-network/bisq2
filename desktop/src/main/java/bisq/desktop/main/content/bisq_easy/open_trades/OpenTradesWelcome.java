@@ -27,6 +27,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,25 +80,30 @@ public class OpenTradesWelcome {
 
             root.getStyleClass().add("bisq-easy-open-trades-welcome-bg");
             root.setPadding(new Insets(30, 48, 44, 48));
+            root.setAlignment(Pos.TOP_LEFT);
 
             Label headlineLabel = new Label(Res.get("bisqEasy.openTrades.welcome.headline"));
-            headlineLabel.getStyleClass().add("bisq-text-headline-4");
             headlineLabel.setWrapText(true);
+            headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
             Label infoHeadline = new Label(Res.get("bisqEasy.openTrades.welcome.info"));
             infoHeadline.setWrapText(true);
+            infoHeadline.setAlignment(Pos.TOP_LEFT);
             infoHeadline.getStyleClass().add("bisq-easy-open-trades-welcome-info");
+            // todo container structure does not guarantee the wrapping
+            infoHeadline.setMinHeight(80);
 
-            HBox line1 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line1"), "reputation-white");
-            HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "fiat-btc-small-white");
-            HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "thumbs-up-white");
+            HBox line1 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line1"), "reputation");
+            HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "fiat-btc-small");
+            HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "thumbs-up");
 
             button = new Button(Res.get("bisqEasy.tradeGuide.open"));
             button.setDefaultButton(true);
             button.getStyleClass().add("super-large-button");
             button.setMaxWidth(Double.MAX_VALUE);
 
-            VBox.setMargin(infoHeadline, new Insets(5, 0, 20, 0));
+            VBox.setVgrow(infoHeadline, Priority.ALWAYS);
+            VBox.setMargin(infoHeadline, new Insets(0, 0, -20, 0));
             VBox.setMargin(button, new Insets(20, 0, 0, 0));
             root.getChildren().addAll(headlineLabel, infoHeadline, line1, line2, line3, button);
         }

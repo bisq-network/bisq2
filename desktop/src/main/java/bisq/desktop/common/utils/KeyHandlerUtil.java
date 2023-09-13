@@ -60,15 +60,15 @@ public class KeyHandlerUtil {
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
+                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_DIRECTION);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_MARKET);
+                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_MARKET);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_AMOUNT);
+                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_AMOUNT);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
+                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_REVIEW_OFFER);
+                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_REVIEW_OFFER);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.H, keyEvent)) {
                 OverlayController.hide();
             }

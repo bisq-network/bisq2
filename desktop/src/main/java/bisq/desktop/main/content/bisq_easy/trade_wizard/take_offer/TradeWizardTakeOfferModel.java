@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.review;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -28,9 +28,12 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,9 +41,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-class CreateOfferReviewOfferModel implements Model {
-    @Setter
-    private boolean showMatchingOffers;
+class TradeWizardTakeOfferModel implements Model {
     @Setter
     private BisqEasyOfferbookChannel selectedChannel;
     @Setter
@@ -50,40 +51,50 @@ class CreateOfferReviewOfferModel implements Model {
     @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods;
     @Setter
-    private String quoteAmountAsString;
-    @Setter
-    private String takeOfferHeadline;
-    @Setter
-    private String myOfferText;
-    @Setter
-    private BisqEasyOfferbookMessage myOfferMessage;
-    @Setter
-    private BisqEasyOffer bisqEasyOffer;
-    @Setter
-    private boolean isMinAmountEnabled;
-    @Setter
     private PriceSpec priceSpec = new MarketPriceSpec();
     @Setter
     private AmountSpec amountSpec;
-    private final BooleanProperty matchingOffersVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-    private final ObservableList<CreateOfferReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
-    private final SortedList<CreateOfferReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
+    @Setter
+    private boolean isMinAmountEnabled;
+    @Setter
+    private BisqEasyOffer bisqEasyOffer;
+    @Setter
+    private BisqEasyOfferbookMessage myOfferMessage;
+    @Setter
+    private String quoteAmountAsString;
+    @Setter
+    private String myOfferText;
+    @Setter
+    private String headLine;
+    @Setter
+    private String subHeadLine;
+    @Setter
+    private TradeWizardTakeOfferView.ListItem selectedItem;
+    private final BooleanProperty showOffers = new SimpleBooleanProperty();
+    private final ObservableList<TradeWizardTakeOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
+    private final FilteredList<TradeWizardTakeOfferView.ListItem> filteredList = new FilteredList<>(matchingOffers);
+    private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final ObjectProperty<BisqEasyOffer> selectedBisqEasyOffer = new SimpleObjectProperty<>();
+    private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
 
     void reset() {
-        showMatchingOffers = false;
         selectedChannel = null;
         direction = null;
         market = null;
         fiatPaymentMethods.clear();
-        myOfferText = null;
-        myOfferMessage = null;
-        isMinAmountEnabled = false;
         priceSpec = new MarketPriceSpec();
         amountSpec = null;
-        matchingOffersVisible.set(false);
-        showCreateOfferSuccess.set(false);
+        isMinAmountEnabled = false;
+        bisqEasyOffer = null;
+        myOfferMessage = null;
+        quoteAmountAsString = null;
+        myOfferText = null;
+        headLine = null;
+        subHeadLine = null;
+        selectedItem = null;
+        showOffers.set(false);
         matchingOffers.clear();
-
+        selectedBisqEasyOffer.set(null);
+        isBackButtonHighlighted.set(false);
     }
 }

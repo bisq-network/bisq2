@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
@@ -35,12 +35,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Getter
-public class CreateOfferAmountModel implements Model {
-    private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
-    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
-    private final StringProperty toggleButtonText = new SimpleStringProperty();
-    private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
-    private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
+public class TradeWizardAmountModel implements Model {
     @Setter
     private Direction direction;
     @Setter
@@ -52,19 +47,27 @@ public class CreateOfferAmountModel implements Model {
     @Setter
     private String headline;
     @Setter
-    private boolean isOpenedFromDashboard;
+    private boolean isCreateOfferMode;
     @Setter
     private Optional<PriceQuote> bestOffersPrice = Optional.empty();
+    private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
+    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final StringProperty toggleButtonText = new SimpleStringProperty();
+    private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
+    private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
 
     public void reset() {
-        showRangeAmounts.set(false);
-        isMinAmountEnabled.set(false);
-        toggleButtonText.set(null);
-        amountSpec.set(null);
         direction = null;
         market = MarketRepository.getDefault();
         fiatPaymentMethods = new ArrayList<>();
         priceSpec = new MarketPriceSpec();
+        headline = null;
+        isCreateOfferMode = false;
+        bestOffersPrice = Optional.empty();
+        showRangeAmounts.set(false);
+        isMinAmountEnabled.set(false);
+        toggleButtonText.set(null);
+        amountSpec.set(null);
         areAmountsValid.set(true);
     }
 }

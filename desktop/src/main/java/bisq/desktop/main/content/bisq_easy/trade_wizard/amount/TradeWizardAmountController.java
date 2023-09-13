@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -62,10 +62,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class CreateOfferAmountController implements Controller {
-    private final CreateOfferAmountModel model;
+public class TradeWizardAmountController implements Controller {
+    private final TradeWizardAmountModel model;
     @Getter
-    private final CreateOfferAmountView view;
+    private final TradeWizardAmountView view;
     private final AmountComponent minAmountComponent, maxOrFixAmountComponent;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
@@ -76,28 +76,28 @@ public class CreateOfferAmountController implements Controller {
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, areAmountsValidPin;
 
-    public CreateOfferAmountController(ServiceProvider serviceProvider) {
+    public TradeWizardAmountController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
-        model = new CreateOfferAmountModel();
+        model = new TradeWizardAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
         minAmountComponent.setDescription(Res.get("bisqEasy.createOffer.amount.description.minAmount"));
         maxOrFixAmountComponent = new AmountComponent(serviceProvider, true);
 
-        view = new CreateOfferAmountView(model, this,
+        view = new TradeWizardAmountView(model, this,
                 minAmountComponent,
                 maxOrFixAmountComponent);
     }
 
-    public void setOpenedFromDashboard(boolean isOpenedFromDashboard) {
-        model.setOpenedFromDashboard(isOpenedFromDashboard);
-        model.getShowRangeAmounts().set(!isOpenedFromDashboard);
-        if (isOpenedFromDashboard) {
+    public void setIsCreateOfferMode(boolean isCreateOfferMode) {
+        model.setCreateOfferMode(isCreateOfferMode);
+        model.getShowRangeAmounts().set(isCreateOfferMode);
+        if (!isCreateOfferMode) {
             model.getIsMinAmountEnabled().set(false);
         }
     }
@@ -243,10 +243,10 @@ public class CreateOfferAmountController implements Controller {
 
         if (model.getDirection().isSell()) {
             String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
-            maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.salePrice"));
+            maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.price"));
         } else {
             String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount") + "\n";
-            if (model.isOpenedFromDashboard()) {
+            if (!model.isCreateOfferMode()) {
                 applyBestOfferQuote();
                 maxOrFixAmountComponent.setTooltip(model.getBestOffersPrice()
                         .map(bestOffersPrice -> btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))

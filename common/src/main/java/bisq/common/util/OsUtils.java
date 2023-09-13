@@ -55,7 +55,7 @@ public class OsUtils {
     }
 
     public static boolean isMac() {
-        return getOSName().contains("mac") || getOSName().contains("darwin");
+        return getOSName().toLowerCase().contains("mac") || getOSName().contains("darwin") || getOSName().contains("Mac OS X");
     }
 
     public static boolean isLinux() {

@@ -17,11 +17,13 @@
 
 package bisq.common.util;
 
+import bisq.common.data.Pair;
 import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -145,5 +147,50 @@ public class StringUtils {
 
     public static String snakeCaseToKebapCase(String value) {
         return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase());
+    }
+
+    public static List<Pair<String, List<String>>> getTextStylePairs(String input) {
+        List<Pair<String, List<String>>> result = new ArrayList<>();
+        if (input == null) {
+            return result;
+        }
+        if (input.isEmpty()) {
+            result.add(new Pair<>("", List.of()));
+            return result;
+        }
+        input = input.replace("/", "|");
+        Pattern pattern = Pattern.compile("<([^<>/]+)\\s+style=([^<>/]+)\\s*>");
+
+        Matcher matcher = pattern.matcher(input);
+        int prevEnd = 0;
+        while (matcher.find()) {
+            String text = input.substring(prevEnd, matcher.start());
+            if (!text.isEmpty()) {
+                result.add(new Pair<>(text, null));
+            }
+            text = matcher.group(1);
+
+            text = text.replace("|", "/");
+            String style = matcher.group(2);
+
+            if (!style.contains(",")) {
+                Pair<String, List<String>> pair = new Pair<>(text, List.of(style));
+                result.add(pair);
+            } else {
+                List<String> styles = List.of(style.replace(", ", ",").split(","));
+                Pair<String, List<String>> pair = new Pair<>(text, styles);
+                result.add(pair);
+            }
+
+            prevEnd = matcher.end();
+        }
+
+        if (prevEnd < input.length()) {
+            String remainingText = input.substring(prevEnd);
+            Pair<String, List<String>> remainingPair = new Pair<>(remainingText, null);
+            result.add(remainingPair);
+        }
+
+        return result;
     }
 }

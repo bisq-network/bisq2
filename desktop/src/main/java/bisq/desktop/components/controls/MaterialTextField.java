@@ -26,11 +26,7 @@ import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -93,7 +89,7 @@ public class MaterialTextField extends Pane {
 
         descriptionLabel.setLayoutX(16);
         descriptionLabel.setMouseTransparent(true);
-        descriptionLabel.setStyle("-fx-font-family: \"IBM Plex Sans Light\";");
+        // descriptionLabel.setStyle("-fx-font-family: \"IBM Plex Sans Light\";");
         if (StringUtils.isNotEmpty(description)) {
             descriptionLabel.setText(description);
         }

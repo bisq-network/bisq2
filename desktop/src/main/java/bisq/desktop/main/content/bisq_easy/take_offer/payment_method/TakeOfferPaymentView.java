@@ -53,7 +53,7 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(450);
+        subtitleLabel.setMaxWidth(600);
 
         flowPane = new FlowPane();
         flowPane.setAlignment(Pos.CENTER);
@@ -61,7 +61,7 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         flowPane.setHgap(20);
 
         VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(10, 65, 30, 65));
+        VBox.setMargin(flowPane, new Insets(25, 65, 30, 65));
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, flowPane, Spacer.fillVBox());
 
         root.setOnMousePressed(e -> root.requestFocus());

@@ -25,19 +25,22 @@ import javafx.geometry.Pos;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import lombok.Getter;
 
+@Getter
 public class SearchBox extends HBox {
     private final TextField searchField;
+    private final ImageView searchIcon;
 
     public SearchBox() {
         setAlignment(Pos.CENTER_LEFT);
         setMaxHeight(30);
-        getStyleClass().add("small-search-box");
+        getStyleClass().add("search-box");
 
-        ImageView searchIcon = ImageUtil.getImageViewById("search-white");
+        searchIcon = ImageUtil.getImageViewById("search-white");
         searchField = new TextField();
         searchField.setPromptText(Res.get("action.search"));
-        searchField.getStyleClass().add("small-search-text");
+        searchField.getStyleClass().add("search-text-field");
 
         HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));
         getChildren().addAll(searchIcon, searchField);

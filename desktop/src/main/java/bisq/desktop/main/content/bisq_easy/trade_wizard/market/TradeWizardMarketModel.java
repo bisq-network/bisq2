@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.market;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.market;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
@@ -32,20 +32,22 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class CreateOfferMarketModel implements Model {
+public class TradeWizardMarketModel implements Model {
     @Setter
     private Direction direction;
     @Setter
     private String headline;
-    private final ObjectProperty<CreateOfferMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+    private final ObjectProperty<TradeWizardMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<CreateOfferMarketView.MarketListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<CreateOfferMarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<CreateOfferMarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
+    private final ObservableList<TradeWizardMarketView.MarketListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<TradeWizardMarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<TradeWizardMarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
 
 
     void reset() {
+        direction = null;
+        headline = null;
         selectedMarketListItem.set(null);
         searchText.set(null);
         selectedMarket.set(null);

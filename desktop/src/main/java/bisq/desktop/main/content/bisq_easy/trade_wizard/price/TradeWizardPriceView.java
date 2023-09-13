@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.create_offer.price;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -37,20 +37,18 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class CreateOfferPriceView extends View<VBox, CreateOfferPriceModel, CreateOfferPriceController> {
+public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private final MaterialTextField percentage;
     private final ToggleButton useFixPriceToggle;
     private final VBox fieldsBox;
     private final PriceInput priceInput;
     private Subscription percentageFocussedPin, useFixPricePin;
 
-    public CreateOfferPriceView(CreateOfferPriceModel model, CreateOfferPriceController controller, PriceInput priceInput) {
+    public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
         super(new VBox(10), model, controller);
         this.priceInput = priceInput;
 
         root.setAlignment(Pos.TOP_CENTER);
-
-        // root.setPadding(new Insets(40, 200, 0, 160));
 
         Label headLine = new Label(Res.get("bisqEasy.price.headline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
@@ -58,9 +56,9 @@ public class CreateOfferPriceView extends View<VBox, CreateOfferPriceModel, Crea
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3");
+        subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(400);
+        subtitleLabel.setMaxWidth(500);
 
         percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage"));
 
