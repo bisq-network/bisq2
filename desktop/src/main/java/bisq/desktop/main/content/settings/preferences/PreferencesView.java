@@ -21,10 +21,12 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,6 +36,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import javafx.util.converter.NumberStringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -46,6 +49,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguageSelection;
+    private final MaterialTextField requiredTotalReputationScore;
     private Subscription selectedNotificationTypePin;
     private Subscription getSelectedLSupportedLanguageCodePin;
 
@@ -155,8 +159,11 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         tradeHeadline.getStyleClass().addAll("settings-headline");
         offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
+        requiredTotalReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
+                null, Res.get("settings.preferences.trade.requiredTotalReputationScore.help"));
+        requiredTotalReputationScore.setMaxWidth(300);
 
-        VBox tradeVBox = new VBox(10, offersOnlySwitch, closeMyOfferWhenTaken);
+        VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
         tradeVBox.setPadding(new Insets(10));
         tradeVBox.getStyleClass().add("settings-box-bg");
 
@@ -185,6 +192,9 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
         addSupportedLanguageButton.disableProperty().bind(model.getAddSupportedLanguageButtonDisabled());
+
+        Bindings.bindBidirectional(requiredTotalReputationScore.textProperty(), model.getRequiredTotalReputationScore(), new NumberStringConverter());
+
         languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
         languageSelection.setOnChangeConfirmed(e -> {
             if (languageSelection.getSelectionModel().getSelectedItem() == null) {
@@ -219,8 +229,11 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notifyForPreRelease.selectedProperty().unbindBidirectional(model.getNotifyForPreRelease());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
+
         offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
+
+        Bindings.unbindBidirectional(requiredTotalReputationScore.textProperty(), model.getRequiredTotalReputationScore());
 
         languageSelection.setOnChangeConfirmed(null);
         supportedLanguageSelection.setOnChangeConfirmed(null);

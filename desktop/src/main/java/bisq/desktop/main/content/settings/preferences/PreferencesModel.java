@@ -34,6 +34,7 @@ public class PreferencesModel implements Model {
     private final BooleanProperty notifyForPreRelease = new SimpleBooleanProperty();
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
+    private final LongProperty requiredTotalReputationScore = new SimpleLongProperty();
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     private final BooleanProperty addSupportedLanguageButtonDisabled = new SimpleBooleanProperty();
