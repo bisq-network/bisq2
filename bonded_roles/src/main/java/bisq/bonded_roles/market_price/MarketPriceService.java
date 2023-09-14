@@ -156,10 +156,13 @@ public class MarketPriceService {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         shutdownStarted = true;
-        scheduler.stop();
-        currentHttpClient.ifPresent(BaseHttpClient::shutdown);
-        return CompletableFuture.completedFuture(true);
+        if (scheduler != null) {
+            scheduler.stop();
+        }
+        return currentHttpClient.map(BaseHttpClient::shutdown)
+                .orElse(CompletableFuture.completedFuture(true));
     }
 
     public void select(Market market) {

@@ -18,6 +18,7 @@
 package bisq.network.http.common;
 
 import bisq.common.data.Pair;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -57,16 +60,31 @@ public class TorHttpClient extends BaseHttpClient {
     }
 
     @Override
-    public void shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        try {
-            if (closeableHttpClient != null) {
-                closeableHttpClient.close();
-                closeableHttpClient = null;
-            }
-        } catch (IOException ignore) {
+        if (closeableHttpClient == null) {
+            hasPendingRequest = false;
+            return CompletableFuture.completedFuture(true);
         }
+
+        CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        try {
+                            if (closeableHttpClient != null) {
+                                closeableHttpClient.close();
+                                closeableHttpClient = null;
+                            }
+                        } catch (IOException ignore) {
+                        }
+                        return true;
+                    } catch (Exception e) {
+                        log.error("Error at shutdown", e);
+                        return false;
+                    }
+                }, ExecutorFactory.newSingleThreadExecutor("TorHttpClient-shutdown"))
+                .orTimeout(500, TimeUnit.MILLISECONDS);
         hasPendingRequest = false;
+        return future;
     }
 
     @Override

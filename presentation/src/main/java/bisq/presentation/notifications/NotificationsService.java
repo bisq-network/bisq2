@@ -78,10 +78,12 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 

@@ -18,6 +18,7 @@
 package bisq.network.http.common;
 
 import bisq.common.data.Pair;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +29,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -47,20 +49,35 @@ public class ClearNetHttpClient extends BaseHttpClient {
     }
 
     @Override
-    public void shutdown() {
-        try {
-            if (connection != null) {
-                connection.getInputStream().close();
-                connection.disconnect();
-                connection = null;
-            }
-        } catch (IOException ignore) {
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        if (connection == null) {
+            hasPendingRequest = false;
+            return CompletableFuture.completedFuture(true);
         }
-        hasPendingRequest = false;
+        CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        // blocking call if connection has issues
+                        connection.getInputStream().close();
+                        connection.disconnect();
+                        return true;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }, ExecutorFactory.newSingleThreadExecutor("ClearNetHttpClient-shutdown"))
+                .orTimeout(500, TimeUnit.MILLISECONDS)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Error at shutdown", throwable);
+                    }
+                });
+        connection = null;
+        return future;
     }
 
     @Override
-    protected String doRequest(String param, HttpMethod httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
+    protected String doRequest(String param, HttpMethod
+            httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
         checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
         hasPendingRequest = true;
 
