@@ -69,7 +69,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         searchBox.setMaxWidth(140);
 
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("create-offer-table-view");
+        tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
         double tableHeight = 290;
         int tableWidth = 650;
         tableView.setMinHeight(tableHeight);

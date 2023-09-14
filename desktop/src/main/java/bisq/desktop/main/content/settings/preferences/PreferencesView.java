@@ -110,7 +110,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         ListView<String> supportedLanguageListView = new ListView<>(model.getSelectedSupportedLanguageCodes());
         supportedLanguageListView.setCellFactory(getSupportedLanguageCellFactory(controller));
         supportedLanguageListView.setMinWidth(450);
-        supportedLanguageListView.setMaxHeight(150);
+        supportedLanguageListView.setMaxHeight(100);
         VBox supportedLanguageListViewVBox = new VBox(10, supportedLanguageListViewSubHeadline, supportedLanguageListView);
 
         HBox.setHgrow(supportedLanguageListViewVBox, Priority.ALWAYS);

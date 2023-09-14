@@ -169,17 +169,42 @@ tree-table-view:focused {
 .table-view {
     -fx-background-color: transparent;
     -fx-border-width: 0;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1em;
 }
-
-/* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
-/*.table-view > .scroll-bar:horizontal {
-    -fx-opacity: 0;
-}*/
 
 .table-view .filler {
     -fx-opacity: 0;
 }
+
+.table-view /*> column-header-background > nested-column-header >*/ .arrow {
+    -fx-background-color: -fx-mid-text-color;
+    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+}
+
+.table-view > .placeholder > .label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.3em;
+}
+
+.hide-vertical-scrollbar .scroll-bar:vertical * {
+    -fx-min-width: 0;
+    -fx-pref-width: 0;
+    -fx-max-width: 0;
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+}
+
+/* turn horizontal scrollbars off */
+/*.table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}*/
 
 /* column-header */
 .table-view .column-header {
@@ -200,12 +225,10 @@ tree-table-view:focused {
     -fx-label-padding: 0 10 0 10;
 }
 
-/* left */
 .table-view .column-header.left .label {
     -fx-alignment: center-left;
 }
 
-/* right */
 .table-view .column-header.right .label {
     -fx-alignment: center-right;
 }
@@ -214,8 +237,14 @@ tree-table-view:focused {
 /* table-cell */
 .table-view .table-cell {
     -fx-background-color: transparent;
+    -fx-border-width: 0;
     -fx-alignment: center;
     -fx-padding: 0 10 0 10;
+}
+
+.table-view .table-cell .text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 .table-view .table-cell.left {
@@ -227,34 +256,37 @@ tree-table-view:focused {
 }
 
 /* row-cell */
-.table-row-cell {
+.table-view .table-row-cell {
     -fx-background-color: transparent;
-    -fx-border-width: 1 0 0 0;
-    -fx-pref-height: 54px;
     -fx-border-color: -bisq-dark-grey;
+    -fx-border-width: 0 0 1 0;
+    -fx-pref-height: 54px;
 }
 
-.table-view .table-row-cell .table-cell {
-    -fx-border-color: transparent;
-    -fx-background-color: -bisq-grey-24;
+.table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-grey-5;
 }
 
-.table-view .table-row-cell .table-cell .text {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-grey-19;
+}
+
+/* Custom style used in selection column for vertical green bar */
+#selection-marker {
+    -fx-background-color: -bisq-green !important;
 }
 
 /* empty */
-.table-row-cell:empty {
-    -fx-border-width: 0;
+.table-view .table-row-cell:empty {
+    -fx-border-color: transparent;
 }
 
 .table-view .table-row-cell:empty .table-cell {
-    -fx-background-color: -bisq-grey-24;
+    -fx-background-color: transparent;
 }
 
 .table-view .table-row-cell:empty:hover .table-cell {
-    -fx-background-color: -bisq-grey-24;
+    -fx-background-color: transparent;
 }
 
 /* disabled */
@@ -263,21 +295,6 @@ tree-table-view:focused {
     -fx-fill: -bisq-grey-20;
 }
 
-
-/* selected */
-.table-row-cell:selected {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-}
-
-.table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-grey-6;
-    -fx-border-color: transparent;
-}
-.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-darker-grey;
-    -fx-border-color: transparent;
-}
 
 /* button */
 .table-view .table-row-cell:selected .button .text {
@@ -336,27 +353,6 @@ tree-table-view:focused {
     -fx-border-width: 0px;
 }
 
-.table-view /*> column-header-background > nested-column-header >*/ .arrow {
-    -fx-background-color: -fx-mid-text-color;
-    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
-    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
-}
-
-.table-view > .placeholder > .label {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.3em;
-}
-
-.hide-vertical-scrollbar .scroll-bar:vertical * {
-    -fx-min-width: 0;
-    -fx-pref-width: 0;
-    -fx-max-width: 0;
-    -fx-min-height: 0;
-    -fx-pref-height: 0;
-    -fx-max-height: 0;
-}
 
 /*******************************************************************************
  * Containers                                            *
@@ -638,7 +634,6 @@ tree-table-view:focused {
 .popover > .content > .title > .text {
     -fx-padding: 6.0 6.0 0.0 6.0;
     -fx-text-fill: rgba(120, 120, 120, .8);
-    -fx-font-weight: bold;
 }
 
 .popover > .content > .title > .icon {

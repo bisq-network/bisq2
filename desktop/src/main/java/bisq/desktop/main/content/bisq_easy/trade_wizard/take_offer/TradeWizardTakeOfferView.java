@@ -67,6 +67,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     private final BisqTableView<ListItem> tableView;
     private final Label headLineLabel, subtitleLabel;
     private Button goBackButton, browseOfferbookButton;
+    private boolean isTableViewConfigured;
 
     TradeWizardTakeOfferView(TradeWizardTakeOfferModel model, TradeWizardTakeOfferController controller) {
         super(new VBox(10), model, controller);
@@ -83,10 +84,11 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
         subtitleLabel.getStyleClass().add("bisq-text-3");
 
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("bisq-easy-trade-wizard-take-offer-table-view");
+        tableView.getStyleClass().add("bisq-easy-trade-wizard-select-offer");
         tableView.setMinWidth(TABLE_WIDTH);
         tableView.setMaxWidth(tableView.getMinWidth());
-        tableView.setMaxHeight(206);
+        // fits 4 rows
+        tableView.setMaxHeight(262); // 4 * 55 (row height) + 40 (header height) + 2 (border)
 
         noMatchingOffersBox = new HBox(25);
 
@@ -110,14 +112,13 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
             VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
             if (noMatchingOffersBox.getChildren().isEmpty()) {
                 Pair<VBox, Button> goBackPair = getBoxPair(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack"),
-                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack.info"),
-                        "outlined-button");
+                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack.info"));
                 VBox goBackBox = goBackPair.getFirst();
                 goBackButton = goBackPair.getSecond();
+                goBackButton.setDefaultButton(true);
 
                 Pair<VBox, Button> browseOfferbookPair = getBoxPair(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook"),
-                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook.info"),
-                        "grey-transparent-outlined-button");
+                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook.info"));
                 VBox browseOfferbookBox = browseOfferbookPair.getFirst();
                 browseOfferbookButton = browseOfferbookPair.getSecond();
 
@@ -143,10 +144,10 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
         }
     }
 
-    private Pair<VBox, Button> getBoxPair(String title, String info, String style) {
+    private Pair<VBox, Button> getBoxPair(String title, String info) {
         Button button = new Button(title);
-        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-direction-button");
         button.setAlignment(Pos.CENTER);
+        button.getStyleClass().addAll("card-button", "card-button-border");
         int width = 235;
         button.setMinWidth(width);
         button.setMinHeight(112);
@@ -165,7 +166,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     }
 
     private void maybeConfigTableView() {
-        if (!tableView.getColumns().isEmpty()) {
+        if (isTableViewConfigured) {
             return;
         }
 
@@ -218,6 +219,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                 .setCellFactory(getSelectButtonCellFactory())
                 .right()
                 .build());
+        isTableViewConfigured = true;
     }
 
 
