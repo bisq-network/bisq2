@@ -22,6 +22,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.chat.priv.PrivateChatChannel;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -34,7 +35,6 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -58,7 +58,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 public class UserProfileSelection {
@@ -114,7 +113,7 @@ public class UserProfileSelection {
         private Pin userProfilesPin;
         private Pin chatChannelSelectionPin;
         private Pin navigationPin;
-        private Optional<UserProfile> pinnedPrivateChannelUserProfile = Optional.empty();
+        private Pin disabledPin;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -131,6 +130,7 @@ public class UserProfileSelection {
             userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(userIdentityService.getUserIdentities());
+            disabledPin = FxBindings.subscribe(model.isPrivateChannel, s -> view.getComboBox().setDisable(s));
 
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
         }
@@ -143,6 +143,7 @@ public class UserProfileSelection {
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
+            disabledPin.unbind();
             navigationPin.unbind();
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
@@ -152,9 +153,12 @@ public class UserProfileSelection {
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
                 UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-                if (pinnedPrivateChannelUserProfile.isPresent() && selectedUserIdentity != null) {
+                if (model.isPrivateChannel.get() && selectedUserIdentity != null) {
                     new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn", selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
+                                // Setting profile to null causes a NullPointerException but should not happen with the
+                                // combobox disabled for private channels. To make sure a different user is never
+                                // selected for a private channel it's safest to keep this anyway.
                                 model.selectedUserProfile.set(null);
                                 model.selectedUserProfile.set(new ListItem(selectedUserIdentity));
                             })
@@ -185,7 +189,7 @@ public class UserProfileSelection {
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
             }
-            pinnedPrivateChannelUserProfile = Optional.empty();
+            model.isPrivateChannel.set(false);
             switch (navigationTarget) {
                 //case BISQ_EASY:
                 case BISQ_EASY_OFFERBOOK:
@@ -213,14 +217,7 @@ public class UserProfileSelection {
         }
 
         private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-            UIThread.run(() -> {
-                if (channel instanceof PrivateChatChannel) {
-                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) channel;
-                    pinnedPrivateChannelUserProfile = Optional.of(privateChatChannel.getMyUserIdentity().getUserProfile());
-                } else {
-                    pinnedPrivateChannelUserProfile = Optional.empty();
-                }
-            });
+            UIThread.run(() -> model.isPrivateChannel.set(channel instanceof  PrivateChatChannel));
         }
     }
 
@@ -229,6 +226,7 @@ public class UserProfileSelection {
         private final ObservableList<ListItem> userProfiles = FXCollections.observableArrayList();
         private final DoubleProperty comboBoxWidth = new SimpleDoubleProperty();
         private final BooleanProperty isLeftAligned = new SimpleBooleanProperty();
+        private final Observable<Boolean> isPrivateChannel = new Observable<>(false);
 
         private Model() {
         }
