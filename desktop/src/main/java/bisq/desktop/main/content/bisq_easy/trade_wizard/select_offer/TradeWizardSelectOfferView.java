@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
@@ -60,7 +60,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, TradeWizardTakeOfferController> {
+class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel, TradeWizardSelectOfferController> {
     private final static int TABLE_WIDTH = 800;
     private final HBox noMatchingOffersBox;
 
@@ -69,7 +69,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     private Button goBackButton, browseOfferbookButton;
     private boolean isTableViewConfigured;
 
-    TradeWizardTakeOfferView(TradeWizardTakeOfferModel model, TradeWizardTakeOfferController controller) {
+    TradeWizardSelectOfferView(TradeWizardSelectOfferModel model, TradeWizardSelectOfferController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -111,14 +111,14 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
         } else {
             VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
             if (noMatchingOffersBox.getChildren().isEmpty()) {
-                Pair<VBox, Button> goBackPair = getBoxPair(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack"),
-                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.goBack.info"));
+                Pair<VBox, Button> goBackPair = getBoxPair(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.goBack"),
+                        Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.goBack.info"));
                 VBox goBackBox = goBackPair.getFirst();
                 goBackButton = goBackPair.getSecond();
                 goBackButton.setDefaultButton(true);
 
-                Pair<VBox, Button> browseOfferbookPair = getBoxPair(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook"),
-                        Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.browseOfferbook.info"));
+                Pair<VBox, Button> browseOfferbookPair = getBoxPair(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.browseOfferbook"),
+                        Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.browseOfferbook.info"));
                 VBox browseOfferbookBox = browseOfferbookPair.getFirst();
                 browseOfferbookButton = browseOfferbookPair.getSecond();
 
@@ -285,7 +285,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSelectButtonCellFactory() {
         return column -> new TableCell<>() {
 
-            private final Button button = new Button(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
+            private final Button button = new Button(Res.get("bisqEasy.tradeWizard.selectOffer.table.select"));
             private TableRow<ListItem> tableRow;
             private Subscription selectedItemPin;
 
@@ -327,11 +327,11 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
                                     button.setVisible(true);
                                     button.getStyleClass().remove("outlined-button");
                                     button.getStyleClass().add("white-button");
-                                    button.setText(Res.get("bisqEasy.tradeWizard.takeOffer.table.takeOffer"));
+                                    button.setText(Res.get("bisqEasy.tradeWizard.selectOffer.table.reviewTakeOffer"));
                                 } else {
                                     button.setVisible(selectedItem == null);
                                     button.getStyleClass().remove("white-button");
-                                    button.setText(Res.get("bisqEasy.tradeWizard.takeOffer.table.select"));
+                                    button.setText(Res.get("bisqEasy.tradeWizard.selectOffer.table.select"));
                                 }
                             });
 
@@ -366,7 +366,7 @@ class TradeWizardTakeOfferView extends View<VBox, TradeWizardTakeOfferModel, Tra
         private final BisqEasyOffer bisqEasyOffer;
 
         public ListItem(BisqEasyOffer bisqEasyOffer,
-                        TradeWizardTakeOfferModel model,
+                        TradeWizardSelectOfferModel model,
                         UserProfileService userProfileService,
                         ReputationService reputationService,
                         MarketPriceService marketPriceService) {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -41,7 +41,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-class TradeWizardTakeOfferModel implements Model {
+class TradeWizardSelectOfferModel implements Model {
     @Setter
     private BisqEasyOfferbookChannel selectedChannel;
     @Setter
@@ -69,11 +69,11 @@ class TradeWizardTakeOfferModel implements Model {
     @Setter
     private String subHeadLine;
     @Setter
-    private TradeWizardTakeOfferView.ListItem selectedItem;
+    private TradeWizardSelectOfferView.ListItem selectedItem;
     private final BooleanProperty showOffers = new SimpleBooleanProperty();
-    private final ObservableList<TradeWizardTakeOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
-    private final FilteredList<TradeWizardTakeOfferView.ListItem> filteredList = new FilteredList<>(matchingOffers);
-    private final SortedList<TradeWizardTakeOfferView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final ObservableList<TradeWizardSelectOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
+    private final FilteredList<TradeWizardSelectOfferView.ListItem> filteredList = new FilteredList<>(matchingOffers);
+    private final SortedList<TradeWizardSelectOfferView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyOffer> selectedBisqEasyOffer = new SimpleObjectProperty<>();
     private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
 
