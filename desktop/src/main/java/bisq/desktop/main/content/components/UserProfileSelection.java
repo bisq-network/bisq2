@@ -153,12 +153,11 @@ public class UserProfileSelection {
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
                 UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+                // To make sure a different user is never selected for a private channel it's safest to keep this check
+                // even though the combobox should be disabled
                 if (model.isPrivateChannel.get() && selectedUserIdentity != null) {
                     new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn", selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
-                                // Setting profile to null causes a NullPointerException but should not happen with the
-                                // combobox disabled for private channels. To make sure a different user is never
-                                // selected for a private channel it's safest to keep this anyway.
                                 model.selectedUserProfile.set(null);
                                 model.selectedUserProfile.set(new ListItem(selectedUserIdentity));
                             })
