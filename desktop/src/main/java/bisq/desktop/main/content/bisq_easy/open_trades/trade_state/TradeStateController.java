@@ -221,45 +221,33 @@ public class TradeStateController implements Controller {
     }
 
     void onCloseTrade() {
+        boolean isSeller = model.getBisqEasyTrade().isSeller();
+        String messageKey;
         switch (model.getTradeCloseType()) {
             case REJECT:
-                new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.completed.warning"))
-                        .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(() -> {
-                            BisqEasyOpenTradeChannel channel = model.getChannel();
-                            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
-                            reset();
-                            onTradeClosedHandler.accept(bisqEasyTrade, channel);
-                        })
-                        .closeButtonText(Res.get("confirmation.no"))
-                        .show();
+                messageKey = isSeller ? "bisqEasy.openTrades.closeTrade.warning.seller.reject" :
+                        "bisqEasy.openTrades.closeTrade.warning.buyer.reject";
                 break;
             case CANCEL:
-                new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.completed.warning"))
-                        .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(() -> {
-                            BisqEasyOpenTradeChannel channel = model.getChannel();
-                            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
-                            reset();
-                            onTradeClosedHandler.accept(bisqEasyTrade, channel);
-                        })
-                        .closeButtonText(Res.get("confirmation.no"))
-                        .show();
+                messageKey = isSeller ? "bisqEasy.openTrades.closeTrade.warning.seller.cancel" :
+                        "bisqEasy.openTrades.closeTrade.warning.buyer.cancel";
                 break;
             case COMPLETED:
-                new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.completed.warning"))
-                        .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(() -> {
-                            BisqEasyOpenTradeChannel channel = model.getChannel();
-                            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
-                            reset();
-                            onTradeClosedHandler.accept(bisqEasyTrade, channel);
-                        })
-                        .closeButtonText(Res.get("confirmation.no"))
-                        .show();
+                messageKey = "bisqEasy.openTrades.closeTrade.warning.completed";
                 break;
+            default:
+                return;
         }
-
+        new Popup().warning(Res.get(messageKey, Res.get("bisqEasy.openTrades.closeTrade.warning.dataDeleted")))
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(() -> {
+                    BisqEasyOpenTradeChannel channel = model.getChannel();
+                    BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
+                    reset();
+                    onTradeClosedHandler.accept(bisqEasyTrade, channel);
+                })
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
     }
 
     private void reset() {
