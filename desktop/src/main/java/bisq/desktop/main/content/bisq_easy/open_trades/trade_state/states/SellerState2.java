@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WaitingAnimation;
 import bisq.i18n.Res;
@@ -26,12 +27,8 @@ import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -88,33 +85,29 @@ public class SellerState2 extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
 
-        private final Text infoHeadlineText;
-        private final Label infoLabel;
+        private final WrappingText fiatSentConfirmed, headline;
+        private final WrappingText info;
         private final WaitingAnimation waitingAnimation;
-        private final CheckBox fiatPaymentSentCheckBox;
+        private final HBox fiatSentConfirmedHBox;
         private Subscription fiatSendConfirmationReceivedPin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            infoHeadlineText = new Text("");
-            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
-            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
-            infoLabel = FormUtils.getLabel("");
+            Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
+            fiatSentConfirmed = confirmPair.getFirst();
+            fiatSentConfirmedHBox = confirmPair.getSecond();
 
-            fiatPaymentSentCheckBox = new CheckBox();
-            fiatPaymentSentCheckBox.setMouseTransparent(true);
-            fiatPaymentSentCheckBox.setSelected(true);
+            headline = FormUtils.getHeadline();
+            info = FormUtils.getInfo();
 
             waitingAnimation = new WaitingAnimation();
 
-            VBox.setMargin(fiatPaymentSentCheckBox, new Insets(10, 0, 20, 0));
-            VBox.setMargin(waitingAnimation, new Insets(20, 0, 5, 40));
-            VBox.setVgrow(infoLabel, Priority.ALWAYS);
+            VBox.setMargin(fiatSentConfirmedHBox, new Insets(0, 0, 10, 0));
             root.getChildren().addAll(
-                    infoHeadline,
-                    infoLabel,
-                    fiatPaymentSentCheckBox,
+                    fiatSentConfirmedHBox,
+                    headline,
+                    info,
                     waitingAnimation
             );
         }
@@ -124,15 +117,17 @@ public class SellerState2 extends BaseState {
             super.onViewAttached();
 
             fiatSendConfirmationReceivedPin = EasyBind.subscribe(model.getFiatSendConfirmationReceived(), fiatPaymentConfirmed -> {
-                fiatPaymentSentCheckBox.setVisible(fiatPaymentConfirmed);
-                fiatPaymentSentCheckBox.setManaged(fiatPaymentConfirmed);
+                fiatSentConfirmedHBox.setVisible(fiatPaymentConfirmed);
+                fiatSentConfirmedHBox.setManaged(fiatPaymentConfirmed);
                 if (fiatPaymentConfirmed) {
-                    infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.headline"));
-                    infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.info"));
-                    fiatPaymentSentCheckBox.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.fiatPaymentSentCheckBox", model.getFormattedQuoteAmount()));
+                    VBox.setMargin(waitingAnimation, new Insets(20, 0, 10, 40));
+                    headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.headline"));
+                    info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.info"));
+                    fiatSentConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.fiatPaymentSentCheckBox", model.getFormattedQuoteAmount()));
                 } else {
-                    infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.headline", model.getQuoteCode()));
-                    infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.info", model.getFormattedQuoteAmount()));
+                    VBox.setMargin(waitingAnimation, new Insets(30, 0, 10, 40));
+                    headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.headline", model.getQuoteCode()));
+                    info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.info", model.getFormattedQuoteAmount()));
                 }
             });
             waitingAnimation.play();

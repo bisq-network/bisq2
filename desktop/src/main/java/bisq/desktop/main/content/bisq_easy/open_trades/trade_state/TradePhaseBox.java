@@ -24,6 +24,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
@@ -190,6 +191,14 @@ class TradePhaseBox {
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
         }
 
+        void onOpenWalletHelp() {
+            new Popup().headLine(Res.get("bisqEasy.walletGuide.headline"))
+                    .backgroundInfo(Res.get("bisqEasy.walletGuide.info"))
+                    .actionButtonText(Res.get("bisqEasy.tradeState.walletGuide.openLearn"))
+                    .onAction(() -> Navigation.navigateTo(NavigationTarget.WALLETS_ACADEMY))
+                    .show();
+        }
+
         void onOpenDispute() {
             BisqEasyOpenTradeChannel channel = model.getSelectedChannel();
             Optional<UserProfile> mediator = channel.getMediator();
@@ -248,7 +257,7 @@ class TradePhaseBox {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label phase1Label, phase2Label, phase3Label, phase4Label, phase5Label;
         private final Button disputeButton;
-        private final Hyperlink openTradeGuide;
+        private final Hyperlink openTradeGuide, walletHelp;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
         private Subscription phaseIndexPin;
 
@@ -278,14 +287,21 @@ class TradePhaseBox {
 
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4, phaseItem5);
 
-            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"));
+            walletHelp = new Hyperlink(Res.get("bisqEasy.walletGuide.open"), ImageUtil.getImageViewById("icon-wallet"));
+            walletHelp.setGraphicTextGap(5);
+            walletHelp.getStyleClass().add("text-fill-grey-dimmed");
+
+            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"), ImageUtil.getImageViewById("icon-help"));
+            openTradeGuide.setGraphicTextGap(5);
+            openTradeGuide.getStyleClass().add("text-fill-grey-dimmed");
 
             disputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
             disputeButton.getStyleClass().add("outlined-button");
 
             VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
             VBox.setMargin(disputeButton, new Insets(15, 0, 0, 0));
-            VBox.setMargin(openTradeGuide, new Insets(30, 0, 0, 2));
+            VBox.setMargin(walletHelp, new Insets(30, 0, 0, 2));
+            VBox.setMargin(openTradeGuide, new Insets(0, 0, 0, 2));
 
             root.getChildren().addAll(
                     phase1HBox,
@@ -298,6 +314,7 @@ class TradePhaseBox {
                     getVLine(),
                     phase5HBox,
                     Spacer.fillVBox(),
+                    walletHelp,
                     openTradeGuide,
                     disputeButton);
         }
@@ -315,7 +332,7 @@ class TradePhaseBox {
 
             disputeButton.setOnAction(e -> controller.onOpenDispute());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
-
+            walletHelp.setOnAction(e -> controller.onOpenWalletHelp());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
         }
 
@@ -331,6 +348,7 @@ class TradePhaseBox {
             disputeButton.disableProperty().unbind();
 
             disputeButton.setOnAction(null);
+            walletHelp.setOnAction(null);
             openTradeGuide.setOnAction(null);
 
             phaseIndexPin.unsubscribe();

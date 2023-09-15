@@ -39,8 +39,6 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -177,9 +175,8 @@ public class BuyerState4 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            Text infoHeadlineText = new Text(Res.get("bisqEasy.tradeState.info.buyer.phase4.headline"));
-            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
-            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase4.headline"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase4.info"));
 
             txId = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase4.txId"), "", false);
             txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
@@ -190,10 +187,11 @@ public class BuyerState4 extends BaseState {
 
             button = new Button(Res.get("bisqEasy.tradeState.info.phase4.buttonText"));
 
+            VBox.setMargin(info, new Insets(0, 0, 10, 0));
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
-                    infoHeadline,
-                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase4.info")),
+                    headline,
+                    info,
                     txId,
                     btcBalance,
                     button);

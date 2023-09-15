@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
+import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,17 +33,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeStateModel implements Model {
+    enum TradeCloseType {
+        REJECT(Res.get("bisqEasy.openTrades.closeTrade.reject")),
+        CANCEL(Res.get("bisqEasy.openTrades.closeTrade.cancel")),
+        COMPLETED(Res.get("bisqEasy.openTrades.closeTrade.completed"));
+        @Getter
+        private final String buttonText;
+
+        TradeCloseType(String buttonText) {
+
+            this.buttonText = buttonText;
+        }
+    }
+
     @Setter
     private BisqEasyTrade bisqEasyTrade;
     @Setter
     private BisqEasyOpenTradeChannel channel;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final StringProperty headline = new SimpleStringProperty();
+    private final StringProperty closeButtonText = new SimpleStringProperty();
+    @Setter
+    private TradeCloseType tradeCloseType;
 
     void reset() {
         bisqEasyTrade = null;
         channel = null;
         stateInfoVBox.set(null);
         headline.set(null);
+        tradeCloseType = null;
     }
 }

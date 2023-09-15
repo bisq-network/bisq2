@@ -17,34 +17,79 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import javax.annotation.Nullable;
+
 public class FormUtils {
+    public static WrappingText getHeadline() {
+        return getHeadline(null);
+    }
+
+    public static WrappingText getHeadline(@Nullable String text) {
+        return new WrappingText(text, "bisq-easy-trade-state-headline");
+    }
+
+    public static WrappingText getInfo() {
+        return getInfo(null);
+    }
+
+    public static WrappingText getInfo(@Nullable String text) {
+        return new WrappingText(text, "bisq-easy-trade-state-info");
+    }
+
+    public static WrappingText getHelp() {
+        return getHelp(null);
+    }
+
+    public static WrappingText getHelp(@Nullable String text) {
+        return new WrappingText(text, "bisq-easy-trade-state-help");
+    }
+
+    public static Pair<WrappingText, HBox> getConfirmHeadline() {
+        return getConfirmHeadline(null);
+    }
+
+    public static Pair<WrappingText, HBox> getConfirmHeadline(@Nullable String text) {
+        WrappingText headline = FormUtils.getHeadline(text);
+        HBox hBox = new HBox(10, ImageUtil.getImageViewById("check-circle"), headline);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        return new Pair<>(headline, hBox);
+    }
+
+    public static Pair<WrappingText, HBox> getConfirmInfo() {
+        return getConfirmInfo(null);
+    }
+
+    public static Pair<WrappingText, HBox> getConfirmInfo(@Nullable String text) {
+        WrappingText headline = FormUtils.getInfo(text);
+        HBox hBox = new HBox(10, ImageUtil.getImageViewById("check-circle"), headline);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        return new Pair<>(headline, hBox);
+    }
+
+
     public static Label getLabel(String text) {
         Label label = new Label(text);
-        label.getStyleClass().add("bisq-easy-trade-state-info-text");
+        label.getStyleClass().add("bisq-easy-trade-state-info");
         label.setWrapText(true);
         VBox.setMargin(label, new Insets(10, 0, 0, 0));
         VBox.setVgrow(label, Priority.ALWAYS);
         return label;
     }
 
-    public static Label getHelpLabel(String text) {
-        Label label = new Label(text);
-        label.getStyleClass().add("bisq-easy-trade-state-info-help-text");
-        label.setWrapText(true);
-        VBox.setMargin(label, new Insets(10, 0, 0, 0));
-        VBox.setVgrow(label, Priority.ALWAYS);
-        return label;
-    }
 
     public static MaterialTextField getTextField(String description, String value, boolean isEditable) {
         MaterialTextField field = new MaterialTextField(description, null);
