@@ -44,7 +44,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
@@ -59,14 +62,15 @@ import java.util.Comparator;
 
 @Slf4j
 public class BisqEasyOpenTradesView extends ChatView {
+    private final static double HEADER_HEIGHT = 61;
+
     private final VBox tradeStateViewRoot, tradeWelcomeViewRoot;
-    private VBox tableViewVBox, chatVBox;
-    private HBox chatHeaderHBox;
-    private Label chatHeadline;
+    private VBox chatVBox;
     private BisqTableView<ListItem> tableView;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
             selectedModelItemPin, peersUserProfilePin, chatWindowPin;
     private Button toggleChatWindowButton;
+    private UserProfileDisplay chatPeerUserProfileDisplay;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -91,7 +95,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         centerVBox.getChildren().add(2, tradeStateViewRoot);
     }
 
-
     @Override
     protected void configTitleHBox() {
     }
@@ -105,12 +108,11 @@ public class BisqEasyOpenTradesView extends ChatView {
     private void addTableBox() {
         tableView = new BisqTableView<>(getModel().getSortedList());
         tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
-
         configTableView();
 
         VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
         Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
-        tableViewVBox = triple.getThird();
+        VBox tableViewVBox = triple.getThird();
         VBox.setMargin(tableViewVBox, new Insets(0, 0, 10, 0));
         centerVBox.getChildren().add(tableViewVBox);
     }
@@ -120,20 +122,30 @@ public class BisqEasyOpenTradesView extends ChatView {
         chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer("", chatMessagesComponent);
-        chatHeadline = triple.getFirst();
-        chatHeadline.setContentDisplay(ContentDisplay.RIGHT);
-        chatHeadline.setGraphicTextGap(10);
+
+        Label peerDescription = new Label(Res.get("bisqEasy.openTrades.chat.peer.description").toUpperCase());
+        peerDescription.getStyleClass().add("bisq-easy-open-trades-header-description");
+        chatPeerUserProfileDisplay = new UserProfileDisplay(25);
+        VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
+        VBox peerVBox = new VBox(0, peerDescription, chatPeerUserProfileDisplay);
+        peerVBox.setAlignment(Pos.CENTER_LEFT);
 
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
         toggleChatWindowButton.getStyleClass().add("outlined-button");
-        chatHeaderHBox = triple.getSecond();
-        chatHeaderHBox.getChildren().addAll(Spacer.fillHBox(), toggleChatWindowButton);
 
-        chatVBox = triple.getThird();
-        VBox.setVgrow(chatVBox, Priority.ALWAYS);
-        centerVBox.getChildren().add(chatVBox);
+        HBox chatHeaderHBox = new HBox(10, peerVBox, Spacer.fillHBox(), toggleChatWindowButton);
+        chatHeaderHBox.setMinHeight(HEADER_HEIGHT);
+        chatHeaderHBox.setMaxHeight(HEADER_HEIGHT);
+        chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
+        chatHeaderHBox.setPadding(new Insets(15, 30, 15, 30));
+
+        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
+        chatVBox.getStyleClass().add("bisq-easy-container");
+
+        VBox.setVgrow(this.chatVBox, Priority.ALWAYS);
+        centerVBox.getChildren().add(this.chatVBox);
     }
 
     @Override
@@ -168,7 +180,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         tradeStateViewRoot.managedProperty().bind(model.getTradeStateVisible());
         chatVBox.visibleProperty().bind(model.getChatVisible());
         chatVBox.managedProperty().bind(model.getChatVisible());
-        chatHeadline.textProperty().bind(model.getChatHeadline());
 
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
@@ -176,6 +187,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         tradeRulesAcceptedPin = EasyBind.subscribe(model.getTradeRulesAccepted(),
                 tradeRulesAccepted -> {
                     if (tradeRulesAccepted) {
+                        tableView.setOnMouseClicked(null);
                         tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                                 item -> {
                                     if (item != null) {
@@ -183,6 +195,8 @@ public class BisqEasyOpenTradesView extends ChatView {
                                     }
                                 });
                         UIThread.runOnNextRenderFrame(() -> tradeRulesAcceptedPin.unsubscribe());
+                    } else {
+                        tableView.setOnMouseClicked(e -> getController().onShowTradeRulesAcceptedWarning());
                     }
                 });
         noOpenTradesPin = EasyBind.subscribe(model.getNoOpenTrades(),
@@ -192,20 +206,21 @@ public class BisqEasyOpenTradesView extends ChatView {
                         tableView.setPlaceholderText(Res.get("bisqEasy.openTrades.noTrades"));
                         tableView.allowVerticalScrollbar();
                         tableView.setFixHeight(150);
+                        tableView.getStyleClass().add("empty-table");
                     } else {
                         tableView.setPlaceholder(null);
                         tableView.adjustHeightToNumRows();
                         tableView.hideVerticalScrollbar();
+                        tableView.getStyleClass().remove("empty-table");
                     }
                 });
-        peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(),
-                peersUserProfile -> {
-                    if (peersUserProfile != null) {
-                        UserProfileDisplay peersUserProfileDisplay = new UserProfileDisplay(peersUserProfile);
-                        peersUserProfileDisplay.applyReputationScore(model.getPeersReputationScore());
-                        chatHeadline.setGraphic(peersUserProfileDisplay);
-                    }
-                });
+
+        peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
+            if (userProfile != null) {
+                chatPeerUserProfileDisplay.setUserProfile(userProfile);
+                chatPeerUserProfileDisplay.applyReputationScore(model.getPeersReputationScore());
+            }
+        });
 
         chatWindowPin = EasyBind.subscribe(model.getChatWindow(),
                 chatWindow -> {
@@ -285,7 +300,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         tradeStateViewRoot.managedProperty().unbind();
         chatVBox.visibleProperty().unbind();
         chatVBox.managedProperty().unbind();
-        chatHeadline.textProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         if (tableViewSelectionPin != null) {
@@ -297,6 +311,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         chatWindowPin.unsubscribe();
 
         toggleChatWindowButton.setOnAction(null);
+        tableView.setOnMouseClicked(null);
     }
 
     private void configTableView() {

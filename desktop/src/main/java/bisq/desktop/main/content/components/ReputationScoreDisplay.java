@@ -32,6 +32,7 @@ public class ReputationScoreDisplay extends HBox {
     private static final double SPACING = 5;
     private static final double STAR_WIDTH = 12;
     private static final double STAR_HEIGHT = 11;
+    private static final double OPACITY = 0.2;
     private final List<ImageView> stars;
     private final Tooltip tooltip = new BisqTooltip();
     private ReputationScore reputationScore;
@@ -54,9 +55,11 @@ public class ReputationScoreDisplay extends HBox {
     }
 
     public void applyReputationScore(ReputationScore reputationScore) {
+        if (reputationScore == null) {
+            return;
+        }
         this.reputationScore = reputationScore;
         double relativeScore = reputationScore.getRelativeScore();
-        relativeScore = 0.5;
         int target = (int) Math.floor(stars.size() * relativeScore);
         for (int i = 0; i < stars.size(); i++) {
             ImageView imageView = stars.get(i);
@@ -64,7 +67,7 @@ public class ReputationScoreDisplay extends HBox {
                 imageView.setOpacity(1);
                 imageView.setId("star-green");
             } else {
-                imageView.setOpacity(0.3);
+                imageView.setOpacity(OPACITY);
                 imageView.setId("star-white");
             }
         }
@@ -85,7 +88,7 @@ public class ReputationScoreDisplay extends HBox {
 
     private ImageView getDefaultStar() {
         ImageView imageView = ImageUtil.getImageViewById("star-white");
-        imageView.setOpacity(0.3);
+        imageView.setOpacity(OPACITY);
         return imageView;
     }
 }

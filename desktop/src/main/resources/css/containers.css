@@ -179,7 +179,7 @@ tree-table-view:focused {
     -fx-opacity: 0;
 }
 
-.table-view /*> column-header-background > nested-column-header >*/ .arrow {
+.table-view .arrow {
     -fx-background-color: -fx-mid-text-color;
     -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";
@@ -190,6 +190,7 @@ tree-table-view:focused {
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.3em;
+    -fx-padding: -40 0 0 0;
 }
 
 .hide-vertical-scrollbar .scroll-bar:vertical * {
@@ -212,6 +213,15 @@ tree-table-view:focused {
 }
 
 .table-view .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.empty-table.table-view .column-header .label {
+    -fx-fill: transparent;
+    -fx-text-fill: transparent;
+}
+
+.empty-table.table-view .arrow {
     -fx-background-color: transparent;
 }
 

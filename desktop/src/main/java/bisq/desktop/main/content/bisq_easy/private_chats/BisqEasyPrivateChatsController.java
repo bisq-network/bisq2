@@ -103,6 +103,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
                 model.getSelectedItem().set(listItem);
             }
         }
+        maybeSelectFirstItem();
         updateVisibility();
     }
 
@@ -114,7 +115,6 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         model.getListItems().clear();
         resetSelectedChildTarget();
     }
-
 
     @Override
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -133,6 +133,16 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     void onSelectItem(BisqEasyPrivateChatsView.ListItem item) {
         selectionService.selectChannel(item.getChannel());
+    }
+
+    void onLeaveChat() {
+        if (model.getSelectedChannel() != null) {
+            channelService.leaveChannel(model.getSelectedChannel().getId());
+        }
+    }
+
+    private void maybeSelectFirstItem() {
+        model.getSelectedItem().set(model.getSortedList().stream().findFirst().orElse(null));
     }
 
     private void updateVisibility() {

@@ -222,13 +222,19 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     }
 
     void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
-        if (item != null && !model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
+        if (item != null) {
+            onShowTradeRulesAcceptedWarning();
+        } else {
+            model.getSelectedItem().set(item);
+        }
+    }
+
+    void onShowTradeRulesAcceptedWarning() {
+        if (!model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
             new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
                     .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
                     .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                     .show();
-        } else {
-            model.getSelectedItem().set(item);
         }
     }
 

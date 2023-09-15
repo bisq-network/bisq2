@@ -38,8 +38,9 @@ import org.fxmisc.easybind.Subscription;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel, bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController> {
+public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final static double HEADER_HEIGHT = 61;
+
     private final HBox phaseAndInfoHBox;
     private final Button closeButton;
     private final Triple<Text, Text, VBox> leftAmount, rightAmount, tradeId;
@@ -81,7 +82,6 @@ public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_ea
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
-        // header.setPadding(new Insets(15, 30, 15, 30));
         header.setPadding(new Insets(0, 30, 0, 30));
 
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
