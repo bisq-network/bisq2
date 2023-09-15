@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.WaitingAnimation;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -31,6 +30,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -87,7 +88,7 @@ public class SellerState2 extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
 
-        private final BisqText infoHeadline;
+        private final Text infoHeadlineText;
         private final Label infoLabel;
         private final WaitingAnimation waitingAnimation;
         private final CheckBox fiatPaymentSentCheckBox;
@@ -96,8 +97,9 @@ public class SellerState2 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            infoHeadline = new BisqText("");
-            infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            infoHeadlineText = new Text("");
+            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
             infoLabel = FormUtils.getLabel("");
 
             fiatPaymentSentCheckBox = new CheckBox();
@@ -125,11 +127,11 @@ public class SellerState2 extends BaseState {
                 fiatPaymentSentCheckBox.setVisible(fiatPaymentConfirmed);
                 fiatPaymentSentCheckBox.setManaged(fiatPaymentConfirmed);
                 if (fiatPaymentConfirmed) {
-                    infoHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.headline"));
+                    infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.headline"));
                     infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.info"));
                     fiatPaymentSentCheckBox.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.fiatPaymentSentCheckBox", model.getFormattedQuoteAmount()));
                 } else {
-                    infoHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.headline", model.getQuoteCode()));
+                    infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.headline", model.getQuoteCode()));
                     infoLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.info", model.getFormattedQuoteAmount()));
                 }
             });

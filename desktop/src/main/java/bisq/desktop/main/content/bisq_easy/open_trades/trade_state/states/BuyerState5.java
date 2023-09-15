@@ -27,7 +27,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -37,6 +36,8 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -158,8 +159,9 @@ public class BuyerState5 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.buyer.phase5.headline"));
-            infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            Text infoHeadlineText = new Text(Res.get("bisqEasy.tradeState.info.buyer.phase5.headline"));
+            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
 
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.exportTrade"));
             leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.leaveChannel"));
