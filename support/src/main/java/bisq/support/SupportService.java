@@ -93,6 +93,7 @@ public class SupportService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         return mediationService.initialize()
                 .thenCompose(result -> moderatorService.initialize())
                 .thenCompose(result -> releaseManagerService.initialize())
@@ -101,6 +102,7 @@ public class SupportService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return mediationService.shutdown()
                 .thenCompose(result -> moderatorService.shutdown())
                 .thenCompose(result -> releaseManagerService.shutdown())

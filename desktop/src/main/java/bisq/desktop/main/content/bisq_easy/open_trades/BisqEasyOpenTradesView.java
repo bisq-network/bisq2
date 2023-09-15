@@ -37,6 +37,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -100,7 +101,7 @@ public class BisqEasyOpenTradesView extends ChatView {
 
     private void addTableBox() {
         tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.getStyleClass().add("bisq-easy-open-trades-table-view");
+        tableView.getStyleClass().add("bisq-easy-open-trades");
         configTableView();
 
         VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
@@ -170,7 +171,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         selectedTradePin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                 item -> {
                     if (item != null) {
-                        getController().onSelectTrade(item.getOfferId());
+                        getController().onSelectItem(item);
                     }
                 });
 
@@ -284,6 +285,8 @@ public class BisqEasyOpenTradesView extends ChatView {
     }
 
     private void configTableView() {
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
                 .minWidth(100)
@@ -307,18 +310,11 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .comparator(Comparator.comparing(ListItem::getTradeId))
                 .valueSupplier(ListItem::getShortTradeId)
                 .build());
-      
-       /* tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.market"))
-                .minWidth(120)
-                .comparator(Comparator.comparing(ListItem::getMarket))
-                .valueSupplier(ListItem::getMarket)
-                .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.price"))
-                .minWidth(130)
-                .comparator(Comparator.comparing(ListItem::getPrice))
-                .valueSupplier(ListItem::getPriceString)
+                .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
+                .minWidth(90)
+                .comparator(Comparator.comparing(ListItem::getQuoteAmount))
+                .valueSupplier(ListItem::getQuoteAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
@@ -327,23 +323,18 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .valueSupplier(ListItem::getBaseAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .minWidth(90)
-                .comparator(Comparator.comparing(ListItem::getQuoteAmount))
-                .valueSupplier(ListItem::getQuoteAmountString)
-                .build());
-       /* tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
+                .title(Res.get("bisqEasy.openTrades.table.price"))
                 .minWidth(130)
-                .comparator(Comparator.comparing(ListItem::getPaymentMethod))
-                .valueSupplier(ListItem::getPaymentMethod)
+                .comparator(Comparator.comparing(ListItem::getPrice))
+                .valueSupplier(ListItem::getPriceString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.myRole"))
                 .minWidth(110)
+                .right()
                 .comparator(Comparator.comparing(ListItem::getMyRole))
                 .valueSupplier(ListItem::getMyRole)
-                .build());*/
+                .build());
     }
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
@@ -382,12 +373,14 @@ public class BisqEasyOpenTradesView extends ChatView {
         private final String dateString, market, priceString,
                 baseAmountString, quoteAmountString, paymentMethod, myRole;
         private final long date, price, baseAmount, quoteAmount;
+        private final UserProfile peersUserProfile;
 
         public ListItem(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade) {
             this.channel = channel;
             this.trade = trade;
 
-            peersUserName = channel.getPeer().getUserName();
+            peersUserProfile = channel.getPeer();
+            peersUserName = peersUserProfile.getUserName();
             offerId = channel.getBisqEasyOffer().getId();
             this.tradeId = trade.getId();
             shortTradeId = tradeId.substring(0, 8);

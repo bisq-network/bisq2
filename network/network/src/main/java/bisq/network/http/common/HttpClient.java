@@ -21,6 +21,7 @@ import bisq.common.data.Pair;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public interface HttpClient {
     String get(String param, Optional<Pair<String, String>> optionalHeader) throws IOException;
@@ -31,5 +32,5 @@ public interface HttpClient {
 
     boolean hasPendingRequest();
 
-    void shutdown();
+    CompletableFuture<Boolean> shutdown();
 }

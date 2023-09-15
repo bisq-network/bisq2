@@ -118,54 +118,15 @@
 
 
 /*******************************************************************************
- * TableView                                                            *
+ * BisqEasyOpenTradesView.tableView                                                       *
  ******************************************************************************/
 
-.bisq-easy-open-trades-table-view.table-view .table-row-cell {
-    -fx-border-color: transparent;
+.bisq-easy-open-trades.table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: derive(-bisq-black, 35%);
 }
 
-.bisq-easy-open-trades-table-view.table-view .table-row-cell .table-cell {
-    -fx-background-color: transparent;
-}
-
-.bisq-easy-open-trades-table-view.table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-grey-5;
-}
-
-.bisq-easy-open-trades-table-view.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-grey-19;
-    -fx-border-color: -bisq-green;
-    -fx-border-width: 0 0 2 0;
-}
-
-
-.table-view.bisq-easy-trade-wizard-take-offer-table-view .column-header {
-    -fx-pref-height: 40px;
-    -fx-font-family: "IBM Plex Sans";
-    -fx-font-weight: normal;
-}
-
-.table-view.bisq-easy-trade-wizard-take-offer-table-view .table-row-cell {
-    -fx-pref-height: 55px;
-    -fx-border-width: 0 0 1 0;
-    -fx-font-size: 1.1em;
-}
-
-.table-view.bisq-easy-trade-wizard-take-offer-table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-grey-2;
-}
-
-.table-view.bisq-easy-trade-wizard-take-offer-table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-green;
-}
-
-.table-view.bisq-easy-trade-wizard-take-offer-table-view .table-row-cell:selected .button.white-button .text {
-    -fx-fill: -bisq-black;
-}
-
-.table-view.bisq-easy-trade-wizard-take-offer-table-view .table-row-cell:hover .button.outlined-button .text {
-    -fx-fill: -bisq-green;
+.bisq-easy-open-trades.table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: derive(-bisq-black, 10%);
 }
 
 
@@ -396,44 +357,94 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-wizard-direction-button {
-    -fx-font-size: 1.46em;
+
+/*******************************************************************************
+ * TradeWizardMarketView.tableView                                                       *
+ ******************************************************************************/
+
+.bisq-easy-trade-wizard-market.table-view {
+    -fx-font-size: 1.15em;
 }
 
-
-.table-view.offer-review .column-header {
-    -fx-pref-height: 40px;
-    -fx-font-family: "IBM Plex Sans";
-    -fx-font-weight: normal;
+.bisq-easy-trade-wizard-market.table-view .column-header {
+    -fx-pref-height: 40;
 }
 
-.table-view.offer-review .table-row-cell {
-    -fx-pref-height: 55px;
-    -fx-border-width: 0 0 1 0;
-    -fx-font-size: 1.1em;
+.bisq-easy-trade-wizard-market.table-view .table-row-cell {
+    -fx-pref-height: 50;
 }
 
-.table-view.create-offer-table-view .column-header {
-    -fx-pref-height: 40px;
-    -fx-font-family: "IBM Plex Sans";
-    -fx-font-weight: normal;
+.bisq-easy-trade-wizard-market.table-view .table-row-cell .table-cell {
+    -fx-background-color: -bisq-grey-24;
 }
 
-.table-view.create-offer-table-view .table-row-cell {
-    -fx-pref-height: 50px;
-    -fx-border-width: 0 0 1 0;
-    -fx-font-size: 1.1em;
-}
-
-.table-view.create-offer-table-view .table-row-cell:hover .table-cell {
+.bisq-easy-trade-wizard-market.table-view .table-row-cell:hover .table-cell {
     -fx-background-color: -bisq-darker-grey;
-    -fx-border-color: transparent;
 }
 
-.table-view.create-offer-table-view .table-row-cell:selected .table-cell {
+.bisq-easy-trade-wizard-market.table-view .table-row-cell:selected .table-cell {
     -fx-background-color: -bisq-green;
-    -fx-border-color: transparent;
 }
+
+
+/*******************************************************************************
+ * TradeWizardTakeOfferView.tableView                                                       *
+ ******************************************************************************/
+
+.bisq-easy-trade-wizard-select-trade.table-view {
+    -fx-font-size: 1.15em;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .column-header {
+    -fx-pref-height: 40px;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell {
+    -fx-pref-height: 55px;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-darker-grey;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-green;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty {
+    -fx-border-color: derive(-bisq-grey-24, -30%);
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty .table-cell {
+    -fx-background-color: derive(-bisq-grey-24, -15%);
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty:hover .table-cell {
+    -fx-background-color: derive(-bisq-grey-24, -15%);
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .button.white-button .text {
+    -fx-fill: -bisq-black !important;
+    -fx-font-family: "IBM Plex Sans Medium" !important;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .button.outlined-button .text {
+    -fx-fill: -bisq-green;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+
+/*.table-view.bisq-easy-trade-wizard-select-offer .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-grey-2;
+}
+
+.table-view.bisq-easy-trade-wizard-select-offer .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-green;
+}*/
 
 
 /* the text property from list view need to set to apply the color to the button label */
@@ -507,30 +518,6 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
-}
-
-.table-view.trade-overview-table-view .column-header {
-    -fx-pref-height: 68px;
-    -fx-border-width: 0 0 2 0;
-    -fx-border-color: -bisq-dark-grey;
-}
-
-.table-view.trade-overview-table-view .column-header .label {
-    -fx-font-weight: normal;
-}
-
-.table-view.trade-overview-table-view .table-row-cell {
-    -fx-pref-height: 68px;
-    -fx-border-width: 0 0 0 0;
-    -fx-font-size: 1.1em;
-}
-
-.table-view.trade-overview-table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-content-bg-grey;
-}
-
-.table-view.trade-overview-table-view .button {
-    -fx-padding: 6 20 6 20;
 }
 
 

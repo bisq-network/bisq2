@@ -72,6 +72,10 @@ class TradePhaseBox {
         controller.setBisqEasyTrade(bisqEasyTrade);
     }
 
+    void reset() {
+        controller.model.reset();
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -88,15 +92,22 @@ class TradePhaseBox {
 
         private void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
             model.setSelectedChannel(channel);
-
             if (isInMediationPin != null) {
                 isInMediationPin.unbind();
             }
-            isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
+            if (channel != null) {
+                isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
+            }
         }
 
         private void setBisqEasyTrade(BisqEasyTrade bisqEasyTrade) {
             model.setBisqEasyTrade(bisqEasyTrade);
+            if (bisqEasyTradeStatePin != null) {
+                bisqEasyTradeStatePin.unbind();
+            }
+            if (bisqEasyTrade == null) {
+                return;
+            }
 
             boolean isBuyer = bisqEasyTrade.isBuyer();
 
@@ -114,9 +125,6 @@ class TradePhaseBox {
                     Res.get("bisqEasy.tradeState.phase.seller.phase4").toUpperCase());
             model.getPhase5Info().set(Res.get("bisqEasy.tradeState.phase.phase5").toUpperCase());
 
-            if (bisqEasyTradeStatePin != null) {
-                bisqEasyTradeStatePin.unbind();
-            }
             bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> {
                 UIThread.run(() -> {
                     switch (state) {
@@ -222,6 +230,19 @@ class TradePhaseBox {
         private final StringProperty phase5Info = new SimpleStringProperty();
         private final BooleanProperty disputeButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty isInMediation = new SimpleBooleanProperty();
+
+        void reset() {
+            selectedChannel = null;
+            bisqEasyTrade = null;
+            phaseIndex.set(0);
+            phase1Info.set(null);
+            phase2Info.set(null);
+            phase3Info.set(null);
+            phase4Info.set(null);
+            phase5Info.set(null);
+            disputeButtonVisible.set(false);
+            isInMediation.set(false);
+        }
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {

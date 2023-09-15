@@ -43,6 +43,7 @@
     -bisq-green-lighter: #53a746;
     -bisq-green-dark: #488e3e;
     -bisq-green-darker: rgba(86, 174, 72, 0.75);
+    -bisq-green-bright: #25b135; /* Green logo color used in Bisq 1 */
     -bisq-white: white;
     -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
@@ -50,6 +51,7 @@
     -bisq-sell: #660000;
     -bisq-red: #d02c1f;
     -bisq-warning: #d0831f;
+    -bisq-table-base: #1D1D1D;
 
     /* Greys */
     -bisq-grey-dimmed: #828282;

@@ -67,6 +67,7 @@ public class UpdaterService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         releaseNotificationsService.getReleaseNotifications().addListener(new CollectionObserver<>() {
             @Override
             public void add(ReleaseNotification releaseNotification) {
@@ -98,6 +99,7 @@ public class UpdaterService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (executorService != null) {
             ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
         }

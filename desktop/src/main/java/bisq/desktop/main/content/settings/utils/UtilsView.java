@@ -56,27 +56,27 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         Label localDataHeadline = new Label(Res.get("settings.utils.localData.headline"));
         localDataHeadline.getStyleClass().addAll("settings-headline");
         openDataDirButton = new Button(Res.get("settings.utils.localData.openDataDir"));
-        openDataDirButton.getStyleClass().add("outlined-button");
+        openDataDirButton.getStyleClass().add("grey-transparent-outlined-button");
         openLogFileButton = new Button(Res.get("settings.utils.localData.openLogFile"));
-        openLogFileButton.getStyleClass().add("outlined-button");
+        openLogFileButton.getStyleClass().add("grey-transparent-outlined-button");
         HBox localDataBox = new HBox(20, openDataDirButton, openLogFileButton);
         localDataBox.getStyleClass().add("settings-box-bg");
 
         Label rulesHeadline = new Label(Res.get("settings.utils.rules.headline"));
         rulesHeadline.getStyleClass().addAll("settings-headline");
         chatRules = new Button(Res.get("settings.utils.rules.chatRules"));
-        chatRules.getStyleClass().add("outlined-button");
+        chatRules.getStyleClass().add("grey-transparent-outlined-button");
         tradeGuide = new Button(Res.get("settings.utils.rules.tradeGuide"));
-        tradeGuide.getStyleClass().add("outlined-button");
+        tradeGuide.getStyleClass().add("grey-transparent-outlined-button");
         HBox rulesBox = new HBox(20, chatRules, tradeGuide);
         rulesBox.getStyleClass().add("settings-box-bg");
 
         Label legalHeadline = new Label(Res.get("settings.utils.legal.headline"));
         legalHeadline.getStyleClass().addAll("settings-headline");
         tac = new Button(Res.get("settings.utils.legal.tac"));
-        tac.getStyleClass().add("outlined-button");
+        tac.getStyleClass().add("grey-transparent-outlined-button");
         license = new Button(Res.get("settings.utils.legal.license"));
-        license.getStyleClass().add("outlined-button");
+        license.getStyleClass().add("grey-transparent-outlined-button");
         HBox legalBox = new HBox(20, tac, license);
         legalBox.getStyleClass().add("settings-box-bg");
 

@@ -25,8 +25,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqTableView<S extends TableItem> extends TableView<S> {
@@ -117,5 +122,37 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
                 .orElse(0d);
         double height = headerHeight + numItems * rowHeight + realScrollbarHeight;
         setFixHeight(height);
+    }
+
+    public BisqTableColumn<S> getSelectionMarkerColumn() {
+        return new BisqTableColumn.Builder<S>()
+                .fixWidth(3)
+                .setCellFactory(getSelectionMarkerCellFactory())
+                .isSortable(false)
+                .build();
+    }
+
+    public Callback<TableColumn<S, S>, TableCell<S, S>> getSelectionMarkerCellFactory
+            () {
+        return column -> new TableCell<>() {
+            private Subscription selectedPin;
+
+            @Override
+            public void updateItem(final S item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    selectedPin = EasyBind.subscribe(BisqTableView.this.getSelectionModel().selectedItemProperty(),
+                            selected -> {
+                                setId(item.equals(selected) ? "selection-marker" : null);
+                            });
+                } else {
+                    if (selectedPin != null) {
+                        selectedPin.unsubscribe();
+                        selectedPin = null;
+                    }
+                }
+            }
+        };
     }
 }

@@ -44,8 +44,9 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         balanceLabel = balanceTriple.getSecond();
         VBox.setMargin(balanceBox, new Insets(40, 0, 0, 0));
 
-        send = getCardButton(Res.get("wallet.sendBtc"), "green-card-button");
-        receive = getCardButton(Res.get("wallet.receiveBtc"), "grey-card-button");
+        send = getCardButton(Res.get("wallet.sendBtc"), "card-button");
+        send.setDefaultButton(true);
+        receive = getCardButton(Res.get("wallet.receiveBtc"), "card-button");
 
         HBox boxes = new HBox(25, send, receive);
         boxes.setAlignment(Pos.CENTER);

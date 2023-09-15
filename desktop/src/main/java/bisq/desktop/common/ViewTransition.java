@@ -53,6 +53,7 @@ public class ViewTransition {
         this.newView = newView;
         newViewRoot = newView.getRoot();
         if (!Transitions.getUseAnimations()) {
+            newViewRoot.setOpacity(1);
             remove(oldViewRoot);
             return;
         }

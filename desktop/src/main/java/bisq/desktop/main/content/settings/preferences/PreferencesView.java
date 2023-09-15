@@ -110,7 +110,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         ListView<String> supportedLanguageListView = new ListView<>(model.getSelectedSupportedLanguageCodes());
         supportedLanguageListView.setCellFactory(getSupportedLanguageCellFactory(controller));
         supportedLanguageListView.setMinWidth(450);
-        supportedLanguageListView.setMaxHeight(150);
+        supportedLanguageListView.setMaxHeight(100);
         VBox supportedLanguageListViewVBox = new VBox(10, supportedLanguageListViewSubHeadline, supportedLanguageListView);
 
         HBox.setHgrow(supportedLanguageListViewVBox, Priority.ALWAYS);
@@ -161,7 +161,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
         requiredTotalReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
                 null, Res.get("settings.preferences.trade.requiredTotalReputationScore.help"));
-        requiredTotalReputationScore.setMaxWidth(300);
+        requiredTotalReputationScore.setMaxWidth(400);
 
         VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
         tradeVBox.setPadding(new Insets(10));

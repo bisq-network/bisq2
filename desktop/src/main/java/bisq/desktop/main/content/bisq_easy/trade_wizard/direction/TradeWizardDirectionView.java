@@ -63,12 +63,12 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         subtitleLabel.getStyleClass().add("bisq-text-3");
 
         Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.buy"),
-                Res.get("bisqEasy.createOffer.direction.buy.info"), "card-toggle-button");
+                Res.get("bisqEasy.createOffer.direction.buy.info"), "card-button");
         VBox buyBox = buyPair.getFirst();
         buyButton = buyPair.getSecond();
 
         Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.createOffer.direction.sell"),
-                Res.get("bisqEasy.createOffer.direction.sell.info"), "card-toggle-button");
+                Res.get("bisqEasy.createOffer.direction.sell.info"), "card-button");
         VBox sellBox = sellPair.getFirst();
         sellButton = sellPair.getSecond();
 
@@ -137,7 +137,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
 
     private Pair<VBox, Button> getBoxPair(String title, String info, String style) {
         Button button = new Button(title);
-        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-direction-button");
+        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-large-push-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);

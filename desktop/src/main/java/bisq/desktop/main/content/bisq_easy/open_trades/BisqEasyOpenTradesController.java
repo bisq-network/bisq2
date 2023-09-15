@@ -69,7 +69,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeStateController = new TradeStateController(serviceProvider, this::openUserProfileSidebar);
+        tradeStateController = new TradeStateController(serviceProvider, this::handleTradeClosed);
         openTradesWelcome = new OpenTradesWelcome();
     }
 
@@ -141,7 +141,12 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             }
         });
 
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(e -> UIThread.run(this::updateVisibility));
+        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(isConfirmed ->
+                UIThread.run(() -> {
+                    if (isConfirmed) {
+                        maybeSelectFirstItem();
+                    }
+                }));
 
         bisqEasyTradeService.getTrades().addListener(() -> {
             UIThread.run(() -> {
@@ -158,17 +163,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
 
-        if (!model.getSortedList().isEmpty()) {
-            BisqEasyOpenTradesView.ListItem listItem = model.getSortedList().get(0);
-            BisqEasyOpenTradeChannel channel = listItem.getChannel();
-            selectionService.selectChannel(channel);
-            tradeStateController.setSelectedChannel(channel);
-
-            // If there is only one item we do not select it in the tableview
-            if (model.getSortedList().size() > 1 && settingsService.getTradeRulesConfirmed().get()) {
-                model.getSelectedItem().set(listItem);
-            }
-        }
+        maybeSelectFirstItem();
         updateVisibility();
     }
 
@@ -207,17 +202,14 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         }
     }
 
-    void onSelectTrade(String tradeId) {
+    void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
         if (!model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
             new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
                     .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
                     .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                     .show();
         } else {
-            channelService.findChannelByOfferId(tradeId).ifPresent(channel -> {
-                selectionService.selectChannel(channel);
-                tradeStateController.setSelectedChannel(channel);
-            });
+            doSelectItem(item);
         }
     }
 
@@ -235,6 +227,33 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             model.getChatWindow().get().hide();
         }
         model.getChatWindow().set(null);
+    }
+
+    private void handleTradeClosed(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+        bisqEasyTradeService.removeTrade(trade);
+        channelService.leaveChannel(channel);
+        maybeSelectFirstItem();
+
+        if (model.getFilteredList().isEmpty()) {
+            doSelectItem(null);
+        } else {
+            BisqEasyOpenTradesView.ListItem firstItem = model.getSortedList().get(0);
+            doSelectItem(firstItem);
+        }
+    }
+
+    private void doSelectItem(BisqEasyOpenTradesView.ListItem item) {
+        BisqEasyOpenTradeChannel channel = item != null ? item.getChannel() : null;
+        selectionService.selectChannel(channel);
+        tradeStateController.setSelectedChannel(channel);
+        model.getSelectedItem().set(item);
+        updateVisibility();
+    }
+
+    private void maybeSelectFirstItem() {
+        if (!model.getSortedList().isEmpty() && settingsService.getTradeRulesConfirmed().get()) {
+            doSelectItem(model.getSortedList().get(0));
+        }
     }
 
     private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {

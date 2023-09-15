@@ -38,4 +38,11 @@ public class TradeStateModel implements Model {
     private BisqEasyOpenTradeChannel channel;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final StringProperty headline = new SimpleStringProperty();
+
+    void reset() {
+        bisqEasyTrade = null;
+        channel = null;
+        stateInfoVBox.set(null);
+        headline.set(null);
+    }
 }

@@ -25,11 +25,15 @@ public class MarketImageComposition {
     private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "usd", "xmr", "any-base", "any-quote");
 
     public static Pair<StackPane, List<ImageView>> imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
-        boolean isRetina = ImageUtil.isRetina();
-
         StackPane pane = new StackPane();
+
+        // TODO check on systems without high resolution
+       /* boolean isRetina = ImageUtil.isRetina();
         pane.setPrefHeight(isRetina ? 34 : 17);
-        pane.setPrefWidth(isRetina ? 30 : 15);
+        pane.setPrefWidth(isRetina ? 30 : 15);*/
+
+        pane.setPrefHeight(34);
+        pane.setPrefWidth(30);
 
         Stream<String> stream = baseCurrencyCode.equals("btc")
                 ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
@@ -38,7 +42,6 @@ public class MarketImageComposition {
         List<ImageView> imageViews = stream.map(code -> {
             Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
             ImageView imageView = new ImageView();
-
 
           /*  ColorAdjust monochrome = new ColorAdjust();
             monochrome.setSaturation(-0.5);

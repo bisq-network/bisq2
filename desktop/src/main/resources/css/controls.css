@@ -17,17 +17,18 @@
     -fx-border-radius: 4;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
     -fx-padding: 5 32 5 32;
 }
 
 .button:hover {
     -fx-background-color: rgba(255, 255, 255, 0.15);
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0.4, 0, 2);
 }
 
 .button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.1);
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 10, 0.5, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.35, 0, 2);
 }
 
 .button:disabled {
@@ -83,7 +84,6 @@
 .white-button > .text {
     -fx-fill: -bisq-black !important;
     -fx-text-fill: -bisq-black !important;
-    -fx-font-family: "IBM Plex Sans";
 }
 
 .white-button:hover {
@@ -265,6 +265,7 @@
     -fx-text-fill: derive(-bisq-red, -10%);
 }
 
+
 /*******************************************************************************
  *                                                                             *
  * Text-Button                                                                  *
@@ -324,6 +325,7 @@
     -fx-background-radius: 32;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
     -fx-border-width: 0;
     -fx-cursor: hand;
     -fx-padding: 5 10 5 6;
@@ -371,7 +373,7 @@
     -fx-background-radius: 8;
     -fx-padding: 15;
     -fx-font-size: 1.7em;
-    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .large-button {
@@ -379,15 +381,15 @@
     -fx-border-radius: 8;
     -fx-padding: 15;
     -fx-font-size: 1.54em;
-    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .medium-large-button {
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
     -fx-padding: 10;
     -fx-font-size: 1.25em;
-    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+    -fx-font-family: "IBM Plex Sans";
 }
 
 
@@ -411,12 +413,10 @@
 
 .toggle-button:hover {
     -fx-background-color: rgba(255, 255, 255, 0.15);
-    /*-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);*/
 }
 
 .toggle-button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.1);
-    /*  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 1), 20, 0.5, 0, 4);*/
 }
 
 .toggle-button:disabled {
@@ -430,12 +430,10 @@
 
 .toggle-button:selected:hover {
     -fx-background-color: -bisq-green-lighter;
-    /* -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);*/
 }
 
 .toggle-button:selected:pressed {
     -fx-background-color: -bisq-green-dark;
-    /* fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);*/
 }
 
 .toggle-button:selected:disabled {
@@ -517,58 +515,69 @@
  *                                                                             *
  ******************************************************************************/
 
-.card-toggle-button {
-    -fx-font-size: 1.46em;
-    -fx-background-color: -bisq-grey-3;
-    -fx-background-radius: 4;
+.card-button {
+    -fx-background-color: derive(-bisq-grey-2, -20%);
     -fx-text-fill: -fx-light-text-color;
-    -fx-cursor: hand;
+    -fx-font-size: 1.55em;
+    -fx-background-radius: 4;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.card-toggle-button:hover {
-    -fx-background-color: -bisq-grey-18;
+.card-button:hover {
+    -fx-background-color: derive(-bisq-grey-2, -30%);
 }
 
-.card-toggle-button:default {
+.card-button:pressed {
+    -fx-background-color: derive(-bisq-grey-2, -40%);
+}
+
+.card-button:default {
     -fx-background-color: -bisq-green;
-}
-
-.card-toggle-button:default:hover {
-    -fx-background-color: -bisq-green-lighter;
-}
-
-
-/*******************************************************************************
- *                                                                             *
- * Card button                                                                *
- *                                                                             *
- ******************************************************************************/
-
-.grey-card-button {
-    -fx-font-size: 1.46em;
-    -fx-background-color: -bisq-grey-3;
-    -fx-background-radius: 4;
     -fx-text-fill: -fx-light-text-color;
-    -fx-cursor: hand;
-    -fx-font-family: "IBM Plex Sans Light";
 }
 
-.grey-card-button:hover {
-    -fx-background-color: -bisq-grey-18;
+.card-button:default:hover {
+    -fx-background-color: derive(-bisq-green, -5%);
+    -fx-text-fill: derive(-fx-light-text-color, -5%);
 }
 
-.green-card-button {
-    -fx-font-size: 1.46em;
-    -fx-background-color: -bisq-green;
-    -fx-background-radius: 4;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-cursor: hand;
-    -fx-font-family: "IBM Plex Sans Light";
+.card-button:default:pressed {
+    -fx-background-color: derive(-bisq-green, -10%);
+    -fx-text-fill: derive(-fx-light-text-color, -10%);
 }
 
-.green-card-button:hover {
-    -fx-background-color: -bisq-green-lighter;
+
+.card-button-border {
+    -fx-background-color: transparent;
+    -fx-border-color: derive(-bisq-white, -25%);
+}
+
+.card-button-border:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.15);
+    -fx-border-color: derive(-bisq-white, -15%);
+}
+
+.card-button-border:pressed {
+    -fx-background-color: rgba(0, 0, 0, 0.2);
+    -fx-border-color: derive(-bisq-white, -10%);
+}
+
+.card-button-border:default {
+    -fx-background-color: transparent;
+    -fx-border-color: derive(-bisq-green, -20%);
+    -fx-text-fill: derive(-bisq-green, -20%);
+}
+
+.card-button-border:default:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.15);
+    -fx-border-color: derive(-bisq-green, -5%);
+    -fx-text-fill: derive(-bisq-green, -5%);
+}
+
+.card-button-border:default:pressed {
+    -fx-background-color: rgba(0, 0, 0, 0.2);
+    -fx-border-color: derive(-bisq-green, -10%);
+    -fx-text-fill: derive(-bisq-green, -10%);
 }
 
 

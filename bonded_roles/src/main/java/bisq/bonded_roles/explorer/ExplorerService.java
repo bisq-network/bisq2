@@ -138,9 +138,10 @@ public class ExplorerService {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         shutdownStarted = true;
-        httpClient.ifPresent(BaseHttpClient::shutdown);
-        return CompletableFuture.completedFuture(true);
+        return httpClient.map(BaseHttpClient::shutdown)
+                .orElse(CompletableFuture.completedFuture(true));
     }
 
     public CompletableFuture<Tx> requestTx(String txId) {
