@@ -38,6 +38,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -63,7 +65,7 @@ public class BisqEasyOpenTradesView extends ChatView {
     private Label chatHeadline;
     private BisqTableView<ListItem> tableView;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
-            selectedModelItemPin, peerUserProfileDisplayPin, chatWindowPin;
+            selectedModelItemPin, peersUserProfilePin, chatWindowPin;
     private Button toggleChatWindowButton;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
@@ -196,10 +198,12 @@ public class BisqEasyOpenTradesView extends ChatView {
                         tableView.hideVerticalScrollbar();
                     }
                 });
-        peerUserProfileDisplayPin = EasyBind.subscribe(model.getPeerUserProfileDisplay(),
-                peerUserProfileDisplay -> {
-                    if (peerUserProfileDisplay != null) {
-                        chatHeadline.setGraphic(peerUserProfileDisplay);
+        peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(),
+                peersUserProfile -> {
+                    if (peersUserProfile != null) {
+                        UserProfileDisplay peersUserProfileDisplay = new UserProfileDisplay(peersUserProfile);
+                        peersUserProfileDisplay.applyReputationScore(model.getPeersReputationScore());
+                        chatHeadline.setGraphic(peersUserProfileDisplay);
                     }
                 });
 
@@ -289,7 +293,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         }
         noOpenTradesPin.unsubscribe();
         tradeRulesAcceptedPin.unsubscribe();
-        peerUserProfileDisplayPin.unsubscribe();
+        peersUserProfilePin.unsubscribe();
         chatWindowPin.unsubscribe();
 
         toggleChatWindowButton.setOnAction(null);
@@ -300,7 +304,7 @@ public class BisqEasyOpenTradesView extends ChatView {
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
-                .minWidth(100)
+                .minWidth(120)
                 .left()
                 .comparator(Comparator.comparing(ListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
@@ -356,7 +360,9 @@ public class BisqEasyOpenTradesView extends ChatView {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    setGraphic(new UserProfileDisplay(item.getChannel().getPeer()));
+                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay.applyReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
                 } else {
                     setGraphic(null);
                 }
@@ -385,8 +391,9 @@ public class BisqEasyOpenTradesView extends ChatView {
                 baseAmountString, quoteAmountString, paymentMethod, myRole;
         private final long date, price, baseAmount, quoteAmount;
         private final UserProfile peersUserProfile;
+        private final ReputationScore reputationScore;
 
-        public ListItem(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade) {
+        public ListItem(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade, ReputationService reputationService) {
             this.channel = channel;
             this.trade = trade;
 
@@ -394,7 +401,7 @@ public class BisqEasyOpenTradesView extends ChatView {
             peersUserName = peersUserProfile.getUserName();
             offerId = channel.getBisqEasyOffer().getId();
             this.tradeId = trade.getId();
-            shortTradeId = tradeId.substring(0, 8);
+            shortTradeId = trade.getShortId();
 
             BisqEasyContract contract = trade.getContract();
             date = trade.getDate();
@@ -408,6 +415,7 @@ public class BisqEasyOpenTradesView extends ChatView {
             quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
             paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethodName();
             myRole = BisqEasyTradeFormatter.getMyRole(trade);
+            reputationScore = reputationService.getReputationScore(peersUserProfile);
         }
     }
 }

@@ -559,6 +559,18 @@
     -fx-image: url("/images/icons/icon-wallet.png");
 }
 
+#star-green {
+    -fx-image: url("/images/icons/star-green.png");
+}
+
+#star-white {
+    -fx-image: url("/images/icons/star-white.png");
+}
+
+#star-grey {
+    -fx-image: url("/images/icons/star-grey.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */

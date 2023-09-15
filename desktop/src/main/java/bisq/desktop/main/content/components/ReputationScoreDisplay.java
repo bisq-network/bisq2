@@ -17,13 +17,11 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.desktop.common.Icons;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.reputation.ReputationScore;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,40 +29,63 @@ import java.util.List;
 
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
-    final List<Label> stars;
-    final Tooltip tooltip = new BisqTooltip();
-
-    public ReputationScoreDisplay() {
-        tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-11;");
-        tooltip.setMaxWidth(300);
-        tooltip.setWrapText(true);
-        Tooltip.install(this, tooltip);
-
-        String fontSize = "0.9em";
-        stars = List.of(Icons.getIcon(AwesomeIcon.STAR, fontSize),
-                Icons.getIcon(AwesomeIcon.STAR, fontSize),
-                Icons.getIcon(AwesomeIcon.STAR, fontSize),
-                Icons.getIcon(AwesomeIcon.STAR, fontSize),
-                Icons.getIcon(AwesomeIcon.STAR, fontSize));
-        for (Label label : stars) {
-            label.setMouseTransparent(false);
-        }
-        setSpacing(5);
-        setAlignment(Pos.CENTER);
-        getChildren().addAll(stars);
-    }
+    private static final double SPACING = 5;
+    private static final double STAR_WIDTH = 12;
+    private static final double STAR_HEIGHT = 11;
+    private final List<ImageView> stars;
+    private final Tooltip tooltip = new BisqTooltip();
+    private ReputationScore reputationScore;
 
     public ReputationScoreDisplay(ReputationScore reputationScore) {
         this();
         applyReputationScore(reputationScore);
     }
 
+    public ReputationScoreDisplay() {
+        super(SPACING);
+
+        tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-11;");
+        tooltip.setMaxWidth(300);
+        tooltip.setWrapText(true);
+        Tooltip.install(this, tooltip);
+
+        stars = List.of(getDefaultStar(), getDefaultStar(), getDefaultStar(), getDefaultStar(), getDefaultStar());
+        getChildren().addAll(stars);
+    }
+
     public void applyReputationScore(ReputationScore reputationScore) {
+        this.reputationScore = reputationScore;
         double relativeScore = reputationScore.getRelativeScore();
-        int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;
+        relativeScore = 0.5;
+        int target = (int) Math.floor(stars.size() * relativeScore);
         for (int i = 0; i < stars.size(); i++) {
-            stars.get(i).setOpacity(i <= target ? 1 : 0.3);
+            ImageView imageView = stars.get(i);
+            if (i < target) {
+                imageView.setOpacity(1);
+                imageView.setId("star-green");
+            } else {
+                imageView.setOpacity(0.3);
+                imageView.setId("star-white");
+            }
         }
-        tooltip.setText(reputationScore.getDetails());
+        tooltip.setText(reputationScore.getTooltipString());
+    }
+
+    public void setScale(double scale) {
+        setSpacing(SPACING * scale);
+        stars.forEach(imageView -> {
+            imageView.setFitWidth(STAR_WIDTH * scale);
+            imageView.setFitHeight(STAR_HEIGHT * scale);
+        });
+    }
+
+    public String getTooltipString() {
+        return reputationScore != null ? reputationScore.getTooltipString() : "";
+    }
+
+    private ImageView getDefaultStar() {
+        ImageView imageView = ImageUtil.getImageViewById("star-white");
+        imageView.setOpacity(0.3);
+        return imageView;
     }
 }

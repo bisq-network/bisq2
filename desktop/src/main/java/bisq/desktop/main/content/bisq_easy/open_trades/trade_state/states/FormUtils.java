@@ -23,6 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;

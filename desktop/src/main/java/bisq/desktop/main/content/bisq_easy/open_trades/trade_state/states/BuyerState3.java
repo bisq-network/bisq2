@@ -21,6 +21,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WaitingAnimation;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;

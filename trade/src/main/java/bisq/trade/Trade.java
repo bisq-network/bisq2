@@ -210,4 +210,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
             return maker;
         }
     }
+
+    public String getShortId() {
+        return id.substring(0, 8);
+    }
 }

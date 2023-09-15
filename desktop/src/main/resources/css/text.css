@@ -275,6 +275,7 @@
 
 /* colors */
 .text-fill-white {
+    -fx-fill: -fx-light-text-color !Important;
     -fx-text-fill: -fx-light-text-color !Important;
 }
 

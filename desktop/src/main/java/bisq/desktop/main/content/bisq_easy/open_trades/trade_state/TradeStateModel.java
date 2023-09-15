@@ -19,8 +19,9 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
-import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -34,16 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class TradeStateModel implements Model {
     enum TradeCloseType {
-        REJECT(Res.get("bisqEasy.openTrades.closeTrade.reject")),
-        CANCEL(Res.get("bisqEasy.openTrades.closeTrade.cancel")),
-        COMPLETED(Res.get("bisqEasy.openTrades.closeTrade.completed"));
-        @Getter
-        private final String buttonText;
-
-        TradeCloseType(String buttonText) {
-
-            this.buttonText = buttonText;
-        }
+        REJECT,
+        CANCEL,
+        COMPLETED
     }
 
     @Setter
@@ -51,8 +45,15 @@ public class TradeStateModel implements Model {
     @Setter
     private BisqEasyOpenTradeChannel channel;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
-    private final StringProperty headline = new SimpleStringProperty();
+    private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
     private final StringProperty closeButtonText = new SimpleStringProperty();
+    private final StringProperty leftAmount = new SimpleStringProperty();
+    private final StringProperty leftAmountDescription = new SimpleStringProperty();
+    private final StringProperty rightAmount = new SimpleStringProperty();
+    private final StringProperty rightAmountDescription = new SimpleStringProperty();
+    private final StringProperty tradeId = new SimpleStringProperty();
+    @Setter
+    private ReputationScore peersReputationScore;
     @Setter
     private TradeCloseType tradeCloseType;
 
@@ -60,7 +61,12 @@ public class TradeStateModel implements Model {
         bisqEasyTrade = null;
         channel = null;
         stateInfoVBox.set(null);
-        headline.set(null);
+        leftAmount.set(null);
+        leftAmountDescription.set(null);
+        rightAmount.set(null);
+        rightAmountDescription.set(null);
+        tradeId.set(null);
+        peersReputationScore = null;
         tradeCloseType = null;
     }
 }

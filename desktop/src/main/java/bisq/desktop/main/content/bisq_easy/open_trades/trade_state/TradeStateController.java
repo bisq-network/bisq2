@@ -37,6 +37,9 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +56,7 @@ public class TradeStateController implements Controller {
     private final ServiceProvider serviceProvider;
     private final TradePhaseBox tradePhaseBox;
     private final BiConsumer<BisqEasyTrade, BisqEasyOpenTradeChannel> onTradeClosedHandler;
+    private final ReputationService reputationService;
     private Pin bisqEasyTradeStatePin;
 
     public TradeStateController(ServiceProvider serviceProvider,
@@ -60,6 +64,7 @@ public class TradeStateController implements Controller {
         this.serviceProvider = serviceProvider;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        reputationService = serviceProvider.getUserService().getReputationService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
         this.onTradeClosedHandler = onTradeClosedHandler;
@@ -81,8 +86,9 @@ public class TradeStateController implements Controller {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(bisqEasyOffer);
+        UserProfile peerUserProfile = channel.getPeer();
         NetworkId takerNetworkId = maker ?
-                channel.getPeer().getNetworkId() :
+                peerUserProfile.getNetworkId() :
                 myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(tradeId);
@@ -162,13 +168,24 @@ public class TradeStateController implements Controller {
         long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
         long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
         Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
-        String baseAmountString = AmountFormatter.formatAmount(baseAmount);
+        String baseAmountString = AmountFormatter.formatAmountWithCode(baseAmount, false);
         Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode());
-        String quoteAmountString = AmountFormatter.formatAmount(quoteAmount);
-        model.getHeadline().set(Res.get("bisqEasy.tradeState.header.headline",
-                directionString.toUpperCase(),
-                baseAmountString + " " + baseAmount.getCode(),
-                quoteAmountString + " " + quoteAmount.getCode()));
+        String quoteAmountString = AmountFormatter.formatAmountWithCode(quoteAmount);
+
+        model.setPeersReputationScore(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
+        model.getPeersUserProfile().set(peerUserProfile);
+        model.getTradeId().set(bisqEasyTrade.getShortId());
+        if (isSeller) {
+            model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
+            model.getLeftAmount().set(baseAmountString);
+            model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
+            model.getRightAmount().set(quoteAmountString);
+        } else {
+            model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.pay").toUpperCase());
+            model.getLeftAmount().set(quoteAmountString);
+            model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
+            model.getRightAmount().set(baseAmountString);
+        }
     }
 
     private void applyCloseTradeReason(BisqEasyTradeState state) {
@@ -178,6 +195,9 @@ public class TradeStateController implements Controller {
             case MAKER_SENT_TAKE_OFFER_RESPONSE:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.REJECT);
+                model.getCloseButtonText().set(model.getBisqEasyTrade().isMaker() ?
+                        Res.get("bisqEasy.openTrades.closeTrade.reject.maker") :
+                        Res.get("bisqEasy.openTrades.closeTrade.reject.taker"));
                 break;
             case SELLER_SENT_ACCOUNT_DATA:
             case BUYER_RECEIVED_ACCOUNT_DATA:
@@ -190,13 +210,13 @@ public class TradeStateController implements Controller {
             case SELLER_SENT_BTC_SENT_CONFIRMATION:
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.CANCEL);
+                model.getCloseButtonText().set(Res.get("bisqEasy.openTrades.closeTrade.cancel"));
                 break;
             case BTC_CONFIRMED:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.COMPLETED);
-
+                model.getCloseButtonText().set(Res.get("bisqEasy.openTrades.closeTrade.completed"));
                 break;
         }
-        model.getCloseButtonText().set(model.getTradeCloseType().getButtonText());
     }
 
     private void resetData() {

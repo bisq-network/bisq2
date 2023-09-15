@@ -26,6 +26,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;

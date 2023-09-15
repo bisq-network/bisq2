@@ -30,7 +30,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,7 +83,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     @Override
     public void onActivate() {
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
-                .map(c -> new BisqEasyPrivateChatsView.ListItem(c, userProfileService, reputationService))
+                .map(channel -> new BisqEasyPrivateChatsView.ListItem(channel, reputationService))
                 .to(channelService.getChannels());
 
         channelsPin = channelService.getChannels().addListener(this::updateVisibility);
@@ -124,8 +124,9 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
             UIThread.run(() -> {
                 TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
-
-                model.getPeerUserProfileDisplay().set(new UserProfileDisplay(privateChannel.getPeer()));
+                UserProfile peer = privateChannel.getPeer();
+                model.setPeersReputationScore(reputationService.getReputationScore(peer));
+                model.getPeersUserProfile().set(peer);
             });
         }
     }

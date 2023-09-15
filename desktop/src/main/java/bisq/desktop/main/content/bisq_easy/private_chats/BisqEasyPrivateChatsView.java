@@ -31,7 +31,6 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
@@ -58,7 +57,7 @@ import java.util.Optional;
 public class BisqEasyPrivateChatsView extends ChatView {
     private BisqTableView<ListItem> tableView;
     private VBox tableViewVBox, chatVBox;
-    private Subscription noOpenChatsPin, selectedTableViewItemPin, selectedModelItemPin, peerUserProfileDisplayPin;
+    private Subscription noOpenChatsPin, selectedTableViewItemPin, selectedModelItemPin, peersUserProfilePin;
     private Label chatHeadline;
 
 
@@ -163,10 +162,12 @@ public class BisqEasyPrivateChatsView extends ChatView {
                     chatVBox.setVisible(!noOpenTrades);
                     chatVBox.setManaged(!noOpenTrades);
                 });
-        peerUserProfileDisplayPin = EasyBind.subscribe(model.getPeerUserProfileDisplay(),
-                peerUserProfileDisplay -> {
-                    if (peerUserProfileDisplay != null) {
-                        chatHeadline.setGraphic(peerUserProfileDisplay);
+        peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(),
+                peersUserProfile -> {
+                    if (peersUserProfile != null) {
+                        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(peersUserProfile);
+                        userProfileDisplay.applyReputationScore(model.getPeersReputationScore());
+                        chatHeadline.setGraphic(userProfileDisplay);
                     }
                 });
 
@@ -181,7 +182,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
         selectedModelItemPin.unsubscribe();
         selectedTableViewItemPin.unsubscribe();
         noOpenChatsPin.unsubscribe();
-        peerUserProfileDisplayPin.unsubscribe();
+        peersUserProfilePin.unsubscribe();
     }
 
     private void configTableView() {
@@ -241,7 +242,9 @@ public class BisqEasyPrivateChatsView extends ChatView {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    setGraphic(new UserProfileDisplay(item.getChannel().getPeer()));
+                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay.applyReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
                 } else {
                     setGraphic(null);
                 }
@@ -266,7 +269,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
         private final String totalReputationScoreString, profileAgeString;
         private final ReputationScore reputationScore;
 
-        public ListItem(TwoPartyPrivateChatChannel channel, UserProfileService userProfileService, ReputationService reputationService) {
+        public ListItem(TwoPartyPrivateChatChannel channel, ReputationService reputationService) {
             this.channel = channel;
 
             UserProfile userProfile = channel.getPeer();

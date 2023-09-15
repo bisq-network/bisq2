@@ -19,33 +19,83 @@ package bisq.desktop.main.content.components;
 
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class UserProfileDisplay extends Label {
-    public static final double DEFAULT_ICON_SIZE = 30;
-    private UserProfileIcon userProfileIcon;
+import javax.annotation.Nullable;
 
-    public UserProfileDisplay(UserProfile userProfile) {
+@Slf4j
+public class UserProfileDisplay extends HBox {
+    public static final double DEFAULT_ICON_SIZE = 30;
+    private final BisqTooltip tooltip;
+    private final UserProfileIcon userProfileIcon;
+    private final ReputationScoreDisplay reputationScoreDisplay;
+    private final Label userName;
+    private UserProfile userProfile;
+
+    public UserProfileDisplay() {
+        this(null, DEFAULT_ICON_SIZE);
+    }
+
+    public UserProfileDisplay(double size) {
+        this(null, size);
+    }
+
+    public UserProfileDisplay(@Nullable UserProfile userProfile) {
         this(userProfile, DEFAULT_ICON_SIZE);
     }
 
-    public UserProfileDisplay(UserProfile userProfile, double size) {
-        userProfileIcon = new UserProfileIcon(size);
-        userProfileIcon.setUserProfile(userProfile);
+    public UserProfileDisplay(@Nullable UserProfile userProfile, double size) {
+        super(10);
+        setAlignment(Pos.CENTER_LEFT);
 
-        setText(userProfile.getUserName());
-        setGraphic(userProfileIcon);
-        setGraphicTextGap(10);
-        BisqTooltip tooltip = new BisqTooltip(userProfile.getTooltipString());
+        userProfileIcon = new UserProfileIcon(size);
+        userName = new Label();
+        userName.getStyleClass().add("user-profile-display");
+        reputationScoreDisplay = new ReputationScoreDisplay();
+        reputationScoreDisplay.setScale(0.75);
+        VBox vBox = new VBox(userName, reputationScoreDisplay);
+        vBox.setAlignment(Pos.CENTER_LEFT);
+        getChildren().addAll(userProfileIcon, vBox);
+
+        tooltip = new BisqTooltip();
         tooltip.getStyleClass().add("medium-dark-tooltip");
         Tooltip.install(this, tooltip);
+
+        if (userProfile != null) {
+            setUserProfile(userProfile);
+        }
+    }
+
+    public void setUserProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
+        if (userProfile != null) {
+            userProfileIcon.setUserProfile(userProfile);
+            userName.setText(userProfile.getUserName());
+            applyTooltip();
+        }
+    }
+
+    private void applyTooltip() {
+        tooltip.setText(userProfile.getTooltipString() + "\n" + reputationScoreDisplay.getTooltipString());
+    }
+
+    public void setReputationScoreScale(double scale) {
+        reputationScoreDisplay.setScale(scale);
     }
 
     public void setIconSize(double size) {
         userProfileIcon.setFitWidth(size);
         userProfileIcon.setFitHeight(size);
+    }
+
+    public void applyReputationScore(ReputationScore reputationScore) {
+        reputationScoreDisplay.applyReputationScore(reputationScore);
+        applyTooltip();
     }
 }

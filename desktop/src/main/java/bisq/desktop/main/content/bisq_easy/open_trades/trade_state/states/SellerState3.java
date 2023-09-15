@@ -21,6 +21,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.trade.TradeException;

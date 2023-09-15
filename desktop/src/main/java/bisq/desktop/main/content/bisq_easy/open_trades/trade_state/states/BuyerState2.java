@@ -25,6 +25,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.trade.TradeException;
@@ -179,7 +180,7 @@ public class BuyerState2 extends BaseState {
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.headline", model.getFormattedQuoteAmount()));
             quoteAmount.setText(model.getFormattedQuoteAmount());
             account.setText(model.getBisqEasyTrade().getPaymentAccountData().get());
-            btcAddressHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.headline", model.getFormattedBaseAmount()));
+            btcAddressHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.btcAddress.headline"));
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2.confirmFiatSent", model.getFormattedQuoteAmount()));
 
             btcAddress.textProperty().bindBidirectional(model.getBtcAddress());

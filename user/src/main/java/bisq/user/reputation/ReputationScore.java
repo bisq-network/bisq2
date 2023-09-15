@@ -32,6 +32,7 @@ public class ReputationScore implements Comparable<ReputationScore> {
     public static final ReputationScore NONE = new ReputationScore(0, 0, 0, 0);
     
     private final long totalScore;
+    // relativeScore has range of 0-1
     private final double relativeScore;
     private final int ranking;
     private final double relativeRanking;
@@ -43,7 +44,7 @@ public class ReputationScore implements Comparable<ReputationScore> {
         this.relativeRanking = relativeRanking;
     }
 
-    public String getDetails() {
+    public String getTooltipString() {
         return Res.get("user.reputation.score.tooltip", totalScore, ranking);
     }
 

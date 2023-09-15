@@ -33,13 +33,14 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -54,6 +55,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final SettingsService settingsService;
+    private final ReputationService reputationService;
 
     private TradeStateController tradeStateController;
     private Pin channelItemPin, selectedChannelPin, tradeRulesConfirmedPin;
@@ -67,6 +69,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         settingsService = serviceProvider.getSettingsService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+
         bisqEasyOpenTradesModel = getModel();
     }
 
@@ -111,7 +115,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                         .ifPresent(trade -> {
                             if (findListItem(trade).isEmpty()) {
                                 UIThread.run(() -> {
-                                    model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel, trade));
+                                    model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel, trade, reputationService));
                                     updateVisibility();
                                 });
                             }
@@ -207,7 +211,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                         Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peerUserName, offer.getShortId());
                 model.getChannelTitle().set(title);
                 model.getChatHeadline().set(Res.get("bisqEasy.openTrades.chat.headline"));
-                model.getPeerUserProfileDisplay().set(new UserProfileDisplay(peerUserProfile));
+                model.setPeersReputationScore(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
+                model.getPeersUserProfile().set(peerUserProfile);
 
                 String shortTradeId = channel.getTradeId().substring(0, 8);
                 model.getChatWindowTitle().set(Res.get("bisqEasy.openTrades.chat.window.title",
