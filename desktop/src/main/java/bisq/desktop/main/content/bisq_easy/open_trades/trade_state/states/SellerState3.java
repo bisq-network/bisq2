@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -35,6 +34,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +121,7 @@ public class SellerState3 extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button fiatReceivedButton, btcSentButton;
         private final MaterialTextField txId;
-        private final BisqText infoHeadline;
+        private final Text infoHeadlineText;
         private final Label sendBtcLabel;
         private final MaterialTextField baseAmount;
         private final MaterialTextField btcAddress;
@@ -130,8 +131,9 @@ public class SellerState3 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            infoHeadline = new BisqText();
-            infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            infoHeadlineText = new Text();
+            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
 
             fiatReceivedButton = new Button();
             fiatReceivedButton.setDefaultButton(true);
@@ -167,7 +169,7 @@ public class SellerState3 extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            infoHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.headline", model.getFormattedQuoteAmount()));
+            infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.headline", model.getFormattedQuoteAmount()));
 
             baseAmount.setText(model.getFormattedBaseAmount());
             btcAddress.setText(model.getBtcAddress());
@@ -177,8 +179,8 @@ public class SellerState3 extends BaseState {
             txId.textProperty().bindBidirectional(model.getTxId());
 
             fiatReceivedPin = EasyBind.subscribe(model.getFiatReceived(), fiatPaymentConfirmed -> {
-                infoHeadline.setVisible(!fiatPaymentConfirmed);
-                infoHeadline.setManaged(!fiatPaymentConfirmed);
+                infoHeadlineText.setVisible(!fiatPaymentConfirmed);
+                infoHeadlineText.setManaged(!fiatPaymentConfirmed);
                 fiatReceivedButton.setVisible(!fiatPaymentConfirmed);
                 fiatReceivedButton.setManaged(!fiatPaymentConfirmed);
                 fiatPaymentReceivedCheckBox.setVisible(fiatPaymentConfirmed);

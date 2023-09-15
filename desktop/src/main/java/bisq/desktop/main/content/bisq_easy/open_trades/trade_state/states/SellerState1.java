@@ -25,7 +25,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -41,6 +40,8 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -183,8 +184,9 @@ public class SellerState1 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            BisqText infoHeadline = new BisqText(Res.get("bisqEasy.tradeState.info.seller.phase1.headline"));
-            infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            Text infoHeadlineText = new Text(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline"));
+            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
 
             accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
             accountSelection.setPrefWidth(300);

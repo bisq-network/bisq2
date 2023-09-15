@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.components.controls.BisqText;
 import bisq.desktop.components.controls.WaitingAnimation;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -30,6 +29,8 @@ import javafx.geometry.Insets;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -88,14 +89,15 @@ public class BuyerState3 extends BaseState {
         private final Label infoLabel;
         private final WaitingAnimation waitingAnimation;
         private final CheckBox fiatReceiptConfirmedCheckBox;
-        private final BisqText infoHeadline;
+        private final Text infoHeadlineText;
         private Subscription fiatReceiptConfirmedPin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            infoHeadline = new BisqText();
-            infoHeadline.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            infoHeadlineText = new Text();
+            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
+            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
             infoLabel = FormUtils.getLabel("");
 
             fiatReceiptConfirmedCheckBox = new CheckBox();
@@ -121,11 +123,11 @@ public class BuyerState3 extends BaseState {
                 fiatReceiptConfirmedCheckBox.setVisible(fiatPaymentConfirmed);
                 fiatReceiptConfirmedCheckBox.setManaged(fiatPaymentConfirmed);
                 if (fiatPaymentConfirmed) {
-                    infoHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
+                    infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
                     infoLabel.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.info"));
                     fiatReceiptConfirmedCheckBox.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3.fiatReceiptConfirmedCheckBox", model.getFormattedQuoteAmount()));
                 } else {
-                    infoHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline", model.getFormattedQuoteAmount()));
+                    infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline", model.getFormattedQuoteAmount()));
                     infoLabel.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", model.getQuoteCode()));
                 }
             });
