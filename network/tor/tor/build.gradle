@@ -22,6 +22,8 @@ dependencies {
     implementation 'network:common'
     implementation 'network:socks5-socket-channel'
 
+    implementation libs.bouncycastle
+
     implementation libs.google.guava
     implementation libs.failsafe
     implementation libs.tukaani
