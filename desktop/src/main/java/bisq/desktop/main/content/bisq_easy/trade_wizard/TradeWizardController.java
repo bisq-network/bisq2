@@ -118,7 +118,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 NavigationTarget.TRADE_WIZARD_MARKET,
                 NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
-                NavigationTarget.TRADE_WIZARD_SELECT_OFFER,
+                NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
 
@@ -236,7 +236,7 @@ public class TradeWizardController extends NavigationController implements InitW
             case TRADE_WIZARD_AMOUNT: {
                 return Optional.of(tradeWizardAmountController);
             }
-            case TRADE_WIZARD_SELECT_OFFER: {
+            case TRADE_WIZARD_TAKE_OFFER_OFFER: {
                 return Optional.of(tradeWizardSelectOfferController);
             }
             case TRADE_WIZARD_REVIEW_OFFER: {
@@ -296,7 +296,7 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private boolean isTakeOfferItem(int index) {
-        return model.isCreateOfferMode() && !model.getChildTargets().isEmpty() && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_SELECT_OFFER;
+        return model.isCreateOfferMode() && !model.getChildTargets().isEmpty() && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
     }
 
     void onClose() {
@@ -327,7 +327,7 @@ public class TradeWizardController extends NavigationController implements InitW
             model.getNextButtonDisabled().set(tradeWizardMarketController.getMarket().get() == null);
         } else if (NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(tradeWizardPaymentMethodController.getFiatPaymentMethods().isEmpty());
-        } else if (NavigationTarget.TRADE_WIZARD_SELECT_OFFER.equals(model.getSelectedChildTarget().get())) {
+        } else if (NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get() == null);
         } else {
             model.getNextButtonDisabled().set(false);

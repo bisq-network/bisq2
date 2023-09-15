@@ -134,6 +134,31 @@
  * Trade state                                                                 *
  ******************************************************************************/
 
+
+.trade-state-headline {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 20px;
+    -fx-padding: 3 0 0;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-state-headline-accent {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 23px;
+    -fx-padding: 0;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-state-headline-amount {
+    -fx-background-color: rgba(0, 0, 0, 0.42);
+    -fx-background-radius: 6;
+    -fx-background-insets: 0 1 0 1;
+    -fx-text-fill: derive(-fx-light-text-color, 0%);
+    -fx-font-size: 23px;
+    -fx-padding: 0 8 0 8;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *
  ******************************************************************************/
@@ -237,7 +262,7 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.trade-wizard-review-direction-high-light {
+.trade-wizard-review-direction-accent {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 23;

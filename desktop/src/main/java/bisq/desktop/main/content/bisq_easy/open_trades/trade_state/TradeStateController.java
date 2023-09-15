@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -153,20 +154,23 @@ public class TradeStateController implements Controller {
             });
         });
 
-        String directionString = isSeller ?
-                Res.get("offer.selling") :
-                Res.get("offer.buying");
+
         FiatPaymentMethodSpec fiatPaymentMethodSpec = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().get(0);
         String paymentMethodName = fiatPaymentMethodSpec.getPaymentMethod().getDisplayString();
 
+        String directionString = isSeller ?
+                Res.get("offer.selling") :
+                Res.get("offer.buying");
         long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
         long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
-        String baseAmountString = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
-        String quoteAmountString = AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+        Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
+        String baseAmountString = AmountFormatter.formatAmount(baseAmount);
+        Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode());
+        String quoteAmountString = AmountFormatter.formatAmount(quoteAmount);
         model.getHeadline().set(Res.get("bisqEasy.tradeState.header.headline",
-                directionString,
-                baseAmountString,
-                quoteAmountString,
+                directionString.toUpperCase(),
+                baseAmountString, baseAmount.getCode(),
+                quoteAmountString, quoteAmount.getCode(),
                 paymentMethodName));
     }
 

@@ -201,10 +201,9 @@ tree-table-view:focused {
     -fx-max-height: 0;
 }
 
-/* turn horizontal scrollbars off */
-/*.table-view > .scroll-bar:horizontal {
+.hide-horizontal-scrollbar .table-view > .scroll-bar:horizontal {
     -fx-opacity: 0;
-}*/
+}
 
 /* column-header */
 .table-view .column-header {
