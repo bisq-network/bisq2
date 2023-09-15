@@ -62,7 +62,8 @@ public class BisqEasyOpenTradesView extends ChatView {
     private HBox chatHeaderHBox;
     private Label chatHeadline;
     private BisqTableView<ListItem> tableView;
-    private Subscription noOpenTradesPin, selectedTradePin, selectedModelItemPin, peerUserProfileDisplayPin, chatWindowPin;
+    private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
+            selectedModelItemPin, peerUserProfileDisplayPin, chatWindowPin;
     private Button toggleChatWindowButton;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
@@ -169,13 +170,19 @@ public class BisqEasyOpenTradesView extends ChatView {
 
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
-        selectedTradePin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
-                item -> {
-                    if (item != null) {
-                        getController().onSelectItem(item);
+
+        tradeRulesAcceptedPin = EasyBind.subscribe(model.getTradeRulesAccepted(),
+                tradeRulesAccepted -> {
+                    if (tradeRulesAccepted) {
+                        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
+                                item -> {
+                                    if (item != null) {
+                                        getController().onSelectItem(item);
+                                    }
+                                });
+                        UIThread.runOnNextRenderFrame(() -> tradeRulesAcceptedPin.unsubscribe());
                     }
                 });
-
         noOpenTradesPin = EasyBind.subscribe(model.getNoOpenTrades(),
                 noOpenTrades -> {
                     if (noOpenTrades) {
@@ -277,8 +284,11 @@ public class BisqEasyOpenTradesView extends ChatView {
         chatHeadline.textProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
-        selectedTradePin.unsubscribe();
+        if (tableViewSelectionPin != null) {
+            tableViewSelectionPin.unsubscribe();
+        }
         noOpenTradesPin.unsubscribe();
+        tradeRulesAcceptedPin.unsubscribe();
         peerUserProfileDisplayPin.unsubscribe();
         chatWindowPin.unsubscribe();
 

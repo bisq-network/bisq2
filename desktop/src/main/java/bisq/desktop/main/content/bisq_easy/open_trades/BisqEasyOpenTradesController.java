@@ -147,7 +147,9 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(isConfirmed ->
                 UIThread.run(() -> {
                     if (isConfirmed) {
+                        model.getTradeRulesAccepted().set(true);
                         maybeSelectFirstItem();
+                        updateVisibility();
                     }
                 }));
 
