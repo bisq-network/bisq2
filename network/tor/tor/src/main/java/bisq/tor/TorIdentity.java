@@ -19,10 +19,15 @@ package bisq.tor;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.bouncycastle.crypto.digests.SHA512Digest;
+import org.bouncycastle.math.ec.rfc8032.Ed25519;
+
+import java.security.SecureRandom;
 
 @Getter
 @ToString
 public class TorIdentity {
+
     @ToString.Exclude
     private final String privateKey;
     private final int port;
@@ -30,5 +35,39 @@ public class TorIdentity {
     public TorIdentity(String privateKey, int port) {
         this.privateKey = privateKey;
         this.port = port;
+    }
+
+    public static TorIdentity generate(int port) {
+        // Key Format definition:
+        // https://gitlab.torproject.org/tpo/core/torspec/-/blob/main/control-spec.txt
+
+        byte[] privateKey = new byte[32];
+        Ed25519.generatePrivateKey(new SecureRandom(), privateKey);
+
+        byte[] secretScalar = generateSecretScalar(privateKey);
+        String base64EncodedSecretScalar = java.util.Base64.getEncoder()
+                .encodeToString(secretScalar);
+
+        String torOnionKey = "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
+                base64EncodedSecretScalar + "\n" +
+                "-----END OPENSSH PRIVATE KEY-----\n";
+
+        return new TorIdentity(torOnionKey, port);
+    }
+
+    private static byte[] generateSecretScalar(byte[] privateKey) {
+        // https://www.rfc-editor.org/rfc/rfc8032#section-5.1
+
+        SHA512Digest sha512Digest = new SHA512Digest();
+        sha512Digest.update(privateKey, 0, privateKey.length);
+
+        byte[] secretScalar = new byte[64];
+        sha512Digest.doFinal(secretScalar, 0);
+
+        secretScalar[0] &= (byte) 248;
+        secretScalar[31] &= 127;
+        secretScalar[31] |= 64;
+
+        return secretScalar;
     }
 }
