@@ -118,13 +118,13 @@ clean:
 .start-clearnet-seeds: seed-type=clear
 .start-clearnet-seeds:
 	# Seed 1
-	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed1-appName} \
 		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
 		-Dapplication.network.supportedTransportTypes.0=CLEAR \
 		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
-	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed2-appName} \
 		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
 		-Dapplication.network.supportedTransportTypes.0=CLEAR \
@@ -132,7 +132,7 @@ clean:
 
 .start-clearnet-clients:
 	for i in $$(seq 1 $n); do \
-		screen -S localtests -X screen -t client-$${i}-clear ./gradlew --console=plain desktop:run \
+		screen -S localtests -X screen -t client-$${i}-clear ./gradlew --console=plain desktop_app:run \
 			-Dapplication.appName=bisq_client$${i}_test \
 			-Dapplication.network.supportedTransportTypes.0=CLEAR \
 			-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -165,7 +165,7 @@ seed2-tor-hostname:
 # If any is not known, this will fail
 .start-tor-clients: seed1-tor-hostname seed2-tor-hostname
 	for i in $$(seq 1 $n); do \
-		screen -S localtests -X screen -t client-$${i}-tor ./gradlew --console=plain desktop:run \
+		screen -S localtests -X screen -t client-$${i}-tor ./gradlew --console=plain desktop_app:run \
 			-Dapplication.appName=bisq_client$${i}_tor_test \
 			-Dapplication.network.supportedTransportTypes.0=TOR \
 			-Dapplication.network.seedAddressByTransportType.tor.0=$(file < seed1-tor-hostname):1000 \
@@ -175,7 +175,7 @@ seed2-tor-hostname:
 .start-tor-seeds: seed-type=tor
 .start-tor-seeds:
 	# Seed 1
-	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed1-appName} \
 		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
 		-Dapplication.network.defaultNodePortByTransportType.tor=1000 \
@@ -184,7 +184,7 @@ seed2-tor-hostname:
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
-	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed2-appName} \
 		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
 		-Dapplication.network.defaultNodePortByTransportType.tor=1001 \
@@ -219,7 +219,7 @@ seed2-i2p-destination:
 .start-i2p-seeds: seed-type=i2p
 .start-i2p-seeds:
 	# Seed 1
-	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.application.appName=${seed1-appName} \
 		-Dapplication.network.defaultNodePortByTransportType.i2p=5000 \
 		-Dapplication.network.supportedTransportTypes.0=I2P \
@@ -228,7 +228,7 @@ seed2-i2p-destination:
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
-	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed2-appName} \
 		-Dapplication.network.defaultNodePortByTransportType.i2p=5001 \
 		-Dapplication.network.supportedTransportTypes.0=I2P \
@@ -245,7 +245,7 @@ seed2-i2p-destination:
   		# the resulting cmd had to be built line by line ;\
   		# See .demo-send-large-command-to-screen for details ;\
   		screen -S localtests -X screen -t client-$${i}-i2p ;\
-  		screen -S localtests -X stuff './gradlew --console=plain desktop:run ' ;\
+  		screen -S localtests -X stuff './gradlew --console=plain desktop_app:run ' ;\
 		screen -S localtests -X stuff "-Dapplication.appName=bisq_client$${i}_i2p_test " ;\
 		screen -S localtests -X stuff '-Dapplication.network.supportedTransportTypes.0=CLEAR ' ;\
 		screen -S localtests -X stuff '-Dapplication.network.supportedTransportTypes.1=I2P ' ;\
