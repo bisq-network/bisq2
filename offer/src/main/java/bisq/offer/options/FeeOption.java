@@ -34,11 +34,11 @@ public final class FeeOption implements OfferOption {
 
         @Override
         public bisq.offer.protobuf.FeeOption.FeeType toProto() {
-            return bisq.offer.protobuf.FeeOption.FeeType.valueOf(name());
+            return bisq.offer.protobuf.FeeOption.FeeType.valueOf(getProtobufEnumPrefix() + name());
         }
 
         public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto) {
-            return ProtobufUtils.enumFromProto(FeeType.class, proto.name());
+            return ProtobufUtils.enumFromProto(FeeType.class, proto.name(), BSQ);
         }
     }
 

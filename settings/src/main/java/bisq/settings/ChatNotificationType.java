@@ -27,10 +27,10 @@ public enum ChatNotificationType implements ProtoEnum {
 
     @Override
     public bisq.settings.protobuf.ChatNotificationType toProto() {
-        return bisq.settings.protobuf.ChatNotificationType.valueOf(name());
+        return bisq.settings.protobuf.ChatNotificationType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static ChatNotificationType fromProto(bisq.settings.protobuf.ChatNotificationType proto) {
-        return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name());
+        return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name(), ALL);
     }
 }

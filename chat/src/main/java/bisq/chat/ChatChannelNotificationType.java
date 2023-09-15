@@ -28,10 +28,10 @@ public enum ChatChannelNotificationType implements ProtoEnum {
 
     @Override
     public bisq.chat.protobuf.ChatChannelNotificationType toProto() {
-        return bisq.chat.protobuf.ChatChannelNotificationType.valueOf(name());
+        return bisq.chat.protobuf.ChatChannelNotificationType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static ChatChannelNotificationType fromProto(bisq.chat.protobuf.ChatChannelNotificationType proto) {
-        return ProtobufUtils.enumFromProto(ChatChannelNotificationType.class, proto.name());
+        return ProtobufUtils.enumFromProto(ChatChannelNotificationType.class, proto.name(), GLOBAL_DEFAULT);
     }
 }

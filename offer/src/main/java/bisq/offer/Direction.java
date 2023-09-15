@@ -27,11 +27,11 @@ public enum Direction implements ProtoEnum {
 
     @Override
     public bisq.offer.protobuf.Direction toProto() {
-        return bisq.offer.protobuf.Direction.valueOf(name());
+        return bisq.offer.protobuf.Direction.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static Direction fromProto(bisq.offer.protobuf.Direction proto) {
-        return ProtobufUtils.enumFromProto(Direction.class, proto.name());
+        return ProtobufUtils.enumFromProto(Direction.class, proto.name(), BUY);
     }
 
     public boolean isBuy() {

@@ -98,6 +98,14 @@ public class StringUtils {
         }
     }
 
+    public static String capitalizeAll(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        } else {
+            return value.toUpperCase();
+        }
+    }
+
     // Replaces the content inside the brackets marked with HYPERLINK with the number of the hyperlink
     // and add the hyperlink to the hyperlinks list.
     // E.g. ...some text [HYPERLINK:https://bisq.community] .... -> ...some text [1] ...

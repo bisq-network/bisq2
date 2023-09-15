@@ -28,10 +28,10 @@ public enum ChatMessageType implements ProtoEnum {
 
     @Override
     public bisq.chat.protobuf.ChatMessageType toProto() {
-        return bisq.chat.protobuf.ChatMessageType.valueOf(name());
+        return bisq.chat.protobuf.ChatMessageType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static ChatMessageType fromProto(bisq.chat.protobuf.ChatMessageType proto) {
-        return ProtobufUtils.enumFromProto(ChatMessageType.class, proto.name());
+        return ProtobufUtils.enumFromProto(ChatMessageType.class, proto.name(), TEXT);
     }
 }

@@ -17,10 +17,13 @@
 
 package bisq.common.util;
 
+import bisq.common.proto.ProtoEnum;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,13 +33,33 @@ import java.io.IOException;
 public class ProtobufUtils {
     @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
-        String enumName = name != null ? name : "UNDEFINED";
+        String info = "Enum type= " + enumType.getSimpleName() + "; name=" + name;
+        checkNotNull(name, "Enum name must not be null. "+info);
+        checkArgument(!name.endsWith("_UNSPECIFIED"), "Unspecified enum. "+info);
+
+        //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
+        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType),"");
+        E result = Enums.getIfPresent(enumType, enumName).orNull();
+        checkNotNull(result, "Enum could not be resolved. "+info);
+        return result;
+    }
+
+    public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name, E fallBack) {
+        String info = "Enum type= " + enumType.getSimpleName() + "; name=" + name + "; fallBack=" + fallBack;
+        if (name == null) {
+            log.error("Enum name is null. We use the fallback value instead. {}", info);
+            return fallBack;
+        }
+        if (name.endsWith("_UNSPECIFIED")) {
+            log.warn("Unspecified enum. We use the fallback value instead. {}", info);
+            return fallBack;
+        }
+        //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
+        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType),"");
         E result = Enums.getIfPresent(enumType, enumName).orNull();
         if (result == null) {
-            result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
-            log.warn("Enum with name {} for enum class {} is not present. We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
-                    "otherwise the enum is null. enum={}", name, enumType.getSimpleName(), result);
-            return result;
+            log.error("Enum could not be resolved. We use the fallback value instead. {}", info);
+            return fallBack;
         }
         return result;
     }

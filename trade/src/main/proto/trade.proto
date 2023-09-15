@@ -37,10 +37,11 @@ message TradeParty {
 }
 
 enum TradeRole{
-  BUYER_AS_TAKER = 0;
-  BUYER_AS_MAKER = 1;
-  SELLER_AS_TAKER = 2;
-  SELLER_AS_MAKER = 3;
+  TRADEROLE_UNSPECIFIED = 0;
+  TRADEROLE_BUYER_AS_TAKER = 1;
+  TRADEROLE_BUYER_AS_MAKER = 2;
+  TRADEROLE_SELLER_AS_TAKER = 3;
+  TRADEROLE_SELLER_AS_MAKER = 4;
 }
 message Trade {
   string state = 1;

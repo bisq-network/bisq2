@@ -25,10 +25,10 @@ public enum LoanProtocolType implements ProtocolType {
 
     @Override
     public bisq.account.protobuf.LoanProtocolType toProto() {
-        return bisq.account.protobuf.LoanProtocolType.valueOf(name());
+        return bisq.account.protobuf.LoanProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static LoanProtocolType fromProto(bisq.account.protobuf.LoanProtocolType proto) {
-        return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name());
+        return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name(), COLLATERALIZED);
     }
 }

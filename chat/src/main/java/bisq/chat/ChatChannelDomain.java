@@ -31,11 +31,11 @@ public enum ChatChannelDomain implements ProtoEnum {
 
     @Override
     public bisq.chat.protobuf.ChatChannelDomain toProto() {
-        return bisq.chat.protobuf.ChatChannelDomain.valueOf(name());
+        return bisq.chat.protobuf.ChatChannelDomain.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static ChatChannelDomain fromProto(bisq.chat.protobuf.ChatChannelDomain proto) {
-        return ProtobufUtils.enumFromProto(ChatChannelDomain.class, proto.name());
+        return ProtobufUtils.enumFromProto(ChatChannelDomain.class, proto.name(), BISQ_EASY_OFFERBOOK);
     }
 
     public String getDisplayString() {

@@ -27,10 +27,10 @@ public enum Role implements ProtoEnum {
 
     @Override
     public bisq.contract.protobuf.Role toProto() {
-        return bisq.contract.protobuf.Role.valueOf(name());
+        return bisq.contract.protobuf.Role.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static Role fromProto(bisq.contract.protobuf.Role proto) {
-        return ProtobufUtils.enumFromProto(Role.class, proto.name());
+        return ProtobufUtils.enumFromProto(Role.class, proto.name(), TAKER);
     }
 }

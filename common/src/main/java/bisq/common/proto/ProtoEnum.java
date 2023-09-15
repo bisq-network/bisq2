@@ -17,6 +17,7 @@
 
 package bisq.common.proto;
 
+import bisq.common.util.StringUtils;
 import com.google.protobuf.ProtocolMessageEnum;
 
 /**
@@ -24,4 +25,12 @@ import com.google.protobuf.ProtocolMessageEnum;
  */
 public interface ProtoEnum {
     ProtocolMessageEnum toProto();
+
+    default String getProtobufEnumPrefix() {
+        return getProtobufEnumPrefix(this.getClass());
+    }
+
+    static String getProtobufEnumPrefix(Class<?> clazz) {
+        return StringUtils.capitalizeAll(clazz.getSimpleName()) + "_";
+    }
 }

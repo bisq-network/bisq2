@@ -28,10 +28,10 @@ public enum AlertType implements ProtoEnum {
 
     @Override
     public bisq.bonded_roles.protobuf.AlertType toProto() {
-        return bisq.bonded_roles.protobuf.AlertType.valueOf(name());
+        return bisq.bonded_roles.protobuf.AlertType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) {
-        return ProtobufUtils.enumFromProto(AlertType.class, proto.name());
+        return ProtobufUtils.enumFromProto(AlertType.class, proto.name(), INFO);
     }
 }

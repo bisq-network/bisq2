@@ -8,8 +8,9 @@ import "security.proto";
 import "account.proto";
 
 enum Direction {
-  BUY = 0;
-  SELL = 1;
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_BUY = 1;
+  DIRECTION_SELL = 2;
 }
 
 // AmountSpec
@@ -90,8 +91,9 @@ message CollateralOption {
 
 message FeeOption {
   enum FeeType {
-    BTC = 0;
-    BSQ = 1;
+    FEETYPE_UNSPECIFIED = 0;
+    FEETYPE_BTC = 1;
+    FEETYPE_BSQ = 2;
   }
   FeeType feeType = 10;
   sint32 blockHeightAtFeePayment = 11;

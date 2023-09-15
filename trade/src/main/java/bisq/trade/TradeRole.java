@@ -38,11 +38,11 @@ public enum TradeRole implements ProtoEnum {
 
     @Override
     public bisq.trade.protobuf.TradeRole toProto() {
-        return bisq.trade.protobuf.TradeRole.valueOf(name());
+        return bisq.trade.protobuf.TradeRole.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static TradeRole fromProto(bisq.trade.protobuf.TradeRole proto) {
-        return ProtobufUtils.enumFromProto(TradeRole.class, proto.name());
+        return ProtobufUtils.enumFromProto(TradeRole.class, proto.name(), BUYER_AS_TAKER);
     }
 
     public boolean isMaker() {

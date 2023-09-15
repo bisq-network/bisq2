@@ -32,10 +32,10 @@ public enum TradeProtocolType implements ProtocolType {
 
     @Override
     public bisq.account.protobuf.TradeProtocolType toProto() {
-        return bisq.account.protobuf.TradeProtocolType.valueOf(name());
+        return bisq.account.protobuf.TradeProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 
     public static TradeProtocolType fromProto(bisq.account.protobuf.TradeProtocolType proto) {
-        return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name());
+        return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name(), BISQ_EASY);
     }
 }
