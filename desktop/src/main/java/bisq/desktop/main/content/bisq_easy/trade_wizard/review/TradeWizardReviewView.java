@@ -46,18 +46,17 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
     private final Label headline, detailsHeadline,
             paymentMethod, paymentMethodDescription, fee, feeDetails,
-            priceDetails, toReceiveAmountDescription, toSendAmountDescription, priceDescription;
+            priceDetails, priceDescription;
     private final VBox createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
     private final StackPane paymentMethodValuePane;
-    private final MultiStyleLabelPane directionHeadlineWithMethod, minAmountsHeadline, maxAmountsHeadline,
-            fixAmountsHeadline, toSendAmount, toReceiveAmount, price;
+    private final MultiStyleLabelPane price;
     @Nullable
     private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
-    TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller) {
+    TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller, HBox tradeDataHeader) {
         super(new StackPane(), model, controller);
 
         content = new GridPane();
@@ -82,7 +81,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         headline = new Label();
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
+        // GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
+        GridPane.setMargin(headline, new Insets(18.5, 0, 0, 0));
         GridPane.setColumnSpan(headline, 4);
         content.add(headline, 0, rowIndex);
 
@@ -92,27 +92,9 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        directionHeadlineWithMethod = new MultiStyleLabelPane();
-        directionHeadlineWithMethod.getStyleClass().add("trade-wizard-review-direction");
-        GridPane.setColumnSpan(directionHeadlineWithMethod, 4);
-        content.add(directionHeadlineWithMethod, 0, rowIndex);
-
-        rowIndex++;
-        minAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setMargin(minAmountsHeadline, new Insets(-15, 0, -10, 0));
-        GridPane.setColumnSpan(minAmountsHeadline, 4);
-        content.add(minAmountsHeadline, 0, rowIndex);
-
-        rowIndex++;
-        maxAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setColumnSpan(maxAmountsHeadline, 4);
-        content.add(maxAmountsHeadline, 0, rowIndex);
-
-        rowIndex++;
-        fixAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setMargin(fixAmountsHeadline, new Insets(-25, 0, 15, 0));
-        GridPane.setColumnSpan(fixAmountsHeadline, 4);
-        content.add(fixAmountsHeadline, 0, rowIndex);
+        GridPane.setColumnSpan(tradeDataHeader, 4);
+        GridPane.setMargin(tradeDataHeader, new Insets(5, 0, 40, 0));
+        content.add(tradeDataHeader, 0, rowIndex);
 
         rowIndex++;
         detailsHeadline = new Label();
@@ -125,26 +107,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
         GridPane.setColumnSpan(line2, 4);
         content.add(line2, 0, rowIndex);
-
-        rowIndex++;
-        toSendAmountDescription = new Label();
-        toSendAmountDescription.getStyleClass().add(descriptionStyle);
-        content.add(toSendAmountDescription, 0, rowIndex);
-
-        toSendAmount = new MultiStyleLabelPane();
-        toSendAmount.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(toSendAmount, 2);
-        content.add(toSendAmount, 1, rowIndex);
-
-        rowIndex++;
-        toReceiveAmountDescription = new Label();
-        toReceiveAmountDescription.getStyleClass().add(descriptionStyle);
-        content.add(toReceiveAmountDescription, 0, rowIndex);
-
-        toReceiveAmount = new MultiStyleLabelPane();
-        toReceiveAmount.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(toReceiveAmount, 2);
-        content.add(toReceiveAmount, 1, rowIndex);
 
         rowIndex++;
         priceDescription = new Label();
@@ -204,33 +166,13 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         StackPane.setMargin(content, new Insets(40));
         StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
+        this.root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
     }
 
     @Override
     protected void onViewAttached() {
         headline.setText(model.getHeadline());
-        directionHeadlineWithMethod.textProperty().bind((model.getDirectionHeadlineWithMethod()));
-        minAmountsHeadline.setText(model.getMinAmountsHeadline());
-        minAmountsHeadline.setManaged(model.getMinAmountsHeadline() != null);
-        minAmountsHeadline.setVisible(model.getMinAmountsHeadline() != null);
-        maxAmountsHeadline.setText(model.getMaxAmountsHeadline());
-        maxAmountsHeadline.setManaged(model.getMaxAmountsHeadline() != null);
-        maxAmountsHeadline.setVisible(model.getMaxAmountsHeadline() != null);
-        fixAmountsHeadline.setText(model.getFixAmountsHeadline());
-        fixAmountsHeadline.setManaged(model.getFixAmountsHeadline() != null);
-        fixAmountsHeadline.setVisible(model.getFixAmountsHeadline() != null);
-        if (model.getFixAmountsHeadline() == null) {
-            GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 10, 0));
-        } else {
-            GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 5, 0));
-        }
         detailsHeadline.setText(model.getDetailsHeadline());
-
-        toSendAmountDescription.setText(model.getToSendAmountDescription());
-        toSendAmount.setText(model.getToSendAmount());
-        toReceiveAmountDescription.setText(model.getToReceiveAmountDescription());
-        toReceiveAmount.setText(model.getToReceiveAmount());
 
         priceDescription.setText(model.getPriceDescription());
         price.setText(model.getPrice());
@@ -298,7 +240,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
     @Override
     protected void onViewDetached() {
-        directionHeadlineWithMethod.textProperty().unbind();
+        // directionHeadlineWithMethod.textProperty().unbind();
 
         createOfferSuccessButton.setOnAction(null);
         takeOfferSuccessButton.setOnAction(null);

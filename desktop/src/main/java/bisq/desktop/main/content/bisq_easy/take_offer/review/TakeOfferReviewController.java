@@ -218,16 +218,16 @@ public class TakeOfferReviewController implements Controller {
         if (takersDirection.isSell()) {
             model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toSend"));
             model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
-            model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
+            model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixAmountWithCode",
                     formattedBaseAmount, fixBaseSideAmount.getCode()));
-            model.setToReceiveAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
+            model.setToReceiveAmount(Res.get("bisqEasy.tradeWizard.review.fixAmountWithCode",
                     formattedQuoteAmount, fixQuoteSideAmount.getCode()));
         } else {
             model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toPay"));
             model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
-            model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
+            model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixAmountWithCode",
                     formattedQuoteAmount, fixQuoteSideAmount.getCode()));
-            model.setToReceiveAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
+            model.setToReceiveAmount(Res.get("bisqEasy.tradeWizard.review.fixAmountWithCode",
                     formattedBaseAmount, fixBaseSideAmount.getCode()));
         }
     }
@@ -277,6 +277,6 @@ public class TakeOfferReviewController implements Controller {
                 .map(PriceFormatter::format)
                 .orElse("");
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
-        model.setPrice(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode", formattedPrice, codes));
+        model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
     }
 }

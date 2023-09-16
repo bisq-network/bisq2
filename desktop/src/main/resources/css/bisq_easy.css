@@ -150,6 +150,20 @@
     -fx-font-size: 1.55em;
 }
 
+.bisq-easy-trade-wizard-review-header-value {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.85em;
+}
+
+.bisq-easy-trade-wizard-review-header-code {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.6em;
+}
+
 /*******************************************************************************
  * Trade state                                                                 *
  ******************************************************************************/
