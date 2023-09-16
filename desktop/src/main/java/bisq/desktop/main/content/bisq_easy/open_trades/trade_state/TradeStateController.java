@@ -162,9 +162,6 @@ public class TradeStateController implements Controller {
             });
         });
 
-        String directionString = isSeller ?
-                Res.get("offer.selling") :
-                Res.get("offer.buying");
         long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
         long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
         Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);

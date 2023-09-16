@@ -50,6 +50,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -58,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 
 @Slf4j
@@ -67,10 +69,11 @@ public class BisqEasyOpenTradesView extends ChatView {
     private final VBox tradeStateViewRoot, tradeWelcomeViewRoot;
     private VBox chatVBox;
     private BisqTableView<ListItem> tableView;
+    private Triple<Text, Text, VBox> direction, leftAmount, rightAmount, tradeId;
+    private Button toggleChatWindowButton;
+    private UserProfileDisplay peersUserProfileDisplay;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
             selectedModelItemPin, peersUserProfilePin, chatWindowPin;
-    private Button toggleChatWindowButton;
-    private UserProfileDisplay chatPeerUserProfileDisplay;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -125,16 +128,30 @@ public class BisqEasyOpenTradesView extends ChatView {
 
         Label peerDescription = new Label(Res.get("bisqEasy.openTrades.chat.peer.description").toUpperCase());
         peerDescription.getStyleClass().add("bisq-easy-open-trades-header-description");
-        chatPeerUserProfileDisplay = new UserProfileDisplay(25);
+        peersUserProfileDisplay = new UserProfileDisplay(25);
+        peersUserProfileDisplay.setMinWidth(120);
+        peersUserProfileDisplay.setPadding(new Insets(0, -15, 0, 0));
         VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
-        VBox peerVBox = new VBox(0, peerDescription, chatPeerUserProfileDisplay);
+        VBox peerVBox = new VBox(0, peerDescription, peersUserProfileDisplay);
         peerVBox.setAlignment(Pos.CENTER_LEFT);
+
+        direction = getValueBox(null);
+        leftAmount = getValueBox(null);
+        rightAmount = getValueBox(null);
+        tradeId = getValueBox(Res.get("bisqEasy.tradeState.header.tradeId"));
 
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
         toggleChatWindowButton.getStyleClass().add("outlined-button");
 
-        HBox chatHeaderHBox = new HBox(10, peerVBox, Spacer.fillHBox(), toggleChatWindowButton);
+        HBox chatHeaderHBox = new HBox(40,
+                peerVBox,
+                direction.getThird(),
+                leftAmount.getThird(),
+                rightAmount.getThird(),
+                tradeId.getThird(),
+                Spacer.fillHBox(),
+                toggleChatWindowButton);
         chatHeaderHBox.setMinHeight(HEADER_HEIGHT);
         chatHeaderHBox.setMaxHeight(HEADER_HEIGHT);
         chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
@@ -173,6 +190,14 @@ public class BisqEasyOpenTradesView extends ChatView {
         super.onViewAttached();
 
         BisqEasyOpenTradesModel model = getModel();
+
+        direction.getFirst().textProperty().bind(model.getDirectionDescription());
+        direction.getSecond().textProperty().bind(model.getDirection());
+        leftAmount.getFirst().textProperty().bind(model.getLeftAmountDescription());
+        leftAmount.getSecond().textProperty().bind(model.getLeftAmount());
+        rightAmount.getFirst().textProperty().bind(model.getRightAmountDescription());
+        rightAmount.getSecond().textProperty().bind(model.getRightAmount());
+        tradeId.getSecond().textProperty().bind(model.getTradeId());
 
         tradeWelcomeViewRoot.visibleProperty().bind(model.getTradeWelcomeVisible());
         tradeWelcomeViewRoot.managedProperty().bind(model.getTradeWelcomeVisible());
@@ -217,8 +242,8 @@ public class BisqEasyOpenTradesView extends ChatView {
 
         peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
             if (userProfile != null) {
-                chatPeerUserProfileDisplay.setUserProfile(userProfile);
-                chatPeerUserProfileDisplay.applyReputationScore(model.getPeersReputationScore());
+                peersUserProfileDisplay.setUserProfile(userProfile);
+                peersUserProfileDisplay.applyReputationScore(model.getPeersReputationScore());
             }
         });
 
@@ -292,6 +317,14 @@ public class BisqEasyOpenTradesView extends ChatView {
         // TODO would be nice to keep it open or allow multiple windows... but for now keep it simple...
         getController().onCloseChatWindow();
 
+        direction.getFirst().textProperty().unbind();
+        direction.getSecond().textProperty().unbind();
+        leftAmount.getFirst().textProperty().unbind();
+        leftAmount.getSecond().textProperty().unbind();
+        rightAmount.getFirst().textProperty().unbind();
+        rightAmount.getSecond().textProperty().unbind();
+        tradeId.getSecond().textProperty().unbind();
+
         tableView.removeListeners();
 
         tradeWelcomeViewRoot.visibleProperty().unbind();
@@ -312,6 +345,19 @@ public class BisqEasyOpenTradesView extends ChatView {
 
         toggleChatWindowButton.setOnAction(null);
         tableView.setOnMouseClicked(null);
+    }
+
+    private Triple<Text, Text, VBox> getValueBox(@Nullable String description) {
+        Text descriptionLabel = description == null ? new Text() : new Text(description.toUpperCase());
+        descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
+        Text valueLabel = new Text();
+        valueLabel.getStyleClass().add("bisq-easy-open-trades-header-value");
+        VBox.setMargin(descriptionLabel, new Insets(2, 0, 0, 0));
+        VBox vBox = new VBox(2, descriptionLabel, valueLabel);
+        vBox.setAlignment(Pos.CENTER_LEFT);
+        vBox.setMinHeight(HEADER_HEIGHT);
+        vBox.setMaxHeight(HEADER_HEIGHT);
+        return new Triple<>(descriptionLabel, valueLabel, vBox);
     }
 
     private void configTableView() {

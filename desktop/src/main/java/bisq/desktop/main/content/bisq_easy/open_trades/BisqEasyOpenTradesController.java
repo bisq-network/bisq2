@@ -23,6 +23,9 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -35,6 +38,7 @@ import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateCon
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -171,13 +175,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         }
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
-
-        selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), selectedItem -> {
-            BisqEasyOpenTradeChannel channel = selectedItem != null ? selectedItem.getChannel() : null;
-            selectionService.selectChannel(channel);
-            tradeStateController.setSelectedChannel(channel);
-            updateVisibility();
-        });
+        selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), this::selectedItemChanged);
 
         maybeSelectFirstItem();
         updateVisibility();
@@ -189,8 +187,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         channelItemPin.unbind();
         selectedChannelPin.unbind();
         selectedChannelPin.unbind();
-        model.getListItems().clear();
-        model.getSelectedItem().set(null);
+        model.reset();
         resetSelectedChildTarget();
     }
 
@@ -202,21 +199,59 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             UIThread.run(() -> {
                 BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
                 applyPeersIcon(channel);
-                BisqEasyOffer offer = channel.getBisqEasyOffer();
-                boolean isMaker = isMaker(offer);
                 UserProfile peerUserProfile = ((BisqEasyOpenTradeChannel) chatChannel).getPeer();
                 String peerUserName = peerUserProfile.getUserName();
-                String title = isMaker ?
-                        Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peerUserName, offer.getShortId()) :
-                        Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peerUserName, offer.getShortId());
-                model.getChannelTitle().set(title);
-                model.setPeersReputationScore(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
-                model.getPeersUserProfile().set(peerUserProfile);
 
                 String shortTradeId = channel.getTradeId().substring(0, 8);
                 model.getChatWindowTitle().set(Res.get("bisqEasy.openTrades.chat.window.title",
                         serviceProvider.getConfig().getAppName(), peerUserName, shortTradeId));
             });
+        }
+    }
+
+    private void selectedItemChanged(BisqEasyOpenTradesView.ListItem selectedItem) {
+        if (selectedItem == null) {
+            selectionService.selectChannel(null);
+            tradeStateController.setSelectedChannel(null);
+            updateVisibility();
+            return;
+        }
+
+        BisqEasyOpenTradeChannel channel = selectedItem.getChannel();
+        selectionService.selectChannel(channel);
+        tradeStateController.setSelectedChannel(channel);
+        updateVisibility();
+
+        BisqEasyTrade bisqEasyTrade = selectedItem.getTrade();
+        if (bisqEasyTrade == null) {
+            return;
+        }
+
+        UserProfile peerUserProfile = channel.getPeer();
+        model.setPeersReputationScore(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
+        model.getPeersUserProfile().set(peerUserProfile);
+        model.getTradeId().set(bisqEasyTrade.getShortId());
+        model.getDirectionDescription().set(Res.get("bisqEasy.tradeState.header.direction").toUpperCase());
+
+        long baseSideAmount = bisqEasyTrade.getContract().getBaseSideAmount();
+        long quoteSideAmount = bisqEasyTrade.getContract().getQuoteSideAmount();
+        Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
+        String baseAmountString = AmountFormatter.formatAmountWithCode(baseAmount, false);
+        Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
+        String quoteAmountString = AmountFormatter.formatAmountWithCode(quoteAmount);
+        boolean isSeller = bisqEasyTrade.isSeller();
+        if (isSeller) {
+            model.getDirection().set(Res.get("offer.sell").toUpperCase());
+            model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
+            model.getLeftAmount().set(baseAmountString);
+            model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
+            model.getRightAmount().set(quoteAmountString);
+        } else {
+            model.getDirection().set(Res.get("offer.buy").toUpperCase());
+            model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.pay").toUpperCase());
+            model.getLeftAmount().set(quoteAmountString);
+            model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
+            model.getRightAmount().set(baseAmountString);
         }
     }
 

@@ -230,27 +230,26 @@ class TradePhaseBox {
         private BisqEasyOpenTradeChannel selectedChannel;
         @Setter
         private BisqEasyTrade bisqEasyTrade;
-
+        private final BooleanProperty disputeButtonVisible = new SimpleBooleanProperty();
+        private final BooleanProperty isInMediation = new SimpleBooleanProperty();
         private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
         private final StringProperty phase1Info = new SimpleStringProperty();
         private final StringProperty phase2Info = new SimpleStringProperty();
         private final StringProperty phase3Info = new SimpleStringProperty();
         private final StringProperty phase4Info = new SimpleStringProperty();
         private final StringProperty phase5Info = new SimpleStringProperty();
-        private final BooleanProperty disputeButtonVisible = new SimpleBooleanProperty();
-        private final BooleanProperty isInMediation = new SimpleBooleanProperty();
 
         void reset() {
             selectedChannel = null;
             bisqEasyTrade = null;
+            disputeButtonVisible.set(false);
+            isInMediation.set(false);
             phaseIndex.set(0);
             phase1Info.set(null);
             phase2Info.set(null);
             phase3Info.set(null);
             phase4Info.set(null);
             phase5Info.set(null);
-            disputeButtonVisible.set(false);
-            isInMediation.set(false);
         }
     }
 

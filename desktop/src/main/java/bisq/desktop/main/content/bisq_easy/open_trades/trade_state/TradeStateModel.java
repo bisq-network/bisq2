@@ -44,6 +44,10 @@ public class TradeStateModel implements Model {
     private BisqEasyTrade bisqEasyTrade;
     @Setter
     private BisqEasyOpenTradeChannel channel;
+    @Setter
+    private ReputationScore peersReputationScore;
+    @Setter
+    private TradeCloseType tradeCloseType;
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
     private final StringProperty closeButtonText = new SimpleStringProperty();
@@ -54,21 +58,21 @@ public class TradeStateModel implements Model {
     private final StringProperty rightAmount = new SimpleStringProperty();
     private final StringProperty rightAmountDescription = new SimpleStringProperty();
     private final StringProperty tradeId = new SimpleStringProperty();
-    @Setter
-    private ReputationScore peersReputationScore;
-    @Setter
-    private TradeCloseType tradeCloseType;
 
     void reset() {
         bisqEasyTrade = null;
         channel = null;
+        peersReputationScore = null;
+        tradeCloseType = null;
         stateInfoVBox.set(null);
+        peersUserProfile.set(null);
+        closeButtonText.set(null);
+        direction.set(null);
+        directionDescription.set(null);
         leftAmount.set(null);
         leftAmountDescription.set(null);
         rightAmount.set(null);
         rightAmountDescription.set(null);
         tradeId.set(null);
-        peersReputationScore = null;
-        tradeCloseType = null;
     }
 }

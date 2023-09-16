@@ -106,10 +106,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
         VBox peerVBox = new VBox(0, peerDescription, chatPeerUserProfileDisplay);
         peerVBox.setAlignment(Pos.CENTER_LEFT);
 
-        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
-        chatVBox = new VBox(peerVBox, Layout.hLine(), chatMessagesComponent);
-        chatVBox.getStyleClass().add("bisq-easy-container");
-
         leaveChatButton = new Button(Res.get("bisqEasy.privateChats.leave"));
         leaveChatButton.getStyleClass().add("outlined-button");
 

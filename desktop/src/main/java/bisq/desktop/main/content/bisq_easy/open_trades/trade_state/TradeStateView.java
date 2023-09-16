@@ -60,6 +60,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         peerDescription.getStyleClass().add("bisq-easy-open-trades-header-description");
         peersUserProfileDisplay = new UserProfileDisplay(25);
         peersUserProfileDisplay.setMinWidth(120);
+        peersUserProfileDisplay.setPadding(new Insets(0, -15, 0, 0));
         VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
         VBox peerVBox = new VBox(0, peerDescription, peersUserProfileDisplay);
         peerVBox.setAlignment(Pos.CENTER_LEFT);
