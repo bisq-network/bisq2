@@ -68,25 +68,11 @@ class TradeWizardReviewModel implements Model {
     private String headline;
 
     @Setter
-    private String directionHeadline;
-    @Setter
     private String headerPaymentMethod;
     @Setter
-    private String minAmountsHeadline;
-    @Setter
-    private String maxAmountsHeadline;
-    @Setter
-    private String fixAmountsHeadline;
-    @Setter
     private String detailsHeadline;
-    /* @Setter
-     private String toSendAmountDescription;
-     @Setter
-     private String toSendAmount;
-     @Setter
-     private String toReceiveAmountDescription;
-     @Setter
-     private String toReceiveAmount;*/
+    @Setter
+    private boolean isRangeAmount;
     @Setter
     private String paymentMethodDescription;
     @Setter
@@ -122,15 +108,7 @@ class TradeWizardReviewModel implements Model {
         fiatPaymentMethods = null;
         myOfferMessage = null;
         headline = null;
-        directionHeadline = null;
-        minAmountsHeadline = null;
-        maxAmountsHeadline = null;
-        fixAmountsHeadline = null;
         detailsHeadline = null;
-      /*  toSendAmountDescription = null;
-        toSendAmount = null;
-        toReceiveAmountDescription = null;
-        toReceiveAmount = null;*/
         priceDescription = null;
         price = null;
         priceDetails = null;

@@ -51,19 +51,6 @@ class TakeOfferReviewModel implements Model {
     private PriceSpec sellersPriceSpec;
 
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
-
-    @Setter
-    private String directionHeadlineWithMethod;
-    @Setter
-    private String fixAmountsHeadline;
-    @Setter
-    private String toSendAmountDescription;
-    @Setter
-    private String toSendAmount;
-    @Setter
-    private String toReceiveAmountDescription;
-    @Setter
-    private String toReceiveAmount;
     @Setter
     private String price;
     @Setter

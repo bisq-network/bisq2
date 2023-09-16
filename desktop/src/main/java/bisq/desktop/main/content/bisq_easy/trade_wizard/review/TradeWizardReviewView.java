@@ -52,12 +52,15 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final GridPane content;
     private final StackPane paymentMethodValuePane;
     private final MultiStyleLabelPane price;
+    private final HBox reviewDataDisplay;
     @Nullable
     private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
-    TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller, HBox tradeDataHeader) {
+    TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller, HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
+
+        this.reviewDataDisplay = reviewDataDisplay;
 
         content = new GridPane();
         content.setHgap(10);
@@ -81,8 +84,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         headline = new Label();
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        // GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
-        GridPane.setMargin(headline, new Insets(18.5, 0, 0, 0));
+        GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
         GridPane.setColumnSpan(headline, 4);
         content.add(headline, 0, rowIndex);
 
@@ -92,9 +94,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        GridPane.setColumnSpan(tradeDataHeader, 4);
-        GridPane.setMargin(tradeDataHeader, new Insets(5, 0, 40, 0));
-        content.add(tradeDataHeader, 0, rowIndex);
+        GridPane.setColumnSpan(reviewDataDisplay, 4);
+        content.add(reviewDataDisplay, 0, rowIndex);
 
         rowIndex++;
         detailsHeadline = new Label();
@@ -166,7 +167,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         StackPane.setMargin(content, new Insets(40));
         StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        this.root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
+        root.getChildren().addAll(content, createOfferSuccess, takeOfferSuccess);
     }
 
     @Override
@@ -236,12 +237,16 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             GridPane.setMargin(paymentMethodValuePane, new Insets(0, 0, 0, 0));
             paymentMethodValuePane.getChildren().setAll(paymentMethod);
         }
+
+        if (model.isRangeAmount()) {
+            GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
+        } else {
+            GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
+        }
     }
 
     @Override
     protected void onViewDetached() {
-        // directionHeadlineWithMethod.textProperty().unbind();
-
         createOfferSuccessButton.setOnAction(null);
         takeOfferSuccessButton.setOnAction(null);
 

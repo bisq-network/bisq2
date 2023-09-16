@@ -40,13 +40,12 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     private final VBox takeOfferSuccess;
     private final Button takeOfferSuccessButton;
-    private final Label toReceiveAmountDescription, toSendAmountDescription, priceDetails, paymentMethod, fee, feeDetails;
+    private final Label priceDetails, paymentMethod, fee, feeDetails;
     private final GridPane content;
-    private final MultiStyleLabelPane directionHeadlineWithMethod, fixAmountsHeadline, toSendAmount,
-            toReceiveAmount, price;
+    private final MultiStyleLabelPane price;
     private Subscription showTakeOfferSuccessPin;
 
-    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller) {
+    TakeOfferReviewView(TakeOfferReviewModel model, TakeOfferReviewController controller, HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
 
         content = new GridPane();
@@ -71,7 +70,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
-        GridPane.setMargin(headline, new Insets(-15, 0, 0, 0));
+        GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
         GridPane.setColumnSpan(headline, 4);
         content.add(headline, 0, rowIndex);
 
@@ -81,17 +80,9 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(line1, 0, rowIndex);
 
         rowIndex++;
-        directionHeadlineWithMethod = new MultiStyleLabelPane();
-        directionHeadlineWithMethod.getStyleClass().add("trade-wizard-review-direction");
-        GridPane.setMargin(directionHeadlineWithMethod, new Insets(10, 0, 5, 0));
-        GridPane.setColumnSpan(directionHeadlineWithMethod, 4);
-        content.add(directionHeadlineWithMethod, 0, rowIndex);
-
-        rowIndex++;
-        fixAmountsHeadline = new MultiStyleLabelPane();
-        GridPane.setMargin(fixAmountsHeadline, new Insets(-5, 0, 15, 0));
-        GridPane.setColumnSpan(fixAmountsHeadline, 4);
-        content.add(fixAmountsHeadline, 0, rowIndex);
+        GridPane.setColumnSpan(reviewDataDisplay, 4);
+        GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
+        content.add(reviewDataDisplay, 0, rowIndex);
 
         rowIndex++;
         Label detailsHeadline = new Label(Res.get("bisqEasy.takeOffer.review.detailsHeadline").toUpperCase());
@@ -104,26 +95,6 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
         GridPane.setColumnSpan(line2, 4);
         content.add(line2, 0, rowIndex);
-
-        rowIndex++;
-        toSendAmountDescription = new Label(Res.get("bisqEasy.takeOffer.review.toPay"));
-        toSendAmountDescription.getStyleClass().add(descriptionStyle);
-        content.add(toSendAmountDescription, 0, rowIndex);
-
-        toSendAmount = new MultiStyleLabelPane();
-        toSendAmount.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(toSendAmount, 2);
-        content.add(toSendAmount, 1, rowIndex);
-
-        rowIndex++;
-        toReceiveAmountDescription = new Label(Res.get("bisqEasy.takeOffer.review.toReceive"));
-        toReceiveAmountDescription.getStyleClass().add(descriptionStyle);
-        content.add(toReceiveAmountDescription, 0, rowIndex);
-
-        toReceiveAmount = new MultiStyleLabelPane();
-        toReceiveAmount.getStyleClass().add(valueStyle);
-        GridPane.setColumnSpan(toReceiveAmount, 2);
-        content.add(toReceiveAmount, 1, rowIndex);
 
         rowIndex++;
         Label priceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.price"));
@@ -179,14 +150,6 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
-        directionHeadlineWithMethod.setText(model.getDirectionHeadlineWithMethod());
-        fixAmountsHeadline.setText(model.getFixAmountsHeadline());
-
-        toSendAmountDescription.setText(model.getToSendAmountDescription());
-        toSendAmount.setText(model.getToSendAmount());
-        toReceiveAmountDescription.setText(model.getToReceiveAmountDescription());
-        toReceiveAmount.setText(model.getToReceiveAmount());
-
         price.setText(model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
