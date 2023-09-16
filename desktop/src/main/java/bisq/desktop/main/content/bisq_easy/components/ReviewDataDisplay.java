@@ -224,7 +224,7 @@ public class ReviewDataDisplay {
             code.getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
 
             HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
-            HBox hBox = new HBox(3, amount, code);
+            HBox hBox = new HBox(5, amount, code);
             hBox.setAlignment(Pos.BASELINE_LEFT);
             VBox.setMargin(hBox, new Insets(-2, 0, 0, 0));
             VBox.setVgrow(hBox, Priority.ALWAYS);

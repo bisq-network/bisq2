@@ -22,6 +22,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.util.DecimalFormatters;
 import lombok.extern.slf4j.Slf4j;
 
+import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -58,6 +59,22 @@ public class AmountFormatter {
 
     public static String formatAmount(Monetary amount, Locale locale, boolean useLowPrecision) {
         return getDecimalFormat(amount, locale, useLowPrecision).format(amount.asDouble());
+    }
+
+    public static String formatWithDecimalGroups(Monetary amount, Locale locale, boolean useLowPrecision) {
+        String formatted = formatAmount(amount, locale, useLowPrecision);
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(locale);
+        char decimalSeparator = symbols.getDecimalSeparator();
+        String regex = decimalSeparator == '.' ? "\\." : String.valueOf(decimalSeparator);
+        String[] parts = formatted.split(regex);
+        if (parts.length == 2 && parts[1].length() == 8) {
+            String part1 = parts[0];
+            String part2 = parts[1].substring(0, 4);
+            String part3 = parts[1].substring(4);
+            return part1 + decimalSeparator + part2 + " " + part3;
+        } else {
+            return formatted;
+        }
     }
 
     public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, boolean useLowPrecision) {

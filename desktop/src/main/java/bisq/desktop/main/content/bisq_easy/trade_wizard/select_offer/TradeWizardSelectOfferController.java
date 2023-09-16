@@ -185,7 +185,7 @@ public class TradeWizardSelectOfferController implements Controller {
         model.setQuoteAmountAsString(quoteAmountAsString);
 
 
-        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(model.getFiatPaymentMethods(), true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(model.getFiatPaymentMethods());
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
                 quoteAmountAsString,

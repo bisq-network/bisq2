@@ -19,12 +19,10 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.fsm.Event;
-import bisq.common.monetary.Monetary;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.Offer;
-import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -98,15 +96,16 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
 
-        Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
-        Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
+        // FIXME If there is no market price available we get a NP in the code below
+       /* Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();*/
 
         //todo add tolerance as market price might be a bit off
         // checkArgument(takersContract.getBaseSideAmount() >= baseSideMinAmount.getValue());
         //  checkArgument(takersContract.getBaseSideAmount() <= baseSideMaxAmount.getValue());
 
-        Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
-        Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
+     /*   Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
+        Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();*/
         //  checkArgument(takersContract.getQuoteSideAmount() >= quoteSideMinAmount.getValue());
         //   checkArgument(takersContract.getQuoteSideAmount() <= quoteSideMaxAmount.getValue());
 

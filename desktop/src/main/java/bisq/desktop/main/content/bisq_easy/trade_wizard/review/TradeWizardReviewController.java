@@ -154,7 +154,7 @@ public class TradeWizardReviewController implements Controller {
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
 
-        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, true);
+        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
         String chatMessageText = Res.get("bisqEasy.createOffer.review.chatMessage",
                 directionString,
                 quoteAmountAsString,
@@ -328,7 +328,7 @@ public class TradeWizardReviewController implements Controller {
                             Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription") :
                             Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.maker")
             );
-            model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false));
+            model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
 
             if (direction.isSell()) {
                 model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.seller"));
@@ -458,9 +458,9 @@ public class TradeWizardReviewController implements Controller {
             if (fiatPaymentMethods.size() > 2) {
                 fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods.stream()
                         .limit(2)
-                        .collect(Collectors.toList()), false) + ",...";
+                        .collect(Collectors.toList())) + ",...";
             } else {
-                fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods, false);
+                fiatPaymentMethodsString = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
             }
             fiatPaymentMethodsString = StringUtils.truncate(fiatPaymentMethodsString, 40);
         } else {

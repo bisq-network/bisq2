@@ -134,7 +134,6 @@
  ******************************************************************************/
 
 .bisq-easy-open-trades-header-description {
-    -fx-alignment: left;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
@@ -142,7 +141,6 @@
 }
 
 .bisq-easy-open-trades-header-value {
-    -fx-alignment: left;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
