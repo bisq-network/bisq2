@@ -129,6 +129,7 @@
     -fx-background-color: derive(-bisq-black, 10%);
 }
 
+
 /*******************************************************************************
  * Header                                                                 *
  ******************************************************************************/
@@ -145,6 +146,13 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.55em;
+}
+
+.bisq-easy-open-trades-header-code {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.27em;
 }
 
 

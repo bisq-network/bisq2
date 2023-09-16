@@ -39,6 +39,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -113,21 +114,25 @@ public class TradeDataHeader {
                 long baseSideAmount = bisqEasyTrade.getContract().getBaseSideAmount();
                 long quoteSideAmount = bisqEasyTrade.getContract().getQuoteSideAmount();
                 Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
-                String baseAmountString = AmountFormatter.formatAmountWithCode(baseAmount, false);
+                String baseAmountString = AmountFormatter.formatAmount(baseAmount, false);
                 Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
-                String quoteAmountString = AmountFormatter.formatAmountWithCode(quoteAmount);
+                String quoteAmountString = AmountFormatter.formatAmount(quoteAmount);
                 if (bisqEasyTrade.isSeller()) {
                     model.getDirection().set(Res.get("offer.sell").toUpperCase());
                     model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
                     model.getLeftAmount().set(baseAmountString);
+                    model.getLeftCode().set(baseAmount.getCode());
                     model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
                     model.getRightAmount().set(quoteAmountString);
+                    model.getRightCode().set(quoteAmount.getCode());
                 } else {
                     model.getDirection().set(Res.get("offer.buy").toUpperCase());
                     model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.pay").toUpperCase());
                     model.getLeftAmount().set(quoteAmountString);
+                    model.getLeftCode().set(quoteAmount.getCode());
                     model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
                     model.getRightAmount().set(baseAmountString);
+                    model.getRightCode().set(baseAmount.getCode());
                 }
             });
         }
@@ -151,10 +156,12 @@ public class TradeDataHeader {
         private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty direction = new SimpleStringProperty();
-        private final StringProperty leftAmount = new SimpleStringProperty();
         private final StringProperty leftAmountDescription = new SimpleStringProperty();
-        private final StringProperty rightAmount = new SimpleStringProperty();
+        private final StringProperty leftAmount = new SimpleStringProperty();
+        private final StringProperty leftCode = new SimpleStringProperty();
         private final StringProperty rightAmountDescription = new SimpleStringProperty();
+        private final StringProperty rightAmount = new SimpleStringProperty();
+        private final StringProperty rightCode = new SimpleStringProperty();
         private final StringProperty tradeId = new SimpleStringProperty();
 
         public Model(String peerDescription) {
@@ -167,10 +174,12 @@ public class TradeDataHeader {
             userProfile.set(null);
             reputationScore.set(null);
             direction.set(null);
-            leftAmount.set(null);
             leftAmountDescription.set(null);
-            rightAmount.set(null);
+            leftAmount.set(null);
+            leftCode.set(null);
             rightAmountDescription.set(null);
+            rightAmount.set(null);
+            rightCode.set(null);
             tradeId.set(null);
         }
     }
@@ -179,9 +188,10 @@ public class TradeDataHeader {
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final static double HEIGHT = 61;
 
-        private final Triple<Text, Text, VBox> direction, leftAmount, rightAmount, tradeId;
+        private final Triple<Text, Text, VBox> direction, tradeId;
         private final UserProfileDisplay peersUserProfileDisplay;
         private final Label peerDescription;
+        private final Triple<Triple<Text, Text, Text>, HBox, VBox> leftAmount, rightAmount;
         private Subscription userProfilePin, reputationScorePin;
 
         private View(Model model, Controller controller) {
@@ -203,8 +213,8 @@ public class TradeDataHeader {
             peerVBox.setAlignment(Pos.CENTER_LEFT);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
-            leftAmount = getElements();
-            rightAmount = getElements();
+            leftAmount = getAmountElements();
+            rightAmount = getAmountElements();
             tradeId = getElements(Res.get("bisqEasy.tradeState.header.tradeId"));
 
             root.getChildren().addAll(peerVBox,
@@ -218,10 +228,12 @@ public class TradeDataHeader {
         protected void onViewAttached() {
             peerDescription.setText(model.getPeerDescription());
             direction.getSecond().textProperty().bind(model.getDirection());
-            leftAmount.getFirst().textProperty().bind(model.getLeftAmountDescription());
-            leftAmount.getSecond().textProperty().bind(model.getLeftAmount());
-            rightAmount.getFirst().textProperty().bind(model.getRightAmountDescription());
-            rightAmount.getSecond().textProperty().bind(model.getRightAmount());
+            leftAmount.getFirst().getFirst().textProperty().bind(model.getLeftAmountDescription());
+            leftAmount.getFirst().getSecond().textProperty().bind(model.getLeftAmount());
+            leftAmount.getFirst().getThird().textProperty().bind(model.getLeftCode());
+            rightAmount.getFirst().getFirst().textProperty().bind(model.getRightAmountDescription());
+            rightAmount.getFirst().getSecond().textProperty().bind(model.getRightAmount());
+            rightAmount.getFirst().getThird().textProperty().bind(model.getRightCode());
             tradeId.getSecond().textProperty().bind(model.getTradeId());
 
             userProfilePin = EasyBind.subscribe(model.getUserProfile(), peersUserProfileDisplay::setUserProfile);
@@ -231,10 +243,12 @@ public class TradeDataHeader {
         @Override
         protected void onViewDetached() {
             direction.getSecond().textProperty().unbind();
-            leftAmount.getFirst().textProperty().unbind();
-            leftAmount.getSecond().textProperty().unbind();
-            rightAmount.getFirst().textProperty().unbind();
-            rightAmount.getSecond().textProperty().unbind();
+            leftAmount.getFirst().getFirst().textProperty().unbind();
+            leftAmount.getFirst().getSecond().textProperty().unbind();
+            leftAmount.getFirst().getThird().textProperty().unbind();
+            rightAmount.getFirst().getFirst().textProperty().unbind();
+            rightAmount.getFirst().getSecond().textProperty().unbind();
+            rightAmount.getFirst().getThird().textProperty().unbind();
             tradeId.getSecond().textProperty().unbind();
 
             userProfilePin.unsubscribe();
@@ -258,5 +272,25 @@ public class TradeDataHeader {
             return new Triple<>(descriptionLabel, valueLabel, vBox);
         }
 
+        private Triple<Triple<Text, Text, Text>, HBox, VBox> getAmountElements() {
+            Text descriptionLabel = new Text();
+            descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
+            Text amount = new Text();
+            amount.getStyleClass().add("bisq-easy-open-trades-header-value");
+            Text code = new Text();
+            code.getStyleClass().add("bisq-easy-open-trades-header-code");
+
+            HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
+            HBox hBox = new HBox(5, amount, code);
+            hBox.setAlignment(Pos.BASELINE_LEFT);
+            VBox.setMargin(descriptionLabel, new Insets(9.5, 0, -0.5, 0));
+            VBox.setVgrow(hBox, Priority.ALWAYS);
+            VBox vBox = new VBox(0, descriptionLabel, hBox);
+            vBox.setFillWidth(true);
+            vBox.setAlignment(Pos.CENTER_LEFT);
+            vBox.setMinHeight(HEIGHT);
+            vBox.setMaxHeight(HEIGHT);
+            return new Triple<>(new Triple<>(descriptionLabel, amount, code), hBox, vBox);
+        }
     }
 }

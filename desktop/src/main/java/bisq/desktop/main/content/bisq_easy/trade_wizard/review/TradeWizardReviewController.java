@@ -363,7 +363,7 @@ public class TradeWizardReviewController implements Controller {
             }
         }
 
-        applyDirectionHeadlineWithMethod();
+        applyHeaderPaymentMethod();
 
         model.setRangeAmount(isRangeAmount);
         reviewDataDisplay.setRangeAmount(isRangeAmount);
@@ -375,7 +375,6 @@ public class TradeWizardReviewController implements Controller {
         reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
         reviewDataDisplay.setPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
-        reviewDataDisplay.setPaymentMethod(model.getHeaderPaymentMethod());
     }
 
     public void reset() {
@@ -427,7 +426,6 @@ public class TradeWizardReviewController implements Controller {
     @Override
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
-
     }
 
     @Override
@@ -444,14 +442,14 @@ public class TradeWizardReviewController implements Controller {
 
     void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
         model.setTakersSelectedPaymentMethod(paymentMethod);
-        applyDirectionHeadlineWithMethod();
+        applyHeaderPaymentMethod();
     }
 
     private void resetSelectedPaymentMethod() {
         model.setTakersSelectedPaymentMethod(null);
     }
 
-    private void applyDirectionHeadlineWithMethod() {
+    private void applyHeaderPaymentMethod() {
         List<FiatPaymentMethod> fiatPaymentMethods = model.getFiatPaymentMethods();
         String fiatPaymentMethodsString;
         if (model.isCreateOfferMode()) {
@@ -467,6 +465,7 @@ public class TradeWizardReviewController implements Controller {
             fiatPaymentMethodsString = model.getTakersSelectedPaymentMethod().getDisplayString();
         }
         model.setHeaderPaymentMethod(fiatPaymentMethodsString);
+        reviewDataDisplay.setPaymentMethod(fiatPaymentMethodsString);
     }
 
     private void applyPriceDetails(Direction direction, PriceSpec priceSpec, Market market) {
