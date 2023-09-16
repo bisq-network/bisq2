@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.take_offer;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -67,10 +67,10 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TradeWizardTakeOfferController implements Controller {
-    private final TradeWizardTakeOfferModel model;
+public class TradeWizardSelectOfferController implements Controller {
+    private final TradeWizardSelectOfferModel model;
     @Getter
-    private final TradeWizardTakeOfferView view;
+    private final TradeWizardSelectOfferView view;
     private final ReputationService reputationService;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
@@ -83,10 +83,10 @@ public class TradeWizardTakeOfferController implements Controller {
     private final BannedUserService bannedUserService;
     private final BisqEasyTradeService bisqEasyTradeService;
 
-    public TradeWizardTakeOfferController(ServiceProvider serviceProvider,
-                                          Runnable onBackHandler,
-                                          Runnable onNextHandler,
-                                          Consumer<NavigationTarget> closeAndNavigateToHandler) {
+    public TradeWizardSelectOfferController(ServiceProvider serviceProvider,
+                                            Runnable onBackHandler,
+                                            Runnable onNextHandler,
+                                            Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.onBackHandler = onBackHandler;
         this.onNextHandler = onNextHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
@@ -100,8 +100,8 @@ public class TradeWizardTakeOfferController implements Controller {
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
-        model = new TradeWizardTakeOfferModel();
-        view = new TradeWizardTakeOfferView(model, this);
+        model = new TradeWizardSelectOfferModel();
+        view = new TradeWizardSelectOfferView(model, this);
     }
 
     public ReadOnlyObjectProperty<BisqEasyOffer> getSelectedBisqEasyOffer() {
@@ -223,13 +223,13 @@ public class TradeWizardTakeOfferController implements Controller {
 
             model.getMatchingOffers().setAll(channel.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                    .map(chatMessage -> new TradeWizardTakeOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                    .map(chatMessage -> new TradeWizardSelectOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
                             model,
                             userProfileService,
                             reputationService,
                             marketPriceService))
                     .collect(Collectors.toList()));
-            model.getFilteredList().setPredicate(getTakeOfferPredicate());
+            model.getFilteredList().setPredicate(getPredicate());
         } else {
             log.warn("optionalChannel not present");
         }
@@ -240,12 +240,12 @@ public class TradeWizardTakeOfferController implements Controller {
 
         if (showOffers) {
             model.setHeadLine(model.getDirection().isBuy() ?
-                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.buyer", quoteAmountAsString) :
-                    Res.get("bisqEasy.tradeWizard.takeOffer.headline.seller", quoteAmountAsString));
-            model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.subHeadline"));
+                    Res.get("bisqEasy.tradeWizard.selectOffer.headline.buyer", quoteAmountAsString) :
+                    Res.get("bisqEasy.tradeWizard.selectOffer.headline.seller", quoteAmountAsString));
+            model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.subHeadline"));
         } else {
-            model.setHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.headline", quoteAmountAsString));
-            model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.takeOffer.noMatchingOffers.subHeadline"));
+            model.setHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.headline", quoteAmountAsString));
+            model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.subHeadline"));
         }
     }
 
@@ -254,7 +254,7 @@ public class TradeWizardTakeOfferController implements Controller {
         model.getIsBackButtonHighlighted().set(false);
     }
 
-    void onSelectRow(TradeWizardTakeOfferView.ListItem listItem) {
+    void onSelectRow(TradeWizardSelectOfferView.ListItem listItem) {
         if (listItem == null) {
             selectListItem(listItem);
             return;
@@ -266,7 +266,7 @@ public class TradeWizardTakeOfferController implements Controller {
         }
     }
 
-    void onSelect(TradeWizardTakeOfferView.ListItem listItem) {
+    void onSelect(TradeWizardSelectOfferView.ListItem listItem) {
         if (listItem == null) {
             return;
         }
@@ -283,13 +283,13 @@ public class TradeWizardTakeOfferController implements Controller {
         closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY_OFFERBOOK);
     }
 
-    private void selectListItem(TradeWizardTakeOfferView.ListItem listItem) {
+    private void selectListItem(TradeWizardSelectOfferView.ListItem listItem) {
         model.setSelectedItem(listItem);
         model.getSelectedBisqEasyOffer().set(listItem.getBisqEasyOffer());
     }
 
     @SuppressWarnings("RedundantIfStatement")
-    private Predicate<? super TradeWizardTakeOfferView.ListItem> getTakeOfferPredicate() {
+    private Predicate<? super TradeWizardSelectOfferView.ListItem> getPredicate() {
         return item ->
         {
             try {
@@ -382,7 +382,7 @@ public class TradeWizardTakeOfferController implements Controller {
 
                 return true;
             } catch (Throwable t) {
-                log.error("Error at TakeOfferPredicate", t);
+                log.error("Error at getPredicate", t);
                 return false;
             }
         };

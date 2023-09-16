@@ -129,10 +129,54 @@
     -fx-background-color: derive(-bisq-black, 10%);
 }
 
+/*******************************************************************************
+ * Header                                                                 *
+ ******************************************************************************/
+
+
+.bisq-easy-open-trades-header-description {
+    -fx-alignment: left;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 0.9em;
+}
+
+.bisq-easy-open-trades-header-value {
+    -fx-alignment: left;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.55em;
+}
 
 /*******************************************************************************
  * Trade state                                                                 *
  ******************************************************************************/
+
+.trade-state-headline {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 20px;
+    -fx-padding: 3 0 0;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-state-headline-accent {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 23px;
+    -fx-padding: 0;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-state-headline-amount {
+    -fx-background-color: rgba(0, 0, 0, 0.42);
+    -fx-background-radius: 6;
+    -fx-background-insets: 0 1 0 1;
+    -fx-text-fill: derive(-fx-light-text-color, 0%);
+    -fx-font-size: 23px;
+    -fx-padding: 0 8 0 8;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  * Trade state phase (left side box)                                                                  *
@@ -193,24 +237,24 @@
  * Trade state phase info (right side box)                                                                *
  ******************************************************************************/
 
-.bisq-easy-trade-state-info-headline {
+.bisq-easy-trade-state-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.7em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-info-text {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
+.bisq-easy-trade-state-info {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-info-help-text {
+.bisq-easy-trade-state-help {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
-    /* -fx-font-size: 1.1em;*/
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -237,7 +281,7 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.trade-wizard-review-direction-high-light {
+.trade-wizard-review-direction-accent {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 23;

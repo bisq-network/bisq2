@@ -129,7 +129,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
-                reputationScoreField.setIconTooltip(reputationScore.getDetails());
+                reputationScoreField.setIconTooltip(reputationScore.getTooltipString());
             }
         });
 

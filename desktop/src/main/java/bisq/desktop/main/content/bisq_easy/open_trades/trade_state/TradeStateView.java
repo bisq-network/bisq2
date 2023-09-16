@@ -17,14 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.common.data.Triple;
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -33,36 +30,36 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel, bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController> {
-    private final Label headline;
+public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final HBox phaseAndInfoHBox;
     private final Button closeButton;
     private Subscription stateInfoVBoxPin;
 
-    public TradeStateView(bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateModel model,
-                          bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController controller,
-                          VBox tradePhaseBox) {
+    public TradeStateView(TradeStateModel model,
+                          TradeStateController controller,
+                          VBox tradePhaseBox,
+                          HBox tradeStateDataHeader) {
         super(new VBox(0), model, controller);
+
+        closeButton = new Button();
+        closeButton.setMinWidth(160);
+        closeButton.getStyleClass().add("outlined-button");
+
+        tradeStateDataHeader.getChildren().addAll(Spacer.fillHBox(), closeButton);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer("", phaseAndInfoHBox);
+        VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
+        VBox vBox = new VBox(tradeStateDataHeader, Layout.hLine(), phaseAndInfoHBox);
+        vBox.getStyleClass().add("bisq-easy-container");
 
-        headline = triple.getFirst();
-
-        closeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
-        closeButton.setMinWidth(150);
-        closeButton.getStyleClass().add("outlined-button");
-        triple.getSecond().getChildren().addAll(Spacer.fillHBox(), closeButton);
-
-        VBox vBox = triple.getThird();
         root.getChildren().add(vBox);
     }
 
     @Override
     protected void onViewAttached() {
-        headline.textProperty().bind(model.getHeadline());
+        closeButton.textProperty().bind(model.getCloseButtonText());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
                 stateInfoVBox -> {
@@ -81,10 +78,15 @@ public class TradeStateView extends View<VBox, bisq.desktop.main.content.bisq_ea
 
     @Override
     protected void onViewDetached() {
-        headline.textProperty().unbind();
+        closeButton.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
 
         closeButton.setOnAction(null);
+
+        if (phaseAndInfoHBox.getChildren().size() == 2) {
+            phaseAndInfoHBox.getChildren().remove(1);
+        }
     }
+
 }

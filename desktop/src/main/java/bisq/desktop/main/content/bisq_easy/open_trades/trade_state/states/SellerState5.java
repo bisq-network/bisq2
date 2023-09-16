@@ -28,6 +28,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -36,8 +37,6 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +92,7 @@ public class SellerState5 extends BaseState {
         }
 
         private void onLeaveChannel() {
-            new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.warning"))
+            new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.completed.warning"))
                     .actionButtonText(Res.get("confirmation.yes"))
                     .onAction(() -> {
                         channelService.leaveChannel(model.getChannel());
@@ -160,9 +159,7 @@ public class SellerState5 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            Text infoHeadlineText = new Text(Res.get("bisqEasy.tradeState.info.seller.phase5.headline"));
-            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
-            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase5.headline"));
 
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.exportTrade"));
             leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.leaveChannel"));
@@ -174,10 +171,12 @@ public class SellerState5 extends BaseState {
             txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
             txId.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
 
-            HBox buttons = new HBox(20, leaveButton, Spacer.fillHBox(), exportButton);
+            HBox buttons = new HBox(leaveButton, Spacer.fillHBox(), exportButton);
+
+            VBox.setMargin(headline, new Insets(0, 0, 5, 0));
             VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
-                    infoHeadline,
+                    headline,
                     quoteAmount,
                     baseAmount,
                     txId,

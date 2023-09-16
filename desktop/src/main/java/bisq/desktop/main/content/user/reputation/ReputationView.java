@@ -189,7 +189,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    reputationScoreDisplay.applyReputationScore(item.getReputationScore());
+                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
                     setGraphic(reputationScoreDisplay);
                 } else {
                     setGraphic(null);

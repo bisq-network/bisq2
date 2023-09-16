@@ -22,6 +22,10 @@
     -fx-image: url("/images/info.png");
 }
 
+#check-circle {
+    -fx-image: url("/images/check-circle.png");
+}
+
 #logo-splash {
     -fx-image: url("/images/logo-splash.png");
 }
@@ -532,24 +536,45 @@
 
 
 /* ------------------------------------------------------------------------------------ */
-/* Chat */
+/* Icons */
 /* ------------------------------------------------------------------------------------ */
 
 #icon-bell {
-    -fx-image: url("/images/chat/icon-bell.png");
+    -fx-image: url("/images/icons/icon-bell.png");
 }
 
 #icon-info {
-    -fx-image: url("/images/chat/icon-info.png");
+    -fx-image: url("/images/icons/icon-info.png");
 }
 
 #icon-help {
-    -fx-image: url("/images/chat/icon-help.png");
+    -fx-image: url("/images/icons/icon-help.png");
 }
 
 #icon-search {
-    -fx-image: url("/images/chat/icon-search.png");
+    -fx-image: url("/images/icons/icon-search.png");
 }
+
+#icon-wallet {
+    -fx-image: url("/images/icons/icon-wallet.png");
+}
+
+#star-green {
+    -fx-image: url("/images/icons/star-green.png");
+}
+
+#star-white {
+    -fx-image: url("/images/icons/star-white.png");
+}
+
+#star-grey {
+    -fx-image: url("/images/icons/star-grey.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Chat */
+/* ------------------------------------------------------------------------------------ */
 
 #icon-sidebar-close {
     -fx-image: url("/images/chat/icon-sidebar-close.png");

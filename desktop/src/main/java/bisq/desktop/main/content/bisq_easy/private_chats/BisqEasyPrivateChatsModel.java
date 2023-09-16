@@ -20,7 +20,8 @@ package bisq.desktop.main.content.bisq_easy.private_chats;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
-import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,6 +29,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.stage.Stage;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,8 +42,10 @@ public class BisqEasyPrivateChatsModel extends ChatModel {
     private final FilteredList<BisqEasyPrivateChatsView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<BisqEasyPrivateChatsView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyPrivateChatsView.ListItem> selectedItem = new SimpleObjectProperty<>();
-    private final ObjectProperty<UserProfileDisplay> peerUserProfileDisplay = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
+    @Setter
+    private ReputationScore peersReputationScore;
 
     public BisqEasyPrivateChatsModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

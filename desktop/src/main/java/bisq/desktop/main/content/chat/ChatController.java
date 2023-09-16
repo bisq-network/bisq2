@@ -118,16 +118,19 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     protected void chatChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
-            model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
-                    .map(service -> service.getChannelTitle(Objects.requireNonNull(chatChannel)))
-                    .orElse(""));
             model.selectedChannelProperty().set(chatChannel);
 
             if (chatChannel == null) {
                 doCloseSideBar();
-            } else if (model.getChannelSidebarVisible().get()) {
-                cleanupChannelInfo();
-                showChannelInfo();
+            } else {
+                model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
+                        .map(service -> service.getChannelTitle(Objects.requireNonNull(chatChannel)))
+                        .orElse(""));
+
+                if (model.getChannelSidebarVisible().get()) {
+                    cleanupChannelInfo();
+                    showChannelInfo();
+                }
             }
         });
     }

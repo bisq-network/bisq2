@@ -18,8 +18,10 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.trade.TradeException;
@@ -31,11 +33,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -121,44 +120,40 @@ public class SellerState3 extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button fiatReceivedButton, btcSentButton;
         private final MaterialTextField txId;
-        private final Text infoHeadlineText;
-        private final Label sendBtcLabel;
+        private final WrappingText headline, sendBtcHeadline, fiatReceiptConfirmed;
         private final MaterialTextField baseAmount;
         private final MaterialTextField btcAddress;
-        private final CheckBox fiatPaymentReceivedCheckBox;
+        private final HBox fiatReceiptConfirmedHBox;
         private Subscription fiatReceivedPin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            infoHeadlineText = new Text();
-            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
-            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
+            Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
+            fiatReceiptConfirmed = confirmPair.getFirst();
+            fiatReceiptConfirmedHBox = confirmPair.getSecond();
 
+            headline = FormUtils.getHeadline();
             fiatReceivedButton = new Button();
             fiatReceivedButton.setDefaultButton(true);
 
-            fiatPaymentReceivedCheckBox = new CheckBox();
-            fiatPaymentReceivedCheckBox.setMouseTransparent(true);
-            fiatPaymentReceivedCheckBox.setSelected(true);
-
+            sendBtcHeadline = FormUtils.getInfo();
+            baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.baseAmount"), "", false);
+            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.btcAddress"), "", false);
             txId = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.txId"), "", true);
             txId.textProperty().bindBidirectional(model.getTxId());
             txId.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3.txId.prompt"));
-
             btcSentButton = new Button();
             btcSentButton.setDefaultButton(true);
 
-            sendBtcLabel = FormUtils.getLabel("");
-            baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.baseAmount"), "", false);
-            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3.btcAddress"), "", false);
-            VBox.setMargin(fiatPaymentReceivedCheckBox, new Insets(5, 0, 10, 0));
-            VBox.setMargin(fiatReceivedButton, new Insets(10, 0, 10, 0));
+            VBox.setMargin(fiatReceivedButton, new Insets(5, 0, 10, 0));
+            VBox.setMargin(fiatReceiptConfirmedHBox, new Insets(0, 0, 5, 0));
             VBox.setMargin(btcSentButton, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
-                    infoHeadline,
-                    fiatReceivedButton, fiatPaymentReceivedCheckBox,
-                    sendBtcLabel,
+                    fiatReceiptConfirmedHBox,
+                    headline,
+                    fiatReceivedButton,
+                    sendBtcHeadline,
                     baseAmount,
                     btcAddress,
                     txId,
@@ -169,7 +164,7 @@ public class SellerState3 extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            infoHeadlineText.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.headline", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.headline", model.getFormattedQuoteAmount()));
 
             baseAmount.setText(model.getFormattedBaseAmount());
             btcAddress.setText(model.getBtcAddress());
@@ -179,32 +174,28 @@ public class SellerState3 extends BaseState {
             txId.textProperty().bindBidirectional(model.getTxId());
 
             fiatReceivedPin = EasyBind.subscribe(model.getFiatReceived(), fiatPaymentConfirmed -> {
-                infoHeadlineText.setVisible(!fiatPaymentConfirmed);
-                infoHeadlineText.setManaged(!fiatPaymentConfirmed);
+                headline.setVisible(!fiatPaymentConfirmed);
+                headline.setManaged(!fiatPaymentConfirmed);
                 fiatReceivedButton.setVisible(!fiatPaymentConfirmed);
                 fiatReceivedButton.setManaged(!fiatPaymentConfirmed);
-                fiatPaymentReceivedCheckBox.setVisible(fiatPaymentConfirmed);
-                fiatPaymentReceivedCheckBox.setManaged(fiatPaymentConfirmed);
+                fiatReceiptConfirmedHBox.setVisible(fiatPaymentConfirmed);
+                fiatReceiptConfirmedHBox.setManaged(fiatPaymentConfirmed);
 
                 baseAmount.setDisable(!fiatPaymentConfirmed);
                 btcAddress.setDisable(!fiatPaymentConfirmed);
                 txId.setDisable(!fiatPaymentConfirmed);
-
+                sendBtcHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.sendBtc", model.getFormattedBaseAmount()));
                 double dimmed = 0.15;
                 if (fiatPaymentConfirmed) {
-                    fiatPaymentReceivedCheckBox.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
+                    fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase3.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
 
-                    VBox.setMargin(sendBtcLabel, new Insets(0, 0, 5, 0));
-                    sendBtcLabel.setOpacity(1);
-                    sendBtcLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase3b.sendBtc", model.getFormattedBaseAmount()));
-                    sendBtcLabel.getStyleClass().remove("bisq-easy-trade-state-info-text");
-                    sendBtcLabel.getStyleClass().add("bisq-easy-trade-state-info-headline");
-
+                    sendBtcHeadline.setOpacity(1);
+                    sendBtcHeadline.removeStyleClass("bisq-easy-trade-state-info");
+                    sendBtcHeadline.addStyleClass("bisq-easy-trade-state-headline");
                 } else {
-                    sendBtcLabel.setOpacity(dimmed);
-                    sendBtcLabel.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc", model.getQuoteCode(), model.getFormattedBaseAmount()));
-                    sendBtcLabel.getStyleClass().add("bisq-easy-trade-state-info-text");
-                    sendBtcLabel.getStyleClass().remove("bisq-easy-trade-state-info-headline");
+                    sendBtcHeadline.setOpacity(dimmed);
+                    sendBtcHeadline.addStyleClass("bisq-easy-trade-state-info");
+                    sendBtcHeadline.removeStyleClass("bisq-easy-trade-state-headline");
                 }
             });
 

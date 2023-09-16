@@ -30,7 +30,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,7 +83,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     @Override
     public void onActivate() {
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
-                .map(c -> new BisqEasyPrivateChatsView.ListItem(c, userProfileService, reputationService))
+                .map(channel -> new BisqEasyPrivateChatsView.ListItem(channel, reputationService))
                 .to(channelService.getChannels());
 
         channelsPin = channelService.getChannels().addListener(this::updateVisibility);
@@ -103,6 +103,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
                 model.getSelectedItem().set(listItem);
             }
         }
+        maybeSelectFirstItem();
         updateVisibility();
     }
 
@@ -115,7 +116,6 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         resetSelectedChildTarget();
     }
 
-
     @Override
     protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof TwoPartyPrivateChatChannel) {
@@ -124,14 +124,25 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
             UIThread.run(() -> {
                 TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
-
-                model.getPeerUserProfileDisplay().set(new UserProfileDisplay(privateChannel.getPeer()));
+                UserProfile peer = privateChannel.getPeer();
+                model.setPeersReputationScore(reputationService.getReputationScore(peer));
+                model.getPeersUserProfile().set(peer);
             });
         }
     }
 
     void onSelectItem(BisqEasyPrivateChatsView.ListItem item) {
         selectionService.selectChannel(item.getChannel());
+    }
+
+    void onLeaveChat() {
+        if (model.getSelectedChannel() != null) {
+            channelService.leaveChannel(model.getSelectedChannel().getId());
+        }
+    }
+
+    private void maybeSelectFirstItem() {
+        model.getSelectedItem().set(model.getSortedList().stream().findFirst().orElse(null));
     }
 
     private void updateVisibility() {

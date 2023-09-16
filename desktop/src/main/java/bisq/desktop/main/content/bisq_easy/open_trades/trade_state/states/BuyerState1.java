@@ -24,8 +24,6 @@ import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,15 +78,12 @@ public class BuyerState1 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            Text infoHeadlineText = new Text(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline"));
-            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
-            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
-
             waitingAnimation = new WaitingAnimation();
-            VBox.setMargin(waitingAnimation, new Insets(20, 0, 0, 20));
+
+            VBox.setMargin(waitingAnimation, new Insets(30, 0, 10, 20));
             root.getChildren().addAll(
-                    infoHeadline,
-                    FormUtils.getLabel(Res.get("bisqEasy.tradeState.info.buyer.phase1.info")),
+                    FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline")),
+                    FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase1.info")),
                     waitingAnimation);
         }
 

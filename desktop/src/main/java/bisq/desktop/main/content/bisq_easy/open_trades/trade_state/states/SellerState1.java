@@ -38,10 +38,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -184,10 +181,6 @@ public class SellerState1 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            Text infoHeadlineText = new Text(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline"));
-            infoHeadlineText.getStyleClass().add("bisq-easy-trade-state-info-headline");
-            TextFlow infoHeadline = new TextFlow(infoHeadlineText);
-
             accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
             accountSelection.setPrefWidth(300);
             accountSelection.setConverter(new StringConverter<>() {
@@ -208,16 +201,15 @@ public class SellerState1 extends BaseState {
             button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
             button.setDefaultButton(true);
 
-            Label helpLabel = FormUtils.getHelpLabel(Res.get("bisqEasy.tradeState.info.seller.phase1.note"));
 
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
-                    infoHeadline,
+                    FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase1.headline")),
                     accountSelection,
                     paymentAccountData,
                     button,
                     Spacer.fillVBox(),
-                    helpLabel);
+                    FormUtils.getHelp(Res.get("bisqEasy.tradeState.info.seller.phase1.note")));
         }
 
         @Override

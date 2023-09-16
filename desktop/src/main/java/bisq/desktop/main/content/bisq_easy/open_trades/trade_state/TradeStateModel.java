@@ -32,17 +32,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeStateModel implements Model {
+    enum TradeCloseType {
+        REJECT,
+        CANCEL,
+        COMPLETED
+    }
+
     @Setter
-    private BisqEasyTrade bisqEasyTrade;
-    @Setter
-    private BisqEasyOpenTradeChannel channel;
+    private TradeCloseType tradeCloseType;
+    private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
-    private final StringProperty headline = new SimpleStringProperty();
+    private final StringProperty closeButtonText = new SimpleStringProperty();
 
     void reset() {
-        bisqEasyTrade = null;
-        channel = null;
+        tradeCloseType = null;
+        channel.set(null);
+        bisqEasyTrade.set(null);
         stateInfoVBox.set(null);
-        headline.set(null);
+        closeButtonText.set(null);
     }
 }

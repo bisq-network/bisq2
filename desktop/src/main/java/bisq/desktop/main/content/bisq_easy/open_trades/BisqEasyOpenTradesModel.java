@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
-import bisq.desktop.main.content.components.UserProfileDisplay;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,17 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqEasyOpenTradesModel extends ChatModel {
     private final BooleanProperty noOpenTrades = new SimpleBooleanProperty();
     private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
+    private final BooleanProperty tradeRulesAccepted = new SimpleBooleanProperty();
     private final BooleanProperty chatVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
-    private final StringProperty chatHeadline = new SimpleStringProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
+    private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObservableList<BisqEasyOpenTradesView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<BisqEasyOpenTradesView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<BisqEasyOpenTradesView.ListItem> sortedList = new SortedList<>(filteredList);
-    private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
-    private final ObjectProperty<UserProfileDisplay> peerUserProfileDisplay = new SimpleObjectProperty<>();
-    private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
-    
+
     public BisqEasyOpenTradesModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }
@@ -53,5 +51,18 @@ public class BisqEasyOpenTradesModel extends ChatModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.NONE;
+    }
+
+
+    void reset() {
+        noOpenTrades.set(false);
+        tradeWelcomeVisible.set(false);
+        tradeRulesAccepted.set(false);
+        chatVisible.set(false);
+        tradeStateVisible.set(false);
+        chatWindowTitle.set(null);
+        chatWindow.set(null);
+        selectedItem.set(null);
+        listItems.clear();
     }
 }

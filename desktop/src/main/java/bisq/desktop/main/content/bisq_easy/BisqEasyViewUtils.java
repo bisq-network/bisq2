@@ -30,7 +30,6 @@ public class BisqEasyViewUtils {
     public static Triple<Label, HBox, VBox> getContainer(String headline, Node content) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
-        //HBox.setMargin(headlineLabel, new Insets(15, 30, 15, 30));
         HBox header = new HBox(10, headlineLabel);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(15, 30, 15, 30));

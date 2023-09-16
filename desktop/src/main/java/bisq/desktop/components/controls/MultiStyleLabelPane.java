@@ -24,14 +24,16 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+// TODO use TextFlow
 @Slf4j
-public class MultiStyleLabelPane extends FlowPane {
+public class MultiStyleLabelPane extends HBox {
     private final StringProperty text = new SimpleStringProperty();
 
     public StringProperty textProperty() {
@@ -71,6 +73,7 @@ public class MultiStyleLabelPane extends FlowPane {
                                     .filter(style -> style != null && !style.isEmpty())
                                     .forEach(style -> label.getStyleClass().add(style));
                         }
+                        HBox.setHgrow(label, Priority.ALWAYS);
                         getChildren().add(label);
                     }
                 });
