@@ -20,8 +20,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ReputationScore;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -41,38 +39,17 @@ public class TradeStateModel implements Model {
     }
 
     @Setter
-    private BisqEasyTrade bisqEasyTrade;
-    @Setter
-    private BisqEasyOpenTradeChannel channel;
-    @Setter
-    private ReputationScore peersReputationScore;
-    @Setter
     private TradeCloseType tradeCloseType;
+    private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
-    private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
     private final StringProperty closeButtonText = new SimpleStringProperty();
-    private final StringProperty direction = new SimpleStringProperty();
-    private final StringProperty directionDescription = new SimpleStringProperty();
-    private final StringProperty leftAmount = new SimpleStringProperty();
-    private final StringProperty leftAmountDescription = new SimpleStringProperty();
-    private final StringProperty rightAmount = new SimpleStringProperty();
-    private final StringProperty rightAmountDescription = new SimpleStringProperty();
-    private final StringProperty tradeId = new SimpleStringProperty();
 
     void reset() {
-        bisqEasyTrade = null;
-        channel = null;
-        peersReputationScore = null;
         tradeCloseType = null;
+        channel.set(null);
+        bisqEasyTrade.set(null);
         stateInfoVBox.set(null);
-        peersUserProfile.set(null);
         closeButtonText.set(null);
-        direction.set(null);
-        directionDescription.set(null);
-        leftAmount.set(null);
-        leftAmountDescription.set(null);
-        rightAmount.set(null);
-        rightAmountDescription.set(null);
-        tradeId.set(null);
     }
 }

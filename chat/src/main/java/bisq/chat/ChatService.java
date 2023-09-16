@@ -182,13 +182,13 @@ public class ChatService implements Service {
             return Optional.empty();
         }
         if (chatChannel instanceof CommonPublicChatChannel) {
-            return Optional.of(commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
+            return Optional.ofNullable(commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
         } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            return Optional.of(twoPartyPrivateChatChannelServices.get(chatChannel.getChatChannelDomain()));
+            return Optional.ofNullable(twoPartyPrivateChatChannelServices.get(chatChannel.getChatChannelDomain()));
         } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
-            return Optional.of(bisqEasyOfferbookChannelService);
+            return Optional.ofNullable(bisqEasyOfferbookChannelService);
         } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-            return Optional.of(bisqEasyOpenTradeChannelService);
+            return Optional.ofNullable(bisqEasyOpenTradeChannelService);
         } else {
             throw new RuntimeException("Unexpected chatChannel instance. chatChannel=" + chatChannel);
         }

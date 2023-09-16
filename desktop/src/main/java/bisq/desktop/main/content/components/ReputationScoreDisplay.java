@@ -25,6 +25,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 @Slf4j
@@ -39,7 +40,7 @@ public class ReputationScoreDisplay extends HBox {
 
     public ReputationScoreDisplay(ReputationScore reputationScore) {
         this();
-        applyReputationScore(reputationScore);
+        setReputationScore(reputationScore);
     }
 
     public ReputationScoreDisplay() {
@@ -54,12 +55,9 @@ public class ReputationScoreDisplay extends HBox {
         getChildren().addAll(stars);
     }
 
-    public void applyReputationScore(ReputationScore reputationScore) {
-        if (reputationScore == null) {
-            return;
-        }
+    public void setReputationScore(@Nullable ReputationScore reputationScore) {
         this.reputationScore = reputationScore;
-        double relativeScore = reputationScore.getRelativeScore();
+        double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
         int target = (int) Math.floor(stars.size() * relativeScore);
         for (int i = 0; i < stars.size(); i++) {
             ImageView imageView = stars.get(i);
@@ -71,7 +69,7 @@ public class ReputationScoreDisplay extends HBox {
                 imageView.setId("star-white");
             }
         }
-        tooltip.setText(reputationScore.getTooltipString());
+        tooltip.setText(reputationScore != null ? reputationScore.getTooltipString() : null);
     }
 
     public void setScale(double scale) {

@@ -337,7 +337,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             roboHashNodeSubscription = EasyBind.subscribe(model.reputationScore, reputationScore -> {
                 if (reputationScore != null) {
-                    reputationScoreDisplay.applyReputationScore(reputationScore);
+                    reputationScoreDisplay.setReputationScore(reputationScore);
                     totalReputationScore.setText(String.valueOf(reputationScore.getTotalScore()));
                 }
             });

@@ -759,7 +759,7 @@ public class ChatMessagesListView {
                                         Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
                                         reputationLabel.getStyleClass().add("bisq-text-7");
 
-                                        reputationScoreDisplay.applyReputationScore(item.getReputationScore());
+                                        reputationScoreDisplay.setReputationScore(item.getReputationScore());
                                         VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
                                         reputationVBox.setAlignment(Pos.CENTER_LEFT);
 

@@ -50,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +66,7 @@ class TradePhaseBox {
         return controller.getView();
     }
 
-    void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
+    void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
         controller.setSelectedChannel(channel);
     }
 
@@ -91,7 +92,8 @@ class TradePhaseBox {
             view = new View(model, this);
         }
 
-        private void setSelectedChannel(BisqEasyOpenTradeChannel channel) {
+        private void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
+            //todo
             model.setSelectedChannel(channel);
             if (isInMediationPin != null) {
                 isInMediationPin.unbind();

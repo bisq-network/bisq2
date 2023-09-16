@@ -180,7 +180,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
         peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
             if (userProfile != null) {
                 chatPeerUserProfileDisplay.setUserProfile(userProfile);
-                chatPeerUserProfileDisplay.applyReputationScore(model.getPeersReputationScore());
+                chatPeerUserProfileDisplay.setReputationScore(model.getPeersReputationScore());
             }
         });
 
@@ -233,7 +233,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
 
                 if (item != null && !empty) {
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
-                    userProfileDisplay.applyReputationScore(item.getReputationScore());
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
                     setGraphic(userProfileDisplay);
                 } else {
                     setGraphic(null);

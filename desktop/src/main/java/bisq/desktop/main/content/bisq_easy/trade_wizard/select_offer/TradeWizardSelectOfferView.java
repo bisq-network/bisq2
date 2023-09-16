@@ -271,7 +271,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                     public void updateItem(final ListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            reputationScoreDisplay.applyReputationScore(item.getReputationScore());
+                            reputationScoreDisplay.setReputationScore(item.getReputationScore());
                             setGraphic(reputationScoreDisplay);
                         } else {
                             setGraphic(null);

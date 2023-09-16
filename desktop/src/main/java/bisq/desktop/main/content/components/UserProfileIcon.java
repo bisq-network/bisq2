@@ -24,17 +24,28 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public class UserProfileIcon extends ImageView {
+    private BisqTooltip tooltip;
+
     public UserProfileIcon(double size) {
         setSize(size);
     }
 
-    public void setUserProfile(UserProfile userProfile) {
-        BisqTooltip tooltip = new BisqTooltip(userProfile.getTooltipString());
-        tooltip.getStyleClass().add("medium-dark-tooltip");
-        Tooltip.install(this, tooltip);
-        setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
+    public void setUserProfile(@Nullable UserProfile userProfile) {
+        if (userProfile != null) {
+            tooltip = new BisqTooltip(userProfile.getTooltipString());
+            tooltip.getStyleClass().add("medium-dark-tooltip");
+            Tooltip.install(this, tooltip);
+            setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
+        } else {
+            setImage(null);
+            if (tooltip != null) {
+                Tooltip.uninstall(this, tooltip);
+            }
+        }
     }
 
     public void releaseResources() {

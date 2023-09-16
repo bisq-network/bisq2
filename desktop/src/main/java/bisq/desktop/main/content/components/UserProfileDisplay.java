@@ -24,7 +24,9 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -35,6 +37,7 @@ public class UserProfileDisplay extends HBox {
     private final BisqTooltip tooltip;
     private final UserProfileIcon userProfileIcon;
     private final ReputationScoreDisplay reputationScoreDisplay;
+    @Getter
     private final Label userName;
     private UserProfile userProfile;
 
@@ -60,7 +63,10 @@ public class UserProfileDisplay extends HBox {
         reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setScale(0.75);
         VBox vBox = new VBox(userName, reputationScoreDisplay);
+        vBox.setFillWidth(true);
         vBox.setAlignment(Pos.CENTER_LEFT);
+        
+        HBox.setHgrow(vBox, Priority.ALWAYS);
         getChildren().addAll(userProfileIcon, vBox);
 
         tooltip = new BisqTooltip();
@@ -72,17 +78,21 @@ public class UserProfileDisplay extends HBox {
         }
     }
 
-    public void setUserProfile(UserProfile userProfile) {
+    public void setUserProfile(@Nullable UserProfile userProfile) {
         this.userProfile = userProfile;
-        if (userProfile != null) {
-            userProfileIcon.setUserProfile(userProfile);
-            userName.setText(userProfile.getUserName());
-            applyTooltip();
-        }
+        userName.setText(userProfile != null ? userProfile.getUserName() : null);
+        userProfileIcon.setUserProfile(userProfile);
+        applyTooltip();
     }
 
     private void applyTooltip() {
-        tooltip.setText(userProfile.getTooltipString() + "\n" + reputationScoreDisplay.getTooltipString());
+        String userProfileTooltip = userProfile != null
+                ? userProfile.getTooltipString() :
+                "";
+        String reputationTooltip = reputationScoreDisplay != null ?
+                "\n" + reputationScoreDisplay.getTooltipString() :
+                "";
+        tooltip.setText(userProfileTooltip + reputationTooltip);
     }
 
     public void setReputationScoreScale(double scale) {
@@ -94,8 +104,8 @@ public class UserProfileDisplay extends HBox {
         userProfileIcon.setFitHeight(size);
     }
 
-    public void applyReputationScore(ReputationScore reputationScore) {
-        reputationScoreDisplay.applyReputationScore(reputationScore);
+    public void setReputationScore(@Nullable ReputationScore reputationScore) {
+        reputationScoreDisplay.setReputationScore(reputationScore);
         applyTooltip();
     }
 }
