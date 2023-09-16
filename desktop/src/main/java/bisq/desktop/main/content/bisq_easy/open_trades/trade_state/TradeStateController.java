@@ -175,12 +175,15 @@ public class TradeStateController implements Controller {
         model.setPeersReputationScore(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
         model.getPeersUserProfile().set(peerUserProfile);
         model.getTradeId().set(bisqEasyTrade.getShortId());
+        model.getDirectionDescription().set(Res.get("bisqEasy.tradeState.header.direction").toUpperCase());
         if (isSeller) {
+            model.getDirection().set(Res.get("offer.sell").toUpperCase());
             model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
             model.getLeftAmount().set(baseAmountString);
             model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());
             model.getRightAmount().set(quoteAmountString);
         } else {
+            model.getDirection().set(Res.get("offer.buy").toUpperCase());
             model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.pay").toUpperCase());
             model.getLeftAmount().set(quoteAmountString);
             model.getRightAmountDescription().set(Res.get("bisqEasy.tradeState.header.receive").toUpperCase());

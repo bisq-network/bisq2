@@ -47,6 +47,8 @@ public class TradeStateModel implements Model {
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
     private final StringProperty closeButtonText = new SimpleStringProperty();
+    private final StringProperty direction = new SimpleStringProperty();
+    private final StringProperty directionDescription = new SimpleStringProperty();
     private final StringProperty leftAmount = new SimpleStringProperty();
     private final StringProperty leftAmountDescription = new SimpleStringProperty();
     private final StringProperty rightAmount = new SimpleStringProperty();

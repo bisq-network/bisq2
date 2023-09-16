@@ -210,7 +210,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                         Res.get("bisqEasy.topPane.privateTradeChannel.maker.title", peerUserName, offer.getShortId()) :
                         Res.get("bisqEasy.topPane.privateTradeChannel.taker.title", peerUserName, offer.getShortId());
                 model.getChannelTitle().set(title);
-                model.getChatHeadline().set(Res.get("bisqEasy.openTrades.chat.headline"));
                 model.setPeersReputationScore(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
                 model.getPeersUserProfile().set(peerUserProfile);
 
@@ -224,9 +223,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
         if (item != null) {
             onShowTradeRulesAcceptedWarning();
-        } else {
-            model.getSelectedItem().set(item);
         }
+        model.getSelectedItem().set(item);
     }
 
     void onShowTradeRulesAcceptedWarning() {

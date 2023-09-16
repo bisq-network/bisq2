@@ -43,7 +43,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     private final HBox phaseAndInfoHBox;
     private final Button closeButton;
-    private final Triple<Text, Text, VBox> leftAmount, rightAmount, tradeId;
+    private final Triple<Text, Text, VBox> direction, leftAmount, rightAmount, tradeId;
     private final UserProfileDisplay peersUserProfileDisplay;
     private Subscription stateInfoVBoxPin;
     private Subscription userProfilePin;
@@ -63,6 +63,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
         VBox peerVBox = new VBox(0, peerDescription, peersUserProfileDisplay);
         peerVBox.setAlignment(Pos.CENTER_LEFT);
+        direction = getValueBox(null);
         leftAmount = getValueBox(null);
         rightAmount = getValueBox(null);
         tradeId = getValueBox(Res.get("bisqEasy.tradeState.header.tradeId"));
@@ -73,6 +74,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         HBox header = new HBox(40,
                 peerVBox,
+                direction.getThird(),
                 leftAmount.getThird(),
                 rightAmount.getThird(),
                 tradeId.getThird(),
@@ -94,6 +96,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewAttached() {
+        direction.getFirst().textProperty().bind(model.getDirectionDescription());
+        direction.getSecond().textProperty().bind(model.getDirection());
         leftAmount.getFirst().textProperty().bind(model.getLeftAmountDescription());
         leftAmount.getSecond().textProperty().bind(model.getLeftAmount());
         rightAmount.getFirst().textProperty().bind(model.getRightAmountDescription());
@@ -126,6 +130,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewDetached() {
+        direction.getFirst().textProperty().unbind();
+        direction.getSecond().textProperty().unbind();
         leftAmount.getFirst().textProperty().unbind();
         leftAmount.getSecond().textProperty().unbind();
         rightAmount.getFirst().textProperty().unbind();
