@@ -147,6 +147,7 @@ public class BuyerState2 extends BaseState {
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2.quoteAmount"), "", false);
             account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2.sellersAccount"),
                     "", false);
+            account.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase2.reasonForPaymentInfo"));
 
             confirmFiatSentButton = new Button();
             confirmFiatSentButton.setDefaultButton(true);

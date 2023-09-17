@@ -56,9 +56,9 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     public static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
-    private final List<Label> navigationProgressLabelList = new ArrayList<>();
-    private final HBox progressBox, topPane;
-    private final Button nextButton, takeOfferButton, backButton, closeButton;
+    private final List<Label> progressLabelList = new ArrayList<>();
+    private final HBox progressBox;
+    private final Button nextButton, backButton, closeButton, takeOfferButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
@@ -71,8 +71,8 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Label review = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.review"));
-        navigationProgressLabelList.add(review);
+        Label review = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.review"));
+        progressLabelList.add(review);
 
         progressBox = new HBox(10);
         progressBox.setAlignment(Pos.CENTER);
@@ -83,13 +83,13 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
 
         closeButton = BisqIconButton.createIconButton("close");
 
-        topPane = new HBox();
-        topPane.setAlignment(Pos.CENTER);
-        topPane.setStyle("-fx-background-color: -bisq-grey-23");
-        topPane.setMinHeight(TOP_PANE_HEIGHT);
-        topPane.setMaxHeight(TOP_PANE_HEIGHT);
-        topPane.setPadding(new Insets(0, 20, 0, 50));
-        topPane.getChildren().addAll(Spacer.fillHBox(),
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER);
+        hBox.setStyle("-fx-background-color: -bisq-grey-23");
+        hBox.setMinHeight(TOP_PANE_HEIGHT);
+        hBox.setMaxHeight(TOP_PANE_HEIGHT);
+        hBox.setPadding(new Insets(0, 20, 0, 50));
+        hBox.getChildren().addAll(Spacer.fillHBox(),
                 progressBox,
                 Spacer.fillHBox(),
                 closeButton);
@@ -111,7 +111,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
         VBox.setMargin(content, new Insets(0, 40, 0, 40));
-        root.getChildren().addAll(topPane, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(hBox, content, Spacer.fillVBox(), buttons);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -139,34 +139,37 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     @Override
     protected void onViewAttached() {
         if (model.isPaymentMethodVisible()) {
-            Label paymentMethod = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.method"));
-            navigationProgressLabelList.add(0, paymentMethod);
+            Label paymentMethod = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.method"));
+            progressLabelList.add(0, paymentMethod);
             progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, paymentMethod);
         }
         if (model.isAmountVisible()) {
-            Label amount = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.amount"));
-            navigationProgressLabelList.add(0, amount);
+            Label amount = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.amount"));
+            progressLabelList.add(0, amount);
             progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, amount);
         }
         if (model.isPriceVisible()) {
-            Label price = getTopPaneLabel(Res.get("bisqEasy.takeOffer.progress.price"));
-            navigationProgressLabelList.add(0, price);
+            Label price = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.price"));
+            progressLabelList.add(0, price);
             progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, price);
         }
 
         nextButton.textProperty().bind(model.getNextButtonText());
-        nextButton.disableProperty().bind(model.getNextButtonDisabled());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
-        takeOfferButton.visibleProperty().bind(model.getTakeOfferButtonVisible());
-        takeOfferButton.managedProperty().bind(model.getTakeOfferButtonVisible());
+        nextButton.disableProperty().bind(model.getNextButtonDisabled());
+
         backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
+
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
+
+        takeOfferButton.visibleProperty().bind(model.getTakeOfferButtonVisible());
+        takeOfferButton.managedProperty().bind(model.getTakeOfferButtonVisible());
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
@@ -204,9 +207,9 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         });
 
         nextButton.setOnAction(e -> controller.onNext());
-        takeOfferButton.setOnAction(e -> controller.onTakeOffer());
         backButton.setOnAction(evt -> controller.onBack());
         closeButton.setOnAction(e -> controller.onClose());
+        takeOfferButton.setOnAction(e -> controller.onTakeOffer());
 
         applyProgress(model.getCurrentIndex().get(), false);
     }
@@ -214,17 +217,19 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     @Override
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
-        nextButton.disableProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
-        takeOfferButton.visibleProperty().unbind();
-        takeOfferButton.managedProperty().unbind();
+        nextButton.disableProperty().unbind();
+
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
         backButton.prefWidthProperty().unbind();
+
         closeButton.visibleProperty().unbind();
 
+        takeOfferButton.visibleProperty().unbind();
+        takeOfferButton.managedProperty().unbind();
 
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
@@ -233,9 +238,9 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         takeOfferButtonVisiblePin.unsubscribe();
 
         nextButton.setOnAction(null);
-        takeOfferButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
+        takeOfferButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
     }
 
@@ -245,20 +250,19 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         return line;
     }
 
-    private Label getTopPaneLabel(String text) {
+    private Label createAndGetProgressLabel(String text) {
         Label label = new Label(text.toUpperCase());
         label.setTextAlignment(TextAlignment.CENTER);
         label.setAlignment(Pos.CENTER);
-        label.getStyleClass().addAll("bisq-text-14");
-
+        label.getStyleClass().add("bisq-text-14");
         label.setOpacity(OPACITY);
         return label;
     }
 
     private void applyProgress(int progressIndex, boolean delay) {
-        if (progressIndex < navigationProgressLabelList.size()) {
-            navigationProgressLabelList.forEach(label -> label.setOpacity(OPACITY));
-            Label label = navigationProgressLabelList.get(progressIndex);
+        if (progressIndex < progressLabelList.size()) {
+            progressLabelList.forEach(label -> label.setOpacity(OPACITY));
+            Label label = progressLabelList.get(progressIndex);
             if (delay) {
                 UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
                         .after(Transitions.DEFAULT_DURATION / 2);

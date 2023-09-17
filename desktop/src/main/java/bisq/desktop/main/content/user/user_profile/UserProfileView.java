@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -53,7 +54,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
         super(new HBox(20), model, controller);
 
-        root.setPadding(new Insets(40, 0, 0, 0));
+        root.setAlignment(Pos.TOP_LEFT);
+        root.setPadding(new Insets(30, 0, 0, 0));
 
         roboIconImageView = new ImageView();
         roboIconImageView.setFitWidth(125);

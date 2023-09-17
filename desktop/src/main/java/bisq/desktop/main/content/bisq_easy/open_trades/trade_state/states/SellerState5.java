@@ -92,7 +92,7 @@ public class SellerState5 extends BaseState {
         }
 
         private void onLeaveChannel() {
-            new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.completed.warning"))
+            new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
                     .actionButtonText(Res.get("confirmation.yes"))
                     .onAction(() -> {
                         channelService.leaveChannel(model.getChannel());

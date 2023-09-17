@@ -22,7 +22,10 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
@@ -31,6 +34,7 @@ import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -54,12 +58,12 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     public static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
-    private final Button closeButton;
     private final List<Label> progressLabelList;
-    private final Button nextButton, backButton;
+    private final HBox progressItemsBox;
+    private final Button nextButton, backButton, closeButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
-    private final HBox progressItemsBox;
+    private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
     private Scene rootScene;
     private Label priceProgressItemLabel;
     private Region priceProgressItemLine;
@@ -93,9 +97,10 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         content.setAlignment(Pos.CENTER);
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
+        VBox.setMargin(content, new Insets(0, 40, 0, 40));
         root.getChildren().addAll(progressItemsBox, content, Spacer.fillVBox(), buttons);
 
-        model.getView().addListener((observable, oldValue, newValue) -> {
+        viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 childRoot.setMinHeight(CONTENT_HEIGHT);
@@ -113,7 +118,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
             } else {
                 content.getChildren().clear();
             }
-        });
+        };
 
         currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
     }
@@ -126,17 +131,20 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         takeOfferProgressLine.setManaged(!model.isCreateOfferMode());
 
         nextButton.textProperty().bind(model.getNextButtonText());
-        backButton.textProperty().bind(model.getBackButtonText());
-        backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
-
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
-        backButton.visibleProperty().bind(model.getBackButtonVisible());
-        backButton.managedProperty().bind(model.getBackButtonVisible());
-        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
+        backButton.textProperty().bind(model.getBackButtonText());
+        backButton.visibleProperty().bind(model.getBackButtonVisible());
+        backButton.managedProperty().bind(model.getBackButtonVisible());
+        backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
+
+        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
+
         model.getCurrentIndex().addListener(currentIndexListener);
+        model.getView().addListener(viewChangeListener);
+
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
@@ -165,17 +173,19 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     @Override
     protected void onViewDetached() {
         nextButton.textProperty().unbind();
-        backButton.textProperty().unbind();
-        backButton.defaultButtonProperty().unbind();
-
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
-        backButton.visibleProperty().unbind();
-        backButton.managedProperty().unbind();
-        closeButton.visibleProperty().unbind();
         nextButton.disableProperty().unbind();
 
+        backButton.textProperty().unbind();
+        backButton.visibleProperty().unbind();
+        backButton.managedProperty().unbind();
+        backButton.defaultButtonProperty().unbind();
+
+        closeButton.visibleProperty().unbind();
+
         model.getCurrentIndex().removeListener(currentIndexListener);
+        model.getView().removeListener(viewChangeListener);
 
         priceProgressItemVisiblePin.unsubscribe();
 

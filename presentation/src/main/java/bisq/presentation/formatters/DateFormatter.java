@@ -41,14 +41,50 @@ public class DateFormatter {
         if (date == null) {
             return "";
         }
+        String formattedDate = formatDate(date, dateFormat, useLocalTimezone);
+        String formattedTime = formatTime(date, timeFormat, useLocalTimezone);
+        return formattedDate + delimiter + formattedTime;
+    }
+
+    public static String formatDate(long date) {
+        return formatDate(new Date(date));
+    }
+
+    public static String formatDate(Date date) {
+        return formatDate(date, DateFormat.DEFAULT, true);
+    }
+
+    public static String formatDate(Date date, int dateFormat, boolean useLocalTimezone) {
+        if (date == null) {
+            return "";
+        }
 
         Locale defaultLocale = LocaleRepository.getDefaultLocale();
         DateFormat dateFormatter = DateFormat.getDateInstance(dateFormat, defaultLocale);
-        DateFormat timeFormatter = DateFormat.getTimeInstance(timeFormat, defaultLocale);
         if (!useLocalTimezone) {
             dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
+        return dateFormatter.format(date);
+    }
+
+    public static String formatTime(long date) {
+        return formatTime(new Date(date));
+    }
+
+    public static String formatTime(Date date) {
+        return formatTime(date, DateFormat.DEFAULT, true);
+    }
+
+    public static String formatTime(Date date, int timeFormat, boolean useLocalTimezone) {
+        if (date == null) {
+            return "";
+        }
+
+        Locale defaultLocale = LocaleRepository.getDefaultLocale();
+        DateFormat timeFormatter = DateFormat.getTimeInstance(timeFormat, defaultLocale);
+        if (!useLocalTimezone) {
             timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
-        return dateFormatter.format(date) + delimiter + timeFormatter.format(date);
+        return timeFormatter.format(date);
     }
 }

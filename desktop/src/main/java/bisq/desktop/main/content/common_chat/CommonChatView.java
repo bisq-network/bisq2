@@ -70,8 +70,9 @@ public class CommonChatView extends ChatView {
 
         helpButton = BisqIconButton.createIconButton("icon-help", model.getHelpTitle());
         infoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
-        HBox.setMargin(infoButton, new Insets(0, 0, 0, -5));
 
+        HBox.setMargin(searchBox, new Insets(0, 0, 0, 0));
+        HBox.setMargin(infoButton, new Insets(0, 0, 0, -5));
         titleHBox.getChildren().addAll(
                 channelTitle,
                 Spacer.fillHBox(),
@@ -80,7 +81,7 @@ public class CommonChatView extends ChatView {
                 infoButton
         );
         titleHBox.setAlignment(Pos.CENTER);
-        titleHBox.setMinHeight(64);
+        titleHBox.setMinHeight(58);
         titleHBox.setPadding(new Insets(0, 20, 0, 25));
     }
 

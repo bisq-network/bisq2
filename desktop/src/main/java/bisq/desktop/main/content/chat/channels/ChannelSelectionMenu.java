@@ -232,11 +232,11 @@ public abstract class ChannelSelectionMenu<
 
             Label headline = new Label(getHeadlineText());
             headline.getStyleClass().add("bisq-text-8");
-            HBox.setMargin(headline, new Insets(26, 0, 10, 22));
 
             // subclasses add settings icon, so we put it into a box
+            HBox.setMargin(headline, new Insets(20, 0, 10, 22));
             headerBox = new HBox(20, headline, Spacer.fillHBox());
-            headerBox.setMinHeight(54);
+            headerBox.setMinHeight(48);
 
             listView = new ListView<>(model.sortedChannels);
             listView.getStyleClass().add("channel-selection-list-view");

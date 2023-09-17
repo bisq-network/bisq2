@@ -20,6 +20,7 @@ package bisq.desktop.main.content.components;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.reputation.ReputationScore;
+import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Random;
 
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
@@ -34,9 +36,11 @@ public class ReputationScoreDisplay extends HBox {
     private static final double STAR_WIDTH = 12;
     private static final double STAR_HEIGHT = 11;
     private static final double OPACITY = 0.2;
+    private static final String DEFAULT_ACCEPT_STAR_ID = "star-green";
     private final List<ImageView> stars;
     private final Tooltip tooltip = new BisqTooltip();
     private ReputationScore reputationScore;
+    private String acceptStarId = DEFAULT_ACCEPT_STAR_ID;
 
     public ReputationScoreDisplay(ReputationScore reputationScore) {
         this();
@@ -45,6 +49,7 @@ public class ReputationScoreDisplay extends HBox {
 
     public ReputationScoreDisplay() {
         super(SPACING);
+        setAlignment(Pos.CENTER_LEFT);
 
         tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-11;");
         tooltip.setMaxWidth(300);
@@ -57,19 +62,7 @@ public class ReputationScoreDisplay extends HBox {
 
     public void setReputationScore(@Nullable ReputationScore reputationScore) {
         this.reputationScore = reputationScore;
-        double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
-        int target = (int) Math.floor(stars.size() * relativeScore);
-        for (int i = 0; i < stars.size(); i++) {
-            ImageView imageView = stars.get(i);
-            if (i < target) {
-                imageView.setOpacity(1);
-                imageView.setId("star-green");
-            } else {
-                imageView.setOpacity(OPACITY);
-                imageView.setId("star-white");
-            }
-        }
-        tooltip.setText(reputationScore != null ? reputationScore.getTooltipString() : null);
+        applyReputationScore();
     }
 
     public void setScale(double scale) {
@@ -78,6 +71,34 @@ public class ReputationScoreDisplay extends HBox {
             imageView.setFitWidth(STAR_WIDTH * scale);
             imageView.setFitHeight(STAR_HEIGHT * scale);
         });
+    }
+
+    public void useGreenAcceptStar() {
+        acceptStarId = "star-green";
+        applyReputationScore();
+    }
+
+    public void useWhiteAcceptStar() {
+        acceptStarId = "star-white";
+        applyReputationScore();
+    }
+
+    private void applyReputationScore() {
+        double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
+        int target = (int) Math.floor(stars.size() * relativeScore);
+        // todo for design testing, remove later
+        target = 1 + new Random().nextInt(4);
+        for (int i = 0; i < stars.size(); i++) {
+            ImageView imageView = stars.get(i);
+            if (i < target) {
+                imageView.setOpacity(1);
+                imageView.setId(acceptStarId);
+            } else {
+                imageView.setOpacity(OPACITY);
+                imageView.setId("star-white");
+            }
+        }
+        tooltip.setText(reputationScore != null ? reputationScore.getTooltipString() : null);
     }
 
     public String getTooltipString() {
@@ -89,4 +110,5 @@ public class ReputationScoreDisplay extends HBox {
         imageView.setOpacity(OPACITY);
         return imageView;
     }
+
 }

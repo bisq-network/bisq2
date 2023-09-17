@@ -20,6 +20,8 @@ package bisq.desktop.main.content.settings.network;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.TitledPane;
@@ -37,10 +39,12 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
                            Optional<Node> clear,
                            Optional<Node> tor,
                            Optional<Node> i2p) {
-        super(new VBox(), model, controller);
+        super(new VBox(20), model, controller);
+
+        root.setPadding(new Insets(20, 0, 0, 0));
+        root.setAlignment(Pos.TOP_LEFT);
 
         root.setFillWidth(true);
-        root.setSpacing(20);
         accordion = new Accordion();
 
         clear.ifPresent(childRoot -> {

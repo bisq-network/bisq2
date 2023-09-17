@@ -262,19 +262,36 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getReputationCellFactory() {
         return new Callback<>() {
+
+
             @Override
             public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
                 return new TableCell<>() {
                     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
+                    private Subscription selectedItemPin;
 
                     @Override
                     public void updateItem(final ListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
+                            getTableRow().setOnMouseClicked(e -> reputationScoreDisplay.useWhiteAcceptStar());
+
+                            selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
+                                    selectedItem -> {
+                                        if (item.equals(selectedItem)) {
+                                            reputationScoreDisplay.useWhiteAcceptStar();
+                                        } else {
+                                            reputationScoreDisplay.useGreenAcceptStar();
+                                        }
+                                    });
+
                             reputationScoreDisplay.setReputationScore(item.getReputationScore());
                             setGraphic(reputationScoreDisplay);
                         } else {
                             setGraphic(null);
+                            if (selectedItemPin != null) {
+                                selectedItemPin.unsubscribe();
+                            }
                         }
                     }
                 };

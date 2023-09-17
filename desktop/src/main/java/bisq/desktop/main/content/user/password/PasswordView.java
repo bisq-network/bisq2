@@ -48,9 +48,11 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
+        root.setPadding(new Insets(30, 0, 0, 0));
 
         headline = new Label();
         headline.getStyleClass().addAll("bisq-text-headline-2");
+        headline.setPadding(new Insets(-8, 0, 0, 0));
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidators(
@@ -72,7 +74,6 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
 
         button = new Button();
         button.setDefaultButton(true);
-        VBox.setMargin(headline, new Insets(30, 0, 0, 0));
         root.getChildren().setAll(headline, password, confirmedPassword, button);
     }
 

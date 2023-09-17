@@ -352,6 +352,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T type(Type type) {
+        this.type = type;
+        return cast();
+    }
+
     public T confirmation(String message) {
         type = Type.CONFIRMATION;
         if (headLine == null)

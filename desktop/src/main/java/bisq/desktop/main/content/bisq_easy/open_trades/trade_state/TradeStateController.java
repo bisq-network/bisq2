@@ -127,11 +127,11 @@ public class TradeStateController implements Controller {
                         "bisqEasy.openTrades.closeTrade.warning.buyer.cancel";
                 break;
             case COMPLETED:
-                messageKey = "bisqEasy.openTrades.closeTrade.warning.completed";
-                break;
+                // We hide close button at the top-pane at the complete screen
             default:
                 return;
         }
+
         new Popup().warning(Res.get(messageKey, Res.get("bisqEasy.openTrades.closeTrade.warning.dataDeleted")))
                 .actionButtonText(Res.get("confirmation.yes"))
                 .onAction(() -> {
@@ -219,6 +219,7 @@ public class TradeStateController implements Controller {
                 model.getCloseButtonText().set(model.getBisqEasyTrade().get().isMaker() ?
                         Res.get("bisqEasy.openTrades.closeTrade.reject.maker") :
                         Res.get("bisqEasy.openTrades.closeTrade.reject.taker"));
+                model.getCloseButtonVisible().set(true);
                 break;
             case SELLER_SENT_ACCOUNT_DATA:
             case BUYER_RECEIVED_ACCOUNT_DATA:
@@ -232,10 +233,11 @@ public class TradeStateController implements Controller {
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.CANCEL);
                 model.getCloseButtonText().set(Res.get("bisqEasy.openTrades.closeTrade.cancel"));
+                model.getCloseButtonVisible().set(true);
                 break;
             case BTC_CONFIRMED:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.COMPLETED);
-                model.getCloseButtonText().set(Res.get("bisqEasy.openTrades.closeTrade.completed"));
+                model.getCloseButtonVisible().set(false);
                 break;
         }
     }

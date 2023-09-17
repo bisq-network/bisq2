@@ -38,20 +38,20 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     public TradeStateView(TradeStateModel model,
                           TradeStateController controller,
                           VBox tradePhaseBox,
-                          HBox tradeStateDataHeader) {
+                          HBox tradeDataHeader) {
         super(new VBox(0), model, controller);
 
         closeButton = new Button();
         closeButton.setMinWidth(160);
         closeButton.getStyleClass().add("outlined-button");
 
-        tradeStateDataHeader.getChildren().addAll(Spacer.fillHBox(), closeButton);
+        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), closeButton);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox vBox = new VBox(tradeStateDataHeader, Layout.hLine(), phaseAndInfoHBox);
+        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), phaseAndInfoHBox);
         vBox.getStyleClass().add("bisq-easy-container");
 
         root.getChildren().add(vBox);
@@ -60,6 +60,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     @Override
     protected void onViewAttached() {
         closeButton.textProperty().bind(model.getCloseButtonText());
+        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
+        closeButton.managedProperty().bind(model.getCloseButtonVisible());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
                 stateInfoVBox -> {
@@ -79,6 +81,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     @Override
     protected void onViewDetached() {
         closeButton.textProperty().unbind();
+        closeButton.visibleProperty().unbind();
+        closeButton.managedProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
 

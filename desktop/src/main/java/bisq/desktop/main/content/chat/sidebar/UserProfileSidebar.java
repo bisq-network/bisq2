@@ -21,6 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
+import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.Navigation;
@@ -45,12 +46,14 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -211,109 +214,107 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nickName;
-        private final Label nym;
-        private final Label userProfileId;
-        private final Label statement;
-        private final Label totalReputationScore;
-        private final Label profileAge;
-        private final Hyperlink mention, ignore, report;
-        private final Label terms;
-        private final Button privateMsgButton;
-        private final VBox statementBox;
-        private final VBox termsBox;
-        private final VBox optionsBox;
+        private final Label nickName, botId, userProfileId, statement, totalReputationScore, profileAge;
+        private final Hyperlink privateMsg, mention, ignore, report;
+        private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
-        private Subscription roboHashNodeSubscription;
+        private final TextArea terms;
         private final Button closeButton;
+        private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
+            super(new VBox(15), model, controller);
 
-            root.setSpacing(10);
-            root.setMinWidth(260);
             root.setPadding(new Insets(0, 20, 20, 20));
-
-            //root.setPadding(new Insets(0, 25, 0, 35));
             root.setAlignment(Pos.TOP_CENTER);
+            root.setMinWidth(260);
+            root.setMaxWidth(260);
 
             Label headline = new Label(Res.get("chat.sideBar.userProfile.headline"));
             headline.setId("chat-sidebar-headline");
 
             closeButton = BisqIconButton.createIconButton("close");
-            HBox.setMargin(headline, new Insets(18, 0, 0, 0));
+            HBox.setMargin(headline, new Insets(15.5, 0, 0, 0));
             HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
-            HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
+            HBox header = new HBox(headline, Spacer.fillHBox(), closeButton);
 
             nickName = new Label();
-            nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
+            nickName.getStyleClass().add("chat-side-bar-user-profile-nickname");
             if (controller.isUserProfileBanned()) {
                 nickName.getStyleClass().add("error");
             }
-            nickName.setAlignment(Pos.CENTER);
-            VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
 
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(100);
             roboIconImageView.setFitHeight(100);
 
-            nym = new Label();
-            nym.getStyleClass().addAll("bisq-text-7");
-            nym.setAlignment(Pos.CENTER);
-            nym.setTooltip(new BisqTooltip(model.nym.get()));
+            botId = new Label();
+            botId.getStyleClass().add("chat-side-bar-user-profile-details");
+            botId.setTooltip(new BisqTooltip(model.nym.get()));
+            botId.setAlignment(Pos.CENTER_LEFT);
+            botId.setTextAlignment(TextAlignment.LEFT);
 
             userProfileId = new Label();
-            userProfileId.getStyleClass().addAll("bisq-text-7");
-            userProfileId.setAlignment(Pos.CENTER);
+            userProfileId.getStyleClass().add("chat-side-bar-user-profile-details");
             userProfileId.setTooltip(new BisqTooltip(model.userProfileIdString.get()));
-            VBox.setMargin(userProfileId, new Insets(0, 0, 25, 0));
 
-            privateMsgButton = new Button(Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
-            VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
-
-            statementBox = getInfoBox(Res.get("chat.sideBar.userProfile.statement"), false);
-            statement = (Label) statementBox.getChildren().get(1);
-
-            Label reputationLabel = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
-            reputationLabel.getStyleClass().addAll("bisq-text-4", "bisq-text-grey-9", "font-semi-bold");
+            Label reputationHeadline = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
+            reputationHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
             reputationScoreDisplay = new ReputationScoreDisplay();
             reputationScoreDisplay.setAlignment(Pos.CENTER_LEFT);
-            VBox reputationBox = new VBox(2, reputationLabel, reputationScoreDisplay);
-            VBox.setMargin(reputationBox, new Insets(2, 0, 0, 0));
+            VBox.setMargin(reputationScoreDisplay, new Insets(0, 0, 5, 0));
+            VBox reputationBox = new VBox(5, reputationHeadline, reputationScoreDisplay);
 
-            VBox totalReputationScoreBox = getInfoBox(Res.get("chat.sideBar.userProfile.totalReputationScore"), false);
-            totalReputationScore = (Label) totalReputationScoreBox.getChildren().get(1);
+            Triple<Label, Label, VBox> totalReputationScoreTriple = getInfoBox(Res.get("chat.sideBar.userProfile.totalReputationScore"));
+            VBox totalReputationScoreBox = totalReputationScoreTriple.getThird();
+            totalReputationScore = totalReputationScoreTriple.getSecond();
 
-            VBox profileAgeBox = getInfoBox(Res.get("chat.sideBar.userProfile.profileAge"), false);
-            profileAge = (Label) profileAgeBox.getChildren().get(1);
+            Triple<Label, Label, VBox> profileAgeTriple = getInfoBox(Res.get("chat.sideBar.userProfile.profileAge"));
+            VBox profileAgeBox = profileAgeTriple.getThird();
+            profileAge = profileAgeTriple.getSecond();
 
-            Label optionsLabel = new Label(Res.get("chat.sideBar.userProfile.options").toUpperCase());
-            optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
-
+            privateMsg = new Hyperlink(Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
             mention = new Hyperlink(Res.get("chat.sideBar.userProfile.mention"));
             ignore = new Hyperlink();
             report = new Hyperlink(Res.get("chat.sideBar.userProfile.report"));
-            //todo report is not implemented yet so we hide it
-            optionsBox = new VBox(5, optionsLabel, mention, ignore, report);
-            optionsBox.setAlignment(Pos.CENTER_LEFT);
-            VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
+            privateMsg.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
+            mention.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
+            ignore.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
+            report.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
+
+            Triple<Label, Label, VBox> statementTriple = getInfoBox(Res.get("chat.sideBar.userProfile.statement"));
+            statementBox = statementTriple.getThird();
+            statement = statementTriple.getSecond();
+
+            Label termsHeadline = new Label(Res.get("chat.sideBar.userProfile.terms").toUpperCase());
+            termsHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
+            terms = new TextArea();
+            terms.setMaxWidth(root.getMaxWidth() - 40);
+            terms.setMaxHeight(100);
+            terms.setWrapText(true);
+            terms.getStyleClass().add("chat-side-bar-user-profile");
+            termsBox = new VBox(7.5, termsHeadline, terms);
 
             Region separator = Layout.hLine();
-            VBox.setMargin(separator, new Insets(25, -20, 15, -20));
+            VBox.setMargin(separator, new Insets(20, -20, 10, -20));
+            optionsVBox = new VBox(5, separator, privateMsg, mention, ignore, report);
+            optionsVBox.setAlignment(Pos.CENTER_LEFT);
 
-            termsBox = getInfoBox(Res.get("chat.sideBar.userProfile.terms"), true);
-            terms = (Label) termsBox.getChildren().get(1);
-            VBox.setMargin(topHBox, new Insets(0, -20, 30, 0));
-            root.getChildren().addAll(topHBox, nickName, roboIconImageView, nym, userProfileId, privateMsgButton,
-                    reputationBox, totalReputationScoreBox, profileAgeBox,
-                    optionsBox, separator, statementBox, termsBox);
+            VBox.setMargin(header, new Insets(0, -20, 0, 0));
+            VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
+            VBox.setMargin(userProfileId, new Insets(-10, 0, 0, 0));
+            VBox.setMargin(reputationBox, new Insets(4, 0, 0, 0));
+            root.getChildren().addAll(header,
+                    nickName, roboIconImageView, botId, userProfileId,
+                    reputationBox, totalReputationScoreBox, profileAgeBox, statementBox, termsBox,
+                    optionsVBox);
         }
 
         @Override
         protected void onViewAttached() {
             nickName.textProperty().bind(model.nickName);
-            nym.textProperty().bind(model.nym);
-            nym.getTooltip().textProperty().bind(model.nym);
+            botId.textProperty().bind(model.nym);
+            botId.getTooltip().textProperty().bind(model.nym);
             userProfileId.textProperty().bind(model.userProfileIdString);
             userProfileId.getTooltip().textProperty().bind(model.userProfileIdString);
             statement.textProperty().bind(model.statement);
@@ -324,10 +325,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             termsBox.managedProperty().bind(model.terms.isEmpty().not());
             profileAge.textProperty().bind(model.profileAge);
             ignore.textProperty().bind(model.ignoreButtonText);
-            optionsBox.visibleProperty().bind(model.isPeer);
-            optionsBox.managedProperty().bind(model.isPeer);
-            privateMsgButton.visibleProperty().bind(model.isPeer);
-            privateMsgButton.managedProperty().bind(model.isPeer);
+            optionsVBox.visibleProperty().bind(model.isPeer);
+            optionsVBox.managedProperty().bind(model.isPeer);
+            privateMsg.visibleProperty().bind(model.isPeer);
+            privateMsg.managedProperty().bind(model.isPeer);
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
@@ -342,7 +343,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 }
             });
 
-            privateMsgButton.setOnAction(e -> controller.onSendPrivateMessage());
+            privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
             mention.setOnAction(e -> controller.onMentionUser());
             ignore.setOnAction(e -> controller.onToggleIgnoreUser());
             report.setOnAction(e -> controller.onReportUser());
@@ -352,8 +353,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         @Override
         protected void onViewDetached() {
             nickName.textProperty().unbind();
-            nym.textProperty().unbind();
-            nym.getTooltip().textProperty().unbind();
+            botId.textProperty().unbind();
+            botId.getTooltip().textProperty().unbind();
             userProfileId.textProperty().unbind();
             userProfileId.getTooltip().textProperty().unbind();
             statement.textProperty().unbind();
@@ -364,31 +365,28 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.managedProperty().unbind();
             profileAge.textProperty().unbind();
             ignore.textProperty().unbind();
-            optionsBox.visibleProperty().unbind();
-            optionsBox.managedProperty().unbind();
-            privateMsgButton.visibleProperty().unbind();
-            privateMsgButton.managedProperty().unbind();
+            optionsVBox.visibleProperty().unbind();
+            optionsVBox.managedProperty().unbind();
+            privateMsg.visibleProperty().unbind();
+            privateMsg.managedProperty().unbind();
 
             roboHashNodeSubscription.unsubscribe();
 
-            privateMsgButton.setOnAction(null);
+            privateMsg.setOnAction(null);
             mention.setOnAction(null);
             ignore.setOnAction(null);
             report.setOnAction(null);
             closeButton.setOnAction(null);
         }
 
-        private VBox getInfoBox(String title, boolean smaller) {
-            Label titleLabel = new Label(title.toUpperCase());
-            titleLabel.getStyleClass().addAll("bisq-text-4", "bisq-text-grey-9", "font-semi-bold");
-            Label contentLabel = new Label();
-            contentLabel.setWrapText(true);
-
-            contentLabel.getStyleClass().addAll(smaller ? "bisq-text-7" : "bisq-text-6");
-            VBox box = new VBox(2, titleLabel, contentLabel);
-            VBox.setMargin(box, new Insets(2, 0, 0, 0));
-
-            return box;
+        private Triple<Label, Label, VBox> getInfoBox(String title) {
+            Label headline = new Label(title.toUpperCase());
+            headline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
+            Label value = new Label();
+            value.setWrapText(true);
+            value.getStyleClass().add("chat-side-bar-user-profile-small-value");
+            VBox vBox = new VBox(2.5, headline, value);
+            return new Triple<>(headline, value, vBox);
         }
     }
 }

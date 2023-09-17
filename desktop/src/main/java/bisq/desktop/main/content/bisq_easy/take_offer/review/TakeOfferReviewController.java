@@ -33,6 +33,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
+import bisq.desktop.main.content.bisq_easy.components.ReviewDataDisplay;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
@@ -74,6 +75,7 @@ public class TakeOfferReviewController implements Controller {
     private final UserIdentityService userIdentityService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BannedUserService bannedUserService;
+    private final ReviewDataDisplay reviewDataDisplay;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider,
                                      Consumer<Boolean> mainButtonsVisibleHandler,
@@ -88,9 +90,9 @@ public class TakeOfferReviewController implements Controller {
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
-
+        reviewDataDisplay = new ReviewDataDisplay();
         model = new TakeOfferReviewModel();
-        view = new TakeOfferReviewView(model, this);
+        view = new TakeOfferReviewView(model, this, reviewDataDisplay.getRoot());
     }
 
     public void init(BisqEasyOffer bisqEasyOffer) {
@@ -161,10 +163,6 @@ public class TakeOfferReviewController implements Controller {
             model.setFiatPaymentMethodSpec(spec);
             String displayString = spec.getDisplayString();
             model.setPaymentMethod(displayString);
-
-            String direction = model.getBisqEasyOffer().getTakersDirection().isBuy() ? Res.get("offer.buying") : Res.get("offer.selling");
-            model.setDirectionHeadlineWithMethod(Res.get("bisqEasy.takeOffer.review.directionHeadline",
-                    direction.toUpperCase(), displayString));
         }
     }
 
@@ -202,34 +200,37 @@ public class TakeOfferReviewController implements Controller {
 
     @Override
     public void onActivate() {
+        String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         Monetary fixBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
         String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
         String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
-        model.setFixAmountsHeadline(Res.get("bisqEasy.tradeWizard.review.fixAmount",
-                formattedQuoteAmount,
-                fixQuoteSideAmount.getCode(),
-                " = ",
-                formattedBaseAmount,
-                fixBaseSideAmount.getCode()
-        ));
-
-        Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
-        if (takersDirection.isSell()) {
-            model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toSend"));
-            model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
-            model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
-                    formattedBaseAmount, fixBaseSideAmount.getCode()));
-            model.setToReceiveAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
-                    formattedQuoteAmount, fixQuoteSideAmount.getCode()));
+        Direction direction = model.getBisqEasyOffer().getTakersDirection();
+        if (direction.isSell()) {
+            toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
+            toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
+            toSendAmount = formattedBaseAmount;
+            toSendCode = fixBaseSideAmount.getCode();
+            toReceiveAmount = formattedQuoteAmount;
+            toReceiveCode = fixQuoteSideAmount.getCode();
         } else {
-            model.setToSendAmountDescription(Res.get("bisqEasy.tradeWizard.review.toPay"));
-            model.setToReceiveAmountDescription(Res.get("bisqEasy.tradeWizard.review.toReceive"));
-            model.setToSendAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
-                    formattedQuoteAmount, fixQuoteSideAmount.getCode()));
-            model.setToReceiveAmount(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode",
-                    formattedBaseAmount, fixBaseSideAmount.getCode()));
+            toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
+            toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
+            toSendAmount = formattedQuoteAmount;
+            toSendCode = fixQuoteSideAmount.getCode();
+            toReceiveAmount = formattedBaseAmount;
+            toReceiveCode = fixBaseSideAmount.getCode();
         }
+
+        reviewDataDisplay.setDirection(Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase() + " Bitcoin");
+        reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
+        reviewDataDisplay.setToSendAmount(toSendAmount);
+        reviewDataDisplay.setToSendCode(toSendCode);
+        reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
+        reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
+        reviewDataDisplay.setToReceiveCode(toReceiveCode);
+        reviewDataDisplay.setPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription").toUpperCase());
+        reviewDataDisplay.setPaymentMethod(model.getPaymentMethod());
     }
 
     @Override
@@ -277,6 +278,6 @@ public class TakeOfferReviewController implements Controller {
                 .map(PriceFormatter::format)
                 .orElse("");
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
-        model.setPrice(Res.get("bisqEasy.tradeWizard.review.fixValueWithCode", formattedPrice, codes));
+        model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
     }
 }

@@ -132,6 +132,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
             boolean isUserProfileBanned = controller.isUserProfileBanned();
 
             userName = new Label();
+            userName.getStyleClass().add("text-fill-white");
             userName.setMaxWidth(100);
             if (isUserProfileBanned) {
                 userName.getStyleClass().add("error");

@@ -20,10 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +41,7 @@ public class TradeStateModel implements Model {
     private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final StringProperty closeButtonText = new SimpleStringProperty();
+    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty(true);
 
     void reset() {
         tradeCloseType = null;
@@ -51,5 +49,6 @@ public class TradeStateModel implements Model {
         bisqEasyTrade.set(null);
         stateInfoVBox.set(null);
         closeButtonText.set(null);
+        closeButtonVisible.set(true);
     }
 }

@@ -27,8 +27,6 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -68,35 +66,24 @@ class TradeWizardReviewModel implements Model {
     private BisqEasyOfferbookMessage myOfferMessage;
     @Setter
     private String headline;
+
     @Setter
-    private String directionHeadline;
-    private final StringProperty directionHeadlineWithMethod = new SimpleStringProperty();
-    @Setter
-    private String minAmountsHeadline;
-    @Setter
-    private String maxAmountsHeadline;
-    @Setter
-    private String fixAmountsHeadline;
+    private String headerPaymentMethod;
     @Setter
     private String detailsHeadline;
     @Setter
-    private String toSendAmountDescription;
+    private boolean isRangeAmount;
     @Setter
-    private String toSendAmount;
+    private String paymentMethodDescription;
     @Setter
-    private String toReceiveAmountDescription;
-    @Setter
-    private String toReceiveAmount;
+    private String paymentMethod;
+
     @Setter
     private String priceDescription;
     @Setter
     private String price;
     @Setter
     private String priceDetails;
-    @Setter
-    private String paymentMethodDescription;
-    @Setter
-    private String paymentMethod;
     @Setter
     private String fee;
     @Setter
@@ -121,16 +108,7 @@ class TradeWizardReviewModel implements Model {
         fiatPaymentMethods = null;
         myOfferMessage = null;
         headline = null;
-        directionHeadline = null;
-        directionHeadlineWithMethod.set(null);
-        minAmountsHeadline = null;
-        maxAmountsHeadline = null;
-        fixAmountsHeadline = null;
         detailsHeadline = null;
-        toSendAmountDescription = null;
-        toSendAmount = null;
-        toReceiveAmountDescription = null;
-        toReceiveAmount = null;
         priceDescription = null;
         price = null;
         priceDetails = null;
