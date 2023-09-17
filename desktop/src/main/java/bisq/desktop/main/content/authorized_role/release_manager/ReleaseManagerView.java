@@ -162,7 +162,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
 
     private Callback<TableColumn<ReleaseNotificationListItem, ReleaseNotificationListItem>, TableCell<ReleaseNotificationListItem, ReleaseNotificationListItem>> getRemoveItemCellFactory() {
         return column -> new TableCell<>() {
-            private final Button button = new Button(Res.get("authorizedRole.releaseManager.table.remove"));
+            private final Button button = new Button(Res.get("data.remove"));
 
             @Override
             public void updateItem(final ReleaseNotificationListItem item, boolean empty) {
