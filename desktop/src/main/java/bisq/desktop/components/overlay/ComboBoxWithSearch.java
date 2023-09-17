@@ -111,6 +111,7 @@ public class ComboBoxWithSearch<T> {
         comboBox.setLayoutX(PADDING);
         comboBox.setLayoutY(PADDING);
         comboBox.getAutoCompleteComboBoxSkin().setDropShadowColor(Color.rgb(0, 0, 0, 0.2));
+        comboBox.getAutoCompleteComboBoxSkin().setHideArrow(true);
         comboBox.setOnChangeConfirmed(e -> {
             T selectedItem = comboBox.getSelectionModel().getSelectedItem();
             selectionHandler.accept(selectedItem);
@@ -127,7 +128,7 @@ public class ComboBoxWithSearch<T> {
         placeHolder.setLayoutX(25);
         placeHolder.setLayoutY(80);
         root = new Pane(listBackground, comboBox, placeHolder);
-        root.setPrefWidth(prefWidth + 20);
+        root.setPrefWidth(prefWidth + 2 * PADDING);
         root.setStyle("-fx-background-color: transparent;");
 
         // Stage setup
@@ -228,7 +229,7 @@ public class ComboBoxWithSearch<T> {
         ObservableList<T> items = comboBox.getItems();
 
         double x = 0;
-        double listOffset = 8;
+        double listOffset = -17.5;
         // relative to visible top-left point 
         double arrowX_l = -9.5;
         double arrowX_m = 0;
