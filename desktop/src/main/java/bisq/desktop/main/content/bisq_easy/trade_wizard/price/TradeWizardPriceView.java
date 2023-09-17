@@ -63,7 +63,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage"));
 
         useFixPriceToggle = new ToggleButton();
-        useFixPriceToggle.setGraphic(ImageUtil.getImageViewById("toggle_price"));
+        useFixPriceToggle.setGraphic(ImageUtil.getImageViewById("arrows-up-down"));
         useFixPriceToggle.getStyleClass().add("icon-button");
         useFixPriceToggle.setTooltip(new BisqTooltip(Res.get("bisqEasy.price.toggle.tooltip")));
 

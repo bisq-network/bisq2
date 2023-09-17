@@ -33,23 +33,24 @@
  ******************************************************************************/
 
 .list-view {
-    -fx-background: transparent;
-    -fx-background-color: -bisq-dark-grey;
-    -fx-border-width: 0;
-    -fx-border-insets: 0;
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
     -fx-padding: 0;
-    -fx-background-insets: 0;
 }
 
-.list-view .list-cell {
-    -fx-background-color: -bisq-dark-grey;
-    -fx-font-size: 1em;
-    -fx-padding: 0 0 0 22;
-    -fx-background-insets: 0;
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+    -fx-padding: 5;
 }
 
-.list-view .list-cell:selected {
-    -fx-background-color: -bisq-darker-grey;
+.list-cell:filled:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+}
+
+.list-cell:filled:selected {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
 }
 
 .list-view .list-cell .label {
@@ -60,9 +61,6 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.list-view .list-cell:empty:hover {
-    -fx-background-color: transparent;
-}
 
 /*******************************************************************************
  *                                                                             *
@@ -129,34 +127,6 @@
 .scroll-bar > .increment-button,
 .scroll-bar > .decrement-button {
     -fx-background-color: -bisq-grey-14;
-}
-
-
-/*******************************************************************************
- *                                                                             *
- * Misc list based                                                             *
- *                                                                             *
- ******************************************************************************/
-
-.list-view:focused,
-.tree-view:focused,
-.table-view:focused,
-.tree-table-view:focused,
-.table-view:focused,
-tree-table-view:focused {
-    -fx-background-insets: 0;
-    -fx-border-color: -bisq-dark-grey;
-}
-
-/* Selected rows */
-.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
-.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
-.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
-.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
-.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
-.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
-    -fx-background-insets: 0;
-    -fx-background-color: transparent;
 }
 
 

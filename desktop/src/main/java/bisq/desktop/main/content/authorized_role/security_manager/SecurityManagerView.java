@@ -263,7 +263,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
     private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getRemoveAlertCellFactory() {
         return column -> new TableCell<>() {
-            private final Button button = new Button(Res.get("authorizedRole.securityManager.alert.table.remove"));
+            private final Button button = new Button(Res.get("data.remove"));
 
             @Override
             public void updateItem(final AlertListItem item, boolean empty) {
