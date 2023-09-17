@@ -30,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class TradeWizardDirectionController implements Controller {
     private final TradeWizardDirectionModel model;
@@ -110,7 +108,9 @@ public class TradeWizardDirectionController implements Controller {
             return;
         }
 
-        ReputationScore reputationScore = reputationService.getReputationScore(checkNotNull(userIdentityService.getSelectedUserIdentity()).getUserProfile());
+        ReputationScore reputationScore = userIdentityService.getSelectedUserIdentity() != null ?
+                reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()) :
+                ReputationScore.NONE;
         if (!reputationScore.hasReputation()) {
             navigationButtonsVisibleHandler.accept(false);
             model.getShowReputationInfo().set(true);
