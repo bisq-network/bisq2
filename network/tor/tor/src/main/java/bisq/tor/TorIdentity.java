@@ -19,9 +19,12 @@ package bisq.tor;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.bouncycastle.crypto.digests.SHA3Digest;
 import org.bouncycastle.crypto.digests.SHA512Digest;
 import org.bouncycastle.math.ec.rfc8032.Ed25519;
+import org.bouncycastle.util.encoders.Base32;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
 @Getter
@@ -51,9 +54,26 @@ public class TorIdentity {
         String base64EncodedSecretScalar = java.util.Base64.getEncoder()
                 .encodeToString(secretScalar);
 
-        return  "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
+        return "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
                 base64EncodedSecretScalar + "\n" +
                 "-----END OPENSSH PRIVATE KEY-----\n";
+    }
+
+    public String getOnionAddress() {
+        byte[] publicKey = new byte[32];
+        Ed25519.generatePublicKey(privateKey, 0, publicKey, 0);
+
+        byte[] checksumForAddress = computeOnionAddressChecksum(publicKey);
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(32 + 2 + 1);
+        byteBuffer.put(publicKey); // 32 bytes
+        byteBuffer.put(checksumForAddress); // 2 bytes
+        byteBuffer.put((byte) 3); // 1 byte
+
+        byte[] byteArray = byteBuffer.array();
+        String base32String = Base32.toBase32String(byteArray);
+
+        return base32String.toLowerCase() + ".onion";
     }
 
     private static byte[] generateSecretScalar(byte[] privateKey) {
@@ -70,5 +90,25 @@ public class TorIdentity {
         secretScalar[31] |= 64;
 
         return secretScalar;
+    }
+
+    private byte[] computeOnionAddressChecksum(byte[] publicKey) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(15 + 32 + 1);
+        byteBuffer.put(".onion checksum".getBytes()); // 15 bytes
+        byteBuffer.put(publicKey); // 32 bytes
+        byteBuffer.put((byte) 3); // 1 byte
+
+        byte[] byteArray = byteBuffer.array();
+
+        SHA3Digest sha3_256Digest = new SHA3Digest();
+        sha3_256Digest.update(byteArray, 0, byteArray.length);
+
+        byte[] hashedByteArray = new byte[64];
+        sha3_256Digest.doFinal(hashedByteArray, 0);
+
+        return new byte[]{
+                hashedByteArray[0],
+                hashedByteArray[1]
+        };
     }
 }
