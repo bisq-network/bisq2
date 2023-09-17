@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 @Slf4j
-public class ComboBoxOverlay<T> {
+public class ComboBoxWithSearch<T> {
     private final static double PADDING = 10;
     private final Region owner;
     private final double prefWidth;
@@ -70,26 +70,26 @@ public class ComboBoxOverlay<T> {
     protected final Polygon listBackground = new Polygon();
     protected double arrowOffset = 31.5;
 
-    public ComboBoxOverlay(Region owner,
-                           ObservableList<T> items,
-                           Callback<ListView<T>, ListCell<T>> cellFactory,
-                           Consumer<T> selectionHandler,
-                           String description,
-                           @Nullable String prompt,
-                           double prefWidth) {
+    public ComboBoxWithSearch(Region owner,
+                              ObservableList<T> items,
+                              Callback<ListView<T>, ListCell<T>> cellFactory,
+                              Consumer<T> selectionHandler,
+                              String description,
+                              @Nullable String prompt,
+                              double prefWidth) {
         this(owner, items, cellFactory, selectionHandler, description, prompt, prefWidth, 0, 0, 31.5);
     }
 
-    public ComboBoxOverlay(Region owner,
-                           ObservableList<T> items,
-                           Callback<ListView<T>, ListCell<T>> cellFactory,
-                           Consumer<T> selectionHandler,
-                           String description,
-                           @Nullable String prompt,
-                           double prefWidth,
-                           double offsetX,
-                           double offsetY,
-                           double arrowOffset) {
+    public ComboBoxWithSearch(Region owner,
+                              ObservableList<T> items,
+                              Callback<ListView<T>, ListCell<T>> cellFactory,
+                              Consumer<T> selectionHandler,
+                              String description,
+                              @Nullable String prompt,
+                              double prefWidth,
+                              double offsetX,
+                              double offsetY,
+                              double arrowOffset) {
         this.owner = owner;
         this.prefWidth = prefWidth;
         this.offsetX = offsetX;
@@ -111,6 +111,7 @@ public class ComboBoxOverlay<T> {
         comboBox.setLayoutX(PADDING);
         comboBox.setLayoutY(PADDING);
         comboBox.getAutoCompleteComboBoxSkin().setDropShadowColor(Color.rgb(0, 0, 0, 0.2));
+        comboBox.getAutoCompleteComboBoxSkin().setHideArrow(true);
         comboBox.setOnChangeConfirmed(e -> {
             T selectedItem = comboBox.getSelectionModel().getSelectedItem();
             selectionHandler.accept(selectedItem);
@@ -127,7 +128,7 @@ public class ComboBoxOverlay<T> {
         placeHolder.setLayoutX(25);
         placeHolder.setLayoutY(80);
         root = new Pane(listBackground, comboBox, placeHolder);
-        root.setPrefWidth(prefWidth + 20);
+        root.setPrefWidth(prefWidth + 2 * PADDING);
         root.setStyle("-fx-background-color: transparent;");
 
         // Stage setup
@@ -228,7 +229,7 @@ public class ComboBoxOverlay<T> {
         ObservableList<T> items = comboBox.getItems();
 
         double x = 0;
-        double listOffset = 8;
+        double listOffset = -17.5;
         // relative to visible top-left point 
         double arrowX_l = -9.5;
         double arrowX_m = 0;

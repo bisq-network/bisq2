@@ -43,6 +43,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Polygon;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -314,6 +315,8 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected double arrowX_l = DEFAULT_ARROW_X_L;
         protected double arrowX_m = DEFAULT_ARROW_X_M;
         protected double arrowX_r = DEFAULT_ARROW_X_R;
+        @Setter
+        private boolean hideArrow;
 
         public Skin(ComboBox<T> control, String description, @Nullable String prompt) {
             super(control);
@@ -409,24 +412,33 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                 listBackground.getPoints().clear();
             } else {
                 double x = 5;
-                double listOffset = 8;
+                double listOffset = hideArrow ? -17.5 : 7.5;
+                double listWidthOffset = hideArrow ? 0 : 10;
                 // relative to visible top-left point 
                 double height = Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
-                double width = comboBox.getWidth() - 10;
+                double width = comboBox.getWidth() - listWidthOffset;
                 double y = materialTextField.getHeight() - 25;
                 double arrowY_m = y - 7.5;
-                listBackground.getPoints().setAll(
-                        x, y,
-                        x + arrowX_l, y,
-                        x + arrowX_m, arrowY_m,
-                        x + arrowX_r, y,
-                        x + width, y,
-                        x + width, y + height,
-                        x, y + height);
+                if (hideArrow) {
+                    listBackground.getPoints().setAll(
+                            x, y,
+                            x + width, y,
+                            x + width, y + height,
+                            x, y + height);
+                } else {
+                    listBackground.getPoints().setAll(
+                            x, y,
+                            x + arrowX_l, y,
+                            x + arrowX_m, arrowY_m,
+                            x + arrowX_r, y,
+                            x + width, y,
+                            x + width, y + height,
+                            x, y + height);
+                }
 
                 listBackground.setLayoutX(0);
                 buttonPane.setLayoutX(0);
-                listView.setLayoutX(5);
+                listView.setLayoutX(listWidthOffset / 2);
                 listView.setLayoutY(y + listOffset);
                 listView.setPrefWidth(width);
                 listView.setPrefHeight(height - listOffset + 2);

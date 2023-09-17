@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
-import bisq.desktop.components.overlay.ComboBoxOverlay;
+import bisq.desktop.components.overlay.ComboBoxWithSearch;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -255,8 +255,7 @@ public class BisqEasyOfferbookView extends ChatView {
     }
 
     private void onOpenMarketSelector() {
-        log.error("onOpenMarketSelector");
-        new ComboBoxOverlay<>(marketSelectorIcon,
+        new ComboBoxWithSearch<>(marketSelectorIcon,
                 bisqEasyOfferbookModel.getSortedMarketChannelItems(),
                 c -> getMarketListCell(),
                 bisqEasyOfferbookController::onSwitchMarketChannel,

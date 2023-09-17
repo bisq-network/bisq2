@@ -25,7 +25,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
-import bisq.desktop.components.overlay.ComboBoxOverlay;
+import bisq.desktop.components.overlay.ComboBoxWithSearch;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import javafx.beans.property.ObjectProperty;
@@ -179,7 +179,7 @@ public class MarketPriceComponent {
                 if (model.items.isEmpty()) {
                     return;
                 }
-                new ComboBoxOverlay<>(root,
+                new ComboBoxWithSearch<>(root,
                         model.items,
                         c -> getListCell(),
                         controller::onSelected,
