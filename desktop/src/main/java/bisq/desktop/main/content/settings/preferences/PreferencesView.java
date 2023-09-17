@@ -170,7 +170,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         tradeVBox.setPadding(new Insets(10));
         tradeVBox.getStyleClass().add("settings-box-bg");
 
-        VBox.setMargin(languageSelectionHeadline, new Insets(-8, 0, -10, 0));
+        VBox.setMargin(languageSelectionHeadline, new Insets(-5, 0, -10, 0));
         VBox.setMargin(supportedLanguageSelectionHeadline, new Insets(10, 0, -10, 0));
         VBox.setMargin(notificationsHeadline, new Insets(10, 0, -10, 0));
         VBox.setMargin(displayHeadline, new Insets(10, 0, -10, 0));

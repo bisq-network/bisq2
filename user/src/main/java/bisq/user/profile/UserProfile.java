@@ -49,7 +49,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @Getter
 public final class UserProfile implements DistributedData {
     public static final int MAX_LENGTH_NICK_NAME = 100;
-    public static final int MAX_LENGTH_TERMS = 100;
+    public static final int MAX_LENGTH_TERMS = 500;
     public static final int MAX_LENGTH_STATEMENT = 100;
 
     public static UserProfile from(UserProfile userProfile, String terms, String statement) {

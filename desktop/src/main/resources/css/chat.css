@@ -131,8 +131,8 @@
 }
 
 #chat-sidebar-text {
-    -fx-text-fill: -fx-light-text-color;
-    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-fill: -fx-mid-text-color;
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -240,6 +240,47 @@
     -fx-background-color: -bisq-grey-23;
 }
 
+/*******************************************************************************
+ * Side bar                                                          *
+ ******************************************************************************/
+
+.chat-side-bar-user-profile-nickname {
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.chat-side-bar-user-profile-details {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 0.9em;
+}
+
+.chat-side-bar-user-profile-small-headline {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 0.9em;
+}
+
+.chat-side-bar-user-profile-small-value {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Light";
+    -fx-font-size: 1em;
+}
+
+.chat-side-bar-user-profile-small-hyperlink {
+    /*  -fx-font-size: 1em;
+      -fx-font-family: "IBM Plex Light";*/
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.chat-side-bar-user-profile.text-area {
+    -fx-font-size: 1em;
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+}
 
 /*******************************************************************************
  *                                                                             *

@@ -92,7 +92,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         VBox resourcesBox = new VBox(5, webpage, dao, sourceCode, community, contribute);
         resourcesBox.getStyleClass().add("settings-box-bg");
 
-        VBox.setMargin(backupHeadline, new Insets(-8, 0, -10, 0));
+        VBox.setMargin(backupHeadline, new Insets(-5, 0, -10, 0));
         VBox.setMargin(localDataHeadline, new Insets(0, 0, -10, 0));
         VBox.setMargin(rulesHeadline, new Insets(0, 0, -10, 0));
         VBox.setMargin(legalHeadline, new Insets(0, 0, -10, 0));
