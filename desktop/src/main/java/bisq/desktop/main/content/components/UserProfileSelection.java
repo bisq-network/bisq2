@@ -113,7 +113,6 @@ public class UserProfileSelection {
         private Pin userProfilesPin;
         private Pin chatChannelSelectionPin;
         private Pin navigationPin;
-        private Pin disabledPin;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -130,7 +129,6 @@ public class UserProfileSelection {
             userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(userIdentityService.getUserIdentities());
-            disabledPin = FxBindings.subscribe(model.isPrivateChannel, s -> view.getComboBox().setDisable(s));
 
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
         }
@@ -143,7 +141,6 @@ public class UserProfileSelection {
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
-            disabledPin.unbind();
             navigationPin.unbind();
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
@@ -216,7 +213,7 @@ public class UserProfileSelection {
         }
 
         private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-            UIThread.run(() -> model.isPrivateChannel.set(channel instanceof  PrivateChatChannel));
+            UIThread.run(() -> model.isPrivateChannel.set(channel instanceof PrivateChatChannel));
         }
     }
 
@@ -239,6 +236,7 @@ public class UserProfileSelection {
         private final Label userName;
         private final ImageView icon;
         private Subscription selectedUserProfilePin, isLeftAlignedPin, comboBoxWidthPin;
+        private Pin isComboBoxPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
@@ -267,11 +265,6 @@ public class UserProfileSelection {
                         if (selected != null) {
                             UserIdentity userIdentity = selected.userIdentity;
                             if (userIdentity != null) {
-                                boolean multipleItems = model.userProfiles.size() > 1;
-                                comboBox.setManaged(multipleItems);
-                                comboBox.setVisible(multipleItems);
-                                userNameAndIcon.setManaged(!multipleItems);
-                                userNameAndIcon.setVisible(!multipleItems);
 
                                 userName.setText(comboBox.getConverter().toString(selected));
                                 icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
@@ -291,6 +284,14 @@ public class UserProfileSelection {
                 }
             });
             comboBoxWidthPin = EasyBind.subscribe(model.comboBoxWidth, w -> comboBox.setComboBoxWidth(w.doubleValue()));
+
+            isComboBoxPin = FxBindings.subscribe(model.isPrivateChannel, isPrivate -> {
+                boolean isComboBox = model.userProfiles.size() > 1 && !isPrivate;
+                comboBox.setManaged(isComboBox);
+                comboBox.setVisible(isComboBox);
+                userNameAndIcon.setManaged(!isComboBox);
+                userNameAndIcon.setVisible(!isComboBox);
+            });
         }
 
         @Override
@@ -298,6 +299,7 @@ public class UserProfileSelection {
             selectedUserProfilePin.unsubscribe();
             isLeftAlignedPin.unsubscribe();
             comboBoxWidthPin.unsubscribe();
+            isComboBoxPin.unbind();
         }
 
         public void setMaxComboBoxWidth(int width) {
