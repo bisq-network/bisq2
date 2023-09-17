@@ -33,9 +33,11 @@ public class BisqEasyViewUtils {
         HBox header = new HBox(10, headlineLabel);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(15, 30, 15, 30));
+        header.getStyleClass().add("bisq-easy-container-header");
 
         VBox.setMargin(content, new Insets(0, 30, 15, 30));
         VBox vBox = new VBox(header, Layout.hLine(), content);
+        vBox.setFillWidth(true);
         vBox.getStyleClass().add("bisq-easy-container");
 
         return new Triple<>(headlineLabel, header, vBox);

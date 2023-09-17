@@ -3,8 +3,13 @@
  ******************************************************************************/
 
 .bisq-easy-container {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-3;
     -fx-background-radius: 8;
+}
+
+.bisq-easy-container-header {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8 8 0 0;
 }
 
 .bisq-easy-container-headline {
@@ -121,12 +126,12 @@
  * BisqEasyOpenTradesView.tableView                                                       *
  ******************************************************************************/
 
-.bisq-easy-open-trades.table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: derive(-bisq-black, 35%);
+.bisq-easy-open-trades.table-view .table-row-cell:filled:hover .table-cell {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
 }
 
-.bisq-easy-open-trades.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: derive(-bisq-black, 10%);
+.bisq-easy-open-trades.table-view .table-row-cell:filled:selected .table-cell {
+    -fx-background-color: -bisq-grey-18;
 }
 
 
@@ -542,21 +547,6 @@
 /*******************************************************************************
  * Chat                                                              *
  ******************************************************************************/
-
-.bisq-easy-chat-title-bg {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 8 8 0 0;
-}
-
-.bisq-easy-chat-tools-bg {
-    -fx-background-color: -bisq-dark-grey;
-    -fx-background-radius: 8 8 0 0;
-}
-
-.bisq-easy-chat-messages-bg {
-    -fx-background-color: -bisq-dark-grey;
-    -fx-background-radius: 0;
-}
 
 .bisq-easy-chat-sidebar-bg {
     -fx-background-color: -bisq-grey-2;

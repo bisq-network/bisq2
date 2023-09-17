@@ -54,6 +54,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), phaseAndInfoHBox);
         vBox.getStyleClass().add("bisq-easy-container");
 
+
         root.getChildren().add(vBox);
     }
 

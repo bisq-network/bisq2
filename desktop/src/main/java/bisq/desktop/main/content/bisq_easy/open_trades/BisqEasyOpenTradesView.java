@@ -102,11 +102,10 @@ public class BisqEasyOpenTradesView extends ChatView {
         tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), toggleChatWindowButton);
 
         chatMessagesComponent.setMinHeight(200);
-        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
 
         VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(tradeDataHeader, Layout.hLine(), chatMessagesComponent);
         chatVBox.getStyleClass().add("bisq-easy-container");
 

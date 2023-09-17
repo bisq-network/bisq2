@@ -201,6 +201,7 @@ public class TradeDataHeader {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setPadding(new Insets(0, 30, 0, 30));
+            root.getStyleClass().add("bisq-easy-container-header");
 
             peerDescription = new Label();
             peerDescription.getStyleClass().add("bisq-easy-open-trades-header-description");

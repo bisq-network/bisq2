@@ -77,7 +77,7 @@ public class BisqEasyOfferbookView extends ChatView {
     protected void configTitleHBox() {
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
-        titleHBox.getStyleClass().add("bisq-easy-chat-title-bg");
+        titleHBox.getStyleClass().add("bisq-easy-container-header");
 
         marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
         marketSelectorIcon.setCursor(Cursor.HAND);
@@ -151,14 +151,14 @@ public class BisqEasyOfferbookView extends ChatView {
         toolsHBox.setAlignment(Pos.CENTER);
         toolsHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
 
-        VBox topPanelVBox = new VBox(titleHBox, toolsHBox/*, filterPane*/);
-        topPanelVBox.getStyleClass().add("bisq-easy-chat-tools-bg");
+        VBox toolBar = new VBox(titleHBox, toolsHBox/*, filterPane*/);
+        toolBar.setMaxHeight(50);
 
         chatMessagesComponent.setMinWidth(700);
-        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(topPanelVBox, Layout.hLine(), chatMessagesComponent);
+        centerVBox.getChildren().addAll(toolBar, Layout.hLine(), chatMessagesComponent);
+        centerVBox.getStyleClass().add("bisq-easy-container");
     }
 
     @Override
