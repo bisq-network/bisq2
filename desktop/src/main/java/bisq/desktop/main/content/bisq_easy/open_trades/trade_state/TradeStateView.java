@@ -60,6 +60,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     @Override
     protected void onViewAttached() {
         closeButton.textProperty().bind(model.getCloseButtonText());
+        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
+        closeButton.managedProperty().bind(model.getCloseButtonVisible());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
                 stateInfoVBox -> {
@@ -79,6 +81,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     @Override
     protected void onViewDetached() {
         closeButton.textProperty().unbind();
+        closeButton.visibleProperty().unbind();
+        closeButton.managedProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
 

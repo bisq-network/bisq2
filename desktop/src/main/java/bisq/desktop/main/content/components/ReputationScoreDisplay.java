@@ -87,7 +87,7 @@ public class ReputationScoreDisplay extends HBox {
         double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
         int target = (int) Math.floor(stars.size() * relativeScore);
         // todo for design testing, remove later
-        target = (int) (1 + new Random().nextInt(4) / 4d);
+        target = 1 + new Random().nextInt(4);
         for (int i = 0; i < stars.size(); i++) {
             ImageView imageView = stars.get(i);
             if (i < target) {

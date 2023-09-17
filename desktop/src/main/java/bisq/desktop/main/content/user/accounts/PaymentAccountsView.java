@@ -25,6 +25,7 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -36,7 +37,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, PaymentAccountsController> {
-    private final Label hadline, noAccountsInfo;
+    private final Label headline, noAccountsInfo;
     private final Button createButton, largeCreateButton, deletedButton, saveButton;
     private final MaterialTextArea accountData;
     private final AutoCompleteComboBox<Account<?, ? extends PaymentMethod<?>>> accountSelection;
@@ -47,10 +48,12 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
     public PaymentAccountsView(PaymentAccountsModel model, PaymentAccountsController controller) {
         super(new VBox(20), model, controller);
 
-        root.setPadding(new Insets(40, 0, 0, 0));
+        root.setAlignment(Pos.TOP_LEFT);
+        root.setPadding(new Insets(30, 0, 0, 0));
 
-        hadline = new Label();
-        hadline.getStyleClass().addAll("bisq-text-headline-2");
+        headline = new Label();
+        headline.getStyleClass().addAll("bisq-text-headline-2");
+        headline.setPadding(new Insets(-8, 0, 0, 0));
 
         noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);
@@ -91,12 +94,12 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
         buttonsHBox = new HBox(20, saveButton, deletedButton);
-        root.getChildren().addAll(hadline, noAccountsInfo, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
+        root.getChildren().addAll(headline, noAccountsInfo, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
     }
 
     @Override
     protected void onViewAttached() {
-        hadline.textProperty().bind(model.getHeadline());
+        headline.textProperty().bind(model.getHeadline());
         accountData.textProperty().bindBidirectional(model.accountDataProperty());
         saveButton.disableProperty().bind(model.saveButtonDisabledProperty());
         deletedButton.disableProperty().bind(model.deleteButtonDisabledProperty());
@@ -135,7 +138,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
 
     @Override
     protected void onViewDetached() {
-        hadline.textProperty().unbind();
+        headline.textProperty().unbind();
         accountData.textProperty().unbindBidirectional(model.getAccountData());
         saveButton.disableProperty().unbind();
         deletedButton.disableProperty().unbind();

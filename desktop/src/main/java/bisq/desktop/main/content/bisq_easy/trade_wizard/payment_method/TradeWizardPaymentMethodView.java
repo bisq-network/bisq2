@@ -73,7 +73,6 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         flowPane.setHgap(20);
 
         custom = new MaterialTextField(Res.get("bisqEasy.createOffer.paymentMethod.customMethod"),
-                null,
                 Res.get("bisqEasy.createOffer.paymentMethod.customMethod.prompt"));
         custom.setPrefWidth(300);
         custom.setIcon("add-white");
@@ -83,8 +82,8 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         addButton.setAlignment(Pos.CENTER);
         custom.setMaxWidth(300);
 
-        VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(25, 60, 30, 60));
+        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(flowPane, new Insets(20, 60, 25, 60));
         root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
         paymentMethodListener = c -> {

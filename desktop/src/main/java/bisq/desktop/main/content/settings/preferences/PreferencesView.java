@@ -56,6 +56,9 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(20), model, controller);
 
+        root.setPadding(new Insets(30, 0, 0, 0));
+        root.setAlignment(Pos.TOP_LEFT);
+
         // Language
         Label languageSelectionHeadline = new Label(Res.get("settings.preferences.language.headline"));
         languageSelectionHeadline.getStyleClass().addAll("settings-headline");
@@ -167,7 +170,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         tradeVBox.setPadding(new Insets(10));
         tradeVBox.getStyleClass().add("settings-box-bg");
 
-        VBox.setMargin(languageSelectionHeadline, new Insets(20, 0, -10, 0));
+        VBox.setMargin(languageSelectionHeadline, new Insets(-8, 0, -10, 0));
         VBox.setMargin(supportedLanguageSelectionHeadline, new Insets(10, 0, -10, 0));
         VBox.setMargin(notificationsHeadline, new Insets(10, 0, -10, 0));
         VBox.setMargin(displayHeadline, new Insets(10, 0, -10, 0));
