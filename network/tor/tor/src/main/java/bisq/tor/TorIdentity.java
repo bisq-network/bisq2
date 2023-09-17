@@ -29,30 +29,31 @@ import java.security.SecureRandom;
 public class TorIdentity {
 
     @ToString.Exclude
-    private final String privateKey;
+    private final byte[] privateKey;
     private final int port;
 
-    public TorIdentity(String privateKey, int port) {
+    public TorIdentity(byte[] privateKey, int port) {
         this.privateKey = privateKey;
         this.port = port;
     }
 
     public static TorIdentity generate(int port) {
-        // Key Format definition:
-        // https://gitlab.torproject.org/tpo/core/torspec/-/blob/main/control-spec.txt
-
         byte[] privateKey = new byte[32];
         Ed25519.generatePrivateKey(new SecureRandom(), privateKey);
+        return new TorIdentity(privateKey, port);
+    }
+
+    public String getTorOnionKey() {
+        // Key Format definition:
+        // https://gitlab.torproject.org/tpo/core/torspec/-/blob/main/control-spec.txt
 
         byte[] secretScalar = generateSecretScalar(privateKey);
         String base64EncodedSecretScalar = java.util.Base64.getEncoder()
                 .encodeToString(secretScalar);
 
-        String torOnionKey = "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
+        return  "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
                 base64EncodedSecretScalar + "\n" +
                 "-----END OPENSSH PRIVATE KEY-----\n";
-
-        return new TorIdentity(torOnionKey, port);
     }
 
     private static byte[] generateSecretScalar(byte[] privateKey) {
