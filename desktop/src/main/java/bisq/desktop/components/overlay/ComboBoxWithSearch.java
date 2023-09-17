@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 @Slf4j
-public class ComboBoxOverlay<T> {
+public class ComboBoxWithSearch<T> {
     private final static double PADDING = 10;
     private final Region owner;
     private final double prefWidth;
@@ -70,26 +70,26 @@ public class ComboBoxOverlay<T> {
     protected final Polygon listBackground = new Polygon();
     protected double arrowOffset = 31.5;
 
-    public ComboBoxOverlay(Region owner,
-                           ObservableList<T> items,
-                           Callback<ListView<T>, ListCell<T>> cellFactory,
-                           Consumer<T> selectionHandler,
-                           String description,
-                           @Nullable String prompt,
-                           double prefWidth) {
+    public ComboBoxWithSearch(Region owner,
+                              ObservableList<T> items,
+                              Callback<ListView<T>, ListCell<T>> cellFactory,
+                              Consumer<T> selectionHandler,
+                              String description,
+                              @Nullable String prompt,
+                              double prefWidth) {
         this(owner, items, cellFactory, selectionHandler, description, prompt, prefWidth, 0, 0, 31.5);
     }
 
-    public ComboBoxOverlay(Region owner,
-                           ObservableList<T> items,
-                           Callback<ListView<T>, ListCell<T>> cellFactory,
-                           Consumer<T> selectionHandler,
-                           String description,
-                           @Nullable String prompt,
-                           double prefWidth,
-                           double offsetX,
-                           double offsetY,
-                           double arrowOffset) {
+    public ComboBoxWithSearch(Region owner,
+                              ObservableList<T> items,
+                              Callback<ListView<T>, ListCell<T>> cellFactory,
+                              Consumer<T> selectionHandler,
+                              String description,
+                              @Nullable String prompt,
+                              double prefWidth,
+                              double offsetX,
+                              double offsetY,
+                              double arrowOffset) {
         this.owner = owner;
         this.prefWidth = prefWidth;
         this.offsetX = offsetX;
