@@ -76,7 +76,7 @@ public class OnionServicePublishService {
 
     public synchronized CompletableFuture<Void> publish(TorIdentity torIdentity, int localPort) {
         try {
-            Optional<String> privateKey = Optional.of(torIdentity.getPrivateKey());
+            Optional<String> privateKey = Optional.of(torIdentity.getTorOnionKey());
             nativeTorController.createHiddenService(torIdentity.getPort(), localPort, privateKey);
             return CompletableFuture.completedFuture(null);
 
