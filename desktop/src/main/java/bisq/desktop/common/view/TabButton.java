@@ -28,7 +28,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -39,6 +38,7 @@ import javafx.scene.layout.Pane;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 
 public class TabButton extends Pane implements Toggle {
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
@@ -85,18 +85,12 @@ public class TabButton extends Pane implements Toggle {
         numMessagesBadge.setLayoutY(17);
 
         getChildren().addAll(label, numMessagesBadge);
-        hoverProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
 
-            }
-        });
-
-        hoverProperty().addListener(new WeakChangeListener<>((observable, wasHovered, isHovered) -> {
+        hoverProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (ov, wasHovered, isHovered) -> {
             if (isSelected()) return;
             Layout.chooseStyleClass(label, styles.getHoover(), styles.getNormal(), isHovered);
             label.setGraphic(isHovered ? iconHover : icon);
-        }));
+        }).get());
 
         labelWidthListener = new ChangeListener<>() {
             @Override
