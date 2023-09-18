@@ -125,7 +125,6 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.top.headline"));
         headlineLabel.getStyleClass().add("bisq-easy-onboarding-big-box-headline");
         headlineLabel.setWrapText(true);
-        //GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         gridPane.add(headlineLabel, 0, 0, 2, 1);
 
         HBox line1 = getBulletPoint(Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");

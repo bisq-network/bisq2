@@ -98,6 +98,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
         toggleChatWindowButton.getStyleClass().add("outlined-button");
+        toggleChatWindowButton.setMinWidth(140);
 
         tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), toggleChatWindowButton);
 
@@ -257,8 +258,8 @@ public class BisqEasyOpenTradesView extends ChatView {
             chatWindow.setY(y);
             chatWindow.setMinWidth(600);
             chatWindow.setMinHeight(400);
-            chatWindow.setWidth(800);
-            chatWindow.setHeight(600);
+            chatWindow.setWidth(1000);
+            chatWindow.setHeight(700);
 
             chatWindow.setOnCloseRequest(event -> {
                 event.consume();
