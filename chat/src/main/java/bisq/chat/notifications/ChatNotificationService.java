@@ -166,6 +166,27 @@ public class ChatNotificationService implements Service {
                 .count();
     }
 
+    public int getNumNotificationsMyDomainOrParentDomain(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+            case BISQ_EASY_OPEN_TRADES:
+            case BISQ_EASY_PRIVATE_CHAT:
+                return (int) notificationsService.getNotConsumedNotificationIds().stream()
+                        .filter(notificationId -> {
+                            ChatChannelDomain notificationIdChatChannelDomain = getChatChannelDomain(notificationId);
+                            return notificationIdChatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                                    notificationIdChatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES ||
+                                    notificationIdChatChannelDomain == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT;
+                        })
+                        .count();
+            case DISCUSSION:
+            case EVENTS:
+            case SUPPORT:
+            default:
+                return getNumNotificationsByDomain(chatChannelDomain);
+        }
+    }
+
     public <C extends ChatChannel<?>> Integer getNumNotificationsByChannel(C chatChannel) {
         return (int) notificationsService.getNotConsumedNotificationIds().stream()
                 .filter(notificationId -> chatChannel.getId().equals(getChatChannelId(notificationId)))

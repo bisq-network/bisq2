@@ -142,7 +142,7 @@ public class LeftNavController implements Controller {
         UIThread.run(() -> {
             ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
             findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
-                    leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
+                    leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsMyDomainOrParentDomain(chatChannelDomain)));
         });
     }
 
