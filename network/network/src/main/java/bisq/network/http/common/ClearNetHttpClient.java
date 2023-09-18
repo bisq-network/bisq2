@@ -57,10 +57,14 @@ public class ClearNetHttpClient extends BaseHttpClient {
         }
         CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
                     try {
-                        // blocking call if connection has issues
-                        connection.getInputStream().close();
-                        connection.disconnect();
-                        return true;
+                        if (connection != null) {
+                            // blocking call if connection has issues
+                            connection.getInputStream().close();
+                            connection.disconnect();
+                            return true;
+                        } else {
+                            return false;
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
