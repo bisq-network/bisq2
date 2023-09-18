@@ -44,7 +44,7 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
         ImageView logo = ImageUtil.getImageViewById("logo-mark-midsize");
 
         Label headlineLabel = new Label(Res.get("onboarding.bisq2.headline"));
-        headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
+        headlineLabel.getStyleClass().add("bisq2-welcome-headline");
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
@@ -61,8 +61,8 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
         hBox.setAlignment(Pos.CENTER);
         hBox.setPadding(new Insets(20));
 
-        VBox.setMargin(logo, new Insets(30, 0, 0, 0));
-        VBox.setMargin(hBox, new Insets(10, 0, 0, 0));
+        VBox.setMargin(logo, new Insets(50, 0, -10, 0));
+        VBox.setMargin(hBox, new Insets(0, 0, 0, 0));
         VBox.setMargin(nextButton, new Insets(30, 0, 30, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
