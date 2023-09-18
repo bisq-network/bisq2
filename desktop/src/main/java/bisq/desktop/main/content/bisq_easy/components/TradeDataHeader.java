@@ -65,10 +65,6 @@ public class TradeDataHeader {
         return controller.view.getRoot();
     }
 
-    public void reset() {
-        controller.model.reset();
-    }
-
     @Slf4j
     private static class Controller implements bisq.desktop.common.view.Controller {
         @Getter
@@ -94,12 +90,10 @@ public class TradeDataHeader {
         public void onActivate() {
             channelPin = EasyBind.subscribe(model.getChannel(), channel -> {
                 if (channel == null) {
-                    model.reset();
                     return;
                 }
                 Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(serviceProvider, channel);
                 if (optionalBisqEasyTrade.isEmpty()) {
-                    model.reset();
                     return;
                 }
 
@@ -140,10 +134,7 @@ public class TradeDataHeader {
         @Override
         public void onDeactivate() {
             channelPin.unsubscribe();
-            model.reset();
         }
-
-
     }
 
     @Slf4j
@@ -166,21 +157,6 @@ public class TradeDataHeader {
 
         public Model(String peerDescription) {
             this.peerDescription = peerDescription;
-        }
-
-        void reset() {
-            channel.set(null);
-            bisqEasyTrade.set(null);
-            userProfile.set(null);
-            reputationScore.set(null);
-            direction.set(null);
-            leftAmountDescription.set(null);
-            leftAmount.set(null);
-            leftCode.set(null);
-            rightAmountDescription.set(null);
-            rightAmount.set(null);
-            rightCode.set(null);
-            tradeId.set(null);
         }
     }
 
@@ -228,6 +204,7 @@ public class TradeDataHeader {
         @Override
         protected void onViewAttached() {
             peerDescription.setText(model.getPeerDescription());
+
             direction.getSecond().textProperty().bind(model.getDirection());
             leftAmount.getFirst().getFirst().textProperty().bind(model.getLeftAmountDescription());
             leftAmount.getFirst().getSecond().textProperty().bind(model.getLeftAmount());
