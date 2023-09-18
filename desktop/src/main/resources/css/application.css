@@ -84,30 +84,6 @@
     -fx-font-size: 1.4em;
 }
 
-/*******************************************************************************
- * User                                                              *
- ******************************************************************************/
-
-.user-sub-headLine {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Thin";
-    -fx-font-size: 1.7em;
-}
-
-.user-content-text {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.1em;
-}
-
-.user-content-note {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.1em;
-}
 
 /*******************************************************************************
  * Components                                                              *

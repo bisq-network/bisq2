@@ -39,7 +39,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -185,8 +184,7 @@ public class TradeDataHeader {
             peersUserProfileDisplay.setPadding(new Insets(0, -15, 0, 0));
             peersUserProfileDisplay.setMinWidth(140);
             peersUserProfileDisplay.setMaxWidth(140);
-            VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
-            VBox peerVBox = new VBox(0, peerDescription, peersUserProfileDisplay);
+            VBox peerVBox = new VBox(2, peerDescription, peersUserProfileDisplay);
             peerVBox.setAlignment(Pos.CENTER_LEFT);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
@@ -242,8 +240,8 @@ public class TradeDataHeader {
             descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
             Text valueLabel = new Text();
             valueLabel.getStyleClass().add("bisq-easy-open-trades-header-value");
-            VBox.setMargin(descriptionLabel, new Insets(2, 0, 0, 0));
-            VBox vBox = new VBox(2, descriptionLabel, valueLabel);
+            VBox.setMargin(descriptionLabel, new Insets(2, 0, 1.5, 0));
+            VBox vBox = new VBox(descriptionLabel, valueLabel);
             vBox.setAlignment(Pos.CENTER_LEFT);
             vBox.setMinHeight(HEIGHT);
             vBox.setMaxHeight(HEIGHT);
@@ -258,12 +256,11 @@ public class TradeDataHeader {
             Text code = new Text();
             code.getStyleClass().add("bisq-easy-open-trades-header-code");
 
-            HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
+            HBox.setMargin(code, new Insets(0.5, 0, 0, 0));
             HBox hBox = new HBox(5, amount, code);
             hBox.setAlignment(Pos.BASELINE_LEFT);
-            VBox.setMargin(descriptionLabel, new Insets(9.5, 0, -0.5, 0));
-            VBox.setVgrow(hBox, Priority.ALWAYS);
-            VBox vBox = new VBox(0, descriptionLabel, hBox);
+            VBox.setMargin(descriptionLabel, new Insets(1.5, 0, 1, 0));
+            VBox vBox = new VBox(descriptionLabel, hBox);
             vBox.setFillWidth(true);
             vBox.setAlignment(Pos.CENTER_LEFT);
             vBox.setMinHeight(HEIGHT);

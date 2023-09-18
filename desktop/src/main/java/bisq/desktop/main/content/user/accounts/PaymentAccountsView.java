@@ -58,10 +58,10 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
 
         Label noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);
-        noAccountsInfo.getStyleClass().add("user-content-text");
+        noAccountsInfo.getStyleClass().add("user-payment-account-no-data");
         Label whySetup = new Label(Res.get("user.paymentAccounts.noAccounts.whySetup"));
         whySetup.setWrapText(true);
-        whySetup.getStyleClass().add("user-sub-headLine");
+        whySetup.getStyleClass().add("large-thin-headline");
         Label whySetupInfo = new Label(Res.get("user.paymentAccounts.noAccounts.whySetup.info"));
         whySetupInfo.setWrapText(true);
         whySetupInfo.getStyleClass().add("user-content-text");
@@ -136,6 +136,8 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
                 accountName -> accountSelection.getSelectionModel().select(accountName));
 
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsSetup(), noAccountsSetup -> {
+            headline.setVisible(!noAccountsSetup);
+            headline.setManaged(!noAccountsSetup);
             noAccountsVBox.setVisible(noAccountsSetup);
             noAccountsVBox.setManaged(noAccountsSetup);
             largeCreateButton.setVisible(noAccountsSetup);
