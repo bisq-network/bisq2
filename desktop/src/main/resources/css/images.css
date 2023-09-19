@@ -66,16 +66,16 @@
     -fx-image: url("/images/collapse.png");
 }
 
-#search {
-    -fx-image: url("/images/search.png");
+#search-dimmed {
+    -fx-image: url("/images/search-dimmed.png");
 }
 
 #search-white {
     -fx-image: url("/images/search-white.png");
 }
 
-#chat-trust {
-    -fx-image: url("/images/trust.png");
+#search-green {
+    -fx-image: url("/images/search-green.png");
 }
 
 #image-buy-white {
