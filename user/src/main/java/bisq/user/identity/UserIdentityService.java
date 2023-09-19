@@ -217,6 +217,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     // Unsafe to use if there are open private chats or messages from userIdentity
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
+        if (getUserIdentities().size() <= 1) {
+            return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
+        }
         synchronized (lock) {
             getUserIdentities().remove(userIdentity);
 

@@ -22,7 +22,6 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
-import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -119,7 +118,7 @@ public class BisqEasyService implements Service {
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
         if (isDeleteUserIdentityProhibited(userIdentity)) {
-            return CompletableFuture.failedFuture(new RuntimeException(Res.get("user.userProfile.deleteProfile.cannotDelete")));
+            return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }
         return userIdentityService.deleteUserIdentity(userIdentity);
     }
