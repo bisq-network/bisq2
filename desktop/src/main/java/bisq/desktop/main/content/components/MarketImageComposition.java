@@ -98,7 +98,6 @@ public class MarketImageComposition {
         pane.setPrefHeight(isRetina ? 34 : 17);
         pane.setPrefWidth(isRetina ? 30 : 15);
 
-
         String symbolOrCode = FiatCurrencyRepository.getSymbol(code);
         if (symbolOrCode.length() > 3) {
             symbolOrCode = code.toUpperCase().substring(0, 3);
@@ -107,22 +106,17 @@ public class MarketImageComposition {
 
         if (symbolOrCode.length() == 1) {
             label.getStyleClass().setAll("fiat-symbol");
-            label.setPadding(new Insets(0, 4.5, 0, 0));
         } else if (symbolOrCode.length() == 2) {
             label.getStyleClass().setAll("fiat-symbol-2");
-            label.setPadding(new Insets(0, 1.25, 0, 0));
         } else {
             label.getStyleClass().setAll("fiat-code");
-            label.setPadding(new Insets(0, 0.2, 0, 0));
         }
 
         Circle circle = new Circle(10);
-        circle.setTranslateX(6.5);
         circle.setSmooth(true);
         pane.getChildren().add(circle);
         if (code.equalsIgnoreCase("EUR")) {
             circle.setFill(Paint.valueOf("#0F0FD9"));
-            label.setPadding(new Insets(0, 4.25, 0, 0));
         } else if (code.equalsIgnoreCase("USD")) {
             circle.setFill(Paint.valueOf("#3D8603"));
         } else {
@@ -135,8 +129,10 @@ public class MarketImageComposition {
             circle.setEffect(colorAdjust);
         }
 
-        StackPane.setAlignment(label, Pos.CENTER_RIGHT);
+        StackPane.setAlignment(label, Pos.CENTER);
         pane.getChildren().add(label);
+        //Move entire pane node horizontally
+        pane.setTranslateX(6.5);
 
         return pane;
     }
