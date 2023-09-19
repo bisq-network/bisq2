@@ -537,10 +537,16 @@
 }
 
 .bisq-easy-offerbook-search-box {
-    -fx-background-color: transparent;
-    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4;
+    -fx-border-color: rgba(255, 255, 255, 0.075);
     -fx-border-width: 1;
     -fx-border-radius: 4;
+}
+
+.bisq-easy-offerbook-search-box-active {
+    -fx-background-color: rgba(255, 255, 255, 0.075);
+    -fx-border-color: -bisq-green;
 }
 
 

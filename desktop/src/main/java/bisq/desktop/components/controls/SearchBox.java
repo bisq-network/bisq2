@@ -17,33 +17,65 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.lang.ref.WeakReference;
+
+@Slf4j
 @Getter
 public class SearchBox extends HBox {
     private final TextField searchField;
     private final ImageView searchIcon;
+    private String defaultStyle = "search-box";
+    private String activeStyle = "search-box-active";
+    private String iconId = "search-dimmed";
+    private String activeIconId = "search-white";
 
     public SearchBox() {
         setAlignment(Pos.CENTER_LEFT);
         setMaxHeight(30);
-        getStyleClass().add("search-box");
+        getStyleClass().add(defaultStyle);
 
-        searchIcon = ImageUtil.getImageViewById("search-white");
+        searchIcon = new ImageView();
         searchField = new TextField();
         searchField.setPromptText(Res.get("action.search"));
         searchField.getStyleClass().add("search-text-field");
 
         HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));
         getChildren().addAll(searchIcon, searchField);
+
+        searchField.focusedProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) -> applyStyle(newValue)).get());
+        applyStyle(searchField.isFocused());
+    }
+
+    public void setDefaultStyle(String defaultStyle) {
+        this.defaultStyle = defaultStyle;
+        applyStyle(searchField.isFocused());
+
+    }
+
+    public void setActiveStyle(String activeStyle) {
+        this.activeStyle = activeStyle;
+        applyStyle(searchField.isFocused());
+    }
+
+    public void setIconId(String iconId) {
+        this.iconId = iconId;
+        applyStyle(searchField.isFocused());
+    }
+
+    public void setActiveIconId(String iconId) {
+        this.activeIconId = iconId;
+        applyStyle(searchField.isFocused());
     }
 
     public final StringProperty textProperty() {
@@ -52,5 +84,17 @@ public class SearchBox extends HBox {
 
     public String getText() {
         return searchField.getText();
+    }
+
+    private void applyStyle(boolean isFocused) {
+        if (isFocused) {
+            searchIcon.setId(activeIconId);
+            getStyleClass().remove(defaultStyle);
+            getStyleClass().add(activeStyle);
+        } else {
+            searchIcon.setId(iconId);
+            getStyleClass().add(defaultStyle);
+            getStyleClass().remove(activeStyle);
+        }
     }
 }

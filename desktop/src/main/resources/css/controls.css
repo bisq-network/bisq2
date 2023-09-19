@@ -820,22 +820,26 @@
 }
 
 
-.search-box {
-    -fx-background-color: -bisq-grey-2;
-    -fx-background-radius: 6;
-    -fx-border-width: 0;
-}
-
-
 /*******************************************************************************
  *                                                                             *
  * SearchBox                                                               *
  *                                                                             *
  ******************************************************************************/
 
+.search-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
+.search-box-active {
+    -fx-background-color: -bisq-grey-3;
+}
+
 .search-text-field {
     -fx-background-color: transparent;
-    -fx-background-radius: 6;
     -fx-border-width: 0;
     -fx-font-size: 1em;
     -fx-text-fill: -fx-light-text-color;

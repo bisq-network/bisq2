@@ -115,8 +115,9 @@ public class BisqEasyOfferbookView extends ChatView {
         searchBox = new SearchBox();
         searchBox.setMaxWidth(200);
         searchBox.setMaxHeight(searchBox.getMinHeight());
-        searchBox.getStyleClass().add("bisq-easy-offerbook-search-box");
-        searchBox.getSearchIcon().setOpacity(0.5);
+        searchBox.setDefaultStyle("bisq-easy-offerbook-search-box");
+        searchBox.setActiveStyle("bisq-easy-offerbook-search-box-active");
+        searchBox.setActiveIconId("search-green");
 
        /* filterButton = new Button(Res.get("bisqEasy.topPane.filter"));
         ImageView filterIcon = ImageUtil.getImageViewById("filter");
