@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.reputation.burn.tab3;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.OrderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,9 +50,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         Label headLine = new Label(Res.get("user.reputation.burnedBsq.howToHeadline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("user.reputation.burnedBsq.howTo"));
-        info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13");
+        OrderedList info = new OrderedList(Res.get("user.reputation.burnedBsq.howTo"), "bisq-text-13");
 
         Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
