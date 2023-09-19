@@ -1,4 +1,29 @@
 /*******************************************************************************
+ * Payment account                                                              *
+ ******************************************************************************/
+
+.user-payment-account-no-data {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.15em;
+}
+
+.user-content-text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+}
+
+.user-content-note {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+}
+
+/*******************************************************************************
  * Reputation                                                  *
  ******************************************************************************/
 

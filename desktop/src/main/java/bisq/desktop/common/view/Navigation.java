@@ -39,7 +39,7 @@ public class Navigation {
     @Getter
     private static Optional<NavigationTarget> persistedNavigationTarget = Optional.empty();
     @Getter
-    private static Observable<NavigationTarget> currentNavigationTarget = new Observable<>();
+    private static final Observable<NavigationTarget> currentNavigationTarget = new Observable<>();
 
     public static void init(SettingsService settingsService) {
         Navigation.settingsService = settingsService;

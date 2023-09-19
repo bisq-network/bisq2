@@ -39,7 +39,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -63,10 +62,6 @@ public class TradeDataHeader {
 
     public HBox getRoot() {
         return controller.view.getRoot();
-    }
-
-    public void reset() {
-        controller.model.reset();
     }
 
     @Slf4j
@@ -94,12 +89,10 @@ public class TradeDataHeader {
         public void onActivate() {
             channelPin = EasyBind.subscribe(model.getChannel(), channel -> {
                 if (channel == null) {
-                    model.reset();
                     return;
                 }
                 Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(serviceProvider, channel);
                 if (optionalBisqEasyTrade.isEmpty()) {
-                    model.reset();
                     return;
                 }
 
@@ -140,10 +133,7 @@ public class TradeDataHeader {
         @Override
         public void onDeactivate() {
             channelPin.unsubscribe();
-            model.reset();
         }
-
-
     }
 
     @Slf4j
@@ -167,21 +157,6 @@ public class TradeDataHeader {
         public Model(String peerDescription) {
             this.peerDescription = peerDescription;
         }
-
-        void reset() {
-            channel.set(null);
-            bisqEasyTrade.set(null);
-            userProfile.set(null);
-            reputationScore.set(null);
-            direction.set(null);
-            leftAmountDescription.set(null);
-            leftAmount.set(null);
-            leftCode.set(null);
-            rightAmountDescription.set(null);
-            rightAmount.set(null);
-            rightCode.set(null);
-            tradeId.set(null);
-        }
     }
 
     @Slf4j
@@ -201,6 +176,7 @@ public class TradeDataHeader {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setPadding(new Insets(0, 30, 0, 30));
+            root.getStyleClass().add("bisq-easy-container-header");
 
             peerDescription = new Label();
             peerDescription.getStyleClass().add("bisq-easy-open-trades-header-description");
@@ -208,8 +184,7 @@ public class TradeDataHeader {
             peersUserProfileDisplay.setPadding(new Insets(0, -15, 0, 0));
             peersUserProfileDisplay.setMinWidth(140);
             peersUserProfileDisplay.setMaxWidth(140);
-            VBox.setMargin(peerDescription, new Insets(2, 0, 3, 0));
-            VBox peerVBox = new VBox(0, peerDescription, peersUserProfileDisplay);
+            VBox peerVBox = new VBox(2, peerDescription, peersUserProfileDisplay);
             peerVBox.setAlignment(Pos.CENTER_LEFT);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
@@ -227,6 +202,7 @@ public class TradeDataHeader {
         @Override
         protected void onViewAttached() {
             peerDescription.setText(model.getPeerDescription());
+
             direction.getSecond().textProperty().bind(model.getDirection());
             leftAmount.getFirst().getFirst().textProperty().bind(model.getLeftAmountDescription());
             leftAmount.getFirst().getSecond().textProperty().bind(model.getLeftAmount());
@@ -264,8 +240,8 @@ public class TradeDataHeader {
             descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
             Text valueLabel = new Text();
             valueLabel.getStyleClass().add("bisq-easy-open-trades-header-value");
-            VBox.setMargin(descriptionLabel, new Insets(2, 0, 0, 0));
-            VBox vBox = new VBox(2, descriptionLabel, valueLabel);
+            VBox.setMargin(descriptionLabel, new Insets(2, 0, 1.5, 0));
+            VBox vBox = new VBox(descriptionLabel, valueLabel);
             vBox.setAlignment(Pos.CENTER_LEFT);
             vBox.setMinHeight(HEIGHT);
             vBox.setMaxHeight(HEIGHT);
@@ -280,12 +256,11 @@ public class TradeDataHeader {
             Text code = new Text();
             code.getStyleClass().add("bisq-easy-open-trades-header-code");
 
-            HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
+            HBox.setMargin(code, new Insets(0.5, 0, 0, 0));
             HBox hBox = new HBox(5, amount, code);
             hBox.setAlignment(Pos.BASELINE_LEFT);
-            VBox.setMargin(descriptionLabel, new Insets(9.5, 0, -0.5, 0));
-            VBox.setVgrow(hBox, Priority.ALWAYS);
-            VBox vBox = new VBox(0, descriptionLabel, hBox);
+            VBox.setMargin(descriptionLabel, new Insets(1.5, 0, 1, 0));
+            VBox vBox = new VBox(descriptionLabel, hBox);
             vBox.setFillWidth(true);
             vBox.setAlignment(Pos.CENTER_LEFT);
             vBox.setMinHeight(HEIGHT);

@@ -37,12 +37,13 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, PaymentAccountsController> {
-    private final Label headline, noAccountsInfo;
+    private final Label headline;
     private final Button createButton, largeCreateButton, deletedButton, saveButton;
     private final MaterialTextArea accountData;
     private final AutoCompleteComboBox<Account<?, ? extends PaymentMethod<?>>> accountSelection;
     private final HBox buttonsHBox;
     private final HBox selectionButtonHBox;
+    private final VBox noAccountsVBox;
     private Subscription selectedAccountPin, noAccountsSetupPin;
 
     public PaymentAccountsView(PaymentAccountsModel model, PaymentAccountsController controller) {
@@ -52,18 +53,32 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         root.setPadding(new Insets(30, 0, 0, 0));
 
         headline = new Label();
-        headline.getStyleClass().addAll("bisq-text-headline-2");
+        headline.getStyleClass().add("large-thin-headline");
         headline.setPadding(new Insets(-8, 0, 0, 0));
 
-        noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
+        Label noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);
-        noAccountsInfo.getStyleClass().addAll("bisq-text-13");
+        noAccountsInfo.getStyleClass().add("user-payment-account-no-data");
+        Label whySetup = new Label(Res.get("user.paymentAccounts.noAccounts.whySetup"));
+        whySetup.setWrapText(true);
+        whySetup.getStyleClass().add("large-thin-headline");
+        Label whySetupInfo = new Label(Res.get("user.paymentAccounts.noAccounts.whySetup.info"));
+        whySetupInfo.setWrapText(true);
+        whySetupInfo.getStyleClass().add("user-content-text");
+        Label whySetupNote = new Label(Res.get("user.paymentAccounts.noAccounts.whySetup.note"));
+        whySetupNote.setWrapText(true);
+        whySetupNote.getStyleClass().add("user-content-note");
+
+        VBox.setMargin(noAccountsInfo, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(whySetup, new Insets(15, 0, -10, 0));
+        VBox.setMargin(whySetupNote, new Insets(10, 0, 20, 0));
+        noAccountsVBox = new VBox(20, noAccountsInfo, whySetup, whySetupInfo, whySetupNote);
 
         largeCreateButton = new Button(Res.get("user.paymentAccounts.createAccount"));
         largeCreateButton.setDefaultButton(true);
 
         createButton = new Button(Res.get("user.paymentAccounts.createAccount"));
-        createButton.getStyleClass().addAll("outlined-button");
+        createButton.getStyleClass().add("outlined-button");
 
         accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
         accountSelection.setPrefWidth(300);
@@ -94,7 +109,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
         buttonsHBox = new HBox(20, saveButton, deletedButton);
-        root.getChildren().addAll(headline, noAccountsInfo, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
+        root.getChildren().addAll(headline, noAccountsVBox, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
     }
 
     @Override
@@ -121,8 +136,10 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
                 accountName -> accountSelection.getSelectionModel().select(accountName));
 
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsSetup(), noAccountsSetup -> {
-            noAccountsInfo.setVisible(noAccountsSetup);
-            noAccountsInfo.setManaged(noAccountsSetup);
+            headline.setVisible(!noAccountsSetup);
+            headline.setManaged(!noAccountsSetup);
+            noAccountsVBox.setVisible(noAccountsSetup);
+            noAccountsVBox.setManaged(noAccountsSetup);
             largeCreateButton.setVisible(noAccountsSetup);
             largeCreateButton.setManaged(noAccountsSetup);
 

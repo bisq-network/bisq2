@@ -13,7 +13,7 @@
     -fx-fill: -fx-light-text-color;
 }
 
-.channel-settings-headline {
+.channel-large-thin-headline {
     -fx-font-size: 1.692em;
     -fx-text-fill: -bisq-grey-5;
 }
@@ -321,11 +321,15 @@
  *                                                                             *
  ******************************************************************************/
 
+.chat-messages-list-view {
+    -fx-background-color: transparent;
+}
+
 .chat-messages-list-view .list-cell {
     -fx-background-insets: 0 0 0 -25;
     -fx-padding: 10 0 10 25;
 }
 
-.chat-messages-list-view .list-cell:hover {
-    -fx-background-color: rgba(0, 0, 0, 0.08);
+.chat-messages-list-view .list-cell:filled:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.15);
 }

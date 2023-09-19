@@ -17,6 +17,17 @@
 }
 
 /*******************************************************************************
+ * Bisq 2 welcome                                                              *
+ ******************************************************************************/
+
+.bisq2-welcome-headline {
+    -fx-font-size: 3.4em;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+
+/*******************************************************************************
  * Updater                                                              *
  ******************************************************************************/
 
@@ -66,24 +77,13 @@
  * Settings                                                              *
  ******************************************************************************/
 
-.settings-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.7em;
-}
-
 .settings-sub-headLine {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.25em;
+    -fx-font-size: 1.4em;
 }
 
-.settings-box-bg {
-    -fx-background-color: -bisq-grey-2;
-    -fx-padding: 20px;
-}
 
 /*******************************************************************************
  * Components                                                              *

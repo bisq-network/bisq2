@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -51,14 +52,14 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin, addLanguageButtonDisabledPin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(50), model, controller);
 
         root.setPadding(new Insets(30, 0, 0, 0));
         root.setAlignment(Pos.TOP_LEFT);
 
         // Language
         Label languageSelectionHeadline = new Label(Res.get("settings.preferences.language.headline"));
-        languageSelectionHeadline.getStyleClass().addAll("settings-headline");
+        languageSelectionHeadline.getStyleClass().add("large-thin-headline");
 
         languageSelection = new AutoCompleteComboBox<>(model.getLanguageCodes(), Res.get("settings.preferences.language.select"));
         languageSelection.setPrefWidth(300);
@@ -74,22 +75,23 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
             }
         });
 
-        // Supported languages
-        GridPane addSupportedLanguageGridPane = new GridPane();
-        addSupportedLanguageGridPane.getStyleClass().add("settings-box-bg");
-        addSupportedLanguageGridPane.setVgap(5);
 
+        // Supported languages
+        Label supportedLanguagesHeadline = new Label(Res.get("settings.preferences.language.supported.headline"));
+        supportedLanguagesHeadline.getStyleClass().add("large-thin-headline");
+
+        GridPane supportedLanguageGridPane = new GridPane();
+        supportedLanguageGridPane.setVgap(5);
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(50);
         ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(50);
-        addSupportedLanguageGridPane.getColumnConstraints().addAll(col1, col2);
-
+        supportedLanguageGridPane.getColumnConstraints().addAll(col1, col2);
         int rowIndex = 0;
 
         Label selectSupportedLanguageHeadline = new Label(Res.get("settings.preferences.language.supported.subHeadLine"));
-        selectSupportedLanguageHeadline.getStyleClass().addAll("settings-sub-headLine");
-        addSupportedLanguageGridPane.add(selectSupportedLanguageHeadline, 0, rowIndex);
+        selectSupportedLanguageHeadline.getStyleClass().add("settings-sub-headLine");
+        supportedLanguageGridPane.add(selectSupportedLanguageHeadline, 0, rowIndex);
 
         supportedLanguagesComboBox = new AutoCompleteComboBox<>(model.getSupportedLanguageCodeFilteredList(),
                 Res.get("settings.preferences.language.supported.select"));
@@ -116,65 +118,56 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         HBox hBox = new HBox(0, supportedLanguagesComboBox, addLanguageButton);
 
         GridPane.setValignment(hBox, VPos.TOP);
-        addSupportedLanguageGridPane.add(hBox, 0, ++rowIndex);
+        supportedLanguageGridPane.add(hBox, 0, ++rowIndex);
 
         Label supportedLanguageListViewSubHeadline = new Label(Res.get("settings.preferences.language.supported.list.subHeadLine"));
-        supportedLanguageListViewSubHeadline.getStyleClass().addAll("settings-sub-headLine");
+        supportedLanguageListViewSubHeadline.getStyleClass().add("settings-sub-headLine");
         rowIndex = 0;
-        addSupportedLanguageGridPane.add(supportedLanguageListViewSubHeadline, 1, rowIndex);
+        supportedLanguageGridPane.add(supportedLanguageListViewSubHeadline, 1, rowIndex);
 
         ListView<String> supportedLanguageListView = new ListView<>(model.getSelectedSupportedLanguageCodes());
         supportedLanguageListView.setCellFactory(getSupportedLanguageCellFactory(controller));
         supportedLanguageListView.setMinWidth(300);
-        addSupportedLanguageGridPane.setMaxHeight(200);
-        addSupportedLanguageGridPane.add(supportedLanguageListView, 1, ++rowIndex);
-
-        Label supportedLanguagesHeadline = new Label(Res.get("settings.preferences.language.supported.headline"));
-        supportedLanguagesHeadline.getStyleClass().addAll("settings-headline");
-
-        VBox supportedLanguageListViewVBox = new VBox(10, supportedLanguagesHeadline, addSupportedLanguageGridPane);
+        supportedLanguageGridPane.setMaxHeight(150);
+        supportedLanguageGridPane.add(supportedLanguageListView, 1, ++rowIndex);
 
 
         // Notifications
         Label notificationsHeadline = new Label(Res.get("settings.preferences.notification.options"));
-        notificationsHeadline.getStyleClass().addAll("settings-headline");
+        notificationsHeadline.getStyleClass().add("large-thin-headline");
 
         all = new RadioButton(Res.get("settings.preferences.notification.option.all"));
-        mention = new RadioButton(Res.get("settings.preferences.notification.option.mention"));
-        off = new RadioButton(Res.get("settings.preferences.notification.option.off"));
-
         all.setToggleGroup(notificationsToggleGroup);
-        mention.setToggleGroup(notificationsToggleGroup);
-        off.setToggleGroup(notificationsToggleGroup);
-
         all.setUserData(ChatNotificationType.ALL);
+        mention = new RadioButton(Res.get("settings.preferences.notification.option.mention"));
+        mention.setToggleGroup(notificationsToggleGroup);
         mention.setUserData(ChatNotificationType.MENTION);
+        off = new RadioButton(Res.get("settings.preferences.notification.option.off"));
+        off.setToggleGroup(notificationsToggleGroup);
         off.setUserData(ChatNotificationType.OFF);
-
         notifyForPreRelease = new Switch(Res.get("settings.preferences.notification.notifyForPreRelease"));
 
         VBox.setMargin(notifyForPreRelease, new Insets(10, 0, 0, 0));
         VBox notificationsVBox = new VBox(10, all, mention, off, notifyForPreRelease);
-        notificationsVBox.setPadding(new Insets(10));
-        notificationsVBox.getStyleClass().add("settings-box-bg");
+
 
         // Display
         Label displayHeadline = new Label(Res.get("settings.preferences.display.headline"));
-        displayHeadline.getStyleClass().addAll("settings-headline");
+        displayHeadline.getStyleClass().add("large-thin-headline");
 
         useAnimations = new Switch(Res.get("settings.preferences.display.useAnimations"));
         preventStandbyMode = new Switch(Res.get("settings.preferences.display.preventStandbyMode"));
         resetDontShowAgain = new Button(Res.get("settings.preferences.display.resetDontShowAgain"));
-        resetDontShowAgain.getStyleClass().add("outlined-button");
+        resetDontShowAgain.getStyleClass().add("grey-transparent-outlined-button");
 
         VBox.setMargin(resetDontShowAgain, new Insets(10, 0, 0, 0));
         VBox displayVBox = new VBox(10, useAnimations, preventStandbyMode, resetDontShowAgain);
-        displayVBox.setPadding(new Insets(10));
-        displayVBox.getStyleClass().add("settings-box-bg");
+
 
         // Trade
         Label tradeHeadline = new Label(Res.get("settings.preferences.trade.headline"));
-        tradeHeadline.getStyleClass().addAll("settings-headline");
+        tradeHeadline.getStyleClass().add("large-thin-headline");
+
         offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
         requiredTotalReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
@@ -182,19 +175,19 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         requiredTotalReputationScore.setMaxWidth(400);
 
         VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
-        tradeVBox.setPadding(new Insets(10));
-        tradeVBox.getStyleClass().add("settings-box-bg");
 
-        VBox.setMargin(languageSelectionHeadline, new Insets(-5, 0, -10, 0));
-        VBox.setMargin(supportedLanguagesHeadline, new Insets(10, 0, -10, 0));
-        VBox.setMargin(notificationsHeadline, new Insets(10, 0, -10, 0));
-        VBox.setMargin(displayHeadline, new Insets(10, 0, -10, 0));
-        VBox.setMargin(tradeHeadline, new Insets(10, 0, -10, 0));
-        root.getChildren().addAll(languageSelectionHeadline, languageSelection,
-                supportedLanguagesHeadline, supportedLanguageListViewVBox,
-                notificationsHeadline, notificationsVBox,
-                displayHeadline, displayVBox,
-                tradeHeadline, tradeVBox);
+        Insets insets = new Insets(0, 5, 0, 5);
+        VBox.setMargin(languageSelectionHeadline, new Insets(-5, 0, 0, 0));
+        VBox.setMargin(languageSelection, insets);
+        VBox.setMargin(supportedLanguageGridPane, insets);
+        VBox.setMargin(notificationsVBox, insets);
+        VBox.setMargin(displayVBox, insets);
+        VBox.setMargin(tradeVBox, insets);
+        root.getChildren().addAll(languageSelectionHeadline, getLine(), languageSelection,
+                supportedLanguagesHeadline, getLine(), supportedLanguageGridPane,
+                notificationsHeadline, getLine(), notificationsVBox,
+                displayHeadline, getLine(), displayVBox,
+                tradeHeadline, getLine(), tradeVBox);
 
         notificationsToggleListener = (observable, oldValue, newValue) -> controller.onSetChatNotificationType((ChatNotificationType) newValue.getUserData());
     }
@@ -263,6 +256,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         supportedLanguagesComboBox.setOnChangeConfirmed(null);
     }
 
+    private Region getLine() {
+        Region line = Layout.hLine();
+        VBox.setMargin(line, new Insets(-42.5, 0, -30, 0));
+        return line;
+    }
+
     private void applyChatNotificationType() {
         switch (model.getChatNotificationType().get()) {
             case ALL: {
@@ -299,6 +298,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                         if (languageCode != null && !empty) {
                             label.setText(controller.getDisplayLanguage(languageCode));
                             button.setOnAction(e -> controller.onRemoveSupportedLanguage(languageCode));
+                            button.getStyleClass().add("grey-transparent-outlined-button");
                             setGraphic(hBox);
                         } else {
                             button.setOnAction(null);

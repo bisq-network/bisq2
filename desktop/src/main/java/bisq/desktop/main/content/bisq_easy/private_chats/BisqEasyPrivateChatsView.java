@@ -88,15 +88,14 @@ public class BisqEasyPrivateChatsView extends ChatView {
 
         VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
         Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.privateChats.table.headline"), tableView);
-        VBox tableViewVBox = triple.getThird();
-        VBox.setMargin(tableViewVBox, new Insets(0, 0, 10, 0));
-        centerVBox.getChildren().add(tableViewVBox);
+        VBox container = triple.getThird();
+
+        VBox.setMargin(container, new Insets(0, 0, 10, 0));
+        centerVBox.getChildren().add(container);
     }
 
     private void addChatBox() {
         chatMessagesComponent.setMinHeight(200);
-        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
 
         Label peerDescription = new Label(Res.get("bisqEasy.openTrades.chat.peer.description").toUpperCase());
@@ -114,13 +113,15 @@ public class BisqEasyPrivateChatsView extends ChatView {
         chatHeaderHBox.setMaxHeight(HEADER_HEIGHT);
         chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
         chatHeaderHBox.setPadding(new Insets(15, 30, 15, 30));
+        chatHeaderHBox.getStyleClass().add("bisq-easy-container-header");
 
         VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
         chatVBox.getStyleClass().add("bisq-easy-container");
 
-        VBox.setVgrow(this.chatVBox, Priority.ALWAYS);
-        centerVBox.getChildren().add(this.chatVBox);
+        VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        centerVBox.getChildren().add(chatVBox);
     }
 
     @Override

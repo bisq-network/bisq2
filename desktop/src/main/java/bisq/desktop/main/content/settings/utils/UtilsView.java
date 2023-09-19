@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.utils;
 
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
@@ -26,25 +27,25 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
-
-    private final Button openLogFileButton, openDataDirButton, setBackupLocationButton, backupButton,
-            chatRules, tradeGuide, license, tac;
+    private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute;
+    private final Hyperlink openLogFileButton, openDataDirButton, chatRules, tradeGuide, license, tac;
 
     public UtilsView(UtilsModel model, UtilsController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(50), model, controller);
 
         root.setPadding(new Insets(30, 0, 0, 0));
         root.setAlignment(Pos.TOP_LEFT);
 
         Label backupHeadline = new Label(Res.get("settings.utils.backup.headline"));
-        backupHeadline.getStyleClass().addAll("settings-headline");
+        backupHeadline.getStyleClass().add("large-thin-headline");
         backupLocation = new MaterialTextField(Res.get("settings.utils.backup.location"),
                 Res.get("settings.utils.backup.location.prompt"),
                 Res.get("settings.utils.backup.location.help"));
@@ -52,37 +53,27 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupButton = new Button(Res.get("settings.utils.backup.backupButton"));
         HBox backupButtons = new HBox(10, setBackupLocationButton, backupButton);
         VBox backupBox = new VBox(20, backupLocation, backupButtons);
-        backupBox.getStyleClass().add("settings-box-bg");
 
         Label localDataHeadline = new Label(Res.get("settings.utils.localData.headline"));
-        localDataHeadline.getStyleClass().addAll("settings-headline");
-        openDataDirButton = new Button(Res.get("settings.utils.localData.openDataDir"));
-        openDataDirButton.getStyleClass().add("grey-transparent-outlined-button");
-        openLogFileButton = new Button(Res.get("settings.utils.localData.openLogFile"));
-        openLogFileButton.getStyleClass().add("grey-transparent-outlined-button");
-        HBox localDataBox = new HBox(20, openDataDirButton, openLogFileButton);
-        localDataBox.getStyleClass().add("settings-box-bg");
+        localDataHeadline.getStyleClass().add("large-thin-headline");
+        openDataDirButton = new Hyperlink(Res.get("settings.utils.localData.openDataDir"));
+        openLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openLogFile"));
+        VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton);
 
         Label rulesHeadline = new Label(Res.get("settings.utils.rules.headline"));
-        rulesHeadline.getStyleClass().addAll("settings-headline");
-        chatRules = new Button(Res.get("settings.utils.rules.chatRules"));
-        chatRules.getStyleClass().add("grey-transparent-outlined-button");
-        tradeGuide = new Button(Res.get("settings.utils.rules.tradeGuide"));
-        tradeGuide.getStyleClass().add("grey-transparent-outlined-button");
-        HBox rulesBox = new HBox(20, chatRules, tradeGuide);
-        rulesBox.getStyleClass().add("settings-box-bg");
+        rulesHeadline.getStyleClass().add("large-thin-headline");
+        chatRules = new Hyperlink(Res.get("settings.utils.rules.chatRules"));
+        tradeGuide = new Hyperlink(Res.get("settings.utils.rules.tradeGuide"));
+        VBox rulesBox = new VBox(5, chatRules, tradeGuide);
 
         Label legalHeadline = new Label(Res.get("settings.utils.legal.headline"));
-        legalHeadline.getStyleClass().addAll("settings-headline");
-        tac = new Button(Res.get("settings.utils.legal.tac"));
-        tac.getStyleClass().add("grey-transparent-outlined-button");
-        license = new Button(Res.get("settings.utils.legal.license"));
-        license.getStyleClass().add("grey-transparent-outlined-button");
-        HBox legalBox = new HBox(20, tac, license);
-        legalBox.getStyleClass().add("settings-box-bg");
+        legalHeadline.getStyleClass().add("large-thin-headline");
+        tac = new Hyperlink(Res.get("settings.utils.legal.tac"));
+        license = new Hyperlink(Res.get("settings.utils.legal.license"));
+        VBox legalBox = new VBox(5, tac, license);
 
         Label resourcesHeadline = new Label(Res.get("settings.utils.resources.headline"));
-        resourcesHeadline.getStyleClass().addAll("settings-headline");
+        resourcesHeadline.getStyleClass().add("large-thin-headline");
         webpage = new Hyperlink(Res.get("settings.utils.resources.webpage"));
         dao = new Hyperlink(Res.get("settings.utils.resources.dao"));
         sourceCode = new Hyperlink(Res.get("settings.utils.resources.sourceCode"));
@@ -90,18 +81,19 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         contribute = new Hyperlink(Res.get("settings.utils.resources.contribute"));
 
         VBox resourcesBox = new VBox(5, webpage, dao, sourceCode, community, contribute);
-        resourcesBox.getStyleClass().add("settings-box-bg");
 
-        VBox.setMargin(backupHeadline, new Insets(-5, 0, -10, 0));
-        VBox.setMargin(localDataHeadline, new Insets(0, 0, -10, 0));
-        VBox.setMargin(rulesHeadline, new Insets(0, 0, -10, 0));
-        VBox.setMargin(legalHeadline, new Insets(0, 0, -10, 0));
-        VBox.setMargin(resourcesHeadline, new Insets(0, 0, -10, 0));
-        root.getChildren().addAll(backupHeadline, backupBox,
-                localDataHeadline, localDataBox,
-                rulesHeadline, rulesBox,
-                legalHeadline, legalBox,
-                resourcesHeadline, resourcesBox);
+        Insets value = new Insets(0, 5, 0, 5);
+        VBox.setMargin(backupHeadline, new Insets(-5, 0, 0, 0));
+        VBox.setMargin(backupBox, value);
+        VBox.setMargin(localDataBox, value);
+        VBox.setMargin(rulesBox, value);
+        VBox.setMargin(legalBox, value);
+        VBox.setMargin(resourcesBox, value);
+        root.getChildren().addAll(backupHeadline, getLine(), backupBox,
+                localDataHeadline, getLine(), localDataBox,
+                rulesHeadline, getLine(), rulesBox,
+                legalHeadline, getLine(), legalBox,
+                resourcesHeadline, getLine(), resourcesBox);
     }
 
     @Override
@@ -146,5 +138,11 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         sourceCode.setOnAction(null);
         community.setOnAction(null);
         contribute.setOnAction(null);
+    }
+
+    private Region getLine() {
+        Region line = Layout.hLine();
+        VBox.setMargin(line, new Insets(-42.5, 0, -30, 0));
+        return line;
     }
 }

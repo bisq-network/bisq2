@@ -51,7 +51,7 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         root.setPadding(new Insets(30, 0, 0, 0));
 
         headline = new Label();
-        headline.getStyleClass().addAll("bisq-text-headline-2");
+        headline.getStyleClass().add("large-thin-headline");
         headline.setPadding(new Insets(-8, 0, 0, 0));
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));

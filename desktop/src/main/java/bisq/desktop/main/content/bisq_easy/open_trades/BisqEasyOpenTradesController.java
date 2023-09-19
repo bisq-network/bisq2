@@ -49,13 +49,11 @@ import java.util.Optional;
 
 @Slf4j
 public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
-    private final BisqEasyOpenTradesModel bisqEasyOpenTradesModel;
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final SettingsService settingsService;
     private final ReputationService reputationService;
-
     private TradeStateController tradeStateController;
     private Pin channelItemPin, selectedChannelPin, tradeRulesConfirmedPin;
     private OpenTradesWelcome openTradesWelcome;
@@ -70,8 +68,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         settingsService = serviceProvider.getSettingsService();
         reputationService = serviceProvider.getUserService().getReputationService();
-
-        bisqEasyOpenTradesModel = getModel();
     }
 
     @Override
@@ -181,6 +177,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         channelItemPin.unbind();
         selectedChannelPin.unbind();
         selectedItemPin.unsubscribe();
+        doCloseChatWindow();
         model.reset();
         resetSelectedChildTarget();
     }
@@ -223,12 +220,15 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         if (model.getChatWindow().get() == null) {
             model.getChatWindow().set(new Stage());
         } else {
-            model.getChatWindow().get().hide();
-            onCloseChatWindow();
+            doCloseChatWindow();
         }
     }
 
     void onCloseChatWindow() {
+        doCloseChatWindow();
+    }
+
+    private void doCloseChatWindow() {
         if (model.getChatWindow().get() != null) {
             model.getChatWindow().get().hide();
         }

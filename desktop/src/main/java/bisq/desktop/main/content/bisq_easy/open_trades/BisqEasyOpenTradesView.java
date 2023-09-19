@@ -98,15 +98,15 @@ public class BisqEasyOpenTradesView extends ChatView {
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
         toggleChatWindowButton.getStyleClass().add("outlined-button");
+        toggleChatWindowButton.setMinWidth(140);
 
         tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), toggleChatWindowButton);
 
         chatMessagesComponent.setMinHeight(200);
-        chatMessagesComponent.getStyleClass().add("bisq-easy-chat-messages-bg");
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
 
         VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(tradeDataHeader, Layout.hLine(), chatMessagesComponent);
         chatVBox.getStyleClass().add("bisq-easy-container");
 
@@ -258,8 +258,8 @@ public class BisqEasyOpenTradesView extends ChatView {
             chatWindow.setY(y);
             chatWindow.setMinWidth(600);
             chatWindow.setMinHeight(400);
-            chatWindow.setWidth(800);
-            chatWindow.setHeight(600);
+            chatWindow.setWidth(1000);
+            chatWindow.setHeight(700);
 
             chatWindow.setOnCloseRequest(event -> {
                 event.consume();
