@@ -17,11 +17,11 @@
 
 package bisq.desktop.components.controls;
 
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -35,11 +35,11 @@ public abstract class TextList extends VBox {
         setSpacing(vSpacing);
         List<String> list = List.of(text.split(regex));
         if (list.size() == 1 && list.get(0).equals(text)) {
-            Label content = new Label(text);
-            content.setWrapText(true);
+            Text contentText = new Text(text);
             if (style != null) {
-                content.getStyleClass().add(style);
+                contentText.getStyleClass().add(style);
             }
+            TextFlow content = new TextFlow(contentText);
             getChildren().add(content);
             return;
         }
@@ -52,16 +52,16 @@ public abstract class TextList extends VBox {
             }
             i++;
             textContent = textContent.stripTrailing();
-            Label content = new Label(textContent);
-            content.setWrapText(true);
+            Text contentText = new Text(textContent);
             String markString = mark == null ? getMark(i) : mark;
             Text markText = new Text(markString);
             if (style != null) {
                 markText.getStyleClass().add(style);
-                content.getStyleClass().add(style);
+                contentText.getStyleClass().add(style);
             }
             HBox.setHgrow(markText, Priority.ALWAYS);
-            HBox.setHgrow(content, Priority.ALWAYS);
+            HBox.setHgrow(contentText, Priority.ALWAYS);
+            TextFlow content = new TextFlow(contentText);
             getChildren().add(new HBox(gap, markText, content));
         }
     }
