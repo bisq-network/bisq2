@@ -153,8 +153,23 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
 
         updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
 
-        bisqEasyService = new BisqEasyService();
+        bisqEasyService = new BisqEasyService(persistenceService,
+                securityService,
+                walletService,
+                networkService,
+                identityService,
+                bondedRolesService,
+                accountService,
+                offerService,
+                contractService,
+                userService,
+                chatService,
+                settingsService,
+                supportService,
+                notificationsService,
+                tradeService);
 
+        // TODO: Not sure if ServiceProvider is still needed as added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
                 persistenceService,

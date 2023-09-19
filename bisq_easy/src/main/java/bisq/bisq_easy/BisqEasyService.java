@@ -17,17 +17,78 @@
 
 package bisq.bisq_easy;
 
+import bisq.account.AccountService;
+import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.contract.ContractService;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
+import bisq.offer.OfferService;
+import bisq.persistence.PersistenceService;
+import bisq.presentation.notifications.NotificationsService;
+import bisq.security.SecurityService;
+import bisq.settings.SettingsService;
+import bisq.support.SupportService;
+import bisq.trade.TradeService;
+import bisq.user.UserService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
 public class BisqEasyService implements Service {
 
-    public BisqEasyService() {
+    private final PersistenceService persistenceService;
+    private final SecurityService securityService;
+    private final Optional<WalletService> walletService;
+    private final NetworkService networkService;
+    private final IdentityService identityService;
+    private final BondedRolesService bondedRolesService;
+    private final AccountService accountService;
+    private final OfferService offerService;
+    private final ContractService contractService;
+    private final UserService userService;
+    private final ChatService chatService;
+    private final SettingsService settingsService;
+    private final SupportService supportService;
+    private final NotificationsService notificationsService;
+    private final TradeService tradeService;
+
+    public BisqEasyService(PersistenceService persistenceService,
+                           SecurityService securityService,
+                           Optional<WalletService> walletService,
+                           NetworkService networkService,
+                           IdentityService identityService,
+                           BondedRolesService bondedRolesService,
+                           AccountService accountService,
+                           OfferService offerService,
+                           ContractService contractService,
+                           UserService userService,
+                           ChatService chatService,
+                           SettingsService settingsService,
+                           SupportService supportService,
+                           NotificationsService notificationsService,
+                           TradeService tradeService) {
+        this.persistenceService = persistenceService;
+        this.securityService = securityService;
+        this.walletService = walletService;
+        this.networkService = networkService;
+        this.identityService = identityService;
+        this.bondedRolesService = bondedRolesService;
+        this.accountService = accountService;
+        this.offerService = offerService;
+        this.contractService = contractService;
+        this.userService = userService;
+        this.chatService = chatService;
+        this.settingsService = settingsService;
+        this.supportService = supportService;
+        this.notificationsService = notificationsService;
+        this.tradeService = tradeService;
     }
 
 

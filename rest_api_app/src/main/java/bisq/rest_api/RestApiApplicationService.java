@@ -19,6 +19,7 @@ package bisq.rest_api;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -83,6 +84,7 @@ public class RestApiApplicationService extends ApplicationService {
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
+    private final BisqEasyService bisqEasyService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -146,6 +148,23 @@ public class RestApiApplicationService extends ApplicationService {
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
+
+        bisqEasyService = new BisqEasyService(persistenceService,
+                securityService,
+                walletService,
+                networkService,
+                identityService,
+                bondedRolesService,
+                accountService,
+                offerService,
+                contractService,
+                userService,
+                chatService,
+                settingsService,
+                supportService,
+                notificationsService,
+                tradeService);
+
     }
 
     @Override
@@ -188,6 +207,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
+                .thenCompose(result -> bisqEasyService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -208,7 +228,8 @@ public class RestApiApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> tradeService.shutdown()
+        return supplyAsync(() -> bisqEasyService.shutdown()
+                .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
