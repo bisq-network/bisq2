@@ -23,6 +23,7 @@ package bisq.desktop;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
@@ -47,7 +48,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public class ServiceProvider {
-
+    private final ShutDownHandler shutDownHandler;
     private final ApplicationService.Config config;
     private final PersistenceService persistenceService;
     private final SecurityService securityService;
@@ -65,7 +66,7 @@ public class ServiceProvider {
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
-    private final ShutDownHandler shutDownHandler;
+    private final BisqEasyService bisqEasyService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -84,7 +85,8 @@ public class ServiceProvider {
                            SupportService supportService,
                            NotificationsService notificationsService,
                            TradeService tradeService,
-                           UpdaterService updaterService) {
+                           UpdaterService updaterService,
+                           BisqEasyService bisqEasyService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -103,5 +105,6 @@ public class ServiceProvider {
         this.notificationsService = notificationsService;
         this.tradeService = tradeService;
         this.updaterService = updaterService;
+        this.bisqEasyService = bisqEasyService;
     }
 }
