@@ -39,6 +39,7 @@ import bisq.presentation.notifications.NotificationsService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -49,6 +50,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
@@ -205,7 +207,22 @@ public class ChatService implements Service {
             optionalChannel.ifPresent(channel -> getChatChannelSelectionService(chatChannelDomain).selectChannel(channel));
             return optionalChannel;
         }
+    }
 
+    public boolean isIdentityUsed(UserIdentity userIdentity) {
+        boolean usedInAnyPrivateChannel = Stream.concat(bisqEasyOpenTradeChannelService.getChannels().stream(),
+                        twoPartyPrivateChatChannelServices.values().stream()
+                                .flatMap(c -> c.getChannels().stream()))
+                .anyMatch(c -> c.getMyUserIdentity().equals(userIdentity));
+
+        boolean usedInAnyMessage = Stream.concat(bisqEasyOfferbookChannelService.getChannels().stream()
+                                .flatMap(c -> c.getChatMessages().stream()),
+                        commonPublicChatChannelServices.values().stream()
+                                .flatMap(c -> c.getChannels().stream())
+                                .flatMap(c -> c.getChatMessages().stream())
+                )
+                .anyMatch(m -> m.getAuthorUserProfileId().equals(userIdentity.getId()));
+        return usedInAnyPrivateChannel || usedInAnyMessage;
     }
 
     public ChatChannelSelectionService getChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {

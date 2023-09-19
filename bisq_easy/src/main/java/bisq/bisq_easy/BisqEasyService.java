@@ -22,8 +22,10 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.DataService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.NotificationsService;
@@ -32,6 +34,8 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +62,7 @@ public class BisqEasyService implements Service {
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
+    private final UserIdentityService userIdentityService;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -89,6 +94,7 @@ public class BisqEasyService implements Service {
         this.supportService = supportService;
         this.notificationsService = notificationsService;
         this.tradeService = tradeService;
+        userIdentityService = userService.getUserIdentityService();
     }
 
 
@@ -104,5 +110,17 @@ public class BisqEasyService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
+    }
+
+    public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {
+        return chatService.isIdentityUsed(userIdentity) ||
+                !userIdentityService.hasMultipleUserIdentities();
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
+        if (isDeleteUserIdentityProhibited(userIdentity)) {
+            return CompletableFuture.failedFuture(new RuntimeException(Res.get("user.userProfile.deleteProfile.cannotDelete")));
+        }
+        return userIdentityService.deleteUserIdentity(userIdentity);
     }
 }

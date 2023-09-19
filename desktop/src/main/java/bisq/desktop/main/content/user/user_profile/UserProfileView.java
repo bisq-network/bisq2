@@ -21,6 +21,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
@@ -28,6 +29,7 @@ import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -43,13 +45,15 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
-    private final Button createNewProfileButton, deletedButton, saveButton;
+    private final Button createNewProfileButton, deleteButton, saveButton;
+    private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
     private final ImageView roboIconImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
-    private Subscription reputationScorePin, selectedChatUserIdentityPin;
+    private final BisqTooltip deleteTooltip;
+    private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
         super(new HBox(20), model, controller);
@@ -110,11 +114,12 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
-        deletedButton = new Button(Res.get("user.userProfile.deleteProfile"));
+        deleteButton = new Button(Res.get("user.userProfile.deleteProfile"));
+        deleteWrapper = new SplitPane(deleteButton);
+        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"));
+        deleteTooltip.getStyleClass().add("medium-dark-tooltip");
 
-        // todo For now we hide the deletedButton because it comes with some complexities
-        // See https://github.com/bisq-network/bisq2/issues/794
-        HBox buttonsHBox = new HBox(20, saveButton/*, deletedButton*/);
+        HBox buttonsHBox = new HBox(20, saveButton, deleteWrapper);
         formVBox.getChildren().add(buttonsHBox);
     }
 
@@ -128,14 +133,17 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         terms.textProperty().bindBidirectional(model.getTerms());
         roboIconImageView.imageProperty().bind(model.getRoboHash());
         saveButton.disableProperty().bind(model.getSaveButtonDisabled());
+        deleteButton.disableProperty().bind(model.getDeleteButtonDisabled());
 
+        useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
+                deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
                 reputationScoreField.setIconTooltip(reputationScore.getTooltipString());
             }
         });
 
-        deletedButton.setOnAction(e -> controller.onDelete());
+        deleteButton.setOnAction(e -> controller.onDeleteProfile());
         saveButton.setOnAction(e -> controller.onSave());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
         comboBox.setOnChangeConfirmed(e -> {
@@ -160,11 +168,14 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         terms.textProperty().unbindBidirectional(model.getTerms());
         roboIconImageView.imageProperty().unbind();
         saveButton.disableProperty().unbind();
+        deleteButton.disableProperty().unbind();
+        deleteWrapper.tooltipProperty().unbind();
 
         reputationScorePin.unsubscribe();
+        useDeleteTooltipPin.unsubscribe();
         selectedChatUserIdentityPin.unsubscribe();
 
-        deletedButton.setOnAction(null);
+        deleteButton.setOnAction(null);
         saveButton.setOnAction(null);
         createNewProfileButton.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
