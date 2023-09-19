@@ -18,6 +18,7 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -82,6 +83,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
+    private final BisqEasyService bisqEasyService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -151,6 +153,23 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
 
         updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
 
+        bisqEasyService = new BisqEasyService(persistenceService,
+                securityService,
+                walletService,
+                networkService,
+                identityService,
+                bondedRolesService,
+                accountService,
+                offerService,
+                contractService,
+                userService,
+                chatService,
+                settingsService,
+                supportService,
+                notificationsService,
+                tradeService);
+
+        // TODO: Not sure if ServiceProvider is still needed as added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
                 persistenceService,
@@ -168,7 +187,8 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 supportService,
                 notificationsService,
                 tradeService,
-                updaterService);
+                updaterService,
+                bisqEasyService);
     }
 
     @Override
@@ -212,6 +232,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
+                .thenCompose(result -> bisqEasyService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -232,7 +253,8 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> updaterService.shutdown()
+        return supplyAsync(() -> bisqEasyService.shutdown()
+                .thenCompose(result -> updaterService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())

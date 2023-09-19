@@ -1,11 +1,5 @@
 plugins {
     id 'bisq.java-library'
-    alias(libs.plugins.openjfx)
-}
-
-javafx {
-    version = '17.0.1'
-    modules = ['javafx.controls', 'javafx.media']
 }
 
 dependencies {
@@ -23,8 +17,6 @@ dependencies {
     implementation project(':chat')
     implementation project(':support')
     implementation project(':presentation')
-    implementation project(':bisq_easy')
-    implementation project(':application')
 
     implementation("network:network")
     implementation("wallets:electrum")
@@ -32,10 +24,7 @@ dependencies {
 
     implementation libs.google.guava
     implementation libs.google.gson
-    implementation libs.bundles.fontawesomefx
-    implementation libs.bundles.fxmisc.libs
     implementation libs.typesafe.config
 
     testImplementation libs.testfx.junit5
-    testImplementation libs.openjfx.monocle
 }

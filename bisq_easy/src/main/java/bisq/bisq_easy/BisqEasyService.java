@@ -3,31 +3,25 @@
  *
  * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, 
-either version 3 of the License, 
-or (at
+ * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, 
-but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, 
-see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.bisq_easy;
 
 import bisq.account.AccountService;
-import bisq.application.ApplicationService;
-import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
+import bisq.common.application.Service;
 import bisq.contract.ContractService;
-import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
@@ -37,19 +31,18 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.updater.UpdaterService;
 import bisq.user.UserService;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class ServiceProvider {
-    private final ShutDownHandler shutDownHandler;
-    private final ApplicationService.Config config;
+public class BisqEasyService implements Service {
+
     private final PersistenceService persistenceService;
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -65,12 +58,8 @@ public class ServiceProvider {
     private final SupportService supportService;
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
-    private final UpdaterService updaterService;
-    private final BisqEasyService bisqEasyService;
 
-    public ServiceProvider(ShutDownHandler shutDownHandler,
-                           ApplicationService.Config config,
-                           PersistenceService persistenceService,
+    public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
                            Optional<WalletService> walletService,
                            NetworkService networkService,
@@ -84,11 +73,7 @@ public class ServiceProvider {
                            SettingsService settingsService,
                            SupportService supportService,
                            NotificationsService notificationsService,
-                           TradeService tradeService,
-                           UpdaterService updaterService,
-                           BisqEasyService bisqEasyService) {
-        this.shutDownHandler = shutDownHandler;
-        this.config = config;
+                           TradeService tradeService) {
         this.persistenceService = persistenceService;
         this.securityService = securityService;
         this.walletService = walletService;
@@ -104,7 +89,20 @@ public class ServiceProvider {
         this.supportService = supportService;
         this.notificationsService = notificationsService;
         this.tradeService = tradeService;
-        this.updaterService = updaterService;
-        this.bisqEasyService = bisqEasyService;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
     }
 }
