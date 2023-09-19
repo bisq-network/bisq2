@@ -112,7 +112,7 @@ public class MarketImageComposition {
             label.getStyleClass().setAll("fiat-code");
         }
 
-        Circle circle = new Circle(10);
+        Circle circle = new Circle(12);
         circle.setSmooth(true);
         pane.getChildren().add(circle);
         if (code.equalsIgnoreCase("EUR")) {
