@@ -33,6 +33,7 @@ dependencies {
     implementation project(':chat')
     implementation project(':support')
     implementation project(':presentation')
+    implementation project(':bisq_easy')
     implementation project(':application')
 
     implementation("network:network")
