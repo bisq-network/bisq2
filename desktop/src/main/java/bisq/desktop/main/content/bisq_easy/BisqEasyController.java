@@ -17,14 +17,19 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
 import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsController;
+import bisq.presentation.notifications.NotificationsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,21 +40,28 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
     private final ServiceProvider serviceProvider;
     @Getter
     private final BisqEasyView view;
+    private final NotificationsService notificationsService;
+    private final ChatNotificationService chatNotificationService;
 
     public BisqEasyController(ServiceProvider serviceProvider) {
         super(new BisqEasyModel(), NavigationTarget.BISQ_EASY);
 
         this.serviceProvider = serviceProvider;
+        notificationsService = serviceProvider.getNotificationsService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
 
         view = new BisqEasyView(model, this);
     }
 
     @Override
     public void onActivate() {
+        notificationsService.addListener(this::updateNumNotifications);
+
     }
 
     @Override
     public void onDeactivate() {
+        notificationsService.removeListener(this::updateNumNotifications);
     }
 
     @Override
@@ -70,6 +82,38 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
             default: {
                 return Optional.empty();
             }
+        }
+    }
+
+    private void updateNumNotifications(String notificationId) {
+        UIThread.run(() -> {
+            ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
+            findTab(chatChannelDomain).ifPresent(tabButton ->
+                    tabButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
+        });
+    }
+
+    private Optional<TabButton> findTab(ChatChannelDomain chatChannelDomain) {
+        return findNavigationTarget(chatChannelDomain)
+                .flatMap(this::findTabButton);
+    }
+
+    Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+        return model.getTabButtons().stream()
+                .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
+                .findAny();
+    }
+
+    private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+                return Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
+            case BISQ_EASY_OPEN_TRADES:
+                return Optional.of(NavigationTarget.BISQ_EASY_OPEN_TRADES);
+            case BISQ_EASY_PRIVATE_CHAT:
+                return Optional.of(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+            default:
+                return Optional.empty();
         }
     }
 }

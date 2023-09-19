@@ -19,11 +19,15 @@ package bisq.desktop.common.view;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Styles;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.Badge;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -34,6 +38,7 @@ import javafx.scene.layout.Pane;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 
 public class TabButton extends Pane implements Toggle {
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
@@ -46,6 +51,8 @@ public class TabButton extends Pane implements Toggle {
     private ImageView icon;
     private ImageView iconSelected;
     private ImageView iconHover;
+    private final Badge numMessagesBadge;
+    private final ChangeListener<Number> labelWidthListener;
 
     public TabButton(String title, ToggleGroup toggleGroup,
                      NavigationTarget navigationTarget,
@@ -73,13 +80,28 @@ public class TabButton extends Pane implements Toggle {
 
         label.getStyleClass().addAll("bisq-tab-button-label", styles.getNormal());
         label.setGraphic(icon);
-        getChildren().add(label);
 
-        hoverProperty().addListener((ov, wasHovered, isHovered) -> {
+        numMessagesBadge = new Badge();
+        numMessagesBadge.setLayoutY(17);
+
+        getChildren().addAll(label, numMessagesBadge);
+
+        hoverProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (ov, wasHovered, isHovered) -> {
             if (isSelected()) return;
             Layout.chooseStyleClass(label, styles.getHoover(), styles.getNormal(), isHovered);
             label.setGraphic(isHovered ? iconHover : icon);
-        });
+        }).get());
+
+        labelWidthListener = new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                if (newValue.doubleValue() > 0) {
+                    numMessagesBadge.setLayoutX(label.getWidth() + 3);
+                    UIThread.runOnNextRenderFrame(() -> label.widthProperty().removeListener(labelWidthListener));
+                }
+            }
+        };
+        label.widthProperty().addListener(labelWidthListener);
     }
 
     public final void setOnAction(Runnable handler) {
@@ -88,6 +110,14 @@ public class TabButton extends Pane implements Toggle {
         } else {
             setOnMouseClicked(e -> handler.run());
         }
+    }
+
+    public void setNumNotifications(int numNotifications) {
+        if (numNotifications == 0) {
+            numMessagesBadge.setText("");
+            return;
+        }
+        numMessagesBadge.setText(String.valueOf(numNotifications));
     }
 
 
