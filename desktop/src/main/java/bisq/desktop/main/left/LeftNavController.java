@@ -27,6 +27,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.presentation.notifications.NotificationsService;
+import bisq.settings.CookieKey;
 import bisq.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -106,7 +107,9 @@ public class LeftNavController implements Controller {
     }
 
     void onToggleHorizontalExpandState() {
-        model.getMenuHorizontalExpanded().set(!model.getMenuHorizontalExpanded().get());
+        boolean newState = !model.getSettingsService().getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(false);
+        model.getSettingsService().setCookie(CookieKey.MENU_HORIZONTAL_EXPANDED, newState);
+        model.getMenuHorizontalExpanded().set(newState);
     }
 
     void onNavigationButtonCreated(LeftNavButton leftNavButton) {
