@@ -21,6 +21,7 @@ import bisq.common.util.DateUtils;
 import bisq.common.util.Version;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public class NetworkDataValidation {
     // Signature are usually 71 - 73 chars
     public static void validateECSignature(byte[] signature) {
         checkArgument(signature.length >= 70 && signature.length <= 74,
-                "Signature not of the expected size");
+                "Signature not of the expected size. signature=" + Arrays.toString(signature));
     }
 
     public static void validateECPubKey(byte[] pubKey) {
