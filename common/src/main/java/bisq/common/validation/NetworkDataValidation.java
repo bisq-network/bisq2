@@ -53,7 +53,7 @@ public class NetworkDataValidation {
 
     public static void validateECPubKey(byte[] pubKey) {
         checkArgument(pubKey.length > 50 && pubKey.length < 100,
-                "Public key not of the expected size. pubKey=" + pubKey);
+                "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
     }
 
     // IDs are created with StringUtils.createUid() which generates 36 chars. We allow upt to 50 for more flexibility.
