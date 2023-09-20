@@ -10,95 +10,49 @@ permissions:
 
 jobs:
   build_bisq:
-    runs-on: ${{ matrix.os }}
+    name: Build Bisq on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
 
-    name: Build Bisq on ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.0.0
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3.12.0
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Gradle Build Action (root)
-        uses: gradle/gradle-build-action@v2.8.0
-        with:
-          arguments: build --scan
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: Bisq
+      build-root-dir: .
 
   build_network_module:
-    runs-on: ${{ matrix.os }}
+    name: Build network module on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
 
-    name: Build network module on ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.0.0
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3.12.0
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Gradle Build Action (network)
-        uses: gradle/gradle-build-action@v2.8.0
-        with:
-          arguments: build --scan
-          build-root-directory: network
-          gradle-executable: ./gradlew
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: network module
+      build-root-dir: network
 
   build_tor_module:
-    runs-on: ${{ matrix.os }}
+    name: Build tor module on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
 
-    name: Build tor module on ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.0.0
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3.12.0
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Gradle Build Action (tor)
-        uses: gradle/gradle-build-action@v2.8.0
-        with:
-          arguments: build --scan
-          build-root-directory: network/tor
-          gradle-executable: ./gradlew
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: tor module
+      build-root-dir: network/tor
 
   build_wallet_module:
-    runs-on: ${{ matrix.os }}
+    name: Build wallet module on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
 
-    name: Build wallet module on ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.0.0
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3.12.0
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Gradle Build Action (wallets)
-        uses: gradle/gradle-build-action@v2.8.0
-        with:
-          arguments: build --scan
-          build-root-directory: wallets
-          gradle-executable: ./gradlew
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: wallet module
+      build-root-dir: wallets
