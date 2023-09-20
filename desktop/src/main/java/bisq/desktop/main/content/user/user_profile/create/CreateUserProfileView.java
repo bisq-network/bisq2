@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateUserProfileView extends NavigationView<VBox, CreateUserProfileModel, CreateUserProfileController> {
 
-    public static final double TOP_PANE_HEIGHT = 55;
     private final Button closeButton;
 
     public CreateUserProfileView(CreateUserProfileModel model, CreateUserProfileController controller) {
@@ -46,15 +45,15 @@ public class CreateUserProfileView extends NavigationView<VBox, CreateUserProfil
 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER);
-        hBox.setMinHeight(TOP_PANE_HEIGHT);
-        hBox.setMaxHeight(TOP_PANE_HEIGHT);
-        hBox.setPadding(new Insets(0, 20, 0, 50));
+        hBox.setPadding(new Insets(10, 20, 0, 0));
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 closeButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             Region childRoot = newValue.getRoot();
             childRoot.setPrefHeight(root.getHeight());
+            //Make the child root smaller 50 pixels so close button is not bellow the childRoot
+            VBox.setMargin(childRoot, new Insets(-35, 50, 0, 50));
             root.getChildren().addAll(hBox, childRoot);
             if (oldValue != null) {
                 Transitions.transitLeftOut(childRoot, oldValue.getRoot());

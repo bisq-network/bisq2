@@ -79,7 +79,7 @@ public class CreateUserProfileController extends NavigationController {
     }
 
     void onClose() {
-        Navigation.navigateTo(NavigationTarget.MAIN);
+        Navigation.navigateTo(NavigationTarget.USER_PROFILE);
         OverlayController.hide();
     }
 
