@@ -9,13 +9,13 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build_bisq:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
 
-    name: Building on ${{ matrix.os }}
+    name: Build Bisq on ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.0.0
@@ -31,6 +31,23 @@ jobs:
         with:
           arguments: build --scan
 
+  build_network_module:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+
+    name: Build network module on ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.0.0
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.12.0
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
       - name: Gradle Build Action (network)
         uses: gradle/gradle-build-action@v2.8.0
         with:
@@ -38,12 +55,46 @@ jobs:
           build-root-directory: network
           gradle-executable: ./gradlew
 
+  build_tor_module:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+
+    name: Build tor module on ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.0.0
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.12.0
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
       - name: Gradle Build Action (tor)
         uses: gradle/gradle-build-action@v2.8.0
         with:
           arguments: build --scan
           build-root-directory: network/tor
           gradle-executable: ./gradlew
+
+  build_wallet_module:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+
+    name: Build wallet module on ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.0.0
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.12.0
+        with:
+          java-version: '17'
+          distribution: 'zulu'
 
       - name: Gradle Build Action (wallets)
         uses: gradle/gradle-build-action@v2.8.0
