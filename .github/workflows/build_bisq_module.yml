@@ -1,0 +1,35 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+      name:
+        required: true
+        type: string
+
+      build-root-dir:
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build ${{ inputs.name }} on ${{ inputs.os }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.0.0
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.12.0
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Gradle Build Action
+        uses: gradle/gradle-build-action@v2.8.0
+        with:
+          arguments: build --scan
+          build-root-directory: ${{ inputs.build-root-dir }}
+          gradle-executable: ./gradlew
