@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DashboardView extends View<GridPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
+    private final Button tradeProtocols, learnMore;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
@@ -70,23 +71,27 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         VBox.setVgrow(firstBox, Priority.NEVER);
         root.add(firstBox, 0, 1, 2, 1);
 
-        VBox secondBox = getWidgetBox(
-                "fiat-btc",
-                Res.get("dashboard.second.headline"),
-                Res.get("dashboard.second.content"),
-                Res.get("dashboard.second.button"),
-                controller::onOpenTradeOverview
-        );
-        root.add(secondBox, 0, 2, 1, 1);
+        GridPane gridPane = getWidgetBoxGridPane();
+        root.add(gridPane, 0, 2, 2, 1);
 
-        VBox thirdBox = getWidgetBox(
-                "learn",
-                Res.get("dashboard.third.headline"),
-                Res.get("dashboard.third.content"),
-                Res.get("dashboard.third.button"),
-                controller::onLearn
+        tradeProtocols = new Button(Res.get("dashboard.second.button"));
+
+        fillSmallBox(gridPane,
+                0,
+                tradeProtocols,
+                Res.get("dashboard.second.headline"),
+                "bisq-easy",
+                Res.get("dashboard.second.content")
         );
-        root.add(thirdBox, 1, 2, 1, 1);
+
+        learnMore = new Button(Res.get("dashboard.third.button"));
+        fillSmallBox(gridPane,
+                1,
+                learnMore,
+                Res.get("dashboard.third.headline"),
+                "bisq-easy",
+                Res.get("dashboard.third.content")
+        );
     }
 
     @Override
@@ -95,6 +100,9 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         marketCodeLabel.textProperty().bind(model.getMarketCode());
         offersOnlineLabel.textProperty().bind(model.getOffersOnline());
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
+
+        tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
+        learnMore.setOnAction(e -> controller.onLearn());
     }
 
     @Override
@@ -103,6 +111,9 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         marketCodeLabel.textProperty().unbind();
         offersOnlineLabel.textProperty().unbind();
         activeUsersLabel.textProperty().unbind();
+
+        tradeProtocols.setOnAction(null);
+        learnMore.setOnAction(null);
     }
 
     private Triple<VBox, Label, Label> getPriceBox(String title) {
@@ -173,27 +184,44 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         return hBox;
     }
 
-    private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
-        Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
+    private void fillSmallBox(GridPane gridPane, int columnIndex, Button button, String headline, String headlineImageId, String info) {
+        Pane group = new Pane();
+        group.getStyleClass().add("bisq-box-1");
+        if (columnIndex == 0) {
+            GridPane.setMargin(group, new Insets(-36, -48, -44, -48));
+        } else {
+            GridPane.setMargin(group, new Insets(-36, -48, -44, -48));
+        }
+        gridPane.add(group, columnIndex, 0, 1, 3);
+
+        Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(headlineImageId));
         headlineLabel.setGraphicTextGap(16.0);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setWrapText(true);
+        GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
+        gridPane.add(headlineLabel, columnIndex, 0);
 
-        Label contentLabel = new Label(content);
-        contentLabel.getStyleClass().addAll("bisq-text-3");
-        contentLabel.setAlignment(Pos.TOP_LEFT);
-        contentLabel.setWrapText(true);
+        Label infoLabel = new Label(info);
+        infoLabel.getStyleClass().add("bisq-text-3");
+        infoLabel.setWrapText(true);
+        gridPane.add(infoLabel, columnIndex, 1);
 
-        Button button = new Button(buttonLabel);
         button.getStyleClass().add("large-button");
-        button.setOnAction(e -> onAction.run());
         button.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setMargin(button, new Insets(20, 0, 0, 0));
+        gridPane.add(button, columnIndex, 2);
+    }
 
-        VBox.setVgrow(contentLabel, Priority.ALWAYS);
-        VBox.setMargin(contentLabel, new Insets(0, 0, 10, 0));
-        VBox vBox = new VBox(16, headlineLabel, contentLabel, button);
-        vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(36, 48, 52, 48));
-        return vBox;
+    private GridPane getWidgetBoxGridPane() {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(116);
+        gridPane.setVgap(15);
+        gridPane.setPadding(new Insets(36, 48, 44, 48));
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        gridPane.getColumnConstraints().addAll(col1, col2);
+        return gridPane;
     }
 }
