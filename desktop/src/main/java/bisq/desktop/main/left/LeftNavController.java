@@ -107,7 +107,8 @@ public class LeftNavController implements Controller {
     }
 
     void onToggleHorizontalExpandState() {
-        boolean newState = !model.getSettingsService().getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(false);
+        boolean newState = !model.getSettingsService().getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED)
+                .orElse(model.getMenuHorizontalExpanded().get());
         model.getSettingsService().setCookie(CookieKey.MENU_HORIZONTAL_EXPANDED, newState);
         model.getMenuHorizontalExpanded().set(newState);
     }

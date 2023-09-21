@@ -69,7 +69,8 @@ public class LeftNavModel implements Model {
         networkService = serviceProvider.getNetworkService();
         settingsService = serviceProvider.getSettingsService();
 
-        menuHorizontalExpanded =  new SimpleBooleanProperty(settingsService.getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
+        menuHorizontalExpanded =  new SimpleBooleanProperty(settingsService.getCookie()
+                .asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
 
         torEnabled.set(networkService.isTransportTypeSupported(Transport.Type.TOR));
         i2pEnabled.set(networkService.isTransportTypeSupported(Transport.Type.I2P));
