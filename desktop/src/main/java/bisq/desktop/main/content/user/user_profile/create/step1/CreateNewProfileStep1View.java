@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.user_profile.create.step1;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileView;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +36,8 @@ public class CreateNewProfileStep1View extends CreateProfileView {
         this.createNewProfileStep1Controller = controller;
 
         createProfileButton.setText(Res.get("action.next"));
+
+        root.setPadding(new Insets(-30, 0, 10, 0));
     }
 
     @Override
