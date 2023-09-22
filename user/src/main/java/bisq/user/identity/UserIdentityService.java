@@ -215,14 +215,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair()));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> deleteUserProfile(UserIdentity userIdentity) {
-        //todo add more checks if deleting profile is permitted (e.g. not used in trades, PM,...)
+    // Unsafe to use if there are open private chats or messages from userIdentity
+    public CompletableFuture<DataService.BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
         if (getUserIdentities().size() <= 1) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
         }
-
         synchronized (lock) {
             getUserIdentities().remove(userIdentity);
+
             getUserIdentities().stream().findAny()
                     .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
                             () -> persistableStore.setSelectedUserIdentity(null));

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.user_profile;
 
+import bisq.bisq_easy.BisqEasyService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -42,6 +43,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE_STEP1;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -51,6 +53,7 @@ public class UserProfileController implements Controller {
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final ProfileAgeService profileAgeService;
+    private final BisqEasyService bisqEasyService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
     private Subscription statementPin, termsPin;
 
@@ -59,6 +62,7 @@ public class UserProfileController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         profileAgeService = reputationService.getProfileAgeService();
+        bisqEasyService = serviceProvider.getBisqEasyService();
 
         model = new UserProfileModel();
         view = new UserProfileView(model, this);
@@ -71,6 +75,7 @@ public class UserProfileController implements Controller {
 
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 userIdentity -> {
+                    updateButtons();
                     if (userIdentity == null) {
                         return;
                     }
@@ -94,9 +99,14 @@ public class UserProfileController implements Controller {
         reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
 
         statementPin = EasyBind.subscribe(model.getStatement(),
-                statement -> updateSaveButtonState());
+                statement -> updateButtons());
         termsPin = EasyBind.subscribe(model.getTerms(),
-                terms -> updateSaveButtonState());
+                terms -> updateButtons());
+    }
+
+    private void updateButtons() {
+        updateSaveButtonState();
+        updateDeleteButtonState();
     }
 
     private void updateSaveButtonState() {
@@ -110,6 +120,17 @@ public class UserProfileController implements Controller {
         String terms = model.getTerms().get();
         model.getSaveButtonDisabled().set(statement.equals(userProfile.getStatement()) &&
                 terms.equals(userProfile.getTerms()));
+    }
+
+    private void updateDeleteButtonState() {
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        if (userIdentity == null) {
+            return;
+        }
+
+        boolean cannotDelete = bisqEasyService.isDeleteUserIdentityProhibited(userIdentity);
+        model.getDeleteButtonDisabled().set(cannotDelete);
+        model.getUseDeleteTooltip().set(cannotDelete);
     }
 
     @Override
@@ -146,25 +167,30 @@ public class UserProfileController implements Controller {
                     UIThread.runOnNextRenderFrame(() -> {
                         UserIdentity value = userIdentityService.getSelectedUserIdentity();
                         model.getSelectedUserIdentity().set(value);
-                        updateSaveButtonState();
+                        updateButtons();
                     });
                 });
     }
 
-    public void onDelete() {
-        if (userIdentityService.getUserIdentities().size() < 2) {
-            new Popup().warning(Res.get("user.userProfile.deleteProfile.lastProfile.warning")).show();
-        } else {
-            new Popup().warning(Res.get("user.userProfile.deleteProfile.warning"))
-                    .onAction(this::doDelete)
-                    .actionButtonText(Res.get("user.userProfile.deleteProfile.warning.yes"))
-                    .closeButtonText(Res.get("action.cancel"))
-                    .show();
-        }
+    public void onDeleteProfile() {
+        String profileName = checkNotNull(userIdentityService.getSelectedUserIdentity()).getUserName();
+        new Popup().warning(Res.get("user.userProfile.deleteProfile.popup.warning", profileName))
+                .onAction(this::doDeleteProfile)
+                .actionButtonText(Res.get("user.userProfile.deleteProfile.popup.warning.yes"))
+                .closeButtonText(Res.get("action.cancel"))
+                .show();
     }
 
-    private CompletableFuture<DataService.BroadCastDataResult> doDelete() {
-        return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserIdentity())
+    private CompletableFuture<DataService.BroadCastDataResult> doDeleteProfile() {
+        if (bisqEasyService.isDeleteUserIdentityProhibited(userIdentityService.getSelectedUserIdentity())) {
+            new Popup().warning(Res.get("user.userProfile.deleteProfile.cannotDelete"))
+                    .closeButtonText(Res.get("confirmation.ok"))
+                    .show();
+            updateDeleteButtonState();
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return bisqEasyService.deleteUserIdentity(userIdentityService.getSelectedUserIdentity())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         UIThread.run(() -> new Popup().error(throwable).show());
@@ -173,7 +199,7 @@ public class UserProfileController implements Controller {
                             UIThread.runOnNextRenderFrame(() -> {
                                 UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
-                                updateSaveButtonState();
+                                updateButtons();
                             });
                         }
                     }
