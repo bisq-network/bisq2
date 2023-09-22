@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.reputation.bond.tab3;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.OrderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,9 +50,7 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
         Label headLine = new Label(Res.get("user.reputation.bond.howToHeadline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("user.reputation.bond.howTo"));
-        info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13");
+        OrderedList info = new OrderedList(Res.get("user.reputation.bond.howTo"), "bisq-text-13");
 
         Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
