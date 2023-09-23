@@ -74,6 +74,7 @@
 }
 
 .bisq-easy-onboarding-small-box-text {
+    -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Light";

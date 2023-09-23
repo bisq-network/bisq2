@@ -9,6 +9,8 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -33,6 +35,28 @@ public class TwoColumnsUtil {
         return hBox;
     }
 
+
+    public static void fillColumnStandardStyle(GridPane gridPane,
+                                          int columnIndex,
+                                          Button button,
+                                          String headline,
+                                          String headlineImageId,
+                                          String info) {
+        String groupPaneStyleClass = "bisq-box-1";
+        String headlineLabelStyleClass = "bisq-text-headline-2";
+        String infoLabelStyleClass = "bisq-text-3";
+        String buttonStyleClass = "large-button";
+        fillColumn(gridPane,
+                columnIndex,
+                button,
+                buttonStyleClass,
+                headline,
+                headlineLabelStyleClass,
+                headlineImageId,
+                info,
+                infoLabelStyleClass,
+                groupPaneStyleClass);
+    }
     public static void fillColumn(GridPane gridPane,
                                      int columnIndex,
                                      Button button,
@@ -60,9 +84,9 @@ public class TwoColumnsUtil {
         GridPane.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         gridPane.add(headlineLabel, columnIndex, 0);
 
-        Label infoLabel = new Label(info);
-        infoLabel.getStyleClass().add(infoLabelStyleClass);
-        infoLabel.setWrapText(true);
+        Text infoLabelText = new Text(info);
+        infoLabelText.getStyleClass().add(infoLabelStyleClass);
+        TextFlow infoLabel = new TextFlow(infoLabelText);
         gridPane.add(infoLabel, columnIndex, 1);
 
         button.getStyleClass().add(buttonStyleClass);

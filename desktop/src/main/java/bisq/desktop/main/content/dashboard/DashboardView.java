@@ -73,34 +73,21 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         GridPane gridPane = TwoColumnsUtil.getWidgetBoxGridPane(116, 5, gridPaneInsets, 50, 50);
         root.add(gridPane, 0, 2, 2, 1);
 
-        String groupPaneStyleClass = "bisq-box-1";
-        String headlineLabelStyleClass = "bisq-text-headline-2";
-        String infoLabelStyleClass = "bisq-text-3";
-        String buttonStyleClass = "large-button";
-
         tradeProtocols = new Button(Res.get("dashboard.second.button"));
-        TwoColumnsUtil.fillColumn(gridPane,
+        TwoColumnsUtil.fillColumnStandardStyle(gridPane,
                 0,
                 tradeProtocols,
-                buttonStyleClass,
                 Res.get("dashboard.second.headline"),
-                headlineLabelStyleClass,
                 "fiat-btc",
-                Res.get("dashboard.second.content"),
-                infoLabelStyleClass,
-                groupPaneStyleClass);
+                Res.get("dashboard.second.content"));
 
         learnMore = new Button(Res.get("dashboard.third.button"));
-        TwoColumnsUtil.fillColumn(gridPane,
+        TwoColumnsUtil.fillColumnStandardStyle(gridPane,
                 1,
                 learnMore,
-                buttonStyleClass,
                 Res.get("dashboard.third.headline"),
-                headlineLabelStyleClass,
                 "learn",
-                Res.get("dashboard.third.content"),
-                infoLabelStyleClass,
-                groupPaneStyleClass);
+                Res.get("dashboard.third.content"));
     }
 
     @Override
