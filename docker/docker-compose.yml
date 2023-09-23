@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.7'
 
 services:
 
@@ -42,3 +42,54 @@ services:
       - DAEMON_URL=http://bisq:bisq@bitcoin-core:18443
       - DB_DIRECTORY=/root/electrumx/db_directory
     entrypoint: ./electrumx_server
+
+  mempool-web:
+    environment:
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: "mempool-api"
+    image: mempool/frontend:latest
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 1m
+    command: "./wait-for mempool-db:3306 --timeout=720 -- nginx -g 'daemon off;'"
+    ports:
+      - 127.0.0.1:8090:8080
+
+  mempool-api:
+    depends_on:
+      - bitcoin-core
+      - electrumx
+    environment:
+      MEMPOOL_BACKEND: "electrum"
+      CORE_RPC_HOST: "bitcoin-core"
+      CORE_RPC_PORT: "18443"
+      CORE_RPC_USERNAME: "bisq"
+      CORE_RPC_PASSWORD: "bisq"
+      ELECTRUM_HOST: "electrumx"
+      ELECTRUM_PORT: "50001"
+      ELECTRUM_TLS_ENABLED: "false"
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: "mempool-db"
+      DATABASE_DATABASE: "mempool"
+      DATABASE_USERNAME: "mempool"
+      DATABASE_PASSWORD: "mempool"
+      STATISTICS_ENABLED: "true"
+    image: mempool/backend:latest
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 1m
+    command: "./wait-for-it.sh mempool-db:3306 --timeout=720 --strict -- ./start.sh"
+    volumes:
+      - ./data_dirs/mempool-api:/backend/cache
+
+  mempool-db:
+    environment:
+      MYSQL_DATABASE: "mempool"
+      MYSQL_USER: "mempool"
+      MYSQL_PASSWORD: "mempool"
+      MYSQL_ROOT_PASSWORD: "admin"
+    image: mariadb:10.5.8
+    restart: on-failure
+    stop_grace_period: 1m
+    volumes:
+      - ./data_dirs/mempool-mysql:/var/lib/mysql
