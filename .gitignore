@@ -44,3 +44,6 @@ seed2-tor-hostname
 seed1-i2p-destination
 seed2-i2p-destination
 /.run/
+
+# Docker Compose data directories
+docker/data_dirs
