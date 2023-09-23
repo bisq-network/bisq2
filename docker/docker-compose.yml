@@ -16,6 +16,7 @@ services:
       - -debug=1
       - -rpcbind
       - -rpcallowip=127.0.0.1
+      - -rpcallowip=172.0.0.1/8
       - -rpcuser=bisq
       - -rpcpassword=bisq
       - -zmqpubhashblock=tcp://127.0.0.1:7777
@@ -23,3 +24,21 @@ services:
       - -fallbackfee=0.00000001
       - -whitelist=127.0.0.1
       - -txindex=1
+
+  electrumx:
+    image: bisq/electrumx
+    build: ./electrumx
+    depends_on:
+      - bitcoin-core
+    ports:
+      - "127.0.0.1:50001:50001"  # electrumx port
+    volumes:
+      - ./data_dirs/electrumx:/root/electrumx/db_directory
+    environment:
+      - ALLOW_ROOT=yes
+      - SERVICES=tcp://:50001,rpc://
+      - COIN=Bitcoin
+      - NET=regtest
+      - DAEMON_URL=http://bisq:bisq@bitcoin-core:18443
+      - DB_DIRECTORY=/root/electrumx/db_directory
+    entrypoint: ./electrumx_server
