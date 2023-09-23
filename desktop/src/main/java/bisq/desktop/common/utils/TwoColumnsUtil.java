@@ -16,14 +16,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 
 public class TwoColumnsUtil {
-    public static void setColumnConstraints(GridPane pane) {
+    public static void setColumnConstraints50percent(GridPane pane) {
+        setColumnConstraints(pane, 50, 50);
+    }
+
+    public static void setColumnConstraints(GridPane pane, int percentageCol1, int percentageCol2) {
         ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(50);
+        col1.setPercentWidth(percentageCol1);
         ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(50);
+        col2.setPercentWidth(percentageCol2);
         pane.getColumnConstraints().addAll(col1, col2);
     }
 
+    /**
+     * Set the layout for the grid pane.
+     */
+    public static GridPane getWidgetBoxGridPane(int hGap, int vGap, Insets gridPadding, int col1PercentWidth, int col2PercentWidth) {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(hGap);
+        gridPane.setVgap(vGap);
+        gridPane.setPadding(gridPadding);
+        setColumnConstraints(gridPane, col1PercentWidth, col2PercentWidth);
+        return gridPane;
+    }
+
+    /**
+     *  Get icon and text as a label. See example at Dashboard, multiple trade protocols box
+     */
     public static HBox getIconAndText(String labelStyleClass, String text, String imageId) {
         Label label = new Label(text);
         label.getStyleClass().add(labelStyleClass);
@@ -35,7 +54,9 @@ public class TwoColumnsUtil {
         return hBox;
     }
 
-
+    /**
+     * Column box using the standard style. See example at Dashboard, multiple trade protocols box
+     */
     public static void fillColumnStandardStyle(GridPane gridPane,
                                           int columnIndex,
                                           Button button,
@@ -57,6 +78,10 @@ public class TwoColumnsUtil {
                 infoLabelStyleClass,
                 groupPaneStyleClass);
     }
+
+    /**
+     * Column box using a custom style. See example at Bisq Easy, best for beginners section
+     */
     public static void fillColumn(GridPane gridPane,
                                      int columnIndex,
                                      Button button,
@@ -70,11 +95,8 @@ public class TwoColumnsUtil {
 
         Pane group = new Pane();
         group.getStyleClass().add(groupPaneStyleClass);
-        if (columnIndex == 0) {
-            GridPane.setMargin(group, new Insets(-36, -48, -44, -48));
-        } else {
-            GridPane.setMargin(group, new Insets(-36, -48, -44, -48));
-        }
+        GridPane.setMargin(group, new Insets(-36, -48, -44, -48));
+
         gridPane.add(group, columnIndex, 0, 1, 3);
 
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(headlineImageId));
@@ -93,18 +115,5 @@ public class TwoColumnsUtil {
         button.setMaxWidth(Double.MAX_VALUE);
         GridPane.setMargin(button, new Insets(20, 0, 0, 0));
         gridPane.add(button, columnIndex, 2);
-    }
-
-    public static GridPane getWidgetBoxGridPane(int hGap, int vGap, Insets gridPadding, int col1PercentWidth, int col2PercentWidth) {
-        GridPane gridPane = new GridPane();
-        gridPane.setHgap(hGap);
-        gridPane.setVgap(vGap);
-        gridPane.setPadding(gridPadding);
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(col1PercentWidth);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(col2PercentWidth);
-        gridPane.getColumnConstraints().addAll(col1, col2);
-        return gridPane;
     }
 }

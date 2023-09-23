@@ -41,7 +41,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         root.setHgap(PADDING);
         root.setVgap(PADDING);
-        TwoColumnsUtil.setColumnConstraints(root);
+        TwoColumnsUtil.setColumnConstraints50percent(root);
 
         //First row
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));

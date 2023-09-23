@@ -53,7 +53,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         root.setHgap(PADDING);
         root.setVgap(10);
         root.setMinWidth(780);
-        TwoColumnsUtil.setColumnConstraints(root);
+        TwoColumnsUtil.setColumnConstraints50percent(root);
 
         //First row
         addTopWidgetBox();
