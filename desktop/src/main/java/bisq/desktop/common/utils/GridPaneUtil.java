@@ -15,11 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 
-public class TwoColumnsUtil {
+public class GridPaneUtil {
     public static void setColumnConstraints50percent(GridPane pane) {
         setGridPaneTwoColumnsConstraints(pane, 50, 50);
     }
 
+    /**
+     * Set the grid pane with two column constraints
+     */
     public static void setGridPaneTwoColumnsConstraints(GridPane pane, int percentageCol1, int percentageCol2) {
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(percentageCol1);
@@ -29,14 +32,23 @@ public class TwoColumnsUtil {
     }
 
     /**
-     * Set the layout for the grid pane.
+     * Get a standard 50/50 two column grid pane with the layout specified
+     */
+    public static GridPane getStandardTwoColumnsGridPane(int hGap, int vGap, Insets gridPadding) {
+        return getTwoColumnsGridPane(hGap, vGap, gridPadding, 50, 50);
+    }
+
+    /**
+     * Get a custom two column grid pane with the layout and column widths specified
      */
     public static GridPane getTwoColumnsGridPane(int hGap, int vGap, Insets gridPadding, int col1PercentWidth, int col2PercentWidth) {
         GridPane gridPane = new GridPane();
         gridPane.setHgap(hGap);
         gridPane.setVgap(vGap);
         gridPane.setPadding(gridPadding);
-        setGridPaneTwoColumnsConstraints(gridPane, col1PercentWidth, col2PercentWidth);
+        if(col1PercentWidth + col2PercentWidth == 100) {
+            setGridPaneTwoColumnsConstraints(gridPane, col1PercentWidth, col2PercentWidth);
+        }
         return gridPane;
     }
 

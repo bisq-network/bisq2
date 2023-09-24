@@ -19,7 +19,7 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
-import bisq.desktop.common.utils.TwoColumnsUtil;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -41,7 +41,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         root.setHgap(PADDING);
         root.setVgap(PADDING);
-        TwoColumnsUtil.setColumnConstraints50percent(root);
+        GridPaneUtil.setColumnConstraints50percent(root);
 
         //First row
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
@@ -70,11 +70,11 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         //Third row
         Insets gridPaneInsets = new Insets(36, 48, 44, 48);
-        GridPane gridPane = TwoColumnsUtil.getTwoColumnsGridPane(116, 5, gridPaneInsets, 50, 50);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(116, 5, gridPaneInsets, 50, 50);
         root.add(gridPane, 0, 2, 2, 1);
 
         tradeProtocols = new Button(Res.get("dashboard.second.button"));
-        TwoColumnsUtil.fillColumnStandardStyle(gridPane,
+        GridPaneUtil.fillColumnStandardStyle(gridPane,
                 0,
                 tradeProtocols,
                 Res.get("dashboard.second.headline"),
@@ -82,7 +82,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 Res.get("dashboard.second.content"));
 
         learnMore = new Button(Res.get("dashboard.third.button"));
-        TwoColumnsUtil.fillColumnStandardStyle(gridPane,
+        GridPaneUtil.fillColumnStandardStyle(gridPane,
                 1,
                 learnMore,
                 Res.get("dashboard.third.headline"),
@@ -161,9 +161,9 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         String iconTxtStyle = "bisq-easy-onboarding-big-box-bullet-point";
         VBox vBox = new VBox(15,
                 headlineLabel,
-                TwoColumnsUtil.getIconAndText(iconTxtStyle, Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
-                TwoColumnsUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
-                TwoColumnsUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content3"), "reputation-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle, Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content3"), "reputation-white"),
                 button);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30, 48, 44, 48));

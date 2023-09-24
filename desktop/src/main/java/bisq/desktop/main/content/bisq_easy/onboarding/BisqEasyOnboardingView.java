@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.onboarding;
 
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.utils.TwoColumnsUtil;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -53,14 +53,14 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         root.setHgap(PADDING);
         root.setVgap(10);
         root.setMinWidth(780);
-        TwoColumnsUtil.setColumnConstraints50percent(root);
+        GridPaneUtil.setColumnConstraints50percent(root);
 
         //First row
         addTopWidgetBox();
 
         //Second row
         Insets gridPaneInsets = new Insets(36, 48, 44, 48);
-        GridPane gridPane = TwoColumnsUtil.getTwoColumnsGridPane(116, 15, gridPaneInsets, 50, 50);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(116, 15, gridPaneInsets, 50, 50);
         root.add(gridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-easy-onboarding-small-box";
@@ -69,7 +69,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         String buttonStyleClass = "large-button";
 
         startTradingButton = new Button(Res.get("bisqEasy.onboarding.left.button"));
-        TwoColumnsUtil.fillColumn(gridPane,
+        GridPaneUtil.fillColumn(gridPane,
                 0,
                 startTradingButton,
                 buttonStyleClass,
@@ -81,7 +81,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 groupPaneStyleClass);
 
         openChatButton = new Button(Res.get("bisqEasy.onboarding.right.button"));
-        TwoColumnsUtil.fillColumn(gridPane,
+        GridPaneUtil.fillColumn(gridPane,
                 1,
                 openChatButton,
                 buttonStyleClass,
@@ -119,7 +119,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
     }
 
     private void addTopWidgetBox() {
-        GridPane gridPane = TwoColumnsUtil.getTwoColumnsGridPane(48, 15, new Insets(30, 48, 44, 48), 50, 50);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(48, 15, new Insets(30, 48, 44, 48), 50, 50);
         gridPane.getStyleClass().add("bisq-easy-onboarding-big-box");
         root.add(gridPane, 0, 0, 2, 1);
 
@@ -129,9 +129,9 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         gridPane.add(headlineLabel, 0, 0, 2, 1);
 
         String lineStyleClass = "bisq-easy-onboarding-big-box-bullet-point";
-        HBox line1 = TwoColumnsUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");
-        HBox line2 = TwoColumnsUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content2"), "onboarding-2-payment");
-        HBox line3 = TwoColumnsUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-chat");
+        HBox line1 = GridPaneUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");
+        HBox line2 = GridPaneUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content2"), "onboarding-2-payment");
+        HBox line3 = GridPaneUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-chat");
         VBox vBox = new VBox(15, Spacer.fillVBox(), line1, line2, line3, Spacer.fillVBox());
         gridPane.add(vBox, 0, 1);
 
