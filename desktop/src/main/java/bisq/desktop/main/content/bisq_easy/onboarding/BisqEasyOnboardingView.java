@@ -60,7 +60,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         //Second row
         Insets gridPaneInsets = new Insets(36, 48, 44, 48);
-        GridPane gridPane = TwoColumnsUtil.getWidgetBoxGridPane(116, 15, gridPaneInsets, 50, 50);
+        GridPane gridPane = TwoColumnsUtil.getTwoColumnsGridPane(116, 15, gridPaneInsets, 50, 50);
         root.add(gridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-easy-onboarding-small-box";
@@ -119,7 +119,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
     }
 
     private void addTopWidgetBox() {
-        GridPane gridPane = TwoColumnsUtil.getWidgetBoxGridPane(48, 15, new Insets(30, 48, 44, 48), 50, 50);
+        GridPane gridPane = TwoColumnsUtil.getTwoColumnsGridPane(48, 15, new Insets(30, 48, 44, 48), 50, 50);
         gridPane.getStyleClass().add("bisq-easy-onboarding-big-box");
         root.add(gridPane, 0, 0, 2, 1);
 

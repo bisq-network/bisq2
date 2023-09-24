@@ -17,10 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 
 public class TwoColumnsUtil {
     public static void setColumnConstraints50percent(GridPane pane) {
-        setColumnConstraints(pane, 50, 50);
+        setGridPaneTwoColumnsConstraints(pane, 50, 50);
     }
 
-    public static void setColumnConstraints(GridPane pane, int percentageCol1, int percentageCol2) {
+    public static void setGridPaneTwoColumnsConstraints(GridPane pane, int percentageCol1, int percentageCol2) {
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(percentageCol1);
         ColumnConstraints col2 = new ColumnConstraints();
@@ -31,12 +31,12 @@ public class TwoColumnsUtil {
     /**
      * Set the layout for the grid pane.
      */
-    public static GridPane getWidgetBoxGridPane(int hGap, int vGap, Insets gridPadding, int col1PercentWidth, int col2PercentWidth) {
+    public static GridPane getTwoColumnsGridPane(int hGap, int vGap, Insets gridPadding, int col1PercentWidth, int col2PercentWidth) {
         GridPane gridPane = new GridPane();
         gridPane.setHgap(hGap);
         gridPane.setVgap(vGap);
         gridPane.setPadding(gridPadding);
-        setColumnConstraints(gridPane, col1PercentWidth, col2PercentWidth);
+        setGridPaneTwoColumnsConstraints(gridPane, col1PercentWidth, col2PercentWidth);
         return gridPane;
     }
 

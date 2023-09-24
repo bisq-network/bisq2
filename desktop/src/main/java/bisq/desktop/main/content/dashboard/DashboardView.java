@@ -70,7 +70,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         //Third row
         Insets gridPaneInsets = new Insets(36, 48, 44, 48);
-        GridPane gridPane = TwoColumnsUtil.getWidgetBoxGridPane(116, 5, gridPaneInsets, 50, 50);
+        GridPane gridPane = TwoColumnsUtil.getTwoColumnsGridPane(116, 5, gridPaneInsets, 50, 50);
         root.add(gridPane, 0, 2, 2, 1);
 
         tradeProtocols = new Button(Res.get("dashboard.second.button"));
