@@ -22,6 +22,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.persistence.PersistenceService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,11 +33,14 @@ import java.util.stream.Stream;
 @Getter
 public class BisqEasyOpenTradeSelectionService extends ChatChannelSelectionService {
     private final BisqEasyOpenTradeChannelService channelService;
+    private final UserIdentityService userIdentityService;
 
     public BisqEasyOpenTradeSelectionService(PersistenceService persistenceService,
-                                             BisqEasyOpenTradeChannelService channelService) {
+                                             BisqEasyOpenTradeChannelService channelService,
+                                             UserIdentityService userIdentityService) {
         super(persistenceService, ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
         this.channelService = channelService;
+        this.userIdentityService = userIdentityService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -46,6 +50,11 @@ public class BisqEasyOpenTradeSelectionService extends ChatChannelSelectionServi
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        if (chatChannel != null) {
+            BisqEasyOpenTradeChannel openTradeChannel = (BisqEasyOpenTradeChannel) chatChannel;
+            userIdentityService.selectChatUserIdentity(openTradeChannel.getMyUserIdentity());
+        }
+
         super.selectChannel(chatChannel);
     }
 

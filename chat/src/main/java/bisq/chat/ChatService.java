@@ -101,7 +101,8 @@ public class ChatService implements Service {
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                 new BisqEasyOfferbookSelectionService(persistenceService, bisqEasyOfferbookChannelService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
-                new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChannelService));
+                new BisqEasyOpenTradeSelectionService(persistenceService, bisqEasyOpenTradeChannelService,
+                        userIdentityService));
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT,
                 new BisqEasyPrivateChatChannelSelectionService(persistenceService,
                         twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT),
