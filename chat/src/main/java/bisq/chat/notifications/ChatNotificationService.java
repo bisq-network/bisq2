@@ -24,7 +24,6 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
-import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
@@ -246,7 +245,7 @@ public class ChatNotificationService implements Service {
         }
 
         // Only notify for the currently selected channel
-        if (chatChannel instanceof PublicChatChannel &&
+        if (chatChannel instanceof BisqEasyOfferbookChannel &&
                 !chatService.getChatChannelSelectionService(chatChannel.getChatChannelDomain()).getSelectedChannel().get().equals(chatChannel)) {
             return;
         }
