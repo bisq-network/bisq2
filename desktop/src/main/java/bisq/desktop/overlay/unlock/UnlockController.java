@@ -27,8 +27,6 @@ import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UnlockController implements InitWithDataController<UnlockController.InitData> {
@@ -46,7 +44,6 @@ public class UnlockController implements InitWithDataController<UnlockController
     private final UnlockView view;
     private final ServiceProvider serviceProvider;
     private final UserIdentityService userIdentityService;
-    private Subscription pin;
     private Runnable completeHandler;
 
     public UnlockController(ServiceProvider serviceProvider) {
@@ -66,18 +63,14 @@ public class UnlockController implements InitWithDataController<UnlockController
     public void onActivate() {
         model.getPasswordIsMasked().set(true);
         model.getPassword().set("");
-
-        pin = EasyBind.subscribe(model.getPassword(),
-                password -> model.getUnlockButtonDisabled().set(isPasswordInvalid(password)));
     }
 
     @Override
     public void onDeactivate() {
-        pin.unsubscribe();
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
     void onUnlock() {
@@ -113,9 +106,5 @@ public class UnlockController implements InitWithDataController<UnlockController
                     .show();
             model.getPassword().set("");
         });
-    }
-
-    private boolean isPasswordInvalid(CharSequence password) {
-        return password == null || password.length() < 8;
     }
 }
