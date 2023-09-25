@@ -71,6 +71,7 @@ class LeftNavButton extends Pane implements Toggle {
     private Button verticalExpandIcon, verticalCollapseIcon;
     @Nullable
     private VBox verticalExpandCollapseIcon;
+    @Getter
     protected final Badge numMessagesBadge = new Badge();
 
     @Getter

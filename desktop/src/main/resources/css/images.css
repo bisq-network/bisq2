@@ -50,6 +50,18 @@
     -fx-image: url("/images/close.png");
 }
 
+#close-white {
+    -fx-image: url("/images/close-white.png");
+}
+
+#close-green {
+    -fx-image: url("/images/close-green.png");
+}
+
+#close-black {
+    -fx-image: url("/images/close-black.png");
+}
+
 #cross {
     -fx-image: url("/images/cross.png");
 }
