@@ -17,24 +17,37 @@
 
 package bisq.desktop.main.content.user.user_profile.create;
 
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
+import javafx.scene.control.Button;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateUserProfileView extends NavigationView<VBox, CreateUserProfileModel, CreateUserProfileController> {
+public class CreateUserProfileView extends NavigationView<AnchorPane, CreateUserProfileModel, CreateUserProfileController> {
+    private static final double TOP_PANE_HEIGHT = 55;
+
+    private final Button closeButton;
+
     public CreateUserProfileView(CreateUserProfileModel model, CreateUserProfileController controller) {
-        super(new VBox(), model, controller);
+        super(new AnchorPane(), model, controller);
 
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
+        closeButton = BisqIconButton.createIconButton("close");
+
+        Layout.pinToAnchorPane(closeButton, 16, 20, null, null);
+        root.getChildren().add(closeButton);
+
         model.getView().addListener((observable, oldValue, newValue) -> {
             Region childRoot = newValue.getRoot();
             childRoot.setPrefHeight(root.getHeight());
+            Layout.pinToAnchorPane(childRoot, TOP_PANE_HEIGHT, null, null, null);
             root.getChildren().add(childRoot);
             if (oldValue != null) {
                 Transitions.transitLeftOut(childRoot, oldValue.getRoot());
@@ -46,9 +59,11 @@ public class CreateUserProfileView extends NavigationView<VBox, CreateUserProfil
 
     @Override
     protected void onViewAttached() {
+        closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
+        closeButton.setOnAction(null);
     }
 }

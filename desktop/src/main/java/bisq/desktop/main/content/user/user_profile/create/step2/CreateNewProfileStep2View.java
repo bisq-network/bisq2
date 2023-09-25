@@ -45,11 +45,10 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
     private Scene rootScene;
 
     public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(25), model, controller);
 
-        root.setAlignment(Pos.CENTER);
-        root.setSpacing(8);
-        root.setPadding(new Insets(10, 0, 10, 0));
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setPadding(new Insets(-30, 0, 10, 0));
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
@@ -104,9 +103,8 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         HBox buttons = new HBox(20, cancelButton, saveButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 40, 0));
-        VBox.setMargin(buttons, new Insets(60, 0, 0, 0));
+        VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
+        VBox.setMargin(buttons, new Insets(40, 0, 0, 0));
         root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
