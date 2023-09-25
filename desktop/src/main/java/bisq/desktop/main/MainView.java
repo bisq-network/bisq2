@@ -36,21 +36,23 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
 
     public MainView(MainModel model,
                     MainController controller,
-                    AnchorPane leftNavView,
-                    HBox topPanelView) {
+                    AnchorPane leftNav,
+                    HBox topPanel,
+                    VBox notificationPanel) {
         super(new HBox(), model, controller);
 
         root.setFillHeight(true);
+
         scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(false);
 
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
-        VBox vBox = new VBox(topPanelView, scrollPane);
+        VBox vBox = new VBox(topPanel, notificationPanel, scrollPane);
         vBox.setFillWidth(true);
 
         HBox.setHgrow(vBox, Priority.ALWAYS);
-        root.getChildren().addAll(leftNavView, vBox);
+        root.getChildren().addAll(leftNav, vBox);
 
         // We only get created once after splashscreen and then never get removed, so we do not need to remove the 
         // listener.

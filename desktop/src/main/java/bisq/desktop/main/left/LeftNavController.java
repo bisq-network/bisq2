@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class LeftNavController implements Controller {
@@ -48,6 +49,7 @@ public class LeftNavController implements Controller {
     private final UserIdentityService userIdentityService;
     private final UpdaterService updaterService;
     private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
+    private boolean notificationSubscriptionDone;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
@@ -62,8 +64,6 @@ public class LeftNavController implements Controller {
 
     @Override
     public void onActivate() {
-        notificationsService.subscribe(this::updateNumNotifications);
-
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
 
@@ -78,10 +78,19 @@ public class LeftNavController implements Controller {
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
         releaseNotificationPin.unbind();
-        notificationsService.unsubscribe(this::updateNumNotifications);
+        if (notificationSubscriptionDone) {
+            notificationsService.unsubscribe(this::updateNumNotifications);
+        }
+        notificationSubscriptionDone = false;
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
+        // We subscribe once we get the content target
+        if (!notificationSubscriptionDone && navigationTarget == NavigationTarget.CONTENT) {
+            notificationsService.subscribe(this::updateNumNotifications);
+            notificationSubscriptionDone = true;
+        }
+
         NavigationTarget supportedNavigationTarget;
         Set<NavigationTarget> navigationTargets = model.getNavigationTargets();
         if (navigationTargets.contains(navigationTarget)) {
@@ -109,7 +118,7 @@ public class LeftNavController implements Controller {
     }
 
     void onToggleHorizontalExpandState() {
-        boolean newState = ! model.getMenuHorizontalExpanded().get();
+        boolean newState = !model.getMenuHorizontalExpanded().get();
         model.getSettingsService().setCookie(CookieKey.MENU_HORIZONTAL_EXPANDED, newState);
         model.getMenuHorizontalExpanded().set(newState);
     }
@@ -146,8 +155,28 @@ public class LeftNavController implements Controller {
     private void updateNumNotifications(String notificationId) {
         UIThread.run(() -> {
             ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-            findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
-                    leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsMyDomainOrParentDomain(chatChannelDomain)));
+            findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton -> {
+                leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsMyDomainOrParentDomain(chatChannelDomain));
+                switch (chatChannelDomain) {
+                    case BISQ_EASY_OFFERBOOK:
+                    case BISQ_EASY_OPEN_TRADES:
+                    case BISQ_EASY_PRIVATE_CHAT:
+                        Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
+                                .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                                .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
+                                .collect(Collectors.toSet());
+                        if (!tradeIdSet.isEmpty()) {
+                            leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                        } else {
+                            leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
+                        }
+                        break;
+                    case DISCUSSION:
+                    case EVENTS:
+                    case SUPPORT:
+                        break;
+                }
+            });
         });
     }
 

@@ -41,6 +41,8 @@ import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 
 public class TabButton extends Pane implements Toggle {
+    public static final double BADGE_PADDING = 7.5;
+
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
     @Getter
@@ -97,7 +99,7 @@ public class TabButton extends Pane implements Toggle {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (newValue.doubleValue() > 0) {
-                    numMessagesBadge.setLayoutX(label.getWidth() + 7.5);
+                    numMessagesBadge.setLayoutX(label.getWidth() + BADGE_PADDING);
                     UIThread.runOnNextRenderFrame(() -> label.widthProperty().removeListener(labelWidthListener));
                 }
             }

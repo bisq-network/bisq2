@@ -38,6 +38,7 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -86,6 +87,15 @@ public class ChatNotificationService implements Service {
         String[] tokens = channelId.split("\\.");
         checkArgument(tokens.length == 2, "unexpected tokens size. notificationId=" + notificationId);
         return tokens[1];
+    }
+
+    public static Optional<String> findTradeId(String notificationId) {
+        try {
+            return Optional.of(notificationId.split("\\.")[1].substring(0, 8));
+        } catch (Exception e) {
+            log.error("Could not extract trade ID", e);
+            return Optional.empty();
+        }
     }
 
 

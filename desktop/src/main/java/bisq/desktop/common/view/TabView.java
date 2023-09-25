@@ -212,7 +212,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
             // Need delay to give time for rendering in case of scrollbars
             UIScheduler.run(() -> Transitions.animateTabButtonMarks(selectionMarker,
-                            selectedTabButton.getWidth(),
+                            selectedTabButton.getWidth() - TabButton.BADGE_PADDING,
                             getSelectionMarkerX(selectedTabButton)))
                     .after(100);
 
