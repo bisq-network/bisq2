@@ -51,6 +51,7 @@ public class TabButton extends Pane implements Toggle {
     private ImageView icon;
     private ImageView iconSelected;
     private ImageView iconHover;
+    @Getter
     private final Badge numMessagesBadge;
     private final ChangeListener<Number> labelWidthListener;
 
