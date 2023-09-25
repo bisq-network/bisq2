@@ -32,6 +32,7 @@ import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -291,6 +292,13 @@ public class BisqEasyOpenTradesView extends ChatView {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.me"))
+                .minWidth(45)
+                .left()
+                .comparator(Comparator.comparing(ListItem::getMyUserName))
+                .setCellFactory(getMyUserCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
                 .minWidth(120)
                 .left()
@@ -386,6 +394,24 @@ public class BisqEasyOpenTradesView extends ChatView {
         };
     }
 
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
+        return column -> new TableCell<>() {
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    UserProfileIcon userProfileIcon = new UserProfileIcon();
+                    userProfileIcon.setUserProfile(item.getChannel().getMyUserIdentity().getUserProfile());
+                    setGraphic(userProfileIcon);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
     private BisqEasyOpenTradesModel getModel() {
         return (BisqEasyOpenTradesModel) model;
     }
@@ -402,7 +428,7 @@ public class BisqEasyOpenTradesView extends ChatView {
         private final String offerId;
         private final String tradeId;
         private final String shortTradeId;
-        private final String peersUserName;
+        private final String peersUserName, myUserName;
         private final String dateString, timeString, market, priceString,
                 baseAmountString, quoteAmountString, paymentMethod, myRole;
         private final long date, price, baseAmount, quoteAmount;
@@ -415,6 +441,7 @@ public class BisqEasyOpenTradesView extends ChatView {
 
             peersUserProfile = channel.getPeer();
             peersUserName = peersUserProfile.getUserName();
+            myUserName = channel.getMyUserIdentity().getUserName();
             offerId = channel.getBisqEasyOffer().getId();
             this.tradeId = trade.getId();
             shortTradeId = trade.getShortId();

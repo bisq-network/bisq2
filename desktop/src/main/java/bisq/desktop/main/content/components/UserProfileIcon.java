@@ -26,9 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_ICON_SIZE;
+
 @Slf4j
 public class UserProfileIcon extends ImageView {
     private BisqTooltip tooltip;
+
+    public UserProfileIcon() {
+        this(DEFAULT_ICON_SIZE);
+    }
 
     public UserProfileIcon(double size) {
         setSize(size);
