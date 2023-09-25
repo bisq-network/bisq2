@@ -204,6 +204,13 @@ public class BisqEasyPrivateChatsView extends ChatView {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.privateChats.table.myUser"))
+                .minWidth(100)
+                .left()
+                .comparator(Comparator.comparing(ListItem::getMyUserName))
+                .setCellFactory(getMyUserCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.privateChats.table.peer"))
                 .minWidth(100)
                 .left()
@@ -243,6 +250,23 @@ public class BisqEasyPrivateChatsView extends ChatView {
         };
     }
 
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
+        return column -> new TableCell<>() {
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getMyUserIdentity().getUserProfile());
+                    setGraphic(userProfileDisplay);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
     private BisqEasyPrivateChatsModel getModel() {
         return (BisqEasyPrivateChatsModel) model;
     }
@@ -255,7 +279,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
     @EqualsAndHashCode
     static class ListItem implements TableItem {
         private final TwoPartyPrivateChatChannel channel;
-        private final String peersUserName;
+        private final String peersUserName, myUserName;
         private final long totalReputationScore, profileAge;
         private final String totalReputationScoreString, profileAgeString;
         private final ReputationScore reputationScore;
@@ -265,6 +289,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
 
             UserProfile userProfile = channel.getPeer();
             peersUserName = userProfile.getUserName();
+            myUserName = channel.getMyUserIdentity().getUserName();
 
             reputationScore = reputationService.getReputationScore(userProfile);
             totalReputationScore = reputationScore.getTotalScore();
