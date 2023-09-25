@@ -28,7 +28,6 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.PeerGroup;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.*;
 import lombok.Getter;
@@ -58,7 +57,7 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pEnabled = new SimpleBooleanProperty(false);
-    private final BooleanProperty menuHorizontalExpanded;
+    private final BooleanProperty menuHorizontalExpanded = new SimpleBooleanProperty();
     private final BooleanProperty authorizedRoleVisible = new SimpleBooleanProperty(false);
     private final BooleanProperty newVersionAvailable = new SimpleBooleanProperty(false);
     @Setter
@@ -68,9 +67,6 @@ public class LeftNavModel implements Model {
         isWalletEnabled = serviceProvider.getWalletService().isPresent();
         networkService = serviceProvider.getNetworkService();
         settingsService = serviceProvider.getSettingsService();
-
-        menuHorizontalExpanded =  new SimpleBooleanProperty(settingsService.getCookie()
-                .asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
 
         torEnabled.set(networkService.isTransportTypeSupported(Transport.Type.TOR));
         i2pEnabled.set(networkService.isTransportTypeSupported(Transport.Type.I2P));
