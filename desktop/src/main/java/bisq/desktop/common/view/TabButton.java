@@ -82,7 +82,7 @@ public class TabButton extends Pane implements Toggle {
         label.setGraphic(icon);
 
         numMessagesBadge = new Badge();
-        numMessagesBadge.setLayoutY(17);
+        numMessagesBadge.setLayoutY(7.5);
 
         getChildren().addAll(label, numMessagesBadge);
 
@@ -96,7 +96,7 @@ public class TabButton extends Pane implements Toggle {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (newValue.doubleValue() > 0) {
-                    numMessagesBadge.setLayoutX(label.getWidth() + 3);
+                    numMessagesBadge.setLayoutX(label.getWidth() + 7.5);
                     UIThread.runOnNextRenderFrame(() -> label.widthProperty().removeListener(labelWidthListener));
                 }
             }
