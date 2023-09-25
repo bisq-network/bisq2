@@ -70,7 +70,7 @@ public class LeftNavController implements Controller {
         releaseNotificationPin = updaterService.getReleaseNotification().addObserver(releaseNotification ->
                 UIThread.run(() -> model.getNewVersionAvailable().set(releaseNotification != null)));
 
-        model.getMenuHorizontalExpanded().set(model.getSettingsService().getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(false));
+        model.getMenuHorizontalExpanded().set(model.getSettingsService().getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
     }
 
     @Override
