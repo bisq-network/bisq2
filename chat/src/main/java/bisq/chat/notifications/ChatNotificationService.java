@@ -128,16 +128,12 @@ public class ChatNotificationService implements Service {
                 onChatChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
-                .forEach(commonPublicChatChannelService -> {
-                    commonPublicChatChannelService.getChannels().addListener(() ->
-                            onChatChannelsChanged(commonPublicChatChannelService.getChannels()));
-                });
+                .forEach(commonPublicChatChannelService -> commonPublicChatChannelService.getChannels().addListener(() ->
+                        onChatChannelsChanged(commonPublicChatChannelService.getChannels())));
 
         chatService.getTwoPartyPrivateChatChannelServices().values()
-                .forEach(twoPartyPrivateChatChannelService -> {
-                    twoPartyPrivateChatChannelService.getChannels().addListener(() ->
-                            onChatChannelsChanged(twoPartyPrivateChatChannelService.getChannels()));
-                });
+                .forEach(twoPartyPrivateChatChannelService -> twoPartyPrivateChatChannelService.getChannels().addListener(() ->
+                        onChatChannelsChanged(twoPartyPrivateChatChannelService.getChannels())));
 
         return CompletableFuture.completedFuture(true);
     }
@@ -245,6 +241,12 @@ public class ChatNotificationService implements Service {
         // If user is ignored we do not notify, but we still keep the messageIds to not trigger 
         // notifications after un-ignore.
         if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
+            return;
+        }
+
+        // Only notify for the currently selected channel
+        if (chatChannel instanceof BisqEasyOfferbookChannel &&
+                !chatService.getChatChannelSelectionService(chatChannel.getChatChannelDomain()).getSelectedChannel().get().equals(chatChannel)) {
             return;
         }
 
