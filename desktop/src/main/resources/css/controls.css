@@ -19,6 +19,7 @@
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans";
     -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
 }
 
 .button:hover {
@@ -742,9 +743,8 @@
 }
 
 .bisq-badge .badge-pane {
-    -fx-background-color: -bisq-red;
+    -fx-background-color: rgba(255, 255, 255, 0.2);
     -fx-background-radius: 15;
-    /*   -fx-pref-width: 15;*/
     -fx-pref-height: 15;
 }
 
@@ -753,6 +753,7 @@
     -fx-text-fill: -fx-light-text-color !important;
     -fx-font-family: "IBM Plex Sans SemiBold";
 }
+
 
 /*******************************************************************************
  *                                                                             *

@@ -82,7 +82,7 @@ public abstract class ChannelSelectionMenu<
         private final ChatNotificationService chatNotificationService;
 
         protected Pin channelsPin, selectedChannelPin;
-        private final Map<String, NotificationsService.Listener> listenerByChannelId = new HashMap<>();
+        private final Map<String, NotificationsService.Subscriber> listenerByChannelId = new HashMap<>();
 
         protected Controller(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
             chatService = serviceProvider.getChatService();
@@ -127,21 +127,21 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected void addNotificationsListenerForChannel(C channel) {
-            NotificationsService.Listener listener = notificationId -> updateNumNotifications(channel);
-            listenerByChannelId.put(channel.getId(), listener);
-            notificationsService.addListener(listener);
+            NotificationsService.Subscriber subscriber = notificationId -> updateNumNotifications(channel);
+            listenerByChannelId.put(channel.getId(), subscriber);
+            notificationsService.subscribe(subscriber);
         }
 
         protected void removeNotificationsListenerForChannel(String channelId) {
-            NotificationsService.Listener listener = listenerByChannelId.get(channelId);
-            if (listener != null) {
-                notificationsService.removeListener(listener);
+            NotificationsService.Subscriber subscriber = listenerByChannelId.get(channelId);
+            if (subscriber != null) {
+                notificationsService.unsubscribe(subscriber);
                 listenerByChannelId.remove(channelId);
             }
         }
 
         protected void removeAllNotificationsListeners() {
-            listenerByChannelId.values().forEach(notificationsService::removeListener);
+            listenerByChannelId.values().forEach(notificationsService::unsubscribe);
             listenerByChannelId.clear();
         }
 

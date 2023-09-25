@@ -44,4 +44,9 @@ public class AcademyView extends TabView<AcademyModel, AcademyController> {
     @Override
     protected void onViewDetached() {
     }
+
+    @Override
+    protected boolean isRightSide() {
+        return false;
+    }
 }

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,8 @@ public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
 
         addTab(Res.get("bisqEasy.dashboard"), NavigationTarget.BISQ_EASY_ONBOARDING);
         addTab(Res.get("bisqEasy.offerbook"), NavigationTarget.BISQ_EASY_OFFERBOOK);
-        addTab(Res.get("bisqEasy.openTrades"), NavigationTarget.BISQ_EASY_OPEN_TRADES);
+        TabButton openTrades = addTab(Res.get("bisqEasy.openTrades"), NavigationTarget.BISQ_EASY_OPEN_TRADES);
+        openTrades.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
         addTab(Res.get("bisqEasy.privateChat"), NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
     }
 

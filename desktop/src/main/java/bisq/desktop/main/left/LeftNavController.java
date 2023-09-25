@@ -62,7 +62,7 @@ public class LeftNavController implements Controller {
 
     @Override
     public void onActivate() {
-        notificationsService.addListener(this::updateNumNotifications);
+        notificationsService.subscribe(this::updateNumNotifications);
 
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
@@ -78,7 +78,7 @@ public class LeftNavController implements Controller {
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
         releaseNotificationPin.unbind();
-        notificationsService.removeListener(this::updateNumNotifications);
+        notificationsService.unsubscribe(this::updateNumNotifications);
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {

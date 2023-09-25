@@ -109,7 +109,7 @@ public class Badge extends StackPane {
             this.control = control;
             getChildren().add(control);
 
-            // if the control got resized the badge must be rest
+            // if the control got resized the badge must be reset
             if (control instanceof Region) {
                 ((Region) control).widthProperty().addListener((o, oldVal, newVal) -> refreshBadge());
                 ((Region) control).heightProperty().addListener((o, oldVal, newVal) -> refreshBadge());
