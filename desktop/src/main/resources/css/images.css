@@ -10,6 +10,10 @@
     -fx-image: url("/images/bullet-point.png");
 }
 
+#clearnet {
+    -fx-image: url("/images/clearnet-white.png");
+}
+
 #tor {
     -fx-image: url("/images/tor.png");
 }

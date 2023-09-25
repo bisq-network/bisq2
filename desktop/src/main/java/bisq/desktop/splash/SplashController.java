@@ -25,14 +25,14 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
-import com.google.common.base.Joiner;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 @Slf4j
@@ -46,7 +46,9 @@ public class SplashController implements Controller {
     private Pin pinClearNetStatus;
     private Pin pinTorStatus;
     private Pin pinI2pStatus;
-    private Subscription statePin;
+    private Subscription clearState;
+    private Subscription torState;
+    private Subscription i2pState;
 
     public SplashController(Observable<State> applicationServiceState, ServiceProvider serviceProvider) {
         this.applicationServiceState = applicationServiceState;
@@ -70,13 +72,9 @@ public class SplashController implements Controller {
             pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(map.get(Transport.Type.I2P));
         }
 
-        MonadicBinding<String> binding = EasyBind.combine(model.getClearServiceNodeState(),
-                model.getTorServiceNodeState(),
-                model.getI2pServiceNodeState(),
-                this::getStatus);
-
-        statePin = EasyBind.subscribe(binding, state -> model.getTransportState().set(state));
-
+        clearState = createNetworkSubscription(model.getClearServiceNodeState(), model.getClearState());
+        torState = createNetworkSubscription(model.getTorServiceNodeState(), model.getTorState());
+        i2pState = createNetworkSubscription(model.getI2pServiceNodeState(), model.getI2pState());
     }
 
     @Override
@@ -91,7 +89,10 @@ public class SplashController implements Controller {
         if (pinI2pStatus != null) {
             pinI2pStatus.unbind();
         }
-        statePin.unsubscribe();
+
+        clearState.unsubscribe();
+        torState.unsubscribe();
+        i2pState.unsubscribe();
     }
 
     public void startAnimation() {
@@ -102,18 +103,15 @@ public class SplashController implements Controller {
         model.getProgress().set(0);
     }
 
-    private String getStatus(Node.State clearnetState, Node.State torState, Node.State i2pState) {
-        ArrayList<String> networkStatuses = new ArrayList<>();
-        if (clearnetState != null) {
-            networkStatuses.add(String.format("Clear %s%%", mapState(clearnetState)));
-        }
-        if (torState != null) {
-            networkStatuses.add(String.format("Tor %s%%", mapState(torState)));
-        }
-        if (i2pState != null) {
-            networkStatuses.add(String.format("I2P %s%%", mapState(i2pState)));
-        }
-        return Joiner.on(" | ").join(networkStatuses).toUpperCase();
+    private Subscription createNetworkSubscription(
+            ObjectProperty<Node.State> stateProperty,
+            StringProperty targetProperty) {
+        MonadicBinding<String> binding = EasyBind.map(stateProperty, this::getStatus);
+        return EasyBind.subscribe(binding, targetProperty::set);
+    }
+
+    private String getStatus(Node.State state) {
+        return state == null ? "" : String.format("%s%%", mapState(state));
     }
 
     private String mapState(Node.State state) {
