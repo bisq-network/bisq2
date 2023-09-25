@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 public class NotificationsService implements PersistenceClient<NotificationsStore>, Service {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
 
-    public interface Listener {
+    public interface Subscriber {
         void onChanged(String notificationId);
     }
 
@@ -49,7 +49,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
     @Getter
     private final Persistence<NotificationsStore> persistence;
     private NotificationsDelegate delegate;
-    private final Set<Listener> listeners = new HashSet<>();
+    private final Set<Subscriber> subscribers = new HashSet<>();
 
     public NotificationsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
@@ -105,7 +105,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
             if (!containsNotificationId(notificationId)) {
                 getNotificationIdMap().put(notificationId,
                         new DateAndConsumedFlag(System.currentTimeMillis(), false));
-                listeners.forEach(listener -> listener.onChanged(notificationId));
+                subscribers.forEach(subscriber -> subscriber.onChanged(notificationId));
                 persist();
             }
         }
@@ -116,7 +116,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
             if (containsNotificationId(notificationId) &&
                     !getNotificationIdMap().get(notificationId).isConsumed()) {
                 getNotificationIdMap().get(notificationId).setConsumed(true);
-                listeners.forEach(listener -> listener.onChanged(notificationId));
+                subscribers.forEach(subscriber -> subscriber.onChanged(notificationId));
                 persist();
             }
         }
@@ -126,7 +126,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
         synchronized (persistableStore) {
             DateAndConsumedFlag previous = getNotificationIdMap().remove(notificationId);
             if (previous != null) {
-                listeners.forEach(listener -> listener.onChanged(notificationId));
+                subscribers.forEach(subscriber -> subscriber.onChanged(notificationId));
                 persist();
             }
         }
@@ -158,12 +158,12 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
         return delegate;
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    public void subscribe(Subscriber subscriber) {
+        subscribers.add(subscriber);
     }
 
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    public void unsubscribe(Subscriber subscriber) {
+        subscribers.remove(subscriber);
     }
 
     private Map<String, DateAndConsumedFlag> getNotificationIdMap() {

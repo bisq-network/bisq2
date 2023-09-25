@@ -55,13 +55,13 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
 
     @Override
     public void onActivate() {
-        notificationsService.addListener(this::updateNumNotifications);
+        notificationsService.subscribe(this::updateNumNotifications);
 
     }
 
     @Override
     public void onDeactivate() {
-        notificationsService.removeListener(this::updateNumNotifications);
+        notificationsService.unsubscribe(this::updateNumNotifications);
     }
 
     @Override
