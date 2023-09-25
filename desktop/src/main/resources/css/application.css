@@ -23,7 +23,7 @@
 .bisq2-welcome-headline {
     -fx-font-size: 3.4em;
     -fx-font-family: "IBM Plex Sans Thin";
-    -fx-text-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
 
