@@ -84,6 +84,14 @@
  * Offerbook                                                           *
  ******************************************************************************/
 
+.num-offers-badge.bisq-badge {
+    -fx-padding: 0 10 0 0;
+}
+
+.num-offers-badge.bisq-badge .badge-pane {
+    -fx-background-color: -bisq-orange;
+}
+
 
 /*******************************************************************************
  *                                                                             *

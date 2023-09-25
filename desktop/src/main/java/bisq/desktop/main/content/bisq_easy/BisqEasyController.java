@@ -56,7 +56,6 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
     @Override
     public void onActivate() {
         notificationsService.subscribe(this::updateNumNotifications);
-
     }
 
     @Override

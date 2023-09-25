@@ -277,8 +277,10 @@ public class BisqEasyOfferbookView extends ChatView {
                 setPrefHeight(40);
                 setPadding(new Insets(0, 0, -20, 0));
 
-                badge.setTooltip(Res.get("bisqEasy.offerbook.marketListCell.numMessages"));
+                // FIXME tooltip not working yet
+                badge.setTooltip(Res.get("bisqEasy.offerbook.marketListCell.numOffers"));
                 badge.setPosition(Pos.CENTER_RIGHT);
+                badge.getStyleClass().add("num-offers-badge");
 
                 hBox.setSpacing(10);
                 hBox.setAlignment(Pos.CENTER_LEFT);

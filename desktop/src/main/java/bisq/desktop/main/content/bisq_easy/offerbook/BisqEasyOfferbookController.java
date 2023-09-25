@@ -22,6 +22,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
@@ -208,7 +209,9 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
 
     int getNumMessages(Market market) {
         return bisqEasyOfferbookChannelService.findChannel(market)
-                .map(channel -> channel.getChatMessages().size())
+                .map(channel -> (int) channel.getChatMessages().stream()
+                        .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                        .count())
                 .orElse(0);
     }
 
