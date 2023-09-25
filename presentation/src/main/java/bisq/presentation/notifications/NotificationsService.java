@@ -160,6 +160,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
 
     public void subscribe(Subscriber subscriber) {
         subscribers.add(subscriber);
+        getNotConsumedNotificationIds().forEach(subscriber::onChanged);
     }
 
     public void unsubscribe(Subscriber subscriber) {
