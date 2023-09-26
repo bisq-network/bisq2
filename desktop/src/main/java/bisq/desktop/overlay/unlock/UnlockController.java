@@ -74,25 +74,27 @@ public class UnlockController implements InitWithDataController<UnlockController
     }
 
     void onUnlock() {
-        userIdentityService.deriveKeyFromPassword(model.getPassword().get())
-                .whenComplete((aesSecretKey, throwable) -> {
-                    if (throwable == null) {
-                        userIdentityService.decryptDataStore(aesSecretKey)
-                                .whenComplete((nil, throwable2) -> {
-                                    if (throwable2 == null) {
-                                        OverlayController.hide(() -> {
-                                            if (completeHandler != null) {
-                                                completeHandler.run();
-                                            }
-                                        });
-                                    } else {
-                                        handleError();
-                                    }
-                                });
-                    } else {
-                        handleError();
-                    }
-                });
+        if(view.validatePassword()) {
+            userIdentityService.deriveKeyFromPassword(model.getPassword().get())
+                    .whenComplete((aesSecretKey, throwable) -> {
+                        if (throwable == null) {
+                            userIdentityService.decryptDataStore(aesSecretKey)
+                                    .whenComplete((nil, throwable2) -> {
+                                        if (throwable2 == null) {
+                                            OverlayController.hide(() -> {
+                                                if (completeHandler != null) {
+                                                    completeHandler.run();
+                                                }
+                                            });
+                                        } else {
+                                            handleError();
+                                        }
+                                    });
+                        } else {
+                            handleError();
+                        }
+                    });
+        }
     }
 
     void onCancel() {

@@ -88,4 +88,8 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         cancelButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
     }
+
+    public boolean validatePassword() {
+        return password.validate();
+    }
 }
