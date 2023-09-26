@@ -60,7 +60,6 @@ public class MaterialPasswordField extends MaterialTextField {
                     if ((newValue == null || newValue.length() == 0) && !textProperty().isBound()) {
                         setText("");
                     }
-                    validate();
                 }).get());
 
         password.set(getText());

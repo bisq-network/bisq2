@@ -51,7 +51,6 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         password.setValidators(
                 new RequiredFieldValidator(Res.get("validation.empty")),
                 new TextMinLengthValidator(Res.get("validation.password.tooShort")));
-        password.validate();
         unlockButton = new Button(Res.get("unlock.button"));
         unlockButton.setDefaultButton(true);
         cancelButton = new Button(Res.get("action.cancel"));
