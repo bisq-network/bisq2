@@ -175,8 +175,11 @@ public class ComboBoxWithSearch<T> {
             }
         });
 
-        scene.setOnMousePressed(e -> close());
-        ownerRoot.setOnMousePressed(e -> close());
+        stage.focusedProperty().addListener((observable, hadFocus, hasFocus) -> {
+            if (!hasFocus) {
+                close();
+            }
+        });
 
         rootWindow.xProperty().addListener(positionListener);
         rootWindow.yProperty().addListener(positionListener);
@@ -229,7 +232,7 @@ public class ComboBoxWithSearch<T> {
         ObservableList<T> items = comboBox.getItems();
 
         double x = 0;
-        double listOffset = -17.5;
+        double listOffset = items.isEmpty() ? 0 : -17.5;
         // relative to visible top-left point 
         double arrowX_l = -9.5;
         double arrowX_m = 0;
