@@ -19,14 +19,13 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
-import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DashboardView extends View<GridPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
+    private final Button tradeProtocols, learnMore;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
@@ -41,13 +41,9 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         root.setHgap(PADDING);
         root.setVgap(PADDING);
+        GridPaneUtil.setColumnConstraints50percent(root);
 
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(50);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(50);
-        root.getColumnConstraints().addAll(col1, col2);
-
+        //First row
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
         VBox marketPrice = priceTriple.getFirst();
         marketPrice.setPrefWidth(350);
@@ -61,32 +57,37 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         Pair<VBox, Label> usersPair = getValueBox(Res.get("dashboard.activeUsers"));
         VBox activeUsers = usersPair.getFirst();
         activeUsersLabel = usersPair.getSecond();
+
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
         root.add(hBox, 0, 0, 2, 1);
 
+        //Second row
         VBox firstBox = getBigWidgetBox();
         VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
         VBox.setVgrow(firstBox, Priority.NEVER);
         root.add(firstBox, 0, 1, 2, 1);
 
-        VBox secondBox = getWidgetBox(
-                "fiat-btc",
-                Res.get("dashboard.second.headline"),
-                Res.get("dashboard.second.content"),
-                Res.get("dashboard.second.button"),
-                controller::onOpenTradeOverview
-        );
-        root.add(secondBox, 0, 2, 1, 1);
+        //Third row
+        Insets gridPaneInsets = new Insets(36, 48, 44, 48);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(116, 5, gridPaneInsets, 50, 50);
+        root.add(gridPane, 0, 2, 2, 1);
 
-        VBox thirdBox = getWidgetBox(
-                "learn",
+        tradeProtocols = new Button(Res.get("dashboard.second.button"));
+        GridPaneUtil.fillColumnStandardStyle(gridPane,
+                0,
+                tradeProtocols,
+                Res.get("dashboard.second.headline"),
+                "fiat-btc",
+                Res.get("dashboard.second.content"));
+
+        learnMore = new Button(Res.get("dashboard.third.button"));
+        GridPaneUtil.fillColumnStandardStyle(gridPane,
+                1,
+                learnMore,
                 Res.get("dashboard.third.headline"),
-                Res.get("dashboard.third.content"),
-                Res.get("dashboard.third.button"),
-                controller::onLearn
-        );
-        root.add(thirdBox, 1, 2, 1, 1);
+                "learn",
+                Res.get("dashboard.third.content"));
     }
 
     @Override
@@ -95,6 +96,9 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         marketCodeLabel.textProperty().bind(model.getMarketCode());
         offersOnlineLabel.textProperty().bind(model.getOffersOnline());
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
+
+        tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
+        learnMore.setOnAction(e -> controller.onLearn());
     }
 
     @Override
@@ -103,6 +107,9 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         marketCodeLabel.textProperty().unbind();
         offersOnlineLabel.textProperty().unbind();
         activeUsersLabel.textProperty().unbind();
+
+        tradeProtocols.setOnAction(null);
+        learnMore.setOnAction(null);
     }
 
     private Triple<VBox, Label, Label> getPriceBox(String title) {
@@ -151,49 +158,15 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         VBox.setMargin(button, new Insets(20, 0, 0, 0));
+        String iconTxtStyle = "bisq-easy-onboarding-big-box-bullet-point";
         VBox vBox = new VBox(15,
                 headlineLabel,
-                getIconAndText(Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
-                getIconAndText(Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
-                getIconAndText(Res.get("dashboard.main.content3"), "reputation-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle, Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content3"), "reputation-white"),
                 button);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30, 48, 44, 48));
-        return vBox;
-    }
-
-    private HBox getIconAndText(String text, String imageId) {
-        Label label = new Label(text);
-        label.getStyleClass().add("bisq-easy-onboarding-big-box-bullet-point");
-        label.setWrapText(true);
-        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
-        HBox hBox = new HBox(15, bulletPoint, label);
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        return hBox;
-    }
-
-    private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
-        Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
-        headlineLabel.setGraphicTextGap(16.0);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
-        headlineLabel.setWrapText(true);
-
-        Label contentLabel = new Label(content);
-        contentLabel.getStyleClass().addAll("bisq-text-3");
-        contentLabel.setAlignment(Pos.TOP_LEFT);
-        contentLabel.setWrapText(true);
-
-        Button button = new Button(buttonLabel);
-        button.getStyleClass().add("large-button");
-        button.setOnAction(e -> onAction.run());
-        button.setMaxWidth(Double.MAX_VALUE);
-
-        VBox.setVgrow(contentLabel, Priority.ALWAYS);
-        VBox.setMargin(contentLabel, new Insets(0, 0, 10, 0));
-        VBox vBox = new VBox(16, headlineLabel, contentLabel, button);
-        vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(36, 48, 52, 48));
         return vBox;
     }
 }
