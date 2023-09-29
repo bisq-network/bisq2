@@ -69,8 +69,8 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         String buttonStyleClass = "large-button";
         Insets groupInsets = new Insets(36, 48, 44, 48);
         Insets headlineInsets = new Insets(36, 48, 0, 48);
-        Insets infoInsets = new Insets(20, 48, 0, 48);
-        Insets buttonInsets = new Insets(10, 48, 44, 48);
+        Insets infoInsets = new Insets(10, 48, 0, 48);
+        Insets buttonInsets = new Insets(20, 48, 44, 48);
 
         startTradingButton = new Button(Res.get("bisqEasy.onboarding.left.button"));
         GridPaneUtil.fillColumn(gridPane,
