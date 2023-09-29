@@ -62,7 +62,6 @@ public class PasswordController implements Controller {
 
     void onButtonClicked() {
         CharSequence password = model.getPassword().get();
-        checkArgument(model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get());
 
         if (userIdentityService.getAESSecretKey().isPresent()) {
             removePassword(password);
