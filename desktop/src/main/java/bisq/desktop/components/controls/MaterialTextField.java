@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
+import java.util.Optional;
 
 import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CLASS_ERROR;
 
@@ -158,8 +159,8 @@ public class MaterialTextField extends Pane {
 
     protected ValidationControl validationControl;
 
-    public ValidatorBase getActiveValidator() {
-        return validationControl.getActiveValidator();
+    public Optional<ValidatorBase> getActiveValidator() {
+        return Optional.ofNullable(validationControl.getActiveValidator());
     }
 
     public ReadOnlyObjectProperty<ValidatorBase> activeValidatorProperty() {
@@ -178,6 +179,10 @@ public class MaterialTextField extends Pane {
         isValid.set(validationControl.validate());
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
+        getActiveValidator().ifPresent(validator -> {
+            helpLabel.setText(validator.getMessage());
+            helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
+        });
         return isValid.get();
     }
 
@@ -186,6 +191,7 @@ public class MaterialTextField extends Pane {
     }
 
     private final BooleanProperty isValid = new SimpleBooleanProperty();
+
     public BooleanProperty isValidProperty() {
         return isValid;
     }

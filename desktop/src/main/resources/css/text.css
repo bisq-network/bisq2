@@ -629,6 +629,12 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.material-text-field-help:error {
+    -fx-font-size: 0.95em;
+    -fx-text-fill: -bisq-red;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /* Used for textarea*/
 .material-text-field:focused .content {
     -fx-background-color: transparent;
