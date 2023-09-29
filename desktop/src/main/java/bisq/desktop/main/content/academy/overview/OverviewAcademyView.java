@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.academy.overview;
 
-import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -25,7 +25,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -34,21 +33,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, OverviewAcademyController> {
     private static final int PADDING = 20;
-    private int rowIndex;
+    private int rowIndex = 0;
 
     public OverviewAcademyView(OverviewAcademyModel model, OverviewAcademyController controller) {
         super(new GridPane(), model, controller);
 
-        root.setPadding(new Insets(20, 0, 0, 0));
+        root.setPadding(new Insets(0, 0, 0, 0));
         root.setHgap(PADDING);
         root.setVgap(PADDING);
         root.setCursor(Cursor.HAND);
 
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(50);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(50);
-        root.getColumnConstraints().addAll(col1, col2);
+        GridPaneUtil.setGridPaneTwoColumnsConstraints(root);
 
         addHeaderBox();
 
@@ -85,7 +80,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
         VBox vBox = new VBox(20, headlineLabel, contentLabel);
         GridPane.setHgrow(vBox, Priority.ALWAYS);
-        root.add(vBox, 0, 0, 2, 1);
+        root.add(vBox, 0, rowIndex, 2, 1);
     }
 
     private void addSmallBox(String leftIconId,
@@ -94,52 +89,55 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                              String rightTopic,
                              NavigationTarget leftNavigationTarget,
                              NavigationTarget rightNavigationTarget) {
-        VBox leftBox = getWidgetBox(
-                leftIconId,
+
+        Insets gridPaneInsets = new Insets(0, 0, 0, 0);
+        GridPane gridPane = GridPaneUtil.getGridPane(20, 0, gridPaneInsets);
+        GridPaneUtil.setGridPaneTwoColumnsConstraints(gridPane);
+
+        Insets groupInsets = new Insets(20, 20, 20, 20);
+        Insets headlineInsets = new Insets(20, 20, 0, 20);
+        Insets infoInsets = new Insets(20, 20, 0, 20);
+        Insets buttonInsets = new Insets(20, 20, 20, 20);
+
+        Button leftBoxButton = new Button(Res.get("academy.overview.selectButton"));
+        leftBoxButton.getStyleClass().addAll("medium-large-button",
+                "outlined-button",
+                "grey-outlined-button");
+        leftBoxButton.setOnAction(e -> controller.onSelect(leftNavigationTarget));
+        GridPaneUtil.fillColumn(gridPane,
+                0,
+                leftBoxButton,
+                "",
+                buttonInsets,
                 Res.get("academy.overview." + leftTopic),
+                "bisq-text-headline-2",
+                leftIconId,
+                headlineInsets,
                 Res.get("academy.overview." + leftTopic + ".content"),
-                Res.get("academy.overview.selectButton"),
-                leftNavigationTarget
-        );
+                "bisq-text-3",
+                infoInsets,
+                "bisq-box-2",
+                groupInsets);
 
-        VBox rightBox = getWidgetBox(
-                rightIconId,
+        Button rightBoxButton = new Button(Res.get("academy.overview.selectButton"));
+        rightBoxButton.getStyleClass().addAll("medium-large-button",
+                "outlined-button",
+                "grey-outlined-button");
+        rightBoxButton.setOnAction(e -> controller.onSelect(rightNavigationTarget));
+        GridPaneUtil.fillColumn(gridPane,
+                1,
+                rightBoxButton,
+                "",
+                buttonInsets,
                 Res.get("academy.overview." + rightTopic),
+                "bisq-text-headline-2",
+                rightIconId,
+                headlineInsets,
                 Res.get("academy.overview." + rightTopic + ".content"),
-                Res.get("academy.overview.selectButton"),
-                rightNavigationTarget
-        );
-        GridPane.setHgrow(leftBox, Priority.ALWAYS);
-        GridPane.setHgrow(rightBox, Priority.ALWAYS);
-        root.add(leftBox, 0, ++rowIndex, 1, 1);
-        root.add(rightBox, 1, rowIndex, 1, 1);
-    }
-
-    private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
-        Label headlineLabel = new Label(headline);
-        headlineLabel.setWrapText(true);
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
-        headlineLabel.setGraphicTextGap(15);
-        headlineLabel.setMinHeight(35);
-
-        Label contentLabel = new Label(content);
-        contentLabel.setWrapText(true);
-        contentLabel.getStyleClass().add("bisq-text-3");
-
-        Button button = new Button(buttonLabel);
-        button.setMaxWidth(Double.MAX_VALUE);
-        // button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
-        button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
-        button.setOnAction(e -> controller.onSelect(navigationTarget));
-
-        VBox.setVgrow(headlineLabel, Priority.ALWAYS);
-        VBox.setVgrow(contentLabel, Priority.ALWAYS);
-        VBox.setMargin(button, new Insets(10, 0, 10, 0));
-        VBox vBox = new VBox(20, headlineLabel, contentLabel, button);
-        vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
-        vBox.getStyleClass().add("bisq-box-2");
-        vBox.setPadding(new Insets(PADDING));
-        return vBox;
+                "bisq-text-3",
+                infoInsets,
+                "bisq-box-2",
+                groupInsets);
+        root.add(gridPane, 0, ++rowIndex, 2, 1);
     }
 }
