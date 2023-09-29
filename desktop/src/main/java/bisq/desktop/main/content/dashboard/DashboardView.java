@@ -82,7 +82,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         String buttonStyleClass = "large-button";
         Insets groupInsets = new Insets(36, 48, 44, 48);
         Insets headlineInsets = new Insets(36, 48, 0, 48);
-        Insets infoInsets = new Insets(20, 48, 0, 48);
+        Insets infoInsets = new Insets(0, 48, 0, 48);
         Insets buttonInsets = new Insets(10, 48, 44, 48);
 
         tradeProtocols = new Button(Res.get("dashboard.second.button"));
@@ -109,7 +109,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 buttonInsets,
                 Res.get("dashboard.third.headline"),
                 headlineLabelStyleClass,
-                "fiat-btc",
+                "learn",
                 headlineInsets,
                 Res.get("dashboard.third.content"),
                 infoLabelStyleClass,
