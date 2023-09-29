@@ -39,7 +39,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         super(new GridPane(), model, controller);
 
         root.setPadding(new Insets(0, 0, 0, 0));
-        root.setHgap(PADDING);
+        root.setHgap(20);
         root.setVgap(PADDING);
         root.setCursor(Cursor.HAND);
 
@@ -79,6 +79,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
         VBox vBox = new VBox(20, headlineLabel, contentLabel);
+        GridPane.setMargin(vBox, new Insets(20, 0, 0, 0));
         GridPane.setHgrow(vBox, Priority.ALWAYS);
         root.add(vBox, 0, rowIndex, 2, 1);
     }
@@ -95,9 +96,9 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         GridPaneUtil.setGridPaneTwoColumnsConstraints(gridPane);
 
         Insets groupInsets = new Insets(20, 20, 20, 20);
-        Insets headlineInsets = new Insets(20, 20, 0, 20);
-        Insets infoInsets = new Insets(20, 20, 0, 20);
-        Insets buttonInsets = new Insets(20, 20, 20, 20);
+        Insets headlineInsets = new Insets(22, 20, 0, 20);
+        Insets infoInsets = new Insets(23, 20, 0, 20);
+        Insets buttonInsets = new Insets(30, 20, 30, 20);
 
         Button leftBoxButton = new Button(Res.get("academy.overview.selectButton"));
         leftBoxButton.getStyleClass().addAll("medium-large-button",
@@ -112,6 +113,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                 Res.get("academy.overview." + leftTopic),
                 "bisq-text-headline-2",
                 leftIconId,
+                5d,
                 headlineInsets,
                 Res.get("academy.overview." + leftTopic + ".content"),
                 "bisq-text-3",
@@ -132,6 +134,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                 Res.get("academy.overview." + rightTopic),
                 "bisq-text-headline-2",
                 rightIconId,
+                5d,
                 headlineInsets,
                 Res.get("academy.overview." + rightTopic + ".content"),
                 "bisq-text-3",

@@ -116,6 +116,7 @@ public class GridPaneUtil {
                                   String headline,
                                   String headlineStyleClass,
                                   String headlineImageId,
+                                  double headlineImageIdGap,
                                   Insets headlineMargin,
                                   String info,
                                   String infoLabelStyleClass,
@@ -137,7 +138,10 @@ public class GridPaneUtil {
 
         gridPane.add(group, columnIndex, rowCount, 1, gridPaneRows);
 
-        Label headlineLabel = getHeadline(headline, headlineStyleClass, headlineImageId, 16.0);
+        Label headlineLabel = getHeadline(headline,
+                headlineStyleClass,
+                headlineImageId,
+                headlineImageIdGap);
         GridPane.setMargin(headlineLabel, headlineMargin);
         gridPane.add(headlineLabel, columnIndex, rowCount);
 
