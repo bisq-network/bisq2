@@ -53,16 +53,16 @@ public class PasswordController implements Controller {
         doDeactivate();
     }
 
-    void onButtonClicked(boolean isPasswordValid, boolean isConfirmedPasswordValid) {
+    void onButtonClicked() {
         CharSequence password = model.getPassword().get();
 
         if (userIdentityService.getAESSecretKey().isPresent()) {
-            if (isPasswordValid) {
+            if (model.getPasswordIsValid().get()) {
                 removePassword(password);
                 view.resetValidations();
             }
         } else {
-            if (isPasswordValid && isConfirmedPasswordValid) {
+            if (model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get()) {
                 setPassword(password);
                 view.resetValidations();
             }

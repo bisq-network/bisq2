@@ -80,7 +80,11 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         confirmedPassword.isMaskedProperty().bindBidirectional(model.getConfirmedPasswordIsMasked());
         confirmedPassword.isValidProperty().bindBidirectional(model.getConfirmedPasswordIsValid());
         button.textProperty().bind(model.getButtonText());
-        button.setOnAction(e -> controller.onButtonClicked(password.validate(), confirmedPassword.validate()));
+        button.setOnAction(e -> {
+            password.validate();
+            confirmedPassword.validate();
+            controller.onButtonClicked();
+        });
     }
 
     @Override
