@@ -118,6 +118,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                 Res.get("academy.overview." + leftTopic + ".content"),
                 "bisq-text-3",
                 infoInsets,
+                1d,
                 "bisq-box-2",
                 groupInsets);
 
@@ -139,6 +140,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                 Res.get("academy.overview." + rightTopic + ".content"),
                 "bisq-text-3",
                 infoInsets,
+                1d,
                 "bisq-box-2",
                 groupInsets);
         root.add(gridPane, 0, ++rowIndex, 2, 1);

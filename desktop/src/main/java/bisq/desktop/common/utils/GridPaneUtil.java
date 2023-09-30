@@ -121,6 +121,7 @@ public class GridPaneUtil {
                                   String info,
                                   String infoLabelStyleClass,
                                   Insets infoMargin,
+                                  double infoLineSpace,
                                   String groupPaneStyleClass,
                                   Insets groupPadding) {
 
@@ -146,6 +147,7 @@ public class GridPaneUtil {
         gridPane.add(headlineLabel, columnIndex, rowCount);
 
         TextFlow infoLabel = getInfoLabel(info, infoLabelStyleClass);
+        infoLabel.setLineSpacing(infoLineSpace);
         GridPane.setMargin(infoLabel, infoMargin);
         gridPane.add(infoLabel, columnIndex, rowCount + 1);
 

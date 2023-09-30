@@ -86,6 +86,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 Res.get("bisqEasy.onboarding.left.info"),
                 infoLabelStyleClass,
                 infoInsets,
+                0d,
                 groupPaneStyleClass,
                 groupInsets);
 
@@ -103,6 +104,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 Res.get("bisqEasy.onboarding.right.info"),
                 infoLabelStyleClass,
                 infoInsets,
+                0d,
                 groupPaneStyleClass,
                 groupInsets);
     }

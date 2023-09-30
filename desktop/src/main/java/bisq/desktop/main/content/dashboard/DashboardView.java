@@ -99,6 +99,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 Res.get("dashboard.second.content"),
                 infoLabelStyleClass,
                 infoInsets,
+                0d,
                 groupPaneStyleClass,
                 groupInsets);
 
@@ -116,6 +117,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 Res.get("dashboard.third.content"),
                 infoLabelStyleClass,
                 infoInsets,
+                0d,
                 groupPaneStyleClass,
                 groupInsets);
     }
