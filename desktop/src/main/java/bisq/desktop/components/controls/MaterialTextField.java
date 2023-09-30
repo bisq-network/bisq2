@@ -26,7 +26,11 @@ import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -179,15 +183,24 @@ public class MaterialTextField extends Pane {
         isValid.set(validationControl.validate());
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
-        getActiveValidator().ifPresent(validator -> {
-            helpLabel.setText(validator.getMessage());
-            helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
-        });
+        getActiveValidator().ifPresentOrElse(validator -> {
+                    helpLabel.setText(validator.getMessage());
+                    helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
+                },
+                () -> {
+                    helpLabel.setText("");
+                    helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+                });
         return isValid.get();
     }
 
     public void resetValidation() {
         validationControl.resetValidation();
+        isValid.set(false);
+        selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+        descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+        helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+        helpLabel.setText("");
     }
 
     private final BooleanProperty isValid = new SimpleBooleanProperty();

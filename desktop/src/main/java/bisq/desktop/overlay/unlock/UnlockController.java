@@ -107,6 +107,7 @@ public class UnlockController implements InitWithDataController<UnlockController
                     .onClose(() -> Navigation.navigateTo(NavigationTarget.UNLOCK))
                     .show();
             model.getPassword().set("");
+            view.resetValidation();
         });
     }
 }

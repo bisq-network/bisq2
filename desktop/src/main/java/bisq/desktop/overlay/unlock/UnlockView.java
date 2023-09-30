@@ -30,6 +30,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
+
+import static org.fxmisc.easybind.EasyBind.subscribe;
 
 @Slf4j
 public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
@@ -40,6 +43,8 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
     private final MaterialPasswordField password;
     private final Button unlockButton, cancelButton;
     private final Label headline;
+    private boolean isFirstTimeThatFocusChanges;
+    private Subscription focusPin;
 
     public UnlockView(UnlockModel model, UnlockController controller) {
         super(new VBox(20), model, controller);
@@ -57,6 +62,7 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         unlockButton = new Button(Res.get("unlock.button"));
         unlockButton.setDefaultButton(true);
         cancelButton = new Button(Res.get("action.cancel"));
+        isFirstTimeThatFocusChanges = true;
         HBox buttons = new HBox(20, unlockButton, cancelButton);
         HBox.setMargin(buttons, new Insets(20, 0, 0, 0));
         root.getChildren().setAll(headline, password, buttons);
@@ -80,6 +86,8 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
             KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
             });
         });
+
+        focusPin = subscribe(password.textInputFocusedProperty(), this::validatePasswordWhenFocusOut);
     }
 
     @Override
@@ -90,9 +98,25 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         unlockButton.setOnAction(null);
         cancelButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
+
+        focusPin.unsubscribe();
     }
 
     public boolean validatePassword() {
         return password.validate();
+    }
+
+    public void resetValidation() {
+        password.resetValidation();
+        isFirstTimeThatFocusChanges = true;
+    }
+
+    private void validatePasswordWhenFocusOut(boolean focused) {
+        if (!focused && !isFirstTimeThatFocusChanges) {
+            validatePassword();
+        }
+        if(isFirstTimeThatFocusChanges) {
+            isFirstTimeThatFocusChanges = false;
+        }
     }
 }
