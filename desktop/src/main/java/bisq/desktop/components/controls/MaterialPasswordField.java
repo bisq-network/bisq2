@@ -85,6 +85,11 @@ public class MaterialPasswordField extends MaterialTextField {
         return passwordField;
     }
 
+    @Override
+    protected double computeMinHeight(double width) {
+        return getBgHeight() + 20;
+    }
+
     public boolean isMasked() {
         return isMaskedProperty().get();
     }
