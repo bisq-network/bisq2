@@ -18,7 +18,6 @@
 package bisq.desktop.components.controls.validator;
 
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -26,11 +25,7 @@ import javafx.beans.property.StringProperty;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
-import javafx.scene.control.Tooltip;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -42,33 +37,6 @@ public abstract class ValidatorBase {
      * This {@link PseudoClass} will be activated when a validation error occurs.
      */
     public static final PseudoClass PSEUDO_CLASS_ERROR = PseudoClass.getPseudoClass("error");
-
-    /**
-     * When using {@code Tooltip.install(node, tooltip)}, the given tooltip is stored in the Node's properties
-     * under this key.
-     *
-     * @see Tooltip#install(Node, Tooltip)
-     */
-    private static final String TOOLTIP_PROP_KEY = "javafx.scene.control.Tooltip";
-
-    /**
-     * Default error tooltip style class
-     */
-    public static final String ERROR_TOOLTIP_STYLE_CLASS = "error-tooltip";
-
-    /**
-     * Key used to stash control tooltip upon validation
-     */
-    private static final String TEMP_TOOLTIP_KEY = "stashed-tootlip";
-
-    /**
-     * supported tooltips keys
-     */
-    private static final Set<String> supportedTooltipKeys = new HashSet<>(
-            List.of(
-                    "javafx.scene.control.Tooltip"
-            )
-    );
 
     /**
      * @param message will be set as the validator's {@link #message}.
@@ -115,66 +83,12 @@ public abstract class ValidatorBase {
      * If the validator isn't "passing" the {@link #PSEUDO_CLASS_ERROR :error} pseudoclass is applied to the
      * {@link #srcControl}.
      * <p>
-     * Applies the {@link #PSEUDO_CLASS_ERROR :error} pseudo class and the errorTooltip to
-     * the {@link #srcControl}.
+     * Applies the {@link #PSEUDO_CLASS_ERROR :error} pseudo class
      */
     protected void onEval() {
         Node control = getSrcControl();
         boolean invalid = hasErrors.get();
         control.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, invalid);
-        Tooltip activeTooltip = getActiveTooltip(control);
-        if (invalid) {
-            Tooltip errorTooltip = errorTooltipSupplier.get();
-            errorTooltip.getStyleClass().add(ERROR_TOOLTIP_STYLE_CLASS);
-            errorTooltip.setText(getMessage());
-            install(control, activeTooltip, errorTooltip);
-        } else {
-            Tooltip orgTooltip = (Tooltip) control.getProperties().remove(TEMP_TOOLTIP_KEY);
-            install(control, activeTooltip, orgTooltip);
-        }
-    }
-
-    private final Tooltip getActiveTooltip(Node node) {
-        Tooltip tooltip = null;
-        for (String key : supportedTooltipKeys) {
-            tooltip = (Tooltip) node.getProperties().get(key);
-            if (tooltip != null) {
-                break;
-            }
-        }
-        return tooltip;
-    }
-
-    private void install(Node node, Tooltip oldVal, Tooltip newVal) {
-        // stash old tooltip if it's not error tooltip
-        if (oldVal != null && !oldVal.getStyleClass().contains(ERROR_TOOLTIP_STYLE_CLASS)) {
-            node.getProperties().put(TEMP_TOOLTIP_KEY, oldVal);
-        }
-        if (node instanceof Control) {
-            // uninstall
-            if (oldVal != null) {
-                if (newVal == null) {
-                    ((Control) node).setTooltip(newVal);
-                    return;
-                }
-            }
-            // install
-            ((Control) node).setTooltip(newVal);
-        } else {
-            uninstall(node, oldVal);
-            install(node, newVal);
-        }
-    }
-
-    private void uninstall(Node node, Tooltip tooltip) {
-        Tooltip.uninstall(node, tooltip);
-    }
-
-    private void install(Node node, Tooltip tooltip) {
-        if (tooltip == null) {
-            return;
-        }
-        Tooltip.install(node, tooltip);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -216,8 +130,7 @@ public abstract class ValidatorBase {
      * set this to <em>true</em>. If the value is <em>valid</em>, it should set this to <em>false</em>.
      * <p>
      * When <em>hasErrors</em> is true, the validator will automatically apply the {@link #PSEUDO_CLASS_ERROR :error}
-     * pseudoclass to the {@link #srcControl}; the {@link #srcControl} will also have a {@link Tooltip} containing the
-     * {@link #message} applied to it.
+     * pseudoclass to the {@link #srcControl}.
      */
     protected ReadOnlyBooleanWrapper hasErrors = new ReadOnlyBooleanWrapper(false);
 
@@ -229,27 +142,7 @@ public abstract class ValidatorBase {
     }
 
     /**
-     * @see #hasErrors
-     */
-    public ReadOnlyBooleanProperty hasErrorsProperty() {
-        return hasErrors.getReadOnlyProperty();
-    }
-
-    private Supplier<Tooltip> errorTooltipSupplier = Tooltip::new;
-
-    public Supplier<Tooltip> getErrorTooltipSupplier() {
-        return errorTooltipSupplier;
-    }
-
-    public void setErrorTooltipSupplier(Supplier<Tooltip> errorTooltipSupplier) {
-        this.errorTooltipSupplier = errorTooltipSupplier;
-    }
-
-    /**
      * The error message to display when the validator is <em>not</em> "passing."
-     * <p>
-     * When {@link #hasErrors} is true, this message is displayed near the {@link #srcControl} (usually below);
-     * it's also displayed in a {@link Tooltip} applied to the {@link #srcControl}.
      */
     protected SimpleStringProperty message = new SimpleStringProperty();
 
