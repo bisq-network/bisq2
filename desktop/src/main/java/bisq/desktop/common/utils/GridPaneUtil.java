@@ -91,10 +91,6 @@ public class GridPaneUtil {
                                     double graphicTextGap) {
         Label headlineLabel;
         if (StringUtils.isNotEmpty(headlineImageId)) {
-            if (graphicTextGap <= 0d) {
-                throw new IllegalArgumentException("When an image is passed, the graphicsTextGraph "
-                        + "must be greater than 0");
-            }
             headlineLabel = new Label(headline, ImageUtil.getImageViewById(headlineImageId));
             headlineLabel.setGraphicTextGap(graphicTextGap);
         } else {
