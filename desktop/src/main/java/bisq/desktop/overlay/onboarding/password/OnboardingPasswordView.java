@@ -77,7 +77,7 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         password.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR);
-        password.setMaxWidth(315);
+        password.setMaxWidth(500);
 
         confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
         confirmedPassword.setValidators(
