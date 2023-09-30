@@ -25,7 +25,6 @@ import bisq.desktop.components.controls.validator.TextMinLengthValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -35,13 +34,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.ref.WeakReference;
-
 @Slf4j
 public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, OnboardingPasswordController> {
 
     private static final ValidatorBase REQUIRED_FIELD_VALIDATOR = new RequiredFieldValidator(Res.get("validation.empty"));
     private static final ValidatorBase MIN_LENGTH_VALIDATOR = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
+    private static final boolean DO_NOT_VALIDATE_ON_TEXT_INPUT = false;
 
     private final MaterialPasswordField password, confirmedPassword;
     private final Button setPasswordButton, skipButton;
@@ -63,25 +61,18 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         subtitleLabel.setMinHeight(40);
         subtitleLabel.setMaxWidth(375);
 
-        password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"));
+        password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
         password.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR);
-        password.validate();
         password.setMaxWidth(315);
 
-        confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
+        confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
         confirmedPassword.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR,
                 new EqualTextsValidator(Res.get("validation.password.notMatching"), password.getTextInputControl()));
-        confirmedPassword.validate();
         confirmedPassword.setMaxWidth(password.getMaxWidth());
-
-        password.passwordProperty().addListener(new WeakReference<>(
-                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> confirmedPassword.validate()).get());
-        confirmedPassword.passwordProperty().addListener(new WeakReference<>(
-                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> password.validate()).get());
 
         setPasswordButton = new Button(Res.get("onboarding.password.button.savePassword"));
         setPasswordButton.setDefaultButton(true);
@@ -101,8 +92,11 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         confirmedPassword.passwordProperty().bindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().bindBidirectional(model.getConfirmedPasswordIsMasked());
         confirmedPassword.isValidProperty().bindBidirectional(model.getConfirmedPasswordIsValid());
-        setPasswordButton.disableProperty().bind(model.getSetPasswordButtonDisabled());
-        setPasswordButton.setOnAction(e -> controller.onSetPassword());
+        setPasswordButton.setOnAction(e -> {
+            password.validate();
+            confirmedPassword.validate();
+            controller.onSetPassword();
+        });
         skipButton.setOnAction(e -> controller.onSkip());
     }
 
@@ -114,7 +108,6 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         confirmedPassword.passwordProperty().unbindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().unbindBidirectional(model.getConfirmedPasswordIsMasked());
         confirmedPassword.isValidProperty().unbindBidirectional(model.getConfirmedPasswordIsValid());
-        setPasswordButton.disableProperty().unbind();
         setPasswordButton.setOnAction(null);
         skipButton.setOnAction(null);
     }
