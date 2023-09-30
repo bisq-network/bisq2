@@ -31,8 +31,6 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 // TODO if walletService is present we want to encrypt the wallet file.
 // Wallet encryption is not implemented yet in the wallet domain
 @Slf4j
@@ -60,14 +58,19 @@ public class PasswordController implements Controller {
         doDeactivate();
     }
 
-    void onButtonClicked() {
+    void onButtonClicked(boolean isPasswordValid, boolean isConfirmedPasswordValid) {
         CharSequence password = model.getPassword().get();
 
         if (userIdentityService.getAESSecretKey().isPresent()) {
-            removePassword(password);
+            if(isPasswordValid) {
+                removePassword(password);
+                view.resetValidations();
+            }
         } else {
-            checkArgument(password.equals(model.getConfirmedPassword().get()));
-            setPassword(password);
+            if(isPasswordValid && isConfirmedPasswordValid) {
+                setPassword(password);
+                view.resetValidations();
+            }
         }
     }
 
