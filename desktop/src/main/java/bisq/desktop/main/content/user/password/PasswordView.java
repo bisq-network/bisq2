@@ -36,7 +36,6 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
 
     private static final ValidatorBase REQUIRED_FIELD_VALIDATOR = new RequiredFieldValidator(Res.get("validation.empty"));
     private static final ValidatorBase MIN_LENGTH_VALIDATOR = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
-    private static final boolean DO_NOT_VALIDATE_ON_TEXT_INPUT = false;
 
     private final MaterialPasswordField password, confirmedPassword;
     private final Button button;
@@ -52,12 +51,12 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         headline.getStyleClass().add("large-thin-headline");
         headline.setPadding(new Insets(-8, 0, 0, 0));
 
-        password = new MaterialPasswordField(Res.get("user.password.enterPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
+        password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR);
 
-        confirmedPassword = new MaterialPasswordField(Res.get("user.password.confirmPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
+        confirmedPassword = new MaterialPasswordField(Res.get("user.password.confirmPassword"));
         confirmedPassword.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR,

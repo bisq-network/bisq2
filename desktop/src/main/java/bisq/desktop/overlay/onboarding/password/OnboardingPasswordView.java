@@ -39,7 +39,6 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
 
     private static final ValidatorBase REQUIRED_FIELD_VALIDATOR = new RequiredFieldValidator(Res.get("validation.empty"));
     private static final ValidatorBase MIN_LENGTH_VALIDATOR = new TextMinLengthValidator(Res.get("validation.password.tooShort"));
-    private static final boolean DO_NOT_VALIDATE_ON_TEXT_INPUT = false;
 
     private final MaterialPasswordField password, confirmedPassword;
     private final Button setPasswordButton, skipButton;
@@ -61,13 +60,13 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         subtitleLabel.setMinHeight(40);
         subtitleLabel.setMaxWidth(375);
 
-        password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
+        password = new MaterialPasswordField(Res.get("onboarding.password.enterPassword"));
         password.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR);
         password.setMaxWidth(315);
 
-        confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
+        confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
         confirmedPassword.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR,

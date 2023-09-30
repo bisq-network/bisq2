@@ -33,7 +33,6 @@ import java.lang.ref.WeakReference;
 public class MaterialPasswordField extends MaterialTextField {
     private BooleanProperty isMasked;
     private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
-    private boolean validateOnTextInput = true;
 
     public MaterialPasswordField() {
         this(null, null, null);
@@ -41,11 +40,6 @@ public class MaterialPasswordField extends MaterialTextField {
 
     public MaterialPasswordField(String description) {
         this(description, null, null);
-    }
-
-    public MaterialPasswordField(String description, boolean validateOnTextInput) {
-        this(description);
-        this.validateOnTextInput = validateOnTextInput;
     }
 
     public MaterialPasswordField(String description, String prompt) {
@@ -65,9 +59,6 @@ public class MaterialPasswordField extends MaterialTextField {
                 (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> {
                     if ((newValue == null || newValue.length() == 0) && !textProperty().isBound()) {
                         setText("");
-                    }
-                    if(validateOnTextInput) {
-                        validate();
                     }
                 }).get());
 

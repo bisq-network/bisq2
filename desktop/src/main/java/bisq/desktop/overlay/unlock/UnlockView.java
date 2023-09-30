@@ -37,8 +37,6 @@ import static org.fxmisc.easybind.EasyBind.subscribe;
 @Slf4j
 public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
-    private static final boolean DO_NOT_VALIDATE_ON_TEXT_INPUT = false;
-
     private Scene rootScene;
     private final MaterialPasswordField password;
     private final Button unlockButton, cancelButton;
@@ -55,7 +53,7 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         headline = new Label(Res.get("unlock.headline"));
         headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
-        password = new MaterialPasswordField(Res.get("user.password.enterPassword"), DO_NOT_VALIDATE_ON_TEXT_INPUT);
+        password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidators(
                 new RequiredFieldValidator(Res.get("validation.empty")),
                 new TextMinLengthValidator(Res.get("validation.password.tooShort")));
