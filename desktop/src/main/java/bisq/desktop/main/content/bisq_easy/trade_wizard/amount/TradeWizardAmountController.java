@@ -49,7 +49,6 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -74,7 +73,7 @@ public class TradeWizardAmountController implements Controller {
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
-            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, areAmountsValidPin;
+            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
     public TradeWizardAmountController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -164,10 +163,6 @@ public class TradeWizardAmountController implements Controller {
         return model.getIsMinAmountEnabled();
     }
 
-    public BooleanProperty areAmountsValid() {
-        return model.getAreAmountsValid();
-    }
-
     @Override
     public void onActivate() {
         model.setHeadline(model.getDirection().isBuy() ?
@@ -230,15 +225,6 @@ public class TradeWizardAmountController implements Controller {
             applyAmountSpec();
         });
 
-        var binding = EasyBind.combine(
-                minAmountComponent.areAmountsValid(),
-                maxOrFixAmountComponent.areAmountsValid(),
-                model.getIsMinAmountEnabled(),
-                (areMinAmountsValid, areMaxOrFixedAmountsValid, isMinAmountEnabled) ->
-                        areMaxOrFixedAmountsValid && (!isMinAmountEnabled | areMinAmountsValid)
-                );
-        areAmountsValidPin = EasyBind.subscribe(binding, areAmountsValid -> model.getAreAmountsValid().set(areAmountsValid));
-
         applyAmountSpec();
 
         if (model.getDirection().isSell()) {
@@ -264,7 +250,6 @@ public class TradeWizardAmountController implements Controller {
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
-        areAmountsValidPin.unsubscribe();;
     }
 
     void onToggleMinAmountVisibility() {

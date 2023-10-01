@@ -32,7 +32,16 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -75,10 +84,6 @@ public class AmountComponent {
 
     public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
         return controller.getQuoteSideAmount();
-    }
-
-    public BooleanProperty areAmountsValid() {
-        return controller.model.areAmountsValid;
     }
 
     public void setBaseSideAmount(Monetary value) {
@@ -131,7 +136,7 @@ public class AmountComponent {
         private final ChangeListener<Number> sliderListener;
         private Subscription baseAmountFromModelPin, baseAmountFromCompPin,
                 quoteAmountFromCompPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin,
-                areAmountsValidPin, baseSideAmountValidPin, quoteSideAmountValidPin;
+                baseSideAmountValidPin, quoteSideAmountValidPin;
 
         private Controller(ServiceProvider serviceProvider,
                            boolean useQuoteCurrencyForMinMaxRange) {
@@ -332,12 +337,6 @@ public class AmountComponent {
 
             baseSideAmountValidPin = subscribeToAmountValidity(baseSideAmountInput);
             quoteSideAmountValidPin = subscribeToAmountValidity(quoteSideAmountInput);
-            var binding = EasyBind.combine(
-                    baseSideAmountInput.isAmountValidProperty(),
-                    quoteSideAmountInput.isAmountValidProperty(),
-                    (isBaseAmountValid, isQuoteAmountValid) -> isBaseAmountValid && isQuoteAmountValid);
-            areAmountsValidPin = EasyBind.subscribe(binding, model.areAmountsValid::set);
-
             model.getSliderValue().addListener(sliderListener);
         }
 
@@ -417,7 +416,6 @@ public class AmountComponent {
             priceFromCompPin.unsubscribe();
             minRangeCustomValuePin.unsubscribe();
             maxRangeCustomValuePin.unsubscribe();
-            areAmountsValidPin.unsubscribe();
             baseSideAmountValidPin.unsubscribe();
             quoteSideAmountValidPin.unsubscribe();
         }
@@ -460,7 +458,6 @@ public class AmountComponent {
 
         private final DoubleProperty sliderValue = new SimpleDoubleProperty();
         private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
-        private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
         private final BooleanProperty isFocusedAmountValid = new SimpleBooleanProperty(true);
 
         @Setter
@@ -495,7 +492,6 @@ public class AmountComponent {
             sliderFocus.set(false);
             market = MarketRepository.getDefault();
             direction = Direction.BUY;
-            areAmountsValid.set(true);
             isFocusedAmountValid.set(true);
         }
     }

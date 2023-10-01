@@ -74,7 +74,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin,
-            selectedBisqEasyOfferPin, isBackButtonHighlightedPin, areAmountsValidPin;
+            selectedBisqEasyOfferPin, isBackButtonHighlightedPin;
 
     public TradeWizardController(ServiceProvider serviceProvider) {
         super(NavigationTarget.TRADE_WIZARD);
@@ -168,9 +168,6 @@ public class TradeWizardController extends NavigationController implements InitW
 
         handlePaymentMethodsUpdate();
         tradeWizardPaymentMethodController.getFiatPaymentMethods().addListener(paymentMethodsListener);
-        areAmountsValidPin = EasyBind.subscribe(
-                tradeWizardAmountController.areAmountsValid(),
-                areAmountsValid -> model.getNextButtonDisabled().set(!areAmountsValid));
     }
 
     @Override
@@ -180,7 +177,6 @@ public class TradeWizardController extends NavigationController implements InitW
         amountSpecPin.unsubscribe();
         isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
-        areAmountsValidPin.unsubscribe();
         selectedBisqEasyOfferPin.unsubscribe();
         isBackButtonHighlightedPin.unsubscribe();
         tradeWizardPaymentMethodController.getFiatPaymentMethods().removeListener(paymentMethodsListener);
