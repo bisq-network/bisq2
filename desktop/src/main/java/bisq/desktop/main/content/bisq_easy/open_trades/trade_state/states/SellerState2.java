@@ -20,7 +20,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.components.controls.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -86,8 +87,7 @@ public class SellerState2 extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
 
-        private final WrappingText fiatSentConfirmed, headline;
-        private final WrappingText info;
+        private final WrappingText fiatSentConfirmed, headline, info;
         private final WaitingAnimation waitingAnimation;
         private final HBox fiatSentConfirmedHBox;
         private Subscription fiatSendConfirmationReceivedPin;
@@ -99,18 +99,14 @@ public class SellerState2 extends BaseState {
             fiatSentConfirmed = confirmPair.getFirst();
             fiatSentConfirmedHBox = confirmPair.getSecond();
 
-            headline = FormUtils.getHeadline();
-            info = FormUtils.getInfo();
+            VBox.setMargin(fiatSentConfirmedHBox, new Insets(0, 0, 10, 0));
 
             waitingAnimation = new WaitingAnimation();
+            headline = FormUtils.getHeadline();
+            info = FormUtils.getInfo();
+            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
-            VBox.setMargin(fiatSentConfirmedHBox, new Insets(0, 0, 10, 0));
-            root.getChildren().addAll(
-                    fiatSentConfirmedHBox,
-                    headline,
-                    info,
-                    waitingAnimation
-            );
+            root.getChildren().addAll(fiatSentConfirmedHBox, waitingInfo);
         }
 
         @Override
@@ -125,12 +121,15 @@ public class SellerState2 extends BaseState {
                     headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.headline"));
                     info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.info"));
                     fiatSentConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.fiatPaymentSentCheckBox", model.getFormattedQuoteAmount()));
+                    waitingAnimation.setState(WaitingState.BITCOIN_ADDRESS);
                 } else {
                     VBox.setMargin(waitingAnimation, new Insets(30, 0, 10, 40));
                     headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.headline", model.getQuoteCode()));
                     info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.info", model.getFormattedQuoteAmount()));
+                    waitingAnimation.setState(WaitingState.FIAT_PAYMENT);
                 }
             });
+
             waitingAnimation.play();
         }
 

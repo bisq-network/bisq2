@@ -138,8 +138,28 @@
     -fx-image: url("/images/arrow-right-sign.png");
 }
 
-#hour_glass {
-    -fx-image: url("/images/hour_glass.png");
+#spinning-circle {
+    -fx-image: url("/images/waitingstates/spinning-circle.png");
+}
+
+#account-data {
+    -fx-image: url("/images/waitingstates/account-data.png");
+}
+
+#fiat-payment {
+    -fx-image: url("/images/waitingstates/fiat-payment.png");
+}
+
+#bitcoin-address {
+    -fx-image: url("/images/waitingstates/bitcoin-address.png");
+}
+
+#bitcoin-payment {
+    -fx-image: url("/images/waitingstates/bitcoin-payment.png");
+}
+
+#bitcoin-confirmation {
+    -fx-image: url("/images/waitingstates/bitcoin-confirmation.png");
 }
 
 #video {

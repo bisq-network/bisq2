@@ -26,6 +26,8 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -39,6 +41,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -172,12 +175,10 @@ public class SellerState4 extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
         private final MaterialTextField txId, btcBalance;
+        private final WaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
-
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase4.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase4.info"));
 
             txId = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase4.txId"), "", false);
             txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
@@ -187,15 +188,14 @@ public class SellerState4 extends BaseState {
             btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase4.balance.prompt"));
 
             button = new Button(Res.get("bisqEasy.tradeState.info.phase4.buttonText"));
-
-            VBox.setMargin(info, new Insets(0, 0, 10, 0));
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
-            root.getChildren().addAll(
-                    headline,
-                    info,
-                    txId,
-                    btcBalance,
-                    button);
+
+            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase4.headline"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase4.info"));
+            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
+
+            root.getChildren().addAll(waitingInfo, txId, btcBalance, button);
         }
 
         @Override
@@ -210,6 +210,8 @@ public class SellerState4 extends BaseState {
 
             button.setOnAction(e -> controller.onComplete());
             txId.getIconButton().setOnAction(e -> controller.openExplorer());
+
+            waitingAnimation.play();
         }
 
         @Override
@@ -222,6 +224,8 @@ public class SellerState4 extends BaseState {
 
             button.setOnAction(null);
             txId.getIconButton().setOnAction(null);
+
+            waitingAnimation.stop();
         }
     }
 }

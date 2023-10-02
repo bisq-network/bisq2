@@ -26,11 +26,15 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
+import javafx.geometry.Pos;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -129,6 +133,16 @@ public abstract class BaseState {
 
         @Override
         protected void onViewDetached() {
+        }
+
+        protected HBox createWaitingInfo(WaitingAnimation animation, WrappingText headline, WrappingText info) {
+            animation.setAlignment(Pos.CENTER);
+            VBox text = new VBox(headline, info);
+            text.setAlignment(Pos.CENTER_LEFT);
+            text.setSpacing(10);
+            HBox waitingInfo = new HBox(animation, text);
+            waitingInfo.setSpacing(20);
+            return waitingInfo;
         }
     }
 }

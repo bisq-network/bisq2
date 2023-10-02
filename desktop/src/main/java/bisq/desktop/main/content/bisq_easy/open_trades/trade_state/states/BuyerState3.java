@@ -20,7 +20,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.components.controls.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -93,28 +94,24 @@ public class BuyerState3 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            headline = FormUtils.getHeadline();
-            info = FormUtils.getInfo();
-
             Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
             fiatReceiptConfirmed = confirmPair.getFirst();
             fiatReceiptConfirmedHBox = confirmPair.getSecond();
 
-            waitingAnimation = new WaitingAnimation();
             VBox.setMargin(fiatReceiptConfirmedHBox, new Insets(0, 0, 5, 0));
-            VBox.setMargin(waitingAnimation, new Insets(30, 0, 0, 20));
-            root.getChildren().addAll(
-                    fiatReceiptConfirmedHBox,
-                    headline,
-                    info,
-                    waitingAnimation);
+
+            waitingAnimation = new WaitingAnimation();
+            headline = FormUtils.getHeadline();
+            info = FormUtils.getInfo();
+            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
+
+            root.getChildren().addAll(fiatReceiptConfirmedHBox, waitingInfo);
+            root.setSpacing(20);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
-
-            waitingAnimation.play();
 
             fiatReceiptConfirmedPin = EasyBind.subscribe(model.getFiatReceiptConfirmed(), fiatPaymentConfirmed -> {
                 fiatReceiptConfirmedHBox.setVisible(fiatPaymentConfirmed);
@@ -123,11 +120,15 @@ public class BuyerState3 extends BaseState {
                     headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
                     info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.info"));
                     fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3.fiatReceiptConfirmedCheckBox", model.getFormattedQuoteAmount()));
+                    waitingAnimation.setState(WaitingState.BITCOIN_PAYMENT);
                 } else {
                     headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline"));
                     info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", model.getFormattedQuoteAmount()));
+                    waitingAnimation.setState(WaitingState.FIAT_PAYMENT_CONFIRMATION);
                 }
             });
+
+            waitingAnimation.play();
         }
 
         @Override
