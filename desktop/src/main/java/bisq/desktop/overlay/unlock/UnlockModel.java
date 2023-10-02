@@ -27,6 +27,5 @@ import lombok.Getter;
 @Getter
 public class UnlockModel implements Model {
     private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
-    private final BooleanProperty unlockButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsMasked = new SimpleBooleanProperty();
 }

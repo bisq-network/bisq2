@@ -60,7 +60,6 @@ public class MaterialPasswordField extends MaterialTextField {
                     if ((newValue == null || newValue.length() == 0) && !textProperty().isBound()) {
                         setText("");
                     }
-                    validate();
                 }).get());
 
         password.set(getText());
@@ -75,6 +74,11 @@ public class MaterialPasswordField extends MaterialTextField {
         PasswordFieldWithCopyEnabled passwordField = new PasswordFieldWithCopyEnabled();
         passwordField.setSkin(new VisiblePasswordFieldSkin(passwordField, this));
         return passwordField;
+    }
+
+    @Override
+    protected double computeMinHeight(double width) {
+        return getBgHeight() + 20;
     }
 
     public boolean isMasked() {

@@ -19,13 +19,13 @@ package bisq.desktop.overlay.onboarding.password;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.EqualTextsValidator;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinLengthValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -34,8 +34,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
-import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.fxmisc.easybind.EasyBind.subscribe;
 
 @Slf4j
 public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, OnboardingPasswordController> {
@@ -45,6 +49,12 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
 
     private final MaterialPasswordField password, confirmedPassword;
     private final Button setPasswordButton, skipButton;
+
+    /* Used to prevent input validation from happening when the view first loads */
+    private final Map<MaterialTextField, Integer> focusChangedCounts = new HashMap<>();
+
+    private Subscription passwordFocusPin;
+    private Subscription confirmedPasswordFocusPin;
 
     public OnboardingPasswordView(OnboardingPasswordModel model, OnboardingPasswordController controller) {
         super(new VBox(20), model, controller);
@@ -67,21 +77,14 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         password.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR);
-        password.validate();
-        password.setMaxWidth(315);
+        password.setMaxWidth(500);
 
         confirmedPassword = new MaterialPasswordField(Res.get("onboarding.password.confirmPassword"));
         confirmedPassword.setValidators(
                 REQUIRED_FIELD_VALIDATOR,
                 MIN_LENGTH_VALIDATOR,
                 new EqualTextsValidator(Res.get("validation.password.notMatching"), password.getTextInputControl()));
-        confirmedPassword.validate();
         confirmedPassword.setMaxWidth(password.getMaxWidth());
-
-        password.passwordProperty().addListener(new WeakReference<>(
-                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> confirmedPassword.validate()).get());
-        confirmedPassword.passwordProperty().addListener(new WeakReference<>(
-                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> password.validate()).get());
 
         setPasswordButton = new Button(Res.get("onboarding.password.button.savePassword"));
         setPasswordButton.setDefaultButton(true);
@@ -101,21 +104,48 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         confirmedPassword.passwordProperty().bindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().bindBidirectional(model.getConfirmedPasswordIsMasked());
         confirmedPassword.isValidProperty().bindBidirectional(model.getConfirmedPasswordIsValid());
-        setPasswordButton.disableProperty().bind(model.getSetPasswordButtonDisabled());
-        setPasswordButton.setOnAction(e -> controller.onSetPassword());
+        focusChangedCounts.put(password, 0);
+        focusChangedCounts.put(confirmedPassword, 0);
+        setPasswordButton.setOnAction(e -> {
+            password.validate();
+            confirmedPassword.validate();
+            controller.onSetPassword();
+        });
         skipButton.setOnAction(e -> controller.onSkip());
+        passwordFocusPin = subscribe(password.textInputFocusedProperty(),
+                focus -> validateWhenFocusOut(password));
+        confirmedPasswordFocusPin = subscribe(confirmedPassword.textInputFocusedProperty(),
+                focus -> validateWhenFocusOut(confirmedPassword));
     }
 
     @Override
     protected void onViewDetached() {
+        resetValidations();
+        focusChangedCounts.clear();
         password.passwordProperty().unbindBidirectional(model.getPassword());
         password.isMaskedProperty().unbindBidirectional(model.getPasswordIsMasked());
         password.isValidProperty().unbindBidirectional(model.getPasswordIsValid());
         confirmedPassword.passwordProperty().unbindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().unbindBidirectional(model.getConfirmedPasswordIsMasked());
         confirmedPassword.isValidProperty().unbindBidirectional(model.getConfirmedPasswordIsValid());
-        setPasswordButton.disableProperty().unbind();
         setPasswordButton.setOnAction(null);
         skipButton.setOnAction(null);
+        passwordFocusPin.unsubscribe();
+        confirmedPasswordFocusPin.unsubscribe();
+        focusChangedCounts.clear();
+    }
+
+    public void resetValidations() {
+        password.resetValidation();
+        confirmedPassword.resetValidation();
+    }
+
+    private void validateWhenFocusOut(MaterialPasswordField source) {
+        if (!source.isFocused() && focusChangedCounts.get(source) >= 2) {
+            source.validate();
+        }
+        if (focusChangedCounts.get(source) < 2) {
+            focusChangedCounts.put(source, focusChangedCounts.get(source) + 1);
+        }
     }
 }

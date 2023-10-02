@@ -28,13 +28,8 @@ import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class OnboardingPasswordController implements Controller {
@@ -42,8 +37,6 @@ public class OnboardingPasswordController implements Controller {
     private final OnboardingPasswordView view;
     private final OnboardingPasswordModel model;
     private final UserIdentityService userIdentityService;
-    private Subscription pin;
-    private MonadicBinding<Boolean> binding;
 
     public OnboardingPasswordController(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -54,44 +47,36 @@ public class OnboardingPasswordController implements Controller {
     @Override
     public void onActivate() {
         reset();
-        binding = EasyBind.combine(
-                model.getPasswordIsValid(),
-                model.getConfirmedPasswordIsValid(),
-                (passwordIsValid, confirmedPasswordIsValid) -> passwordIsValid && confirmedPasswordIsValid);
-        pin = EasyBind.subscribe(binding, isValid -> model.getSetPasswordButtonDisabled().set(!isValid));
     }
 
     @Override
     public void onDeactivate() {
         model.getPassword().set("");
         model.getConfirmedPassword().set("");
-        pin.unsubscribe();
-        binding = null;
     }
 
     void onSetPassword() {
         CharSequence password = model.getPassword().get();
-        checkArgument(model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get());
         if (userIdentityService.getAESSecretKey().isPresent()) {
             log.warn("Password is already set. This should not happen in the normal flow of the screens.");
             return;
         }
-
-        userIdentityService.deriveKeyFromPassword(password)
-                .whenComplete((key, throwable) -> maybeHandleError(throwable))
-                .thenCompose(key -> userIdentityService.encryptDataStore())
-                .whenComplete((encryptedData, throwable) -> {
-                    maybeHandleError(throwable);
-                    if (throwable == null) {
-                        UIThread.run(() -> {
-                            OverlayController.hide();
-                            model.getSetPasswordButtonDisabled().set(true);
-                            UIThread.runOnNextRenderFrame(() -> new Popup().feedback(Res.get("onboarding.password.savePassword.success"))
-                                    .onClose(this::close)
-                                    .show());
-                        });
-                    }
-                });
+        if (model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get()) {
+            userIdentityService.deriveKeyFromPassword(password)
+                    .whenComplete((key, throwable) -> maybeHandleError(throwable))
+                    .thenCompose(key -> userIdentityService.encryptDataStore())
+                    .whenComplete((encryptedData, throwable) -> {
+                        maybeHandleError(throwable);
+                        if (throwable == null) {
+                            UIThread.run(() -> {
+                                OverlayController.hide();
+                                UIThread.runOnNextRenderFrame(() -> new Popup().feedback(Res.get("onboarding.password.savePassword.success"))
+                                        .onClose(this::close)
+                                        .show());
+                            });
+                        }
+                    });
+        }
     }
 
     void onSkip() {

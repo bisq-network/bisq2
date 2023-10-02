@@ -27,8 +27,6 @@ import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UnlockController implements InitWithDataController<UnlockController.InitData> {
@@ -46,7 +44,6 @@ public class UnlockController implements InitWithDataController<UnlockController
     private final UnlockView view;
     private final ServiceProvider serviceProvider;
     private final UserIdentityService userIdentityService;
-    private Subscription pin;
     private Runnable completeHandler;
 
     public UnlockController(ServiceProvider serviceProvider) {
@@ -66,40 +63,38 @@ public class UnlockController implements InitWithDataController<UnlockController
     public void onActivate() {
         model.getPasswordIsMasked().set(true);
         model.getPassword().set("");
-
-        pin = EasyBind.subscribe(model.getPassword(),
-                password -> model.getUnlockButtonDisabled().set(isPasswordInvalid(password)));
     }
 
     @Override
     public void onDeactivate() {
-        pin.unsubscribe();
     }
 
     void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
+        serviceProvider.getShutDownHandler().shutdown();
     }
 
     void onUnlock() {
-        userIdentityService.deriveKeyFromPassword(model.getPassword().get())
-                .whenComplete((aesSecretKey, throwable) -> {
-                    if (throwable == null) {
-                        userIdentityService.decryptDataStore(aesSecretKey)
-                                .whenComplete((nil, throwable2) -> {
-                                    if (throwable2 == null) {
-                                        OverlayController.hide(() -> {
-                                            if (completeHandler != null) {
-                                                completeHandler.run();
-                                            }
-                                        });
-                                    } else {
-                                        handleError();
-                                    }
-                                });
-                    } else {
-                        handleError();
-                    }
-                });
+        if(view.validatePassword()) {
+            userIdentityService.deriveKeyFromPassword(model.getPassword().get())
+                    .whenComplete((aesSecretKey, throwable) -> {
+                        if (throwable == null) {
+                            userIdentityService.decryptDataStore(aesSecretKey)
+                                    .whenComplete((nil, throwable2) -> {
+                                        if (throwable2 == null) {
+                                            OverlayController.hide(() -> {
+                                                if (completeHandler != null) {
+                                                    completeHandler.run();
+                                                }
+                                            });
+                                        } else {
+                                            handleError();
+                                        }
+                                    });
+                        } else {
+                            handleError();
+                        }
+                    });
+        }
     }
 
     void onCancel() {
@@ -112,10 +107,7 @@ public class UnlockController implements InitWithDataController<UnlockController
                     .onClose(() -> Navigation.navigateTo(NavigationTarget.UNLOCK))
                     .show();
             model.getPassword().set("");
+            view.resetValidation();
         });
-    }
-
-    private boolean isPasswordInvalid(CharSequence password) {
-        return password == null || password.length() < 8;
     }
 }

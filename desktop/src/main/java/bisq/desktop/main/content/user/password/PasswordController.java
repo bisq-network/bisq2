@@ -25,13 +25,8 @@ import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 // TODO if walletService is present we want to encrypt the wallet file.
 // Wallet encryption is not implemented yet in the wallet domain
@@ -41,8 +36,6 @@ public class PasswordController implements Controller {
     private final PasswordView view;
     private final PasswordModel model;
     private final UserIdentityService userIdentityService;
-    private Subscription pin;
-    private MonadicBinding<Boolean> binding;
 
     public PasswordController(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -62,13 +55,17 @@ public class PasswordController implements Controller {
 
     void onButtonClicked() {
         CharSequence password = model.getPassword().get();
-        checkArgument(model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get());
 
         if (userIdentityService.getAESSecretKey().isPresent()) {
-            removePassword(password);
+            if (model.getPasswordIsValid().get()) {
+                removePassword(password);
+                view.resetValidations();
+            }
         } else {
-            checkArgument(password.equals(model.getConfirmedPassword().get()));
-            setPassword(password);
+            if (model.getPasswordIsValid().get() && model.getConfirmedPasswordIsValid().get()) {
+                setPassword(password);
+                view.resetValidations();
+            }
         }
     }
 
@@ -122,24 +119,14 @@ public class PasswordController implements Controller {
         if (isKeyPresent) {
             model.getHeadline().set(Res.get("user.password.headline.removePassword"));
             model.getButtonText().set(Res.get("user.password.button.removePassword"));
-            pin = EasyBind.subscribe(
-                    model.getPasswordIsValid(),
-                    passwordIsValid -> model.getButtonDisabled().set(!passwordIsValid));
         } else {
             model.getHeadline().set(Res.get("user.password.headline.setPassword"));
             model.getButtonText().set(Res.get("user.password.button.savePassword"));
-            binding = EasyBind.combine(
-                    model.getPasswordIsValid(),
-                    model.getConfirmedPasswordIsValid(),
-                    (passwordIsValid, confirmedPasswordIsValid) -> passwordIsValid && confirmedPasswordIsValid);
-            pin = EasyBind.subscribe(binding, isValid -> model.getButtonDisabled().set(!isValid));
         }
     }
 
     private void doDeactivate() {
         model.getPassword().set("");
         model.getConfirmedPassword().set("");
-        pin.unsubscribe();
-        binding = null;
     }
 }

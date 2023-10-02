@@ -30,13 +30,19 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
+
+import static org.fxmisc.easybind.EasyBind.subscribe;
 
 @Slf4j
 public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
+
     private Scene rootScene;
     private final MaterialPasswordField password;
     private final Button unlockButton, cancelButton;
     private final Label headline;
+    private boolean isFirstTimeThatFocusChanges;
+    private Subscription focusPin;
 
     public UnlockView(UnlockModel model, UnlockController controller) {
         super(new VBox(20), model, controller);
@@ -51,10 +57,10 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         password.setValidators(
                 new RequiredFieldValidator(Res.get("validation.empty")),
                 new TextMinLengthValidator(Res.get("validation.password.tooShort")));
-        password.validate();
         unlockButton = new Button(Res.get("unlock.button"));
         unlockButton.setDefaultButton(true);
         cancelButton = new Button(Res.get("action.cancel"));
+        isFirstTimeThatFocusChanges = true;
         HBox buttons = new HBox(20, unlockButton, cancelButton);
         HBox.setMargin(buttons, new Insets(20, 0, 0, 0));
         root.getChildren().setAll(headline, password, buttons);
@@ -64,7 +70,6 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
     protected void onViewAttached() {
         password.passwordProperty().bindBidirectional(model.getPassword());
         password.isMaskedProperty().bindBidirectional(model.getPasswordIsMasked());
-        unlockButton.disableProperty().bind(model.getUnlockButtonDisabled());
 
         unlockButton.setOnAction(e -> controller.onUnlock());
         cancelButton.setOnAction(e -> controller.onCancel());
@@ -79,16 +84,37 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
             KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
             });
         });
+
+        focusPin = subscribe(password.textInputFocusedProperty(), this::validatePasswordWhenFocusOut);
     }
 
     @Override
     protected void onViewDetached() {
         password.passwordProperty().unbindBidirectional(model.getPassword());
         password.isMaskedProperty().unbindBidirectional(model.getPasswordIsMasked());
-        unlockButton.disableProperty().unbind();
 
         unlockButton.setOnAction(null);
         cancelButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
+
+        focusPin.unsubscribe();
+    }
+
+    public boolean validatePassword() {
+        return password.validate();
+    }
+
+    public void resetValidation() {
+        password.resetValidation();
+        isFirstTimeThatFocusChanges = true;
+    }
+
+    private void validatePasswordWhenFocusOut(boolean focused) {
+        if (!focused && !isFirstTimeThatFocusChanges) {
+            validatePassword();
+        }
+        if(isFirstTimeThatFocusChanges) {
+            isFirstTimeThatFocusChanges = false;
+        }
     }
 }

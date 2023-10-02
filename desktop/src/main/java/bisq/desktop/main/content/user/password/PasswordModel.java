@@ -30,7 +30,6 @@ public class PasswordModel implements Model {
     private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
     private final ObjectProperty<CharSequence> confirmedPassword = new SimpleObjectProperty<>();
     private final BooleanProperty confirmedPasswordVisible = new SimpleBooleanProperty();
-    private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty confirmedPasswordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();

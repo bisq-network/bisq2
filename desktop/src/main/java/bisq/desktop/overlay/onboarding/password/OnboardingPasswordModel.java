@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 public class OnboardingPasswordModel implements Model {
     private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
     private final ObjectProperty<CharSequence> confirmedPassword = new SimpleObjectProperty<>();
-    private final BooleanProperty setPasswordButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty confirmedPasswordIsMasked = new SimpleBooleanProperty();
     private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
