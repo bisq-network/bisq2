@@ -30,6 +30,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.StrokeType;
 import javafx.stage.Screen;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
@@ -78,16 +79,17 @@ public class ImageUtil {
         return Screen.getPrimary().getOutputScaleX() > 1.5;
     }
 
-    public static Image getWindowTitleIcon() {
-        String iconPath;
-        if (OsUtils.isMac())
-            iconPath = ImageUtil.isRetina() ? "images/app_window/mac@2x.png" : "images/app_window/mac.png";
-        else if (OsUtils.isWindows())
-            iconPath = "images/app_window/windows.png";
-        else
-            iconPath = "images/app_window/linux.png";
-
-        return ImageUtil.getImageByPath(iconPath);
+    public static void addAppIcons(Stage stage) {
+        if (OsUtils.isMac()) {
+            String iconPath = ImageUtil.isRetina() ? "images/app_window/mac@2x.png" : "images/app_window/mac.png";
+            stage.getIcons().add(ImageUtil.getImageByPath(iconPath));
+        } else {
+            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_256.png"));
+            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_128.png"));
+            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_64.png"));
+            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_32.png"));
+            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
+        }
     }
 
     public static Image composeImage(String[] paths, int width, int height) {

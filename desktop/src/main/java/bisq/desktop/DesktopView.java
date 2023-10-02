@@ -45,7 +45,8 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
         scene = new Scene(root); // takes about  50 ms
         try {
             stage.setTitle(model.getTitle());
-            stage.getIcons().add(ImageUtil.getWindowTitleIcon());
+
+            ImageUtil.addAppIcons(stage);
 
             configCss();
             configSizeAndPosition();
