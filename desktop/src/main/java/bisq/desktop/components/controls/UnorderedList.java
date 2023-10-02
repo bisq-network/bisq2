@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 
 public class UnorderedList extends TextList {
     private static final String REGEX = "- ";
-    private static final String MARK = "•";
+    private static final String MARK = "\u2022"; // Unicode code for "•"
 
     public UnorderedList(String text, String style, String regex, String mark) {
         this(text, style, 7, 0, regex, mark);
