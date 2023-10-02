@@ -26,7 +26,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +44,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         root.setHgap(PADDING);
         root.setVgap(PADDING);
-        GridPaneUtil.setColumnConstraints50percent(root);
+        GridPaneUtil.setGridPaneTwoColumnsConstraints(root);
 
         //First row
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
@@ -69,25 +72,54 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(firstBox, 0, 1, 2, 1);
 
         //Third row
-        Insets gridPaneInsets = new Insets(36, 48, 44, 48);
-        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(116, 5, gridPaneInsets, 50, 50);
+        Insets gridPaneInsets = new Insets(0, 0, -20, 0);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
         root.add(gridPane, 0, 2, 2, 1);
 
+        String groupPaneStyleClass = "bisq-box-1";
+        String headlineLabelStyleClass = "bisq-text-headline-2";
+        String infoLabelStyleClass = "bisq-text-3";
+        String buttonStyleClass = "large-button";
+        Insets groupInsets = new Insets(36, 48, 44, 48);
+        Insets headlineInsets = new Insets(36, 48, 0, 48);
+        Insets infoInsets = new Insets(0, 48, 0, 48);
+        Insets buttonInsets = new Insets(10, 48, 44, 48);
+
         tradeProtocols = new Button(Res.get("dashboard.second.button"));
-        GridPaneUtil.fillColumnStandardStyle(gridPane,
+        GridPaneUtil.fillColumn(gridPane,
                 0,
                 tradeProtocols,
+                buttonStyleClass,
+                buttonInsets,
                 Res.get("dashboard.second.headline"),
+                headlineLabelStyleClass,
                 "fiat-btc",
-                Res.get("dashboard.second.content"));
+                16d,
+                headlineInsets,
+                Res.get("dashboard.second.content"),
+                infoLabelStyleClass,
+                infoInsets,
+                0d,
+                groupPaneStyleClass,
+                groupInsets);
 
         learnMore = new Button(Res.get("dashboard.third.button"));
-        GridPaneUtil.fillColumnStandardStyle(gridPane,
+        GridPaneUtil.fillColumn(gridPane,
                 1,
                 learnMore,
+                buttonStyleClass,
+                buttonInsets,
                 Res.get("dashboard.third.headline"),
+                headlineLabelStyleClass,
                 "learn",
-                Res.get("dashboard.third.content"));
+                16d,
+                headlineInsets,
+                Res.get("dashboard.third.content"),
+                infoLabelStyleClass,
+                infoInsets,
+                0d,
+                groupPaneStyleClass,
+                groupInsets);
     }
 
     @Override
@@ -146,9 +178,10 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
     }
 
     private VBox getBigWidgetBox() {
-        Label headlineLabel = new Label(Res.get("dashboard.main.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-4");
-        headlineLabel.setWrapText(true);
+        Label headlineLabel = GridPaneUtil.getHeadline(Res.get("dashboard.main.headline"),
+                "bisq-text-headline-4",
+                null,
+                0d);
 
         Button button = new Button(Res.get("dashboard.main.button"));
         button.setDefaultButton(true);
@@ -161,9 +194,15 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         String iconTxtStyle = "bisq-easy-onboarding-big-box-bullet-point";
         VBox vBox = new VBox(15,
                 headlineLabel,
-                GridPaneUtil.getIconAndText(iconTxtStyle, Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
-                GridPaneUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
-                GridPaneUtil.getIconAndText(iconTxtStyle,Res.get("dashboard.main.content3"), "reputation-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,
+                        Res.get("dashboard.main.content1"),
+                        "onboarding-2-offer-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,
+                        Res.get("dashboard.main.content2"),
+                        "onboarding-2-chat-white"),
+                GridPaneUtil.getIconAndText(iconTxtStyle,
+                        Res.get("dashboard.main.content3"),
+                        "reputation-white"),
                 button);
         vBox.getStyleClass().add("bisq-box-2");
         vBox.setPadding(new Insets(30, 48, 44, 48));

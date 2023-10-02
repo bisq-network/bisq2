@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
 import bisq.desktop.common.Icons;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -32,7 +32,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -53,44 +54,59 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         root.setHgap(PADDING);
         root.setVgap(10);
         root.setMinWidth(780);
-        GridPaneUtil.setColumnConstraints50percent(root);
 
         //First row
         addTopWidgetBox();
 
         //Second row
-        Insets gridPaneInsets = new Insets(36, 48, 44, 48);
-        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(116, 15, gridPaneInsets, 50, 50);
+        Insets gridPaneInsets = new Insets(0, 0, 0, 0);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
         root.add(gridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-easy-onboarding-small-box";
         String headlineLabelStyleClass = "bisq-easy-onboarding-small-box-headline";
         String infoLabelStyleClass = "bisq-easy-onboarding-small-box-text";
         String buttonStyleClass = "large-button";
+        Insets groupInsets = new Insets(36, 48, 44, 48);
+        Insets headlineInsets = new Insets(36, 48, 0, 48);
+        Insets infoInsets = new Insets(10, 48, 0, 48);
+        Insets buttonInsets = new Insets(20, 48, 44, 48);
 
         startTradingButton = new Button(Res.get("bisqEasy.onboarding.left.button"));
         GridPaneUtil.fillColumn(gridPane,
                 0,
                 startTradingButton,
                 buttonStyleClass,
+                buttonInsets,
                 Res.get("bisqEasy.onboarding.left.headline"),
                 headlineLabelStyleClass,
                 "bisq-easy",
+                16d,
+                headlineInsets,
                 Res.get("bisqEasy.onboarding.left.info"),
                 infoLabelStyleClass,
-                groupPaneStyleClass);
+                infoInsets,
+                0d,
+                groupPaneStyleClass,
+                groupInsets);
 
         openChatButton = new Button(Res.get("bisqEasy.onboarding.right.button"));
         GridPaneUtil.fillColumn(gridPane,
                 1,
                 openChatButton,
                 buttonStyleClass,
+                buttonInsets,
                 Res.get("bisqEasy.onboarding.right.headline"),
                 headlineLabelStyleClass,
                 "fiat-btc",
+                16d,
+                headlineInsets,
                 Res.get("bisqEasy.onboarding.right.info"),
                 infoLabelStyleClass,
-                groupPaneStyleClass);
+                infoInsets,
+                0d,
+                groupPaneStyleClass,
+                groupInsets);
     }
 
     @Override
@@ -119,20 +135,30 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
     }
 
     private void addTopWidgetBox() {
-        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(48, 15, new Insets(30, 48, 44, 48), 50, 50);
+        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(48, 15,
+                new Insets(30, 48, 44, 48));
         gridPane.getStyleClass().add("bisq-easy-onboarding-big-box");
         root.add(gridPane, 0, 0, 2, 1);
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.top.headline"));
-        headlineLabel.getStyleClass().add("bisq-easy-onboarding-big-box-headline");
-        headlineLabel.setWrapText(true);
-        gridPane.add(headlineLabel, 0, 0, 2, 1);
+        gridPane.add(
+                GridPaneUtil.getHeadline(Res.get("bisqEasy.onboarding.top.headline"),
+                        "bisq-easy-onboarding-big-box-headline",
+                        null,
+                        0d),
+                0, 0, 2, 1);
 
         String lineStyleClass = "bisq-easy-onboarding-big-box-bullet-point";
-        HBox line1 = GridPaneUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content1"), "thumbs-up");
-        HBox line2 = GridPaneUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content2"), "onboarding-2-payment");
-        HBox line3 = GridPaneUtil.getIconAndText(lineStyleClass, Res.get("bisqEasy.onboarding.top.content3"), "onboarding-2-chat");
-        VBox vBox = new VBox(15, Spacer.fillVBox(), line1, line2, line3, Spacer.fillVBox());
+        VBox vBox = new VBox(15, Spacer.fillVBox(),
+                GridPaneUtil.getIconAndText(lineStyleClass,
+                        Res.get("bisqEasy.onboarding.top.content1"),
+                        "thumbs-up"),
+                GridPaneUtil.getIconAndText(lineStyleClass,
+                        Res.get("bisqEasy.onboarding.top.content2"),
+                        "onboarding-2-payment"),
+                GridPaneUtil.getIconAndText(lineStyleClass,
+                        Res.get("bisqEasy.onboarding.top.content3"),
+                        "onboarding-2-chat"),
+                Spacer.fillVBox());
         gridPane.add(vBox, 0, 1);
 
         videoImage = ImageUtil.getImageViewById("video");
