@@ -245,7 +245,7 @@ public class BisqEasyOpenTradesView extends ChatView {
             toggleChatWindowButton.setGraphic(icon);
 
             chatWindow.titleProperty().bind(getModel().getChatWindowTitle());
-            chatWindow.getIcons().add(ImageUtil.getWindowTitleIcon());
+            ImageUtil.addAppIcons(chatWindow);
             chatWindow.initModality(Modality.NONE);
 
             // We open the window at the button position (need to be done before we remove the chatVBox
