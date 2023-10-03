@@ -606,7 +606,8 @@ public class AmountComponent {
             description.textProperty().unbind();
             minRangeValue.textProperty().unbind();
             maxRangeValue.textProperty().unbind();
-
+            baseAmount.isAmountValidProperty().set(true);
+            quoteAmount.isAmountValidProperty().set(true);
             Parent node = root;
             while (node.getParent() != null) {
                 node.setOnMousePressed(null);
