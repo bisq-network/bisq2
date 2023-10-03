@@ -19,7 +19,11 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
@@ -325,8 +329,6 @@ public class TradeWizardController extends NavigationController implements InitW
     private void updateNextButtonDisabledState() {
         if (NavigationTarget.TRADE_WIZARD_MARKET.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(tradeWizardMarketController.getMarket().get() == null);
-        } else if (NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(tradeWizardPaymentMethodController.getFiatPaymentMethods().isEmpty());
         } else if (NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get() == null);
         } else {
@@ -349,6 +351,5 @@ public class TradeWizardController extends NavigationController implements InitW
         tradeWizardSelectOfferController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
         tradeWizardAmountController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
         tradeWizardReviewController.setFiatPaymentMethods(tradeWizardPaymentMethodController.getFiatPaymentMethods());
-        updateNextButtonDisabledState();
     }
 }
