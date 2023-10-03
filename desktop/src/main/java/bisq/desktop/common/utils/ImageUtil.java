@@ -81,11 +81,11 @@ public class ImageUtil {
     public static Image getWindowTitleIcon() {
         String iconPath;
         if (OsUtils.isMac())
-            iconPath = ImageUtil.isRetina() ? "images/window_icon@2x.png" : "images/window_icon.png";
+            iconPath = ImageUtil.isRetina() ? "images/app_window/mac@2x.png" : "images/app_window/mac.png";
         else if (OsUtils.isWindows())
-            iconPath = "images/task_bar_icon_windows.png";
+            iconPath = "images/app_window/windows.png";
         else
-            iconPath = "images/task_bar_icon_linux.png";
+            iconPath = "images/app_window/linux.png";
 
         return ImageUtil.getImageByPath(iconPath);
     }
