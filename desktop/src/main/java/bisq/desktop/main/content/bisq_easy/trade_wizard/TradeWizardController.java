@@ -270,14 +270,8 @@ public class TradeWizardController extends NavigationController implements InitW
             nextIndex++;
         }
         if (nextIndex < model.getChildTargets().size()) {
-            if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
-                if(tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
-                    tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
-                    return;
-                }
-                if(!tradeWizardPaymentMethodController.validateSelectedPaymentMethods()) {
-                    return;
-                }
+            if (isPaymentMethodsScreen() && validatePaymentMethods()) {
+                return;
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -286,6 +280,18 @@ public class TradeWizardController extends NavigationController implements InitW
             Navigation.navigateTo(nextTarget);
             updateNextButtonDisabledState();
         }
+    }
+
+    private boolean isPaymentMethodsScreen() {
+        return model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD;
+    }
+
+    private boolean validatePaymentMethods() {
+        if(tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
+            tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
+            return true;
+        }
+        return !tradeWizardPaymentMethodController.validateSelectedPaymentMethods();
     }
 
     void onBack() {
