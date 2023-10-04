@@ -27,12 +27,15 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
@@ -78,10 +81,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), selectedTabButton -> {
             if (selectedTabButton != null) {
                 toggleGroup.selectToggle(selectedTabButton);
-
-                if (transitionStarted) {
-                    maybeAnimateMark();
-                }
+                maybeAnimateMark();
             }
         });
 
@@ -125,12 +125,12 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public void onTransitionCompleted() {
     }
 
-    protected void setupTopBox() {
-        setupTopBox(isRightSide());
-    }
-
     protected boolean isRightSide() {
         return true;
+    }
+
+    protected void setupTopBox() {
+        setupTopBox(isRightSide());
     }
 
     protected void setupTopBox(boolean isRightSide) {
@@ -192,7 +192,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         return tabButton;
     }
 
-    //todo 
+    //todo
     protected void removeTab(NavigationTarget navigationTarget) {
         controller.findTabButton(navigationTarget).ifPresent(tabButton -> {
             controller.onTabButtonRemoved(tabButton);
@@ -214,7 +214,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             UIScheduler.run(() -> Transitions.animateTabButtonMarks(selectionMarker,
                             selectedTabButton.getWidth() - TabButton.BADGE_PADDING,
                             getSelectionMarkerX(selectedTabButton)))
-                    .after(100);
+                    .after(150);
 
             UIThread.runOnNextRenderFrame(() -> {
                 if (layoutDoneSubscription != null) {
