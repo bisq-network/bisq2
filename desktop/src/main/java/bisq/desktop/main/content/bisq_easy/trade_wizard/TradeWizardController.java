@@ -270,10 +270,14 @@ public class TradeWizardController extends NavigationController implements InitW
             nextIndex++;
         }
         if (nextIndex < model.getChildTargets().size()) {
-            if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD &&
-                    tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
-                tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
-                return;
+            if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
+                if(tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
+                    tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
+                    return;
+                }
+                if(!tradeWizardPaymentMethodController.validateSelectedPaymentMethods()) {
+                    return;
+                }
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
