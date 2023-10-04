@@ -272,7 +272,7 @@ public class TradeWizardController extends NavigationController implements InitW
         if (nextIndex < model.getChildTargets().size()) {
             if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD &&
                     tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
-                tradeWizardPaymentMethodController.showCustomMethodNotEmptyWarning();
+                tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
                 return;
             }
             model.setAnimateRightOut(false);

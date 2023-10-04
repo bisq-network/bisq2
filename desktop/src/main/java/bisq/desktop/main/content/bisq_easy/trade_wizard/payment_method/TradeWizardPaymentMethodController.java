@@ -66,7 +66,7 @@ public class TradeWizardPaymentMethodController implements Controller {
         return StringUtils.isNotEmpty(model.getCustomFiatPaymentMethodName().get());
     }
 
-    public void showCustomMethodNotEmptyWarning() {
+    public void tryAddCustomPaymentMethodAndNavigateNext() {
         if (doAddCustomMethod()) {
             onNextHandler.run();
         }
