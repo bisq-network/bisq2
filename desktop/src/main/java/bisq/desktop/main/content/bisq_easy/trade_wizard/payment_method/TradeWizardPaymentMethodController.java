@@ -32,6 +32,7 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import com.google.common.base.Joiner;
 import javafx.collections.ObservableList;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -60,7 +61,9 @@ public class TradeWizardPaymentMethodController implements Controller {
 
     public boolean validateSelectedPaymentMethods() {
         if(model.getSelectedFiatPaymentMethods().isEmpty()) {
-            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.noPaymentMethodSelected")).show();
+            new Popup().invalid(Res.get("bisqEasy.createOffer.paymentMethod.warn.noPaymentMethodSelected"))
+                    .owner((Region) view.getRoot().getParent().getParent())
+                    .show();
             return false;
         }
         return true;

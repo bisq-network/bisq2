@@ -43,6 +43,8 @@ import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -117,6 +119,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         CONFIRMATION(AnimationType.ScaleYFromCenter),
 
         WARNING(AnimationType.ScaleDownToCenter),
+        INVALID(AnimationType.SlideDownFromCenterTop, Transitions.Type.LIGHT_BLUR_LIGHT),
         ERROR(AnimationType.ScaleDownToCenter);
 
         public final AnimationType animationType;
@@ -382,6 +385,15 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T invalid(String message) {
+        type = Type.INVALID;
+
+        if (headLine == null)
+            this.headLine = Res.get("popup.headline.invalid");
+        processMessage(message);
+        return cast();
+    }
+
     public T error(Throwable throwable) {
         return error(ExceptionUtil.print(throwable));
     }
@@ -532,6 +544,16 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public void display() {
+        // Once our owner gets removed we also want to remove our overlay
+        owner.sceneProperty().addListener(new WeakChangeListener<Scene>(new ChangeListener<Scene>() {
+            @Override
+            public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
+                if (oldValue != null && newValue == null) {
+                    hide();
+                }
+            }
+        }));
+
         Scene rootScene = owner.getScene();
         if (rootScene != null) {
             Scene scene = new Scene(getRootContainer());
@@ -788,6 +810,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     headlineIcon.getStyleClass().add("overlay-icon-information");
                     break;
                 case WARNING:
+                case INVALID:
                     Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, headlineIcon, "1.5em");
                     headLineLabel.getStyleClass().add("overlay-headline-warning");
                     headlineIcon.getStyleClass().add("overlay-icon-warning");
