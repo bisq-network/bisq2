@@ -1,10 +1,12 @@
 package bisq.desktop.common.utils;
 
 import bisq.common.util.StringUtils;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -151,5 +153,39 @@ public class GridPaneUtil {
         button.setMaxWidth(Double.MAX_VALUE);
         GridPane.setMargin(button, buttonMargin);
         gridPane.add(button, columnIndex, rowCount + 2);
+    }
+
+    /**
+     * Add text field to a grid pane with a bind. Field text will show grayed out on textfield.
+     */
+    public static TextField addTextField(String labelText,
+                                         StringProperty textFieldText,
+                                         GridPane gridPane) {
+        TextField textField = addTextField(labelText, textFieldText.get(), gridPane);
+        textField.textProperty().bindBidirectional(textFieldText);
+        return textField;
+    }
+
+    /**
+     * Add text field to the grid pane.
+     */
+    public static TextField addTextField(String labelText, GridPane gridPane) {
+        return addTextField(labelText, "", gridPane);
+    }
+
+    /**
+     * Add text field to a grid pane. Field text will show grayed out on textfield when empty.
+     */
+    public static TextField addTextField(String labelText,
+                                         String textFieldText,
+                                         GridPane gridPane) {
+        TextField textField = new TextField(textFieldText);
+        textField.setPromptText(labelText);
+        GridPane.setRowIndex(textField, gridPane.getRowCount());
+        GridPane.setColumnIndex(textField, 0);
+        GridPane.setColumnSpan(textField, gridPane.getColumnCount() + 1);
+        //GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
+        gridPane.getChildren().addAll(textField);
+        return textField;
     }
 }
