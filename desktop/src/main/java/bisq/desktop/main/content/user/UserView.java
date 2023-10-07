@@ -32,8 +32,6 @@ public class UserView extends TabView<UserModel, UserController> {
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
         addTab(Res.get("user.nodes"), NavigationTarget.NODES);
-
-        headLine.setText(Res.get("user.headline"));
     }
 
     @Override
@@ -43,4 +41,10 @@ public class UserView extends TabView<UserModel, UserController> {
     @Override
     protected void onViewDetached() {
     }
+
+    @Override
+    protected boolean isRightSide() {
+        return false;
+    }
+
 }
