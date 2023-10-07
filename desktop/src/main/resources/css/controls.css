@@ -44,7 +44,7 @@
 }
 
 .button:default:hover {
-    -fx-background-color: -bisq-green-lighter;
+    -fx-background-color: -bisq-green-hover;
 }
 
 .button:default:pressed {
@@ -349,7 +349,7 @@
 }
 
 .chips-button-selected-hover {
-    -fx-background-color: -bisq-green-lighter;
+    -fx-background-color: -bisq-green-hover;
 }
 
 .chips-button > .toggle-button,
@@ -430,7 +430,7 @@
 }
 
 .toggle-button:selected:hover {
-    -fx-background-color: -bisq-green-lighter;
+    -fx-background-color: -bisq-green-hover;
 }
 
 .toggle-button:selected:pressed {
