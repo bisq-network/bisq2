@@ -100,7 +100,7 @@
     -fx-box-border: transparent;
     -fx-focus-color: -bisq-green;
     -fx-faint-focus-color: -bisq-green;
-    -fx-default-button: derive(-bisq-green, -25%);
+    -fx-default-button: derive(-bisq-green, -15%);
     -bisq-green-hover: derive(-fx-default-button, 10%);
     -bisq-green-pressed: derive(-fx-default-button, -5%);
 
