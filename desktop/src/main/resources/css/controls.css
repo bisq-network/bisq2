@@ -538,12 +538,12 @@
 }
 
 .card-button:default:hover {
-    -fx-background-color: derive(-bisq-green, -5%);
+    -fx-background-color: -bisq-green-hover;
     -fx-text-fill: derive(-fx-light-text-color, -5%);
 }
 
 .card-button:default:pressed {
-    -fx-background-color: derive(-bisq-green, -10%);
+    -fx-background-color: -bisq-green-pressed;
     -fx-text-fill: derive(-fx-light-text-color, -10%);
 }
 
@@ -620,7 +620,7 @@
 
 .check-box:selected:hover > .box,
 .check-box:indeterminate:hover > .box {
-    -fx-background-color: derive(-bisq-green, -10%);
+    -fx-background-color: -bisq-green-pressed;
     -fx-background-insets: 1 0 -1 0, 0;
     -fx-border-color: transparent;
 }
