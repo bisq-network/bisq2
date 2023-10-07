@@ -20,7 +20,7 @@ package bisq.desktop.overlay.chat_rules;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.OrderedList;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesController> {
     private final Button closeButton;
-    private final OrderedList content;
+    private final UnorderedList content;
 
     public ChatRulesView(ChatRulesModel model, ChatRulesController controller) {
         super(new VBox(20), model, controller);
@@ -47,7 +47,7 @@ public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesControlle
         Label headline = new Label(Res.get("chat.chatRules.headline"));
         headline.getStyleClass().add("bisq-content-headline-label");
 
-        content = new OrderedList(Res.get("chat.chatRules.content"), "bisq-text-13");
+        content = new UnorderedList(Res.get("chat.chatRules.content"), "bisq-text-13");
 
         closeButton = BisqIconButton.createIconButton("close");
         closeButton.setDefaultButton(true);
