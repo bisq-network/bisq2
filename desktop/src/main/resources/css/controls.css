@@ -48,7 +48,7 @@
 }
 
 .button:default:pressed {
-    -fx-background-color: -bisq-green-dark;
+    -fx-background-color: -bisq-green-pressed;
 }
 
 .button:default:disabled {
@@ -147,8 +147,8 @@
 
 .outlined-button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.025);
-    -fx-border-color: -bisq-green-dark;
-    -fx-text-fill: -bisq-green-dark;
+    -fx-border-color: -bisq-green-pressed;
+    -fx-text-fill: -bisq-green-pressed;
     -fx-effect: none;
 }
 
@@ -290,7 +290,7 @@
 .text-button:pressed {
     -fx-background-color: rgba(255, 255, 255, 0.05);
     -fx-effect: none;
-    -fx-text-fill: -bisq-green-dark;
+    -fx-text-fill: -bisq-green-pressed;
 }
 
 .text-button:disabled {
@@ -345,7 +345,7 @@
 }
 
 .chips-button-selected-pressed {
-    -fx-background-color: -bisq-green-dark;
+    -fx-background-color: -bisq-green-pressed;
 }
 
 .chips-button-selected-hover {
@@ -434,7 +434,7 @@
 }
 
 .toggle-button:selected:pressed {
-    -fx-background-color: -bisq-green-dark;
+    -fx-background-color: -bisq-green-pressed;
 }
 
 .toggle-button:selected:disabled {
