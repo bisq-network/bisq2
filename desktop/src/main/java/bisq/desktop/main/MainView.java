@@ -18,7 +18,6 @@
 package bisq.desktop.main;
 
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -27,12 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MainView extends NavigationView<HBox, MainModel, MainController> {
-    private static ScrollPane scrollPane;
-
-    // Hack to adjust the fitToHeight property in case a chatView is displayed
-    public static void setFitToHeight(boolean value) {
-        scrollPane.setFitToHeight(value);
-    }
+    private static AnchorPane anchorPane;
 
     public MainView(MainModel model,
                     MainController controller,
@@ -41,22 +35,26 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
                     VBox notificationPanel) {
         super(new HBox(), model, controller);
 
-        root.setFillHeight(true);
+        anchorPane = new AnchorPane();
+        VBox.setVgrow(anchorPane, Priority.ALWAYS);
 
-        scrollPane = new ScrollPane();
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(false);
-
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-        VBox vBox = new VBox(topPanel, notificationPanel, scrollPane);
+        VBox vBox = new VBox(topPanel, notificationPanel, anchorPane);
         vBox.setFillWidth(true);
-
         HBox.setHgrow(vBox, Priority.ALWAYS);
+
+        root.setFillHeight(true);
         root.getChildren().addAll(leftNav, vBox);
 
         // We only get created once after splashscreen and then never get removed, so we do not need to remove the 
         // listener.
-        model.getView().addListener((observable, oldValue, newValue) -> scrollPane.setContent(newValue.getRoot()));
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            anchorPane.getChildren().setAll(newValue.getRoot());
+            AnchorPane.setTopAnchor(newValue.getRoot(), 0.0);
+            AnchorPane.setBottomAnchor(newValue.getRoot(), 0.0);
+            AnchorPane.setLeftAnchor(newValue.getRoot(), 0.0);
+            AnchorPane.setRightAnchor(newValue.getRoot(), 0.0);
+        });
+
     }
 
     @Override

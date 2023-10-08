@@ -41,7 +41,7 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
                            Optional<Node> i2p) {
         super(new VBox(20), model, controller);
 
-        root.setPadding(new Insets(20, 0, 0, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         root.setFillWidth(true);

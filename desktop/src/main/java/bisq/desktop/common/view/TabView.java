@@ -22,10 +22,12 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.main.content.chat.ChatView;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -44,7 +46,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected final HBox tabs = new HBox();
     protected Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    protected final VBox contentPane;
+    protected final ScrollPane scrollPane;
     protected Pane lineAndMarker;
     protected Pane topBox;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
@@ -55,10 +57,20 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         super(new VBox(), model, controller);
 
         setupTopBox();
-        contentPane = new VBox();
         setupLineAndMarker();
-        VBox.setVgrow(contentPane, Priority.ALWAYS);
-        root.getChildren().addAll(topBox, lineAndMarker, contentPane);
+
+        scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setVvalue(0);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+
+        Region spacer = new Region();
+        spacer.setMinHeight(20);
+        root.getChildren().addAll(topBox, lineAndMarker, spacer, scrollPane);
+
     }
 
     @Override
@@ -95,10 +107,11 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         if (newValue != null) {
-            VBox.setVgrow(newValue.getRoot(), Priority.ALWAYS);
-            contentPane.getChildren().setAll(newValue.getRoot());
+            scrollPane.setFitToHeight(newValue instanceof ChatView);
+            scrollPane.setContent(newValue.getRoot());
+            scrollPane.setVvalue(0);
         } else {
-            contentPane.getChildren().clear();
+            scrollPane.setContent(null);
         }
     }
 
@@ -136,19 +149,16 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void setupTopBox(boolean isRightSide) {
         headLine = new Label();
         headLine.getStyleClass().add("tab-view");
-        headLine.setMinWidth(90);
-        headLine.setWrapText(true);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
-        tabs.setMinHeight(52);
 
         if (isRightSide) {
             topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
         } else {
             topBox = new HBox(tabs, Spacer.fillHBox(), headLine);
         }
-        HBox.setMargin(headLine, new Insets(-4, 0, 0, -2));
+        topBox.setPadding(new Insets(30, 40, 0, 40));
     }
 
     protected void setupLineAndMarker() {
@@ -165,7 +175,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         lineAndMarker.getChildren().addAll(line, selectionMarker);
         lineAndMarker.setMinHeight(lineHeight);
         lineAndMarker.setMaxHeight(lineHeight);
-        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
+        lineAndMarker.setPadding(new Insets(0, 40, 0, 40));
     }
 
     protected TabButton addTab(String text, NavigationTarget navigationTarget) {

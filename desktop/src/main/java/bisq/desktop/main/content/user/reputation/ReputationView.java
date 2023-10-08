@@ -91,6 +91,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         VBox.setVgrow(vBox, Priority.SOMETIMES);
         VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.getChildren().addAll(vBox, tableHeadline, tableView);
     }
 

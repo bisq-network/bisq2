@@ -18,10 +18,10 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.main.MainView;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -30,7 +30,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, ChatController<?, ?>> {
+public abstract class ChatView extends NavigationView<ScrollPane, ChatModel, ChatController<?, ?>> {
     protected final Label channelTitle = new Label();
     protected Button helpButton, infoButton;
     protected final VBox sideBar = new VBox();
@@ -45,7 +45,7 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
                     ChatController<?, ?> controller,
                     Pane chatMessagesComponent,
                     Pane channelSidebar) {
-        super(new AnchorPane(), model, controller);
+        super(new ScrollPane(), model, controller);
 
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
@@ -54,6 +54,9 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
         configCenterVBox();
         configSideBarVBox();
         configContainerHBox();
+
+        root.setFitToWidth(true);
+        root.setFitToHeight(true);
     }
 
     protected abstract void configTitleHBox();
@@ -66,7 +69,6 @@ public abstract class ChatView extends NavigationView<AnchorPane, ChatModel, Cha
 
     @Override
     protected void onViewAttached() {
-        MainView.setFitToHeight(true);
         channelTitle.textProperty().bind(model.getChannelTitle());
         channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
         channelSidebar.managedProperty().bind(model.getChannelSidebarVisible());

@@ -19,12 +19,12 @@ package bisq.desktop.main.content.user.reputation.burn;
 
 import bisq.desktop.DesktopModel;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.*;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -48,7 +48,8 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
 
-        VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
+        topBox.setPadding(new Insets(0, 0, 0, 0));
+        lineAndMarker.setPadding(new Insets(0, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("user.reputation.burnedBsq.tab1"),
@@ -102,5 +103,12 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
 
         line.getStyleClass().remove("bisq-dark-bg");
         line.getStyleClass().add("bisq-mid-grey");
+    }
+
+    @Override
+    protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
+                               View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
+        super.onChildView(oldValue, newValue);
+        scrollPane.setFitToHeight(true);
     }
 }

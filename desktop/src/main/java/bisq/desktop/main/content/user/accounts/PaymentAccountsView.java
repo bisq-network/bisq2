@@ -50,7 +50,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
-        root.setPadding(new Insets(30, 0, 0, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
 
         headline = new Label();
         headline.getStyleClass().add("large-thin-headline");

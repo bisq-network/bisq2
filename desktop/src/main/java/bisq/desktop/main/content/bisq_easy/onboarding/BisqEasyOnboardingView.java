@@ -50,7 +50,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(new GridPane(), model, controller);
 
-        root.setPadding(new Insets(30, 0, -44, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
         root.setHgap(PADDING);
         root.setVgap(10);
         root.setMinWidth(780);
