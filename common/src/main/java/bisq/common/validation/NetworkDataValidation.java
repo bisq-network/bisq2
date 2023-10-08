@@ -47,7 +47,7 @@ public class NetworkDataValidation {
 
     // Signature are usually 71 - 73 chars
     public static void validateECSignature(byte[] signature) {
-        checkArgument(signature.length >= 70 && signature.length <= 74,
+        checkArgument(signature.length >= 68 && signature.length <= 74,
                 "Signature not of the expected size. signature=" + Arrays.toString(signature));
     }
 
