@@ -27,12 +27,15 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
@@ -137,6 +140,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         headLine = new Label();
         headLine.getStyleClass().add("tab-view");
         headLine.setMinWidth(90);
+        headLine.setWrapText(true);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
