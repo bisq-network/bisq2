@@ -28,7 +28,7 @@ import lombok.Getter;
 @Getter
 public class NotificationPanelModel implements Model {
     private final BooleanProperty isVisible = new SimpleBooleanProperty();
-    private final BooleanProperty useExtraPadding = new SimpleBooleanProperty();
+    private final BooleanProperty useLessPadding = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty content = new SimpleStringProperty();
 

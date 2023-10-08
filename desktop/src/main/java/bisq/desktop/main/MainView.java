@@ -19,6 +19,8 @@ package bisq.desktop.main;
 
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -32,12 +34,11 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
                     MainController controller,
                     AnchorPane leftNav,
                     HBox topPanel,
-                    VBox notificationPanel) {
+                    BorderPane notificationPanel) {
         super(new HBox(), model, controller);
 
         anchorPane = new AnchorPane();
         VBox.setVgrow(anchorPane, Priority.ALWAYS);
-
         VBox vBox = new VBox(topPanel, notificationPanel, anchorPane);
         vBox.setFillWidth(true);
         HBox.setHgrow(vBox, Priority.ALWAYS);

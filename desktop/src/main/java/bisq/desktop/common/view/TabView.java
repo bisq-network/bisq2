@@ -67,10 +67,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
         HBox.setHgrow(scrollPane, Priority.ALWAYS);
 
-        Region spacer = new Region();
-        spacer.setMinHeight(20);
-        root.getChildren().addAll(topBox, lineAndMarker, spacer, scrollPane);
-
+        root.getChildren().addAll(topBox, lineAndMarker, scrollPane);
     }
 
     @Override

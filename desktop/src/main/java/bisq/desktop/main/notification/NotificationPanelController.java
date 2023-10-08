@@ -78,11 +78,12 @@ public class NotificationPanelController implements Controller {
             model.getIsVisible().set(false);
         }
 
-        // Add CONTENT as it's the parent and gets called as well
-        model.getUseExtraPadding().set(navigationTarget == NavigationTarget.CONTENT ||
-                navigationTarget == NavigationTarget.DISCUSSION ||
-                navigationTarget == NavigationTarget.EVENTS ||
-                navigationTarget == NavigationTarget.SUPPORT);
+        model.getUseLessPadding().set(navigationTarget == NavigationTarget.DASHBOARD ||
+                navigationTarget == NavigationTarget.ACADEMY ||
+                navigationTarget == NavigationTarget.TRADE_PROTOCOLS ||
+                navigationTarget == NavigationTarget.BISQ_EASY ||
+                navigationTarget == NavigationTarget.USER ||
+                navigationTarget == NavigationTarget.SETTINGS);
     }
 
     @Override
