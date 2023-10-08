@@ -18,12 +18,15 @@
 package bisq.desktop.overlay.chat_rules;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,16 +45,17 @@ public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesControlle
         root.setPadding(new Insets(15, 30, 30, 30));
 
         Label headline = new Label(Res.get("chat.chatRules.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        headline.getStyleClass().add("bisq-content-headline-label");
 
         content = new UnorderedList(Res.get("chat.chatRules.content"), "bisq-text-13");
 
-        closeButton = new Button(Res.get("action.close"));
+        closeButton = BisqIconButton.createIconButton("close");
         closeButton.setDefaultButton(true);
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(closeButton, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, content, closeButton);
+        HBox.setMargin(closeButton, new Insets(-1, -15, 0, 0));
+        HBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        HBox hBox = new HBox(headline, Spacer.fillHBox(), closeButton);
+        root.getChildren().addAll(hBox, content);
     }
 
     @Override
