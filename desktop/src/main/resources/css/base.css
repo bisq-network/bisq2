@@ -37,13 +37,10 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 13;
 
+    /* Green logo color used in Bisq 1 is #25b135*/
 
     /* Colors */
-    -bisq-green: #56ae48; /* rgb(86,174,72) */
-    -bisq-green-lighter: #53a746;
-    -bisq-green-dark: #488e3e;
-    -bisq-green-darker: rgba(86, 174, 72, 0.75);
-    -bisq-green-bright: #25b135; /* Green logo color used in Bisq 1 */
+    -bisq-green: #56ae48; /* #56ae48 rgb(86,174,72) */
     -bisq-white: white;
     -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
@@ -101,9 +98,11 @@
     -fx-body-color: -fx-color;
 
     -fx-box-border: transparent;
-    -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: -fx-accent;
-    -fx-default-button: -bisq-green;
+    -fx-focus-color: -bisq-green;
+    -fx-faint-focus-color: -bisq-green;
+    -fx-default-button: derive(-bisq-green, -15%);
+    -bisq-green-hover: derive(-fx-default-button, 10%);
+    -bisq-green-pressed: derive(-fx-default-button, -5%);
 
     -fx-dark-text-color: -bisq-black;
     -fx-mid-text-color: -bisq-grey-dimmed;

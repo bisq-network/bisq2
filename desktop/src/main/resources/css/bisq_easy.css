@@ -528,16 +528,6 @@
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
-
-/*.table-view.bisq-easy-trade-wizard-select-offer .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-grey-2;
-}
-
-.table-view.bisq-easy-trade-wizard-select-offer .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-green;
-}*/
-
-
 /* the text property from list view need to set to apply the color to the button label */
 .onboarding-market-table-toggle-button .text {
     -fx-fill: -fx-light-text-color !important;
