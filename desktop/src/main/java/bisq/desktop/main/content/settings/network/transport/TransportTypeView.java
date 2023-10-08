@@ -17,39 +17,77 @@
 
 package bisq.desktop.main.content.settings.network.transport;
 
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
-public class TransportTypeView extends View<BisqGridPane, TransportTypeModel, TransportTypeController> {
+public class TransportTypeView extends View<GridPane, TransportTypeModel, TransportTypeController> {
     private final BisqTableView<ConnectionListItem> connectionsTableView;
     private final BisqTableView<NodeListItem> nodesTableView;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
-        super(new BisqGridPane(), model, controller);
+        super(GridPaneUtil.getGridPane(5, 20, new Insets(0)), model, controller);
 
-        root.startSection(Res.get("settings.network.nodeInfo.title"));
-        root.addTextField(Res.get("settings.network.nodeInfo.myAddress"), model.getMyDefaultNodeAddress());
-        root.endSection();
+        Label nodeAddressLabel = GridPaneUtil.getHeadline(
+                Res.get("settings.network.nodeInfo.title"),
+                "bisq-content-headline-label",
+                "",
+                0);
+        root.add(nodeAddressLabel, 0, root.getRowCount());
 
-        root.startSection(Res.get("settings.network.connections.title"));
+        TextField nodeAddressTxtFld = GridPaneUtil.addTextField(
+                Res.get("settings.network.nodeInfo.myAddress"),
+                model.getMyDefaultNodeAddress(),
+                root);
+        VBox vBoxNode = new VBox(16, nodeAddressTxtFld);
+        vBoxNode.getStyleClass().add("bisq-box-2");
+        vBoxNode.setPadding(new Insets(20));
+        vBoxNode.setAlignment(Pos.TOP_LEFT);
+        root.add(vBoxNode, 0, root.getRowCount(), 2, 1);
+
+        Label connectionsLabel = GridPaneUtil.getHeadline(
+                Res.get("settings.network.connections.title"),
+                "bisq-content-headline-label",
+                "",
+                0);
+        root.add(connectionsLabel, 0, root.getRowCount());
+
         connectionsTableView = new BisqTableView<>(model.getSortedConnectionListItems());
         connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
         connectionsTableView.setMinHeight(150);
-        root.addTableView(connectionsTableView);
         configConnectionsTableView();
-        root.endSection();
 
-        root.startSection(Res.get("settings.network.nodes.title"));
+        VBox vBoxConnections = new VBox(16, connectionsTableView);
+        vBoxConnections.getStyleClass().add("bisq-box-2");
+        vBoxConnections.setPadding(new Insets(30));
+        vBoxConnections.setAlignment(Pos.TOP_LEFT);
+        root.add(vBoxConnections, 0, root.getRowCount(), 2, 1);
+
+        Label nodesLabel = GridPaneUtil.getHeadline(Res.get("settings.network.nodes.title"),
+                "bisq-content-headline-label",
+                "",
+                0);
+        root.add(nodesLabel, 0, root.getRowCount());
+
         nodesTableView = new BisqTableView<>(model.getSortedNodeListItems());
         nodesTableView.setPadding(new Insets(-15, 0, 0, 0));
         nodesTableView.setMinHeight(100);
-        root.addTableView(nodesTableView);
         configNodesTableView();
-        root.endSection();
+
+        VBox vBoxNodes = new VBox(16, nodesTableView);
+        vBoxNodes.getStyleClass().add("bisq-box-2");
+        vBoxNodes.setPadding(new Insets(30));
+        vBoxNodes.setAlignment(Pos.TOP_LEFT);
+        root.add(vBoxNodes, 0, root.getRowCount(), 2, 1);
+
     }
 
     private void configConnectionsTableView() {
