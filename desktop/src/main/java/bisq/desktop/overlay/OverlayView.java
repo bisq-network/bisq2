@@ -141,13 +141,13 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         window.yProperty().addListener(positionListener);
         window.widthProperty().addListener(positionListener);
 
-        stage.show();
-
-        layout();
-
         model.getTransitionsType().apply(owner);
-
         animateDisplay(controller::onShown);
+        UIScheduler.run(() -> {
+                    stage.show();
+                    layout();
+                })
+                .after(150);
     }
 
     private void hide() {
@@ -175,7 +175,6 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void animateDisplay(Runnable onFinishedHandler) {
-        root.setOpacity(0);
         double duration = model.getDuration(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -197,6 +196,16 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         timeline.play();
     }
 
+    private void layout() {
+        double titleBarHeight = window.getHeight() - ownerScene.getHeight();
+
+        if (OsUtils.isWindows()) {
+            titleBarHeight -= 9;
+        }
+        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
+        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
+    }
+
     private void animateHide(Runnable onFinishedHandler) {
         double duration = model.getDuration(Transitions.DEFAULT_DURATION / 2d);
         Timeline timeline = new Timeline();
@@ -215,15 +224,5 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
 
         timeline.setOnFinished(e -> onFinishedHandler.run());
         timeline.play();
-    }
-
-    private void layout() {
-        double titleBarHeight = window.getHeight() - ownerScene.getHeight();
-
-        if (OsUtils.isWindows()) {
-            titleBarHeight -= 9;
-        }
-        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
-        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
     }
 }
