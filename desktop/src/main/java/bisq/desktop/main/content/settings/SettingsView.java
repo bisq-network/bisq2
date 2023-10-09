@@ -29,8 +29,6 @@ public class SettingsView extends TabView<SettingsModel, SettingsController> {
         addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
         addTab(Res.get("settings.utils"), NavigationTarget.UTILS);
-
-        headLine.setText(Res.get("settings.headline"));
     }
 
     @Override

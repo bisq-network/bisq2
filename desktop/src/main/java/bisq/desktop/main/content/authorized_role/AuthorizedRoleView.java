@@ -44,8 +44,6 @@ public class AuthorizedRoleView extends TabView<AuthorizedRoleModel, AuthorizedR
             tabButtonByBondedRoleType.put(bondedRoleType, tabButton);
         });
 
-        headLine.setText(Res.get("authorizedRole.headline"));
-
         listener = c -> updateVisibility();
     }
 
