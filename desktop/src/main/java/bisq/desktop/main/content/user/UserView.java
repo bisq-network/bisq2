@@ -41,10 +41,4 @@ public class UserView extends TabView<UserModel, UserController> {
     @Override
     protected void onViewDetached() {
     }
-
-    @Override
-    protected boolean isRightSide() {
-        return false;
-    }
-
 }

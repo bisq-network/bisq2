@@ -43,9 +43,4 @@ public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
     @Override
     protected void onViewDetached() {
     }
-
-    @Override
-    protected boolean isRightSide() {
-        return false;
-    }
 }
