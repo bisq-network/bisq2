@@ -49,9 +49,4 @@ public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> 
     @Override
     protected void onViewDetached() {
     }
-
-    @Override
-    protected boolean isRightSide() {
-        return false;
-    }
 }
