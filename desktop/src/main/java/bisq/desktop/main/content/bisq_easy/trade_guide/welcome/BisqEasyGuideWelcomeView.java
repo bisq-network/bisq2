@@ -15,64 +15,53 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.process;
+package bisq.desktop.main.content.bisq_easy.trade_guide.welcome;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.OrderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessModel, BisqEasyGuideProcessController> {
-    private final Button backButton, nextButton;
-    private final Hyperlink learnMore;
+public class BisqEasyGuideWelcomeView extends View<VBox, BisqEasyGuideWelcomeModel, BisqEasyGuideWelcomeController> {
+    private final Button nextButton;
+    private final Label content;
 
-    public BisqEasyGuideProcessView(BisqEasyGuideProcessModel model, BisqEasyGuideProcessController controller) {
+    public BisqEasyGuideWelcomeView(BisqEasyGuideWelcomeModel model, BisqEasyGuideWelcomeController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
+        root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("bisqEasy.tradeGuide.process.headline"));
+        Label headline = new Label(Res.get("bisqEasy.tradeGuide.welcome.headline"));
         headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
-        Label content = new Label(Res.get("bisqEasy.tradeGuide.process.content"));
+        content = new Label();
         content.setWrapText(true);
         content.getStyleClass().add("bisq-easy-trade-guide-content");
-        OrderedList rules = new OrderedList(Res.get("bisqEasy.tradeGuide.process.steps"), "bisq-easy-trade-guide-content");
-
-        backButton = new Button(Res.get("action.back"));
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        HBox buttons = new HBox(20, backButton, nextButton);
-
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
-
         VBox.setMargin(headline, new Insets(10, 0, -5, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, rules, learnMore, buttons);
+        VBox.setMargin(nextButton, new Insets(10, 0, 0, 0));
+        root.getChildren().addAll(headline, content, nextButton);
     }
 
     @Override
     protected void onViewAttached() {
-        backButton.setOnAction(e -> controller.onBack());
+        content.textProperty().bind(model.getContentText());
         nextButton.setOnAction(e -> controller.onNext());
-        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
-        backButton.setOnAction(null);
+        content.textProperty().unbind();
         nextButton.setOnAction(null);
-        learnMore.setOnAction(null);
     }
 }

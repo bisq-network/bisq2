@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.welcome;
+package bisq.desktop.main.content.bisq_easy.trade_guide.welcome;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.SimpleStringProperty;

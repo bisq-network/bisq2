@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide;
+package bisq.desktop.main.content.bisq_easy.trade_guide;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.bisq_easy.guide.process.BisqEasyGuideProcessController;
-import bisq.desktop.main.content.bisq_easy.guide.rules.BisqEasyGuideRulesController;
-import bisq.desktop.main.content.bisq_easy.guide.security.BisqEasyGuideSecurityController;
-import bisq.desktop.main.content.bisq_easy.guide.welcome.BisqEasyGuideWelcomeController;
+import bisq.desktop.main.content.bisq_easy.trade_guide.process.BisqEasyGuideProcessController;
+import bisq.desktop.main.content.bisq_easy.trade_guide.rules.BisqEasyGuideRulesController;
+import bisq.desktop.main.content.bisq_easy.trade_guide.security.BisqEasyGuideSecurityController;
+import bisq.desktop.main.content.bisq_easy.trade_guide.welcome.BisqEasyGuideWelcomeController;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

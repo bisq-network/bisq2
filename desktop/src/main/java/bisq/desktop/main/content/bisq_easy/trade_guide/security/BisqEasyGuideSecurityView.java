@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.security;
+package bisq.desktop.main.content.bisq_easy.trade_guide.security;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.UnorderedList;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide;
+package bisq.desktop.main.content.bisq_easy.trade_guide;
 
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.NavigationTarget;
