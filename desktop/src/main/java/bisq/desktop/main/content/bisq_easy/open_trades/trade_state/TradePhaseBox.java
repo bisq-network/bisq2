@@ -194,11 +194,7 @@ class TradePhaseBox {
         }
 
         void onOpenWalletHelp() {
-            new Popup().headLine(Res.get("bisqEasy.walletGuide.headline"))
-                    .backgroundInfo(Res.get("bisqEasy.walletGuide.info"))
-                    .actionButtonText(Res.get("bisqEasy.tradeState.walletGuide.openLearn"))
-                    .onAction(() -> Navigation.navigateTo(NavigationTarget.WALLETS_ACADEMY))
-                    .show();
+            Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
         void onOpenDispute() {

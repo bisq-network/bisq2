@@ -907,10 +907,23 @@
 }
 
 
+/* wallet-guide */
 
+#blue-wallet-download {
+    -fx-image: url("/images/wallet_guide/blue-wallet-download.png");
+}
 
+#blue-wallet-create {
+    -fx-image: url("/images/wallet_guide/blue-wallet-create.png");
+}
 
+#blue-wallet-tx {
+    -fx-image: url("/images/wallet_guide/blue-wallet-tx.png");
+}
 
+#blue-wallet-qr {
+    -fx-image: url("/images/wallet_guide/blue-wallet-qr.png");
+}
 
 
 
