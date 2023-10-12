@@ -18,18 +18,26 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.desktop.common.utils.ImageUtil;
-import javafx.animation.Animation;
-import javafx.animation.Interpolator;
+import javafx.animation.FadeTransition;
 import javafx.animation.RotateTransition;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class WaitingAnimation extends StackPane {
-    private final RotateTransition rotate;
     private ImageView waitingStateIcon;
     private WaitingState waitingState;
+    private final RotateTransition rotate;
+    private final FadeTransition fadeTransition;
+    private Scene scene;
+    private ChangeListener<Scene> sceneListener;
+    private ChangeListener<Boolean> focusListener;
 
     public WaitingAnimation(WaitingState waitingState) {
         this();
@@ -39,11 +47,39 @@ public class WaitingAnimation extends StackPane {
     public WaitingAnimation() {
         setAlignment(Pos.CENTER);
         ImageView spinningCircle = ImageUtil.getImageViewById("spinning-circle");
+        spinningCircle.setOpacity(0);
         getChildren().add(spinningCircle);
-        rotate = new RotateTransition(Duration.seconds(1), spinningCircle);
+
+        fadeTransition = new FadeTransition(Duration.millis(1000), spinningCircle);
+        fadeTransition.setFromValue(0);
+        fadeTransition.setToValue(1);
+
+        rotate = new RotateTransition(Duration.millis(1000), spinningCircle);
         rotate.setByAngle(360);
-        rotate.setCycleCount(Animation.INDEFINITE);
-        rotate.setInterpolator(Interpolator.LINEAR);
+
+        sceneListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                focusListener = new ChangeListener<>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                        if (newValue) {
+                            rotate.playFromStart();
+                            spinningCircle.setOpacity(0);
+                            fadeTransition.playFromStart();
+                        }
+                    }
+                };
+                scene = getScene();
+                scene.getWindow().focusedProperty().addListener(focusListener);
+            } else {
+                if (scene != null) {
+                    scene.getWindow().focusedProperty().removeListener(focusListener);
+                    scene = null;
+                }
+                sceneProperty().removeListener(sceneListener);
+            }
+        };
+        sceneProperty().addListener(sceneListener);
     }
 
     public void setState(WaitingState newWaitingState) {
@@ -70,7 +106,7 @@ public class WaitingAnimation extends StackPane {
     private String getIconId(WaitingState waitingState) {
         switch (waitingState) {
             case ACCOUNT_DATA:
-               return "account-data";
+                return "account-data";
             case FIAT_PAYMENT:
             case FIAT_PAYMENT_CONFIRMATION:
                 return "fiat-payment";
@@ -87,9 +123,11 @@ public class WaitingAnimation extends StackPane {
 
     public void play() {
         rotate.play();
+        fadeTransition.play();
     }
 
     public void stop() {
         rotate.stop();
+        fadeTransition.stop();
     }
 }
