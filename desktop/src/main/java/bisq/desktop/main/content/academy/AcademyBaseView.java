@@ -50,9 +50,11 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
+        VBox.setMargin(learnMore, new Insets(25, 0, 0,0));
 
-        VBox.setMargin(headline, new Insets(20, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(0, 0, 0, 0));
         root.getChildren().addAll(headline, subHeadline);
+        root.setPadding(new Insets(20, 40, 40, 40));
     }
 
     protected Label addHeadlineLabel(String headlineKey) {
@@ -67,6 +69,7 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         Label label = new Label(Res.get("academy." + getKey() + "." + contentKey));
         label.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         label.setWrapText(true);
+        VBox.setMargin(label, new Insets(25, 0, 0,0));
         root.getChildren().add(label);
         return label;
     }

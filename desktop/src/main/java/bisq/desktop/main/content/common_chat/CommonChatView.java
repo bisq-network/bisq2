@@ -102,7 +102,7 @@ public class CommonChatView extends ChatView {
     protected void configContainerHBox() {
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
-        root.getChildren().add(containerHBox);
+        root.setContent(containerHBox);
 
         left = new VBox();
         HBox.setHgrow(left, Priority.NEVER);

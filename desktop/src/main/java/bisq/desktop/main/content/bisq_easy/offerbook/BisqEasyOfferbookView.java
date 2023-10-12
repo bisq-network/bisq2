@@ -69,8 +69,6 @@ public class BisqEasyOfferbookView extends ChatView {
 
         bisqEasyOfferbookController = controller;
         bisqEasyOfferbookModel = model;
-
-        root.setPadding(new Insets(0, 0, -67, 0));
     }
 
     @Override
@@ -177,9 +175,10 @@ public class BisqEasyOfferbookView extends ChatView {
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
+        containerHBox.setPadding(new Insets(20, 40, 40, 40));
 
-        Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
-        root.getChildren().add(containerHBox);
+        Layout.pinToAnchorPane(containerHBox, 0, 40, 40, 40);
+        root.setContent(containerHBox);
     }
 
     @Override

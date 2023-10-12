@@ -22,7 +22,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.MainView;
 import bisq.desktop.main.content.academy.AcademyController;
 import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyController;
@@ -59,19 +58,6 @@ public class ContentController extends NavigationController {
 
     @Override
     public void onDeactivate() {
-    }
-
-    @Override
-    protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
-        if (navigationTarget != NavigationTarget.BISQ_EASY &&
-                navigationTarget != NavigationTarget.BISQ_EASY_OFFERBOOK &&
-                navigationTarget != NavigationTarget.BISQ_EASY_OPEN_TRADES &&
-                navigationTarget != NavigationTarget.BISQ_EASY_PRIVATE_CHAT &&
-                navigationTarget != NavigationTarget.DISCUSSION &&
-                navigationTarget != NavigationTarget.EVENTS &&
-                navigationTarget != NavigationTarget.SUPPORT) {
-            MainView.setFitToHeight(false);
-        }
     }
 
     @Override

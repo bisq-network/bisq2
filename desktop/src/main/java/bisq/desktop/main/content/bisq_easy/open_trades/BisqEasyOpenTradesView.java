@@ -84,8 +84,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         this.tradeStateViewRoot = tradeStateViewRoot;
         this.tradeWelcomeViewRoot = tradeWelcomeViewRoot;
 
-        root.setPadding(new Insets(0, 0, -67, 0));
-
         // Table view
         tableView = new BisqTableView<>(getModel().getSortedList());
         tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
@@ -142,9 +140,10 @@ public class BisqEasyOpenTradesView extends ChatView {
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
+        containerHBox.setPadding(new Insets(20, 40, 40, 40));
 
         Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
-        root.getChildren().add(containerHBox);
+        root.setContent(containerHBox);
     }
 
     @Override

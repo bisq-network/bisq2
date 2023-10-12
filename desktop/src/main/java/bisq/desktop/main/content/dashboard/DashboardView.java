@@ -26,6 +26,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -34,17 +35,19 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DashboardView extends View<GridPane, DashboardModel, DashboardController> {
+public class DashboardView extends View<ScrollPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
     private final Button tradeProtocols, learnMore;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
-        super(new GridPane(), model, controller);
+        super(new ScrollPane(), model, controller);
 
-        root.setHgap(PADDING);
-        root.setVgap(PADDING);
-        GridPaneUtil.setGridPaneTwoColumnsConstraints(root);
+        GridPane container = new GridPane();
+
+        container.setHgap(PADDING);
+        container.setVgap(PADDING);
+        GridPaneUtil.setGridPaneTwoColumnsConstraints(container);
 
         //First row
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
@@ -63,18 +66,18 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
-        root.add(hBox, 0, 0, 2, 1);
+        container.add(hBox, 0, 0, 2, 1);
 
         //Second row
         VBox firstBox = getBigWidgetBox();
         VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
         VBox.setVgrow(firstBox, Priority.NEVER);
-        root.add(firstBox, 0, 1, 2, 1);
+        container.add(firstBox, 0, 1, 2, 1);
 
         //Third row
         Insets gridPaneInsets = new Insets(0, 0, -20, 0);
         GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
-        root.add(gridPane, 0, 2, 2, 1);
+        container.add(gridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-box-1";
         String headlineLabelStyleClass = "bisq-text-headline-2";
@@ -120,6 +123,11 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 0d,
                 groupPaneStyleClass,
                 groupInsets);
+
+        container.setPadding(new Insets(40));
+        root.setFitToWidth(true);
+        root.setFitToHeight(true);
+        root.setContent(container);
     }
 
     @Override

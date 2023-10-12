@@ -53,7 +53,7 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
 
         root.setHgap(HORIZONTAL_GAP);
         root.setVgap(VERTICAL_GAP);
-        root.setPadding(new Insets(20, 0, 0, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
 
         GridPaneUtil.setGridPaneTwoColumnsConstraints(root);
         root.getColumnConstraints().get(0).setMinWidth(450);

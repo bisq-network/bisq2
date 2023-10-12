@@ -59,7 +59,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         super(new HBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
-        root.setPadding(new Insets(30, 0, 0, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
 
         roboIconImageView = new ImageView();
         roboIconImageView.setFitWidth(125);

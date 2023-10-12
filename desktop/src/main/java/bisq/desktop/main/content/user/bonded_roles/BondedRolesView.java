@@ -54,12 +54,12 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
         verificationHeadline.getStyleClass().add("bisq-text-headline-2");
         OrderedList verificationInstruction = new OrderedList(Res.get("user.bondedRoles.verification.howTo.instruction"), "bisq-text-13");
 
-        VBox.setVgrow(tabControllerRoot, Priority.ALWAYS);
         VBox.setMargin(tabControllerRoot, new Insets(30, 0, 20, 0));
         VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
         VBox.setMargin(verificationHeadline, new Insets(0, 0, -10, 10));
         VBox.setMargin(verificationInstruction, new Insets(0, 0, 0, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView, verificationHeadline, verificationInstruction);
     }
 

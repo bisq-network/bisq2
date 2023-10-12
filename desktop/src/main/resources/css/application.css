@@ -87,25 +87,31 @@
 }
 
 .notification-box {
-    -fx-background-color: derive(white, -10%);
+    -fx-background-color: -bisq-yellow;
     -fx-background-radius: 8;
     -fx-border-color: transparent;
 }
 
 .notification-headline {
-    -fx-fill: -fx-dark-text-color;
-    -fx-text-fill: -fx-dark-text-color;
-    -fx-font-size: 2.0em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.notification-content {
-    -fx-fill: derive(black, 10%);
-    -fx-text-fill: derive(black, 10%);
+    -fx-fill: -bisq-darkgrey-light;
+    -fx-text-fill: -bisq-darkgrey-light;
     -fx-font-size: 1.15em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-family: "IBM Plex Sans Regular";
 }
 
+.notification-hyperlink, .hyperlink:visited {
+    -fx-fill: -bisq-black-light;
+    -fx-text-fill: -bisq-black-light;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Regular";
+}
+
+.notification-hyperlink:hover, .hyperlink:visited:hover {
+    -fx-fill: -bisq-white-dimmed;
+    -fx-text-fill: -bisq-white-dimmed;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Regular";
+}
 
 /*******************************************************************************
  * Settings                                                              *

@@ -38,7 +38,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
     public OverviewAcademyView(OverviewAcademyModel model, OverviewAcademyController controller) {
         super(new GridPane(), model, controller);
 
-        root.setPadding(new Insets(0, 0, 0, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
         root.setHgap(20);
         root.setVgap(PADDING);
         root.setCursor(Cursor.HAND);
@@ -79,7 +79,6 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
         VBox vBox = new VBox(20, headlineLabel, contentLabel);
-        GridPane.setMargin(vBox, new Insets(20, 0, 0, 0));
         GridPane.setHgrow(vBox, Priority.ALWAYS);
         root.add(vBox, 0, rowIndex, 2, 1);
     }

@@ -24,69 +24,63 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import javafx.animation.Timeline;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
+import javafx.scene.layout.BorderPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class NotificationPanelView extends View<VBox, NotificationPanelModel, NotificationPanelController> {
+public class NotificationPanelView extends View<BorderPane, NotificationPanelModel, NotificationPanelController> {
     private final Label notificationHeadline;
-    private final Button closeButton, goToOpenTradesButton;
-    private final Text notificationContent;
+    private final Button closeButton;
+    private final Hyperlink goToOpenTradesButton;
     private Timeline slideInRightTimeline, slideOutTopTimeline;
-    private Subscription useExtraPaddingPin, isVisiblePin;
+    private Subscription useLessPaddingPin, isVisiblePin;
 
     public NotificationPanelView(NotificationPanelModel model,
                                  NotificationPanelController controller) {
-        super(new VBox(), model, controller);
+        super(new BorderPane(), model, controller);
 
         root.setManaged(false);
         root.setVisible(false);
 
         notificationHeadline = new Label();
         notificationHeadline.getStyleClass().add("notification-headline");
-        notificationContent = new Text();
-        notificationContent.getStyleClass().add("notification-content");
-        TextFlow notificationContentTextFlow = new TextFlow(notificationContent);
 
         closeButton = BisqIconButton.createIconButton("close-black");
 
-        goToOpenTradesButton = new Button(Res.get("notificationPanel.button"));
-        goToOpenTradesButton.setDefaultButton(true);
+        goToOpenTradesButton = new Hyperlink(Res.get("notificationPanel.button"));
+        goToOpenTradesButton.getStyleClass().add("notification-hyperlink");
 
-        VBox.setMargin(goToOpenTradesButton, new Insets(10, 0, 0, 0));
-        VBox notificationVBox = new VBox(10, notificationHeadline, notificationContentTextFlow, goToOpenTradesButton);
+        HBox.setMargin(goToOpenTradesButton, new Insets(5, 0, 5, 0));
 
-        HBox.setMargin(notificationVBox, new Insets(30, 48, 44, 48));
-        HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
-        HBox notificationHBox = new HBox(notificationVBox, Spacer.fillHBox(), closeButton);
+        Label separator = new Label("|");
+        separator.getStyleClass().add("notification-headline");
+        HBox notificationContent = new HBox(notificationHeadline, separator, goToOpenTradesButton);
+        notificationContent.setAlignment(Pos.CENTER);
+        notificationContent.setSpacing(10);
+
+        HBox notificationHBox = new HBox(notificationContent, Spacer.fillHBox(), closeButton);
+        notificationHBox.setPadding(new Insets(0, 10, 0, 15));
         notificationHBox.getStyleClass().add("notification-box");
+        notificationHBox.setAlignment(Pos.CENTER);
 
-        root.getChildren().add(notificationHBox);
+        root.setCenter(notificationHBox);
+        root.setPadding(new Insets(20, 40, 0, 40));
     }
 
     @Override
     protected void onViewAttached() {
         notificationHeadline.textProperty().bind(model.getHeadline());
-        notificationContent.textProperty().bind(model.getContent());
 
-        useExtraPaddingPin = EasyBind.subscribe(model.getUseExtraPadding(), useExtraPadding -> {
-            double bottom = useExtraPadding ? 33 : 0;
-            root.setPadding(new Insets(33, 67, bottom, 67));
-
-            if (useExtraPadding) {
-                root.getStyleClass().remove("notification-pane");
-                root.getStyleClass().add("notification-pane-dark");
-            } else {
-                root.getStyleClass().add("notification-pane");
-                root.getStyleClass().remove("notification-pane-dark");
-            }
+        useLessPaddingPin = EasyBind.subscribe(model.getUseLessPadding(), useLessPadding -> {
+            double bottom = useLessPadding ? 0 : 20;
+            root.setPadding(new Insets(20, 40, bottom, 40));
         });
 
         isVisiblePin = EasyBind.subscribe(model.getIsVisible(), isVisible -> {
@@ -126,9 +120,8 @@ public class NotificationPanelView extends View<VBox, NotificationPanelModel, No
     @Override
     protected void onViewDetached() {
         notificationHeadline.textProperty().unbind();
-        notificationContent.textProperty().unbind();
 
-        useExtraPaddingPin.unsubscribe();
+        useLessPaddingPin.unsubscribe();
         isVisiblePin.unsubscribe();
 
         closeButton.setOnAction(null);

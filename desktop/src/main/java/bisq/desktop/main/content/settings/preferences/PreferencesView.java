@@ -54,7 +54,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
 
-        root.setPadding(new Insets(30, 0, 0, 0));
+        root.setPadding(new Insets(20, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         // Language

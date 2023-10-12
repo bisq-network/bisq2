@@ -67,8 +67,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
                                     VBox chatMessagesComponent,
                                     Pane channelSidebar) {
         super(model, controller, chatMessagesComponent, channelSidebar);
-
-        root.setPadding(new Insets(0, 0, -67, 0));
     }
 
     @Override
@@ -139,9 +137,11 @@ public class BisqEasyPrivateChatsView extends ChatView {
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
+        containerHBox.setPadding(new Insets(20, 40, 40, 40));
 
         Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
-        root.getChildren().add(containerHBox);
+        VBox.setVgrow(containerHBox, Priority.ALWAYS);
+        root.setContent(containerHBox);
     }
 
     @Override

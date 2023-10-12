@@ -17,8 +17,12 @@
 
 package bisq.desktop.main.content.user.bonded_roles.tabs;
 
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +35,8 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
         root.setPadding(new Insets(30));
         root.getStyleClass().add("user-bonded-roles-tab-view");
 
-        VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
+        topBox.setPadding(new Insets(0, 0, 0, 0));
+        lineAndMarker.setPadding(new Insets(0, 0, 0, 0));
 
         addTabs();
     }
@@ -73,5 +78,19 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
 
         line.getStyleClass().remove("bisq-dark-bg");
         line.getStyleClass().add("bisq-mid-grey");
+    }
+
+    @Override
+    protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
+                               View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
+        super.onChildView(oldValue, newValue);
+
+        scrollPane.prefViewportHeightProperty().unbind();
+        scrollPane.prefViewportWidthProperty().unbind();
+
+        if (newValue != null) {
+            scrollPane.prefViewportHeightProperty().bind(newValue.getRoot().heightProperty());
+            scrollPane.prefViewportWidthProperty().bind(newValue.getRoot().widthProperty());
+        }
     }
 }
