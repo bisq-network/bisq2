@@ -335,15 +335,18 @@ public class AmountComponent {
             maxRangeCustomValuePin = EasyBind.subscribe(model.getMaxRangeMonetary(),
                     value -> applyInitialRangeValues());
 
-            baseSideAmountValidPin = subscribeToAmountValidity(baseSideAmountInput);
-            quoteSideAmountValidPin = subscribeToAmountValidity(quoteSideAmountInput);
+            baseSideAmountValidPin = subscribeToAmountValidity(baseSideAmountInput, this::setBaseFromQuote);
+            quoteSideAmountValidPin = subscribeToAmountValidity(quoteSideAmountInput, this::setQuoteFromBase);
             model.getSliderValue().addListener(sliderListener);
         }
 
-        private Subscription subscribeToAmountValidity(AmountInput amountInput) {
+        private Subscription subscribeToAmountValidity(AmountInput amountInput, Runnable autocorrect) {
             return EasyBind.subscribe(amountInput.isAmountValidProperty(), isAmountValid -> {
                 if (amountInput.focusedProperty().get()) {
                     model.isFocusedAmountValid.set(isAmountValid);
+                } else if(!amountInput.isAmountValidProperty().get()) {
+                    autocorrect.run();
+                    amountInput.isAmountValidProperty().set(true);
                 }
             });
         }
