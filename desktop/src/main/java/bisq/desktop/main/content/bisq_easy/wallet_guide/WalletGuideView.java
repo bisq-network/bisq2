@@ -38,8 +38,8 @@ public class WalletGuideView extends TabView<WalletGuideModel, WalletGuideContro
     public WalletGuideView(WalletGuideModel model, WalletGuideController controller) {
         super(model, controller);
 
-        root.setPadding(new Insets(15, 30, 30, 30));
-        VBox.setMargin(contentPane, new Insets(20, 0, 20, 0));
+        root.setPadding(new Insets(15, 30, 10, 30));
+        VBox.setMargin(scrollPane, new Insets(20, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("bisqEasy.walletGuide.intro"),
@@ -65,7 +65,7 @@ public class WalletGuideView extends TabView<WalletGuideModel, WalletGuideContro
         closeIconButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 30);
+        root.setPrefHeight(OverlayModel.HEIGHT + 40);
     }
 
     @Override
