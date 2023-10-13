@@ -19,7 +19,9 @@ package bisq.bisq_easy;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -40,7 +42,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -121,5 +125,12 @@ public class BisqEasyService implements Service {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }
         return userIdentityService.deleteUserIdentity(userIdentity);
+    }
+
+    public Set<String> getTradeIdsOfNotifications() {
+        return notificationsService.getNotConsumedNotificationIds().stream()
+                .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
+                .collect(Collectors.toSet());
     }
 }

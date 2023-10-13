@@ -18,13 +18,18 @@
 package bisq.desktop.main.content;
 
 import bisq.desktop.common.ViewTransition;
-import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.common.view.*;
+import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
 public class ContentView extends NavigationView<StackPane, ContentModel, ContentController> {
+    private static final Insets NOTIFICATION_PADDING = new Insets(0, 40, 0, 40);
+
     private ViewTransition viewTransition;
 
     public ContentView(ContentModel model, ContentController controller) {
@@ -47,14 +52,27 @@ public class ContentView extends NavigationView<StackPane, ContentModel, Content
             }
             Region oldValueRoot = oldValue != null ? oldValue.getRoot() : null;
             viewTransition = new ViewTransition(oldValueRoot, newValue);
+
+            if (newValue instanceof TabView) {
+                updateTabViewPadding();
+            }
         });
     }
 
     @Override
     protected void onViewAttached() {
+        EasyBind.subscribe(model.getIsNotificationVisible(), isNotificationVisible -> updateTabViewPadding());
     }
 
     @Override
     protected void onViewDetached() {
+    }
+
+    private void updateTabViewPadding() {
+        View<? extends Parent, ? extends Model, ? extends Controller> view = model.getView().get();
+        if (view instanceof TabView) {
+            TabView<?, ?> tabView = (TabView<?, ?>) view;
+            tabView.getTopBox().setPadding(model.getIsNotificationVisible().get() ? NOTIFICATION_PADDING : TabView.DEFAULT_TOP_PANE_PADDING);
+        }
     }
 }

@@ -17,8 +17,7 @@
 
 package bisq.desktop.main.notification;
 
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.notifications.ChatNotificationService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -27,11 +26,11 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.presentation.notifications.NotificationsService;
 import com.google.common.base.Joiner;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class NotificationPanelController implements Controller {
@@ -39,12 +38,19 @@ public class NotificationPanelController implements Controller {
     private final NotificationPanelView view;
     private final NotificationPanelModel model;
     private final NotificationsService notificationsService;
+    private final BisqEasyService bisqEasyService;
     private boolean notificationSubscriptionDone;
 
     public NotificationPanelController(ServiceProvider serviceProvider) {
         notificationsService = serviceProvider.getNotificationsService();
+        bisqEasyService = serviceProvider.getBisqEasyService();
+
         model = new NotificationPanelModel();
         view = new NotificationPanelView(model, this);
+    }
+
+    public ReadOnlyBooleanProperty getIsNotificationVisible() {
+        return model.getIsNotificationVisible();
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
@@ -54,36 +60,26 @@ public class NotificationPanelController implements Controller {
             notificationsService.subscribe(e -> {
                 UIThread.run(() -> {
                     if (Navigation.getCurrentNavigationTarget().get() != NavigationTarget.BISQ_EASY_OPEN_TRADES) {
-                        Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
-                                .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                                .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                                .collect(Collectors.toSet());
-                        if (tradeIdSet.size() == 1) {
-                            String tradeId = tradeIdSet.iterator().next();
+                        Set<String> tradeIdsOfNotifications = bisqEasyService.getTradeIdsOfNotifications();
+                        if (tradeIdsOfNotifications.size() == 1) {
+                            String tradeId = tradeIdsOfNotifications.iterator().next();
                             model.getHeadline().set(Res.get("notificationPanel.headline.single", tradeId));
                             model.getContent().set(Res.get("notificationPanel.content.single", tradeId,
                                     Res.get("notificationPanel.content.part2")));
-                        } else if (tradeIdSet.size() > 1) {
-                            String tradeIds = Joiner.on(", ").join(tradeIdSet);
+                        } else if (tradeIdsOfNotifications.size() > 1) {
+                            String tradeIds = Joiner.on(", ").join(tradeIdsOfNotifications);
                             model.getHeadline().set(Res.get("notificationPanel.headline.multiple", tradeIds));
                             model.getContent().set(Res.get("notificationPanel.content.multiple", tradeIds,
                                     Res.get("notificationPanel.content.part2")));
                         }
-                        model.getIsVisible().set(!tradeIdSet.isEmpty());
+                        model.getIsNotificationVisible().set(!tradeIdsOfNotifications.isEmpty());
                     }
                 });
             });
         }
         if (navigationTarget == NavigationTarget.BISQ_EASY_OPEN_TRADES) {
-            model.getIsVisible().set(false);
+            model.getIsNotificationVisible().set(false);
         }
-
-        model.getUseLessPadding().set(navigationTarget == NavigationTarget.DASHBOARD ||
-                navigationTarget == NavigationTarget.ACADEMY ||
-                navigationTarget == NavigationTarget.TRADE_PROTOCOLS ||
-                navigationTarget == NavigationTarget.BISQ_EASY ||
-                navigationTarget == NavigationTarget.USER ||
-                navigationTarget == NavigationTarget.SETTINGS);
     }
 
     @Override
@@ -95,11 +91,11 @@ public class NotificationPanelController implements Controller {
     }
 
     void onClose() {
-        model.getIsVisible().set(false);
+        model.getIsNotificationVisible().set(false);
     }
 
     void onGoToOpenTrades() {
-        model.getIsVisible().set(false);
+        model.getIsNotificationVisible().set(false);
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 }

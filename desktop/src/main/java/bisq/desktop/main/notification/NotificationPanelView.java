@@ -28,8 +28,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -40,7 +40,7 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
     private final Button closeButton;
     private final Hyperlink goToOpenTradesButton;
     private Timeline slideInRightTimeline, slideOutTopTimeline;
-    private Subscription useLessPaddingPin, isVisiblePin;
+    private Subscription isVisiblePin;
 
     public NotificationPanelView(NotificationPanelModel model,
                                  NotificationPanelController controller) {
@@ -71,19 +71,14 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
         notificationHBox.setAlignment(Pos.CENTER);
 
         root.setCenter(notificationHBox);
-        root.setPadding(new Insets(20, 40, 0, 40));
+        root.setPadding(new Insets(20, 40, 20, 40));
     }
 
     @Override
     protected void onViewAttached() {
         notificationHeadline.textProperty().bind(model.getHeadline());
 
-        useLessPaddingPin = EasyBind.subscribe(model.getUseLessPadding(), useLessPadding -> {
-            double bottom = useLessPadding ? 0 : 20;
-            root.setPadding(new Insets(20, 40, bottom, 40));
-        });
-
-        isVisiblePin = EasyBind.subscribe(model.getIsVisible(), isVisible -> {
+        isVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), isVisible -> {
             if (slideInRightTimeline != null) {
                 slideInRightTimeline.stop();
                 slideInRightTimeline = null;
@@ -121,7 +116,6 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
     protected void onViewDetached() {
         notificationHeadline.textProperty().unbind();
 
-        useLessPaddingPin.unsubscribe();
         isVisiblePin.unsubscribe();
 
         closeButton.setOnAction(null);

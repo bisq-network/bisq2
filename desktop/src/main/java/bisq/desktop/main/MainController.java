@@ -148,7 +148,7 @@ public class MainController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CONTENT: {
-                return Optional.of(new ContentController(serviceProvider));
+                return Optional.of(new ContentController(serviceProvider, notificationPanelController));
             }
             default: {
                 return Optional.empty();

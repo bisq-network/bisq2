@@ -30,6 +30,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.*;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -39,12 +40,15 @@ import javax.annotation.Nullable;
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
         implements TransitionedView {
+    public static final Insets DEFAULT_TOP_PANE_PADDING = new Insets(30, 40, 0, 40);
+
     protected Label headLine;
     protected final HBox tabs = new HBox();
     protected Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ScrollPane scrollPane;
     protected Pane lineAndMarker;
+    @Getter
     protected Pane topBox;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
@@ -152,7 +156,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         } else {
             topBox = new HBox(tabs, Spacer.fillHBox(), headLine);
         }
-        topBox.setPadding(new Insets(30, 40, 0, 40));
+        topBox.setPadding(DEFAULT_TOP_PANE_PADDING);
     }
 
     protected void setupLineAndMarker() {

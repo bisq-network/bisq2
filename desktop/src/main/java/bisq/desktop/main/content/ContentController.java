@@ -31,6 +31,7 @@ import bisq.desktop.main.content.settings.SettingsController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
+import bisq.desktop.main.notification.NotificationPanelController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,23 +42,27 @@ public class ContentController extends NavigationController {
     private final ServiceProvider serviceProvider;
     @Getter
     private final ContentModel model;
+    private final NotificationPanelController notificationPanelController;
     @Getter
     private final ContentView view;
 
-    public ContentController(ServiceProvider serviceProvider) {
+    public ContentController(ServiceProvider serviceProvider, NotificationPanelController notificationPanelController) {
         super(NavigationTarget.CONTENT);
 
         this.serviceProvider = serviceProvider;
+        this.notificationPanelController = notificationPanelController;
         model = new ContentModel(serviceProvider.getWalletService().isPresent());
         view = new ContentView(model, this);
     }
 
     @Override
     public void onActivate() {
+        model.getIsNotificationVisible().bind(notificationPanelController.getIsNotificationVisible());
     }
 
     @Override
     public void onDeactivate() {
+        model.getIsNotificationVisible().unbind();
     }
 
     @Override
