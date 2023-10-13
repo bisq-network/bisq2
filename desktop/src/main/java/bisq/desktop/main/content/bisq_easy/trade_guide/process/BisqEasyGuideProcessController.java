@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.process;
+package bisq.desktop.main.content.bisq_easy.trade_guide.process;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;

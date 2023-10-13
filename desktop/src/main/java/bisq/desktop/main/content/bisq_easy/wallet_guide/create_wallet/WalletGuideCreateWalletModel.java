@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.process;
+package bisq.desktop.main.content.bisq_easy.wallet_guide.create_wallet;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
@@ -23,5 +23,5 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideProcessModel implements Model {
+public class WalletGuideCreateWalletModel implements Model {
 }

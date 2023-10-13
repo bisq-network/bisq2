@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.rules;
+package bisq.desktop.main.content.bisq_easy.wallet_guide.receive;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -23,26 +23,21 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideRulesController implements Controller {
-    private final BisqEasyGuideRulesModel model;
+public class WalletGuideReceiveController implements Controller {
     @Getter
-    private final BisqEasyGuideRulesView view;
-    private final SettingsService settingsService;
+    private final WalletGuideReceiveView view;
 
-    public BisqEasyGuideRulesController(ServiceProvider serviceProvider) {
-        settingsService = serviceProvider.getSettingsService();
-        model = new BisqEasyGuideRulesModel();
-        view = new BisqEasyGuideRulesView(model, this);
+    public WalletGuideReceiveController(ServiceProvider serviceProvider) {
+        WalletGuideReceiveModel model = new WalletGuideReceiveModel();
+        view = new WalletGuideReceiveView(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.getTradeRulesConfirmed().set(settingsService.getTradeRulesConfirmed().get());
     }
 
     @Override
@@ -50,19 +45,15 @@ public class BisqEasyGuideRulesController implements Controller {
     }
 
     void onBack() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_PROCESS);
+        Navigation.navigateTo(NavigationTarget.WALLET_GUIDE_CREATE_WALLET);
     }
 
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+    void onOpenLink1() {
+        Browser.open("https://www.youtube.com/watch?v=NqY3wBhloH4");
     }
 
-    void onConfirm(boolean selected) {
-        settingsService.setTradeRulesConfirmed(selected);
-        model.getTradeRulesConfirmed().set(selected);
-       /* if (selected) {
-            OverlayController.hide();
-        }*/
+    void onOpenLink2() {
+        Browser.open("https://www.youtube.com/watch?v=imMX7i4qpmg");
     }
 
     void onClose() {

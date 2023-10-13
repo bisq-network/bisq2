@@ -106,11 +106,7 @@ public class BuyerState2 extends BaseState {
         }
 
         void onOpenWalletHelp() {
-            new Popup().headLine(Res.get("bisqEasy.walletGuide.headline"))
-                    .backgroundInfo(Res.get("bisqEasy.walletGuide.info"))
-                    .actionButtonText(Res.get("bisqEasy.tradeState.walletGuide.openLearn"))
-                    .onAction(() -> Navigation.navigateTo(NavigationTarget.WALLETS_ACADEMY))
-                    .show();
+            Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
     }
 

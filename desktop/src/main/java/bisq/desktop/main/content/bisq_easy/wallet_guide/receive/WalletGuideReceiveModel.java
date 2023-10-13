@@ -15,19 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide;
+package bisq.desktop.main.content.bisq_easy.wallet_guide.receive;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideModel extends TabModel {
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY_GUIDE_WELCOME;
-    }
+public class WalletGuideReceiveModel implements Model {
 }

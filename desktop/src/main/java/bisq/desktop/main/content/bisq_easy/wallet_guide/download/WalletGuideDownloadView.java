@@ -15,36 +15,41 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.security;
+package bisq.desktop.main.content.bisq_easy.wallet_guide.download;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityModel, BisqEasyGuideSecurityController> {
+public class WalletGuideDownloadView extends View<HBox, WalletGuideDownloadModel, WalletGuideDownloadController> {
     private final Button backButton, nextButton;
-    private final Hyperlink learnMore;
+    private final Hyperlink download;
 
-    public BisqEasyGuideSecurityView(BisqEasyGuideSecurityModel model, BisqEasyGuideSecurityController controller) {
-        super(new VBox(), model, controller);
+    public WalletGuideDownloadView(WalletGuideDownloadModel model, WalletGuideDownloadController controller) {
+        super(new HBox(20), model, controller);
 
-        root.setSpacing(20);
-        root.setFillWidth(true);
-        root.setAlignment(Pos.TOP_LEFT);
+        VBox vBox = new VBox(20);
+        vBox.setFillWidth(true);
+        vBox.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("bisqEasy.tradeGuide.security.headline"));
+        Label headline = new Label(Res.get("bisqEasy.walletGuide.download.headline"));
         headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
-        UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.security.content"), "bisq-easy-trade-guide-content");
+        Text text = new Text(Res.get("bisqEasy.walletGuide.download.content"));
+        text.getStyleClass().add("bisq-easy-trade-guide-content");
+        TextFlow content = new TextFlow(text);
 
         backButton = new Button(Res.get("action.back"));
 
@@ -53,24 +58,27 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
 
         HBox buttons = new HBox(20, backButton, nextButton);
 
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        download = new Hyperlink(Res.get("bisqEasy.walletGuide.download.link"));
 
-        VBox.setMargin(headline, new Insets(10, 0, -5, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, content, learnMore, buttons);
+        VBox.setMargin(headline, new Insets(0, 0, -5, 0));
+        VBox.setMargin(download, new Insets(0, 0, 10, -3));
+        vBox.getChildren().addAll(headline, content, download, buttons);
+
+        ImageView image = ImageUtil.getImageViewById("blue-wallet-download");
+        root.getChildren().addAll(vBox, image);
     }
 
     @Override
     protected void onViewAttached() {
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
-        learnMore.setOnAction(e -> controller.onLearnMore());
+        download.setOnAction(e -> controller.onOpenLink());
     }
 
     @Override
     protected void onViewDetached() {
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
-        learnMore.setOnAction(null);
+        download.setOnAction(null);
     }
 }

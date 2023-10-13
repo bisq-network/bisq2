@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.security;
+package bisq.desktop.main.content.bisq_easy.trade_guide.process;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
@@ -23,5 +23,5 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideSecurityModel implements Model {
+public class BisqEasyGuideProcessModel implements Model {
 }

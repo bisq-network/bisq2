@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.rules;
+package bisq.desktop.main.content.bisq_easy.trade_guide.welcome;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyGuideRulesModel implements Model {
-    private final BooleanProperty tradeRulesConfirmed = new SimpleBooleanProperty();
+public class BisqEasyGuideWelcomeModel implements Model {
+    private final StringProperty contentText = new SimpleStringProperty();
 }

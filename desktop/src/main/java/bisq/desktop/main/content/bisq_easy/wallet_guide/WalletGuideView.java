@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide;
+package bisq.desktop.main.content.bisq_easy.wallet_guide;
 
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,27 +32,27 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuideController> {
+public class WalletGuideView extends TabView<WalletGuideModel, WalletGuideController> {
     private Button closeIconButton;
 
-    public BisqEasyGuideView(BisqEasyGuideModel model, BisqEasyGuideController controller) {
+    public WalletGuideView(WalletGuideModel model, WalletGuideController controller) {
         super(model, controller);
 
-        root.setPadding(new Insets(15, 30, 30, 30));
-        VBox.setMargin(scrollPane, new Insets(10, 0, 0, 0));
+        root.setPadding(new Insets(15, 30, 10, 30));
+        VBox.setMargin(scrollPane, new Insets(20, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
-        addTab(Res.get("bisqEasy.tradeGuide.welcome"),
-                NavigationTarget.BISQ_EASY_GUIDE_WELCOME,
+        addTab(Res.get("bisqEasy.walletGuide.intro"),
+                NavigationTarget.WALLET_GUIDE_INTRO,
                 styles);
-        addTab(Res.get("bisqEasy.tradeGuide.security"),
-                NavigationTarget.BISQ_EASY_GUIDE_SECURITY,
+        addTab(Res.get("bisqEasy.walletGuide.download"),
+                NavigationTarget.WALLET_GUIDE_DOWNLOAD,
                 styles);
-        addTab(Res.get("bisqEasy.tradeGuide.process"),
-                NavigationTarget.BISQ_EASY_GUIDE_PROCESS,
+        addTab(Res.get("bisqEasy.walletGuide.createWallet"),
+                NavigationTarget.WALLET_GUIDE_CREATE_WALLET,
                 styles);
-        addTab(Res.get("bisqEasy.tradeGuide.rules"),
-                NavigationTarget.BISQ_EASY_GUIDE_RULES,
+        addTab(Res.get("bisqEasy.walletGuide.receive"),
+                NavigationTarget.WALLET_GUIDE_RECEIVE,
                 styles);
     }
 
@@ -65,7 +65,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         closeIconButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 30);
+        root.setPrefHeight(OverlayModel.HEIGHT + 40);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("bisqEasy.tradeGuide.tabs.headline"));
+        headLine.setText(Res.get("bisqEasy.walletGuide.tabs.headline"));
         headLine.getStyleClass().add("tab-view");
 
         closeIconButton = BisqIconButton.createIconButton("close");

@@ -22,11 +22,11 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.main.content.bisq_easy.guide.BisqEasyGuideController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.bisq_easy.onboarding.video.BisqEasyVideoController;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
+import bisq.desktop.main.content.bisq_easy.wallet_guide.WalletGuideController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
 import bisq.desktop.main.content.user.reputation.accountAge.AccountAgeController;
@@ -139,7 +139,10 @@ public class OverlayController extends NavigationController {
                 return Optional.of(new BisqEasyVideoController(serviceProvider));
             }
             case BISQ_EASY_GUIDE: {
-                return Optional.of(new BisqEasyGuideController(serviceProvider));
+                return Optional.of(new bisq.desktop.main.content.bisq_easy.trade_guide.BisqEasyGuideController(serviceProvider));
+            }
+            case WALLET_GUIDE: {
+                return Optional.of(new WalletGuideController(serviceProvider));
             }
             case BISQ_EASY_OFFER_DETAILS: {
                 return Optional.of(new BisqEasyOfferDetailsController(serviceProvider));

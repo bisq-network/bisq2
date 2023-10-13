@@ -15,44 +15,43 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.guide.welcome;
+package bisq.desktop.main.content.bisq_easy.trade_guide.security;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.i18n.Res;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyGuideWelcomeController implements Controller {
+public class BisqEasyGuideSecurityController implements Controller {
     @Getter
-    private final BisqEasyGuideWelcomeView view;
-    private final SettingsService settingsService;
-    private final BisqEasyGuideWelcomeModel model;
+    private final BisqEasyGuideSecurityView view;
 
-    public BisqEasyGuideWelcomeController(ServiceProvider serviceProvider) {
-        settingsService = serviceProvider.getSettingsService();
-        model = new BisqEasyGuideWelcomeModel();
-        view = new BisqEasyGuideWelcomeView(model, this);
+    public BisqEasyGuideSecurityController(ServiceProvider serviceProvider) {
+        BisqEasyGuideSecurityModel model = new BisqEasyGuideSecurityModel();
+        view = new BisqEasyGuideSecurityView(model, this);
     }
 
     @Override
     public void onActivate() {
-        String content = Res.get("bisqEasy.tradeGuide.welcome.content");
-        model.getContentText().setValue(content);
-      /*  model.getContentText().setValue(settingsService.getTradeRulesConfirmed().get() ?
-                content :
-                content + "\n\n" + Res.get("tradeGuide.welcome.content.notYetConfirmed"));*/
     }
 
     @Override
     public void onDeactivate() {
     }
 
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/bisqeasy");
+    }
+
+    void onBack() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_WELCOME);
+    }
+
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_SECURITY);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE_PROCESS);
     }
 }
