@@ -49,11 +49,11 @@ public class WalletGuideReceiveController implements Controller {
     }
 
     void onOpenLink1() {
-        Browser.open("https://www.youtube.com/watch?v=imMX7i4qpmg&list=PLxdf8G0kzsUUE7HHNTGTWBFxzt2oudiyS&index=3");
+        Browser.open("https://www.youtube.com/watch?v=NqY3wBhloH4");
     }
 
     void onOpenLink2() {
-        Browser.open("https://www.youtube.com/watch?v=NqY3wBhloH4");
+        Browser.open("https://www.youtube.com/watch?v=imMX7i4qpmg");
     }
 
     void onClose() {
