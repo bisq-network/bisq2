@@ -48,7 +48,7 @@ public class BisqIconButton extends Button {
     }
 
     public static Button createInfoIconButton(String tooltipText) {
-        Button button = AwesomeDude.createIconButton(AwesomeIcon.INFO);
+        Button button = AwesomeDude.createIconButton(AwesomeIcon.INFO_SIGN);
         button.getStyleClass().add("icon-button");
         BisqTooltip tooltip = new BisqTooltip(tooltipText);
         tooltip.getStyleClass().add("dark-tooltip");

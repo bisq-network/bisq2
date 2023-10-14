@@ -100,7 +100,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
                 .right()
-                .minWidth(80)
+                .minWidth(90)
                 .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
                 .valueSupplier(BondedRolesListItem::getIsBanned)
                 .build());
