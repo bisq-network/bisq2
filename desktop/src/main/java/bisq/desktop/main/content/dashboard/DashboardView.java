@@ -19,8 +19,10 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.main.notification.NotificationPanelView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -143,8 +145,15 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         offersOnlineLabel.textProperty().bind(model.getOffersOnline());
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
 
-        isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible ->
-                gridPane.setPadding(visible ? NOTIFICATION_PADDING : DEFAULT_PADDING));
+        isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
+                    if (!visible) {
+                        UIScheduler.run(() -> gridPane.setPadding(DEFAULT_PADDING))
+                                .after(NotificationPanelView.DURATION);
+                    } else {
+                        gridPane.setPadding(NOTIFICATION_PADDING);
+                    }
+                }
+        );
 
         tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
         learnMore.setOnAction(e -> controller.onLearn());

@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.content;
 
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.notification.NotificationPanelView;
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
@@ -49,8 +51,15 @@ public abstract class ContentTabView<M extends ContentTabModel, C extends Conten
 
     @Override
     protected void onViewAttached() {
-        isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible ->
-                topBox.setPadding(visible ? NOTIFICATION_PADDING : TabView.DEFAULT_TOP_PANE_PADDING));
+        isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
+                    if (!visible) {
+                        UIScheduler.run(() -> topBox.setPadding(TabView.DEFAULT_TOP_PANE_PADDING))
+                                .after(NotificationPanelView.DURATION);
+                    } else {
+                        topBox.setPadding(NOTIFICATION_PADDING);
+                    }
+                }
+        );
     }
 
     @Override

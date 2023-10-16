@@ -36,6 +36,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NotificationPanelView extends View<BorderPane, NotificationPanelModel, NotificationPanelController> {
+    public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
     private final Label notificationHeadline;
     private final Button closeButton;
     private final Hyperlink goToOpenTradesButton;
@@ -97,12 +98,12 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
                 root.setManaged(true);
                 root.setVisible(true);
                 root.setTranslateY(0);
-                slideInRightTimeline = Transitions.slideInRight(root, Transitions.DEFAULT_DURATION / 2, () -> {
+                slideInRightTimeline = Transitions.slideInRight(root, DURATION, () -> {
                 });
             } else {
                 root.setTranslateX(0);
                 root.setTranslateY(0);
-                slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, Transitions.DEFAULT_DURATION / 2, () -> {
+                slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, DURATION, () -> {
                     root.setManaged(false);
                     root.setVisible(false);
                 });
