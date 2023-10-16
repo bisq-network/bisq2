@@ -159,16 +159,11 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             });
         });
 
-        if (selectionService.getSelectedChannel().get() == null
-                && !model.getListItems().isEmpty()) {
-            selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
-        }
+        updateVisibility();
+        maybeSelectFirstItem();
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
         selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), this::selectedItemChanged);
-
-        maybeSelectFirstItem();
-        updateVisibility();
     }
 
     @Override
@@ -180,6 +175,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         doCloseChatWindow();
         model.reset();
         resetSelectedChildTarget();
+        selectionService.selectChannel(null);
     }
 
     @Override
