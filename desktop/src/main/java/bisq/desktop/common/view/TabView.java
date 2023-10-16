@@ -68,7 +68,10 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
         HBox.setHgrow(scrollPane, Priority.ALWAYS);
 
-        root.getChildren().addAll(topBox, lineAndMarker, scrollPane);
+        Region space = new Region();
+        space.setPadding(new Insets(10));
+
+        root.getChildren().addAll(topBox, lineAndMarker, space, scrollPane);
     }
 
     @Override
