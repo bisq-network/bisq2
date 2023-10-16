@@ -22,7 +22,14 @@ import bisq.common.monetary.Monetary;
 import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
@@ -190,7 +197,6 @@ public abstract class AmountInput {
     }
 
     protected static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        protected final ChangeListener<String> textInputListener;
         protected final ChangeListener<Boolean> focusListener;
         protected final ChangeListener<Monetary> amountListener;
         protected final TextField textInput;
@@ -201,7 +207,6 @@ public abstract class AmountInput {
             textInput = createTextInput();
             codeLabel = createCodeLabel();
             root.getChildren().addAll(textInput, codeLabel);
-            textInputListener = this::onTextChanged;
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
             initView();
@@ -216,11 +221,6 @@ public abstract class AmountInput {
         }
 
         protected void initView() {
-        }
-
-        private void onTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-            controller.onAmount(textInput.getText());
-            adjustTextFieldStyle();
         }
 
         private void onFocusChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -246,7 +246,6 @@ public abstract class AmountInput {
 
         @Override
         protected void onViewAttached() {
-            textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             codeLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
@@ -255,7 +254,6 @@ public abstract class AmountInput {
 
         @Override
         protected void onViewDetached() {
-            textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
             codeLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);

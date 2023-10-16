@@ -32,7 +32,16 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -50,7 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CLASS_ERROR;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -75,10 +83,6 @@ public class AmountComponent {
 
     public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
         return controller.getQuoteSideAmount();
-    }
-
-    public BooleanProperty areAmountsValid() {
-        return controller.model.areAmountsValid;
     }
 
     public void setBaseSideAmount(Monetary value) {
@@ -131,7 +135,7 @@ public class AmountComponent {
         private final ChangeListener<Number> sliderListener;
         private Subscription baseAmountFromModelPin, baseAmountFromCompPin,
                 quoteAmountFromCompPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin,
-                areAmountsValidPin, baseSideAmountValidPin, quoteSideAmountValidPin;
+                baseSideAmountValidPin, quoteSideAmountValidPin;
 
         private Controller(ServiceProvider serviceProvider,
                            boolean useQuoteCurrencyForMinMaxRange) {
@@ -330,21 +334,16 @@ public class AmountComponent {
             maxRangeCustomValuePin = EasyBind.subscribe(model.getMaxRangeMonetary(),
                     value -> applyInitialRangeValues());
 
-            baseSideAmountValidPin = subscribeToAmountValidity(baseSideAmountInput);
-            quoteSideAmountValidPin = subscribeToAmountValidity(quoteSideAmountInput);
-            var binding = EasyBind.combine(
-                    baseSideAmountInput.isAmountValidProperty(),
-                    quoteSideAmountInput.isAmountValidProperty(),
-                    (isBaseAmountValid, isQuoteAmountValid) -> isBaseAmountValid && isQuoteAmountValid);
-            areAmountsValidPin = EasyBind.subscribe(binding, model.areAmountsValid::set);
-
+            baseSideAmountValidPin = subscribeToAmountValidity(baseSideAmountInput, this::setBaseFromQuote);
+            quoteSideAmountValidPin = subscribeToAmountValidity(quoteSideAmountInput, this::setQuoteFromBase);
             model.getSliderValue().addListener(sliderListener);
         }
 
-        private Subscription subscribeToAmountValidity(AmountInput amountInput) {
+        private Subscription subscribeToAmountValidity(AmountInput amountInput, Runnable autocorrect) {
             return EasyBind.subscribe(amountInput.isAmountValidProperty(), isAmountValid -> {
-                if (amountInput.focusedProperty().get()) {
-                    model.isFocusedAmountValid.set(isAmountValid);
+                if(!amountInput.isAmountValidProperty().get()) {
+                    autocorrect.run();
+                    amountInput.isAmountValidProperty().set(true);
                 }
             });
         }
@@ -417,7 +416,6 @@ public class AmountComponent {
             priceFromCompPin.unsubscribe();
             minRangeCustomValuePin.unsubscribe();
             maxRangeCustomValuePin.unsubscribe();
-            areAmountsValidPin.unsubscribe();
             baseSideAmountValidPin.unsubscribe();
             quoteSideAmountValidPin.unsubscribe();
         }
@@ -460,8 +458,6 @@ public class AmountComponent {
 
         private final DoubleProperty sliderValue = new SimpleDoubleProperty();
         private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
-        private final BooleanProperty areAmountsValid = new SimpleBooleanProperty(true);
-        private final BooleanProperty isFocusedAmountValid = new SimpleBooleanProperty(true);
 
         @Setter
         private ObjectProperty<Monetary> minRangeMonetary = new SimpleObjectProperty<>(MIN_RANGE_BASE_SIDE_VALUE);
@@ -495,8 +491,6 @@ public class AmountComponent {
             sliderFocus.set(false);
             market = MarketRepository.getDefault();
             direction = Direction.BUY;
-            areAmountsValid.set(true);
-            isFocusedAmountValid.set(true);
         }
     }
 
@@ -509,7 +503,7 @@ public class AmountComponent {
         private final Region selectionLine;
         private final SmallAmountInput baseAmount;
         private final BigAmountInput quoteAmount;
-        private Subscription baseAmountFocusPin, quoteAmountFocusPin, isFocusedAmountValidPin;
+        private Subscription baseAmountFocusPin, quoteAmountFocusPin;
 
         private View(Model model, AmountComponent.Controller controller, SmallAmountInput baseAmount, BigAmountInput quoteAmount) {
             super(new VBox(10), model, controller);
@@ -574,10 +568,9 @@ public class AmountComponent {
             UIScheduler.run(() -> {
                 quoteAmount.requestFocus();
                 baseAmountFocusPin = EasyBind.subscribe(baseAmount.focusedProperty(),
-                        focus -> onInputTextFieldFocus(quoteAmount.focusedProperty(), focus, baseAmount.isAmountValidProperty()));
+                        focus -> onInputTextFieldFocus(quoteAmount.focusedProperty(), focus));
                 quoteAmountFocusPin = EasyBind.subscribe(quoteAmount.focusedProperty(),
-                        focus -> onInputTextFieldFocus(baseAmount.focusedProperty(), focus, quoteAmount.isAmountValidProperty()));
-                isFocusedAmountValidPin = EasyBind.subscribe(model.isFocusedAmountValid, this::updateSelectionLine);
+                        focus -> onInputTextFieldFocus(baseAmount.focusedProperty(), focus));
             }).after(700);
 
             slider.valueProperty().bindBidirectional(model.getSliderValue());
@@ -602,15 +595,13 @@ public class AmountComponent {
             if (quoteAmountFocusPin != null) {
                 quoteAmountFocusPin.unsubscribe();
             }
-            if (isFocusedAmountValidPin != null) {
-                isFocusedAmountValidPin.unsubscribe();
-            }
             slider.valueProperty().unbindBidirectional(model.getSliderValue());
             model.getSliderFocus().unbind();
             description.textProperty().unbind();
             minRangeValue.textProperty().unbind();
             maxRangeValue.textProperty().unbind();
-
+            baseAmount.isAmountValidProperty().set(true);
+            quoteAmount.isAmountValidProperty().set(true);
             Parent node = root;
             while (node.getParent() != null) {
                 node.setOnMousePressed(null);
@@ -618,21 +609,16 @@ public class AmountComponent {
             }
         }
 
-        private void onInputTextFieldFocus(ReadOnlyBooleanProperty other, boolean focus, BooleanProperty isAmountValid) {
+        private void onInputTextFieldFocus(ReadOnlyBooleanProperty other, boolean focus) {
             if (focus) {
                 selectionLine.setPrefWidth(0);
                 selectionLine.setOpacity(1);
-                model.isFocusedAmountValid.set(isAmountValid.getValue());
                 Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH);
             } else if (!other.get()) {
                 // If switching between the 2 fields we want to avoid to get the fadeout called that's why
                 // we do the check with !other.get()  
                 Transitions.fadeOut(selectionLine, 200);
             }
-        }
-
-        private void updateSelectionLine(boolean isAmountValid) {
-            selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isAmountValid);
         }
     }
 }
