@@ -19,8 +19,6 @@ package bisq.desktop.main.content;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class ContentModel extends NavigationModel {
     private final boolean isWalletEnabled;
-    private final BooleanProperty isNotificationVisible = new SimpleBooleanProperty();
 
     public ContentModel(boolean isWalletEnabled) {
         this.isWalletEnabled = isWalletEnabled;

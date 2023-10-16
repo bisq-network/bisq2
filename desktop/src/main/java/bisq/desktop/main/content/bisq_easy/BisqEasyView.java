@@ -19,13 +19,12 @@ package bisq.desktop.main.content.bisq_easy;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
-
+public class BisqEasyView extends ContentTabView<BisqEasyModel, BisqEasyController> {
     public BisqEasyView(BisqEasyModel model, BisqEasyController controller) {
         super(model, controller);
 
@@ -34,13 +33,5 @@ public class BisqEasyView extends TabView<BisqEasyModel, BisqEasyController> {
         TabButton openTrades = addTab(Res.get("bisqEasy.openTrades"), NavigationTarget.BISQ_EASY_OPEN_TRADES);
         openTrades.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
         addTab(Res.get("bisqEasy.privateChat"), NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
     }
 }

@@ -18,11 +18,11 @@
 package bisq.desktop.main.content.user;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.main.content.ContentTabModel;
 import lombok.Getter;
 
 @Getter
-public class UserModel extends TabModel {
+public class UserModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.USER_PROFILE;

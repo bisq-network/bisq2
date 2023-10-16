@@ -19,7 +19,7 @@ package bisq.desktop.main.content.authorized_role;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.main.content.ContentTabModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -27,7 +27,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class AuthorizedRoleModel extends TabModel {
+public class AuthorizedRoleModel extends ContentTabModel {
     private final List<BondedRoleType> bondedRoleTypes;
     private final ObservableList<BondedRoleType> authorizedBondedRoles = FXCollections.observableArrayList();
 

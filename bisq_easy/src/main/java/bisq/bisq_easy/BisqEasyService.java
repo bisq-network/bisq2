@@ -19,9 +19,7 @@ package bisq.bisq_easy;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
-import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -42,14 +40,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
 public class BisqEasyService implements Service {
-
     private final PersistenceService persistenceService;
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -66,6 +61,7 @@ public class BisqEasyService implements Service {
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -98,6 +94,8 @@ public class BisqEasyService implements Service {
         this.notificationsService = notificationsService;
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
+
+        bisqEasyNotificationsService = new BisqEasyNotificationsService(notificationsService);
     }
 
 
@@ -107,12 +105,12 @@ public class BisqEasyService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return CompletableFuture.completedFuture(true);
+        return bisqEasyNotificationsService.initialize();
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return CompletableFuture.completedFuture(true);
+        return bisqEasyNotificationsService.shutdown();
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {
@@ -125,12 +123,5 @@ public class BisqEasyService implements Service {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }
         return userIdentityService.deleteUserIdentity(userIdentity);
-    }
-
-    public Set<String> getTradeIdsOfNotifications() {
-        return notificationsService.getNotConsumedNotificationIds().stream()
-                .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                .collect(Collectors.toSet());
     }
 }

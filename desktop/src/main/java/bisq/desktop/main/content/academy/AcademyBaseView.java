@@ -54,7 +54,7 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));
         root.getChildren().addAll(headline, subHeadline);
-        root.setPadding(new Insets(20, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
     }
 
     protected Label addHeadlineLabel(String headlineKey) {

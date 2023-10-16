@@ -33,21 +33,28 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class DashboardView extends View<ScrollPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
+    private static final Insets DEFAULT_PADDING = new Insets(30, 40, 40, 40);
+    private static final Insets NOTIFICATION_PADDING = new Insets(10, 40, 40, 40);
+
     private final Button tradeProtocols, learnMore;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
+    private final GridPane gridPane;
+    private Subscription isNotificationVisiblePin;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new ScrollPane(), model, controller);
 
-        GridPane container = new GridPane();
+        gridPane = new GridPane();
 
-        container.setHgap(PADDING);
-        container.setVgap(PADDING);
-        GridPaneUtil.setGridPaneTwoColumnsConstraints(container);
+        gridPane.setHgap(PADDING);
+        gridPane.setVgap(PADDING);
+        GridPaneUtil.setGridPaneTwoColumnsConstraints(gridPane);
 
         //First row
         Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
@@ -66,18 +73,18 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
-        container.add(hBox, 0, 0, 2, 1);
+        gridPane.add(hBox, 0, 0, 2, 1);
 
         //Second row
         VBox firstBox = getBigWidgetBox();
         VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
         VBox.setVgrow(firstBox, Priority.NEVER);
-        container.add(firstBox, 0, 1, 2, 1);
+        gridPane.add(firstBox, 0, 1, 2, 1);
 
         //Third row
         Insets gridPaneInsets = new Insets(0, 0, -20, 0);
-        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
-        container.add(gridPane, 0, 2, 2, 1);
+        GridPane subGridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
+        this.gridPane.add(subGridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-box-1";
         String headlineLabelStyleClass = "bisq-text-headline-2";
@@ -89,7 +96,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         Insets buttonInsets = new Insets(10, 48, 44, 48);
 
         tradeProtocols = new Button(Res.get("dashboard.second.button"));
-        GridPaneUtil.fillColumn(gridPane,
+        GridPaneUtil.fillColumn(subGridPane,
                 0,
                 tradeProtocols,
                 buttonStyleClass,
@@ -107,7 +114,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 groupInsets);
 
         learnMore = new Button(Res.get("dashboard.third.button"));
-        GridPaneUtil.fillColumn(gridPane,
+        GridPaneUtil.fillColumn(subGridPane,
                 1,
                 learnMore,
                 buttonStyleClass,
@@ -124,10 +131,9 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 groupPaneStyleClass,
                 groupInsets);
 
-        container.setPadding(new Insets(40));
         root.setFitToWidth(true);
         root.setFitToHeight(true);
-        root.setContent(container);
+        root.setContent(this.gridPane);
     }
 
     @Override
@@ -136,6 +142,9 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         marketCodeLabel.textProperty().bind(model.getMarketCode());
         offersOnlineLabel.textProperty().bind(model.getOffersOnline());
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
+
+        isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible ->
+                gridPane.setPadding(visible ? NOTIFICATION_PADDING : DEFAULT_PADDING));
 
         tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
         learnMore.setOnAction(e -> controller.onLearn());
@@ -147,6 +156,8 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         marketCodeLabel.textProperty().unbind();
         offersOnlineLabel.textProperty().unbind();
         activeUsersLabel.textProperty().unbind();
+
+        isNotificationVisiblePin.unsubscribe();
 
         tradeProtocols.setOnAction(null);
         learnMore.setOnAction(null);

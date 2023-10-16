@@ -358,44 +358,29 @@
 
 .titled-pane {
     -fx-background-color: null;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-label-padding: -30 0 0 0;
+    -fx-border-color: null;
 }
 
 .titled-pane:focused {
 }
 
-.titled-pane > .title {
-    -fx-background-color: null;
-    -fx-border-color: null;
-    -fx-font-size: 1.25em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-pref-height: 50;
-}
-
-.titled-pane:focused > .title > .arrow-button > .arrow {
-}
-
 .titled-pane > .title > .arrow-button {
     -fx-background-color: null;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0;
-    -fx-padding: 0.0em 0.583em 0.0em 0.0em; /* 0 7 0 0 */
+    -fx-padding: 0 10 0 -20;
 }
 
 .titled-pane > .title > .arrow-button > .arrow {
     -fx-background-color: -bisq-white;
-    -fx-background-insets: 1 0 -1 0, 0;
-    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+    -fx-background-insets: 2.5;
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";
 }
 
-.titled-pane > .title:hover {
-    -fx-color: -fx-hover-base;
+.titled-pane:focused > .title > .arrow-button > .arrow {
+    -fx-background-color: -bisq-white;
+    -fx-effect: null;
 }
 
-.titled-pane > *.content {
-    -fx-padding: 0 0 -10 0;
+.titled-pane > .title:hover {
 }
 
 .titled-pane > .content > .scroll-pane > .scroll-bar {
@@ -408,26 +393,15 @@
  *                                                                             *
  ******************************************************************************/
 
-.accordion > .titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-grey-dimmed;
-    -fx-background-insets: -1, 0;
-}
-
-
 .accordion > .titled-pane > .title {
-    -fx-background-color: -bisq-content-bg-grey;
-    -fx-background-insets: 0, 1, 2;
-    -fx-background-radius: 3 3 0 0, 2 2 0 0, 1 1 0 0;
-    -fx-padding: 0.3333em 0.75em 0.3333em 0.75em; /* 4 9 4 9 */
+    -fx-background-color: null;
+    -fx-border-color: null;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-font-size: 2.3em;
 }
 
-.accordion > .titled-pane > .title {
-    -fx-font-size: 1em;
-}
-
-.accordion > .titled-pane {
-    -fx-text-fill: -fx-mid-text-color;
-}
 
 
 /*******************************************************************************
@@ -522,10 +496,6 @@
 }
 
 .tab-view-line {
-    -fx-background-color: -bisq-dark-grey;
-}
-
-.tab-view-line-light {
     -fx-background-color: -bisq-grey-20;
 }
 

@@ -18,11 +18,10 @@
 package bisq.desktop.main.content.wallet;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 
-public class WalletView extends TabView<WalletModel, WalletController> {
-
+public class WalletView extends ContentTabView<WalletModel, WalletController> {
     public WalletView(WalletModel model, WalletController controller) {
         super(model, controller);
 
@@ -31,13 +30,5 @@ public class WalletView extends TabView<WalletModel, WalletController> {
         addTab(Res.get("wallet.receive"), NavigationTarget.WALLET_RECEIVE);
         addTab(Res.get("wallet.txs"), NavigationTarget.WALLET_TXS);
         addTab(Res.get("wallet.settings"), NavigationTarget.WALLET_SETTINGS);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
     }
 }

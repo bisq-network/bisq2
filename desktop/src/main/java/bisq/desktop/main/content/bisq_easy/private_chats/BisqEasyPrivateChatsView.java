@@ -137,7 +137,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(20, 40, 40, 40));
+        containerHBox.setPadding(new Insets(0, 40, 0, 40));
 
         Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
         VBox.setVgrow(containerHBox, Priority.ALWAYS);

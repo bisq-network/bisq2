@@ -20,7 +20,7 @@ package bisq.desktop.main.content.settings;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.settings.network.NetworkInfoController;
 import bisq.desktop.main.content.settings.preferences.PreferencesController;
 import bisq.desktop.main.content.settings.utils.UtilsController;
@@ -30,25 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SettingsController extends TabController<SettingsModel> {
-    private final ServiceProvider serviceProvider;
+public class SettingsController extends ContentTabController<SettingsModel> {
     @Getter
     private final SettingsView view;
 
     public SettingsController(ServiceProvider serviceProvider) {
-        super(new SettingsModel(), NavigationTarget.SETTINGS);
-
-        this.serviceProvider = serviceProvider;
+        super(new SettingsModel(), NavigationTarget.SETTINGS, serviceProvider);
 
         view = new SettingsView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {

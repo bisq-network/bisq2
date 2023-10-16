@@ -41,7 +41,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
     public UtilsView(UtilsModel model, UtilsController controller) {
         super(new VBox(50), model, controller);
 
-        root.setPadding(new Insets(20, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         Label backupHeadline = new Label(Res.get("settings.utils.backup.headline"));
@@ -83,7 +83,6 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         VBox resourcesBox = new VBox(5, webpage, dao, sourceCode, community, contribute);
 
         Insets value = new Insets(0, 5, 0, 5);
-        VBox.setMargin(backupHeadline, new Insets(-5, 0, 0, 0));
         VBox.setMargin(backupBox, value);
         VBox.setMargin(localDataBox, value);
         VBox.setMargin(rulesBox, value);

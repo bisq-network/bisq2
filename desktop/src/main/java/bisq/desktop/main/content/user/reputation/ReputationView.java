@@ -87,7 +87,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         tableView.setMinHeight(200);
         configTableView();
 
-        VBox.setMargin(vBox, new Insets(30, 0, 20, 0));
+        VBox.setMargin(vBox, new Insets(0, 0, 20, 0));
         VBox.setVgrow(vBox, Priority.SOMETIMES);
         VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);

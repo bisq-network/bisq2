@@ -18,11 +18,10 @@
 package bisq.desktop.main.content.user;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 
-public class UserView extends TabView<UserModel, UserController> {
-
+public class UserView extends ContentTabView<UserModel, UserController> {
     public UserView(UserModel model, UserController controller) {
         super(model, controller);
 
@@ -32,13 +31,5 @@ public class UserView extends TabView<UserModel, UserController> {
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
         addTab(Res.get("user.nodes"), NavigationTarget.NODES);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
     }
 }

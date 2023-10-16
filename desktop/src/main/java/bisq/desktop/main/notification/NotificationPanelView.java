@@ -101,6 +101,7 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
                 });
             } else {
                 root.setTranslateX(0);
+                root.setTranslateY(0);
                 slideOutTopTimeline = Transitions.slideAndFadeOutTop(root, Transitions.DEFAULT_DURATION / 2, () -> {
                     root.setManaged(false);
                     root.setVisible(false);

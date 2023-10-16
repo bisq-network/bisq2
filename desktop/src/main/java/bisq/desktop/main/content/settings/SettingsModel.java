@@ -18,13 +18,9 @@
 package bisq.desktop.main.content.settings;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.main.content.ContentTabModel;
 
-public class SettingsModel extends TabModel {
-
-    public SettingsModel() {
-    }
-
+public class SettingsModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.PREFERENCES;

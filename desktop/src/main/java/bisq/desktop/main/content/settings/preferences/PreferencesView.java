@@ -54,7 +54,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
 
-        root.setPadding(new Insets(20, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         // Language
@@ -177,7 +177,6 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
 
         Insets insets = new Insets(0, 5, 0, 5);
-        VBox.setMargin(languageSelectionHeadline, new Insets(-5, 0, 0, 0));
         VBox.setMargin(languageSelection, insets);
         VBox.setMargin(supportedLanguageGridPane, insets);
         VBox.setMargin(notificationsVBox, insets);

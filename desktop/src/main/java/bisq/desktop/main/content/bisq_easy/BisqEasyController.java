@@ -24,7 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
@@ -36,17 +36,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class BisqEasyController extends TabController<BisqEasyModel> {
-    private final ServiceProvider serviceProvider;
+public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     @Getter
     private final BisqEasyView view;
     private final NotificationsService notificationsService;
     private final ChatNotificationService chatNotificationService;
 
     public BisqEasyController(ServiceProvider serviceProvider) {
-        super(new BisqEasyModel(), NavigationTarget.BISQ_EASY);
+        super(new BisqEasyModel(), NavigationTarget.BISQ_EASY, serviceProvider);
 
-        this.serviceProvider = serviceProvider;
         notificationsService = serviceProvider.getNotificationsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
 
@@ -55,11 +53,15 @@ public class BisqEasyController extends TabController<BisqEasyModel> {
 
     @Override
     public void onActivate() {
+        super.onActivate();
+
         notificationsService.subscribe(this::updateNumNotifications);
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
+
         notificationsService.unsubscribe(this::updateNumNotifications);
     }
 

@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.dashboard;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
@@ -28,4 +30,5 @@ public class DashboardModel implements Model {
     private final StringProperty marketCode = new SimpleStringProperty();
     private final StringProperty offersOnline = new SimpleStringProperty();
     private final StringProperty activeUsers = new SimpleStringProperty();
+    private final BooleanProperty isNotificationVisible = new SimpleBooleanProperty();
 }

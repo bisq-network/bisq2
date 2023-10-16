@@ -21,7 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class AuthorizedRoleView extends TabView<AuthorizedRoleModel, AuthorizedRoleController> {
-
+public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, AuthorizedRoleController> {
     private final Map<BondedRoleType, TabButton> tabButtonByBondedRoleType = new HashMap<>();
     private final ListChangeListener<BondedRoleType> listener;
 
@@ -49,12 +48,16 @@ public class AuthorizedRoleView extends TabView<AuthorizedRoleModel, AuthorizedR
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
+
         model.getAuthorizedBondedRoles().addListener(listener);
         updateVisibility();
     }
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
+
         model.getAuthorizedBondedRoles().removeListener(listener);
     }
 

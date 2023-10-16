@@ -25,7 +25,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.desktop.main.content.authorized_role.mediator.MediatorController;
 import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
@@ -41,8 +41,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AuthorizedRoleController extends TabController<AuthorizedRoleModel> {
-    private final ServiceProvider serviceProvider;
+public class AuthorizedRoleController extends ContentTabController<AuthorizedRoleModel> {
     @Getter
     private final AuthorizedRoleView view;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -50,9 +49,8 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
     private Pin bondedRolesPin, selectedUserIdentityPin;
 
     public AuthorizedRoleController(ServiceProvider serviceProvider) {
-        super(new AuthorizedRoleModel(List.of(BondedRoleType.values())), NavigationTarget.AUTHORIZED_ROLE);
+        super(new AuthorizedRoleModel(List.of(BondedRoleType.values())), NavigationTarget.AUTHORIZED_ROLE, serviceProvider);
 
-        this.serviceProvider = serviceProvider;
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         view = new AuthorizedRoleView(model, this);
@@ -62,12 +60,16 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
 
     @Override
     public void onActivate() {
+        super.onActivate();
+
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
+
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
     }

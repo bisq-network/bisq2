@@ -18,24 +18,15 @@
 package bisq.desktop.main.content.settings;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 
-public class SettingsView extends TabView<SettingsModel, SettingsController> {
-
+public class SettingsView extends ContentTabView<SettingsModel, SettingsController> {
     public SettingsView(SettingsModel model, SettingsController controller) {
         super(model, controller);
 
         addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
         addTab(Res.get("settings.utils"), NavigationTarget.UTILS);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
     }
 }

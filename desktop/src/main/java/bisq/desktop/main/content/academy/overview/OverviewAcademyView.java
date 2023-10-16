@@ -38,7 +38,7 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
     public OverviewAcademyView(OverviewAcademyModel model, OverviewAcademyController controller) {
         super(new GridPane(), model, controller);
 
-        root.setPadding(new Insets(20, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.setHgap(20);
         root.setVgap(PADDING);
         root.setCursor(Cursor.HAND);
