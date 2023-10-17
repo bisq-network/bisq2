@@ -46,14 +46,14 @@ public final class Address implements Proto, Comparable<Address> {
             this.port = -1;
         }
 
-        NetworkDataValidation.validateText(host, 500);
+        NetworkDataValidation.validateText(host, 700);
     }
 
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
         this.port = port;
 
-        NetworkDataValidation.validateText(host, 500);
+        NetworkDataValidation.validateText(host, 700);
     }
 
     public Address(OnionAddress onionAddress) {
