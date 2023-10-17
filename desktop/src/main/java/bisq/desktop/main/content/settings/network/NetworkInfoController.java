@@ -20,7 +20,7 @@ package bisq.desktop.main.content.settings.network;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.settings.network.transport.TransportTypeController;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import javafx.scene.Node;
 import lombok.Getter;
 
@@ -45,11 +45,11 @@ public class NetworkInfoController implements Controller {
         model = new NetworkInfoModel(serviceProvider);
 
 
-        Set<Transport.Type> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
+        Set<Type> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
         view = new NetworkInfoView(model, this,
-                getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.CLEAR),
-                getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.TOR),
-                getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.I2P));
+                getTransportTypeViewRoot(supportedTransportTypes, Type.CLEAR),
+                getTransportTypeViewRoot(supportedTransportTypes, Type.TOR),
+                getTransportTypeViewRoot(supportedTransportTypes, Type.I2P));
     }
 
     @Override
@@ -60,7 +60,7 @@ public class NetworkInfoController implements Controller {
     public void onDeactivate() {
     }
 
-    private Optional<Node> getTransportTypeViewRoot(Set<Transport.Type> supportedTransportTypes, Transport.Type type) {
+    private Optional<Node> getTransportTypeViewRoot(Set<Type> supportedTransportTypes, Type type) {
         if (supportedTransportTypes.contains(type)) {
             return Optional.of(new TransportTypeController(serviceProvider, type)).map(e -> e.getView().getRoot());
         } else {

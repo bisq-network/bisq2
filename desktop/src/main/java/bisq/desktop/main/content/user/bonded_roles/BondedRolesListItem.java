@@ -23,7 +23,7 @@ import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import com.google.common.base.Joiner;
@@ -64,7 +64,7 @@ public class BondedRolesListItem implements TableItem {
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         roleTypeString = bondedRoleType.getDisplayString();
 
-        Map<Transport.Type, Address> addressByNetworkType = authorizedBondedRoleData.getAddressByNetworkType();
+        Map<Type, Address> addressByNetworkType = authorizedBondedRoleData.getAddressByNetworkType();
         List<String> list = addressByNetworkType.entrySet().stream()
                 .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
                 .collect(Collectors.toList());

@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -110,7 +111,7 @@ public class ServiceNode {
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
                        Set<Address> seedNodeAddresses,
-                       Transport.Type transportType) {
+                       Type transportType) {
         BanList banList = new BanList();
         transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transport);

@@ -22,7 +22,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;
@@ -39,11 +39,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ProtoBufMessageLengthTests {
 
     private final Path tmpDir = FileUtils.createTempDir();
-    private final List<Transport.Type> supportedTransportTypes = new ArrayList<>(1);
+    private final List<Type> supportedTransportTypes = new ArrayList<>(1);
     private final AuthorizationService authorizationService;
 
     public ProtoBufMessageLengthTests() throws IOException {
-        supportedTransportTypes.add(Transport.Type.CLEAR);
+        supportedTransportTypes.add(Type.CLEAR);
         this.authorizationService = createAuthorizationService();
     }
 

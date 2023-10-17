@@ -25,7 +25,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,8 +55,8 @@ public class ExplorerService {
             //todo move to conf
             return new Config(List.of(
                     //https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521
-                    new Provider("https://mempool.emzy.de/", Transport.Type.CLEAR),
-                    new Provider("http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/", Transport.Type.TOR)
+                    new Provider("https://mempool.emzy.de/", Type.CLEAR),
+                    new Provider("http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/", Type.TOR)
 
                    /* new BlockchainExplorerService.Provider("https://mempool.space/tx/", "https://mempool.space/address/", "mempool.space (@wiz)", Transport.Type.CLEAR),
                     new BlockchainExplorerService.Provider("http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/tx/", "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/address/", "mempool.space Tor V3", Transport.Type.TOR),
@@ -100,13 +100,13 @@ public class ExplorerService {
         private final String apiPath;
         private final String txPath;
         private final String addressPath;
-        private final Transport.Type transportType;
+        private final Type transportType;
 
-        public Provider(String baseUrl, Transport.Type transportType) {
+        public Provider(String baseUrl, Type transportType) {
             this(baseUrl, "api/", "tx/", "address/", transportType);
         }
 
-        public Provider(String baseUrl, String apiPath, String txPath, String addressPath, Transport.Type transportType) {
+        public Provider(String baseUrl, String apiPath, String txPath, String addressPath, Type transportType) {
             this.baseUrl = baseUrl;
             this.apiPath = apiPath;
             this.txPath = txPath;

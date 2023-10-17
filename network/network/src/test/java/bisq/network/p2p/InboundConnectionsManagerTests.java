@@ -23,7 +23,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
@@ -41,7 +41,10 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -50,10 +53,10 @@ import static org.mockito.Mockito.mock;
 public class InboundConnectionsManagerTests {
     private final Path tmpDir = FileUtils.createTempDir();
     private final AuthorizationService authorizationService = createAuthorizationService();
-    private final List<Transport.Type> supportedTransportTypes = new ArrayList<>(1);
+    private final List<Type> supportedTransportTypes = new ArrayList<>(1);
 
     public InboundConnectionsManagerTests() throws IOException {
-        supportedTransportTypes.add(Transport.Type.CLEAR);
+        supportedTransportTypes.add(Type.CLEAR);
     }
 
     @Test
@@ -228,8 +231,8 @@ public class InboundConnectionsManagerTests {
     }
 
     private bisq.network.protobuf.NetworkEnvelope createPoWRequest(Address myAddress, Address peerAddress) {
-        List<Transport.Type> supportedTransportTypes = new ArrayList<>(1);
-        supportedTransportTypes.add(Transport.Type.CLEAR);
+        List<Type> supportedTransportTypes = new ArrayList<>(1);
+        supportedTransportTypes.add(Type.CLEAR);
         Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
 
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);

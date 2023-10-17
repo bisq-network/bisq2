@@ -23,7 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -52,14 +52,14 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
     private final String signatureBase64;
     private final NetworkId networkId;
     private final boolean isCancellationRequest;
-    private final Map<Transport.Type, Address> addressByNetworkType;
+    private final Map<Type, Address> addressByNetworkType;
 
     public BondedRoleRegistrationRequest(String profileId,
                                          String authorizedPublicKey,
                                          BondedRoleType bondedRoleType,
                                          String bondUserName,
                                          String signatureBase64,
-                                         Map<Transport.Type, Address> addressByNetworkType,
+                                         Map<Type, Address> addressByNetworkType,
                                          NetworkId networkId,
                                          boolean isCancellationRequest) {
         this.profileId = profileId;

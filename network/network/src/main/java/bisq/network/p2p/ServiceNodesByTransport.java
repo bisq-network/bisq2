@@ -29,7 +29,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -61,14 +61,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class ServiceNodesByTransport {
     @Getter
-    private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
-    private final Set<Transport.Type> supportedTransportTypes;
+    private final Map<Type, ServiceNode> map = new ConcurrentHashMap<>();
+    private final Set<Type> supportedTransportTypes;
 
-    public ServiceNodesByTransport(Map<Transport.Type, TransportConfig> configByTransportType,
-                                   Set<Transport.Type> supportedTransportTypes,
+    public ServiceNodesByTransport(Map<Type, TransportConfig> configByTransportType,
+                                   Set<Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
-                                   Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                                   Map<Transport.Type, Set<Address>> seedAddressesByTransport,
+                                   Map<Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
+                                   Map<Type, Set<Address>> seedAddressesByTransport,
                                    Optional<DataService> dataService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
@@ -112,26 +112,26 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeNode(Transport.Type type, String nodeId, int portByTransport) {
+    public void initializeNode(Type type, String nodeId, int portByTransport) {
         map.get(type).initializeNode(nodeId, portByTransport);
     }
 
-    public boolean isInitialized(Transport.Type type, String nodeId) {
+    public boolean isInitialized(Type type, String nodeId) {
         return map.get(type).isNodeInitialized(nodeId);
     }
 
-    public void initializePeerGroup(Transport.Type type) {
+    public void initializePeerGroup(Type type) {
         map.get(type).initializePeerGroup();
     }
 
-    public void addSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
+    public void addSeedNodeAddressByTransport(Map<Type, Address> seedNodeAddressesByTransport) {
         supportedTransportTypes.forEach(transportType -> {
             Address seedNodeAddress = seedNodeAddressesByTransport.get(transportType);
             map.get(transportType).addSeedNodeAddress(seedNodeAddress);
         });
     }
 
-    public void removeSeedNodeAddressByTransport(Map<Transport.Type, Address> seedNodeAddressesByTransport) {
+    public void removeSeedNodeAddressByTransport(Map<Type, Address> seedNodeAddressesByTransport) {
         supportedTransportTypes.forEach(transportType -> {
             Address seedNodeAddress = seedNodeAddressesByTransport.get(transportType);
             map.get(transportType).removeSeedNodeAddress(seedNodeAddress);
@@ -162,11 +162,11 @@ public class ServiceNodesByTransport {
         return resultsByType;
     }
 
-    public Map<Transport.Type, Connection> send(String senderNodeId,
-                                                NetworkMessage networkMessage,
-                                                Map<Transport.Type, Address> receiverAddressByNetworkType) {
+    public Map<Type, Connection> send(String senderNodeId,
+                                      NetworkMessage networkMessage,
+                                      Map<Type, Address> receiverAddressByNetworkType) {
         return receiverAddressByNetworkType.entrySet().stream().map(entry -> {
-                    Transport.Type transportType = entry.getKey();
+                    Type transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
                         return new Pair<>(transportType, map.get(transportType).send(senderNodeId, networkMessage, entry.getValue()));
                     } else {
@@ -203,7 +203,7 @@ public class ServiceNodesByTransport {
     }
 
     public Optional<Socks5Proxy> getSocksProxy() {
-        return findServiceNode(Transport.Type.TOR)
+        return findServiceNode(Type.TOR)
                 .flatMap(serviceNode -> {
                     try {
                         return serviceNode.getSocksProxy();
@@ -214,30 +214,30 @@ public class ServiceNodesByTransport {
                 });
     }
 
-    public Map<Transport.Type, Observable<Node.State>> getNodeStateByTransportType() {
+    public Map<Type, Observable<Node.State>> getNodeStateByTransportType() {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
     }
 
-    public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
+    public Optional<ServiceNode> findServiceNode(Type transport) {
         return Optional.ofNullable(map.get(transport));
     }
 
-    public Optional<Node> findNode(Transport.Type transport, String nodeId) {
+    public Optional<Node> findNode(Type transport, String nodeId) {
         return findServiceNode(transport)
                 .flatMap(serviceNode -> serviceNode.findNode(nodeId));
     }
 
-    public Map<Transport.Type, Map<String, Address>> getAddressesByNodeIdMapByTransportType() {
+    public Map<Type, Map<String, Address>> getAddressesByNodeIdMapByTransportType() {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getAddressesByNodeId()));
     }
 
-    public Optional<Map<String, Address>> findAddressesByNodeId(Transport.Type transport) {
+    public Optional<Map<String, Address>> findAddressesByNodeId(Type transport) {
         return Optional.ofNullable(getAddressesByNodeIdMapByTransportType().get(transport));
     }
 
-    public Optional<Address> findAddress(Transport.Type transport, String nodeId) {
+    public Optional<Address> findAddress(Type transport, String nodeId) {
         return findAddressesByNodeId(transport)
                 .flatMap(addressesByNodeId -> Optional.ofNullable(addressesByNodeId.get(nodeId)));
     }

@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import lombok.extern.slf4j.Slf4j;
 
 // FIXME tests fail for unknown reasons (many changes in the code since test was written)
@@ -26,12 +26,12 @@ public class I2PNodesByIdIntegrationTest extends BaseNodesByIdTest {
 
     // @Test
     void test_messageRoundTrip() throws InterruptedException {
-        super.test_messageRoundTrip(getConfig(Transport.Type.I2P));
+        super.test_messageRoundTrip(getConfig(Type.I2P));
     }
 
     // @Test
     void test_initializeServer() throws InterruptedException {
-        super.test_initializeServer(getConfig(Transport.Type.I2P));
+        super.test_initializeServer(getConfig(Type.I2P));
     }
 
     @Override

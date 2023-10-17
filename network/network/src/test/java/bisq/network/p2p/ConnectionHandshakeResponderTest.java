@@ -22,7 +22,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
@@ -44,14 +44,14 @@ public class ConnectionHandshakeResponderTest {
 
     private final Path tmpDir = FileUtils.createTempDir();
     private final BanList banList = mock(BanList.class);
-    private final List<Transport.Type> supportedTransportTypes = new ArrayList<>(1);
+    private final List<Type> supportedTransportTypes = new ArrayList<>(1);
     private final Capability responderCapability;
     private final AuthorizationService authorizationService;
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = mock(NetworkEnvelopeSocketChannel.class);
     private final ConnectionHandshakeResponder handshakeResponder;
 
     public ConnectionHandshakeResponderTest() throws IOException {
-        supportedTransportTypes.add(Transport.Type.CLEAR);
+        supportedTransportTypes.add(Type.CLEAR);
         this.responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes);
         this.authorizationService = createAuthorizationService();
         this.handshakeResponder = new ConnectionHandshakeResponder(

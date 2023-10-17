@@ -15,27 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.transport;
 
-import bisq.network.p2p.node.transport.Type;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
+import bisq.network.p2p.node.Address;
 
-@Slf4j
-public class ClearNetNodesByIdIntegrationTest extends BaseNodesByIdTest {
+/**
+ * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
+ */
+public enum Type {
+    TOR,
+    I2P,
+    CLEAR;
 
-    @Test
-    void test_messageRoundTrip() throws InterruptedException {
-        super.test_messageRoundTrip(getConfig(Type.CLEAR));
-    }
-
-    @Test
-    void test_initializeServer() throws InterruptedException {
-        super.test_initializeServer(getConfig(Type.CLEAR));
-    }
-
-    @Override
-    protected long getTimeout() {
-        return 2;
+    public static Type from(Address address) {
+        if (address.isClearNetAddress()) {
+            return Type.CLEAR;
+        } else if (address.isTorAddress()) {
+            return Type.TOR;
+        } else if (address.isI2pAddress()) {
+            return Type.I2P;
+        } else {
+            throw new IllegalArgumentException("Could not resolve transportType from address " + address);
+        }
     }
 }

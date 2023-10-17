@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,9 +33,9 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 public final class Capability implements Proto {
     private final Address address;
-    private final List<Transport.Type> supportedTransportTypes;
+    private final List<Type> supportedTransportTypes;
 
-    public Capability(Address address, List<Transport.Type> supportedTransportTypes) {
+    public Capability(Address address, List<Type> supportedTransportTypes) {
         this.address = address;
         this.supportedTransportTypes = supportedTransportTypes;
         // We need to sort deterministically as the data is used in the proof of work check
@@ -52,8 +52,8 @@ public final class Capability implements Proto {
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {
-        List<Transport.Type> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
-                .map(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e))
+        List<Type> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
+                .map(e -> ProtobufUtils.enumFromProto(Type.class, e))
                 .collect(Collectors.toList());
         return new Capability(Address.fromProto(proto.getAddress()), supportedTransportTypes);
     }

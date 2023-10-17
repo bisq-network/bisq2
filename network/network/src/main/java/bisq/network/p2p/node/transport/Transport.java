@@ -32,28 +32,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface Transport {
-    /**
-     * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
-     */
-    enum Type {
-        TOR,
-        I2P,
-        CLEAR;
 
-        public static Type from(Address address) {
-            if (address.isClearNetAddress()) {
-                return Type.CLEAR;
-            } else if (address.isTorAddress()) {
-                return Type.TOR;
-            } else if (address.isI2pAddress()) {
-                return Type.I2P;
-            } else {
-                throw new IllegalArgumentException("Could not resolve transportType from address " + address);
-            }
-        }
-    }
-
-    static Transport create(Transport.Type transportType, TransportConfig config) {
+    static Transport create(Type transportType, TransportConfig config) {
         switch (transportType) {
             case TOR:
                 return new TorTransport(config);

@@ -20,7 +20,7 @@ package bisq.oracle_node_app;
 import bisq.common.util.FileUtils;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.Type;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +35,7 @@ public class OracleNodeApp {
         applicationService.readAllPersisted()
                 .thenCompose(result -> applicationService.initialize())
                 .whenComplete((result, throwable) -> {
-                    Map<Transport.Type, Address> addressByNetworkType = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
+                    Map<Type, Address> addressByNetworkType = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
                     String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
                     Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
                     try {

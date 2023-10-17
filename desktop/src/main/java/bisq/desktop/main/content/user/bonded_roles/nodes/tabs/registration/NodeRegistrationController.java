@@ -30,7 +30,6 @@ import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRoles
 import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRolesRegistrationModel;
 import bisq.desktop.main.content.user.bonded_roles.tabs.registration.BondedRolesRegistrationView;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.user.identity.UserIdentity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -121,11 +120,11 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
                 .or(getNodesRegistrationModel().getJsonValid().not()));
     }
 
-    private Map<Transport.Type, Address> addressByNetworkTypeFromJson(String json) {
+    private Map<bisq.network.p2p.node.transport.Type, Address> addressByNetworkTypeFromJson(String json) {
         try {
-            Type type = new TypeToken<HashMap<Transport.Type, Address>>() {
+            Type type = new TypeToken<HashMap<bisq.network.p2p.node.transport.Type, Address>>() {
             }.getType();
-            Map<Transport.Type, Address> map = new Gson().fromJson(json, type);
+            Map<bisq.network.p2p.node.transport.Type, Address> map = new Gson().fromJson(json, type);
             getNodesRegistrationModel().getJsonValid().set(true);
             return map;
         } catch (Exception e) {
