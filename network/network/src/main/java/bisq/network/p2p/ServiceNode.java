@@ -155,7 +155,7 @@ public class ServiceNode {
                 )
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((list, throwable) -> throwable == null && list.stream().allMatch(e -> e))
-                .thenCompose(result -> transport.shutdown().thenApply(nil -> true))
+                .thenCompose(result -> transport.shutdown())
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 

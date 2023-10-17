@@ -93,27 +93,36 @@ public class I2PTransport implements Transport {
         boolean isEmbeddedRouter;
         isEmbeddedRouter = isEmbeddedRouter();
 
-        if(isEmbeddedRouter) {
-                if(!I2pEmbeddedRouter.isInitialized()) {
-                    I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                            config.getInboundKBytesPerSecond(),
-                            config.getOutboundKBytesPerSecond(),
-                            config.getBandwidthSharePercentage(),
-                            config.isExtendedI2pLogging());
+        if (isEmbeddedRouter) {
+            if (!I2pEmbeddedRouter.isInitialized()) {
+                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
+                        config.getInboundKBytesPerSecond(),
+                        config.getOutboundKBytesPerSecond(),
+                        config.getBandwidthSharePercentage(),
+                        config.isExtendedI2pLogging());
+            }
+            while (!I2pEmbeddedRouter.isRouterRunning()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                while(!I2pEmbeddedRouter.isRouterRunning()){
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                i2pClient = getClient(isEmbeddedRouter);
-        }
-        else {
+            }
+            i2pClient = getClient(isEmbeddedRouter);
+        } else {
             i2pClient = getClient(isEmbeddedRouter);
         }
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        initializeCalled = false;
+        if (i2pClient == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL)
+                .thenApply(nil -> true);
     }
 
     private boolean isEmbeddedRouter() {
@@ -145,7 +154,7 @@ public class I2PTransport implements Transport {
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
-            if(!isEmbeddedRouter()) {
+            if (!isEmbeddedRouter()) {
                 i2pPort = config.getI2cpPort();
             }
             ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, config.getI2cpHost(), i2pPort);
@@ -178,15 +187,6 @@ public class I2PTransport implements Transport {
     @Override
     public boolean isPeerOnline(Address address) {
         throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
-    }
-
-    @Override
-    public CompletableFuture<Void> shutdown() {
-        initializeCalled = false;
-        if (i2pClient == null) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL);
     }
 
     @Override

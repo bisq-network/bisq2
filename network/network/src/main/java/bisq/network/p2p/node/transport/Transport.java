@@ -87,6 +87,8 @@ public interface Transport {
 
     CompletableFuture<Boolean> initialize();
 
+    CompletableFuture<Boolean> shutdown();
+
     ServerSocketResult getServerSocket(int port, String nodeId);
 
     Socket getSocket(Address address) throws IOException;
@@ -98,6 +100,4 @@ public interface Transport {
     Optional<Address> getServerAddress(String serverId);
 
     boolean isPeerOnline(Address address);
-
-    CompletableFuture<Void> shutdown();
 }

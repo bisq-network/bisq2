@@ -58,6 +58,13 @@ public class ClearNetTransport implements Transport {
     }
 
     @Override
+    public CompletableFuture<Boolean> shutdown() {
+        // Simulate delay
+        return CompletableFuture.supplyAsync(() -> true,
+                CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
+    }
+
+    @Override
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.info("Create serverSocket at port {}", port);
         try {
@@ -75,13 +82,6 @@ public class ClearNetTransport implements Transport {
     public Socket getSocket(Address address) throws IOException {
         log.debug("Create new Socket to {}", address);
         return new Socket(address.getHost(), address.getPort());
-    }
-
-    @Override
-    public CompletableFuture<Void> shutdown() {
-        // Simulate delay
-        return CompletableFuture.runAsync(() -> {
-        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
 
     @Override

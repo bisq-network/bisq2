@@ -38,6 +38,13 @@ public class TorTransport implements Transport {
     }
 
     @Override
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("Shutdown tor.");
+        torService.shutdown().join();
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         try {
             CompletableFuture<CreateOnionServiceResponse> completableFuture = torService.createOnionService(port, nodeId);
@@ -66,13 +73,6 @@ public class TorTransport implements Transport {
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
-    }
-
-    @Override
-    public CompletableFuture<Void> shutdown() {
-        log.info("Shutdown tor.");
-        torService.shutdown().join();
-        return CompletableFuture.completedFuture(null);
     }
 
     @Override
