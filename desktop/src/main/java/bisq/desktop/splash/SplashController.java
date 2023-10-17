@@ -21,78 +21,61 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
-import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.network.p2p.node.Node;
+import bisq.desktop.splash.temp.BootstrapStateDisplay;
+import bisq.i18n.Res;
+import bisq.network.NetworkService;
 import bisq.network.p2p.node.transport.TransportType;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-import org.fxmisc.easybind.monadic.MonadicBinding;
-
-import java.util.Map;
 
 @Slf4j
 public class SplashController implements Controller {
     private final SplashModel model;
     @Getter
     private final SplashView view;
-    private final ServiceProvider serviceProvider;
     private final Observable<State> applicationServiceState;
-    private Pin pinApplicationStatus;
-    private Pin pinClearNetStatus;
-    private Pin pinTorStatus;
-    private Pin pinI2pStatus;
-    private Subscription clearState;
-    private Subscription torState;
-    private Subscription i2pState;
+    private final NetworkService networkService;
+    private final ServiceProvider serviceProvider;
+    private Pin applicationServiceStatePin;
 
     public SplashController(Observable<State> applicationServiceState, ServiceProvider serviceProvider) {
         this.applicationServiceState = applicationServiceState;
         this.serviceProvider = serviceProvider;
+        networkService = serviceProvider.getNetworkService();
         model = new SplashModel();
         view = new SplashView(model, this);
     }
 
     @Override
     public void onActivate() {
-        pinApplicationStatus = FxBindings.bind(model.getApplicationState()).to(applicationServiceState);
+        applicationServiceStatePin = applicationServiceState.addObserver(state -> {
+            UIThread.run(() -> model.getApplicationServiceState().set(Res.get("splash.applicationServiceState." + state.name())));
+        });
 
-        Map<TransportType, Observable<Node.State>> map = serviceProvider.getNetworkService().getNodeStateByTransportType();
-        if (map.containsKey(TransportType.CLEAR)) {
-            pinClearNetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(map.get(TransportType.CLEAR));
+        if (networkService.getSupportedTransportTypes().contains(TransportType.CLEAR)) {
+            model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.CLEAR, serviceProvider));
+            networkService.getBootstrapInfoByTransportType().get(TransportType.CLEAR).getBootstrapProgress().addObserver(progress ->
+                    UIThread.run(() -> applyMaxProgress(progress)));
         }
-        if (map.containsKey(TransportType.TOR)) {
-            pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(map.get(TransportType.TOR));
+        if (networkService.getSupportedTransportTypes().contains(TransportType.TOR)) {
+            model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.TOR, serviceProvider));
+            networkService.getBootstrapInfoByTransportType().get(TransportType.TOR).getBootstrapProgress().addObserver(progress ->
+                    UIThread.run(() -> applyMaxProgress(progress)));
         }
-        if (map.containsKey(TransportType.I2P)) {
-            pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(map.get(TransportType.I2P));
+        if (networkService.getSupportedTransportTypes().contains(TransportType.I2P)) {
+            model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.I2P, serviceProvider));
+            networkService.getBootstrapInfoByTransportType().get(TransportType.I2P).getBootstrapProgress().addObserver(progress ->
+                    UIThread.run(() -> applyMaxProgress(progress)));
         }
-
-        clearState = createNetworkSubscription(model.getClearServiceNodeState(), model.getClearState());
-        torState = createNetworkSubscription(model.getTorServiceNodeState(), model.getTorState());
-        i2pState = createNetworkSubscription(model.getI2pServiceNodeState(), model.getI2pState());
     }
 
     @Override
     public void onDeactivate() {
-        pinApplicationStatus.unbind();
-        if (pinClearNetStatus != null) {
-            pinClearNetStatus.unbind();
-        }
-        if (pinTorStatus != null) {
-            pinTorStatus.unbind();
-        }
-        if (pinI2pStatus != null) {
-            pinI2pStatus.unbind();
-        }
-
-        clearState.unsubscribe();
-        torState.unsubscribe();
-        i2pState.unsubscribe();
+        applicationServiceStatePin.unbind();
+        model.getBootstrapStateDisplays().clear();
+        model.getProgress().set(0);
     }
 
     public void startAnimation() {
@@ -103,27 +86,9 @@ public class SplashController implements Controller {
         model.getProgress().set(0);
     }
 
-    private Subscription createNetworkSubscription(
-            ObjectProperty<Node.State> stateProperty,
-            StringProperty targetProperty) {
-        MonadicBinding<String> binding = EasyBind.map(stateProperty, this::getStatus);
-        return EasyBind.subscribe(binding, targetProperty::set);
-    }
-
-    private String getStatus(Node.State state) {
-        return state == null ? "" : String.format("%s%%", mapState(state));
-    }
-
-    private String mapState(Node.State state) {
-        switch (state) {
-            case NEW:
-                return "0";
-            case STARTING:
-                return "50";
-            case RUNNING:
-                return "75";
-            default:
-                return "";
+    private void applyMaxProgress(double progress) {
+        if (model.getProgress().get() < progress) {
+            model.getProgress().set(progress);
         }
     }
 }

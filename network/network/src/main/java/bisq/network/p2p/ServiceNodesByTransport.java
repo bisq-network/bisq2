@@ -29,6 +29,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -217,6 +218,12 @@ public class ServiceNodesByTransport {
     public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
+    }
+
+    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> entry.getValue().getTransportService().getBootstrapInfo()));
     }
 
     public Optional<ServiceNode> findServiceNode(TransportType transport) {

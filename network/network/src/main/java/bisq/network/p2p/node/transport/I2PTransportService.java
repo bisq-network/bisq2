@@ -67,7 +67,9 @@ public class I2PTransportService implements TransportService {
     private I2pClient i2pClient;
     private boolean initializeCalled;
     private String sessionId;
-
+    @Getter
+    private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
+    private int numSocketsCreated = 0;
     private I2PTransportService.Config config;
 
     public I2PTransportService(TransportConfig config) {
@@ -88,6 +90,9 @@ public class I2PTransportService implements TransportService {
         }
         initializeCalled = true;
         log.debug("Initialize");
+
+        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
+        bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
 
         //If embedded router, start it already ...
         boolean isEmbeddedRouter;
@@ -150,6 +155,11 @@ public class I2PTransportService implements TransportService {
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         try {
+            bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
+            // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
+            bootstrapInfo.getBootstrapProgress().set(0.25);
+            bootstrapInfo.getBootstrapDetails().set("Create I2P service for node ID '" + nodeId + "'");
+
             sessionId = nodeId;
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
@@ -161,6 +171,12 @@ public class I2PTransportService implements TransportService {
             String destination = i2pClient.getMyDestination(sessionId);
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
+
+            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
+            bootstrapInfo.getBootstrapProgress().set(0.5);
+            bootstrapInfo.getBootstrapDetails().set("My I2P destination: " + address);
+
+
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
             return new ServerSocketResult(nodeId, serverSocket, address);
         } catch (Exception exception) {
@@ -176,6 +192,10 @@ public class I2PTransportService implements TransportService {
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
             Socket socket = i2pClient.getSocket(address.getHost(), sessionId);
+            numSocketsCreated++;
+            bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
+            bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
+            bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peers");
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {

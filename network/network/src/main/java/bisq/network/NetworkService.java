@@ -31,6 +31,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -374,6 +375,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
         return serviceNodesByTransport.getNodeStateByTransportType();
+    }
+
+    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
+        return serviceNodesByTransport.getBootstrapInfoByTransportType();
     }
 
     public boolean isTransportTypeSupported(TransportType transportType) {
