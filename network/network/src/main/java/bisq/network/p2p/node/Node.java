@@ -28,7 +28,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.transport.ServerSocketResult;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -121,7 +121,7 @@ public class Node implements Connection.Handler {
     }
 
     private final BanList banList;
-    private final Transport transport;
+    private final TransportService transportService;
     private final AuthorizationService authorizationService;
     private final Config config;
     @Getter
@@ -142,9 +142,9 @@ public class Node implements Connection.Handler {
     @Getter
     public Observable<State> observableState = new Observable<>(State.NEW);
 
-    public Node(BanList banList, Config config, String nodeId, Transport transport) {
+    public Node(BanList banList, Config config, String nodeId, TransportService transportService) {
         this.banList = banList;
-        this.transport = transport;
+        this.transportService = transportService;
         transportType = config.getTransportType();
         authorizationService = config.getAuthorizationService();
         this.config = config;
@@ -203,7 +203,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen(int port) {
-        ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
@@ -337,7 +337,7 @@ public class Node implements Connection.Handler {
         }
         Socket socket;
         try {
-            socket = transport.getSocket(address); // Blocking call
+            socket = transportService.getSocket(address); // Blocking call
         } catch (IOException e) {
             handleException(e);
             throw new ConnectionException(e);
@@ -531,7 +531,7 @@ public class Node implements Connection.Handler {
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
-        return transport.getSocksProxy();
+        return transportService.getSocksProxy();
     }
 
     public void addListener(Listener listener) {

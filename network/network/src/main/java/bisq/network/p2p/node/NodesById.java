@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 
 import java.util.Collection;
@@ -51,14 +51,14 @@ public class NodesById implements Node.Listener {
     private final Map<String, Node> map = new ConcurrentHashMap<>();
     private final BanList banList;
     private final Node.Config nodeConfig;
-    private final Transport transport;
+    private final TransportService transportService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<Node.Listener> nodeListeners = new CopyOnWriteArraySet<>();
 
-    public NodesById(BanList banList, Node.Config nodeConfig, Transport transport) {
+    public NodesById(BanList banList, Node.Config nodeConfig, TransportService transportService) {
         this.banList = banList;
         this.nodeConfig = nodeConfig;
-        this.transport = transport;
+        this.transportService = transportService;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ public class NodesById implements Node.Listener {
     private Node getOrCreateNode(String nodeId) {
         return findNode(nodeId)
                 .orElseGet(() -> {
-                    Node node = new Node(banList, nodeConfig, nodeId, transport);
+                    Node node = new Node(banList, nodeConfig, nodeId, transportService);
                     map.put(nodeId, node);
                     node.addListener(this);
                     listeners.forEach(listener -> listener.onNodeAdded(node));

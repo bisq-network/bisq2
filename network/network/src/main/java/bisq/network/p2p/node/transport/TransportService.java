@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.transport;
 
+import bisq.common.application.Service;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -26,16 +27,16 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface Transport {
+public interface TransportService extends Service {
 
-    static Transport create(TransportType transportType, TransportConfig config) {
+    static TransportService create(TransportType transportType, TransportConfig config) {
         switch (transportType) {
             case TOR:
-                return new TorTransport(config);
+                return new TorTransportService(config);
             case I2P:
-                return new I2PTransport(config);
+                return new I2PTransportService(config);
             case CLEAR:
-                return new ClearNetTransport(config);
+                return new ClearNetTransportService(config);
             default:
                 throw new RuntimeException("Unhandled transportType");
         }

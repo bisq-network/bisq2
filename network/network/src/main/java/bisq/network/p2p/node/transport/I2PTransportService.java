@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class I2PTransport implements Transport {
+public class I2PTransportService implements TransportService {
     @Getter
     @ToString
     @EqualsAndHashCode
@@ -68,14 +68,14 @@ public class I2PTransport implements Transport {
     private boolean initializeCalled;
     private String sessionId;
 
-    private I2PTransport.Config config;
+    private I2PTransportService.Config config;
 
-    public I2PTransport(TransportConfig config) {
+    public I2PTransportService(TransportConfig config) {
         // Demonstrate potential usage of specific config.
         // Would be likely passed to i2p router not handled here...
 
         // Failed to get config generic...
-        this.config = (I2PTransport.Config) config;
+        this.config = (I2PTransportService.Config) config;
 
         i2pDirPath = config.getDataDir().toAbsolutePath().toString();
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);

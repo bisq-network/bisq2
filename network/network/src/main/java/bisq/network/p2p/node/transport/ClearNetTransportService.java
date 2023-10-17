@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
-public class ClearNetTransport implements Transport {
+public class ClearNetTransportService implements TransportService {
 
     @Getter
     @ToString
@@ -40,7 +40,7 @@ public class ClearNetTransport implements Transport {
     private final TransportConfig config;
     private boolean initializeCalled;
 
-    public ClearNetTransport(TransportConfig config) {
+    public ClearNetTransportService(TransportConfig config) {
         this.config = config;
     }
 

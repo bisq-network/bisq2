@@ -23,7 +23,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -88,7 +88,7 @@ public class ServiceNode {
 
     @Getter
     private final NodesById nodesById;
-    private final Transport transport;
+    private final TransportService transportService;
     @Getter
     private final Node defaultNode;
     @Getter
@@ -113,8 +113,8 @@ public class ServiceNode {
                        Set<Address> seedNodeAddresses,
                        TransportType transportType) {
         BanList banList = new BanList();
-        transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        nodesById = new NodesById(banList, nodeConfig, transport);
+        transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+        nodesById = new NodesById(banList, nodeConfig, transportService);
         defaultNode = nodesById.getOrCreateDefaultNode();
         Set<Service> services = config.getServices();
 
@@ -156,7 +156,7 @@ public class ServiceNode {
                 )
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((list, throwable) -> throwable == null && list.stream().allMatch(e -> e))
-                .thenCompose(result -> transport.shutdown())
+                .thenCompose(result -> transportService.shutdown())
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 
@@ -166,7 +166,7 @@ public class ServiceNode {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void initializeNode(String nodeId, int serverPort) {
-        transport.initialize()
+        transportService.initialize()
                 .thenRun(() -> nodesById.initialize(nodeId, serverPort));
     }
 

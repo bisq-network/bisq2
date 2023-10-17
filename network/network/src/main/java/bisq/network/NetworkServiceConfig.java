@@ -21,8 +21,8 @@ import bisq.common.util.ConfigUtil;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.ClearNetTransport;
-import bisq.network.p2p.node.transport.I2PTransport;
+import bisq.network.p2p.node.transport.ClearNetTransportService;
+import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -137,10 +137,10 @@ public final class NetworkServiceConfig {
                 return TorTransportConfig.from(dataDir, transportConfig);
             case I2P:
                 dataDir = baseDir.resolve("i2p");
-                return I2PTransport.Config.from(dataDir, transportConfig);
+                return I2PTransportService.Config.from(dataDir, transportConfig);
             case CLEAR:
                 dataDir = baseDir;
-                return ClearNetTransport.Config.from(dataDir, transportConfig);
+                return ClearNetTransportService.Config.from(dataDir, transportConfig);
             default:
                 throw new RuntimeException("Unhandled case. type=" + transportType);
         }

@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
@@ -36,23 +36,23 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
 
     void test_messageRoundTrip(Node.Config nodeConfig) throws InterruptedException {
         BanList banList = new BanList();
-        Transport transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        NodesById nodesById = new NodesById(banList, nodeConfig, transport);
+        TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+        NodesById nodesById = new NodesById(banList, nodeConfig, transportService);
         long ts = System.currentTimeMillis();
         numNodes = 5;
         int numRepeats = 1;
         for (int i = 0; i < numRepeats; i++) {
-            doMessageRoundTrip(numNodes, nodesById, transport);
+            doMessageRoundTrip(numNodes, nodesById, transportService);
         }
         log.error("MessageRoundTrip for {} nodes repeated {} times took {} ms", numNodes, numRepeats, System.currentTimeMillis() - ts);
     }
 
-    private void doMessageRoundTrip(int numNodes, NodesById nodesById, Transport transport) throws InterruptedException {
+    private void doMessageRoundTrip(int numNodes, NodesById nodesById, TransportService transportService) throws InterruptedException {
         long ts = System.currentTimeMillis();
         CountDownLatch initializeServerLatch = new CountDownLatch(numNodes);
         CountDownLatch sendPongLatch = new CountDownLatch(numNodes);
         CountDownLatch receivedPongLatch = new CountDownLatch(numNodes);
-        transport.initialize().join();
+        transportService.initialize().join();
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int finalI = i;
@@ -124,8 +124,8 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
 
     void test_initializeServer(Node.Config nodeConfig) {
         BanList banList = new BanList();
-        Transport transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        NodesById nodesById = new NodesById(banList, nodeConfig, transport);
+        TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+        NodesById nodesById = new NodesById(banList, nodeConfig, transportService);
         initializeServers(2, nodesById);
         nodesById.shutdown().join();
     }
