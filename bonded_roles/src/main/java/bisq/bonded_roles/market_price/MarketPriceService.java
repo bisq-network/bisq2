@@ -31,7 +31,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import com.google.gson.Gson;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -61,20 +61,20 @@ public class MarketPriceService {
                     .map(config -> {
                         String url = config.getString("url");
                         String operator = config.getString("operator");
-                        Type transportType = getTransportTypeFromUrl(url);
+                        TransportType transportType = getTransportTypeFromUrl(url);
                         return new Provider(url, operator, transportType);
                     }).collect(Collectors.toUnmodifiableSet());
 
             return new MarketPriceService.Config(marketPriceProviders);
         }
 
-        private static Type getTransportTypeFromUrl(String url) {
+        private static TransportType getTransportTypeFromUrl(String url) {
             if (url.endsWith(".i2p/")) {
-                return Type.I2P;
+                return TransportType.I2P;
             } else if (url.endsWith(".onion/")) {
-                return Type.TOR;
+                return TransportType.TOR;
             } else {
-                return Type.CLEAR;
+                return TransportType.CLEAR;
             }
         }
 
@@ -92,9 +92,9 @@ public class MarketPriceService {
     public static final class Provider {
         private final String url;
         private final String operator;
-        private final Type transportType;
+        private final TransportType transportType;
 
-        public Provider(String url, String operator, Type transportType) {
+        public Provider(String url, String operator, TransportType transportType) {
             this.url = url;
             this.operator = operator;
             this.transportType = transportType;
@@ -252,8 +252,8 @@ public class MarketPriceService {
         if (candidates.isEmpty()) {
             // First try to use the clear net candidate if clear net is supported
             candidates.addAll(providers.stream()
-                    .filter(provider -> networkService.getSupportedTransportTypes().contains(Type.CLEAR))
-                    .filter(provider -> Type.CLEAR == provider.transportType)
+                    .filter(provider -> networkService.getSupportedTransportTypes().contains(TransportType.CLEAR))
+                    .filter(provider -> TransportType.CLEAR == provider.transportType)
                     .collect(Collectors.toList()));
             if (candidates.isEmpty()) {
                 candidates.addAll(providers.stream()

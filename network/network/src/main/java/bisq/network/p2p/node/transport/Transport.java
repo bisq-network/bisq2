@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface Transport {
 
-    static Transport create(Type transportType, TransportConfig config) {
+    static Transport create(TransportType transportType, TransportConfig config) {
         switch (transportType) {
             case TOR:
                 return new TorTransport(config);

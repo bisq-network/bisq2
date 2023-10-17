@@ -28,7 +28,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import dev.failsafe.Failsafe;
@@ -100,14 +100,14 @@ public class Node implements Connection.Handler {
     @Getter
     @ToString
     public static final class Config {
-        private final Type transportType;
-        private final Set<Type> supportedTransportTypes;
+        private final TransportType transportType;
+        private final Set<TransportType> supportedTransportTypes;
         private final AuthorizationService authorizationService;
         private final TransportConfig transportConfig;
         private final int socketTimeout;
 
-        public Config(Type transportType,
-                      Set<Type> supportedTransportTypes,
+        public Config(TransportType transportType,
+                      Set<TransportType> supportedTransportTypes,
                       AuthorizationService authorizationService,
                       TransportConfig transportConfig,
                       int socketTimeout) {
@@ -130,7 +130,7 @@ public class Node implements Connection.Handler {
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
-    private final Type transportType;
+    private final TransportType transportType;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private final RetryPolicy<Boolean> retryPolicy;

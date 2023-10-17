@@ -27,7 +27,7 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,7 +72,7 @@ public class BondedRoleRegistrationService implements Service {
                                                  BondedRoleType bondedRoleType,
                                                  String bondUserName,
                                                  String signatureBase64,
-                                                 Map<Type, Address> addressByNetworkType,
+                                                 Map<TransportType, Address> addressByNetworkType,
                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                  boolean isCancellationRequest) {
         ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();

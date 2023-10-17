@@ -23,7 +23,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;
@@ -177,8 +177,8 @@ public class NetworkEnvelopeSocketChannelTests {
     }
 
     private NetworkEnvelope createHandshakeRequestMessage() {
-        List<Type> supportedTransportTypes = new ArrayList<>(1);
-        supportedTransportTypes.add(Type.CLEAR);
+        List<TransportType> supportedTransportTypes = new ArrayList<>(1);
+        supportedTransportTypes.add(TransportType.CLEAR);
 
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);

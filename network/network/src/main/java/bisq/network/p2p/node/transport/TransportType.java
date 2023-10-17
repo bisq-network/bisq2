@@ -22,18 +22,18 @@ import bisq.network.p2p.node.Address;
 /**
  * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
  */
-public enum Type {
+public enum TransportType {
     TOR,
     I2P,
     CLEAR;
 
-    public static Type from(Address address) {
+    public static TransportType from(Address address) {
         if (address.isClearNetAddress()) {
-            return Type.CLEAR;
+            return TransportType.CLEAR;
         } else if (address.isTorAddress()) {
-            return Type.TOR;
+            return TransportType.TOR;
         } else if (address.isI2pAddress()) {
-            return Type.I2P;
+            return TransportType.I2P;
         } else {
             throw new IllegalArgumentException("Could not resolve transportType from address " + address);
         }

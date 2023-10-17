@@ -26,7 +26,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.settings.SettingsService;
 import javafx.beans.property.*;
@@ -68,8 +68,8 @@ public class LeftNavModel implements Model {
         networkService = serviceProvider.getNetworkService();
         settingsService = serviceProvider.getSettingsService();
 
-        torEnabled.set(networkService.isTransportTypeSupported(Type.TOR));
-        i2pEnabled.set(networkService.isTransportTypeSupported(Type.I2P));
+        torEnabled.set(networkService.isTransportTypeSupported(TransportType.TOR));
+        i2pEnabled.set(networkService.isTransportTypeSupported(TransportType.I2P));
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
@@ -105,9 +105,9 @@ public class LeftNavModel implements Model {
         );
     }
 
-    private void onNumConnectionsChanged(Type type, PeerGroup peerGroup) {
+    private void onNumConnectionsChanged(TransportType transportType, PeerGroup peerGroup) {
         UIThread.run(() -> {
-            switch (type) {
+            switch (transportType) {
                 case TOR:
                     torNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
                     break;

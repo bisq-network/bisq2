@@ -23,7 +23,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
@@ -53,10 +53,10 @@ import static org.mockito.Mockito.mock;
 public class InboundConnectionsManagerTests {
     private final Path tmpDir = FileUtils.createTempDir();
     private final AuthorizationService authorizationService = createAuthorizationService();
-    private final List<Type> supportedTransportTypes = new ArrayList<>(1);
+    private final List<TransportType> supportedTransportTypes = new ArrayList<>(1);
 
     public InboundConnectionsManagerTests() throws IOException {
-        supportedTransportTypes.add(Type.CLEAR);
+        supportedTransportTypes.add(TransportType.CLEAR);
     }
 
     @Test
@@ -231,8 +231,8 @@ public class InboundConnectionsManagerTests {
     }
 
     private bisq.network.protobuf.NetworkEnvelope createPoWRequest(Address myAddress, Address peerAddress) {
-        List<Type> supportedTransportTypes = new ArrayList<>(1);
-        supportedTransportTypes.add(Type.CLEAR);
+        List<TransportType> supportedTransportTypes = new ArrayList<>(1);
+        supportedTransportTypes.add(TransportType.CLEAR);
         Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
 
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);

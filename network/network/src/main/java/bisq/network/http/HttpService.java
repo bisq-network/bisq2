@@ -21,7 +21,7 @@ import bisq.network.http.common.BaseHttpClient;
 import bisq.network.http.common.ClearNetHttpClient;
 import bisq.network.http.common.Socks5ProxyProvider;
 import bisq.network.http.common.TorHttpClient;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.net.InetSocketAddress;
@@ -35,7 +35,7 @@ public class HttpService {
 
     public BaseHttpClient getHttpClient(String url,
                                         String userAgent,
-                                        Type transportType,
+                                        TransportType transportType,
                                         Optional<Socks5Proxy> socksProxy,
                                         Optional<String> socks5ProxyAddress) {
         switch (transportType) {

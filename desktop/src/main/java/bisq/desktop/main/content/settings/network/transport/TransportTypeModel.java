@@ -31,7 +31,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
-import bisq.network.p2p.node.transport.Type;
+import bisq.network.p2p.node.transport.TransportType;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @Getter
 public class TransportTypeModel implements Model {
     private final NetworkService networkService;
-    private final Type transportType;
+    private final TransportType transportType;
     private final ObservableList<ConnectionListItem> connectionListItems = FXCollections.observableArrayList();
     private final FilteredList<ConnectionListItem> filteredConnectionListItems = new FilteredList<>(connectionListItems);
     private final SortedList<ConnectionListItem> sortedConnectionListItems = new SortedList<>(filteredConnectionListItems);
@@ -69,7 +69,7 @@ public class TransportTypeModel implements Model {
     private Collection<Node> allNodes = new ArrayList<>();
 
     //todo move behaviour code to controller
-    public TransportTypeModel(ServiceProvider serviceProvider, Type transportType) {
+    public TransportTypeModel(ServiceProvider serviceProvider, TransportType transportType) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
         this.transportType = transportType;
