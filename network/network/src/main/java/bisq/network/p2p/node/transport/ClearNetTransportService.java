@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
-public class ClearNetTransport implements Transport {
+public class ClearNetTransportService implements TransportService {
 
     @Getter
     @ToString
@@ -40,7 +40,7 @@ public class ClearNetTransport implements Transport {
     private final TransportConfig config;
     private boolean initializeCalled;
 
-    public ClearNetTransport(TransportConfig config) {
+    public ClearNetTransportService(TransportConfig config) {
         this.config = config;
     }
 
@@ -49,10 +49,19 @@ public class ClearNetTransport implements Transport {
         if (initializeCalled) {
             return CompletableFuture.completedFuture(true);
         }
-        //Uninterruptibles.sleepUninterruptibly(Duration.of(2, ChronoUnit.SECONDS));
-        initializeCalled = true;
-        log.debug("Initialize");
-        return CompletableFuture.completedFuture(true);
+
+        // Simulate delay
+        return CompletableFuture.supplyAsync(() -> {
+            initializeCalled = true;
+            return true;
+        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        // Simulate delay
+        return CompletableFuture.supplyAsync(() -> true,
+                CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
 
     @Override
@@ -73,12 +82,6 @@ public class ClearNetTransport implements Transport {
     public Socket getSocket(Address address) throws IOException {
         log.debug("Create new Socket to {}", address);
         return new Socket(address.getHost(), address.getPort());
-    }
-
-    @Override
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
 
     @Override

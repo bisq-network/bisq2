@@ -27,10 +27,9 @@ import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.ClearNetTransport;
-import bisq.network.p2p.node.transport.I2PTransport;
-import bisq.network.p2p.node.transport.TorTransport;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.ServerSocketResult;
+import bisq.network.p2p.node.transport.TransportService;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import dev.failsafe.Failsafe;
@@ -102,14 +101,14 @@ public class Node implements Connection.Handler {
     @Getter
     @ToString
     public static final class Config {
-        private final Transport.Type transportType;
-        private final Set<Transport.Type> supportedTransportTypes;
+        private final TransportType transportType;
+        private final Set<TransportType> supportedTransportTypes;
         private final AuthorizationService authorizationService;
         private final TransportConfig transportConfig;
         private final int socketTimeout;
 
-        public Config(Transport.Type transportType,
-                      Set<Transport.Type> supportedTransportTypes,
+        public Config(TransportType transportType,
+                      Set<TransportType> supportedTransportTypes,
                       AuthorizationService authorizationService,
                       TransportConfig transportConfig,
                       int socketTimeout) {
@@ -122,7 +121,7 @@ public class Node implements Connection.Handler {
     }
 
     private final BanList banList;
-    private final Transport transport;
+    private final TransportService transportService;
     private final AuthorizationService authorizationService;
     private final Config config;
     @Getter
@@ -132,7 +131,7 @@ public class Node implements Connection.Handler {
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
-    private final Transport.Type transportType;
+    private final TransportType transportType;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private final RetryPolicy<Boolean> retryPolicy;
@@ -143,10 +142,10 @@ public class Node implements Connection.Handler {
     @Getter
     public Observable<State> observableState = new Observable<>(State.NEW);
 
-    public Node(BanList banList, Config config, String nodeId) {
+    public Node(BanList banList, Config config, String nodeId, TransportService transportService) {
         this.banList = banList;
+        this.transportService = transportService;
         transportType = config.getTransportType();
-        transport = getTransport(transportType, config.getTransportConfig());
         authorizationService = config.getAuthorizationService();
         this.config = config;
         this.nodeId = nodeId;
@@ -181,9 +180,6 @@ public class Node implements Connection.Handler {
                 case NEW: {
                     setState(STARTING);
 
-                    CompletableFuture<Boolean> completableFuture = transport.initialize();
-                    completableFuture.join();
-
                     createServerAndListen(port);
                     setState(State.RUNNING);
                     break;
@@ -207,7 +203,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen(int port) {
-        Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
@@ -218,7 +214,7 @@ public class Node implements Connection.Handler {
                 }));
     }
 
-    private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
+    private void onClientSocket(Socket socket, ServerSocketResult serverSocketResult, Capability myCapability) {
         ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
                 banList,
                 config.getSocketTimeout(),
@@ -341,7 +337,7 @@ public class Node implements Connection.Handler {
         }
         Socket socket;
         try {
-            socket = transport.getSocket(address); // Blocking call
+            socket = transportService.getSocket(address); // Blocking call
         } catch (IOException e) {
             handleException(e);
             throw new ConnectionException(e);
@@ -525,7 +521,6 @@ public class Node implements Connection.Handler {
                     if (throwable != null) {
                         log.warn("Exception at node shutdown", throwable);
                     }
-                    transport.shutdown();
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();
                     listeners.forEach(listener -> listener.onShutdown(this));
@@ -536,7 +531,7 @@ public class Node implements Connection.Handler {
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
-        return transport.getSocksProxy();
+        return transportService.getSocksProxy();
     }
 
     public void addListener(Listener listener) {
@@ -596,19 +591,6 @@ public class Node implements Connection.Handler {
             log.warn(exception.toString(), exception);
         } else {
             log.error(exception.toString(), exception);
-        }
-    }
-
-    private Transport getTransport(Transport.Type transportType, TransportConfig config) {
-        switch (transportType) {
-            case TOR:
-                return new TorTransport(config);
-            case I2P:
-                return new I2PTransport(config);
-            case CLEAR:
-                return new ClearNetTransport(config);
-            default:
-                throw new RuntimeException("Unhandled transportType");
         }
     }
 

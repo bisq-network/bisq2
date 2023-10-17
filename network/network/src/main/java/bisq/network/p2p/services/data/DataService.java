@@ -21,7 +21,7 @@ import bisq.common.timer.Scheduler;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.Result;
@@ -60,8 +60,8 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class DataService implements DataNetworkService.Listener {
-    public static class BroadCastDataResult extends HashMap<Transport.Type, CompletableFuture<BroadcastResult>> {
-        public BroadCastDataResult(Map<Transport.Type, CompletableFuture<BroadcastResult>> map) {
+    public static class BroadCastDataResult extends HashMap<TransportType, CompletableFuture<BroadcastResult>> {
+        public BroadCastDataResult(Map<TransportType, CompletableFuture<BroadcastResult>> map) {
             super(map);
         }
 
@@ -96,7 +96,7 @@ public class DataService implements DataNetworkService.Listener {
     @Getter
     private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Map<Transport.Type, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
+    private final Map<TransportType, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
 
     public DataService(StorageService storageService) {
         this.storageService = storageService;
@@ -129,7 +129,7 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     // todo a bit of a hack that way...
-    public DataNetworkService getDataServicePerTransport(Transport.Type transportType, Node defaultNode, PeerGroupService peerGroupService) {
+    public DataNetworkService getDataServicePerTransport(TransportType transportType, Node defaultNode, PeerGroupService peerGroupService) {
         DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupService, storageService::getInventoryOfAllStores);
         dataNetworkServiceByTransportType.put(transportType, dataNetworkService);
         dataNetworkService.addListener(this);

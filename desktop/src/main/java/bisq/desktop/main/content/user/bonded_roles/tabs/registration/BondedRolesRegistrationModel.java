@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.bonded_roles.tabs.registration;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.Model;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.user.identity.UserIdentity;
 import javafx.beans.property.*;
 import lombok.Getter;
@@ -41,7 +41,7 @@ public abstract class BondedRolesRegistrationModel implements Model {
     protected final BooleanProperty requestButtonDisabled = new SimpleBooleanProperty();
     protected final BooleanProperty requestCancellationButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
-    protected final Map<Transport.Type, Address> addressByNetworkType = new HashMap<>();
+    protected final Map<TransportType, Address> addressByNetworkType = new HashMap<>();
     @Setter
     protected String authorizedPublicKey;
 

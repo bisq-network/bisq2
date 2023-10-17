@@ -23,7 +23,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
@@ -141,7 +141,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
                             BanList banList,
                             Config config,
                             Set<Address> seedNodeAddresses,
-                            Transport.Type transportType) {
+                            TransportType transportType) {
         this.node = node;
         this.banList = banList;
         this.config = config;

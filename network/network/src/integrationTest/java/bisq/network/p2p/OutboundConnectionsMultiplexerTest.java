@@ -21,7 +21,7 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
@@ -53,8 +53,8 @@ public class OutboundConnectionsMultiplexerTest {
 
     @Test
     void startServerAndConnectAfterItsReady() throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        ArrayList<Transport.Type> supportedTransportTypes = new ArrayList<>();
-        supportedTransportTypes.add(Transport.Type.CLEAR);
+        ArrayList<TransportType> supportedTransportTypes = new ArrayList<>();
+        supportedTransportTypes.add(TransportType.CLEAR);
 
         Address serverAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
         Capability serverCapability = new Capability(serverAddress, supportedTransportTypes);

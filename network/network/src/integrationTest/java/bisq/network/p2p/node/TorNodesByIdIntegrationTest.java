@@ -17,19 +17,19 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
     // @Test
     void test_messageRoundTrip() throws InterruptedException {
-        super.test_messageRoundTrip(getConfig(Transport.Type.TOR));
+        super.test_messageRoundTrip(getConfig(TransportType.TOR));
     }
 
     // @Test
     void test_initializeServer() throws InterruptedException {
-        super.test_initializeServer(getConfig(Transport.Type.TOR));
+        super.test_initializeServer(getConfig(TransportType.TOR));
     }
 
     @Override

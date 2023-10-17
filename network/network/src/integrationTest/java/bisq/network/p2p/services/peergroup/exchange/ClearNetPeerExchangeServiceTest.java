@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutionException;
@@ -27,7 +27,7 @@ public class ClearNetPeerExchangeServiceTest extends BasePeerExchangeServiceTest
 
     //  @Test
     void test_peerExchange() throws InterruptedException, ExecutionException {
-        super.test_peerExchange(getConfig(Transport.Type.CLEAR));
+        super.test_peerExchange(getConfig(TransportType.CLEAR));
     }
 
     @Override

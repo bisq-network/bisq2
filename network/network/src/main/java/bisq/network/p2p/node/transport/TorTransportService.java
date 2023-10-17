@@ -20,12 +20,12 @@ import java.util.concurrent.TimeoutException;
 
 
 @Slf4j
-public class TorTransport implements Transport {
+public class TorTransportService implements TransportService {
     public final static int DEFAULT_PORT = 9999;
 
     private static TorService torService;
 
-    public TorTransport(TransportConfig config) {
+    public TorTransportService(TransportConfig config) {
         if (torService == null) {
             torService = new TorService((TorTransportConfig) config);
         }
@@ -35,6 +35,13 @@ public class TorTransport implements Transport {
     public CompletableFuture<Boolean> initialize() {
         log.info("Initialize Tor");
         return torService.initialize();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("Shutdown tor.");
+        torService.shutdown().join();
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
@@ -69,14 +76,7 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public CompletableFuture<Void> shutdown() {
-        log.info("Shutdown tor.");
-        torService.shutdown().join();
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
     public Optional<Address> getServerAddress(String nodeId) {
-        return torService.getOnionAddressForNode(nodeId).map(onionAddress -> new Address(onionAddress.getHost(), TorTransport.DEFAULT_PORT));
+        return torService.getOnionAddressForNode(nodeId).map(onionAddress -> new Address(onionAddress.getHost(), TorTransportService.DEFAULT_PORT));
     }
 }

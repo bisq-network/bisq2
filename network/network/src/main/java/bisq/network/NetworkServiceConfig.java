@@ -21,9 +21,9 @@ import bisq.common.util.ConfigUtil;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.ClearNetTransport;
-import bisq.network.p2p.node.transport.I2PTransport;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.ClearNetTransportService;
+import bisq.network.p2p.node.transport.I2PTransportService;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
@@ -41,7 +41,7 @@ import static java.util.stream.Collectors.toMap;
 @Getter
 public final class NetworkServiceConfig {
     public static NetworkServiceConfig from(Path baseDir, Config config) {
-        Set<Transport.Type> supportedTransportTypes = new HashSet<>(config.getEnumList(Transport.Type.class, "supportedTransportTypes"));
+        Set<TransportType> supportedTransportTypes = new HashSet<>(config.getEnumList(TransportType.class, "supportedTransportTypes"));
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
@@ -51,7 +51,7 @@ public final class NetworkServiceConfig {
 
         Config seedConfig = config.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
-        Map<Transport.Type, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
+        Map<TransportType, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
                 .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
@@ -68,13 +68,13 @@ public final class NetworkServiceConfig {
                 keepAliveServiceConfig,
                 config.getConfig("clearNetPeerGroup"));
 
-        Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport = Map.of(
-                Transport.Type.TOR, defaultConf,
-                Transport.Type.I2P, defaultConf,
-                Transport.Type.CLEAR, clearNetConf
+        Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport = Map.of(
+                TransportType.TOR, defaultConf,
+                TransportType.I2P, defaultConf,
+                TransportType.CLEAR, clearNetConf
         );
 
-        Map<Transport.Type, Integer> defaultNodePortByTransportType = createDefaultNodePortByTransportType(config);
+        Map<TransportType, Integer> defaultNodePortByTransportType = createDefaultNodePortByTransportType(config);
        /* Map<Transport.Type, Integer> defaultNodePortByTransportType = new HashMap<>();
         if (config.hasPath("defaultNodePortByTransportType")) {
             Config portConfig = config.getConfig("defaultNodePortByTransportType");
@@ -90,7 +90,7 @@ public final class NetworkServiceConfig {
         }*/
 
 
-        Map<Transport.Type, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
+        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
 
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
@@ -103,50 +103,50 @@ public final class NetworkServiceConfig {
                 Optional.empty());
     }
 
-    private static Map<Transport.Type, Integer> createDefaultNodePortByTransportType(Config config) {
-        Map<Transport.Type, Integer> map = new HashMap<>();
+    private static Map<TransportType, Integer> createDefaultNodePortByTransportType(Config config) {
+        Map<TransportType, Integer> map = new HashMap<>();
         if (config.hasPath("defaultNodePortByTransportType")) {
             Config portConfig = config.getConfig("defaultNodePortByTransportType");
             if (portConfig.hasPath("tor")) {
-                map.put(Transport.Type.TOR, portConfig.getInt("tor"));
+                map.put(TransportType.TOR, portConfig.getInt("tor"));
             }
             if (portConfig.hasPath("i2p")) {
-                map.put(Transport.Type.I2P, portConfig.getInt("i2p"));
+                map.put(TransportType.I2P, portConfig.getInt("i2p"));
             }
             if (portConfig.hasPath("clear")) {
-                map.put(Transport.Type.CLEAR, portConfig.getInt("clear"));
+                map.put(TransportType.CLEAR, portConfig.getInt("clear"));
             }
         }
         return map;
     }
 
-    private static Map<Transport.Type, TransportConfig> createConfigByTransportType(Config config, Path baseDir) {
-        Map<Transport.Type, TransportConfig> map = new HashMap<>();
-        map.put(Transport.Type.CLEAR, createTransportConfig(Transport.Type.CLEAR, config, baseDir));
-        map.put(Transport.Type.TOR, createTransportConfig(Transport.Type.TOR, config, baseDir));
-        map.put(Transport.Type.I2P, createTransportConfig(Transport.Type.I2P, config, baseDir));
+    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config, Path baseDir) {
+        Map<TransportType, TransportConfig> map = new HashMap<>();
+        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, baseDir));
+        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, baseDir));
+        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, baseDir));
         return map;
     }
 
-    private static TransportConfig createTransportConfig(Transport.Type type, Config config, Path baseDir) {
-        Config transportConfig = config.getConfig("configByTransportType." + type.name().toLowerCase());
+    private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
+        Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase());
         Path dataDir;
-        switch (type) {
+        switch (transportType) {
             case TOR:
                 dataDir = baseDir.resolve("tor");
                 return TorTransportConfig.from(dataDir, transportConfig);
             case I2P:
                 dataDir = baseDir.resolve("i2p");
-                return I2PTransport.Config.from(dataDir, transportConfig);
+                return I2PTransportService.Config.from(dataDir, transportConfig);
             case CLEAR:
                 dataDir = baseDir;
-                return ClearNetTransport.Config.from(dataDir, transportConfig);
+                return ClearNetTransportService.Config.from(dataDir, transportConfig);
             default:
-                throw new RuntimeException("Unhandled case. type=" + type);
+                throw new RuntimeException("Unhandled case. type=" + transportType);
         }
     }
 
-    private static Set<Address> getSeedAddresses(Transport.Type transportType, Config config) {
+    private static Set<Address> getSeedAddresses(TransportType transportType, Config config) {
         switch (transportType) {
             case TOR: {
                 return ConfigUtil.getStringList(config, "tor").stream()
@@ -170,21 +170,21 @@ public final class NetworkServiceConfig {
     }
 
     private final String baseDir;
-    private final Set<Transport.Type> supportedTransportTypes;
-    private final Map<Transport.Type, TransportConfig> configByTransportType;
+    private final Set<TransportType> supportedTransportTypes;
+    private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
-    private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
-    private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
-    private final Map<Transport.Type, Set<Address>> seedAddressesByTransport;
+    private final Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport;
+    private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
 
     public NetworkServiceConfig(String baseDir,
-                                Set<Transport.Type> supportedTransportTypes,
-                                Map<Transport.Type, TransportConfig> configByTransportType,
+                                Set<TransportType> supportedTransportTypes,
+                                Map<TransportType, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
-                                Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                                Map<Transport.Type, Integer> defaultNodePortByTransportType,
-                                Map<Transport.Type, Set<Address>> seedAddressesByTransport,
+                                Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport,
+                                Map<TransportType, Integer> defaultNodePortByTransportType,
+                                Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
         this.supportedTransportTypes = supportedTransportTypes;
@@ -197,8 +197,8 @@ public final class NetworkServiceConfig {
     }
 
     // In case our config contains not supported transport types we remove them
-    private <V> Map<Transport.Type, V> filterMap(Set<Transport.Type> supportedTransportTypes,
-                                                 Map<Transport.Type, V> map) {
+    private <V> Map<TransportType, V> filterMap(Set<TransportType> supportedTransportTypes,
+                                                Map<TransportType, V> map) {
         return map.entrySet().stream()
                 .filter(e -> supportedTransportTypes.contains(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

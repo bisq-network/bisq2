@@ -26,7 +26,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -52,7 +52,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signatureBase64;
-    private final Map<Transport.Type, Address> addressByNetworkType;
+    private final Map<TransportType, Address> addressByNetworkType;
     private final NetworkId networkId;
     private final Optional<AuthorizedOracleNode> authorizedOracleNode;
     private final boolean staticPublicKeysProvided;
@@ -62,7 +62,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 BondedRoleType bondedRoleType,
                                 String bondUserName,
                                 String signatureBase64,
-                                Map<Transport.Type, Address> addressByNetworkType,
+                                Map<TransportType, Address> addressByNetworkType,
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizedOracleNode,
                                 boolean staticPublicKeysProvided) {

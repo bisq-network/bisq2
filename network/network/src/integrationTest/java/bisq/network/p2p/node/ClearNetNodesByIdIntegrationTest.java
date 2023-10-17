@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -26,12 +26,12 @@ public class ClearNetNodesByIdIntegrationTest extends BaseNodesByIdTest {
 
     @Test
     void test_messageRoundTrip() throws InterruptedException {
-        super.test_messageRoundTrip(getConfig(Transport.Type.CLEAR));
+        super.test_messageRoundTrip(getConfig(TransportType.CLEAR));
     }
 
     @Test
     void test_initializeServer() throws InterruptedException {
-        super.test_initializeServer(getConfig(Transport.Type.CLEAR));
+        super.test_initializeServer(getConfig(TransportType.CLEAR));
     }
 
     @Override

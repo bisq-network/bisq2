@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.security.KeyPairService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,7 +39,7 @@ public class NetworkInfoModel implements Model {
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
-    private final Set<Transport.Type> supportedTransportTypes;
+    private final Set<TransportType> supportedTransportTypes;
 
     private final KeyPairService keyPairService;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
@@ -47,9 +47,9 @@ public class NetworkInfoModel implements Model {
     public NetworkInfoModel(ServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         supportedTransportTypes = networkService.getSupportedTransportTypes();
-        clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));
-        torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));
-        i2pDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.I2P));
+        clearNetDisabled.set(!networkService.isTransportTypeSupported(TransportType.CLEAR));
+        torDisabled.set(!networkService.isTransportTypeSupported(TransportType.TOR));
+        i2pDisabled.set(!networkService.isTransportTypeSupported(TransportType.I2P));
 
         keyPairService = serviceProvider.getSecurityService().getKeyPairService();
     }

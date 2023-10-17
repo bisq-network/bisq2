@@ -25,7 +25,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.BondedRoleVerificationDto;
 import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
@@ -90,7 +90,7 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         // We expect that bisq 1 dao node runs on localhost, so we use clear net 
-        httpClient = networkService.getHttpClient(url, "Bisq1Bridge", Transport.Type.CLEAR);
+        httpClient = networkService.getHttpClient(url, "Bisq1Bridge", TransportType.CLEAR);
         return CompletableFuture.completedFuture(true);
     }
 

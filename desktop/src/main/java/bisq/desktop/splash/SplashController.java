@@ -24,7 +24,7 @@ import bisq.desktop.State;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.TransportType;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
@@ -61,15 +61,15 @@ public class SplashController implements Controller {
     public void onActivate() {
         pinApplicationStatus = FxBindings.bind(model.getApplicationState()).to(applicationServiceState);
 
-        Map<Transport.Type, Observable<Node.State>> map = serviceProvider.getNetworkService().getNodeStateByTransportType();
-        if (map.containsKey(Transport.Type.CLEAR)) {
-            pinClearNetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(map.get(Transport.Type.CLEAR));
+        Map<TransportType, Observable<Node.State>> map = serviceProvider.getNetworkService().getNodeStateByTransportType();
+        if (map.containsKey(TransportType.CLEAR)) {
+            pinClearNetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(map.get(TransportType.CLEAR));
         }
-        if (map.containsKey(Transport.Type.TOR)) {
-            pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(map.get(Transport.Type.TOR));
+        if (map.containsKey(TransportType.TOR)) {
+            pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(map.get(TransportType.TOR));
         }
-        if (map.containsKey(Transport.Type.I2P)) {
-            pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(map.get(Transport.Type.I2P));
+        if (map.containsKey(TransportType.I2P)) {
+            pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(map.get(TransportType.I2P));
         }
 
         clearState = createNetworkSubscription(model.getClearServiceNodeState(), model.getClearState());

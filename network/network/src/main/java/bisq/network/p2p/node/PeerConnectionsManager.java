@@ -18,7 +18,8 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.ServerSocketResult;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +44,7 @@ public class PeerConnectionsManager {
     private final String nodeId;
     private final BanList banList;
     private final AuthorizationService authorizationService;
-    private final Transport transport;
+    private final TransportService transportService;
 
     private Optional<ServerChannel> server = Optional.empty();
     private Optional<OutboundConnectionMultiplexer> outboundConnectionMultiplexer;
@@ -52,12 +53,12 @@ public class PeerConnectionsManager {
                                   String nodeId,
                                   BanList banList,
                                   AuthorizationService authorizationService,
-                                  Transport transport) {
+                                  TransportService transportService) {
         this.config = config;
         this.nodeId = nodeId;
         this.banList = banList;
         this.authorizationService = authorizationService;
-        this.transport = transport;
+        this.transportService = transportService;
     }
 
     public void start(Node node, int port) {
@@ -116,7 +117,7 @@ public class PeerConnectionsManager {
     }
 
     private Capability createServerAndListen(Node node, int port) throws IOException {
-        Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(port, nodeId);
         Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
