@@ -195,7 +195,7 @@ public class I2PTransportService implements TransportService {
             numSocketsCreated++;
             bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
             bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
-            bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peers");
+            bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peer(s)");
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {
