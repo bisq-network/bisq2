@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.encoding.Hex;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -25,13 +26,13 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -73,32 +74,42 @@ class InventoryHandler implements Connection.Listener {
         if (networkMessage instanceof InventoryResponse) {
             InventoryResponse response = (InventoryResponse) networkMessage;
             if (response.getRequestNonce() == nonce) {
-                Map<String, Integer> map = new HashMap<>();
-                response.getInventory().getEntries().stream()
-                        .filter(e -> e instanceof AddAuthenticatedDataRequest)
-                        .map(e -> (AddAuthenticatedDataRequest) e)
-                        .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
-                        .map(AuthenticatedSequentialData::getAuthenticatedData)
-                        .forEach(e -> {
-                            String simpleName = e.getDistributedData().getClass().getSimpleName();
-                            map.putIfAbsent(simpleName, 0);
-                            map.put(simpleName, map.get(simpleName) + 1);
+                Map<String, List<String>> details = new HashMap<>();
+                response.getInventory().getEntries()
+                        .forEach(entry -> {
+                            String key = entry.getClass().getSimpleName();
+                            String data = null;
+                            if (entry instanceof AddAuthenticatedDataRequest) {
+                                AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) entry;
+                                data = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                            } else if (entry instanceof RemoveAuthenticatedDataRequest) {
+                                RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) entry;
+                                data = Hex.encode(removeRequest.getHash());
+                                key += ": Hashes";
+                            } else if (entry instanceof AddMailboxRequest) {
+                                AddMailboxRequest addRequest = (AddMailboxRequest) entry;
+                                data = addRequest.getMailboxSequentialData().getMailboxData().getConfidentialMessage().getReceiverKeyId();
+                                key += ": ReceiverKeyIds";
+                            } else if (entry instanceof RemoveMailboxRequest) {
+                                RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) entry;
+                                data = Hex.encode(removeRequest.getHash());
+                                key += ": Hashes";
+                            } else if (entry instanceof AddAppendOnlyDataRequest) {
+                                AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) entry;
+                                data = addRequest.getAppendOnlyData().getClass().getSimpleName();
+                            }
+                            if (data != null) {
+                                details.putIfAbsent(key, new ArrayList<>());
+                                List<String> list = details.get(key);
+                                list.add(data);
+                                details.put(key, list);
+                            }
                         });
-                response.getInventory().getEntries().stream()
-                        .filter(e -> e instanceof AddAppendOnlyDataRequest)
-                        .map(e -> (AddAppendOnlyDataRequest) e)
-                        .map(AddAppendOnlyDataRequest::getAppendOnlyData)
-                        .forEach(e -> {
-                            String simpleName = e.getClass().getSimpleName();
-                            map.putIfAbsent(simpleName, 0);
-                            map.put(simpleName, map.get(simpleName) + 1);
-                        });
-              /*  log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
-                        node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());*/
                 log.info("\n##########################################################################################\n" +
                         "## INVENTORY from: " + connection.getPeerAddress() + "\n" +
                         "##########################################################################################\n" +
-                        map.entrySet().stream().map(e -> e.getValue() + " " + e.getKey()).collect(Collectors.joining("\n")) +
+                        details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
+                                .collect(Collectors.joining("\n")) +
                         "\n##########################################################################################");
                 removeListeners();
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
