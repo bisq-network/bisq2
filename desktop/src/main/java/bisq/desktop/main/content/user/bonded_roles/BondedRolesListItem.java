@@ -31,12 +31,14 @@ import com.google.gson.GsonBuilder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @EqualsAndHashCode
 @Getter
 @ToString
@@ -52,6 +54,7 @@ public class BondedRolesListItem implements TableItem {
     private final String addressInfoJson;
     @EqualsAndHashCode.Exclude
     private final String isBanned;
+    private final boolean staticPublicKeysProvided;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
@@ -70,7 +73,7 @@ public class BondedRolesListItem implements TableItem {
                 .collect(Collectors.toList());
         address = Joiner.on("\n").join(list);
         addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
-
+        staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
         // oracleNodePublicKeyHash = authorizedBondedRoleData.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElseGet(() -> Res.get("data.na"));
     }
 }

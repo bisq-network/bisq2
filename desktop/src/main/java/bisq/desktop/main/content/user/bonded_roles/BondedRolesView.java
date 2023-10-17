@@ -63,9 +63,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
         root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView, verificationHeadline, verificationInstruction);
     }
 
-    protected String getVerificationHeadline() {
-        return Res.get("user.bondedRoles.verification.howTo");
-    }
+    protected abstract String getVerificationHeadline();
 
     protected abstract String getTableHeadline();
 
@@ -84,10 +82,12 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label userName = new Label();
             private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
             private final HBox hBox = new HBox(10, userProfileIcon, userName);
+            private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"));
 
             {
                 userName.setId("chat-user-name");
                 hBox.setAlignment(Pos.CENTER_LEFT);
+                tooltip.getStyleClass().add("dark-tooltip");
             }
 
             @Override
@@ -96,6 +96,13 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
+                    if (item.isStaticPublicKeysProvided()) {
+                        userName.setTooltip(tooltip);
+                        userName.setStyle("-fx-text-fill: -bisq-green;");
+                    } else {
+                        userName.setTooltip(null);
+                        userName.setStyle("-fx-text-fill: -fx-light-text-color;");
+                    }
                     item.getUserProfile().ifPresent(userProfileIcon::setUserProfile);
                     setGraphic(hBox);
                 } else {

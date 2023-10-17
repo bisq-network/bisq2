@@ -390,7 +390,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     request.getAddressByNetworkType(),
                                     request.getNetworkId(),
                                     Optional.of(authorizedOracleNode),
-                                    staticPublicKeysProvided);
+                                    false);
                             if (request.isCancellationRequest()) {
                                 authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                                         .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))

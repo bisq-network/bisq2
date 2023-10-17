@@ -288,6 +288,7 @@
 }
 
 .text-fill-green {
+    -fx-fill: -bisq-green !Important;
     -fx-text-fill: -bisq-green !Important;
 }
 

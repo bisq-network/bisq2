@@ -86,7 +86,7 @@ public class RolesView extends BondedRolesView<RolesModel, RolesController> {
         tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
                 .right()
-                .fixWidth(80)
+                .fixWidth(90)
                 .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
                 .valueSupplier(BondedRolesListItem::getIsBanned)
                 .build());
