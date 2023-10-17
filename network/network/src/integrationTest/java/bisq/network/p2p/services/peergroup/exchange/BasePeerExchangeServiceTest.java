@@ -20,11 +20,11 @@ package bisq.network.p2p.services.peergroup.exchange;
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.PeerGroupStore;
-import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,10 +44,10 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         int numSeeds = 2;
         int numNodes = 2;
         BanList banList = new BanList();
-        Node tempNode = new Node(banList, nodeConfig, "node-id");
+        Transport transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+        Node tempNode = new Node(banList, nodeConfig, "node-id", transport);
         PeerGroupStore peerGroupStore = new PeerGroupStore();
         PersistenceService persistenceService = new PersistenceService(getBaseDir().toAbsolutePath().toString());
-        KeepAliveService keepAliveService = new KeepAliveService(tempNode, null, null);
         PeerGroupService.Config peerGroupServiceConfig = new PeerGroupService.Config(
                 null, null, null,
                 100, 100, 100, 100, 100, 100, 100);
@@ -61,11 +61,15 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         PeerGroupService peerGroupService = new PeerGroupService(persistenceService, tempNode, banList,
                 peerGroupServiceConfig, new HashSet<>(seedNodeAddresses), nodeConfig.getTransportType());
 
+        transport.initialize().join();
         CountDownLatch initSeedsLatch = new CountDownLatch(numNodes);
         List<Node> seeds = new ArrayList<>();
         for (int i = 0; i < numSeeds; i++) {
             int port = 10000 + i;
-            Node seed = new Node(banList, nodeConfig, "seed_" + i);
+            Node seed = new Node(banList,
+                    nodeConfig,
+                    "seed_" + i,
+                    transport);
             seeds.add(seed);
             seed.initialize(port);
             initSeedsLatch.countDown();
@@ -83,7 +87,10 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         List<Node> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; i++) {
             int port = 3000 + i;
-            Node node = new Node(banList, nodeConfig, "node_" + i);
+            Node node = new Node(banList,
+                    nodeConfig,
+                    "node_" + i,
+                    transport);
             nodes.add(node);
             node.initialize(port);
             initNodesLatch.countDown();

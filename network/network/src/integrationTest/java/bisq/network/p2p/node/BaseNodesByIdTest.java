@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
@@ -33,23 +34,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     protected int numNodes;
 
-    void test_messageRoundTrip(Node.Config config) throws InterruptedException {
+    void test_messageRoundTrip(Node.Config nodeConfig) throws InterruptedException {
         BanList banList = new BanList();
-        NodesById nodesById = new NodesById(banList, config);
+        Transport transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+        NodesById nodesById = new NodesById(banList, nodeConfig, transport);
         long ts = System.currentTimeMillis();
         numNodes = 5;
         int numRepeats = 1;
         for (int i = 0; i < numRepeats; i++) {
-            doMessageRoundTrip(numNodes, nodesById);
+            doMessageRoundTrip(numNodes, nodesById, transport);
         }
         log.error("MessageRoundTrip for {} nodes repeated {} times took {} ms", numNodes, numRepeats, System.currentTimeMillis() - ts);
     }
 
-    private void doMessageRoundTrip(int numNodes, NodesById nodesById) throws InterruptedException {
+    private void doMessageRoundTrip(int numNodes, NodesById nodesById, Transport transport) throws InterruptedException {
         long ts = System.currentTimeMillis();
         CountDownLatch initializeServerLatch = new CountDownLatch(numNodes);
         CountDownLatch sendPongLatch = new CountDownLatch(numNodes);
         CountDownLatch receivedPongLatch = new CountDownLatch(numNodes);
+        transport.initialize().join();
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int finalI = i;
@@ -119,9 +122,10 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         log.error("shutdown took {} ms", System.currentTimeMillis() - ts);
     }
 
-    void test_initializeServer(Node.Config nodeConfig) throws InterruptedException {
+    void test_initializeServer(Node.Config nodeConfig) {
         BanList banList = new BanList();
-        NodesById nodesById = new NodesById(banList, nodeConfig);
+        Transport transport = Transport.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+        NodesById nodesById = new NodesById(banList, nodeConfig, transport);
         initializeServers(2, nodesById);
         nodesById.shutdown().join();
     }

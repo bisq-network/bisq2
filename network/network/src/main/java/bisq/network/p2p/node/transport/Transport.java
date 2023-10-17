@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.transport;
 
+import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -49,6 +50,19 @@ public interface Transport {
             } else {
                 throw new IllegalArgumentException("Could not resolve transportType from address " + address);
             }
+        }
+    }
+
+    static Transport create(Transport.Type transportType, TransportConfig config) {
+        switch (transportType) {
+            case TOR:
+                return new TorTransport(config);
+            case I2P:
+                return new I2PTransport(config);
+            case CLEAR:
+                return new ClearNetTransport(config);
+            default:
+                throw new RuntimeException("Unhandled transportType");
         }
     }
 

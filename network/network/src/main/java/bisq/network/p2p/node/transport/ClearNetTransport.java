@@ -49,10 +49,12 @@ public class ClearNetTransport implements Transport {
         if (initializeCalled) {
             return CompletableFuture.completedFuture(true);
         }
-        //Uninterruptibles.sleepUninterruptibly(Duration.of(2, ChronoUnit.SECONDS));
-        initializeCalled = true;
-        log.debug("Initialize");
-        return CompletableFuture.completedFuture(true);
+
+        // Simulate delay
+        return CompletableFuture.supplyAsync(() -> {
+            initializeCalled = true;
+            return true;
+        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
 
     @Override
@@ -77,6 +79,7 @@ public class ClearNetTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
+        // Simulate delay
         return CompletableFuture.runAsync(() -> {
         }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }

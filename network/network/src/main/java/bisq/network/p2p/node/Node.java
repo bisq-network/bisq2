@@ -27,9 +27,6 @@ import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.transport.ClearNetTransport;
-import bisq.network.p2p.node.transport.I2PTransport;
-import bisq.network.p2p.node.transport.TorTransport;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -143,10 +140,10 @@ public class Node implements Connection.Handler {
     @Getter
     public Observable<State> observableState = new Observable<>(State.NEW);
 
-    public Node(BanList banList, Config config, String nodeId) {
+    public Node(BanList banList, Config config, String nodeId, Transport transport) {
         this.banList = banList;
+        this.transport = transport;
         transportType = config.getTransportType();
-        transport = getTransport(transportType, config.getTransportConfig());
         authorizationService = config.getAuthorizationService();
         this.config = config;
         this.nodeId = nodeId;
@@ -180,9 +177,6 @@ public class Node implements Connection.Handler {
             switch (state.get()) {
                 case NEW: {
                     setState(STARTING);
-
-                    CompletableFuture<Boolean> completableFuture = transport.initialize();
-                    completableFuture.join();
 
                     createServerAndListen(port);
                     setState(State.RUNNING);
@@ -525,7 +519,6 @@ public class Node implements Connection.Handler {
                     if (throwable != null) {
                         log.warn("Exception at node shutdown", throwable);
                     }
-                    transport.shutdown();
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();
                     listeners.forEach(listener -> listener.onShutdown(this));
@@ -596,19 +589,6 @@ public class Node implements Connection.Handler {
             log.warn(exception.toString(), exception);
         } else {
             log.error(exception.toString(), exception);
-        }
-    }
-
-    private Transport getTransport(Transport.Type transportType, TransportConfig config) {
-        switch (transportType) {
-            case TOR:
-                return new TorTransport(config);
-            case I2P:
-                return new I2PTransport(config);
-            case CLEAR:
-                return new ClearNetTransport(config);
-            default:
-                throw new RuntimeException("Unhandled transportType");
         }
     }
 
