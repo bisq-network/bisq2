@@ -19,14 +19,9 @@ package bisq.network.p2p.node.transport;
 
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
-import bisq.tor.onionservice.CreateOnionServiceResponse;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -43,25 +38,6 @@ public interface Transport {
                 return new ClearNetTransport(config);
             default:
                 throw new RuntimeException("Unhandled transportType");
-        }
-    }
-
-    @Getter
-    @ToString
-    @EqualsAndHashCode
-    final class ServerSocketResult {
-        private final String nodeId;
-        private final ServerSocket serverSocket;
-        private final Address address;
-
-        public ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
-            this.nodeId = nodeId;
-            this.serverSocket = serverSocket;
-            this.address = address;
-        }
-
-        public ServerSocketResult(CreateOnionServiceResponse response) {
-            this(response.getNodeId(), response.getServerSocket(), new Address(response.getOnionAddress()));
         }
     }
 

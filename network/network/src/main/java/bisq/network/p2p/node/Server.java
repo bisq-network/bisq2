@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +37,7 @@ public final class Server {
     private volatile boolean isStopped;
     private final Future<?> future;
 
-    Server(Transport.ServerSocketResult serverSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
+    Server(ServerSocketResult serverSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
         serverSocket = serverSocketResult.getServerSocket();
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);

@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +117,7 @@ public class PeerConnectionsManager {
     }
 
     private Capability createServerAndListen(Node node, int port) throws IOException {
-        Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
+        ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
         Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,

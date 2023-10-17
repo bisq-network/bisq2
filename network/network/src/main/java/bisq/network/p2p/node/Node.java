@@ -27,6 +27,7 @@ import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -202,7 +203,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen(int port) {
-        Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
+        ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
@@ -213,7 +214,7 @@ public class Node implements Connection.Handler {
                 }));
     }
 
-    private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
+    private void onClientSocket(Socket socket, ServerSocketResult serverSocketResult, Capability myCapability) {
         ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
                 banList,
                 config.getSocketTimeout(),
