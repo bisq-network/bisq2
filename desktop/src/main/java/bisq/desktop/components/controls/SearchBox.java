@@ -48,6 +48,7 @@ public class SearchBox extends HBox {
         searchIcon = new ImageView();
         searchField = new TextField();
         searchField.setPromptText(Res.get("action.search"));
+        searchField.setFocusTraversable(false); // setPromptText would trigger focus
         searchField.getStyleClass().add("search-text-field");
 
         HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));
