@@ -1,4 +1,33 @@
 /*******************************************************************************
+ * Splash                                                              *
+ ******************************************************************************/
+
+.splash-application-state {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.splash-bootstrap-state {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.splash-bootstrap-details {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-grey-13;
+}
+
+.splash-bootstrap-progress {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
+
+/*******************************************************************************
  * TAC                                                              *
  ******************************************************************************/
 

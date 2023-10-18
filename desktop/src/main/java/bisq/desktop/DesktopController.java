@@ -150,13 +150,13 @@ public class DesktopController extends NavigationController {
     public void onDeactivate() {
     }
 
-    public void onApplicationServiceInitialized(boolean result, Throwable throwable) {
+    public void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         if (throwable != null) {
             new Popup().error(throwable).show();
             return;
         }
 
-        if (!result) {
+        if (result == null || !result) {
             new Popup().warning("Initialising applicationService failed.").show();
             return;
         }

@@ -38,6 +38,9 @@ public class ClearNetTransportService implements TransportService {
     }
 
     private final TransportConfig config;
+    private int numSocketsCreated = 0;
+    @Getter
+    private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private boolean initializeCalled;
 
     public ClearNetTransportService(TransportConfig config) {
@@ -49,6 +52,8 @@ public class ClearNetTransportService implements TransportService {
         if (initializeCalled) {
             return CompletableFuture.completedFuture(true);
         }
+
+        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
 
         // Simulate delay
         return CompletableFuture.supplyAsync(() -> {
@@ -67,10 +72,20 @@ public class ClearNetTransportService implements TransportService {
     @Override
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.info("Create serverSocket at port {}", port);
+
+        bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
+        bootstrapInfo.getBootstrapProgress().set(0.25);
+        bootstrapInfo.getBootstrapDetails().set("Start creating server");
+
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             Address address = Address.localHost(port);
             log.debug("ServerSocket created at port {}", port);
+
+            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
+            bootstrapInfo.getBootstrapProgress().set(0.5);
+            bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
+
             return new ServerSocketResult(nodeId, serverSocket, address);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
@@ -81,7 +96,14 @@ public class ClearNetTransportService implements TransportService {
     @Override
     public Socket getSocket(Address address) throws IOException {
         log.debug("Create new Socket to {}", address);
-        return new Socket(address.getHost(), address.getPort());
+        Socket socket = new Socket(address.getHost(), address.getPort());
+        numSocketsCreated++;
+
+        bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
+        bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
+        bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peers");
+
+        return socket;
     }
 
     @Override

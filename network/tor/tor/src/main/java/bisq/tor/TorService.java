@@ -18,9 +18,11 @@
 package bisq.tor;
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
+import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
@@ -111,6 +113,10 @@ public class TorService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
+    public Observable<BootstrapEvent> getBootstrapEvent() {
+        return nativeTorController.getBootstrapEvent();
+    }
+
     public CompletableFuture<Boolean> startNode(TorIdentity torIdentity) {
         try {
             ServerSocket serverSocket = createOnionService(torIdentity).get();
@@ -127,7 +133,6 @@ public class TorService implements Service {
         try {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
-
             return onionServicePublishService.publish(nodeId, port, localPort)
                     .thenApply(onionAddress -> {
                                 log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",

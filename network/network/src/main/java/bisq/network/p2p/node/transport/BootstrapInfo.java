@@ -15,22 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.splash;
+package bisq.network.p2p.node.transport;
 
-import bisq.desktop.common.view.Model;
-import bisq.desktop.splash.temp.BootstrapStateDisplay;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import bisq.common.observable.Observable;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter
-public class SplashModel implements Model {
-    private final StringProperty applicationServiceState = new SimpleStringProperty();
-    private final DoubleProperty progress = new SimpleDoubleProperty();
-    private final List<BootstrapStateDisplay> bootstrapStateDisplays = new ArrayList<>();
+public class BootstrapInfo {
+    private final Observable<Double> bootstrapProgress = new Observable<>(0d);
+    private final Observable<String> bootstrapDetails = new Observable<>("");
+    private final Observable<BootstrapState> bootstrapState = new Observable<>(BootstrapState.BOOTSTRAP_TO_NETWORK);
 }

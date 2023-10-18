@@ -54,6 +54,8 @@ public interface TransportService extends Service {
         return Optional.empty();
     }
 
+    BootstrapInfo getBootstrapInfo();
+
     Optional<Address> getServerAddress(String serverId);
 
     boolean isPeerOnline(Address address);

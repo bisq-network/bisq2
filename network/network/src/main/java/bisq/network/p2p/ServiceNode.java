@@ -88,6 +88,7 @@ public class ServiceNode {
 
     @Getter
     private final NodesById nodesById;
+    @Getter
     private final TransportService transportService;
     @Getter
     private final Node defaultNode;

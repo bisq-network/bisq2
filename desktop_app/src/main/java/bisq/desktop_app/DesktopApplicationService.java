@@ -234,19 +234,20 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
-                .whenComplete((success, throwable) -> {
+                .handle((result, throwable) -> {
                     if (throwable == null) {
-                        if (success) {
+                        if (result != null && result) {
                             setState(State.APP_INITIALIZED);
                             log.info("ApplicationService initialized");
+                            return true;
                         } else {
-                            setState(State.FAILED);
                             log.error("Initializing applicationService failed");
                         }
                     } else {
-                        setState(State.FAILED);
                         log.error("Initializing applicationService failed", throwable);
                     }
+                    setState(State.FAILED);
+                    return false;
                 });
     }
 
@@ -273,7 +274,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 })
                 .thenCompose(result -> securityService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
-                .handle((result, throwable) -> throwable == null)
+                .handle((result, throwable) -> throwable == null && result != null && result)
                 .join());
     }
 

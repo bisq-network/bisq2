@@ -11,7 +11,7 @@
 }
 
 #clearnet {
-    -fx-image: url("/images/clearnet-white.png");
+    -fx-image: url("/images/clearnet.png");
 }
 
 #tor {

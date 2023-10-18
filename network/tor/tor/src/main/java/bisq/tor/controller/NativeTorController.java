@@ -17,6 +17,7 @@
 
 package bisq.tor.controller;
 
+import bisq.common.observable.Observable;
 import bisq.tor.TorrcClientConfigFactory;
 import bisq.tor.controller.events.ControllerEventHandler;
 import bisq.tor.controller.events.events.BootstrapEvent;
@@ -26,6 +27,7 @@ import bisq.tor.controller.events.listener.HsDescUploadedEventListener;
 import bisq.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.tor.process.NativeTorProcess;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 import net.freehaven.tor.control.TorControlConnection;
@@ -47,6 +49,8 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     private final ControllerEventHandler controllerEventHandler = new ControllerEventHandler();
     private final CompletableFuture<String> hiddenServiceAddress = new CompletableFuture<>();
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
+    @Getter
+    private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
 
     public void connect(int controlPort, PasswordDigest controlConnectionSecret) {
         log.info("connect with controlPort {}", controlPort);
@@ -158,6 +162,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     @Override
     public void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent) {
         log.info("Tor bootstrap event: {}", bootstrapEvent);
+        this.bootstrapEvent.set(bootstrapEvent);
         if (bootstrapEvent.isDoneEvent()) {
             isBootstrappedCountdownLatch.countDown();
         }
