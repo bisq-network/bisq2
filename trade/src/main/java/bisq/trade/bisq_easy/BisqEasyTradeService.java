@@ -100,20 +100,20 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 return;
             }
 
-            if (networkMessage instanceof BisqEasyTakeOfferRequest) {
-                onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) networkMessage);
-            } else if (networkMessage instanceof BisqEasyTakeOfferResponse) {
-                onBisqEasyTakeOfferResponse((BisqEasyTakeOfferResponse) networkMessage);
-            } else if (networkMessage instanceof BisqEasyAccountDataMessage) {
-                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) networkMessage);
-            } else if (networkMessage instanceof BisqEasyConfirmFiatSentMessage) {
-                onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) networkMessage);
-            } else if (networkMessage instanceof BisqEasyBtcAddressMessage) {
-                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) networkMessage);
-            } else if (networkMessage instanceof BisqEasyConfirmFiatReceiptMessage) {
-                onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) networkMessage);
-            } else if (networkMessage instanceof BisqEasyConfirmBtcSentMessage) {
-                onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) networkMessage);
+            if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
+                onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferResponse) {
+                onBisqEasyTakeOfferResponse((BisqEasyTakeOfferResponse) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
+                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmFiatSentMessage) {
+                onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
+                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmFiatReceiptMessage) {
+                onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmBtcSentMessage) {
+                onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) bisqEasyTradeMessage);
             }
         }
     }
