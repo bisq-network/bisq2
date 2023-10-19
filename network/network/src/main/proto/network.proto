@@ -15,13 +15,12 @@ message Address {
   sint32 port = 2;
 }
 
-message AddressTransportTypeTuple {
-  string transportType = 1;
-  Address address = 2;
+message AddressByTransportTypeMap {
+  map<string, Address> addressByTransportType = 1;
 }
 
 message NetworkId {
-  repeated AddressTransportTypeTuple addressNetworkTypeTuple = 1;
+  AddressByTransportTypeMap addressByNetworkTypeMap = 1;
   security.PubKey pubKey = 2;
   string nodeId = 3;
 }
@@ -291,7 +290,7 @@ message DataStore {
 
 message NetworkServiceStore {
   map<string, NetworkId> networkIdByNodeId = 1;
-  repeated string seedNodeAddresses = 2;
+  repeated AddressByTransportTypeMap seedNodes = 2;
 }
 
 message MessageDeliveryStatusStore {

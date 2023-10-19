@@ -86,7 +86,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
                 bondedRoles.add(new BondedRole(authorizedBondedRole));
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                    networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
+                    networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap());
                 }
 
                 networkService.getDataService().orElseThrow().getAuthorizedData()
@@ -119,7 +119,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 Optional<BondedRole> toRemove = bondedRoles.stream().filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedBondedRole)).findAny();
                 toRemove.ifPresent(bondedRoles::remove);
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                    networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByNetworkType());
+                    networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap());
                 }
 
                 networkService.getDataService().orElseThrow().getAuthorizedData()

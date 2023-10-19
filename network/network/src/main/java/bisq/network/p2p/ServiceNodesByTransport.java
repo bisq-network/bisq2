@@ -26,6 +26,7 @@ import bisq.network.NetworkService;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -77,6 +78,7 @@ public class ServiceNodesByTransport {
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService) {
         this.supportedTransportTypes = supportedTransportTypes;
+
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
 
@@ -128,16 +130,16 @@ public class ServiceNodesByTransport {
         map.get(transportType).initializePeerGroup();
     }
 
-    public void addSeedNodeAddressByTransport(Map<TransportType, Address> seedNodeAddressesByTransport) {
+    public void addSeedNode(AddressByTransportTypeMap seedNode) {
         supportedTransportTypes.forEach(transportType -> {
-            Address seedNodeAddress = seedNodeAddressesByTransport.get(transportType);
+            Address seedNodeAddress = seedNode.get(transportType);
             map.get(transportType).addSeedNodeAddress(seedNodeAddress);
         });
     }
 
-    public void removeSeedNodeAddressByTransport(Map<TransportType, Address> seedNodeAddressesByTransport) {
+    public void removeSeedNode(AddressByTransportTypeMap seedNode) {
         supportedTransportTypes.forEach(transportType -> {
-            Address seedNodeAddress = seedNodeAddressesByTransport.get(transportType);
+            Address seedNodeAddress = seedNode.get(transportType);
             map.get(transportType).removeSeedNodeAddress(seedNodeAddress);
         });
     }
@@ -147,7 +149,7 @@ public class ServiceNodesByTransport {
                                                              KeyPair senderKeyPair,
                                                              String senderNodeId) {
         NetworkService.SendMessageResult resultsByType = new NetworkService.SendMessageResult();
-        receiverNetworkId.getAddressByNetworkType().forEach((transportType, address) -> {
+        receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
@@ -163,8 +165,8 @@ public class ServiceNodesByTransport {
 
     public Map<TransportType, Connection> send(String senderNodeId,
                                                NetworkMessage networkMessage,
-                                               Map<TransportType, Address> receiverAddressByNetworkType) {
-        return receiverAddressByNetworkType.entrySet().stream().map(entry -> {
+                                               AddressByTransportTypeMap receiver) {
+        return receiver.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
                         return new Pair<>(transportType, map.get(transportType).send(senderNodeId, networkMessage, entry.getValue()));

@@ -30,6 +30,7 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.BootstrapInfo;
@@ -155,16 +156,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        persistableStore.getSeedNodeAddresses().stream()
-                .map(NetworkId.AddressTransportTypeTuple::setToAddressesByTypeMap)
-                .forEach(this::addSeedNodeAddressByTransport);
+        persistableStore.getSeedNodes().forEach(serviceNodesByTransport::addSeedNode);
 
         PubKey pubKey = keyPairService.getDefaultPubKey();
         String nodeId = Node.DEFAULT;
         Stream<CompletableFuture<Void>> futures = getDefaultPortByTransport().entrySet().stream()
                 .map(entry -> {
                     TransportType transportType = entry.getKey();
-                    Integer port = entry.getValue();
+                    int port = entry.getValue();
                     return runAsync(() -> {
                         try {
                             serviceNodesByTransport.initializeNode(transportType, nodeId, port);
@@ -277,8 +276,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      */
     public CompletableFuture<Map<TransportType, Connection>> send(String senderNodeId,
                                                                   NetworkMessage networkMessage,
-                                                                  Map<TransportType, Address> receiverAddressByNetworkType) {
-        return supplyAsync(() -> serviceNodesByTransport.send(senderNodeId, networkMessage, receiverAddressByNetworkType),
+                                                                  AddressByTransportTypeMap receiver) {
+        return supplyAsync(() -> serviceNodesByTransport.send(senderNodeId, networkMessage, receiver),
                 NETWORK_IO_POOL);
     }
 
@@ -389,11 +388,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.getAddressesByNodeIdMapByTransportType();
     }
 
-    public Map<TransportType, Address> getAddressByNetworkType(String nodeId) {
-        return supportedTransportTypes.stream()
+    public AddressByTransportTypeMap getAddressByNetworkType(String nodeId) {
+        Map<TransportType, Address> map = supportedTransportTypes.stream()
                 .filter(transportType -> findAddress(transportType, nodeId).isPresent())
                 .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> findAddress(transportType, nodeId).orElseThrow()));
+        return new AddressByTransportTypeMap(map);
     }
 
     public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
@@ -429,7 +429,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         Map<TransportType, Integer> persistedOrRandomPortByTransport = supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> networkIdOptional.stream()
-                                .map(NetworkId::getAddressByNetworkType)
+                                .map(NetworkId::getAddressByTransportTypeMap)
                                 .flatMap(addressByNetworkType -> Optional.ofNullable(addressByNetworkType.get(transportType)).stream())
                                 .map(Address::getPort)
                                 .findAny()
@@ -495,7 +495,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Optional<NetworkId> createNetworkId(String nodeId, PubKey pubKey) {
-        Map<TransportType, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
+        AddressByTransportTypeMap addressByNetworkType = getAddressByNetworkType(nodeId);
         // We need the addresses for all transports to be able to create the networkId.
         if (supportedTransportTypes.size() == addressByNetworkType.size()) {
             return Optional.of(new NetworkId(addressByNetworkType, pubKey, nodeId));
@@ -514,15 +514,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Add seed node address
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addSeedNodeAddressByTransport(Map<TransportType, Address> seedNodeAddressesByTransport) {
-        serviceNodesByTransport.addSeedNodeAddressByTransport(seedNodeAddressesByTransport);
-        persistableStore.getSeedNodeAddresses().add(NetworkId.AddressTransportTypeTuple.addressByNetworkTypeToString(seedNodeAddressesByTransport));
+    public void addSeedNodeAddressByTransport(AddressByTransportTypeMap seedNodeAddressesByTransport) {
+        serviceNodesByTransport.addSeedNode(seedNodeAddressesByTransport);
+        persistableStore.getSeedNodes().add(seedNodeAddressesByTransport);
         persist();
     }
 
-    public void removeSeedNodeAddressByTransport(Map<TransportType, Address> seedNodeAddressesByTransport) {
-        serviceNodesByTransport.removeSeedNodeAddressByTransport(seedNodeAddressesByTransport);
-        persistableStore.getSeedNodeAddresses().remove(NetworkId.AddressTransportTypeTuple.addressByNetworkTypeToString(seedNodeAddressesByTransport));
+    public void removeSeedNodeAddressByTransport(AddressByTransportTypeMap seedNodeAddressesByTransport) {
+        serviceNodesByTransport.removeSeedNode(seedNodeAddressesByTransport);
+        persistableStore.getSeedNodes().remove(seedNodeAddressesByTransport);
         persist();
     }
 

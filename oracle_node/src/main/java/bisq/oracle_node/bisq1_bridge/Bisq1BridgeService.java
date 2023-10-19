@@ -387,7 +387,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                     bondedRoleType,
                                     bondUserName,
                                     signatureBase64,
-                                    request.getAddressByNetworkType(),
+                                    request.getAddressByTransportTypeMap(),
                                     request.getNetworkId(),
                                     Optional.of(authorizedOracleNode),
                                     false);

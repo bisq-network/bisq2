@@ -88,7 +88,7 @@ public class RoleInfo {
                         model.setIsBanned(BooleanFormatter.toYesNo(bondedRole.isBanned()));
                         AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
                         String addressByNetworkType = Joiner.on(", ")
-                                .join(authorizedBondedRole.getNetworkId().getAddressByNetworkType().entrySet().stream()
+                                .join(authorizedBondedRole.getNetworkId().getAddressByTransportTypeMap().entrySet().stream()
                                         .map(e -> e.getKey() + ": " + e.getValue().getFullAddress())
                                         .collect(Collectors.toList()));
                         model.setAddressByNetworkType(addressByNetworkType);

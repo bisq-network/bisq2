@@ -31,7 +31,7 @@ message BondedRoleRegistrationRequest {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
+  network.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.NetworkId networkId = 7;
   bool isCancellationRequest = 8;
 }
@@ -42,7 +42,7 @@ message AuthorizedBondedRole {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  repeated network.AddressTransportTypeTuple addressNetworkTypeTuple = 6;
+  network.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.NetworkId networkId = 7;
   optional AuthorizedOracleNode authorizedOracleNode = 8;
   bool staticPublicKeysProvided = 9;
