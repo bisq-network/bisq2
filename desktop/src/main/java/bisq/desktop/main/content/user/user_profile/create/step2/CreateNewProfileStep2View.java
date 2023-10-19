@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.user_profile.create.step2;
 
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -25,7 +24,6 @@ import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -42,7 +40,6 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
     private final Button saveButton, cancelButton;
     private final Label nickName, nym;
     protected final Label headLineLabel;
-    private Scene rootScene;
 
     public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
         super(new VBox(25), model, controller);
@@ -122,13 +119,6 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         statement.textProperty().bindBidirectional(model.getStatement());
         saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> controller.onCancel());
-
-        rootScene = root.getScene();
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onCancel);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
     }
 
     @Override
@@ -138,8 +128,5 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());
         statement.textProperty().unbindBidirectional(model.getStatement());
-        if (rootScene != null) {
-            rootScene.setOnKeyReleased(null);
-        }
     }
 }

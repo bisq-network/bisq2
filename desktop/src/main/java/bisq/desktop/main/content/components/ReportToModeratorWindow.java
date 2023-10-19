@@ -19,7 +19,6 @@ package bisq.desktop.main.content.components;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.overlay.Popup;
@@ -35,7 +34,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -135,7 +133,6 @@ public class ReportToModeratorWindow {
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Button reportButton, cancelButton;
         private final MaterialTextArea message;
-        private Scene rootScene;
 
         private View(Model model, Controller controller) {
             super(new VBox(20), model, controller);
@@ -162,18 +159,10 @@ public class ReportToModeratorWindow {
 
         @Override
         protected void onViewAttached() {
-            rootScene = root.getScene();
-
             message.textProperty().bindBidirectional(model.getMessage());
             reportButton.disableProperty().bind(model.getReportButtonDisabled());
             reportButton.setOnAction(e -> controller.onReport());
             cancelButton.setOnAction(e -> controller.onCancel());
-
-            // Replace the key handler of OverlayView as we do not support escape/enter at this popup
-            rootScene.setOnKeyReleased(keyEvent -> {
-                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-                KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-            });
         }
 
         @Override
@@ -182,7 +171,6 @@ public class ReportToModeratorWindow {
             reportButton.disableProperty().unbind();
             reportButton.setOnAction(null);
             cancelButton.setOnAction(null);
-            rootScene.setOnKeyReleased(null);
         }
     }
 }

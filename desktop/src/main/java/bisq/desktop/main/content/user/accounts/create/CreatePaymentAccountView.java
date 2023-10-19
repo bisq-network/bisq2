@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.accounts.create;
 
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -25,7 +24,6 @@ import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -39,7 +37,6 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
     private final MaterialTextArea accountData;
     private final Button saveButton, cancelButton;
     private final Label headLineLabel;
-    private Scene rootScene;
 
     public CreatePaymentAccountView(CreatePaymentAccountModel model, CreatePaymentAccountController controller) {
         super(new VBox(), model, controller);
@@ -103,13 +100,6 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
 
         saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> controller.onCancel());
-
-        rootScene = root.getScene();
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onCancel);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
     }
 
     @Override
@@ -120,9 +110,5 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
 
         saveButton.setOnAction(null);
         cancelButton.setOnAction(null);
-
-        if (rootScene != null) {
-            rootScene.setOnKeyReleased(null);
-        }
     }
 }

@@ -107,9 +107,7 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
     }
 
     private void configKeyEventHandlers() {
-        scene.setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
+        scene.setOnKeyPressed(keyEvent ->
+                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit));
     }
 }

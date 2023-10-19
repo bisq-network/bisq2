@@ -19,6 +19,7 @@ package bisq.desktop.overlay;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -39,8 +40,10 @@ import bisq.desktop.overlay.onboarding.OnboardingController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.overlay.update.UpdaterController;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -81,6 +84,10 @@ public class OverlayController extends NavigationController {
     private final ServiceProvider serviceProvider;
     @Nullable
     private Runnable onHiddenHandler;
+    @Setter
+    private boolean useEscapeKeyHandler;
+    @Setter
+    private Runnable enterKeyHandler;
 
     public OverlayController(ServiceProvider serviceProvider, Region applicationRoot) {
         super(NavigationTarget.OVERLAY);
@@ -91,6 +98,7 @@ public class OverlayController extends NavigationController {
         model = new OverlayModel(serviceProvider);
         view = new OverlayView(model, this, applicationRoot);
         INSTANCE = this;
+        // We activate the OverlayController, and it stays active during the application lifetime
         onActivateInternal();
 
         model.getView().addListener((observable, oldValue, newValue) -> {
@@ -174,6 +182,17 @@ public class OverlayController extends NavigationController {
             default: {
                 return Optional.empty();
             }
+        }
+    }
+
+    void onKeyPressed(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, this::onQuit);
+
+        if (useEscapeKeyHandler) {
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> getView().hide());
+        }
+        if (enterKeyHandler != null) {
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, enterKeyHandler);
         }
     }
 

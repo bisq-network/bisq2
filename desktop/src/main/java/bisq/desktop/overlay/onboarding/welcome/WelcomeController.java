@@ -21,6 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.overlay.OverlayController;
 import bisq.settings.DontShowAgainService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,14 +32,18 @@ import static bisq.settings.DontShowAgainKey.WELCOME;
 public class WelcomeController implements Controller {
     @Getter
     private final WelcomeView view;
+    private final OverlayController overlayController;
 
     public WelcomeController(ServiceProvider serviceProvider) {
+        overlayController = OverlayController.getInstance();
         WelcomeModel model = new WelcomeModel();
         view = new WelcomeView(model, this);
     }
 
     @Override
     public void onActivate() {
+        overlayController.setEnterKeyHandler(this::onNext);
+        overlayController.setUseEscapeKeyHandler(false);
     }
 
     @Override

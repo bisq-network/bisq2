@@ -17,7 +17,6 @@
 
 package bisq.desktop.overlay.onboarding.create_profile;
 
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -163,8 +162,6 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
             root.requestFocus();
         });
 
-        root.setOnKeyReleased(keyEvent -> KeyHandlerUtil.handleEnterKeyEvent(keyEvent, controller::onCreateUserProfile));
-
         nickname.requestFocus();
     }
 
@@ -196,6 +193,5 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         regenerateButton.setOnMouseClicked(null);
         roboIconView.setOnMouseClicked(null);
         createProfileButton.setOnMouseClicked(null);
-        root.setOnKeyReleased(null);
     }
 }

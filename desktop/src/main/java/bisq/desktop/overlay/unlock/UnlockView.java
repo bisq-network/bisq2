@@ -17,14 +17,12 @@
 
 package bisq.desktop.overlay.unlock;
 
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinLengthValidator;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -36,11 +34,8 @@ import static org.fxmisc.easybind.EasyBind.subscribe;
 
 @Slf4j
 public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
-
-    private Scene rootScene;
     private final MaterialPasswordField password;
     private final Button unlockButton, cancelButton;
-    private final Label headline;
     private boolean isFirstTimeThatFocusChanges;
     private Subscription focusPin;
 
@@ -50,16 +45,21 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
         root.setPrefWidth(750);
         root.setPadding(new Insets(30, 30, 30, 30));
 
-        headline = new Label(Res.get("unlock.headline"));
+        Label headline = new Label(Res.get("unlock.headline"));
         headline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidators(
                 new RequiredFieldValidator(Res.get("validation.empty")),
                 new TextMinLengthValidator(Res.get("validation.password.tooShort")));
+
         unlockButton = new Button(Res.get("unlock.button"));
         unlockButton.setDefaultButton(true);
+        unlockButton.setFocusTraversable(false);
+
         cancelButton = new Button(Res.get("action.cancel"));
+        cancelButton.setFocusTraversable(false);
+
         isFirstTimeThatFocusChanges = true;
         HBox buttons = new HBox(20, unlockButton, cancelButton);
         HBox.setMargin(buttons, new Insets(20, 0, 0, 0));
@@ -68,22 +68,12 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
     @Override
     protected void onViewAttached() {
+        password.requestFocus();
         password.passwordProperty().bindBidirectional(model.getPassword());
         password.isMaskedProperty().bindBidirectional(model.getPasswordIsMasked());
 
         unlockButton.setOnAction(e -> controller.onUnlock());
         cancelButton.setOnAction(e -> controller.onCancel());
-
-        // Replace the key handler of OverlayView as we do not support escape/enter at this popup
-        rootScene = root.getScene();
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
-            });
-        });
 
         focusPin = subscribe(password.textInputFocusedProperty(), this::validatePasswordWhenFocusOut);
     }
@@ -95,7 +85,6 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
         unlockButton.setOnAction(null);
         cancelButton.setOnAction(null);
-        rootScene.setOnKeyReleased(null);
 
         focusPin.unsubscribe();
     }

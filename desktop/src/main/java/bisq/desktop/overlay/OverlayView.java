@@ -22,7 +22,6 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.NavigationView;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -112,22 +111,8 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void show(double prefWidth, double prefHeight) {
-        if (scene.getOnKeyReleased() == null) {
-            scene.setOnKeyReleased(keyEvent -> {
-                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-                KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
-                KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::hide);
-                KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-            });
-        }
-        if (ownerScene.getOnKeyReleased() == null) {
-            ownerScene.setOnKeyReleased(keyEvent -> {
-                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-                KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
-                KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::hide);
-                KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-            });
-        }
+        scene.setOnKeyPressed(controller::onKeyPressed);
+        ownerScene.setOnKeyPressed(controller::onKeyPressed);
 
         prefWidth = Math.min(prefWidth, owner.getWidth());
         prefHeight = Math.min(prefHeight, owner.getHeight());
@@ -150,9 +135,9 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                 .after(150);
     }
 
-    private void hide() {
-        scene.setOnKeyReleased(null);
-        ownerScene.setOnKeyReleased(null);
+    void hide() {
+        scene.setOnKeyPressed(null);
+        ownerScene.setOnKeyPressed(null);
         Transitions.removeEffect(owner);
         animateHide(() -> {
             if (stage != null) {
