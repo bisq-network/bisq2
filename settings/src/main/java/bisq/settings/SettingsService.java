@@ -63,7 +63,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
-        getSupportedLanguageCodes().addListener(this::persist);
+        getSupportedLanguageCodes().addObserver(this::persist);
         isInitialized = true;
         return CompletableFuture.completedFuture(true);
     }

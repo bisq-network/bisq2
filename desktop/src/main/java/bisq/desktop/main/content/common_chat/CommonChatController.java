@@ -92,7 +92,7 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
         });
 
         ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
-        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addListener(() ->
+        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
                 model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
 
         selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);

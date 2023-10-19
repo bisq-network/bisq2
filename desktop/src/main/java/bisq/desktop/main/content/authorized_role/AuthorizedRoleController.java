@@ -62,7 +62,7 @@ public class AuthorizedRoleController extends TabController<AuthorizedRoleModel>
 
     @Override
     public void onActivate() {
-        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addListener(this::onBondedRolesChanged);
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
     }
 

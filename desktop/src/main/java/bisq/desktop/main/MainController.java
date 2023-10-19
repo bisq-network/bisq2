@@ -94,7 +94,7 @@ public class MainController extends NavigationController {
             }
         }
 
-        alertService.getAuthorizedAlertDataSet().addListener(new CollectionObserver<>() {
+        alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData == null) {

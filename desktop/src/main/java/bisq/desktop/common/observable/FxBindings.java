@@ -121,7 +121,7 @@ public class FxBindings {
         }
 
         public Pin to(ObservableHashMap<K, V> observable) {
-            return observable.addListener(new HashMapObserver<>() {
+            return observable.addObserver(new HashMapObserver<>() {
                 @Override
                 public void put(K key, V value) {
                     UIThread.run(() -> observableMap.put(key, value));

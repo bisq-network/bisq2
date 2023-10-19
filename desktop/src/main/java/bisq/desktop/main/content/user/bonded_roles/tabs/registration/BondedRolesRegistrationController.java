@@ -84,7 +84,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
                     });
                 }
         );
-        bondedRoleSetPin = authorizedBondedRolesService.getBondedRoles().addListener(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
+        bondedRoleSetPin = authorizedBondedRolesService.getBondedRoles().addObserver(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
         applyRequestRegistrationButtonDisabledBinding();
 
         // Issue with height of MultiLine text so lets wait until the component is fixed

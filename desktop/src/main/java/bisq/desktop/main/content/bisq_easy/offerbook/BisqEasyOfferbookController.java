@@ -110,7 +110,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
 
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
-        bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addListener(() ->
+        bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
                 model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChannels.isEmpty()));
 
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()

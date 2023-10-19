@@ -38,13 +38,13 @@ public class ObservableHashMap<K, V> implements Map<K, V> {
         putAll(map);
     }
 
-    public Pin addListener(HashMapObserver<K, V> observer) {
+    public Pin addObserver(HashMapObserver<K, V> observer) {
         observers.add(observer);
         observer.putAll(map);
         return () -> observers.remove(observer);
     }
 
-    public Pin addListener(Runnable observer) {
+    public Pin addObserver(Runnable observer) {
         SimpleHashMapObserver<K, V> simpleHashMapObserver = new SimpleHashMapObserver<>(observer);
         observers.add(simpleHashMapObserver);
         simpleHashMapObserver.onChange();
