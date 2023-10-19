@@ -36,6 +36,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.NotificationsService;
+import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
@@ -69,13 +70,13 @@ public class ChatService implements Service {
     private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices = new HashMap<>();
 
     public ChatService(PersistenceService persistenceService,
-                       ProofOfWorkService proofOfWorkService,
+                       SecurityService securityService,
                        NetworkService networkService,
                        UserService userService,
                        SettingsService settingsService,
                        NotificationsService notificationsService) {
         this.persistenceService = persistenceService;
-        this.proofOfWorkService = proofOfWorkService;
+        this.proofOfWorkService = securityService.getProofOfWorkService();
         this.networkService = networkService;
         this.userService = userService;
         this.userIdentityService = userService.getUserIdentityService();

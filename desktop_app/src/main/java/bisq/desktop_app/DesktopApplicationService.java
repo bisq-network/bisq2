@@ -135,7 +135,7 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
         offerService = new OfferService(networkService, identityService, persistenceService);
 
         chatService = new ChatService(persistenceService,
-                securityService.getProofOfWorkService(),
+                securityService,
                 networkService,
                 userService,
                 settingsService,

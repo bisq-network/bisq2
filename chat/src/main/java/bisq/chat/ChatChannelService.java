@@ -33,7 +33,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>> implements Service, PersistenceClient<S> {
+public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
+        implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;

@@ -22,6 +22,8 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.NetworkId;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -38,17 +40,19 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage {
+public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage, AckRequestingMessage {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
-    protected final UserProfile sender;
+    protected final UserProfile senderUserProfile;
+    protected final NetworkId receiverNetworkId;
 
     protected PrivateChatMessage(String messageId,
                                  ChatChannelDomain chatChannelDomain,
                                  String channelId,
-                                 UserProfile sender,
+                                 UserProfile senderUserProfile,
                                  String receiverUserProfileId,
+                                 NetworkId receiverNetworkId,
                                  @Nullable String text,
                                  Optional<Citation> citation,
                                  long date,
@@ -57,8 +61,9 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
         this(messageId,
                 chatChannelDomain,
                 channelId,
-                sender,
+                senderUserProfile,
                 receiverUserProfileId,
+                receiverNetworkId,
                 Optional.ofNullable(text),
                 citation,
                 date,
@@ -69,8 +74,9 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
     protected PrivateChatMessage(String messageId,
                                  ChatChannelDomain chatChannelDomain,
                                  String channelId,
-                                 UserProfile sender,
+                                 UserProfile senderUserProfile,
                                  String receiverUserProfileId,
+                                 NetworkId receiverNetworkId,
                                  Optional<String> text,
                                  Optional<Citation> citation,
                                  long date,
@@ -79,15 +85,26 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
         super(messageId,
                 chatChannelDomain,
                 channelId,
-                sender.getId(),
+                senderUserProfile.getId(),
                 text,
                 citation,
                 date,
                 wasEdited,
                 chatMessageType);
         this.receiverUserProfileId = receiverUserProfileId;
-        this.sender = sender;
+        this.senderUserProfile = senderUserProfile;
+        this.receiverNetworkId = receiverNetworkId;
 
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
+    }
+
+    @Override
+    public NetworkId getSender() {
+        return senderUserProfile.getNetworkId();
+    }
+
+    @Override
+    public NetworkId getReceiver() {
+        return receiverNetworkId;
     }
 }

@@ -31,7 +31,10 @@ import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
@@ -49,6 +52,8 @@ import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
+import bisq.network.NetworkService;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
@@ -62,11 +67,9 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -145,6 +148,7 @@ public class ChatMessagesListView {
         private final ChatNotificationService chatNotificationService;
         private final BisqEasyTradeService bisqEasyTradeService;
         private final BannedUserService bannedUserService;
+        private final NetworkService networkService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription;
 
@@ -161,6 +165,7 @@ public class ChatMessagesListView {
             settingsService = serviceProvider.getSettingsService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
+            networkService = serviceProvider.getNetworkService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -391,7 +396,7 @@ public class ChatMessagesListView {
             if (chatMessage instanceof PrivateChatMessage) {
                 PrivateChatMessage privateChatMessage = (PrivateChatMessage) chatMessage;
                 Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                        new ReportToModeratorWindow.InitData(privateChatMessage.getSender(), chatChannelDomain));
+                        new ReportToModeratorWindow.InitData(privateChatMessage.getSenderUserProfile(), chatChannelDomain));
             } else {
                 userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                         .ifPresent(accusedUserProfile -> Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
@@ -453,10 +458,39 @@ public class ChatMessagesListView {
         }
 
         private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
-            return FxBindings.<M, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                    .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
-                            bisqEasyTradeService, userIdentityService))
-                    .to(channel.getChatMessages());
+            return channel.getChatMessages().addObserver(new CollectionObserver<>() {
+                @Override
+                public void add(M chatMessage) {
+                    UIThread.run(() -> {
+                        model.chatMessages.add(new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                                bisqEasyTradeService, userIdentityService, networkService));
+                    });
+                }
+
+                @Override
+                public void remove(Object element) {
+                    if (element instanceof ChatMessage) {
+                        UIThread.run(() -> {
+                            ChatMessage chatMessage = (ChatMessage) element;
+                            Optional<ChatMessageListItem<? extends ChatMessage>> toRemove = model.chatMessages.stream()
+                                    .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
+                                    .findAny();
+                            toRemove.ifPresent(item -> {
+                                item.dispose();
+                                model.chatMessages.remove(item);
+                            });
+                        });
+                    }
+                }
+
+                @Override
+                public void clear() {
+                    UIThread.run(() -> {
+                        model.chatMessages.forEach(ChatMessageListItem::dispose);
+                        model.chatMessages.clear();
+                    });
+                }
+            });
         }
 
         private String getUserName(String userProfileId) {
@@ -574,17 +608,26 @@ public class ChatMessagesListView {
                     return new ListCell<>() {
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
-                        private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon, moreOptionsIcon, supportedLanguages;
+                        private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon,
+                                moreOptionsIcon, supportedLanguages;
+                        private final Label deliveryState;
                         private final Text quotedMessageField;
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
                         private final VBox mainVBox, quotedMessageVBox;
                         private final HBox cellHBox, messageHBox, messageBgHBox, reactionsHBox, editButtonsHBox;
                         private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
+                        private final Set<Subscription> subscriptions = new HashSet<>();
 
                         {
                             userName = new Label();
                             userName.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
+
+                            deliveryState = new Label();
+                            deliveryState.setCursor(Cursor.HAND);
+                            BisqTooltip tooltip = new BisqTooltip();
+                            tooltip.getStyleClass().add("dark-tooltip");
+                            deliveryState.setTooltip(tooltip);
 
                             dateTime = new Label();
                             dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
@@ -632,6 +675,7 @@ public class ChatMessagesListView {
                             replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
                             pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
                             editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
+                            HBox.setMargin(editIcon, new Insets(1, 0, 0, 0));
                             copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
                             deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
                             moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
@@ -647,7 +691,6 @@ public class ChatMessagesListView {
                             VBox.setMargin(quotedMessageVBox, new Insets(15, 0, 10, 5));
                             VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
                             VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
-                            VBox.setMargin(reactionsHBox, new Insets(4, 15, -3, 15));
                             mainVBox = new VBox();
                             mainVBox.setFillWidth(true);
                             HBox.setHgrow(mainVBox, Priority.ALWAYS);
@@ -665,6 +708,7 @@ public class ChatMessagesListView {
                             super.updateItem(item, empty);
                             if (item != null && !empty) {
 
+                                subscriptions.clear();
                                 ChatMessage chatMessage = item.getChatMessage();
 
                                 Node flow = this.getListView().lookup(".virtual-flow");
@@ -701,9 +745,7 @@ public class ChatMessagesListView {
                                     quotedMessageVBox.setId("chat-message-quote-box-my-msg");
 
                                     messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 30, -5, 0));
-
-                                    HBox.setMargin(copyIcon, new Insets(0, 15, 0, 0));
+                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
 
                                     VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
                                     if (isBisqEasyPublicChatMessageWithOffer) {
@@ -727,14 +769,33 @@ public class ChatMessagesListView {
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(140));
                                         userProfileIcon.setSize(30);
                                         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-                                        HBox.setMargin(deleteIcon, new Insets(0, 11, 0, -15));
+                                        HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
                                         reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, deleteIcon);
                                         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
                                         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
                                         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
                                         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
                                     }
-                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, reactionsHBox);
+
+                                    HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
+                                    HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
+
+                                    subscriptions.add(EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
+                                        if (v) {
+                                            deliveryStateHBox.getChildren().remove(deliveryState);
+                                            if (!reactionsHBox.getChildren().contains(deliveryState)) {
+                                                reactionsHBox.getChildren().add(deliveryState);
+                                            }
+                                        } else {
+                                            reactionsHBox.getChildren().remove(deliveryState);
+                                            if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
+                                                deliveryStateHBox.getChildren().add(deliveryState);
+                                            }
+                                        }
+                                    }));
+
+                                    VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
+                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
 
                                     messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
 
@@ -745,7 +806,9 @@ public class ChatMessagesListView {
                                     userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
 
                                     userProfileIcon.setSize(60);
-                                    HBox.setMargin(replyIcon, new Insets(0, 0, 0, 15));
+                                    HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
+                                    HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
+                                    HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
 
 
                                     quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
@@ -774,7 +837,7 @@ public class ChatMessagesListView {
                                         HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
                                         messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
 
-                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 30));
+                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
                                         mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
                                     } else {
                                         reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
@@ -788,7 +851,7 @@ public class ChatMessagesListView {
                                         messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
                                         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
 
-                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 30));
+                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
                                         mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
                                     }
                                 }
@@ -809,6 +872,16 @@ public class ChatMessagesListView {
                                     Tooltip.install(userProfileIcon, new BisqTooltip(author.getTooltipString()));
                                     userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
                                 });
+
+                                subscriptions.add(EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
+                                            deliveryState.setManaged(icon != null);
+                                            deliveryState.setVisible(icon != null);
+                                            if (icon != null) {
+                                                AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                                            }
+                                        }
+                                ));
+                                deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
 
                                 messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
                                 messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
@@ -848,6 +921,9 @@ public class ChatMessagesListView {
                                 cellHBox.setOnMouseExited(null);
 
                                 userProfileIcon.releaseResources();
+
+                                subscriptions.forEach(Subscription::unsubscribe);
+                                subscriptions.clear();
 
                                 setGraphic(null);
                             }
@@ -945,7 +1021,6 @@ public class ChatMessagesListView {
                             editInputField.setManaged(true);
                             editInputField.setInitialHeight(message.getBoundsInLocal().getHeight());
                             editInputField.setText(message.getText().replace(EDITED_POST_FIX, ""));
-                            // editInputField.setScrollHideThreshold(200);
                             editInputField.requestFocus();
                             editInputField.positionCaret(message.getText().length());
                             editButtonsHBox.setVisible(true);
@@ -1010,16 +1085,23 @@ public class ChatMessagesListView {
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
         private final boolean canTakeOffer;
+        @EqualsAndHashCode.Exclude
+        private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
+        @EqualsAndHashCode.Exclude
+        private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
+        @EqualsAndHashCode.Exclude
+        private final Set<Pin> pins = new HashSet<>();
 
         public ChatMessageListItem(T chatMessage,
                                    UserProfileService userProfileService,
                                    ReputationService reputationService,
                                    BisqEasyTradeService bisqEasyTradeService,
-                                   UserIdentityService userIdentityService) {
+                                   UserIdentityService userIdentityService,
+                                   NetworkService networkService) {
             this.chatMessage = chatMessage;
 
             if (chatMessage instanceof PrivateChatMessage) {
-                senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
+                senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
             } else {
                 senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
             }
@@ -1047,6 +1129,50 @@ public class ChatMessagesListView {
             } else {
                 canTakeOffer = false;
             }
+
+            networkService.getMessageDeliveryStatusByMessageId()
+                    .ifPresent(map ->
+                            pins.add(map.addObserver(new HashMapObserver<>() {
+                                @Override
+                                public void put(String key, Observable<MessageDeliveryStatus> value) {
+                                    if (key.equals(chatMessage.getId())) {
+                                        pins.add(value.addObserver(status -> {
+                                            UIThread.run(() -> {
+                                                if (status != null) {
+                                                    UIThread.run(() -> {
+                                                        messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
+                                                        switch (status) {
+                                                            case SENT:
+                                                                messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
+                                                                break;
+                                                            case ARRIVED:
+                                                                messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
+                                                                break;
+                                                            case ADDED_TO_MAILBOX:
+                                                                messageDeliveryStatusIcon.set(AwesomeIcon.ENVELOPE);
+                                                                break;
+                                                            case MAILBOX_MSG_RECEIVED:
+                                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_DOWN);
+                                                                break;
+                                                            case FAILED:
+                                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
+                                                                break;
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }));
+                                    }
+                                }
+
+                                @Override
+                                public void remove(Object key) {
+                                }
+
+                                @Override
+                                public void clear() {
+                                }
+                            })));
         }
 
         @Override
@@ -1057,6 +1183,10 @@ public class ChatMessagesListView {
         @Override
         public boolean match(String filterString) {
             return filterString == null || filterString.isEmpty() || StringUtils.containsIgnoreCase(message, filterString) || StringUtils.containsIgnoreCase(nym, filterString) || StringUtils.containsIgnoreCase(nickName, filterString) || StringUtils.containsIgnoreCase(date, filterString);
+        }
+
+        public void dispose() {
+            pins.forEach(Pin::unbind);
         }
     }
 }
