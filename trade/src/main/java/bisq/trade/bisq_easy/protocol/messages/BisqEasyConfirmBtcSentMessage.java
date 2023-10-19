@@ -31,8 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
     private final String txId;
 
-    public BisqEasyConfirmBtcSentMessage(String tradeId, NetworkId sender, String txId) {
-        super(tradeId, sender);
+    public BisqEasyConfirmBtcSentMessage(String id,
+                                         String tradeId,
+                                         NetworkId sender,
+                                         NetworkId receiver,
+                                         String txId) {
+        super(id, tradeId, sender, receiver);
 
         this.txId = txId;
 
@@ -55,8 +59,10 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
     public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyConfirmBtcSentMessage();
         return new BisqEasyConfirmBtcSentMessage(
+                proto.getId(),
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
+                NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyConfirmBtcSentMessage.getTxId());
     }
 }

@@ -31,8 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     private final String btcAddress;
 
-    public BisqEasyBtcAddressMessage(String tradeId, NetworkId sender, String btcAddress) {
-        super(tradeId, sender);
+    public BisqEasyBtcAddressMessage(String id,
+                                     String tradeId,
+                                     NetworkId sender,
+                                     NetworkId receiver,
+                                     String btcAddress) {
+        super(id, tradeId, sender, receiver);
 
         this.btcAddress = btcAddress;
 
@@ -55,8 +59,10 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyConfirmFiatSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
         return new BisqEasyBtcAddressMessage(
+                proto.getId(),
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
+                NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyConfirmFiatSentMessage.getBtcAddress());
     }
 }

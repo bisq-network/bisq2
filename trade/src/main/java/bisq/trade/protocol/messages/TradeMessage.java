@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
@@ -38,21 +39,27 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class TradeMessage implements MailboxMessage, Event {
+public abstract class TradeMessage implements MailboxMessage, AckRequestingMessage, Event {
+    private final String id;
     private final String tradeId;
     private final NetworkId sender;
+    protected final NetworkId receiver;
 
-    protected TradeMessage(String tradeId, NetworkId sender) {
+    protected TradeMessage(String id, String tradeId, NetworkId sender, NetworkId receiver) {
+        this.id = id;
         this.tradeId = tradeId;
         this.sender = sender;
+        this.receiver = receiver;
 
         NetworkDataValidation.validateText(tradeId, 200); // For private channels we combine user profile IDs for channelId
     }
 
     public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {
         return bisq.trade.protobuf.TradeMessage.newBuilder()
+                .setId(id)
                 .setTradeId(tradeId)
-                .setSender(sender.toProto());
+                .setSender(sender.toProto())
+                .setReceiver(receiver.toProto());
     }
 
     @Override

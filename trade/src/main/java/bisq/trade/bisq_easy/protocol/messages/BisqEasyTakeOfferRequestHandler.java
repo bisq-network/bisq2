@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -58,7 +59,11 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             ContractSignatureData makersContractSignatureData = contractService.signContract(contract, trade.getMyIdentity().getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
 
-            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(trade.getId(), trade.getMyself().getNetworkId(), makersContractSignatureData);
+            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(UUID.randomUUID().toString(),
+                    trade.getId(),
+                    trade.getMyself().getNetworkId(),
+                    trade.getPeer().getNetworkId(),
+                    makersContractSignatureData);
             sendMessage(response, serviceProvider, trade);
 
             if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {

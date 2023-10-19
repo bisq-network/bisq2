@@ -35,8 +35,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public abstract class BisqEasyTradeMessage extends TradeMessage {
     protected final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
 
-    protected BisqEasyTradeMessage(String tradeId, NetworkId sender) {
-        super(tradeId, sender);
+    protected BisqEasyTradeMessage(String id, String tradeId, NetworkId sender, NetworkId receiver) {
+        super(id, tradeId, sender, receiver);
     }
 
     public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

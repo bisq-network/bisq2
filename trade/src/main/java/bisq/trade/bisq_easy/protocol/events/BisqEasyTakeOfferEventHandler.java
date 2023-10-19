@@ -26,6 +26,7 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
 
 import java.security.GeneralSecurityException;
+import java.util.UUID;
 
 public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 
@@ -40,7 +41,12 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
         try {
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, trade.getMyIdentity().getKeyPair());
             commitToModel(contractSignatureData);
-            sendMessage(new BisqEasyTakeOfferRequest(trade.getId(), trade.getMyIdentity().getNetworkId(), bisqEasyContract, contractSignatureData));
+            sendMessage(new BisqEasyTakeOfferRequest(UUID.randomUUID().toString(),
+                    trade.getId(),
+                    trade.getMyIdentity().getNetworkId(),
+                    trade.getPeer().getNetworkId(),
+                    bisqEasyContract,
+                    contractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

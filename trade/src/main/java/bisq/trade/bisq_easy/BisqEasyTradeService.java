@@ -35,7 +35,6 @@ import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
-import bisq.trade.protocol.Protocol;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -137,79 +136,66 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
         persistableStore.add(bisqEasyTrade);
 
-        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(bisqEasyTrade);
         try {
-            protocol.handle(message);
+            createAndAddTradeProtocol(bisqEasyTrade).handle(message);
             persist();
-        } catch (TradeException e) {
+        } catch (Exception e) {
             log.error("Error at processing message " + message, e);
         }
     }
 
     private void onBisqEasyTakeOfferResponse(BisqEasyTakeOfferResponse message) {
-        findProtocol(message.getTradeId()).ifPresent(protocol -> {
-            try {
-                protocol.handle(message);
-                persist();
-            } catch (TradeException e) {
-                log.error("Error at processing message " + message, e);
-            }
-        });
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
     }
 
     private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
-        findProtocol(message.getTradeId()).ifPresent(protocol -> {
-            try {
-                protocol.handle(message);
-                persist();
-            } catch (TradeException e) {
-                log.error("Error at processing message " + message, e);
-            }
-        });
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
     }
 
     private void onBisqEasyConfirmFiatSentMessage(BisqEasyConfirmFiatSentMessage message) {
-        findProtocol(message.getTradeId()).ifPresent(protocol -> {
-            try {
-                protocol.handle(message);
-                persist();
-            } catch (TradeException e) {
-                log.error("Error at processing message " + message, e);
-            }
-        });
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
     }
 
     private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
-        findProtocol(message.getTradeId()).ifPresent(protocol -> {
-            try {
-                protocol.handle(message);
-                persist();
-            } catch (TradeException e) {
-                log.error("Error at processing message " + message, e);
-            }
-        });
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
     }
 
     private void onBisqEasyConfirmFiatReceiptMessage(BisqEasyConfirmFiatReceiptMessage message) {
-        findProtocol(message.getTradeId()).ifPresent(protocol -> {
-            try {
-                protocol.handle(message);
-                persist();
-            } catch (TradeException e) {
-                log.error("Error at processing message " + message, e);
-            }
-        });
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
     }
 
     private void onBisqEasyConfirmBtcSentMessage(BisqEasyConfirmBtcSentMessage message) {
-        findProtocol(message.getTradeId()).ifPresent(protocol -> {
-            try {
-                protocol.handle(message);
-                persist();
-            } catch (TradeException e) {
-                log.error("Error at processing message " + message, e);
-            }
-        });
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
     }
 
 
@@ -241,45 +227,38 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
         persistableStore.add(bisqEasyTrade);
 
-        Protocol<BisqEasyTrade> protocol = createAndAddTradeProtocol(bisqEasyTrade);
-        protocol.handle(new BisqEasyTakeOfferEvent(contract));
+        createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent(contract));
         persist();
         return bisqEasyTrade;
     }
 
-    public void sellerSendsPaymentAccount(BisqEasyTrade tradeModel, String paymentAccountData) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyAccountDataEvent(paymentAccountData));
+    public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyAccountDataEvent(paymentAccountData));
         persist();
     }
 
-    public void buyerConfirmFiatSent(BisqEasyTrade tradeModel) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyConfirmFiatSentEvent());
+    public void buyerConfirmFiatSent(BisqEasyTrade trade) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatSentEvent());
         persist();
     }
 
-    public void buyerSendBtcAddress(BisqEasyTrade tradeModel, String buyersBtcAddress) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasySendBtcAddressEvent(buyersBtcAddress));
+    public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasySendBtcAddressEvent(buyersBtcAddress));
         persist();
     }
 
-    public void sellerConfirmFiatReceipt(BisqEasyTrade tradeModel) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyConfirmFiatReceiptEvent());
+    public void sellerConfirmFiatReceipt(BisqEasyTrade trade) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatReceiptEvent());
         persist();
     }
 
-    public void sellerConfirmBtcSent(BisqEasyTrade tradeModel, String txId) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyConfirmBtcSentEvent(txId));
+    public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyConfirmBtcSentEvent(txId));
         persist();
     }
 
-    public void btcConfirmed(BisqEasyTrade tradeModel) throws TradeException {
-        BisqEasyProtocol protocol = findProtocol(tradeModel.getId()).orElseThrow();
-        protocol.handle(new BisqEasyBtcConfirmedEvent());
+    public void btcConfirmed(BisqEasyTrade trade) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyBtcConfirmedEvent());
         persist();
     }
 
@@ -290,6 +269,12 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
+    }
+
+    public BisqEasyProtocol getProtocol(String id) throws IllegalArgumentException {
+        Optional<BisqEasyProtocol> protocol = findProtocol(id);
+        checkArgument(protocol.isPresent(), "No protocol found for trade ID " + id);
+        return protocol.get();
     }
 
     public Optional<BisqEasyTrade> findTrade(String tradeId) {

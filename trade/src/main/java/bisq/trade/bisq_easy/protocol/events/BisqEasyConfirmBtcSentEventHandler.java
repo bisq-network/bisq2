@@ -23,6 +23,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
 
+import java.util.UUID;
+
 public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 
     public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
@@ -34,7 +36,11 @@ public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<
         BisqEasyConfirmBtcSentEvent bisqEasyConfirmBtcSentEvent = (BisqEasyConfirmBtcSentEvent) event;
         String txId = bisqEasyConfirmBtcSentEvent.getTxId();
         commitToModel(txId);
-        sendMessage(new BisqEasyConfirmBtcSentMessage(trade.getId(), trade.getMyIdentity().getNetworkId(), txId));
+        sendMessage(new BisqEasyConfirmBtcSentMessage(UUID.randomUUID().toString(),
+                trade.getId(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                txId));
     }
 
     private void commitToModel(String txId) {

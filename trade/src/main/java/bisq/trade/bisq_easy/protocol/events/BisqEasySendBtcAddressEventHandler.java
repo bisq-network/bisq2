@@ -23,6 +23,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
 
+import java.util.UUID;
+
 public class BisqEasySendBtcAddressEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
 
     public BisqEasySendBtcAddressEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
@@ -34,7 +36,11 @@ public class BisqEasySendBtcAddressEventHandler extends SendTradeMessageHandler<
         BisqEasySendBtcAddressEvent bisqEasySendBtcAddressEvent = (BisqEasySendBtcAddressEvent) event;
         String btcAddress = bisqEasySendBtcAddressEvent.getBtcAddress();
         commitToModel(btcAddress);
-        sendMessage(new BisqEasyBtcAddressMessage(trade.getId(), trade.getMyIdentity().getNetworkId(), btcAddress));
+        sendMessage(new BisqEasyBtcAddressMessage(UUID.randomUUID().toString(),
+                trade.getId(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                btcAddress));
     }
 
     private void commitToModel(String btcAddress) {
