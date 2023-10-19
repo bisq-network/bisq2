@@ -28,6 +28,7 @@ import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.monitor.MonitorService;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -60,6 +62,10 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 public class ServiceNode {
     @Getter
     public static final class Config {
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(new HashSet<>(config.getEnumList(Service.class, "p2pServiceNode")));
+        }
+
         private final Set<Service> services;
 
         public Config(Set<Service> services) {
@@ -83,6 +89,7 @@ public class ServiceNode {
         PEER_GROUP,
         DATA,
         CONFIDENTIAL,
+        ACK,
         MONITOR
     }
 
@@ -93,22 +100,22 @@ public class ServiceNode {
     @Getter
     private final Node defaultNode;
     @Getter
-    private Optional<ConfidentialMessageService> confidentialMessageService;
+    private final Optional<ConfidentialMessageService> confidentialMessageService;
     @Getter
-    private Optional<PeerGroupService> peerGroupService;
+    private final Optional<PeerGroupService> peerGroupService;
     @Getter
-    private Optional<DataNetworkService> dataServicePerTransport;
-
+    private final Optional<DataNetworkService> dataServicePerTransport;
     @Getter
-    private Optional<MonitorService> monitorService;
+    private final Optional<MonitorService> monitorService;
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
     public Observable<State> state = new Observable<>(State.NEW);
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
                        PeerGroupService.Config peerGroupServiceConfig,
                        Optional<DataService> dataService,
+                       Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
                        Set<Address> seedNodeAddresses,
@@ -117,33 +124,32 @@ public class ServiceNode {
         transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService);
         defaultNode = nodesById.getOrCreateDefaultNode();
+
         Set<Service> services = config.getServices();
-
-        if (services.contains(Service.PEER_GROUP)) {
-            PeerGroupService peerGroupService = new PeerGroupService(persistenceService,
-                    defaultNode,
-                    banList,
-                    peerGroupServiceConfig,
-                    seedNodeAddresses,
-                    transportType);
-            this.peerGroupService = Optional.of(peerGroupService);
-
-            if (services.contains(Service.DATA)) {
-                dataServicePerTransport = Optional.of(dataService.orElseThrow().getDataServicePerTransport(nodeConfig.getTransportType(),
+        peerGroupService = services.contains(Service.PEER_GROUP) ?
+                Optional.of(new PeerGroupService(persistenceService,
                         defaultNode,
-                        peerGroupService));
-            }
+                        banList,
+                        peerGroupServiceConfig,
+                        seedNodeAddresses,
+                        transportType)) :
+                Optional.empty();
 
-            if (services.contains(Service.MONITOR)) {
-                monitorService = Optional.of(new MonitorService(defaultNode,
-                        peerGroupService.getPeerGroup(),
-                        peerGroupService.getPeerGroupStore()));
-            }
-        }
+        dataServicePerTransport = services.contains(Service.PEER_GROUP) && services.contains(Service.DATA) ?
+                Optional.of(dataService.orElseThrow().getDataServicePerTransport(nodeConfig.getTransportType(),
+                        defaultNode,
+                        peerGroupService.orElseThrow())) :
+                Optional.empty();
 
-        if (services.contains(Service.CONFIDENTIAL)) {
-            confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService));
-        }
+        confidentialMessageService = services.contains(Service.CONFIDENTIAL) ?
+                Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
+                Optional.empty();
+
+        monitorService = services.contains(Service.PEER_GROUP) && services.contains(Service.MONITOR) ?
+                Optional.of(new MonitorService(defaultNode,
+                        peerGroupService.orElseThrow().getPeerGroup(),
+                        peerGroupService.orElseThrow().getPeerGroupStore())) :
+                Optional.empty();
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -192,8 +198,8 @@ public class ServiceNode {
                                                               PubKey receiverPubKey,
                                                               KeyPair senderKeyPair,
                                                               String senderNodeId) {
-        return confidentialMessageService.map(service -> service.send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId))
-                .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
+        checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
+        return confidentialMessageService.get().send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId);
     }
 
     public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {

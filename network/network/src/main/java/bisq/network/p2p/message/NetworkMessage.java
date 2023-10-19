@@ -22,6 +22,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.CloseConnectionMessage;
 import bisq.network.p2p.node.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
@@ -78,6 +79,9 @@ public interface NetworkMessage extends Proto {
             }
             case CONFIDENTIALMESSAGE: {
                 return ConfidentialMessage.fromProto(proto.getConfidentialMessage());
+            }
+            case ACKMESSAGE: {
+                return AckMessage.fromProto(proto.getAckMessage());
             }
             case INVENTORYREQUEST: {
                 return InventoryRequest.fromProto(proto.getInventoryRequest());

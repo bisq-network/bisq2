@@ -99,10 +99,14 @@ message Pong {
 }
 
 message ConfidentialMessage {
-  sint32 version = 1;
-  security.ConfidentialData confidentialData = 2;
-  string receiverKeyId = 3;
+  security.ConfidentialData confidentialData = 1;
+  string receiverKeyId = 2;
 }
+
+message AckMessage {
+  string id = 1;
+}
+
 
 message InventoryRequest {
   DataFilter dataFilter = 1;
@@ -139,14 +143,15 @@ message NetworkMessage {
     Pong pong = 9;
 
     ConfidentialMessage confidentialMessage = 10;
+    AckMessage ackMessage = 11;
 
-    InventoryRequest inventoryRequest = 11;
-    InventoryResponse inventoryResponse = 12;
+    InventoryRequest inventoryRequest = 12;
+    InventoryResponse inventoryResponse = 13;
 
-    DataRequest dataRequest = 13;
+    DataRequest dataRequest = 14;
 
     // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
-    ExternalNetworkMessage externalNetworkMessage = 14;
+    ExternalNetworkMessage externalNetworkMessage = 15;
   }
 }
 
@@ -262,6 +267,15 @@ message NetworkEnvelope {
   NetworkMessage networkMessage = 3;
 }
 
+enum MessageDeliveryStatus {
+  MESSAGEDELIVERYSTATUS_UNSPECIFIED = 0;
+  MESSAGEDELIVERYSTATUS_SENT = 1;
+  MESSAGEDELIVERYSTATUS_ARRIVED = 2;
+  MESSAGEDELIVERYSTATUS_ADDED_TO_MAILBOX = 3;
+  MESSAGEDELIVERYSTATUS_MAILBOX_MSG_RECEIVED = 4;
+  MESSAGEDELIVERYSTATUS_FAILED = 5;
+}
+
 
 ////////////////////////////////////////////////////////////////////
 // Stores
@@ -279,6 +293,11 @@ message NetworkServiceStore {
   map<string, NetworkId> networkIdByNodeId = 1;
   repeated string seedNodeAddresses = 2;
 }
+
+message MessageDeliveryStatusStore {
+  map<string, MessageDeliveryStatus> messageDeliveryStatusByMessageId = 1;
+}
+
 
 message PeerGroupStore {
   repeated Peer persistedPeers = 1;

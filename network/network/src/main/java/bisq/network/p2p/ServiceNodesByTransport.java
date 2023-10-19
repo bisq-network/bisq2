@@ -34,6 +34,7 @@ import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
@@ -71,6 +72,7 @@ public class ServiceNodesByTransport {
                                    Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    Optional<DataService> dataService,
+                                   Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService) {
@@ -90,6 +92,7 @@ public class ServiceNodesByTransport {
                     nodeConfig,
                     peerGroupServiceConfig,
                     dataService,
+                    messageDeliveryStatusService,
                     keyPairService,
                     persistenceService,
                     seedAddresses,
@@ -147,17 +150,12 @@ public class ServiceNodesByTransport {
         receiverNetworkId.getAddressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
-                try {
-                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
-                            address,
-                            receiverNetworkId.getPubKey(),
-                            senderKeyPair,
-                            senderNodeId);
-                    resultsByType.put(transportType, result);
-                } catch (Throwable throwable) {
-                    resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)
-                            .setErrorMsg(throwable.getMessage()));
-                }
+                ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
+                        address,
+                        receiverNetworkId.getPubKey(),
+                        senderKeyPair,
+                        senderNodeId);
+                resultsByType.put(transportType, result);
             }
         });
         return resultsByType;
