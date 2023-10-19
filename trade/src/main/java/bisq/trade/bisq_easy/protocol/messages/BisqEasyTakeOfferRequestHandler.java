@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -33,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
-import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -59,7 +59,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             ContractSignatureData makersContractSignatureData = contractService.signContract(contract, trade.getMyIdentity().getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
 
-            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(UUID.randomUUID().toString(),
+            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(StringUtils.createUid(),
                     trade.getId(),
                     trade.getMyself().getNetworkId(),
                     trade.getPeer().getNetworkId(),

@@ -100,7 +100,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Citation> citation,
                                                                                TwoPartyPrivateChatChannel channel) {
-        return sendMessage(StringUtils.createShortUid(),
+        return sendMessage(StringUtils.createUid(),
                 text,
                 citation,
                 channel,

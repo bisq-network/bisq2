@@ -50,7 +50,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                                     Optional<Citation> citation,
                                     long date,
                                     boolean wasEdited) {
-        this(StringUtils.createShortUid(),
+        this(StringUtils.createUid(),
                 ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                 channelId,
                 authorUserProfileId,

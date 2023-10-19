@@ -17,7 +17,7 @@
 
 package bisq.wallets.json_rpc;
 
-import java.util.UUID;
+import bisq.common.util.StringUtils;
 
 public class JsonRpcCall {
     private final String jsonrpc = "2.0";
@@ -26,7 +26,7 @@ public class JsonRpcCall {
     private final Object params;
 
     public JsonRpcCall(String method, Object params) {
-        this.id = UUID.randomUUID().toString();
+        this.id = StringUtils.createUid();
         this.method = method;
         this.params = params;
     }

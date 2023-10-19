@@ -129,7 +129,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                      Optional<UserProfile> mediator,
                                      ChatMessageType chatMessageType,
                                      BisqEasyOffer bisqEasyOffer) {
-        super(StringUtils.createShortUid(),
+        super(StringUtils.createUid(),
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
                 senderUserProfile,
