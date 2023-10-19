@@ -22,10 +22,13 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.HashMapObserver;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
@@ -35,6 +38,10 @@ import java.util.function.Function;
 public class FxBindings {
     public static <S, T> ObservableListBindings<S, T> bind(ObservableList<T> observer) {
         return new ObservableListBindings<>(observer);
+    }
+
+    public static <K, V> ObservableMapBindings<K, V> bind(ObservableMap<K, V> observer) {
+        return new ObservableMapBindings<>(observer);
     }
 
     public static <S> ObservablePropertyBindings<S> bind(ObjectProperty<S> observer) {
@@ -102,6 +109,34 @@ public class FxBindings {
 
         public Pin to(ObservableArray<S> observable) {
             return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
+        }
+    }
+
+    // We do not support type mapping here
+    public static class ObservableMapBindings<K, V> {
+        private final ObservableMap<K, V> observableMap;
+
+        private ObservableMapBindings(ObservableMap<K, V> observableList) {
+            this.observableMap = observableList;
+        }
+
+        public Pin to(ObservableHashMap<K, V> observable) {
+            return observable.addListener(new HashMapObserver<>() {
+                @Override
+                public void put(K key, V value) {
+                    UIThread.run(() -> observableMap.put(key, value));
+                }
+
+                @Override
+                public void remove(Object key) {
+                    UIThread.run(() -> observableMap.remove(key));
+                }
+
+                @Override
+                public void clear() {
+                    UIThread.run(observableMap::clear);
+                }
+            });
         }
     }
 
