@@ -42,12 +42,16 @@ public class WelcomeController implements Controller {
 
     @Override
     public void onActivate() {
-        overlayController.setEnterKeyHandler(this::onNext);
+        // If we support next on enter, the input handling at the profile view is broken.
+        // Needs to manually click inside to have real input focus. Not clear why... for now lets
+        // keep support for enter key disabled.
+        overlayController.setEnterKeyHandler(null);
         overlayController.setUseEscapeKeyHandler(false);
     }
 
     @Override
     public void onDeactivate() {
+
     }
 
     void onNext() {

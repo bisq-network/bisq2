@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay.onboarding.create_profile;
 
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -162,7 +163,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
             root.requestFocus();
         });
 
-        nickname.requestFocus();
+        UIScheduler.run(nickname::requestFocus).after(700);
     }
 
     @Override
