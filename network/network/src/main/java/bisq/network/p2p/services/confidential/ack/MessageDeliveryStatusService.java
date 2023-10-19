@@ -70,7 +70,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onMessageDeliveryStatusChanged(String messageId, MessageDeliveryStatus status) {
+    public void onMessageSentStatus(String messageId, MessageDeliveryStatus status) {
         Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = persistableStore.getMessageDeliveryStatusByMessageId();
         synchronized (messageDeliveryStatusByMessageId) {
             if (messageDeliveryStatusByMessageId.containsKey(messageId)) {
@@ -90,6 +90,8 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
             } else {
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(status));
             }
+            log.info("Sent an AckRequestingMessage with message ID {} and set status to {}",
+                    messageId, messageDeliveryStatusByMessageId.get(messageId).get());
             persist();
         }
     }
@@ -124,6 +126,8 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
             } else {
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(MessageDeliveryStatus.ARRIVED));
             }
+            log.info("Received AckMessage for message with ID {} and set status to {}",
+                    messageId, messageDeliveryStatusByMessageId.get(messageId).get());
             persist();
         }
     }
@@ -132,6 +136,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
         AckMessage ackMessage = new AckMessage(message.getId());
         keyPairService.findKeyPair(message.getReceiver().getPubKey().getKeyId())
                 .ifPresent(keyPair -> {
+                    log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(message.getReceiver(), keyPair);
                     networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
                 });
