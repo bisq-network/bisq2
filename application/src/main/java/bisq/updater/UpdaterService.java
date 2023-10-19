@@ -68,7 +68,7 @@ public class UpdaterService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        releaseNotificationsService.getReleaseNotifications().addListener(new CollectionObserver<>() {
+        releaseNotificationsService.getReleaseNotifications().addObserver(new CollectionObserver<>() {
             @Override
             public void add(ReleaseNotification releaseNotification) {
                 onNewReleaseNotificationAdded(releaseNotification);

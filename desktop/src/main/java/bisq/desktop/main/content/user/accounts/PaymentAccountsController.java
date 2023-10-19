@@ -60,7 +60,7 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = accountService.getAccounts().addListener(() -> {
+        accountsPin = accountService.getAccounts().addObserver(() -> {
             model.setAllAccounts(accountService.getAccounts());
             maybeSelectFirstAccount();
             model.getNoAccountsSetup().set(!accountService.hasAccounts());

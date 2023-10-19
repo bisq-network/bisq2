@@ -59,7 +59,7 @@ public abstract class PrivateChannelSelectionMenu<
         public void onActivate() {
             super.onActivate();
 
-            channelCollectionObserverPin = chatChannelService.getChannels().addListener(new CollectionObserver<>() {
+            channelCollectionObserverPin = chatChannelService.getChannels().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(C channel) {
                     addNotificationsListenerForChannel(channel);

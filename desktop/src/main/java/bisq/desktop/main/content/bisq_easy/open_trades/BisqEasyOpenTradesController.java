@@ -102,7 +102,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public void onActivate() {
         model.getFilteredList().setPredicate(e -> false);
 
-        channelItemPin = channelService.getChannels().addListener(new CollectionObserver<>() {
+        channelItemPin = channelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOpenTradeChannel channel) {
                 bisqEasyTradeService.findTrade(channel.getTradeId())
@@ -151,7 +151,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                     }
                 }));
 
-        bisqEasyTradeService.getTrades().addListener(() -> {
+        bisqEasyTradeService.getTrades().addObserver(() -> {
             UIThread.run(() -> {
                 model.getFilteredList()
                         .setPredicate(e -> bisqEasyTradeService.findTrade(e.getTradeId()).isPresent());

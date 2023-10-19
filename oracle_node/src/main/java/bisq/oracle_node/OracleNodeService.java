@@ -201,7 +201,7 @@ public class OracleNodeService implements Service {
                     scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
                             .periodically(25, TimeUnit.DAYS);
 
-                    authorizedBondedRolesService.getBondedRoles().addListener(new CollectionObserver<>() {
+                    authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
                         @Override
                         public void add(BondedRole element) {
                         }

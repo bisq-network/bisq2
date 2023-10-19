@@ -76,7 +76,7 @@ public class MultisigOfferService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        offersObserverPin = offerMessageService.getOffers().addListener(offersObserver);
+        offersObserverPin = offerMessageService.getOffers().addObserver(offersObserver);
 
         republishMyOffers();
         // Do again once we assume we better connected

@@ -130,19 +130,19 @@ public class ChatNotificationService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
-        bisqEasyOpenTradeChannelService.getChannels().addListener(() ->
+        bisqEasyOpenTradeChannelService.getChannels().addObserver(() ->
                 onChatChannelsChanged(bisqEasyOpenTradeChannelService.getChannels()));
 
         BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        bisqEasyOfferbookChannelService.getChannels().addListener(() ->
+        bisqEasyOfferbookChannelService.getChannels().addObserver(() ->
                 onChatChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
-                .forEach(commonPublicChatChannelService -> commonPublicChatChannelService.getChannels().addListener(() ->
+                .forEach(commonPublicChatChannelService -> commonPublicChatChannelService.getChannels().addObserver(() ->
                         onChatChannelsChanged(commonPublicChatChannelService.getChannels())));
 
         chatService.getTwoPartyPrivateChatChannelServices().values()
-                .forEach(twoPartyPrivateChatChannelService -> twoPartyPrivateChatChannelService.getChannels().addListener(() ->
+                .forEach(twoPartyPrivateChatChannelService -> twoPartyPrivateChatChannelService.getChannels().addObserver(() ->
                         onChatChannelsChanged(twoPartyPrivateChatChannelService.getChannels())));
 
         return CompletableFuture.completedFuture(true);
@@ -210,7 +210,7 @@ public class ChatNotificationService implements Service {
             if (chatMessagesByChannelIdPins.containsKey(channelId)) {
                 chatMessagesByChannelIdPins.get(channelId).unbind();
             }
-            Pin pin = chatChannel.getChatMessages().addListener(new CollectionObserver<>() {
+            Pin pin = chatChannel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M message) {
                     chatNotificationAdded(chatChannel, message);
