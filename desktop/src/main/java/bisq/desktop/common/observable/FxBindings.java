@@ -129,6 +129,7 @@ public class FxBindings {
 
                 @Override
                 public void remove(Object key) {
+                    //noinspection SuspiciousMethodCalls
                     UIThread.run(() -> observableMap.remove(key));
                 }
 

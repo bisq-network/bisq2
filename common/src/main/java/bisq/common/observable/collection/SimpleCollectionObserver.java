@@ -23,21 +23,21 @@ import lombok.ToString;
 import java.util.Collection;
 
 /**
- * Simple Observer which notifies the given handler about any change of the target collection.
+ * Simple Observer which notifies about any change of the source collection.
  *
  * @param <S> The type of the source collection element.
  */
 @EqualsAndHashCode
 @ToString
-final class CollectionChangeHandler<S> implements CollectionObserver<S> {
-    private final Runnable listener;
+final class SimpleCollectionObserver<S> implements CollectionObserver<S> {
+    private final Runnable observer;
 
-    public CollectionChangeHandler(Runnable listener) {
-        this.listener = listener;
+    public SimpleCollectionObserver(Runnable observer) {
+        this.observer = observer;
     }
 
     void onChange() {
-        listener.run();
+        observer.run();
     }
 
     @Override

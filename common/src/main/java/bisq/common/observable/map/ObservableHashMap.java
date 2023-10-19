@@ -38,17 +38,17 @@ public class ObservableHashMap<K, V> implements Map<K, V> {
         putAll(map);
     }
 
-    public Pin addListener(HashMapObserver<K, V> listener) {
-        observers.add(listener);
-        listener.putAll(map);
-        return () -> observers.remove(listener);
+    public Pin addListener(HashMapObserver<K, V> observer) {
+        observers.add(observer);
+        observer.putAll(map);
+        return () -> observers.remove(observer);
     }
 
-    public Pin addListener(Runnable listener) {
-        HashMapChangeHandler<K, V> mapChangeHandler = new HashMapChangeHandler<>(listener);
-        observers.add(mapChangeHandler);
-        mapChangeHandler.onChange();
-        return () -> observers.remove(mapChangeHandler);
+    public Pin addListener(Runnable observer) {
+        SimpleHashMapObserver<K, V> simpleHashMapObserver = new SimpleHashMapObserver<>(observer);
+        observers.add(simpleHashMapObserver);
+        simpleHashMapObserver.onChange();
+        return () -> observers.remove(simpleHashMapObserver);
     }
 
     @Nullable

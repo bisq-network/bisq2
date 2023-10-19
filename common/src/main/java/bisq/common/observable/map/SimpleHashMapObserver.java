@@ -21,21 +21,21 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
- * Map Observer which notifies the listener about any change of the source map.
+ * Simple Observer which notifies about any change of the source map.
  *
  * @param <K, V> The map types.
  */
 @EqualsAndHashCode
 @ToString
-final class HashMapChangeHandler<K, V> implements HashMapObserver<K, V> {
-    private final Runnable listener;
+final class SimpleHashMapObserver<K, V> implements HashMapObserver<K, V> {
+    private final Runnable observer;
 
-    public HashMapChangeHandler(Runnable listener) {
-        this.listener = listener;
+    public SimpleHashMapObserver(Runnable observer) {
+        this.observer = observer;
     }
 
     void onChange() {
-        listener.run();
+        observer.run();
     }
 
     @Override
