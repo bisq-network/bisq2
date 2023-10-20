@@ -161,13 +161,13 @@ public class ChatMessagesComponent {
             model.getPaymentAccounts().setAll(accountService.getAccounts());
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetailsHandler);
 
-            getUserIdentitiesPin = userIdentityService.getUserIdentities().addListener(() -> UIThread.run(this::applyUserProfileOrChannelChange));
+            getUserIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::applyUserProfileOrChannelChange));
 
             ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
             selectedChannelPin = chatChannelSelectionService.getSelectedChannel()
                     .addObserver(this::selectedChannelChanged);
 
-            paymentAccountsPin = accountService.getAccounts().addListener(this::accountsChanged);
+            paymentAccountsPin = accountService.getAccounts().addObserver(this::accountsChanged);
             selectedPaymentAccountPin = FxBindings.bind(model.selectedAccountProperty())
                     .to(accountService.selectedAccountAsObservable());
             selectedPaymentAccountSubscription = EasyBind.subscribe(model.selectedAccountProperty(),
@@ -212,7 +212,7 @@ public class ChatMessagesComponent {
                     chatMessagesPin.unbind();
                 }
                 if (isBisqEasyPrivateTradeChatChannel) {
-                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> privateTradeMessagesChanged((BisqEasyOpenTradeChannel) chatChannel));
+                    chatMessagesPin = chatChannel.getChatMessages().addObserver(() -> privateTradeMessagesChanged((BisqEasyOpenTradeChannel) chatChannel));
                     BisqEasyOpenTradeChannel privateChannel = (BisqEasyOpenTradeChannel) chatChannel;
                     if (inMediationPin != null) {
                         inMediationPin.unbind();
@@ -220,7 +220,7 @@ public class ChatMessagesComponent {
                     inMediationPin = privateChannel.isInMediationObservable().addObserver(isInMediation ->
                             UIThread.run(() -> model.getOpenDisputeButtonVisible().set(!isInMediation && !privateChannel.isMediator())));
                 } else if (isTwoPartyPrivateChatChannel) {
-                    chatMessagesPin = chatChannel.getChatMessages().addListener(() -> updateLeaveChannelButtonState((TwoPartyPrivateChatChannel) chatChannel));
+                    chatMessagesPin = chatChannel.getChatMessages().addObserver(() -> updateLeaveChannelButtonState((TwoPartyPrivateChatChannel) chatChannel));
                 }
 
                 accountsChanged();
@@ -333,7 +333,7 @@ public class ChatMessagesComponent {
             }
 
             if (selectedChatChannel != null) {
-                chatMessagesPin = selectedChatChannel.getChatMessages().addListener(this::maybeSwitchUserProfile);
+                chatMessagesPin = selectedChatChannel.getChatMessages().addObserver(this::maybeSwitchUserProfile);
             }
         }
 

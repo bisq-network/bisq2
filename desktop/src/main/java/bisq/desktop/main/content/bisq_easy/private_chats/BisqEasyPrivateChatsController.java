@@ -86,7 +86,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
                 .map(channel -> new BisqEasyPrivateChatsView.ListItem(channel, reputationService))
                 .to(channelService.getChannels());
 
-        channelsPin = channelService.getChannels().addListener(this::updateVisibility);
+        channelsPin = channelService.getChannels().addObserver(this::updateVisibility);
         if (selectionService.getSelectedChannel().get() == null && !model.getListItems().isEmpty()) {
             selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
         }

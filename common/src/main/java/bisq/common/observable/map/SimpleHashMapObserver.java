@@ -15,53 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.observable.collection;
+package bisq.common.observable.map;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Collection;
-
 /**
- * Simple Observer which notifies the given handler about any change of the target collection.
+ * Simple Observer which notifies about any change of the source map.
  *
- * @param <S> The type of the source collection element.
+ * @param <K, V> The map types.
  */
 @EqualsAndHashCode
 @ToString
-final class CollectionChangeHandler<S> implements CollectionObserver<S> {
-    private final Runnable listener;
+final class SimpleHashMapObserver<K, V> implements HashMapObserver<K, V> {
+    private final Runnable observer;
 
-    public CollectionChangeHandler(Runnable listener) {
-        this.listener = listener;
+    public SimpleHashMapObserver(Runnable observer) {
+        this.observer = observer;
     }
 
     void onChange() {
-        listener.run();
+        observer.run();
     }
 
     @Override
-    public void add(S element) {
+    public void put(K key, V value) {
         onChange();
     }
 
     @Override
-    public void addAll(Collection<? extends S> values) {
-        onChange();
-    }
-
-    @Override
-    public void setAll(Collection<? extends S> values) {
-        onChange();
-    }
-
-    @Override
-    public void remove(Object element) {
-        onChange();
-    }
-
-    @Override
-    public void removeAll(Collection<?> values) {
+    public void remove(Object key) {
         onChange();
     }
 

@@ -42,17 +42,17 @@ public abstract class ObservableCollection<S> implements Collection<S> {
 
     protected abstract Collection<S> createCollection();
 
-    public Pin addListener(CollectionObserver<S> listener) {
-        observers.add(listener);
-        listener.addAll(collection);
-        return () -> observers.remove(listener);
+    public Pin addObserver(CollectionObserver<S> observer) {
+        observers.add(observer);
+        observer.addAll(collection);
+        return () -> observers.remove(observer);
     }
 
-    public Pin addListener(Runnable listener) {
-        CollectionChangeHandler<S> collectionChangeHandler = new CollectionChangeHandler<>(listener);
-        observers.add(collectionChangeHandler);
-        collectionChangeHandler.onChange();
-        return () -> observers.remove(collectionChangeHandler);
+    public Pin addObserver(Runnable observer) {
+        SimpleCollectionObserver<S> simpleCollectionObserver = new SimpleCollectionObserver<>(observer);
+        observers.add(simpleCollectionObserver);
+        simpleCollectionObserver.onChange();
+        return () -> observers.remove(simpleCollectionObserver);
     }
 
     public <T> Pin addCollectionChangeMapper(Collection<T> collection, Function<S, T> mapFunction, Consumer<Runnable> executor) {
