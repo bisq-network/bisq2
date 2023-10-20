@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.data;
 
 import bisq.network.p2p.message.NetworkEnvelope;
 import lombok.Getter;

@@ -19,7 +19,7 @@ package bisq.network.p2p.node.authorization;
 
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.Load;
+import bisq.network.p2p.node.data.Load;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;

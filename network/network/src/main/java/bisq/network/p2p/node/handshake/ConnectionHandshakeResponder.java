@@ -15,13 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.handshake;
 
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.extern.slf4j.Slf4j;

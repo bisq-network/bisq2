@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.Metrics;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.Setter;

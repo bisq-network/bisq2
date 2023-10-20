@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.envelope;
 
 import bisq.network.p2p.message.NetworkEnvelope;
 import lombok.extern.slf4j.Slf4j;

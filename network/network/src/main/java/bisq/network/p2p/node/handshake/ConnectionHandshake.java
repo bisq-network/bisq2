@@ -15,13 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.EqualsAndHashCode;
@@ -116,11 +121,11 @@ public final class ConnectionHandshake {
         }
     }
 
-    ConnectionHandshake(Socket socket,
-                        BanList banList,
-                        int socketTimeout,
-                        Capability capability,
-                        AuthorizationService authorizationService) {
+    public ConnectionHandshake(Socket socket,
+                               BanList banList,
+                               int socketTimeout,
+                               Capability capability,
+                               AuthorizationService authorizationService) {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
@@ -137,7 +142,7 @@ public final class ConnectionHandshake {
     }
 
     // Client side protocol
-    Result start(Load myLoad, Address peerAddress) {
+    public Result start(Load myLoad, Address peerAddress) {
         try {
             Metrics metrics = new Metrics();
             Request request = new Request(capability, myLoad);
@@ -199,7 +204,7 @@ public final class ConnectionHandshake {
     }
 
     // Server side protocol
-    Result onSocket(Load myLoad) {
+    public Result onSocket(Load myLoad) {
         try {
             Metrics metrics = new Metrics();
             bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
@@ -257,7 +262,7 @@ public final class ConnectionHandshake {
         }
     }
 
-    void shutdown() {
+    public void shutdown() {
         // todo close pending requests but do not close sockets
     }
 }

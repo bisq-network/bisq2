@@ -17,6 +17,9 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
