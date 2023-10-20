@@ -34,7 +34,7 @@ import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
@@ -112,7 +112,7 @@ public class ServiceNode {
     @Getter
     private final Optional<ConfidentialMessageService> confidentialMessageService;
     @Getter
-    private final Optional<PeerGroupService> peerGroupService;
+    private final Optional<PeerGroupManager> peerGroupService;
     @Getter
     private final Optional<DataNetworkService> dataServicePerTransport;
     @Getter
@@ -123,7 +123,7 @@ public class ServiceNode {
 
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
-                       PeerGroupService.Config peerGroupServiceConfig,
+                       PeerGroupManager.Config peerGroupServiceConfig,
                        Optional<DataService> dataService,
                        Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                        KeyPairService keyPairService,
@@ -139,7 +139,7 @@ public class ServiceNode {
 
         Set<Service> services = config.getServices();
         peerGroupService = services.contains(Service.PEER_GROUP) ?
-                Optional.of(new PeerGroupService(persistenceService,
+                Optional.of(new PeerGroupManager(persistenceService,
                         defaultNode,
                         banList,
                         peerGroupServiceConfig,
@@ -199,7 +199,7 @@ public class ServiceNode {
         setState(State.STOPPING);
         return CompletableFutureUtils.allOf(
                         confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(completedFuture(true)),
-                        peerGroupService.map(PeerGroupService::shutdown).orElse(completedFuture(true)),
+                        peerGroupService.map(PeerGroupManager::shutdown).orElse(completedFuture(true)),
                         dataServicePerTransport.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
                         monitorService.map(MonitorService::shutdown).orElse(completedFuture(true)),
                         nodesById.shutdown()

@@ -37,7 +37,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -81,7 +81,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
                                    Set<TransportType> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
-                                   Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport,
+                                   Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
@@ -106,7 +106,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                     transportConfig.getSocketTimeout());
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
-            PeerGroupService.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
+            PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
                     peerGroupServiceConfig,

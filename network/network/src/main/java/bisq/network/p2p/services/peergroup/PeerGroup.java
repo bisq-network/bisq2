@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
@@ -74,6 +75,14 @@ public class PeerGroup {
         this.seedNodeAddresses = seedNodeAddresses;
         this.banList = banList;
         this.persistedPeersHandler = persistedPeersHandler;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Persisted peers
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<Peer> getPersistedPeers() {
+        return new HashSet<>(); //todo
     }
 
 

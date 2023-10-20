@@ -50,7 +50,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
-public class PeerGroupService implements PersistenceClient<PeerGroupStore>, PersistedPeersHandler {
+public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, PersistedPeersHandler {
     public enum State {
         NEW,
         STARTING,
@@ -60,7 +60,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     }
 
     public interface Listener {
-        void onStateChanged(PeerGroupService.State state);
+        void onStateChanged(PeerGroupManager.State state);
     }
 
     @Getter
@@ -131,13 +131,13 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     @Getter
     private final PeerGroupStore persistableStore = new PeerGroupStore();
     @Getter
-    public AtomicReference<PeerGroupService.State> state = new AtomicReference<>(PeerGroupService.State.NEW);
+    public AtomicReference<PeerGroupManager.State> state = new AtomicReference<>(PeerGroupManager.State.NEW);
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
     private final Persistence<PeerGroupStore> persistence;
     private final RetryPolicy<Boolean> retryPolicy;
 
-    public PeerGroupService(PersistenceService persistenceService,
+    public PeerGroupManager(PersistenceService persistenceService,
                             Node node,
                             BanList banList,
                             Config config,
@@ -148,8 +148,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         this.config = config;
         peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
-                config.getPeerExchangeConfig(),
-                persistableStore);
+                config.getPeerExchangeConfig());
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
         keepAliveService = new KeepAliveService(node, peerGroup, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
@@ -183,7 +182,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         State state = getState().get();
         switch (state) {
             case NEW:
-                setState(PeerGroupService.State.STARTING);
+                setState(PeerGroupManager.State.STARTING);
                 peerExchangeService.startInitialPeerExchange().join();
                 log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
                         nodeInfo, config.getInterval());
@@ -408,15 +407,15 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public void addListener(PeerGroupService.Listener listener) {
+    public void addListener(PeerGroupManager.Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(PeerGroupService.Listener listener) {
+    public void removeListener(PeerGroupManager.Listener listener) {
         listeners.remove(listener);
     }
 
-    private void setState(PeerGroupService.State newState) {
+    private void setState(PeerGroupManager.State newState) {
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);

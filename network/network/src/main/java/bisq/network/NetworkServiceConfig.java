@@ -25,7 +25,7 @@ import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.PeerGroup;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.tor.TorTransportConfig;
@@ -53,16 +53,16 @@ public final class NetworkServiceConfig {
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(config.getConfig("peerExchangeStrategy"));
         KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(config.getConfig("keepAlive"));
 
-        PeerGroupService.Config defaultConf = PeerGroupService.Config.from(peerGroupConfig,
+        PeerGroupManager.Config defaultConf = PeerGroupManager.Config.from(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
                 config.getConfig("defaultPeerGroup"));
-        PeerGroupService.Config clearNetConf = PeerGroupService.Config.from(peerGroupConfig,
+        PeerGroupManager.Config clearNetConf = PeerGroupManager.Config.from(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
                 config.getConfig("clearNetPeerGroup"));
 
-        Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport = Map.of(
+        Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport = Map.of(
                 TransportType.TOR, defaultConf,
                 TransportType.I2P, defaultConf,
                 TransportType.CLEAR, clearNetConf
@@ -167,7 +167,7 @@ public final class NetworkServiceConfig {
     private final Set<TransportType> supportedTransportTypes;
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
-    private final Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport;
+    private final Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport;
     private final Map<TransportType, Integer> defaultNodePortByTransportType;
     private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
@@ -176,7 +176,7 @@ public final class NetworkServiceConfig {
                                 Set<TransportType> supportedTransportTypes,
                                 Map<TransportType, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
-                                Map<TransportType, PeerGroupService.Config> peerGroupServiceConfigByTransport,
+                                Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                 Map<TransportType, Integer> defaultNodePortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {

@@ -36,7 +36,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -129,8 +129,8 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     // todo a bit of a hack that way...
-    public DataNetworkService getDataServicePerTransport(TransportType transportType, Node defaultNode, PeerGroupService peerGroupService) {
-        DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupService, storageService::getInventoryOfAllStores);
+    public DataNetworkService getDataServicePerTransport(TransportType transportType, Node defaultNode, PeerGroupManager peerGroupManager) {
+        DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupManager, storageService::getInventoryOfAllStores);
         dataNetworkServiceByTransportType.put(transportType, dataNetworkService);
         dataNetworkService.addListener(this);
         return dataNetworkService;
@@ -158,8 +158,8 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     @Override
-    public void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService) {
-        if (state == PeerGroupService.State.RUNNING) {
+    public void onStateChanged(PeerGroupManager.State state, DataNetworkService dataNetworkService) {
+        if (state == PeerGroupManager.State.RUNNING) {
             log.info("PeerGroupService initialized. We start the inventory request after a short delay.");
             Scheduler.run(() -> doRequestInventory(dataNetworkService)).after(500);
         }
