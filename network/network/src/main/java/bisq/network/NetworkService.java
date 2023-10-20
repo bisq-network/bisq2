@@ -23,7 +23,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.network.http.HttpService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.ServiceNode;
@@ -71,7 +70,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.node.transport.TransportType.*;
+import static bisq.network.p2p.node.transport.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -99,9 +98,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
-    private final KeyPairService keyPairService;
     private final HttpService httpService;
-    private final Map<TransportType, Integer> defaultNodePortByTransportType;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
     @Getter
     private final Set<TransportType> supportedTransportTypes;
@@ -115,7 +112,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           PersistenceService persistenceService,
                           KeyPairService keyPairService,
                           ProofOfWorkService proofOfWorkService) {
-        this.keyPairService = keyPairService;
         httpService = new HttpService();
 
         Set<ServiceNode.Service> services = config.getServiceNodeConfig().getServices();
@@ -142,8 +138,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 keyPairService,
                 persistenceService,
                 proofOfWorkService);
-
-        defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -188,19 +182,19 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isNodeOnAllTransportsInitialized(String nodeId) {
-        return serviceNodesByTransport.isNodeOnAllTransportsInitialized(nodeId);
-    }
-
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(String nodeId, PubKey pubKey) {
         return serviceNodesByTransport.getInitializedNodeByTransport(nodeId, pubKey);
     }
 
+    public boolean isNodeOnAllTransportsInitialized(String nodeId) {
+        return serviceNodesByTransport.isNodeOnAllTransportsInitialized(nodeId);
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Get networkId and initialize server
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: This might be too restrictive as any failing transport would result in a failed completableFuture
 
+    /**
+     * NetworkId of a fully initialized node (on all transports)
+     */
     public CompletableFuture<NetworkId> getNetworkIdOfInitializedNode(String nodeId, PubKey pubKey) {
         return serviceNodesByTransport.getNetworkIdOfInitializedNode(nodeId, pubKey);
     }
@@ -225,6 +219,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                 senderNetworkIdWithKeyPair.getNodeId()),
                         NETWORK_IO_POOL));
     }
+
+    // TODO: Not used. Consider to remove it so it wont get used accidentally.
 
     /**
      * Send message via given senderNodeId to the supported network types of the addresses specified at
@@ -345,7 +341,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.getAddressesByNodeIdMapByTransportType();
     }
 
-    public AddressByTransportTypeMap getAddressByNetworkType(String nodeId) {
+    public AddressByTransportTypeMap getAddressByTransportTypeMap(String nodeId) {
         Map<TransportType, Address> map = supportedTransportTypes.stream()
                 .filter(transportType -> findAddress(transportType, nodeId).isPresent())
                 .collect(Collectors.toMap(transportType -> transportType,
@@ -365,58 +361,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return supportedTransportTypes.contains(transportType);
     }
 
-    public Optional<ObservableHashMap<String, Observable<MessageDeliveryStatus>>> getMessageDeliveryStatusByMessageId() {
-        return messageDeliveryStatusService.map(MessageDeliveryStatusService::getMessageDeliveryStatusByMessageId);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // We return the port by transport type if found from the persisted networkId, otherwise we
-    // fill in a random free system port for all supported transport types.
-    private Map<TransportType, Integer> getDefaultPortByTransport() {
-        String nodeId = Node.DEFAULT;
-        Optional<NetworkId> networkIdOptional = findNetworkIdFromStore(nodeId);
-        return getOrCreatePortByTransport(nodeId, networkIdOptional);
-    }
-
-    // If nodeId is Node.DEFAULT and there is a port defined in defaultNodePortByTransportType config we use that.
-    // Otherwise, if we have a persisted entry we use that
-    // Otherwise we use a free random system port.
-    // If nodeId is not Node.DEFAULT we use the persisted entry if available, otherwise a free system port
-    private Map<TransportType, Integer> getOrCreatePortByTransport(String nodeId, Optional<NetworkId> networkIdOptional) {
-        // If we have a persisted networkId we take that port otherwise we take random system port.
-        Map<TransportType, Integer> persistedOrRandomPortByTransport = supportedTransportTypes.stream()
-                .collect(Collectors.toMap(transportType -> transportType,
-                        transportType -> networkIdOptional.stream()
-                                .map(networkId -> networkId.getAddressByTransportTypeMap().get(transportType).getPort())
-                                .findAny()
-                                .orElse(NetworkUtils.findFreeSystemPort())));
-
-        // In case of the default node and if we have defined ports in the config we take those.
-        Map<TransportType, Integer> portByTransport = new HashMap<>();
-        if (nodeId.equals(Node.DEFAULT)) {
-            if (defaultNodePortByTransportType.containsKey(CLEAR)) {
-                portByTransport.put(CLEAR, defaultNodePortByTransportType.get(CLEAR));
-            } else if (persistedOrRandomPortByTransport.containsKey(CLEAR)) {
-                portByTransport.put(CLEAR, persistedOrRandomPortByTransport.get(CLEAR));
-            }
-            if (defaultNodePortByTransportType.containsKey(TOR)) {
-                portByTransport.put(TOR, defaultNodePortByTransportType.get(TOR));
-            } else if (persistedOrRandomPortByTransport.containsKey(TOR)) {
-                portByTransport.put(TOR, persistedOrRandomPortByTransport.get(TOR));
-            }
-            if (defaultNodePortByTransportType.containsKey(I2P)) {
-                portByTransport.put(I2P, defaultNodePortByTransportType.get(I2P));
-            } else if (persistedOrRandomPortByTransport.containsKey(I2P)) {
-                portByTransport.put(I2P, persistedOrRandomPortByTransport.get(I2P));
-            }
-        } else {
-            portByTransport = persistedOrRandomPortByTransport;
-        }
-        return portByTransport;
+    public ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
+        return messageDeliveryStatusService.map(MessageDeliveryStatusService::getMessageDeliveryStatusByMessageId)
+                .orElse(new ObservableHashMap<>());
     }
 
 
@@ -436,7 +383,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.findNode(transport, nodeId);
     }
 
-    public Optional<Map<String, Address>> findAddressesByNodeId(TransportType transport) {
+    public Optional<Map<String, Address>> findAddresses(TransportType transport) {
         return serviceNodesByTransport.findAddressesByNodeId(transport);
     }
 
@@ -444,28 +391,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.findAddress(transport, nodeId);
     }
 
-    public Optional<NetworkId> findNetworkIdFromStore(String nodeId, PubKey pubKey) {
-        return findNetworkIdFromStore(nodeId)
-                .filter(networkId -> networkId.getPubKey().equals(pubKey));
-    }
-
     public Optional<NetworkId> findNetworkIdFromStore(String nodeId) {
-        return Optional.ofNullable(persistableStore.getNetworkIdByNodeId().get(nodeId));
-    }
-
-    public Optional<NetworkId> createNetworkId(String nodeId, PubKey pubKey) {
-        AddressByTransportTypeMap addressByNetworkType = getAddressByNetworkType(nodeId);
-        // We need the addresses for all transports to be able to create the networkId.
-        if (supportedTransportTypes.size() == addressByNetworkType.size()) {
-            return Optional.of(new NetworkId(addressByNetworkType, pubKey, nodeId));
-        } else {
-            // Expected case at first startup or creation of new node when addresses of other transport types are
-            // not available yet.
-            log.debug("supportedTransportTypes.size() != addressByNetworkType.size(). " +
-                            "supportedTransportTypes={}, addressByNetworkType={}. nodeId={}",
-                    supportedTransportTypes, addressByNetworkType, nodeId);
-            return Optional.empty();
-        }
+        return serviceNodesByTransport.findPersistedNetworkId(nodeId);
     }
 
 
@@ -483,17 +410,5 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         serviceNodesByTransport.removeSeedNode(seedNodeAddressesByTransport);
         persistableStore.getSeedNodes().remove(seedNodeAddressesByTransport);
         persist();
-    }
-
-    // If not persisted we try to create the networkId and persist if available.
-    private Optional<NetworkId> maybePersistNewNetworkId(String nodeId, PubKey pubKey) {
-        return findNetworkIdFromStore(nodeId, pubKey)
-                .or(() -> createNetworkId(nodeId, pubKey)
-                        .map(networkId -> {
-                            persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
-                            persist();
-                            return networkId;
-                        })
-                );
     }
 }

@@ -289,8 +289,7 @@ message DataStore {
 }
 
 message NetworkServiceStore {
-  map<string, NetworkId> networkIdByNodeId = 1;
-  repeated AddressByTransportTypeMap seedNodes = 2;
+  repeated AddressByTransportTypeMap seedNodes = 1;
 }
 
 message ServiceNodesByTransportStore {

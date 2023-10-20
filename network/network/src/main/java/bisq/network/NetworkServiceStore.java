@@ -25,32 +25,25 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
 public final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
-    private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
     private final Set<AddressByTransportTypeMap> seedNodes = new CopyOnWriteArraySet<>();
 
     public NetworkServiceStore() {
     }
 
-    public NetworkServiceStore(Map<String, NetworkId> networkIdByNodeId,
-                               Set<AddressByTransportTypeMap> seedNodes) {
-        this.networkIdByNodeId.putAll(networkIdByNodeId);
+    public NetworkServiceStore(Set<AddressByTransportTypeMap> seedNodes) {
         this.seedNodes.addAll(seedNodes);
     }
 
     @Override
     public bisq.network.protobuf.NetworkServiceStore toProto() {
         return bisq.network.protobuf.NetworkServiceStore.newBuilder()
-                .putAllNetworkIdByNodeId(networkIdByNodeId.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toProto())))
                 .addAllSeedNodes(seedNodes.stream()
                         .map(AddressByTransportTypeMap::toProto)
                         .collect(Collectors.toList()))
@@ -58,10 +51,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto) {
-        Map<String, NetworkId> networkIdByNodeId = proto.getNetworkIdByNodeIdMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> NetworkId.fromProto(e.getValue())));
-        return new NetworkServiceStore(networkIdByNodeId,
-                proto.getSeedNodesList().stream()
+        return new NetworkServiceStore(proto.getSeedNodesList().stream()
                         .map(AddressByTransportTypeMap::fromProto)
                         .collect(Collectors.toSet()));
     }
@@ -79,14 +69,12 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     @Override
     public void applyPersisted(NetworkServiceStore persisted) {
-        networkIdByNodeId.clear();
-        networkIdByNodeId.putAll(persisted.getNetworkIdByNodeId());
         seedNodes.clear();
         seedNodes.addAll(persisted.getSeedNodes());
     }
 
     @Override
     public NetworkServiceStore getClone() {
-        return new NetworkServiceStore(networkIdByNodeId, seedNodes);
+        return new NetworkServiceStore(seedNodes);
     }
 }

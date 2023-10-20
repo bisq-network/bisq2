@@ -186,7 +186,7 @@ public class OracleNodeService implements Service {
                             BondedRoleType.ORACLE_NODE,
                             bondUserName,
                             signatureBase64,
-                            networkService.getAddressByNetworkType(Node.DEFAULT),
+                            networkService.getAddressByTransportTypeMap(Node.DEFAULT),
                             networkId,
                             oracleNode,
                             staticPublicKeysProvided);
