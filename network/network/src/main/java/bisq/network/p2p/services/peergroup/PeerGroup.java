@@ -111,7 +111,7 @@ public class PeerGroup {
         return (int) getAllConnections().count();
     }
 
-    public boolean isASeed(Connection connection) {
+    public boolean isSeed(Connection connection) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(connection.getPeerAddress()));
     }
 
@@ -186,7 +186,7 @@ public class PeerGroup {
         return node.findMyAddress().stream().noneMatch(myAddress -> myAddress.equals(address));
     }
 
-    public boolean isASeed(Address address) {
+    public boolean isSeed(Address address) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(address));
     }
 }

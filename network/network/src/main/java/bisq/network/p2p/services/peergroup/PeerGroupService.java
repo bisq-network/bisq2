@@ -46,7 +46,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class PeerGroupService implements PersistenceClient<PeerGroupStore>, PersistedPeersHandler {
@@ -149,7 +150,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
                 config.getPeerExchangeConfig(),
                 persistableStore);
-        peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
+        peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
         keepAliveService = new KeepAliveService(node, peerGroup, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
 
@@ -178,30 +179,27 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
     private void doInitialize() {
         log.info("Node {} called initialize", node);
-        switch (getState().get()) {
+        String nodeInfo = node.getNodeInfo();
+        State state = getState().get();
+        switch (state) {
             case NEW:
                 setState(PeerGroupService.State.STARTING);
-                //todo do we need async?
-                peerExchangeService.doInitialPeerExchange().join();
-                log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                        node, config.getInterval());
+                peerExchangeService.startInitialPeerExchange().join();
+                log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
+                        nodeInfo, config.getInterval());
                 scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
                         .periodically(config.getInterval())
-                        .name("PeerGroupService.scheduler-" + node));
+                        .name("PeerGroupService.scheduler-" + nodeInfo));
                 keepAliveService.initialize();
                 setState(State.RUNNING);
                 break;
             case STARTING:
-                throw new IllegalStateException("Already starting. NodeId=" + node.getNodeId());
             case RUNNING:
-                log.debug("Got called while already running. We ignore that call.");
-                break;
             case STOPPING:
-                throw new IllegalStateException("Already stopping. NodeId=" + node.getNodeId());
             case TERMINATED:
-                throw new IllegalStateException("Already terminated. NodeId=" + node.getNodeId());
+                log.warn("Got called at an invalid state. We ignore that call. State={}", state);
+                break;
         }
-
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -319,7 +317,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed(); // reversed as we use skip
         peerGroup.getAllConnections()
                 .filter(this::mayDisconnect)
-                .filter(peerGroup::isASeed)
+                .filter(peerGroup::isSeed)
                 .sorted(comparator)
                 .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
@@ -372,10 +370,8 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
-            int numAllConnections = peerGroup.getNumConnections();
-            int missing = minNumConnectedPeers - numAllConnections;
-            if (missing <= 0) {
-                log.debug("Node {} has sufficient outbound connections", node);
+            if (peerGroup.getNumConnections() >= minNumConnectedPeers) {
+                log.debug("Node {} has sufficient connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
             }
@@ -383,28 +379,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
         // We use the peer exchange protocol for establishing new connections.
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
-
-        int missingOutboundConnections = getMissingOutboundConnections();
-        if (missingOutboundConnections <= 0) {
-            // We have enough outbound connections, lets check if we have sufficient connections in total
-            int numAllConnections = peerGroup.getNumConnections();
-            int missing = minNumConnectedPeers - numAllConnections;
-            if (missing <= 0) {
-                log.debug("Node {} has sufficient connections", node);
-                CompletableFuture.completedFuture(null);
-                return;
-            }
-        }
-
-        log.info("Node {} has not sufficient connections and calls peerExchangeService.doFurtherPeerExchange", node);
-        peerExchangeService.doFurtherPeerExchange()
-                .orTimeout(config.getTimeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeCreateConnections with {}", node, throwable);
-                    return null;
-                });
+        log.info("We have not sufficient connections and call peerExchangeService.doFurtherPeerExchange");
+        // It is an async call. We do not wait for the result.
+        peerExchangeService.startFurtherPeerExchange();
     }
-
 
     private void maybeRemoveReportedPeers() {
         List<Peer> reportedPeers = new ArrayList<>(peerGroup.getReportedPeers());

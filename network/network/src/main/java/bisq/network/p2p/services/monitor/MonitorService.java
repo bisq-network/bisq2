@@ -46,7 +46,7 @@ public class MonitorService {
 
     public String getPeerGroupInfo() {
         int numSeedConnections = (int) peerGroup.getAllConnections()
-                .filter(connection -> peerGroup.isASeed(connection.getPeerAddress())).count();
+                .filter(connection -> peerGroup.isSeed(connection.getPeerAddress())).count();
         StringBuilder sb = new StringBuilder();
         sb.append(node.getTransportType().name()).append(": ")
                 .append(node.findMyAddress().map(Address::toString).orElse(""))

@@ -560,6 +560,10 @@ public class Node implements Connection.Handler {
         return findMyAddress().map(Address::toString).orElse("null");
     }
 
+    public String getNodeInfo() {
+        return getNodeId() + " @ " + getTransportType().name();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private

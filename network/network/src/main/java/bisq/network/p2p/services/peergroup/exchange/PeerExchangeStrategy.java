@@ -111,41 +111,68 @@ public class PeerExchangeStrategy {
         return candidates;
     }
 
+    boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
+        int numFailed = numRequests - numSuccess;
+        return numFailed > numRequests / 2 ||
+                peerGroup.getAllConnectedPeers().count() < peerGroup.getTargetNumConnectedPeers() ||
+                peerGroup.getReportedPeers().size() < peerGroup.getMinNumReportedPeers();
+    }
+
+    private List<Address> getCandidates(List<Address> priorityList) {
+        return priorityList.stream()
+                .filter(this::isNotUsed)
+                .distinct()
+                .limit(getPeerExchangeLimit())
+                .collect(Collectors.toList());
+    }
+
+    private int getPeerExchangeLimit() {
+        int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers(); // default 8
+        // We want at least 25% of minNumConnectedPeers
+        int minValue = minNumConnectedPeers / 4;
+        int missing = Math.max(0, peerGroup.getTargetNumConnectedPeers() - peerGroup.getNumConnections());
+        int limit = Math.max(minValue, missing);
+
+        // In case we have enough connections but do not have received at least 25% of our
+        // numReportedPeersAtBoostrap (default 10) target we still try to connect to 50% of minNumConnectedPeers.
+        if (limit == minValue && peerGroup.getReportedPeers().size() < config.getNumReportedPeersAtBoostrap() / 4) {
+            return minNumConnectedPeers / 2;
+        }
+        return limit;
+    }
+
     private List<Address> getPriorityListForInitialPeerExchange() {
-        List<Address> priorityList = new ArrayList<>(getSeeds());
+        List<Address> priorityList = new ArrayList<>(getSeedAddresses());
         priorityList.addAll(getReportedPeerAddresses());
-        priorityList.addAll(getPersisted());
+        priorityList.addAll(getPersistedAddresses());
         priorityList.addAll(getAllConnectedPeerAddresses());
-        return getDistictList(priorityList);
+        return priorityList;
     }
 
     private List<Address> getPriorityListForFurtherPeerExchange() {
         List<Address> priorityList = new ArrayList<>(getReportedPeerAddresses());
-        priorityList.addAll(getPersisted());
-        return getDistictList(priorityList);
+        priorityList.addAll(getPersistedAddresses());
+        return priorityList;
     }
 
-    private List<Address> getSeeds() {
+    private List<Address> getSeedAddresses() {
         return getShuffled(peerGroup.getSeedNodeAddresses()).stream()
                 .filter(peerGroup::notMyself)
                 .filter(peerGroup::isNotBanned)
-                .filter(this::isNotUsed)
                 .limit(config.getNumSeedNodesAtBoostrap())
                 .collect(Collectors.toList());
     }
 
     private List<Address> getReportedPeerAddresses() {
         return getReportedPeers()
-                .filter(this::isNotUsed)
                 .limit(config.getNumReportedPeersAtBoostrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
     }
 
-    private List<Address> getPersisted() {
+    private List<Address> getPersistedAddresses() {
         return peerGroupStore.getPersistedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
-                .filter(this::isNotUsed)
                 .sorted(Comparator.comparing(Peer::getDate))
                 .limit(config.getNumPersistedPeersAtBoostrap())
                 .map(Peer::getAddress)
@@ -154,7 +181,6 @@ public class PeerExchangeStrategy {
 
     private List<Address> getAllConnectedPeerAddresses() {
         return getAllConnectedPeers()
-                .filter(this::isNotUsed)
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
     }
@@ -193,23 +219,13 @@ public class PeerExchangeStrategy {
         peerGroup.addReportedPeers(filtered);
     }
 
-    boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
-        boolean moreThenHalfFailed = numRequests - numSuccess > numRequests / 2;
-        return moreThenHalfFailed ||
-                !sufficientConnections() ||
-                !sufficientReportedPeers();
-    }
 
-    private boolean sufficientConnections() {
-        return peerGroup.getAllConnectedPeers().count() >= peerGroup.getMinNumConnectedPeers();
-    }
-
-    private boolean sufficientReportedPeers() {
-        return peerGroup.getReportedPeers().size() >= peerGroup.getMinNumReportedPeers();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean notASeed(Address address) {
-        return !peerGroup.isASeed(address);
+        return !peerGroup.isSeed(address);
     }
 
     private boolean notASeed(Peer peer) {
@@ -245,7 +261,6 @@ public class PeerExchangeStrategy {
     private Stream<Peer> getAllConnectedPeers() {
         return peerGroup.getAllConnectedPeers()
                 .filter(this::isValidNonSeedPeer)
-                .sorted(Comparator.comparing(peer -> peer.getLoad().getNumConnections()))
                 .sorted(Comparator.comparing(Peer::getDate).reversed());
     }
 
@@ -256,33 +271,9 @@ public class PeerExchangeStrategy {
                 .sorted(Comparator.comparing(Peer::getDate).reversed());
     }
 
-    private List<Address> getCandidates(List<Address> priorityList) {
-        return priorityList.stream()
-                .limit(getLimit())
-                .collect(Collectors.toList());
-    }
-
-    private int getLimit() {
-        int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers();
-        // We want at least 25% of minNumConnectedPeers
-        int minValue = minNumConnectedPeers / 4;
-        int limit = Math.max(minValue, peerGroup.getTargetNumConnectedPeers() - peerGroup.getNumConnections());
-
-        // In case we have enough connections but do not have received at least 25% of our numReportedPeersAtBoostrap 
-        // target we still try to connect to 50% of minNumConnectedPeers.
-        if (limit == minValue && peerGroup.getReportedPeers().size() < config.getNumReportedPeersAtBoostrap() / 4) {
-            return minNumConnectedPeers / 2;
-        }
-        return limit;
-    }
-
     private List<Address> getShuffled(Collection<Address> addresses) {
         List<Address> list = new ArrayList<>(addresses);
         Collections.shuffle(list);
         return list;
-    }
-
-    private static List<Address> getDistictList(List<Address> list) {
-        return list.stream().distinct().collect(Collectors.toList());
     }
 }
