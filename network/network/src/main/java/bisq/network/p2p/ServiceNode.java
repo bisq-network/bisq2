@@ -102,7 +102,6 @@ public class ServiceNode {
         MONITOR
     }
 
-    private final TransportType transportType;
     @Getter
     private final NodesById nodesById;
     @Getter
@@ -131,7 +130,6 @@ public class ServiceNode {
                        PersistenceService persistenceService,
                        Set<Address> seedNodeAddresses,
                        TransportType transportType) {
-        this.transportType = transportType;
         BanList banList = new BanList();
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());

@@ -65,8 +65,8 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
  *
- * TODO: if we change the supported transports we need to clean up the persisted networkIds.
  */
+// TODO: if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
 public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesByTransportStore> {
     @Getter
@@ -217,7 +217,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                                                              NetworkId receiverNetworkId,
                                                              KeyPair senderKeyPair,
                                                              String senderNodeId) {
-        NetworkService.SendMessageResult resultsByType = new NetworkService.SendMessageResult();
+        NetworkService.SendMessageResult sendMessageResult = new NetworkService.SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
@@ -226,10 +226,10 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
                         senderNodeId);
-                resultsByType.put(transportType, result);
+                sendMessageResult.put(transportType, result);
             }
         });
-        return resultsByType;
+        return sendMessageResult;
     }
 
     public Map<TransportType, Connection> send(String senderNodeId,

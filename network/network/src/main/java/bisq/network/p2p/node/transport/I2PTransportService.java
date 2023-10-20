@@ -105,9 +105,7 @@ public class I2PTransportService implements TransportService {
         bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
 
         //If embedded router, start it already ...
-        boolean isEmbeddedRouter;
-        isEmbeddedRouter = isEmbeddedRouter();
-
+        boolean isEmbeddedRouter = isEmbeddedRouter();
         if (isEmbeddedRouter) {
             if (!I2pEmbeddedRouter.isInitialized()) {
                 I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
@@ -119,13 +117,12 @@ public class I2PTransportService implements TransportService {
             while (!I2pEmbeddedRouter.isRouterRunning()) {
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                } catch (InterruptedException ignore) {
                 }
             }
-            i2pClient = getClient(isEmbeddedRouter);
+            i2pClient = getClient(true);
         } else {
-            i2pClient = getClient(isEmbeddedRouter);
+            i2pClient = getClient(false);
         }
     }
 
@@ -133,7 +130,7 @@ public class I2PTransportService implements TransportService {
     public CompletableFuture<Boolean> shutdown() {
         initializeCalled = false;
         if (i2pClient == null) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(true);
         }
         return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL)
                 .thenApply(nil -> true);
@@ -141,7 +138,7 @@ public class I2PTransportService implements TransportService {
 
     private boolean isEmbeddedRouter() {
         if (config.isEmbeddedRouter()) {
-            //Is there a running router? If so ignore the config for embeeded router if exists
+            // Is there a running router? If so, ignore the config for embedded router if exists
             if (NetworkUtils.isPortInUse("127.0.0.1", 7654)) {
                 log.info("Embedded router parameter set to true, but there's a service running on 127.0.0.1:7654...");
                 return false;

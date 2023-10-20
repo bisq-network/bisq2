@@ -42,14 +42,12 @@ public class ClearNetTransportService implements TransportService {
         }
     }
 
-    private final TransportConfig config;
     private int numSocketsCreated = 0;
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private boolean initializeCalled;
 
     public ClearNetTransportService(TransportConfig config) {
-        this.config = config;
     }
 
     @Override
