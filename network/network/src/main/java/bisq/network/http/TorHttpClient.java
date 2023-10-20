@@ -20,7 +20,7 @@ package bisq.network.http;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
-import bisq.network.http.common.*;
+import bisq.network.http.utils.*;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;

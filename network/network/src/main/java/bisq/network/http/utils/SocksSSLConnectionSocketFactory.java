@@ -15,12 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http.common;
+package bisq.network.http.utils;
 
 import org.apache.http.HttpHost;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.protocol.HttpContext;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -30,15 +32,21 @@ import java.net.Socket;
 //   http://stackoverflow.com/a/25203021/5616248
 //
 // This class routes connections over Socks, and avoids resolving hostnames locally.
-public class SocksConnectionSocketFactory extends PlainConnectionSocketFactory {
+public class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
+    public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
+        // Only allow connections to sites with valid certs.
+        super(sslContext, new DefaultHostnameVerifier());
+        // Or to allow "insecure" (eg self-signed certs)
+        // super(sslContext, ALLOW_ALL_HOSTNAME_VERIFIER);
+    }
 
     /**
      * creates an unconnected Socks Proxy socket
      */
     @Override
-    public Socket createSocket(final HttpContext context) throws IOException {
-        InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
-        Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
+    public Socket createSocket(final HttpContext context) {
+        InetSocketAddress socketAddress = (InetSocketAddress) context.getAttribute("socks.address");
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, socketAddress);
         return new Socket(proxy);
     }
 
