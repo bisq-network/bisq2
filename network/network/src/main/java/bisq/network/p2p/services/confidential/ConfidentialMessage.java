@@ -35,19 +35,10 @@ import java.util.Arrays;
 @EqualsAndHashCode
 @Getter
 public final class ConfidentialMessage implements NetworkMessage, DistributedData {
-    //todo
-    private static final int VERSION = 0;
-
-    private final int version;
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 
-    public ConfidentialMessage(ConfidentialData confidentialData, String receiverKeyId) {
-        this(VERSION, confidentialData, receiverKeyId);
-    }
-
-    private ConfidentialMessage(int version, ConfidentialData confidentialData, String receiverKeyId) {
-        this.version = version;
+    ConfidentialMessage(ConfidentialData confidentialData, String receiverKeyId) {
         this.confidentialData = confidentialData;
         this.receiverKeyId = receiverKeyId;
 
@@ -58,7 +49,6 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setConfidentialMessage(
                 bisq.network.protobuf.ConfidentialMessage.newBuilder()
-                        .setVersion(VERSION)
                         .setConfidentialData(confidentialData.toProto())
                         .setReceiverKeyId(receiverKeyId)
         ).build();
@@ -66,7 +56,6 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
 
     public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto) {
         return new ConfidentialMessage(
-                proto.getVersion(),
                 ConfidentialData.fromProto(proto.getConfidentialData()),
                 proto.getReceiverKeyId()
         );

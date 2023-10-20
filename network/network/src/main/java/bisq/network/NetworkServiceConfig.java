@@ -41,16 +41,10 @@ import static java.util.stream.Collectors.toMap;
 @Getter
 public final class NetworkServiceConfig {
     public static NetworkServiceConfig from(Path baseDir, Config config) {
-        Set<TransportType> supportedTransportTypes = new HashSet<>(config.getEnumList(TransportType.class, "supportedTransportTypes"));
-
-        ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
-                ServiceNode.Service.CONFIDENTIAL,
-                ServiceNode.Service.PEER_GROUP,
-                ServiceNode.Service.DATA,
-                ServiceNode.Service.MONITOR));
-
+        ServiceNode.Config serviceNodeConfig = ServiceNode.Config.from(config.getConfig("serviceNode"));
         Config seedConfig = config.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
+        Set<TransportType> supportedTransportTypes = new HashSet<>(config.getEnumList(TransportType.class, "supportedTransportTypes"));
         Map<TransportType, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
                 .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));

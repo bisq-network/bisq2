@@ -20,6 +20,7 @@ package bisq.network;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
@@ -36,6 +37,8 @@ import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -77,7 +80,6 @@ import static java.util.concurrent.CompletableFuture.*;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-@Getter
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
@@ -88,14 +90,20 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
+    @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
+    @Getter
     private final Persistence<NetworkServiceStore> persistence;
     private final KeyPairService keyPairService;
     private final HttpService httpService;
     private final Map<TransportType, Integer> defaultNodePortByTransportType;
-    private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance 
+    private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
+    @Getter
     private final Set<TransportType> supportedTransportTypes;
+    @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
+    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    @Getter
     private final Optional<DataService> dataService;
 
     public NetworkService(NetworkServiceConfig config,
@@ -105,8 +113,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         this.keyPairService = keyPairService;
         httpService = new HttpService();
 
-        boolean supportsDataService = config.getServiceNodeConfig().getServices().contains(ServiceNode.Service.DATA);
-        dataService = supportsDataService ? Optional.of(new DataService(new StorageService(persistenceService))) : Optional.empty();
+        Set<ServiceNode.Service> services = config.getServiceNodeConfig().getServices();
+
+        // DataService is a global service that's why we create it here and pass it to lower level services
+        dataService = services.contains(ServiceNode.Service.DATA) ?
+                Optional.of(new DataService(new StorageService(persistenceService))) :
+                Optional.empty();
+
+        // MessageDeliveryStatusService is a global service that's why we create it here and pass it to lower level services
+        messageDeliveryStatusService = services.contains(ServiceNode.Service.ACK) && services.contains(ServiceNode.Service.CONFIDENTIAL) ?
+                Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
+                Optional.empty();
 
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
@@ -116,6 +133,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 config.getPeerGroupServiceConfigByTransport(),
                 config.getSeedAddressesByTransport(),
                 dataService,
+                messageDeliveryStatusService,
                 keyPairService,
                 persistenceService,
                 proofOfWorkService);
@@ -151,7 +169,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                         try {
                             serviceNodesByTransport.initializeNode(transportType, nodeId, port);
                             maybePersistNewNetworkId(nodeId, pubKey);
+                            //todo add completable futures
+
                             serviceNodesByTransport.initializePeerGroup(transportType);
+                            messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
                         } catch (Throwable t) {
                             log.error("initialize failed", t);
                         }
@@ -162,7 +183,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return CompletableFutureUtils.allOf(dataService.map(DataService::shutdown).orElse(completedFuture(true)),
+        return CompletableFutureUtils.allOf(
+                        dataService.map(DataService::shutdown).orElse(completedFuture(true)),
+                        messageDeliveryStatusService.map(MessageDeliveryStatusService::shutdown).orElse(completedFuture(true)),
                         serviceNodesByTransport.shutdown(),
                         httpService.shutdown())
                 .thenApply(list -> list.stream().filter(e -> e).count() == 3);
@@ -382,8 +405,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public boolean isTransportTypeSupported(TransportType transportType) {
-        return getSupportedTransportTypes().contains(transportType);
+        return supportedTransportTypes.contains(transportType);
     }
+
+    public Optional<ObservableHashMap<String, Observable<MessageDeliveryStatus>>> getMessageDeliveryStatusByMessageId() {
+        return messageDeliveryStatusService.map(MessageDeliveryStatusService::getMessageDeliveryStatusByMessageId);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 

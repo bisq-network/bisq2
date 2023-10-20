@@ -21,7 +21,11 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -43,20 +47,14 @@ import static java.util.concurrent.CompletableFuture.*;
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
 
-    public enum State {
-        ARRIVED,
-        ADDED_TO_MAILBOX,
-        FAILED
-    }
-
     @Getter
     public static class Result {
-        private final State state;
+        private final MessageDeliveryStatus messageDeliveryStatus;
         private DataService.BroadCastDataResult mailboxFuture = new DataService.BroadCastDataResult();
         private Optional<String> errorMsg = Optional.empty();
 
-        public Result(State state) {
-            this.state = state;
+        public Result(MessageDeliveryStatus messageDeliveryStatus) {
+            this.messageDeliveryStatus = messageDeliveryStatus;
         }
 
         public Result setMailboxFuture(DataService.BroadCastDataResult mailboxFuture) {
@@ -71,22 +69,25 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
         @Override
         public String toString() {
-            return "[state=" + state + errorMsg.map(error -> ", errorMsg=" + error + "]").orElse("]");
+            return "[messageDeliveryStatus=" + messageDeliveryStatus + errorMsg.map(error -> ", errorMsg=" + error + "]").orElse("]");
         }
     }
-
-    private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
-    private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
-
 
     private final NodesById nodesById;
     private final KeyPairService keyPairService;
     private final Optional<DataService> dataService;
+    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
-    public ConfidentialMessageService(NodesById nodesById, KeyPairService keyPairService, Optional<DataService> dataService) {
+    public ConfidentialMessageService(NodesById nodesById,
+                                      KeyPairService keyPairService,
+                                      Optional<DataService> dataService,
+                                      Optional<MessageDeliveryStatusService> messageDeliveryStatusService) {
         this.nodesById = nodesById;
         this.keyPairService = keyPairService;
         this.dataService = dataService;
+        this.messageDeliveryStatusService = messageDeliveryStatusService;
 
         nodesById.addNodeListener(this);
         dataService.ifPresent(service -> service.addListener(this));
@@ -167,15 +168,19 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             Connection connection = nodesById.getConnection(senderNodeId, address);
             return send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
         } catch (Throwable throwable) {
+            Result result;
             if (networkMessage instanceof MailboxMessage) {
                 log.info("Message could not be sent because of {}.\n" +
                         "We send the message as mailbox message.", throwable.getMessage());
                 ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
-                return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+                result = storeMailBoxMessage(((MailboxMessage) networkMessage).getMetaData(),
+                        confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
                 log.warn("Sending of networkMessage failed and networkMessage is not type of MailboxMessage. networkMessage={}", networkMessage);
-                return new Result(State.FAILED).setErrorMsg("Sending networkMessage failed and networkMessage is not type of MailboxMessage. Exception=" + throwable);
+                result = new Result(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
+            onResult(networkMessage, result);
+            return result;
         }
     }
 
@@ -186,20 +191,26 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         String senderNodeId) {
         log.debug("Send message to {}", connection);
         ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
+        Result result;
         try {
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNodeId);
             nodesById.send(senderNodeId, confidentialMessage, connection);
-            return new Result(State.ARRIVED);
+            result = new Result(MessageDeliveryStatus.ARRIVED);
+            onResult(networkMessage, result);
+            return result;
         } catch (Throwable throwable) {
             if (networkMessage instanceof MailboxMessage) {
                 log.info("Message could not be sent because of {}.\n" +
                         "We send the message as mailbox message.", throwable.getMessage());
-                return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+                result = storeMailBoxMessage(((MailboxMessage) networkMessage).getMetaData(),
+                        confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
-                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
-                return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
+                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", networkMessage);
+                result = new Result(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
+            onResult(networkMessage, result);
+            return result;
         }
     }
 
@@ -224,23 +235,32 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Result storeMailBoxMessage(MailboxMessage mailboxMessage,
+    private void onResult(NetworkMessage networkMessage, Result result) {
+        if (networkMessage instanceof AckRequestingMessage) {
+            messageDeliveryStatusService.ifPresent(service -> {
+                String messageId = ((AckRequestingMessage) networkMessage).getId();
+                service.onMessageDeliveryStatusChanged(messageId, result.getMessageDeliveryStatus());
+            });
+        }
+    }
+
+    private Result storeMailBoxMessage(MetaData metaData,
                                        ConfidentialMessage confidentialMessage,
                                        PubKey receiverPubKey,
                                        KeyPair senderKeyPair) {
         if (dataService.isEmpty()) {
-            log.warn("We have not stored the mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
-            return new Result(State.FAILED).setErrorMsg("We have not stored the mailboxMessage because the dataService is not present.");
+            log.warn("We have not stored the mailboxMessage because the dataService is not present.");
+            return new Result(MessageDeliveryStatus.FAILED).setErrorMsg("We have not stored the mailboxMessage because the dataService is not present.");
         }
 
-        MailboxData mailboxData = new MailboxData(confidentialMessage, mailboxMessage.getMetaData());
+        MailboxData mailboxData = new MailboxData(confidentialMessage, metaData);
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
         DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
                         senderKeyPair,
                         receiverPubKey.getPublicKey())
                 .join();
-        return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
+        return new Result(MessageDeliveryStatus.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
     private ConfidentialMessage getConfidentialMessage(NetworkMessage networkMessage, PubKey receiverPubKey, KeyPair senderKeyPair) {

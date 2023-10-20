@@ -55,11 +55,14 @@ public class ClearNetTransportService implements TransportService {
 
         bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
 
+        initializeCalled = true;
+        return CompletableFuture.completedFuture(true);
+
         // Simulate delay
-        return CompletableFuture.supplyAsync(() -> {
+        /*return CompletableFuture.supplyAsync(() -> {
             initializeCalled = true;
             return true;
-        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
+        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));*/
     }
 
     @Override

@@ -324,7 +324,9 @@ public class Node implements Connection.Handler {
     private Connection createOutboundConnection(Address address) {
         return myCapability.map(capability -> createOutboundConnection(address, capability)).orElseGet(() -> {
             int port = NetworkUtils.findFreeSystemPort();
-            log.warn("We create an outbound connection but we have not initialized our server. " + "We create a server on port {} now but clients better control node " + "life cycle themselves.", port);
+            log.warn("We create an outbound connection but we have not initialized our server. " +
+                    "We create a server on port {} now but clients better control node " +
+                    "life cycle themselves.", port);
             initialize(port);
             checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
             return createOutboundConnection(address, myCapability.get());
