@@ -24,7 +24,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.p2p.services.data.storage.Result;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
@@ -200,8 +200,8 @@ public class DataService implements DataNetworkService.Listener {
                 .thenApply(store -> {
                     try {
                         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
-                        Result result = store.add(request);
-                        if (result.isSuccess()) {
+                        DataStorageResult dataStorageResult = store.add(request);
+                        if (dataStorageResult.isSuccess()) {
                             if (authenticatedData instanceof AuthorizedData) {
                                 listeners.forEach(e -> e.onAuthorizedDataAdded((AuthorizedData) authenticatedData));
                             } else {
@@ -227,8 +227,8 @@ public class DataService implements DataNetworkService.Listener {
         return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData().getClassName())
                 .thenApply(store -> {
                     AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);
-                    Result result = store.add(request);
-                    if (result.isSuccess()) {
+                    DataStorageResult dataStorageResult = store.add(request);
+                    if (dataStorageResult.isSuccess()) {
                         listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
                         return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
@@ -245,8 +245,8 @@ public class DataService implements DataNetworkService.Listener {
                 .thenApply(store -> {
                     try {
                         AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverPublicKey);
-                        Result result = store.add(request);
-                        if (result.isSuccess()) {
+                        DataStorageResult dataStorageResult = store.add(request);
+                        if (dataStorageResult.isSuccess()) {
                             listeners.forEach(listener -> listener.onMailboxDataAdded(mailboxData));
                             return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
@@ -271,8 +271,8 @@ public class DataService implements DataNetworkService.Listener {
                 .thenApply(store -> {
                     try {
                         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
-                        Result result = store.remove(request);
-                        if (result.isSuccess()) {
+                        DataStorageResult dataStorageResult = store.remove(request);
+                        if (dataStorageResult.isSuccess()) {
                             if (authenticatedData instanceof AuthorizedData) {
                                 listeners.forEach(e -> e.onAuthorizedDataRemoved((AuthorizedData) authenticatedData));
                             } else {
@@ -299,8 +299,8 @@ public class DataService implements DataNetworkService.Listener {
                 .thenApply(store -> {
                     try {
                         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, keyPair);
-                        Result result = store.remove(request);
-                        if (result.isSuccess()) {
+                        DataStorageResult dataStorageResult = store.remove(request);
+                        if (dataStorageResult.isSuccess()) {
                             listeners.forEach(listener -> listener.onMailboxDataRemoved(mailboxData));
                             return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
