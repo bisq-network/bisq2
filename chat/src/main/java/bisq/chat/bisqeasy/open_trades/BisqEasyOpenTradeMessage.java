@@ -23,6 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.common.util.StringUtils;
+import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
@@ -48,14 +49,15 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
     public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
                                                                   String channelId,
-                                                                  UserProfile sender,
-                                                                  String receiverUserProfileId,
+                                                                  UserProfile senderUserProfile,
+                                                                  UserProfile receiverUserProfile,
                                                                   Optional<UserProfile> mediator,
                                                                   BisqEasyOffer bisqEasyOffer) {
         return new BisqEasyOpenTradeMessage(tradeId,
                 channelId,
-                sender,
-                receiverUserProfileId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
                 mediator,
                 ChatMessageType.TAKE_BISQ_EASY_OFFER,
                 bisqEasyOffer);
@@ -70,8 +72,9 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     public BisqEasyOpenTradeMessage(String tradeId,
                                     String messageId,
                                     String channelId,
-                                    UserProfile sender,
+                                    UserProfile senderUserProfile,
                                     String receiverUserProfileId,
+                                    NetworkId receiverNetworkId,
                                     @Nullable String text,
                                     Optional<Citation> citation,
                                     long date,
@@ -83,8 +86,9 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 messageId,
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
-                sender,
+                senderUserProfile,
                 receiverUserProfileId,
+                receiverNetworkId,
                 text,
                 citation,
                 date,
@@ -98,8 +102,9 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                      String messageId,
                                      ChatChannelDomain chatChannelDomain,
                                      String channelId,
-                                     UserProfile sender,
+                                     UserProfile senderUserProfile,
                                      String receiverUserProfileId,
+                                     NetworkId receiverNetworkId,
                                      @Nullable String text,
                                      Optional<Citation> citation,
                                      long date,
@@ -107,7 +112,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                      Optional<UserProfile> mediator,
                                      ChatMessageType chatMessageType,
                                      Optional<BisqEasyOffer> bisqEasyOffer) {
-        super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType);
+        super(messageId, chatChannelDomain, channelId, senderUserProfile, receiverUserProfileId,
+                receiverNetworkId, text, citation, date, wasEdited, chatMessageType);
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
@@ -117,16 +123,18 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
 
     private BisqEasyOpenTradeMessage(String tradeId,
                                      String channelId,
-                                     UserProfile sender,
+                                     UserProfile senderUserProfile,
                                      String receiverUserProfileId,
+                                     NetworkId receiverNetworkId,
                                      Optional<UserProfile> mediator,
                                      ChatMessageType chatMessageType,
                                      BisqEasyOffer bisqEasyOffer) {
         super(StringUtils.createShortUid(),
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
                 channelId,
-                sender,
+                senderUserProfile,
                 receiverUserProfileId,
+                receiverNetworkId,
                 Optional.empty(),
                 Optional.empty(),
                 new Date().getTime(),
@@ -154,7 +162,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
                 .setTradeId(tradeId)
                 .setReceiverUserProfileId(receiverUserProfileId)
-                .setSender(sender.toProto());
+                .setReceiverNetworkId(receiverNetworkId.toProto())
+                .setSender(senderUserProfile.toProto());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
         return getChatMessageBuilder()
@@ -170,8 +179,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         Optional<UserProfile> mediator = protoMessage.hasMediator() ?
                 Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
                 Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOpenTradeMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOpenTradeMessage().getBisqEasyOffer())) :
+        Optional<BisqEasyOffer> bisqEasyOffer = protoMessage.hasBisqEasyOffer() ?
+                Optional.of(BisqEasyOffer.fromProto(protoMessage.getBisqEasyOffer())) :
                 Optional.empty();
         return new BisqEasyOpenTradeMessage(
                 protoMessage.getTradeId(),
@@ -180,6 +189,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 baseProto.getChannelId(),
                 UserProfile.fromProto(protoMessage.getSender()),
                 protoMessage.getReceiverUserProfileId(),
+                NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
                 baseProto.getText(),
                 citation,
                 baseProto.getDate(),

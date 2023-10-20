@@ -141,7 +141,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                             tradeId,
                             channel.getId(),
                             myUserIdentity.getUserProfile(),
-                            maker.getId(),
+                            maker,
                             channel.getMediator(),
                             bisqEasyOffer);
                     addMessage(takeOfferMessage, channel);
@@ -205,11 +205,14 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     public void addMediatorsResponseMessage(BisqEasyOpenTradeChannel channel, String text) {
         setIsInMediation(channel, true);
         checkArgument(channel.getMediator().isPresent());
+        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
+        UserProfile senderUserProfile = channel.getMediator().get();
         BisqEasyOpenTradeMessage systemMessage = new BisqEasyOpenTradeMessage(channel.getTradeId(),
                 StringUtils.createShortUid(),
                 channel.getId(),
-                channel.getMediator().get(),
-                channel.getMyUserIdentity().getUserProfile().getId(),
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
                 text,
                 Optional.empty(),
                 new Date().getTime(),
@@ -235,8 +238,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     @Override
     protected BisqEasyOpenTradeMessage createAndGetNewPrivateChatMessage(String messageId,
                                                                          BisqEasyOpenTradeChannel channel,
-                                                                         UserProfile sender,
-                                                                         String receiverUserProfileId,
+                                                                         UserProfile senderUserProfile,
+                                                                         UserProfile receiverUserProfile,
                                                                          @Nullable String text,
                                                                          Optional<Citation> citation,
                                                                          long time,
@@ -248,8 +251,9 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 channel.getTradeId(),
                 messageId,
                 channel.getId(),
-                sender,
-                receiverUserProfileId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
                 text,
                 citation,
                 time,
@@ -258,6 +262,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 chatMessageType,
                 Optional.empty());
     }
+
 
     //todo
     @Override
@@ -284,7 +289,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                                     .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
                                             message.getBisqEasyOffer().get(),
                                             myUserIdentity,
-                                            message.getSender(),
+                                            message.getSenderUserProfile(),
                                             message.getMediator()));
                         } else {
                             // It could be that taker sends quickly a message after take offer, and we receive them 

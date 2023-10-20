@@ -70,6 +70,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +117,8 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     protected TwoPartyPrivateChatMessage createAndGetNewPrivateChatMessage(String messageId,
                                                                            TwoPartyPrivateChatChannel channel,
-                                                                           UserProfile sender,
-                                                                           String receiverUserProfileId,
+                                                                           UserProfile senderUserProfile,
+                                                                           UserProfile receiverUserProfile,
                                                                            String text,
                                                                            Optional<Citation> citation,
                                                                            long time,
@@ -126,8 +127,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         return new TwoPartyPrivateChatMessage(messageId,
                 channel.getChatChannelDomain(),
                 channel.getId(),
-                sender,
-                receiverUserProfileId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
                 text,
                 citation,
                 new Date().getTime(),
@@ -154,7 +156,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                                     "happen in some rare cases.");
                             return Optional.empty();
                         } else {
-                            return createAndAddChannel(message.getSender(), message.getReceiverUserProfileId());
+                            return createAndAddChannel(message.getSenderUserProfile(), message.getReceiverUserProfileId());
                         }
                     })
                     .ifPresent(channel -> addMessage(message, channel));

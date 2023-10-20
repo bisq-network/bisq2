@@ -91,6 +91,7 @@ message ChatChannel {
 message TwoPartyPrivateChatMessage {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
+  network.NetworkId receiverNetworkId = 3;
 }
 message TwoPartyPrivateChatChannel {
   user.UserIdentity myUserIdentity = 1;
@@ -118,9 +119,10 @@ message CommonPublicChatChannelStore {
 message BisqEasyOpenTradeMessage {
   string tradeId = 1;
   string receiverUserProfileId = 2;
-  user.UserProfile sender = 3;
-  optional user.UserProfile mediator = 4;
-  optional offer.Offer bisqEasyOffer = 5;
+  network.NetworkId receiverNetworkId = 3;
+  user.UserProfile sender = 4;
+  optional user.UserProfile mediator = 5;
+  optional offer.Offer bisqEasyOffer = 6;
 }
 message BisqEasyOpenTradeChannel {
   string tradeId = 1;

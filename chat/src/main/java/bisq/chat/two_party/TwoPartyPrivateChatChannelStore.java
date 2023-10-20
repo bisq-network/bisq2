@@ -64,8 +64,8 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
     }
 
     @Override
-    public void applyPersisted(TwoPartyPrivateChatChannelStore chatStore) {
-        setAll(chatStore.getChannels());
+    public void applyPersisted(TwoPartyPrivateChatChannelStore persisted) {
+        setAll(persisted.getChannels());
     }
 
     @Override

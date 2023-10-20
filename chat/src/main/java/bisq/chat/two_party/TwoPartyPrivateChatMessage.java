@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.user.profile.UserProfile;
@@ -45,8 +46,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
                                       String channelId,
-                                      UserProfile sender,
+                                      UserProfile senderUserProfile,
                                       String receiverUserProfileId,
+                                      NetworkId receiverNetworkId,
                                       String text,
                                       Optional<Citation> citation,
                                       long date,
@@ -55,8 +57,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
         super(messageId,
                 chatChannelDomain,
                 channelId,
-                sender,
+                senderUserProfile,
                 receiverUserProfileId,
+                receiverNetworkId,
                 text,
                 citation,
                 date,
@@ -77,7 +80,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
         return getChatMessageBuilder()
                 .setTwoPartyPrivateChatMessage(bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
                         .setReceiverUserProfileId(receiverUserProfileId)
-                        .setSender(sender.toProto()))
+                        .setReceiverNetworkId(receiverNetworkId.toProto())
+                        .setSender(senderUserProfile.toProto()))
                 .build();
     }
 
@@ -92,6 +96,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateChatMessage.getSender()),
                 privateChatMessage.getReceiverUserProfileId(),
+                NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
                 baseProto.getText(),
                 citation,
                 baseProto.getDate(),

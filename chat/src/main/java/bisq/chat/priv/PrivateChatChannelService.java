@@ -96,7 +96,7 @@ public abstract class PrivateChatChannelService<
         M chatMessage = createAndGetNewPrivateChatMessage(messageId,
                 channel,
                 myUserIdentity.getUserProfile(),
-                receiver.getId(),
+                receiver,
                 text,
                 citation,
                 date,
@@ -151,7 +151,7 @@ public abstract class PrivateChatChannelService<
             log.warn("Sent a message to myself. This should never happen for private chat messages.");
             return false;
         }
-        if (bannedUserService.isNetworkIdBanned(message.getSender().getNetworkId())) {
+        if (bannedUserService.isNetworkIdBanned(message.getSenderUserProfile().getNetworkId())) {
             log.warn("Message invalid as sender is banned");
             return false;
         }
@@ -162,8 +162,8 @@ public abstract class PrivateChatChannelService<
 
     protected abstract M createAndGetNewPrivateChatMessage(String messageId,
                                                            C channel,
-                                                           UserProfile sender,
-                                                           String receiverUserProfileId,
+                                                           UserProfile senderUserProfile,
+                                                           UserProfile receiverUserProfile,
                                                            String text,
                                                            Optional<Citation> citation,
                                                            long time,
