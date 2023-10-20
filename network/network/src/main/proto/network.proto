@@ -293,6 +293,10 @@ message NetworkServiceStore {
   repeated AddressByTransportTypeMap seedNodes = 2;
 }
 
+message ServiceNodesByTransportStore {
+  map<string, NetworkId> networkIdByNodeId = 1;
+}
+
 message MessageDeliveryStatusStore {
   map<string, MessageDeliveryStatus> messageDeliveryStatusByMessageId = 1;
 }

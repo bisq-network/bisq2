@@ -38,8 +38,11 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
+import bisq.security.PubKey;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
@@ -56,13 +59,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
  */
 @Slf4j
-public class ServiceNodesByTransport {
+public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesByTransportStore> {
+    @Getter
+    private final ServiceNodesByTransportStore persistableStore = new ServiceNodesByTransportStore();
+    private final KeyPairService keyPairService;
+    @Getter
+    private final Persistence<ServiceNodesByTransportStore> persistence;
     @Getter
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
@@ -78,6 +88,12 @@ public class ServiceNodesByTransport {
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService) {
         this.supportedTransportTypes = supportedTransportTypes;
+        this.keyPairService = keyPairService;
+
+        persistence = persistenceService.getOrCreatePersistence(this,
+                NetworkService.SUB_PATH,
+                "ServiceNodesByTransportStore",
+                persistableStore);
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
@@ -101,8 +117,28 @@ public class ServiceNodesByTransport {
                     transportType);
             map.put(transportType, serviceNode);
         });
+
+        setupDefaultNodeInitializeObserver();
     }
 
+    /**
+     * @return A CompletableFuture with the success state if at least one of the service node initialisations was
+     * successfully completed. In case all fail, we complete exceptionally.
+     */
+    public CompletableFuture<Boolean> initialize() {
+        // We initialize all service nodes per transport type in parallel. As soon one has completed we
+        // return a success state.
+        Optional<NetworkId> persistedDefaultNodeId = findPersistedNetworkId(Node.DEFAULT);
+        Stream<CompletableFuture<Void>> futures = map.entrySet().stream()
+                .map(entry -> runAsync(() -> {
+                    TransportType transportType = entry.getKey();
+                    ServiceNode serviceNode = entry.getValue();
+                    Optional<Integer> persistedDefaultNodePort = persistedDefaultNodeId
+                            .map(e -> e.getAddressByTransportTypeMap().get(transportType).getPort());
+                    serviceNode.initialize(persistedDefaultNodePort);
+                }, NETWORK_IO_POOL));
+        return CompletableFutureUtils.anyOf(futures).thenApply(nil -> true);
+    }
 
     public CompletableFuture<Boolean> shutdown() {
         Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
@@ -248,4 +284,40 @@ public class ServiceNodesByTransport {
         return findAddressesByNodeId(transport)
                 .flatMap(addressesByNodeId -> Optional.ofNullable(addressesByNodeId.get(nodeId)));
     }
+
+    public Optional<NetworkId> findPersistedNetworkId(String nodeId) {
+        return Optional.ofNullable(persistableStore.getNetworkIdByNodeId().get(nodeId));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupDefaultNodeInitializeObserver() {
+        String defaultNodeId = Node.DEFAULT;
+        PubKey defaultPubKey = keyPairService.getDefaultPubKey();
+        map.forEach((transportType, serviceNode) -> {
+            serviceNode.getState().addObserver(state -> {
+                // Once we have our default node initialize wer persist the address in the NetworkId
+                if (state == ServiceNode.State.DEFAULT_NODE_INITIALIZED) {
+                    serviceNode.getDefaultNode().findMyAddress()
+                            .ifPresent(address -> {
+                                if (persistableStore.getNetworkIdByNodeId().containsKey(defaultNodeId)) {
+                                    NetworkId networkId = persistableStore.getNetworkIdByNodeId().get(defaultNodeId);
+                                    networkId.getAddressByTransportTypeMap().put(transportType, address);
+                                } else {
+                                    AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
+                                    addressByTransportTypeMap.put(transportType, address);
+                                    NetworkId networkId = new NetworkId(addressByTransportTypeMap, defaultPubKey, defaultNodeId);
+                                    persistableStore.getNetworkIdByNodeId().put(defaultNodeId, networkId);
+                                }
+                                persist();
+                            });
+                }
+            });
+        });
+    }
+
+
 }
