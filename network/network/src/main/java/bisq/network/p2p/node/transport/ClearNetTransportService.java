@@ -25,44 +25,38 @@ public class ClearNetTransportService implements TransportService {
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
-            return new Config(dataDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
+
+            return new Config(dataDir,
+                    config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
         }
 
+        private final int defaultNodePort;
         private final int socketTimeout;
         private final Path dataDir;
 
-        public Config(Path dataDir, int socketTimeout) {
+        public Config(Path dataDir, int defaultNodePort, int socketTimeout) {
             this.dataDir = dataDir;
+            this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
         }
     }
 
-    private final TransportConfig config;
     private int numSocketsCreated = 0;
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private boolean initializeCalled;
 
     public ClearNetTransportService(TransportConfig config) {
-        this.config = config;
     }
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
+    public void initialize() {
         if (initializeCalled) {
-            return CompletableFuture.completedFuture(true);
+            return;
         }
-
-        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-
         initializeCalled = true;
-        return CompletableFuture.completedFuture(true);
-
-        // Simulate delay
-        /*return CompletableFuture.supplyAsync(() -> {
-            initializeCalled = true;
-            return true;
-        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));*/
+        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
     }
 
     @Override

@@ -138,9 +138,9 @@ public class Node implements Connection.Handler {
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
     @Getter
-    public AtomicReference<State> state = new AtomicReference<>(State.NEW);
+    public final AtomicReference<State> state = new AtomicReference<>(State.NEW);
     @Getter
-    public Observable<State> observableState = new Observable<>(State.NEW);
+    public final Observable<State> observableState = new Observable<>(State.NEW);
 
     public Node(BanList banList, Config config, String nodeId, TransportService transportService) {
         this.banList = banList;
@@ -179,7 +179,6 @@ public class Node implements Connection.Handler {
             switch (state.get()) {
                 case NEW: {
                     setState(STARTING);
-
                     createServerAndListen(port);
                     setState(State.RUNNING);
                     break;

@@ -20,6 +20,7 @@ package bisq.network.p2p;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
@@ -79,8 +80,16 @@ public class ServiceNode {
 
     public enum State {
         NEW,
+
+        INITIALIZE_TRANSPORT,
+        TRANSPORT_INITIALIZED,
+
+        INITIALIZE_DEFAULT_NODE,
+        DEFAULT_NODE_INITIALIZED,
+
         INITIALIZE_PEER_GROUP,
         PEER_GROUP_INITIALIZED,
+
         STOPPING,
         TERMINATED
     }
@@ -99,6 +108,7 @@ public class ServiceNode {
     private final TransportService transportService;
     @Getter
     private final Node defaultNode;
+    private final int defaultNodePort;
     @Getter
     private final Optional<ConfidentialMessageService> confidentialMessageService;
     @Getter
@@ -121,9 +131,11 @@ public class ServiceNode {
                        Set<Address> seedNodeAddresses,
                        TransportType transportType) {
         BanList banList = new BanList();
-        transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
+
+        transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService);
         defaultNode = nodesById.getOrCreateDefaultNode();
+        defaultNodePort = nodeConfig.getTransportConfig().getDefaultNodePort();
 
         Set<Service> services = config.getServices();
         peerGroupService = services.contains(Service.PEER_GROUP) ?
@@ -136,7 +148,7 @@ public class ServiceNode {
                 Optional.empty();
 
         dataServicePerTransport = services.contains(Service.PEER_GROUP) && services.contains(Service.DATA) ?
-                Optional.of(dataService.orElseThrow().getDataServicePerTransport(nodeConfig.getTransportType(),
+                Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
                         defaultNode,
                         peerGroupService.orElseThrow())) :
                 Optional.empty();
@@ -150,6 +162,37 @@ public class ServiceNode {
                         peerGroupService.orElseThrow().getPeerGroup(),
                         peerGroupService.orElseThrow().getPeerGroupStore())) :
                 Optional.empty();
+    }
+
+    void initializeTransport() {
+        setState(State.INITIALIZE_TRANSPORT);
+        transportService.initialize();
+        setState(State.TRANSPORT_INITIALIZED);
+    }
+
+    void initializeDefaultNode(Optional<Integer> persistedDefaultNodePort) {
+        int port;
+        if (defaultNodePort > -1) {
+            port = defaultNodePort;
+        } else {
+            port = persistedDefaultNodePort.orElse(NetworkUtils.findFreeSystemPort());
+        }
+        setState(State.INITIALIZE_DEFAULT_NODE);
+        defaultNode.initialize(port);
+        setState(State.DEFAULT_NODE_INITIALIZED);
+    }
+
+    void initializePeerGroup() {
+        peerGroupService.ifPresent(peerGroupService -> {
+            setState(State.INITIALIZE_PEER_GROUP);
+            peerGroupService.initialize();
+            setState(State.PEER_GROUP_INITIALIZED);
+        });
+    }
+
+    Node getInitializedNode(String nodeId, Optional<Integer> persistedNodePort) {
+        int port = persistedNodePort.orElse(NetworkUtils.findFreeSystemPort());
+        return nodesById.getInitializedNode(nodeId, port);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -172,17 +215,9 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeNode(String nodeId, int serverPort) {
-        transportService.initialize()
-                .thenRun(() -> nodesById.initialize(nodeId, serverPort));
-    }
 
     public boolean isNodeInitialized(String nodeId) {
         return nodesById.isNodeInitialized(nodeId);
-    }
-
-    public void initializePeerGroup() {
-        peerGroupService.ifPresent(PeerGroupService::initialize);
     }
 
     public void addSeedNodeAddress(Address seedNodeAddress) {

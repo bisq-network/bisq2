@@ -1,6 +1,5 @@
 package bisq.network.p2p.services.confidential.ack;
 
-import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkIdWithKeyPair;
@@ -15,7 +14,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * This service aggregates the message delivery status for all supported transports and provides
@@ -26,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 @Getter
-public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, Service, MessageListener {
+public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, MessageListener {
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyPairService keyPairService;
@@ -38,17 +36,18 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
         this.keyPairService = keyPairService;
         this.networkService = networkService;
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this,
+                NetworkService.NETWORK_DB_PATH,
+                "MessageDeliveryStatusServiceStore",
+                persistableStore);
     }
 
-    public CompletableFuture<Boolean> initialize() {
+    public void initialize() {
         networkService.addMessageListener(this);
-        return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<Boolean> shutdown() {
+    public void shutdown() {
         networkService.removeMessageListener(this);
-        return CompletableFuture.completedFuture(true);
     }
 
 

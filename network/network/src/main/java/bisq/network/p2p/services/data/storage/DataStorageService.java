@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
+import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -33,7 +34,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
-    public static final String SUB_PATH = "db" + File.separator + "network";
     public static final String STORE_POST_FIX = "Store";
 
     @Getter
@@ -50,7 +50,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         super();
         this.storeKey = storeKey;
         String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + STORE_POST_FIX);
-        subDirectory = SUB_PATH + File.separator + storeName;
+        subDirectory = NetworkService.NETWORK_DB_PATH + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this, subDirectory, storageFileName, persistableStore);
     }
 

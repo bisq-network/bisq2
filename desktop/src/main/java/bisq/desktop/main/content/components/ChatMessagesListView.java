@@ -1130,49 +1130,47 @@ public class ChatMessagesListView {
                 canTakeOffer = false;
             }
 
-            networkService.getMessageDeliveryStatusByMessageId()
-                    .ifPresent(map ->
-                            pins.add(map.addObserver(new HashMapObserver<>() {
-                                @Override
-                                public void put(String key, Observable<MessageDeliveryStatus> value) {
-                                    if (key.equals(chatMessage.getId())) {
-                                        pins.add(value.addObserver(status -> {
-                                            UIThread.run(() -> {
-                                                if (status != null) {
-                                                    UIThread.run(() -> {
-                                                        messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
-                                                        switch (status) {
-                                                            case SENT:
-                                                                messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
-                                                                break;
-                                                            case ARRIVED:
-                                                                messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
-                                                                break;
-                                                            case ADDED_TO_MAILBOX:
-                                                                messageDeliveryStatusIcon.set(AwesomeIcon.ENVELOPE);
-                                                                break;
-                                                            case MAILBOX_MSG_RECEIVED:
-                                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_DOWN);
-                                                                break;
-                                                            case FAILED:
-                                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
-                                                                break;
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }));
-                                    }
+            pins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
+                @Override
+                public void put(String key, Observable<MessageDeliveryStatus> value) {
+                    if (key.equals(chatMessage.getId())) {
+                        pins.add(value.addObserver(status -> {
+                            UIThread.run(() -> {
+                                if (status != null) {
+                                    UIThread.run(() -> {
+                                        messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
+                                        switch (status) {
+                                            case SENT:
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
+                                                break;
+                                            case ARRIVED:
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
+                                                break;
+                                            case ADDED_TO_MAILBOX:
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.ENVELOPE);
+                                                break;
+                                            case MAILBOX_MSG_RECEIVED:
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_DOWN);
+                                                break;
+                                            case FAILED:
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
+                                                break;
+                                        }
+                                    });
                                 }
+                            });
+                        }));
+                    }
+                }
 
-                                @Override
-                                public void remove(Object key) {
-                                }
+                @Override
+                public void remove(Object key) {
+                }
 
-                                @Override
-                                public void clear() {
-                                }
-                            })));
+                @Override
+                public void clear() {
+                }
+            }));
         }
 
         @Override

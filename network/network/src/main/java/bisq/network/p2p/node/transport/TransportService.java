@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.common.application.Service;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -27,7 +26,7 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface TransportService extends Service {
+public interface TransportService {
 
     static TransportService create(TransportType transportType, TransportConfig config) {
         switch (transportType) {
@@ -42,7 +41,7 @@ public interface TransportService extends Service {
         }
     }
 
-    CompletableFuture<Boolean> initialize();
+    void initialize();
 
     CompletableFuture<Boolean> shutdown();
 

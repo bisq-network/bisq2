@@ -111,7 +111,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String nodeId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        return networkService.getInitializedNetworkId(nodeId, pubKey)
+        return networkService.getNetworkIdOfInitializedNode(nodeId, pubKey)
                 .thenApply(networkId -> new Identity(identityTag, networkId, keyPair));
     }
 
@@ -168,7 +168,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        return networkService.getInitializedNetworkId(nodeId, pubKey)
+        return networkService.getNetworkIdOfInitializedNode(nodeId, pubKey)
                 .thenApply(networkId -> {
                     Identity identity = new Identity(tag, networkId, keyPair);
                     synchronized (lock) {
@@ -256,7 +256,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Optional<Identity> swapAnyInitializedPooledIdentity(String tag) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.isInitialized(identity.getNodeId()))
+                    .filter(identity -> networkService.isNodeOnAllTransportsInitialized(identity.getNodeId()))
                     .findAny()
                     .or(() -> persistableStore.getPool().stream().findAny())
                     .map(pooledIdentity -> swapPooledIdentity(tag, pooledIdentity));
@@ -277,8 +277,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private void initializeActiveIdentities() {
         getActiveIdentityByTag().values().forEach(identity ->
-                networkService.initializeNode(identity.getNodeId(), identity.getPubKey()).values()
-                        .forEach(future -> future.whenComplete((__, throwable) -> {
+                networkService.getInitializedNodeByTransport(identity.getNodeId(), identity.getPubKey()).values()
+                        .forEach(future -> future.whenComplete((node, throwable) -> {
                                     if (throwable == null) {
                                         log.info("Network node for active identity {} initialized. NetworkId={}",
                                                 identity.getTag(), identity.getNetworkId());
@@ -292,8 +292,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private void initializePooledIdentities() {
         persistableStore.getPool().forEach(identity ->
-                networkService.initializeNode(identity.getNodeId(), identity.getPubKey()).values()
-                        .forEach(future -> future.whenComplete((__, throwable) -> {
+                networkService.getInitializedNodeByTransport(identity.getNodeId(), identity.getPubKey()).values()
+                        .forEach(future -> future.whenComplete((node, throwable) -> {
                                     if (throwable == null) {
                                         log.info("Network node for pooled identity {} initialized. NetworkId={}",
                                                 identity.getTag(), identity.getNetworkId());
@@ -349,7 +349,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        return networkService.getInitializedNetworkId(nodeId, pubKey)
+        return networkService.getNetworkIdOfInitializedNode(nodeId, pubKey)
                 .thenApply(networkId -> new Identity(tag, networkId, keyPair));
     }
 }

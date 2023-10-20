@@ -34,9 +34,10 @@ public class TorSocketChannelFactory implements SocketChannelFactory {
 
     @Override
     public SocketChannel getSocketChannelForAddress(Address address) throws IOException {
-        TorSocketChannel torSocketChannel = TorSocketChannel.open();
-        var connectionData = new TorSocksConnectionData(torSocksProxyPort, address.getHost(), address.getPort());
-        return torSocketChannel.connect(connectionData, ByteBuffer.allocate(1024));
+        try (TorSocketChannel torSocketChannel = TorSocketChannel.open()) {
+            var connectionData = new TorSocksConnectionData(torSocksProxyPort, address.getHost(), address.getPort());
+            return torSocketChannel.connect(connectionData, ByteBuffer.allocate(1024));
+        }
     }
 }
 

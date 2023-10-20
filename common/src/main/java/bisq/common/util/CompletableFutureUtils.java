@@ -71,7 +71,7 @@ public class CompletableFutureUtils {
      * @param <T>        The generic type of the future
      * @return Returns a CompletableFuture with the result once any future has completed successfully.
      * If all futures completed exceptionally the result also completes exceptionally.
-     * This is different to the `CompletableFuture.anyOf` behaviour which completes successfully also if any of the futures
+     * This is different to the `CompletableFuture.anyOf` behaviour which completes exceptionally if any of the futures
      * complete exceptionally.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {

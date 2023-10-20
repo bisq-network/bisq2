@@ -22,5 +22,7 @@ import java.nio.file.Path;
 public interface TransportConfig {
     Path getDataDir();
 
+    int getDefaultNodePort();
+
     int getSocketTimeout();
 }

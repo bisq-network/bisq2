@@ -52,12 +52,12 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         CountDownLatch initializeServerLatch = new CountDownLatch(numNodes);
         CountDownLatch sendPongLatch = new CountDownLatch(numNodes);
         CountDownLatch receivedPongLatch = new CountDownLatch(numNodes);
-        transportService.initialize().join();
+        transportService.initialize();
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int finalI = i;
             int serverPort = 1000 + i;
-            nodesById.initialize(nodeId, serverPort);
+            nodesById.getInitializedNode(nodeId, serverPort);
             initializeServerLatch.countDown();
             nodesById.addNodeListener(new Node.Listener() {
                 @Override
@@ -134,7 +134,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int serverPort = 1000 + i;
-            nodesById.initialize(nodeId, serverPort);
+            nodesById.getInitializedNode(nodeId, serverPort);
         }
         nodesById.shutdown().join();
         assertTrue(true);

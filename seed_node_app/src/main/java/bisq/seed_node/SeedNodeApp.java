@@ -33,7 +33,7 @@ public class SeedNodeApp {
         applicationService.readAllPersisted()
                 .thenCompose(result -> applicationService.initialize())
                 .whenComplete((result, throwable) -> {
-                    AddressByTransportTypeMap addressByTransportTypeMap = applicationService.getNetworkService().getAddressByNetworkType(Node.DEFAULT);
+                    AddressByTransportTypeMap addressByTransportTypeMap = applicationService.getNetworkService().getAddressByTransportTypeMap(Node.DEFAULT);
                     String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
                     Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
                     try {
