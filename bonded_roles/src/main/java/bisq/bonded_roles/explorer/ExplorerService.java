@@ -24,7 +24,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
-import bisq.network.http.common.BaseHttpClient;
+import bisq.network.http.BaseHttpClient;
 import bisq.network.p2p.node.transport.TransportType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;

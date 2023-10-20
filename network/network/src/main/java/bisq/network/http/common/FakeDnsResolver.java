@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 
 // This class is adapted from
 //   http://stackoverflow.com/a/25203021/5616248
-class FakeDnsResolver implements DnsResolver {
+public class FakeDnsResolver implements DnsResolver {
     @Override
     public InetAddress[] resolve(String host) throws UnknownHostException {
         // Return some fake DNS record for every request, we won't be using it

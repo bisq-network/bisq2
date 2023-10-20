@@ -30,7 +30,7 @@ import java.net.Socket;
 //   http://stackoverflow.com/a/25203021/5616248
 //
 // This class routes connections over Socks, and avoids resolving hostnames locally.
-class SocksConnectionSocketFactory extends PlainConnectionSocketFactory {
+public class SocksConnectionSocketFactory extends PlainConnectionSocketFactory {
 
     /**
      * creates an unconnected Socks Proxy socket

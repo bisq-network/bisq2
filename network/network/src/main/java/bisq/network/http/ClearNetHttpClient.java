@@ -15,11 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http.common;
+package bisq.network.http;
 
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
+import bisq.network.http.common.HttpException;
+import bisq.network.http.common.HttpMethod;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

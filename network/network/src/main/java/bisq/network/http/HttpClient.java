@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http.common;
+package bisq.network.http;
 
 import bisq.common.data.Pair;
 
