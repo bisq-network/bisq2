@@ -19,7 +19,6 @@ package bisq.desktop.overlay.tac;
 
 import bisq.desktop.DesktopModel;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.OrderedList;
@@ -90,10 +89,14 @@ public class TacView extends View<VBox, TacModel, TacController> {
         UnorderedList rulesList = new UnorderedList(rules, "tac-text");
 
         confirmCheckBox = new CheckBox(Res.get("tac.confirm"));
+        confirmCheckBox.setFocusTraversable(false);
 
         acceptButton = new Button(Res.get("tac.accept"));
+        acceptButton.setFocusTraversable(false);
+
         rejectButton = new Button(Res.get("tac.reject"));
         rejectButton.getStyleClass().add("outlined-button");
+        rejectButton.setFocusTraversable(false);
 
         HBox buttons = new HBox(20, acceptButton, Spacer.fillHBox(), rejectButton);
         VBox.setMargin(rulesList, new Insets(-20, 0, 0, 20));
@@ -107,6 +110,7 @@ public class TacView extends View<VBox, TacModel, TacController> {
 
     @Override
     protected void onViewAttached() {
+        root.requestFocus();
         rootScene = root.getScene();
 
         Region applicationRoot = OverlayController.getInstance().getApplicationRoot();
@@ -129,12 +133,6 @@ public class TacView extends View<VBox, TacModel, TacController> {
 
         acceptButton.setOnAction(e -> controller.onAccept());
         rejectButton.setOnAction(e -> controller.onReject());
-
-        // Replace the key handler of OverlayView as we do not support escape/enter at this popup
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
     }
 
     @Override
@@ -144,7 +142,6 @@ public class TacView extends View<VBox, TacModel, TacController> {
         tacConfirmedPin.unsubscribe();
         acceptButton.setOnAction(null);
         rejectButton.setOnAction(null);
-        rootScene.setOnKeyReleased(null);
     }
 
     private void updateHeight() {

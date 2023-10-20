@@ -17,10 +17,6 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.common.application.DevMode;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.OverlayController;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
@@ -44,34 +40,6 @@ public class KeyHandlerUtil {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
             handler.run();
-        }
-    }
-
-    public static void handleDevModeKeyEvent(KeyEvent keyEvent) {
-        if (DevMode.isDevMode()) {
-            if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT0, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP1);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_DIRECTION);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_MARKET);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_AMOUNT);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.TRADE_WIZARD_REVIEW_OFFER);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.H, keyEvent)) {
-                OverlayController.hide();
-            }
         }
     }
 }

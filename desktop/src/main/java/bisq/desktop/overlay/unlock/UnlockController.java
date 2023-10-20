@@ -30,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UnlockController implements InitWithDataController<UnlockController.InitData> {
+    private final OverlayController overlayController;
+
     @Getter
     public static final class InitData {
         private final Runnable completeHandler;
@@ -49,7 +51,7 @@ public class UnlockController implements InitWithDataController<UnlockController
     public UnlockController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-
+        overlayController = OverlayController.getInstance();
         model = new UnlockModel();
         view = new UnlockView(model, this);
     }
@@ -61,6 +63,8 @@ public class UnlockController implements InitWithDataController<UnlockController
 
     @Override
     public void onActivate() {
+        overlayController.setEnterKeyHandler(null);
+        overlayController.setUseEscapeKeyHandler(false);
         model.getPasswordIsMasked().set(true);
         model.getPassword().set("");
     }
@@ -69,12 +73,8 @@ public class UnlockController implements InitWithDataController<UnlockController
     public void onDeactivate() {
     }
 
-    void onQuit() {
-        serviceProvider.getShutDownHandler().shutdown();
-    }
-
     void onUnlock() {
-        if(view.validatePassword()) {
+        if (view.validatePassword()) {
             userIdentityService.deriveKeyFromPassword(model.getPassword().get())
                     .whenComplete((aesSecretKey, throwable) -> {
                         if (throwable == null) {

@@ -21,7 +21,6 @@ import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;
@@ -35,7 +34,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -64,7 +62,6 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private Scene rootScene;
     private Label priceProgressItemLabel;
     private Region priceProgressItemLine;
     private Subscription priceProgressItemVisiblePin;
@@ -145,12 +142,6 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
 
-        rootScene = root.getScene();
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onClose);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
         priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
             if (isVisible) {
                 progressItemsBox.getChildren().add(5, priceProgressItemLine);
@@ -192,7 +183,6 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
-        rootScene.setOnKeyReleased(null);
 
         if (progressLabelAnimationScheduler != null) {
             progressLabelAnimationScheduler.stop();

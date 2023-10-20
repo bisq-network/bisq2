@@ -40,11 +40,13 @@ public class TacController implements InitWithDataController<TacController.InitD
     private final TacView view;
     private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
+    private final OverlayController overlayController;
     private Runnable completeHandler;
 
     public TacController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
+        overlayController = OverlayController.getInstance();
         model = new TacModel();
         view = new TacView(model, this);
     }
@@ -57,6 +59,9 @@ public class TacController implements InitWithDataController<TacController.InitD
     @Override
     public void onActivate() {
         model.getTacConfirmed().set(settingsService.isTacAccepted());
+
+        overlayController.setEnterKeyHandler(null);
+        overlayController.setUseEscapeKeyHandler(false);
     }
 
     @Override
@@ -70,6 +75,11 @@ public class TacController implements InitWithDataController<TacController.InitD
     void onConfirm(boolean selected) {
         model.getTacConfirmed().set(selected);
         settingsService.setTacAccepted(selected);
+        if (selected) {
+            overlayController.setEnterKeyHandler(this::onAccept);
+        } else {
+            overlayController.setEnterKeyHandler(null);
+        }
     }
 
     void onAccept() {

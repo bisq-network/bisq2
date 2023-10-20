@@ -18,7 +18,6 @@
 package bisq.desktop.overlay.onboarding.welcome;
 
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -73,13 +72,12 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
     @Override
     protected void onViewAttached() {
         nextButton.setOnMouseClicked(e -> controller.onNext());
-        root.setOnKeyReleased(keyEvent -> KeyHandlerUtil.handleEnterKeyEvent(keyEvent, controller::onNext));
+        root.requestFocus();
     }
 
     @Override
     protected void onViewDetached() {
         nextButton.setOnMouseClicked(null);
-        root.setOnKeyReleased(null);
     }
 
     private VBox getWidgetBox(String headline, String content, String imageId) {

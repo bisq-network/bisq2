@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.take_offer;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;
@@ -33,7 +32,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -62,7 +60,6 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private Scene rootScene;
     private Subscription showProgressBoxPin, takeOfferButtonVisiblePin;
 
     public TakeOfferView(TakeOfferModel model, TakeOfferController controller) {
@@ -183,13 +180,6 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
             }
         });
 
-        rootScene = root.getScene();
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onClose);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
-
       /*  if (!model.getShowProgressBox().get()) {
             progressBox.setOpacity(0);
             topPane.setStyle("-fx-background-color: transparent");
@@ -241,7 +231,6 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         takeOfferButton.setOnAction(null);
-        rootScene.setOnKeyReleased(null);
     }
 
     private Region getHLine() {

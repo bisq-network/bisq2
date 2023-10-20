@@ -59,6 +59,7 @@ public class CreateProfileController implements Controller {
     protected final KeyPairService keyPairService;
     protected final ProofOfWorkService proofOfWorkService;
     protected final IdentityService identityService;
+    private final OverlayController overlayController;
     protected Optional<CompletableFuture<ProofOfWork>> mintNymProofOfWorkFuture = Optional.empty();
     protected Subscription nickNameSubscription;
     protected final List<Identity> pooledIdentities = new ArrayList<>();
@@ -69,6 +70,7 @@ public class CreateProfileController implements Controller {
         proofOfWorkService = serviceProvider.getSecurityService().getProofOfWorkService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         identityService = serviceProvider.getIdentityService();
+        overlayController = OverlayController.getInstance();
 
         model = getGenerateProfileModel();
         view = getGenerateProfileView();
@@ -84,6 +86,8 @@ public class CreateProfileController implements Controller {
 
     @Override
     public void onActivate() {
+        overlayController.setEnterKeyHandler(this::onCreateUserProfile);
+        overlayController.setUseEscapeKeyHandler(false);
         if (!pooledIdentitiesInitialized) {
             pooledIdentitiesInitialized = true;
             pooledIdentities.addAll(identityService.getPool());
@@ -99,6 +103,8 @@ public class CreateProfileController implements Controller {
 
     @Override
     public void onDeactivate() {
+        overlayController.setEnterKeyHandler(null);
+        overlayController.setUseEscapeKeyHandler(true);
         if (nickNameSubscription != null) {
             nickNameSubscription.unsubscribe();
         }

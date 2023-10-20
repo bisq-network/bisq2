@@ -18,18 +18,14 @@
 package bisq.desktop.overlay.onboarding;
 
 import bisq.desktop.common.Transitions;
-import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.overlay.OverlayModel;
-import javafx.scene.Scene;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OnboardingView extends NavigationView<VBox, OnboardingModel, OnboardingController> {
-    private Scene rootScene;
-
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
@@ -50,19 +46,11 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
 
     @Override
     protected void onViewAttached() {
-        // Replace the key handler of OverlayView as we do not support escape/enter at onboarding
-        rootScene = root.getScene();
-        rootScene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
-
-        rootScene.getWindow().setWidth(OverlayModel.WIDTH);
-        rootScene.getWindow().setHeight(OverlayModel.HEIGHT);
+        root.getScene().getWindow().setWidth(OverlayModel.WIDTH);
+        root.getScene().getWindow().setHeight(OverlayModel.HEIGHT);
     }
 
     @Override
     protected void onViewDetached() {
-        rootScene.setOnKeyReleased(null);
     }
 }
