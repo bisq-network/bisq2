@@ -137,8 +137,12 @@ public class PeerGroup {
                 new Peer(con.getPeersCapability(), con.getPeersLoad(), con.isOutboundConnection()));
     }
 
-    public boolean isNotInQuarantine(Peer peer) {
-        return banList.isNotBanned(peer.getAddress());
+    public boolean isNotBanned(Peer peer) {
+        return isNotBanned(peer.getAddress());
+    }
+
+    public boolean isNotBanned(Address address) {
+        return banList.isNotBanned(address);
     }
 
     public boolean notMyself(Peer peer) {

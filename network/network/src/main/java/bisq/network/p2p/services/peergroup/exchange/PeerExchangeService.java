@@ -75,7 +75,7 @@ public class PeerExchangeService implements Node.Listener {
         return doPeerExchange(peerExchangeStrategy.getAddressesForFurtherPeerExchange());
     }
 
-    private CompletableFuture<Void> doPeerExchange(Set<Address> candidates) {
+    private CompletableFuture<Void> doPeerExchange(List<Address> candidates) {
         if (candidates.isEmpty() || isStopped) {
             return CompletableFuture.completedFuture(null);
         }
@@ -129,7 +129,6 @@ public class PeerExchangeService implements Node.Listener {
                         }
                     });
                 });
-
         return resultFuture;
     }
 
@@ -150,7 +149,7 @@ public class PeerExchangeService implements Node.Listener {
 
             PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
             requestHandlerMap.put(key, handler);
-            Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
+            Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
             Set<Peer> peers = handler.request(myPeers).join();
             log.info("Node {} completed peer exchange with {} and received {} peers.", node, peerAddress, peers.size());
@@ -180,8 +179,8 @@ public class PeerExchangeService implements Node.Listener {
             PeerExchangeRequest request = (PeerExchangeRequest) networkMessage;
             //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
+            List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
-            List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeers(peerAddress));
             NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
             log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }
