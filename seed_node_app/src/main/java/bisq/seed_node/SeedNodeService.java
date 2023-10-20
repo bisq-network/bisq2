@@ -99,7 +99,7 @@ public class SeedNodeService implements Service {
                     config.getBondUserName(),
                     config.getSignatureBase64(),
                     networkService.getAddressByNetworkType(Node.DEFAULT),
-                    networkService.findNetworkId(Node.DEFAULT).orElseThrow(),
+                    networkService.findNetworkIdFromStore(Node.DEFAULT).orElseThrow(),
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
             KeyPair keyPair = keyPairService.getOrCreateKeyPair(config.keyId);
