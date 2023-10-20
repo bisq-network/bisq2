@@ -143,8 +143,7 @@ public class ServiceNode {
                         defaultNode,
                         banList,
                         peerGroupServiceConfig,
-                        seedNodeAddresses,
-                        transportType)) :
+                        seedNodeAddresses)) :
                 Optional.empty();
 
         dataServicePerTransport = services.contains(Service.PEER_GROUP) && services.contains(Service.DATA) ?

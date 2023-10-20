@@ -18,14 +18,15 @@
 package bisq.network.p2p.services.peergroup;
 
 import bisq.common.util.MathUtils;
+import bisq.network.NetworkService;
 import bisq.network.p2p.node.*;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
 
@@ -33,7 +34,8 @@ import java.util.stream.Stream;
  * Maintains different collections of peers and connections
  */
 @Slf4j
-public class PeerGroupService {
+public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
+
     @Getter
     public static class Config {
         private final int minNumConnectedPeers;
@@ -60,21 +62,32 @@ public class PeerGroupService {
         }
     }
 
+    @Getter
+    private final Persistence<PeerGroupStore> persistence;
+    @Getter
+    private final PeerGroupStore persistableStore = new PeerGroupStore();
     private final Node node;
     private final Config config;
     @Getter
     private final Set<Address> seedNodeAddresses;
     private final BanList banList;
-    private final PersistedPeersHandler persistedPeersHandler;
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
 
-    public PeerGroupService(Node node, Config config, Set<Address> seedNodeAddresses, BanList banList, PersistedPeersHandler persistedPeersHandler) {
+    public PeerGroupService(PersistenceService persistenceService,
+                            Node node,
+                            Config config,
+                            Set<Address> seedNodeAddresses,
+                            BanList banList) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;
         this.banList = banList;
-        this.persistedPeersHandler = persistedPeersHandler;
+
+        persistence = persistenceService.getOrCreatePersistence(this,
+                NetworkService.NETWORK_DB_PATH,
+                node.getTransportType().name().toLowerCase() + "_" + persistableStore.getClass().getSimpleName(),
+                persistableStore);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +98,15 @@ public class PeerGroupService {
         return new HashSet<>(); //todo
     }
 
+    public void addPersistedPeers(Set<Peer> peers) {
+        persistableStore.getPersistedPeers().addAll(peers);
+        persist();
+    }
+
+    public void removePersistedPeers(List<Peer> candidates) {
+        persistableStore.getPersistedPeers().removeAll(candidates);
+        persist();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Reported peers
@@ -92,7 +114,7 @@ public class PeerGroupService {
 
     public void addReportedPeers(Set<Peer> peers) {
         reportedPeers.addAll(peers);
-        persistedPeersHandler.addPersistedPeers(peers);
+        addPersistedPeers(peers);
     }
 
     public void removeReportedPeers(Collection<Peer> peers) {
