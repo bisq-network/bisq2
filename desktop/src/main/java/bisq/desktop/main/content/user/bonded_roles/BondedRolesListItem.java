@@ -22,8 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import com.google.common.base.Joiner;
@@ -34,7 +33,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -67,12 +65,12 @@ public class BondedRolesListItem implements TableItem {
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         roleTypeString = bondedRoleType.getDisplayString();
 
-        Map<TransportType, Address> addressByNetworkType = authorizedBondedRoleData.getAddressByNetworkType();
-        List<String> list = addressByNetworkType.entrySet().stream()
+        AddressByTransportTypeMap addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
+        List<String> list = addressByTransportTypeMap.entrySet().stream()
                 .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
                 .collect(Collectors.toList());
         address = Joiner.on("\n").join(list);
-        addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByNetworkType);
+        addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
         // oracleNodePublicKeyHash = authorizedBondedRoleData.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElseGet(() -> Res.get("data.na"));
     }

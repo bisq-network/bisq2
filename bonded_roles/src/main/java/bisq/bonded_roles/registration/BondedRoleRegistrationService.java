@@ -26,12 +26,10 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -72,7 +70,7 @@ public class BondedRoleRegistrationService implements Service {
                                                  BondedRoleType bondedRoleType,
                                                  String bondUserName,
                                                  String signatureBase64,
-                                                 Map<TransportType, Address> addressByNetworkType,
+                                                 AddressByTransportTypeMap addressByTransportTypeMap,
                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                  boolean isCancellationRequest) {
         ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
@@ -89,7 +87,7 @@ public class BondedRoleRegistrationService implements Service {
                 bondedRoleType,
                 bondUserName,
                 signatureBase64,
-                addressByNetworkType,
+                addressByTransportTypeMap,
                 networkId,
                 isCancellationRequest);
         authorizedOracleNodes.forEach(oracleNode ->

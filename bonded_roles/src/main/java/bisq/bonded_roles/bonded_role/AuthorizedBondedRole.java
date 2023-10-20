@@ -25,8 +25,7 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -35,7 +34,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -52,7 +50,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signatureBase64;
-    private final Map<TransportType, Address> addressByNetworkType;
+    private final AddressByTransportTypeMap addressByTransportTypeMap;
     private final NetworkId networkId;
     private final Optional<AuthorizedOracleNode> authorizedOracleNode;
     private final boolean staticPublicKeysProvided;
@@ -62,7 +60,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 BondedRoleType bondedRoleType,
                                 String bondUserName,
                                 String signatureBase64,
-                                Map<TransportType, Address> addressByNetworkType,
+                                AddressByTransportTypeMap addressByTransportTypeMap,
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizedOracleNode,
                                 boolean staticPublicKeysProvided) {
@@ -71,7 +69,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
         this.signatureBase64 = signatureBase64;
-        this.addressByNetworkType = addressByNetworkType;
+        this.addressByTransportTypeMap = addressByTransportTypeMap;
         this.networkId = networkId;
         this.authorizedOracleNode = authorizedOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -93,7 +91,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto())
-                .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
+                .setAddressByTransportTypeMap(addressByTransportTypeMap.toProto())
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
         authorizedOracleNode.ifPresent(oracleNode -> builder.setAuthorizedOracleNode(oracleNode.toProto()));
         return builder.build();
@@ -105,7 +103,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignatureBase64(),
-                NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
+                AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.hasAuthorizedOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizedOracleNode())) : Optional.empty(),
                 proto.getStaticPublicKeysProvided());
@@ -150,7 +148,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    bondUserName='" + bondUserName + '\'' +
                 ",\r\n                    signature='" + signatureBase64 + '\'' +
                 ",\r\n                    networkId=" + networkId +
-                ",\r\n                    addressByNetworkType=" + addressByNetworkType +
+                ",\r\n                    addressByTransportTypeMap=" + addressByTransportTypeMap +
                 ",\r\n                    authorizedOracleNode=" + authorizedOracleNode +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +

@@ -22,8 +22,7 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.NetworkId;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -33,8 +32,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Map;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
@@ -52,14 +49,14 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
     private final String signatureBase64;
     private final NetworkId networkId;
     private final boolean isCancellationRequest;
-    private final Map<TransportType, Address> addressByNetworkType;
+    private final AddressByTransportTypeMap addressByTransportTypeMap;
 
     public BondedRoleRegistrationRequest(String profileId,
                                          String authorizedPublicKey,
                                          BondedRoleType bondedRoleType,
                                          String bondUserName,
                                          String signatureBase64,
-                                         Map<TransportType, Address> addressByNetworkType,
+                                         AddressByTransportTypeMap addressByTransportTypeMap,
                                          NetworkId networkId,
                                          boolean isCancellationRequest) {
         this.profileId = profileId;
@@ -67,7 +64,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
         this.bondedRoleType = bondedRoleType;
         this.bondUserName = bondUserName;
         this.signatureBase64 = signatureBase64;
-        this.addressByNetworkType = addressByNetworkType;
+        this.addressByTransportTypeMap = addressByTransportTypeMap;
         this.networkId = networkId;
         this.isCancellationRequest = isCancellationRequest;
 
@@ -95,7 +92,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 .setBondedRoleType(bondedRoleType.toProto())
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
-                .addAllAddressNetworkTypeTuple(NetworkId.AddressTransportTypeTuple.mapToProtoList(addressByNetworkType))
+                .setAddressByTransportTypeMap(addressByTransportTypeMap.toProto())
                 .setNetworkId(networkId.toProto())
                 .setIsCancellationRequest(isCancellationRequest)
                 .build();
@@ -107,7 +104,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignatureBase64(),
-                NetworkId.AddressTransportTypeTuple.protoListToMap(proto.getAddressNetworkTypeTupleList()),
+                AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.getIsCancellationRequest());
     }
