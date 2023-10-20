@@ -74,8 +74,4 @@ public class OnboardingController extends NavigationController {
             }
         }
     }
-
-    public void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
-    }
 }
