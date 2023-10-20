@@ -27,10 +27,9 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
-public class HttpService {
-    public HttpService() {
+public class HttpClientRepository {
+    public HttpClientRepository() {
     }
 
     public BaseHttpClient getHttpClient(String url,
@@ -57,9 +56,5 @@ public class HttpService {
             default:
                 throw new IllegalArgumentException("Providers network type not recognized. " + transportType);
         }
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
     }
 }
