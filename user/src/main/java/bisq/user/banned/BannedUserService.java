@@ -19,10 +19,10 @@ package bisq.user.banned;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

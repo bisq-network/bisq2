@@ -23,10 +23,10 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.AddressByTransportTypeMap;
+import bisq.network.p2p.vo.AddressByTransportTypeMap;
+import bisq.network.p2p.vo.NetworkId;
+import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 

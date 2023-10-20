@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;

@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.p2p.vo.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

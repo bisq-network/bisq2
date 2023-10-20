@@ -17,7 +17,7 @@
 
 package bisq.trade.submarine;
 
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.trade.TradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

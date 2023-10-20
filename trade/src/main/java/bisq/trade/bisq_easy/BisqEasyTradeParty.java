@@ -18,7 +18,7 @@
 package bisq.trade.bisq_easy;
 
 import bisq.contract.ContractSignatureData;
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.trade.TradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

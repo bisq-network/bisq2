@@ -18,8 +18,8 @@
 package bisq.oracle_node_app;
 
 import bisq.common.util.FileUtils;
-import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.vo.AddressByTransportTypeMap;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 

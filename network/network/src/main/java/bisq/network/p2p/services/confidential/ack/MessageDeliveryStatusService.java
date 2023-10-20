@@ -2,10 +2,10 @@ package bisq.network.p2p.services.confidential.ack;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

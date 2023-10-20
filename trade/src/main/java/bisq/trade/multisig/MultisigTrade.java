@@ -22,7 +22,7 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.ProtobufUtils;
 import bisq.contract.multisig.MultisigContract;
 import bisq.identity.Identity;
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.offer.multisig.MultisigOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;

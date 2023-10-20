@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network;
+package bisq.network.p2p.vo;
 
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

@@ -19,7 +19,7 @@ package bisq.user.identity;
 
 import bisq.common.proto.Proto;
 import bisq.identity.Identity;
-import bisq.network.NetworkIdWithKeyPair;
+import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

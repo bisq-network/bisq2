@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
-import bisq.network.p2p.node.Address;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.vo.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -21,7 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
 import bisq.trade.multisig.MultisigTradeParty;
 import bisq.trade.submarine.SubmarineTradeParty;

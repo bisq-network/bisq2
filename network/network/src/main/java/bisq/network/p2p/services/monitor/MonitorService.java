@@ -17,11 +17,11 @@
 
 package bisq.network.p2p.services.monitor;
 
-import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.vo.Address;
 
 import java.text.SimpleDateFormat;
 import java.util.Comparator;

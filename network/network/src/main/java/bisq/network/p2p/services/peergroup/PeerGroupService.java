@@ -19,7 +19,11 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.*;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.InboundConnection;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.OutboundConnection;
+import bisq.network.p2p.vo.Address;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

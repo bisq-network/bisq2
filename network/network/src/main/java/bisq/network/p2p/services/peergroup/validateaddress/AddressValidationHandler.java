@@ -18,8 +18,12 @@
 package bisq.network.p2p.services.peergroup.validateaddress;
 
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.*;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.OutboundConnection;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

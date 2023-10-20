@@ -19,10 +19,10 @@ package bisq.network.p2p.services.data.broadcast;
 
 import bisq.common.util.CollectionUtil;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.vo.Address;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
