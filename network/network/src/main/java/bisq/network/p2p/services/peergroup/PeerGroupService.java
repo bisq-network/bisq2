@@ -26,7 +26,9 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
 
@@ -95,18 +97,19 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Set<Peer> getPersistedPeers() {
-        return new HashSet<>(); //todo
+        return persistableStore.getPersistedPeers();
     }
 
     public void addPersistedPeers(Set<Peer> peers) {
-        persistableStore.getPersistedPeers().addAll(peers);
+        getPersistedPeers().addAll(peers);
         persist();
     }
 
-    public void removePersistedPeers(List<Peer> candidates) {
-        persistableStore.getPersistedPeers().removeAll(candidates);
+    public void removePersistedPeers(Collection<Peer> candidates) {
+        getPersistedPeers().removeAll(candidates);
         persist();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Reported peers
@@ -114,7 +117,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public void addReportedPeers(Set<Peer> peers) {
         reportedPeers.addAll(peers);
-        addPersistedPeers(peers);
     }
 
     public void removeReportedPeers(Collection<Peer> peers) {

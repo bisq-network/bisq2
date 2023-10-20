@@ -114,7 +114,6 @@ public class PeerGroupManager {
         }
     }
 
-
     private final Node node;
     private final BanList banList;
     private final Config config;
@@ -146,8 +145,6 @@ public class PeerGroupManager {
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
         keepAliveService = new KeepAliveService(node, peerGroupService, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
-
-
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)
@@ -382,7 +379,6 @@ public class PeerGroupManager {
             persistedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> candidates = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
             log.info("Remove {} persisted peers: {}", candidates.size(), candidates);
-
             peerGroupService.removePersistedPeers(candidates);
         }
     }
@@ -404,20 +400,17 @@ public class PeerGroupManager {
     }
 
 
-    public PeerGroupStore getPeerGroupStore() {
-        return peerGroupService.getPersistableStore(); //todo
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean mayDisconnect(Connection connection) {
         return notBootstrapping(connection) &&
-                addressValidationService.isNotInProgress(connection)
-                && connection.isRunning();
+                addressValidationService.isNotInProgress(connection) &&
+                connection.isRunning();
     }
 
+    // TODO find better solution than to use a hard coded estimated value
     private boolean notBootstrapping(Connection connection) {
         return connection.getMetrics().getAge() > config.getBootstrapTime();
     }

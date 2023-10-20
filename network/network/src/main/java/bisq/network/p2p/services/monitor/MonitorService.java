@@ -22,7 +22,6 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.network.p2p.services.peergroup.PeerGroupStore;
 
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -32,12 +31,10 @@ import java.util.stream.Collectors;
 public class MonitorService {
     private final Node node;
     private final PeerGroupService peerGroupService;
-    private final PeerGroupStore peerGroupStore;
 
-    public MonitorService(Node node, PeerGroupService peerGroupService, PeerGroupStore peerGroupStore) {
+    public MonitorService(Node node, PeerGroupService peerGroupService) {
         this.node = node;
         this.peerGroupService = peerGroupService;
-        this.peerGroupStore = peerGroupStore;
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -64,7 +61,7 @@ public class MonitorService {
                 .forEach(connection -> appendConnectionInfo(sb, connection, false));
         sb.append("\n").append("Reported peers (").append(peerGroupService.getReportedPeers().size()).append("): ").append(peerGroupService.getReportedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
-        sb.append("\n").append("Persisted peers: ").append(peerGroupStore.getPersistedPeers().stream()
+        sb.append("\n").append("Persisted peers: ").append(peerGroupService.getPersistedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         return sb.append("\n").toString();
     }

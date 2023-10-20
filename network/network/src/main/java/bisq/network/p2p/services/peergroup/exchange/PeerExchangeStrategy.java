@@ -214,6 +214,7 @@ public class PeerExchangeStrategy {
                 .limit(REPORTED_PEERS_LIMIT)
                 .collect(Collectors.toSet());
         peerGroupService.addReportedPeers(filtered);
+        peerGroupService.addPersistedPeers(filtered);
     }
 
 
