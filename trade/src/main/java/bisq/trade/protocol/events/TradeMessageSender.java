@@ -34,7 +34,9 @@ public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
             return CompletableFuture.failedFuture(new RuntimeException());
         }
 
-        return serviceProvider.getNetworkService().confidentialSend(message, trade.getPeer().getNetworkId(), trade.getMyIdentity().getNodeIdAndKeyPair())
+        return serviceProvider.getNetworkService().confidentialSend(message,
+                        trade.getPeer().getNetworkId(),
+                        trade.getMyIdentity().getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
                     // System.out.println("sendMessage " + message + ". result=" + result);
                     //todo store info if message arrive or stored in mailbox

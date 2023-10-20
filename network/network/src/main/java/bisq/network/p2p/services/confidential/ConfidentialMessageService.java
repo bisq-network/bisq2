@@ -239,7 +239,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (networkMessage instanceof AckRequestingMessage) {
             messageDeliveryStatusService.ifPresent(service -> {
                 String messageId = ((AckRequestingMessage) networkMessage).getId();
-                service.onMessageDeliveryStatusChanged(messageId, result.getMessageDeliveryStatus());
+                service.onMessageSentStatus(messageId, result.getMessageDeliveryStatus());
             });
         }
     }

@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.events;
 
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
@@ -31,6 +32,9 @@ public class BisqEasyConfirmFiatSentEventHandler extends SendTradeMessageHandler
 
     @Override
     public void handle(Event event) {
-        sendMessage(new BisqEasyConfirmFiatSentMessage(trade.getId(), trade.getMyIdentity().getNetworkId()));
+        sendMessage(new BisqEasyConfirmFiatSentMessage(StringUtils.createUid(),
+                trade.getId(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId()));
     }
 }

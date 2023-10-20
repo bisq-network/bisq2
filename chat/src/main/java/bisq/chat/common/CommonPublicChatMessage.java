@@ -47,7 +47,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                    Optional<Citation> citation,
                                    long date,
                                    boolean wasEdited) {
-        this(StringUtils.createShortUid(),
+        this(StringUtils.createUid(),
                 chatChannelDomain,
                 channelId,
                 authorUserProfileId,

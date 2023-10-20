@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.data.Pair;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -26,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 public class ConnectionHandshakeResponder {
@@ -81,7 +81,7 @@ public class ConnectionHandshakeResponder {
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),
                 Load.INITIAL_LOAD,
-                UUID.randomUUID().toString(),
+                StringUtils.createUid(),
                 myAddress
         );
 

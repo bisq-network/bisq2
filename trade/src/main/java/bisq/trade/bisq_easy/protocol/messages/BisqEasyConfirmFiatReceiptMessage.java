@@ -28,8 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessage {
-    public BisqEasyConfirmFiatReceiptMessage(String tradeId, NetworkId sender) {
-        super(tradeId, sender);
+    public BisqEasyConfirmFiatReceiptMessage(String id,
+                                             String tradeId,
+                                             NetworkId sender,
+                                             NetworkId receiver) {
+        super(id, tradeId, sender, receiver);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//332
     }
@@ -45,7 +48,9 @@ public final class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessag
 
     public static BisqEasyConfirmFiatReceiptMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         return new BisqEasyConfirmFiatReceiptMessage(
+                proto.getId(),
                 proto.getTradeId(),
-                NetworkId.fromProto(proto.getSender()));
+                NetworkId.fromProto(proto.getSender()),
+                NetworkId.fromProto(proto.getReceiver()));
     }
 }

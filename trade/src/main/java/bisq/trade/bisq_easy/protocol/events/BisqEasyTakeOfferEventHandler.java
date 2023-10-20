@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.events;
 
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.trade.ServiceProvider;
@@ -40,7 +41,12 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
         try {
             ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, trade.getMyIdentity().getKeyPair());
             commitToModel(contractSignatureData);
-            sendMessage(new BisqEasyTakeOfferRequest(trade.getId(), trade.getMyIdentity().getNetworkId(), bisqEasyContract, contractSignatureData));
+            sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
+                    trade.getId(),
+                    trade.getMyIdentity().getNetworkId(),
+                    trade.getPeer().getNetworkId(),
+                    bisqEasyContract,
+                    contractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }

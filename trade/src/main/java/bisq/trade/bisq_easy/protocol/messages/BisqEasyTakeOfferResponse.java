@@ -31,8 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
     private final ContractSignatureData contractSignatureData;
 
-    public BisqEasyTakeOfferResponse(String tradeId, NetworkId sender, ContractSignatureData contractSignatureData) {
-        super(tradeId, sender);
+    public BisqEasyTakeOfferResponse(String id,
+                                     String tradeId,
+                                     NetworkId sender,
+                                     NetworkId receiver,
+                                     ContractSignatureData contractSignatureData) {
+        super(id, tradeId, sender, receiver);
 
         this.contractSignatureData = contractSignatureData;
 
@@ -52,8 +56,10 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
     public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto) {
         bisq.trade.protobuf.BisqEasyTakeOfferResponse response = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferResponse();
         return new BisqEasyTakeOfferResponse(
+                proto.getId(),
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
+                NetworkId.fromProto(proto.getReceiver()),
                 ContractSignatureData.fromProto(response.getContractSignatureData()));
     }
 }

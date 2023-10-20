@@ -121,7 +121,7 @@ public abstract class PrivateChatChannelService<
     }
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
-        return sendMessage(StringUtils.createShortUid(),
+        return sendMessage(StringUtils.createUid(),
                 Res.get("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName()),
                 Optional.empty(),
                 channel,

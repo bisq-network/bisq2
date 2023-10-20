@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.events;
 
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
@@ -34,7 +35,11 @@ public class BisqEasyAccountDataEventHandler extends SendTradeMessageHandler<Bis
         BisqEasyAccountDataEvent bisqEasyTakeOfferEvent = (BisqEasyAccountDataEvent) event;
         String paymentAccountData = bisqEasyTakeOfferEvent.getPaymentAccountData();
         commitToModel(paymentAccountData);
-        sendMessage(new BisqEasyAccountDataMessage(trade.getId(), trade.getMyIdentity().getNetworkId(), paymentAccountData));
+        sendMessage(new BisqEasyAccountDataMessage(StringUtils.createUid(),
+                trade.getId(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                paymentAccountData));
     }
 
     private void commitToModel(String paymentAccountData) {

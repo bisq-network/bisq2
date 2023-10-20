@@ -60,8 +60,10 @@ message Trade {
   }
 }
 message TradeMessage {
-  string tradeId = 1;
-  network.NetworkId sender = 2;
+  string id = 1;
+  string tradeId = 2;
+  network.NetworkId sender = 3;
+  network.NetworkId receiver = 4;
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
     SubmarineTradeMessage submarineTradeMessage = 21;

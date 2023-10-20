@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -26,7 +27,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -83,7 +83,7 @@ public class ConnectionHandshakeInitiator {
         boolean isAuthorized = authorizationService.isAuthorized(response,
                 responseNetworkEnvelope.getAuthorizationToken(),
                 myLoad,
-                UUID.randomUUID().toString(),
+                StringUtils.createUid(),
                 myAddress);
 
         if (isAuthorized) {

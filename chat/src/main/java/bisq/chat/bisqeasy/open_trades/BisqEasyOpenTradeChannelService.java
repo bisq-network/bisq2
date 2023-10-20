@@ -165,7 +165,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                                                                             Optional<Citation> citation,
                                                                             ChatMessageType chatMessageType,
                                                                             BisqEasyOpenTradeChannel channel) {
-        String shortUid = StringUtils.createShortUid();
+        String shortUid = StringUtils.createUid();
         long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getTraders().stream()
@@ -208,7 +208,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
         UserProfile senderUserProfile = channel.getMediator().get();
         BisqEasyOpenTradeMessage systemMessage = new BisqEasyOpenTradeMessage(channel.getTradeId(),
-                StringUtils.createShortUid(),
+                StringUtils.createUid(),
                 channel.getId(),
                 senderUserProfile,
                 receiverUserProfile.getId(),

@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.UUID;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -174,7 +173,7 @@ public final class ConnectionHandshake {
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
                     myLoad,
-                    UUID.randomUUID().toString(),
+                    StringUtils.createUid(),
                     myAddress);
 
             if (!isAuthorized) {
@@ -227,7 +226,7 @@ public final class ConnectionHandshake {
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
                     Load.INITIAL_LOAD,
-                    UUID.randomUUID().toString(),
+                    StringUtils.createUid(),
                     myAddress);
             if (!isAuthorized) {
                 throw new ConnectionException("Request authorization failed. request=" + request);

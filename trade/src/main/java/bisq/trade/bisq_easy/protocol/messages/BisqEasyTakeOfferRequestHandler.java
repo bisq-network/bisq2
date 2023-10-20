@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.fsm.Event;
+import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -58,7 +59,11 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             ContractSignatureData makersContractSignatureData = contractService.signContract(contract, trade.getMyIdentity().getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
 
-            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(trade.getId(), trade.getMyself().getNetworkId(), makersContractSignatureData);
+            BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(StringUtils.createUid(),
+                    trade.getId(),
+                    trade.getMyself().getNetworkId(),
+                    trade.getPeer().getNetworkId(),
+                    makersContractSignatureData);
             sendMessage(response, serviceProvider, trade);
 
             if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {

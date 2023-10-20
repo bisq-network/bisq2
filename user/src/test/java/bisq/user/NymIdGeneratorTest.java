@@ -17,6 +17,7 @@
 
 package bisq.user;
 
+import bisq.common.util.StringUtils;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -27,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static bisq.user.NymIdGenerator.fromHash;
 import static bisq.user.NymIdGenerator.read;
@@ -137,14 +137,14 @@ public class NymIdGeneratorTest {
 
         // Feed random strings, expect no exceptions
         for (int i = 0; i < 100; i++) {
-            input = new BigInteger(DigestUtil.RIPEMD160(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)));
+            input = new BigInteger(DigestUtil.RIPEMD160(StringUtils.createUid().getBytes(StandardCharsets.UTF_8)));
             log.debug(NymIdGenerator.fromHash(input, adverbs, adjectives, nouns));
         }
 
         // Use real word lists
         // Feed random strings, expect no exceptions
         for (int i = 0; i < 3; i++) {
-            byte[] hash = DigestUtil.RIPEMD160(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            byte[] hash = DigestUtil.RIPEMD160(StringUtils.createUid().getBytes(StandardCharsets.UTF_8));
             log.debug(fromHash(hash));
         }
 

@@ -53,7 +53,7 @@ public class StringUtils {
     }
 
     public static String createUid(int maxLength) {
-        return UUID.randomUUID().toString().substring(0, maxLength);
+        return createUid().substring(0, maxLength);
     }
 
     public static String fromBytes(long size) {

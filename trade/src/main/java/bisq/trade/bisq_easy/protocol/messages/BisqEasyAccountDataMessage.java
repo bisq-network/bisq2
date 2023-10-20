@@ -33,8 +33,12 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
 
     private final String paymentAccountData;
 
-    public BisqEasyAccountDataMessage(String tradeId, NetworkId sender, String paymentAccountData) {
-        super(tradeId, sender);
+    public BisqEasyAccountDataMessage(String id,
+                                      String tradeId,
+                                      NetworkId sender,
+                                      NetworkId receiver,
+                                      String paymentAccountData) {
+        super(id, tradeId, sender, receiver);
 
         this.paymentAccountData = paymentAccountData;
 
@@ -55,8 +59,10 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
     public static BisqEasyAccountDataMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         bisq.trade.protobuf.BisqEasyAccountDataMessage bisqEasyAccountDataMessage = proto.getBisqEasyTradeMessage().getBisqEasyAccountDataMessage();
         return new BisqEasyAccountDataMessage(
+                proto.getId(),
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
+                NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyAccountDataMessage.getPaymentAccountData());
     }
 }
