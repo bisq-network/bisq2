@@ -166,19 +166,13 @@ public class ServiceNode {
                 Optional.empty();
     }
 
-    void initialize(Optional<Integer> persistedDefaultNodePort) {
-        initializeTransport();
-        initializeDefaultNode(persistedDefaultNodePort);
-        initializePeerGroup();
-    }
-
-    private void initializeTransport() {
+    void initializeTransport() {
         setState(State.INITIALIZE_TRANSPORT);
         transportService.initialize();
         setState(State.TRANSPORT_INITIALIZED);
     }
 
-    private void initializeDefaultNode(Optional<Integer> persistedDefaultNodePort) {
+    void initializeDefaultNode(Optional<Integer> persistedDefaultNodePort) {
         int port;
         if (defaultNodePort > -1) {
             port = defaultNodePort;
@@ -190,7 +184,7 @@ public class ServiceNode {
         setState(State.DEFAULT_NODE_INITIALIZED);
     }
 
-    private void initializePeerGroup() {
+    void initializePeerGroup() {
         peerGroupService.ifPresent(peerGroupService -> {
             setState(State.INITIALIZE_PEER_GROUP);
             peerGroupService.initialize();
@@ -198,12 +192,10 @@ public class ServiceNode {
         });
     }
 
-
-    public void initializeNode(String nodeId, int serverPort) {
-        transportService.initialize();
-        nodesById.initialize(nodeId, serverPort);
+    Node getInitializedNode(String nodeId, Optional<Integer> persistedNodePort) {
+        int port = persistedNodePort.orElse(NetworkUtils.findFreeSystemPort());
+        return nodesById.getInitializedNode(nodeId, port);
     }
-
 
     public CompletableFuture<Boolean> shutdown() {
         setState(State.STOPPING);
