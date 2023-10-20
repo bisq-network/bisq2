@@ -49,9 +49,9 @@ public class TorTransportService implements TransportService {
     }
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
+    public void initialize() {
         log.info("Initialize Tor");
-        return torService.initialize();
+        torService.initialize().join();
     }
 
     @Override

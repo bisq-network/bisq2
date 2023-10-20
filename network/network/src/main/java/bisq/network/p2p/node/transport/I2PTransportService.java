@@ -94,9 +94,9 @@ public class I2PTransportService implements TransportService {
     }
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
+    public void initialize() {
         if (initializeCalled) {
-            return CompletableFuture.completedFuture(true);
+            return;
         }
         initializeCalled = true;
         log.debug("Initialize");
@@ -127,7 +127,6 @@ public class I2PTransportService implements TransportService {
         } else {
             i2pClient = getClient(isEmbeddedRouter);
         }
-        return CompletableFuture.completedFuture(true);
     }
 
     @Override

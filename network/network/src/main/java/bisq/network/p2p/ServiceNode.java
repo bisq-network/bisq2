@@ -190,7 +190,7 @@ public class ServiceNode {
         setState(State.DEFAULT_NODE_INITIALIZED);
     }
 
-    public void initializePeerGroup() {
+    private void initializePeerGroup() {
         peerGroupService.ifPresent(peerGroupService -> {
             setState(State.INITIALIZE_PEER_GROUP);
             peerGroupService.initialize();

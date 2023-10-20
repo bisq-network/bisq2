@@ -53,21 +53,12 @@ public class ClearNetTransportService implements TransportService {
     }
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
+    public void initialize() {
         if (initializeCalled) {
-            return CompletableFuture.completedFuture(true);
+            return;
         }
-
-        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-
         initializeCalled = true;
-        return CompletableFuture.completedFuture(true);
-
-        // Simulate delay
-        /*return CompletableFuture.supplyAsync(() -> {
-            initializeCalled = true;
-            return true;
-        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));*/
+        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
     }
 
     @Override

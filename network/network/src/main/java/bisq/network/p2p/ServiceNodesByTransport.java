@@ -162,10 +162,6 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         return map.get(transportType).isNodeInitialized(nodeId);
     }
 
-    public void initializePeerGroup(TransportType transportType) {
-        map.get(transportType).initializePeerGroup();
-    }
-
     public void addSeedNode(AddressByTransportTypeMap seedNode) {
         supportedTransportTypes.forEach(transportType -> {
             Address seedNodeAddress = seedNode.get(transportType);

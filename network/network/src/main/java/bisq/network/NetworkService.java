@@ -67,7 +67,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static bisq.network.p2p.node.transport.TransportType.*;
 import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
@@ -163,33 +162,21 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         PubKey pubKey = keyPairService.getDefaultPubKey();
         String nodeId = Node.DEFAULT;
 
-        Stream<CompletableFuture<Void>> futures = getDefaultPortByTransport().entrySet().stream()
-                .map(entry -> {
-                    TransportType transportType = entry.getKey();
-                    int port = entry.getValue();
-                    // We run in parallel the blocking initialize calls on each transport
-                    return runAsync(() -> {
-                        try {
-                            serviceNodesByTransport.initializeNode(transportType, nodeId, port);
-                            // After the default node is initialized we know our address.
-                            // If it was not already persisted we persist it.
-                            maybePersistNewNetworkId(nodeId, pubKey);
-
-                            serviceNodesByTransport.initializePeerGroup(transportType);
-                            messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
-                        } catch (Throwable t) {
-                            log.error("initialize failed", t);
-                        }
-                    }, NETWORK_IO_POOL);
+        return serviceNodesByTransport.initialize()
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                    } else {
+                        log.error("Initialize serviceNodesByTransport failed", throwable);
+                    }
                 });
-        return CompletableFutureUtils.anyOf(futures).thenApply(nil -> true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
         return CompletableFutureUtils.allOf(
                         dataService.map(DataService::shutdown).orElse(completedFuture(true)),
-                        messageDeliveryStatusService.map(MessageDeliveryStatusService::shutdown).orElse(completedFuture(true)),
                         serviceNodesByTransport.shutdown(),
                         httpService.shutdown())
                 .thenApply(list -> list.stream().filter(e -> e).count() == 3);
