@@ -88,7 +88,7 @@ public class StorageService {
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
-        String subPath = persistenceService.getBaseDir() + File.separator + DataStorageService.SUB_PATH;
+        String subPath = persistenceService.getBaseDir() + File.separator + NetworkService.NETWORK_DB_PATH;
         try {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             String directory = subPath + File.separator + authStoreName;

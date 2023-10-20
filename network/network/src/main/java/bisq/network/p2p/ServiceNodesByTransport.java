@@ -92,8 +92,8 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         this.keyPairService = keyPairService;
 
         persistence = persistenceService.getOrCreatePersistence(this,
-                NetworkService.SUB_PATH,
-                "ServiceNodesByTransportStore",
+                NetworkService.NETWORK_DB_PATH,
+                persistableStore.getClass().getSimpleName(),
                 persistableStore);
 
         supportedTransportTypes.forEach(transportType -> {

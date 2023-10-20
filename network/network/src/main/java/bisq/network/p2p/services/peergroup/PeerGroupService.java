@@ -152,8 +152,11 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
         keepAliveService = new KeepAliveService(node, peerGroup, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
-        String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name().toLowerCase();
-        persistence = persistenceService.getOrCreatePersistence(this, "db", fileName, persistableStore);
+
+        persistence = persistenceService.getOrCreatePersistence(this,
+                NetworkService.NETWORK_DB_PATH,
+                transportType.name().toLowerCase() + "_" + persistableStore.getClass().getSimpleName(),
+                persistableStore);
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)

@@ -36,7 +36,10 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
         this.keyPairService = keyPairService;
         this.networkService = networkService;
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this,
+                NetworkService.NETWORK_DB_PATH,
+                "MessageDeliveryStatusServiceStore",
+                persistableStore);
     }
 
     public void initialize() {

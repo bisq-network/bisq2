@@ -84,7 +84,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Slf4j
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
-    public static final String SUB_PATH = "db" + File.separator + "network";
+    public static final String NETWORK_DB_PATH = "db" + File.separator + "network";
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
@@ -139,7 +139,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 persistenceService,
                 proofOfWorkService);
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this,
+                NetworkService.NETWORK_DB_PATH,
+                persistableStore.getClass().getSimpleName(),
+                persistableStore);
     }
 
 
