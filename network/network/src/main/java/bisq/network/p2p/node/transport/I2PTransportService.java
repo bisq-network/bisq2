@@ -28,6 +28,7 @@ public class I2PTransportService implements TransportService {
     public static final class Config implements TransportConfig {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(dataDir,
+                    config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
@@ -38,6 +39,7 @@ public class I2PTransportService implements TransportService {
                     config.getBoolean("extendedI2pLogging"));
         }
 
+        private final int defaultNodePort;
         private final int socketTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
@@ -48,10 +50,18 @@ public class I2PTransportService implements TransportService {
         private final Path dataDir;
         private final boolean extendedI2pLogging;
 
-        public Config(Path dataDir, int socketTimeout, int inboundKBytesPerSecond, int outboundKBytesPerSecond,
-                      int bandwidthSharePercentage, String i2cpHost, int i2cpPort, boolean embeddedRouter,
+        public Config(Path dataDir,
+                      int defaultNodePort,
+                      int socketTimeout,
+                      int inboundKBytesPerSecond,
+                      int outboundKBytesPerSecond,
+                      int bandwidthSharePercentage,
+                      String i2cpHost,
+                      int i2cpPort,
+                      boolean embeddedRouter,
                       boolean extendedI2pLogging) {
             this.dataDir = dataDir;
+            this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;

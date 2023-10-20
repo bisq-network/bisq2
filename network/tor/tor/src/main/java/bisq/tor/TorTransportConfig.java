@@ -40,6 +40,7 @@ public class TorTransportConfig implements TransportConfig {
     public static TorTransportConfig from(Path dataDir, com.typesafe.config.Config config) {
         return new TorTransportConfig(
                 dataDir,
+                config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
@@ -83,13 +84,18 @@ public class TorTransportConfig implements TransportConfig {
     private final Path dataDir;
     private final int socketTimeout;
 
+    private final int defaultNodePort;
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
 
-    public TorTransportConfig(Path dataDir, int socketTimeout, boolean isTestNetwork,
+    public TorTransportConfig(Path dataDir,
+                              int defaultNodePort,
+                              int socketTimeout,
+                              boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides) {
+        this.defaultNodePort = defaultNodePort;
         this.isTestNetwork = isTestNetwork;
         this.dataDir = dataDir;
         this.socketTimeout = socketTimeout;
