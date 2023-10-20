@@ -159,9 +159,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         // Add persisted seed nodes to serviceNodesByTransport
         persistableStore.getSeedNodes().forEach(serviceNodesByTransport::addSeedNode);
 
-        PubKey pubKey = keyPairService.getDefaultPubKey();
-        String nodeId = Node.DEFAULT;
-
         return serviceNodesByTransport.initialize()
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
@@ -187,9 +184,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isInitialized(String nodeId) {
-        return supportedTransportTypes.stream()
-                .allMatch(type -> serviceNodesByTransport.isInitialized(type, nodeId));
+    public boolean isNodeOnAllTransportsInitialized(String nodeId) {
+        return serviceNodesByTransport.isNodeOnAllTransportsInitialized(nodeId);
     }
 
     public Map<TransportType, CompletableFuture<Void>> initializeNode(String nodeId, PubKey pubKey) {

@@ -256,7 +256,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Optional<Identity> swapAnyInitializedPooledIdentity(String tag) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.isInitialized(identity.getNodeId()))
+                    .filter(identity -> networkService.isNodeOnAllTransportsInitialized(identity.getNodeId()))
                     .findAny()
                     .or(() -> persistableStore.getPool().stream().findAny())
                     .map(pooledIdentity -> swapPooledIdentity(tag, pooledIdentity));

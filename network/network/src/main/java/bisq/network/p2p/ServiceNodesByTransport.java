@@ -158,6 +158,11 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         map.get(transportType).initializeNode(nodeId, portByTransport);
     }
 
+    public boolean isNodeOnAllTransportsInitialized(String nodeId) {
+        return map.values().stream()
+                .allMatch(serviceNode -> serviceNode.isNodeInitialized(nodeId));
+    }
+
     public boolean isInitialized(TransportType transportType, String nodeId) {
         return map.get(transportType).isNodeInitialized(nodeId);
     }

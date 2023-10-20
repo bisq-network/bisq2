@@ -230,7 +230,6 @@ public class ServiceNode {
         return nodesById.isNodeInitialized(nodeId);
     }
 
-
     public void addSeedNodeAddress(Address seedNodeAddress) {
         peerGroupService.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
     }
