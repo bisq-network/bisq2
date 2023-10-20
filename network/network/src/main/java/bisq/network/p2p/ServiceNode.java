@@ -159,7 +159,7 @@ public class ServiceNode {
 
         monitorService = services.contains(Service.PEER_GROUP) && services.contains(Service.MONITOR) ?
                 Optional.of(new MonitorService(defaultNode,
-                        peerGroupService.orElseThrow().getPeerGroup(),
+                        peerGroupService.orElseThrow().getPeerGroupService(),
                         peerGroupService.orElseThrow().getPeerGroupStore())) :
                 Optional.empty();
     }

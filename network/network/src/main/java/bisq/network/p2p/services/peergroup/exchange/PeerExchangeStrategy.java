@@ -19,7 +19,7 @@ package bisq.network.p2p.services.peergroup.exchange;
 
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.services.peergroup.Peer;
-import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,12 +60,12 @@ public class PeerExchangeStrategy {
         }
     }
 
-    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
     private final Config config;
     private final Set<Address> usedAddresses = new CopyOnWriteArraySet<>();
 
-    public PeerExchangeStrategy(PeerGroup peerGroup, Config config) {
-        this.peerGroup = peerGroup;
+    public PeerExchangeStrategy(PeerGroupService peerGroupService, Config config) {
+        this.peerGroupService = peerGroupService;
         this.config = config;
     }
 
@@ -111,8 +111,8 @@ public class PeerExchangeStrategy {
     boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
         int numFailed = numRequests - numSuccess;
         return numFailed > numRequests / 2 ||
-                peerGroup.getAllConnectedPeers().count() < peerGroup.getTargetNumConnectedPeers() ||
-                peerGroup.getReportedPeers().size() < peerGroup.getMinNumReportedPeers();
+                peerGroupService.getAllConnectedPeers().count() < peerGroupService.getTargetNumConnectedPeers() ||
+                peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
     }
 
     private List<Address> getCandidates(List<Address> priorityList) {
@@ -124,15 +124,15 @@ public class PeerExchangeStrategy {
     }
 
     private int getPeerExchangeLimit() {
-        int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers(); // default 8
+        int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers(); // default 8
         // We want at least 25% of minNumConnectedPeers
         int minValue = minNumConnectedPeers / 4;
-        int missing = Math.max(0, peerGroup.getTargetNumConnectedPeers() - peerGroup.getNumConnections());
+        int missing = Math.max(0, peerGroupService.getTargetNumConnectedPeers() - peerGroupService.getNumConnections());
         int limit = Math.max(minValue, missing);
 
         // In case we have enough connections but do not have received at least 25% of our
         // numReportedPeersAtBoostrap (default 10) target we still try to connect to 50% of minNumConnectedPeers.
-        if (limit == minValue && peerGroup.getReportedPeers().size() < config.getNumReportedPeersAtBoostrap() / 4) {
+        if (limit == minValue && peerGroupService.getReportedPeers().size() < config.getNumReportedPeersAtBoostrap() / 4) {
             return minNumConnectedPeers / 2;
         }
         return limit;
@@ -153,9 +153,9 @@ public class PeerExchangeStrategy {
     }
 
     private List<Address> getSeedAddresses() {
-        return getShuffled(peerGroup.getSeedNodeAddresses()).stream()
-                .filter(peerGroup::notMyself)
-                .filter(peerGroup::isNotBanned)
+        return getShuffled(peerGroupService.getSeedNodeAddresses()).stream()
+                .filter(peerGroupService::notMyself)
+                .filter(peerGroupService::isNotBanned)
                 .limit(config.getNumSeedNodesAtBoostrap())
                 .collect(Collectors.toList());
     }
@@ -168,7 +168,7 @@ public class PeerExchangeStrategy {
     }
 
     private List<Address> getPersistedAddresses() {
-        return peerGroup.getPersistedPeers().stream()
+        return peerGroupService.getPersistedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
                 .sorted(Comparator.comparing(Peer::getDate))
                 .limit(config.getNumPersistedPeersAtBoostrap())
@@ -213,7 +213,7 @@ public class PeerExchangeStrategy {
                 .sorted(Comparator.comparing(Peer::getDate).reversed())
                 .limit(REPORTED_PEERS_LIMIT)
                 .collect(Collectors.toSet());
-        peerGroup.addReportedPeers(filtered);
+        peerGroupService.addReportedPeers(filtered);
     }
 
 
@@ -222,7 +222,7 @@ public class PeerExchangeStrategy {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean notASeed(Address address) {
-        return !peerGroup.isSeed(address);
+        return !peerGroupService.isSeed(address);
     }
 
     private boolean notASeed(Peer peer) {
@@ -231,8 +231,8 @@ public class PeerExchangeStrategy {
 
     private boolean isValidNonSeedPeer(Address address) {
         return notASeed(address) &&
-                peerGroup.isNotBanned(address) &&
-                peerGroup.notMyself(address);
+                peerGroupService.isNotBanned(address) &&
+                peerGroupService.notMyself(address);
     }
 
     private boolean isValidNonSeedPeer(Peer peer) {
@@ -256,13 +256,13 @@ public class PeerExchangeStrategy {
     }
 
     private Stream<Peer> getAllConnectedPeers() {
-        return peerGroup.getAllConnectedPeers()
+        return peerGroupService.getAllConnectedPeers()
                 .filter(this::isValidNonSeedPeer)
                 .sorted(Comparator.comparing(Peer::getDate).reversed());
     }
 
     private Stream<Peer> getReportedPeers() {
-        return peerGroup.getReportedPeers().stream()
+        return peerGroupService.getReportedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotAged)
                 .sorted(Comparator.comparing(Peer::getDate).reversed());

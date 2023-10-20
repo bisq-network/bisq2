@@ -24,8 +24,8 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.node.transport.TransportType;
-import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.tor.TorTransportConfig;
@@ -49,7 +49,7 @@ public final class NetworkServiceConfig {
                 .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
-        PeerGroup.Config peerGroupConfig = PeerGroup.Config.from(config.getConfig("peerGroup"));
+        PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(config.getConfig("peerGroup"));
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(config.getConfig("peerExchangeStrategy"));
         KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(config.getConfig("keepAlive"));
 

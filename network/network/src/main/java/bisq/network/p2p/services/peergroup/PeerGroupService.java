@@ -33,7 +33,7 @@ import java.util.stream.Stream;
  * Maintains different collections of peers and connections
  */
 @Slf4j
-public class PeerGroup {
+public class PeerGroupService {
     @Getter
     public static class Config {
         private final int minNumConnectedPeers;
@@ -53,7 +53,7 @@ public class PeerGroup {
         }
 
         public static Config from(com.typesafe.config.Config typesafeConfig) {
-            return new PeerGroup.Config(
+            return new PeerGroupService.Config(
                     typesafeConfig.getInt("minNumConnectedPeers"),
                     typesafeConfig.getInt("maxNumConnectedPeers"),
                     typesafeConfig.getInt("minNumReportedPeers"));
@@ -69,7 +69,7 @@ public class PeerGroup {
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
 
-    public PeerGroup(Node node, Config config, Set<Address> seedNodeAddresses, BanList banList, PersistedPeersHandler persistedPeersHandler) {
+    public PeerGroupService(Node node, Config config, Set<Address> seedNodeAddresses, BanList banList, PersistedPeersHandler persistedPeersHandler) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;

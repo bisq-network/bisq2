@@ -27,8 +27,8 @@ import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.inventory.InventoryService;
-import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -43,7 +43,7 @@ import java.util.function.Function;
 @Slf4j
 public class DataNetworkService implements PeerGroupManager.Listener, Node.Listener {
 
-    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
     private final PeerGroupManager peerGroupManager;
 
     public interface Listener {
@@ -63,11 +63,11 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
                               PeerGroupManager peerGroupManager,
                               Function<DataFilter, Inventory> inventoryProvider) {
         this.node = node;
-        peerGroup = peerGroupManager.getPeerGroup();
+        peerGroupService = peerGroupManager.getPeerGroupService();
         this.peerGroupManager = peerGroupManager;
         peerGroupManager.addListener(this);
-        broadcaster = new Broadcaster(node, peerGroup);
-        inventoryService = new InventoryService(node, peerGroup, inventoryProvider);
+        broadcaster = new Broadcaster(node, peerGroupService);
+        inventoryService = new InventoryService(node, peerGroupService, inventoryProvider);
         node.addListener(this);
     }
 
@@ -100,8 +100,8 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
 
     @Override
     public void onConnection(Connection connection) {
-        if (peerGroup.getNumConnections() > peerGroup.getTargetNumConnectedPeers() / 2) {
-            listeners.forEach(listener -> listener.onSufficientlyConnected(peerGroup.getNumConnections(), this));
+        if (peerGroupService.getNumConnections() > peerGroupService.getTargetNumConnectedPeers() / 2) {
+            listeners.forEach(listener -> listener.onSufficientlyConnected(peerGroupService.getNumConnections(), this));
         }
     }
 

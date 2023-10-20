@@ -66,7 +66,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
     @Getter
     @ToString
     public static final class Config {
-        private final PeerGroup.Config peerGroupConfig;
+        private final PeerGroupService.Config peerGroupConfig;
         private final PeerExchangeStrategy.Config peerExchangeConfig;
         private final KeepAliveService.Config keepAliveServiceConfig;
         private final long bootstrapTime;
@@ -77,7 +77,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
         private final int maxPersisted;
         private final int maxSeeds;
 
-        public Config(PeerGroup.Config peerGroupConfig,
+        public Config(PeerGroupService.Config peerGroupConfig,
                       PeerExchangeStrategy.Config peerExchangeConfig,
                       KeepAliveService.Config keepAliveServiceConfig,
                       long bootstrapTime,
@@ -99,7 +99,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
             this.maxSeeds = maxSeeds;
         }
 
-        public static Config from(PeerGroup.Config peerGroupConfig,
+        public static Config from(PeerGroupService.Config peerGroupConfig,
                                   PeerExchangeStrategy.Config peerExchangeStrategyConfig,
                                   KeepAliveService.Config keepAliveServiceConfig,
                                   com.typesafe.config.Config typesafeConfig) {
@@ -122,7 +122,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
     private final BanList banList;
     private final Config config;
     @Getter
-    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
     private final PeerExchangeService peerExchangeService;
     private final KeepAliveService keepAliveService;
     private final AddressValidationService addressValidationService;
@@ -146,11 +146,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
         this.node = node;
         this.banList = banList;
         this.config = config;
-        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
-        PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
+        peerGroupService = new PeerGroupService(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
+        PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService,
                 config.getPeerExchangeConfig());
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
-        keepAliveService = new KeepAliveService(node, peerGroup, config.getKeepAliveServiceConfig());
+        keepAliveService = new KeepAliveService(node, peerGroupService, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
 
         persistence = persistenceService.getOrCreatePersistence(this,
@@ -227,11 +227,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
-        peerGroup.addSeedNodeAddress(seedNodeAddress);
+        peerGroupService.addSeedNodeAddress(seedNodeAddress);
     }
 
     public void removeSeedNodeAddress(Address seedNodeAddress) {
-        peerGroup.removeSeedNodeAddress(seedNodeAddress);
+        peerGroupService.removeSeedNodeAddress(seedNodeAddress);
     }
 
 
@@ -266,7 +266,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
 
     private void closeBanned() {
         log.debug("Node {} called closeBanned", node);
-        peerGroup.getAllConnections()
+        peerGroupService.getAllConnections()
                 .filter(Connection::isRunning)
                 .filter(connection -> banList.isBanned(connection.getPeerAddress()))
                 .peek(connection -> log.info("{} -> {}: CloseQuarantined triggered close connection", node, connection.getPeerAddress()))
@@ -279,11 +279,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
         if (new Random().nextInt(10) >= 3) {
             return;
         }
-        Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
+        Set<Address> outboundAddresses = peerGroupService.getOutboundConnections()
                 .filter(addressValidationService::isInProgress)
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
-        peerGroup.getInboundConnections()
+        peerGroupService.getInboundConnections()
                 .filter(Connection::isRunning)
                 .filter(inbound -> !inbound.isPeerAddressVerified())
                 .filter(addressValidationService::isNotInProgress)
@@ -297,11 +297,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
      */
     private void maybeCloseDuplicateConnections() {
         log.debug("Node {} called maybeCloseDuplicateConnections", node);
-        Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
+        Set<Address> outboundAddresses = peerGroupService.getOutboundConnections()
                 .filter(addressValidationService::isNotInProgress)
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
-        peerGroup.getInboundConnections()
+        peerGroupService.getInboundConnections()
                 .filter(this::mayDisconnect)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
                 .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
@@ -313,10 +313,10 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeCloseConnectionsToSeeds() {
         log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
-        Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed(); // reversed as we use skip
-        peerGroup.getAllConnections()
+        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed(); // reversed as we use skip
+        peerGroupService.getAllConnections()
                 .filter(this::mayDisconnect)
-                .filter(peerGroup::isSeed)
+                .filter(peerGroupService::isSeed)
                 .sorted(comparator)
                 .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
@@ -327,7 +327,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeCloseAgedConnections() {
         log.debug("Node {} called maybeCloseAgedConnections", node);
-        peerGroup.getAllConnections()
+        peerGroupService.getAllConnections()
                 .filter(this::mayDisconnect)
                 .filter(connection -> connection.getMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
@@ -339,11 +339,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeCloseExceedingInboundConnections() {
         log.debug("Node {} called maybeCloseExceedingInboundConnections", node);
-        Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
-        peerGroup.getInboundConnections()
+        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
+        peerGroupService.getInboundConnections()
                 .filter(this::mayDisconnect)
                 .sorted(comparator)
-                .skip(peerGroup.getMaxInboundConnections())
+                .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
                         node, connection.getPeersCapability().getAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
@@ -352,11 +352,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeCloseExceedingConnections() {
         log.debug("Node {} called maybeCloseExceedingConnections", node);
-        Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
-        peerGroup.getAllConnections()
+        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
+        peerGroupService.getAllConnections()
                 .filter(this::mayDisconnect)
                 .sorted(comparator)
-                .skip(peerGroup.getMaxNumConnectedPeers())
+                .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
                         node, connection.getPeersCapability().getAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
@@ -365,11 +365,11 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeCreateConnections() {
         log.debug("Node {} called maybeCreateConnections", node);
-        int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers();
+        int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers();
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
-            if (peerGroup.getNumConnections() >= minNumConnectedPeers) {
+            if (peerGroupService.getNumConnections() >= minNumConnectedPeers) {
                 log.debug("Node {} has sufficient connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
@@ -384,13 +384,13 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
     }
 
     private void maybeRemoveReportedPeers() {
-        List<Peer> reportedPeers = new ArrayList<>(peerGroup.getReportedPeers());
+        List<Peer> reportedPeers = new ArrayList<>(peerGroupService.getReportedPeers());
         int exceeding = reportedPeers.size() - config.getMaxReported();
         if (exceeding > 0) {
             reportedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> candidates = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
             log.info("Remove {} reported peers: {}", candidates.size(), candidates);
-            peerGroup.removeReportedPeers(candidates);
+            peerGroupService.removeReportedPeers(candidates);
         }
     }
 
@@ -443,7 +443,7 @@ public class PeerGroupManager implements PersistenceClient<PeerGroupStore>, Pers
     }
 
     private int getMissingOutboundConnections() {
-        return peerGroup.getMinOutboundConnections() - (int) peerGroup.getOutboundConnections().count();
+        return peerGroupService.getMinOutboundConnections() - (int) peerGroupService.getOutboundConnections().count();
     }
 
 }

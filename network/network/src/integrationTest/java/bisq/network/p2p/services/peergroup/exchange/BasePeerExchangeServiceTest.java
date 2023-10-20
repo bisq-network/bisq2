@@ -22,8 +22,8 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.PeerGroupStore;
 import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
@@ -73,8 +73,8 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             seeds.add(seed);
             seed.initialize(port);
             initSeedsLatch.countDown();
-            PeerGroup peerGroup = new PeerGroup(seed, new PeerGroup.Config(), new HashSet<>(seedNodeAddresses), banList, peerGroupManager);
-            PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config());
+            PeerGroupService peerGroupService = new PeerGroupService(seed, new PeerGroupService.Config(), new HashSet<>(seedNodeAddresses), banList, peerGroupManager);
+            PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService, new PeerExchangeStrategy.Config());
             new PeerExchangeService(seed, peerExchangeStrategy);
         }
         assertTrue(initSeedsLatch.await(getTimeout(), TimeUnit.SECONDS));
@@ -98,8 +98,8 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
 
         for (int i = 0; i < numNodes; i++) {
             Node node = nodes.get(i);
-            PeerGroup peerGroup = new PeerGroup(node, new PeerGroup.Config(), new HashSet<>(seedNodeAddresses), banList, peerGroupManager);
-            PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config());
+            PeerGroupService peerGroupService = new PeerGroupService(node, new PeerGroupService.Config(), new HashSet<>(seedNodeAddresses), banList, peerGroupManager);
+            PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService, new PeerExchangeStrategy.Config());
             PeerExchangeService peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
             peerExchangeService.startInitialPeerExchange().whenComplete((result, throwable) -> {
                 assertNull(throwable);
@@ -115,8 +115,8 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
 
             for (int i = 0; i < numNodes; i++) {
                 Node node = nodes.get(i);
-                PeerGroup peerGroup = new PeerGroup(node, new PeerGroup.Config(), new HashSet<>(seedNodeAddresses), banList, peerGroupManager);
-                PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config());
+                PeerGroupService peerGroupService = new PeerGroupService(node, new PeerGroupService.Config(), new HashSet<>(seedNodeAddresses), banList, peerGroupManager);
+                PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService, new PeerExchangeStrategy.Config());
                 PeerExchangeService peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
                 peerExchangeService.startInitialPeerExchange().whenComplete((result, throwable) -> {
                     assertNull(throwable);

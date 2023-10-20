@@ -27,7 +27,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.TransportType;
-import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.settings.SettingsService;
 import javafx.beans.property.*;
 import lombok.Getter;
@@ -74,7 +74,7 @@ public class LeftNavModel implements Model {
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
                     serviceNode.getPeerGroupService().ifPresent(peerGroupService -> {
-                        PeerGroup peerGroup = peerGroupService.getPeerGroup();
+                        PeerGroupService peerGroup = peerGroupService.getPeerGroupService();
                         switch (type) {
                             case TOR:
                                 torNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
@@ -105,14 +105,14 @@ public class LeftNavModel implements Model {
         );
     }
 
-    private void onNumConnectionsChanged(TransportType transportType, PeerGroup peerGroup) {
+    private void onNumConnectionsChanged(TransportType transportType, PeerGroupService peerGroupService) {
         UIThread.run(() -> {
             switch (transportType) {
                 case TOR:
-                    torNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
+                    torNumConnections.set(String.valueOf(peerGroupService.getNumConnections()));
                     break;
                 case I2P:
-                    i2pNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
+                    i2pNumConnections.set(String.valueOf(peerGroupService.getNumConnections()));
                     break;
             }
         });

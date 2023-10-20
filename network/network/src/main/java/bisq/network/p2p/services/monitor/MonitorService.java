@@ -21,7 +21,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.Peer;
-import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.PeerGroupStore;
 
 import java.text.SimpleDateFormat;
@@ -31,12 +31,12 @@ import java.util.stream.Collectors;
 
 public class MonitorService {
     private final Node node;
-    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
     private final PeerGroupStore peerGroupStore;
 
-    public MonitorService(Node node, PeerGroup peerGroup, PeerGroupStore peerGroupStore) {
+    public MonitorService(Node node, PeerGroupService peerGroupService, PeerGroupStore peerGroupStore) {
         this.node = node;
-        this.peerGroup = peerGroup;
+        this.peerGroupService = peerGroupService;
         this.peerGroupStore = peerGroupStore;
     }
 
@@ -45,24 +45,24 @@ public class MonitorService {
     }
 
     public String getPeerGroupInfo() {
-        int numSeedConnections = (int) peerGroup.getAllConnections()
-                .filter(connection -> peerGroup.isSeed(connection.getPeerAddress())).count();
+        int numSeedConnections = (int) peerGroupService.getAllConnections()
+                .filter(connection -> peerGroupService.isSeed(connection.getPeerAddress())).count();
         StringBuilder sb = new StringBuilder();
         sb.append(node.getTransportType().name()).append(": ")
                 .append(node.findMyAddress().map(Address::toString).orElse(""))
-                .append("\n").append("Num connections: ").append(peerGroup.getNumConnections())
-                .append("\n").append("Num all connections: ").append(peerGroup.getNumConnections())
-                .append("\n").append("Num outbound connections: ").append(peerGroup.getOutboundConnections().count())
-                .append("\n").append("Num inbound connections: ").append(peerGroup.getInboundConnections().count())
+                .append("\n").append("Num connections: ").append(peerGroupService.getNumConnections())
+                .append("\n").append("Num all connections: ").append(peerGroupService.getNumConnections())
+                .append("\n").append("Num outbound connections: ").append(peerGroupService.getOutboundConnections().count())
+                .append("\n").append("Num inbound connections: ").append(peerGroupService.getInboundConnections().count())
                 .append("\n").append("Num seed connections: ").append(numSeedConnections)
                 .append("\n").append("Connections: ").append("\n");
-        peerGroup.getOutboundConnections()
-                .sorted(peerGroup.getConnectionAgeComparator())
+        peerGroupService.getOutboundConnections()
+                .sorted(peerGroupService.getConnectionAgeComparator())
                 .forEach(connection -> appendConnectionInfo(sb, connection, true));
-        peerGroup.getInboundConnections()
-                .sorted(peerGroup.getConnectionAgeComparator())
+        peerGroupService.getInboundConnections()
+                .sorted(peerGroupService.getConnectionAgeComparator())
                 .forEach(connection -> appendConnectionInfo(sb, connection, false));
-        sb.append("\n").append("Reported peers (").append(peerGroup.getReportedPeers().size()).append("): ").append(peerGroup.getReportedPeers().stream()
+        sb.append("\n").append("Reported peers (").append(peerGroupService.getReportedPeers().size()).append("): ").append(peerGroupService.getReportedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         sb.append("\n").append("Persisted peers: ").append(peerGroupStore.getPersistedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));

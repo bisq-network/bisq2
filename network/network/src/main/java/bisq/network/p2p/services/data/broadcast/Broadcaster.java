@@ -22,7 +22,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
@@ -41,12 +41,12 @@ public class Broadcaster {
     private static final long RE_BROADCAST_DELAY_MS = 100;
 
     private final Node node;
-    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
     private final RetryPolicy<BroadcastResult> retryPolicy;
 
-    public Broadcaster(Node node, PeerGroup peerGroup) {
+    public Broadcaster(Node node, PeerGroupService peerGroupService) {
         this.node = node;
-        this.peerGroup = peerGroup;
+        this.peerGroupService = peerGroupService;
 
         retryPolicy = RetryPolicy.<BroadcastResult>builder()
                 .handle(IllegalStateException.class)
@@ -83,11 +83,11 @@ public class Broadcaster {
                 .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
         AtomicInteger numSuccess = new AtomicInteger(0);
         AtomicInteger numFaults = new AtomicInteger(0);
-        long numConnections = peerGroup.getAllConnections().count();
+        long numConnections = peerGroupService.getAllConnections().count();
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
         log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
                 broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
-        List<Connection> allConnections = peerGroup.getAllConnections().collect(Collectors.toList());
+        List<Connection> allConnections = peerGroupService.getAllConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
         NetworkService.NETWORK_IO_POOL.submit(() -> {
             allConnections.stream()
@@ -111,7 +111,7 @@ public class Broadcaster {
     }
 
     public Address getPeerAddressesForInventoryRequest() {
-        return CollectionUtil.getRandomElement(peerGroup.getAllConnectedPeerAddresses().collect(Collectors.toSet()));
+        return CollectionUtil.getRandomElement(peerGroupService.getAllConnectedPeerAddresses().collect(Collectors.toSet()));
     }
 
     public void shutdown() {
