@@ -92,7 +92,7 @@ public abstract class ConnectionChannel {
             throw new ConnectionClosedException(this);
         }
         try {
-            NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, networkMessage);
             boolean sent = false;
             synchronized (writeLock) {
                 try {

@@ -151,7 +151,7 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_NETWORK_LOAD,
                     peerAddress.getFullAddress(),
                     0);
-            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
 
             networkEnvelopeSocket.send(requestNetworkEnvelope);
@@ -246,7 +246,7 @@ public final class ConnectionHandshake {
 
             Response response = new Response(capability, myNetworkLoad);
             AuthorizationToken token = authorizationService.createToken(response, request.getNetworkLoad(), peerAddress.getFullAddress(), 0);
-            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
+            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(token, response);
             networkEnvelopeSocket.send(responseNetworkEnvelope);
 
             connectionMetrics.onSent(responseNetworkEnvelope);

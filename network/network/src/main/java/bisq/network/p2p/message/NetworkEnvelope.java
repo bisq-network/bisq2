@@ -38,6 +38,10 @@ public final class NetworkEnvelope implements Proto {
     private final AuthorizationToken authorizationToken;
     private final NetworkMessage networkMessage;
 
+    public NetworkEnvelope(AuthorizationToken authorizationToken, NetworkMessage networkMessage) {
+        this(VERSION, authorizationToken, networkMessage);
+    }
+
     public NetworkEnvelope(int version, AuthorizationToken authorizationToken, NetworkMessage networkMessage) {
         this.version = version;
         this.authorizationToken = authorizationToken;

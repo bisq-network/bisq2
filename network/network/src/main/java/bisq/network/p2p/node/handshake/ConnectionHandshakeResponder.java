@@ -121,7 +121,7 @@ public class ConnectionHandshakeResponder {
     private NetworkEnvelope createResponseEnvelope(NetworkLoad myNetworkLoad, NetworkLoad peerNetworkLoad, Address peerAddress) {
         ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myNetworkLoad);
         AuthorizationToken token = authorizationService.createToken(response, peerNetworkLoad, peerAddress.getFullAddress(), 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
+        return new NetworkEnvelope(token, response);
     }
 
     private void validateEnvelopeVersion(NetworkEnvelope requestNetworkEnvelope) {

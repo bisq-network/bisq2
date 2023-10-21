@@ -120,7 +120,7 @@ public class ConnectionHandshakeResponderTest {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 0);
-        NetworkEnvelope responseEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
+        NetworkEnvelope responseEnvelope = new NetworkEnvelope(token, response);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(responseEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
@@ -138,7 +138,7 @@ public class ConnectionHandshakeResponderTest {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 0);
-        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
@@ -158,7 +158,7 @@ public class ConnectionHandshakeResponderTest {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 5);
-        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
@@ -177,7 +177,7 @@ public class ConnectionHandshakeResponderTest {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 responderCapability.getAddress().getFullAddress(),
                 0);
-        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
@@ -195,6 +195,6 @@ public class ConnectionHandshakeResponderTest {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 responderCapability.getAddress().getFullAddress(),
                 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        return new NetworkEnvelope(token, request);
     }
 }

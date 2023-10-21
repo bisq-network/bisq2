@@ -194,7 +194,7 @@ public class NetworkEnvelopeSocketChannelTests {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 responderCapability.getAddress().getFullAddress(),
                 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        return new NetworkEnvelope(token, request);
     }
 
     private AuthorizationService createAuthorizationService() {

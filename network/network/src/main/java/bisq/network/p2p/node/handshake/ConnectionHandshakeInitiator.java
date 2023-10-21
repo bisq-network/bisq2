@@ -58,7 +58,7 @@ public class ConnectionHandshakeInitiator {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 peerAddress.getFullAddress(),
                 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        return new NetworkEnvelope(token, request);
     }
 
     public ConnectionHandshake.Response finish(List<NetworkEnvelope> responseNetworkEnvelopes) {
