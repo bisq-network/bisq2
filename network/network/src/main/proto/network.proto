@@ -30,7 +30,7 @@ message Capability {
   repeated string supportedTransportTypes = 2;
 }
 
-message Load {
+message NetworkLoad {
   sint32 numConnections = 1;
 }
 
@@ -50,7 +50,7 @@ message Inventory {
 
 message Peer {
   Capability capability = 1;
-  Load load = 2;
+  NetworkLoad networkLoad = 2;
   bool isOutboundConnection = 3;
   sint64 created = 4;
 }
@@ -62,11 +62,11 @@ message Peer {
 message ConnectionHandshake {
   message Request {
     Capability capability = 1;
-    Load load = 2;
+    NetworkLoad networkLoad = 2;
   }
   message Response {
     Capability capability = 1;
-    Load load = 2;
+    NetworkLoad networkLoad = 2;
   }
 }
 

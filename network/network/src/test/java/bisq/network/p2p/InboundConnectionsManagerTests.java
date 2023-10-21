@@ -25,7 +25,7 @@ import bisq.network.p2p.node.InboundConnectionsManager;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
@@ -242,10 +242,10 @@ public class InboundConnectionsManagerTests {
         supportedTransportTypes.add(TransportType.CLEAR);
         Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
 
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationService authorizationService = createAuthorizationService();
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 myAddress.getFullAddress(),
                 0);
         return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request).toProto();

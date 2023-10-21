@@ -22,8 +22,8 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.Load;
 import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.vo.Address;
 import lombok.Getter;
@@ -67,7 +67,7 @@ public abstract class Connection {
     @Getter
     private final Capability peersCapability;
     @Getter
-    private final Load peersLoad;
+    private final NetworkLoad peersNetworkLoad;
     @Getter
     private final Metrics metrics;
 
@@ -87,12 +87,12 @@ public abstract class Connection {
 
     protected Connection(Socket socket,
                          Capability peersCapability,
-                         Load peersLoad,
+                         NetworkLoad peersNetworkLoad,
                          Metrics metrics,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.peersCapability = peersCapability;
-        this.peersLoad = peersLoad;
+        this.peersNetworkLoad = peersNetworkLoad;
         this.handler = handler;
         this.metrics = metrics;
 

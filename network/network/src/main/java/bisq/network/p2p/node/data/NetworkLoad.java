@@ -25,20 +25,20 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Load implements Proto {
-    public static final Load INITIAL_LOAD = new Load(1);
+public final class NetworkLoad implements Proto {
+    public static final NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad(1);
     private final int numConnections;
 
-    public Load(int numConnections) {
+    public NetworkLoad(int numConnections) {
         this.numConnections = numConnections;
     }
 
-    public bisq.network.protobuf.Load toProto() {
-        return bisq.network.protobuf.Load.newBuilder().setNumConnections(numConnections).build();
+    public bisq.network.protobuf.NetworkLoad toProto() {
+        return bisq.network.protobuf.NetworkLoad.newBuilder().setNumConnections(numConnections).build();
     }
 
-    public static Load fromProto(bisq.network.protobuf.Load proto) {
-        return new Load(proto.getNumConnections());
+    public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
+        return new NetworkLoad(proto.getNumConnections());
     }
 
     public int getFactor() {

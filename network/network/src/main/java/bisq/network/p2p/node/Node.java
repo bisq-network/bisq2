@@ -27,7 +27,7 @@ import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
@@ -244,7 +244,7 @@ public class Node implements Connection.Handler {
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
                     result.getCapability(),
-                    result.getLoad(),
+                    result.getNetworkLoad(),
                     result.getMetrics(),
                     this,
                     this::handleException);
@@ -292,7 +292,7 @@ public class Node implements Connection.Handler {
         }
         try {
             AuthorizationToken token = authorizationService.createToken(networkMessage,
-                    connection.getPeersLoad(),
+                    connection.getPeersNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
                     connection.getSentMessageCounter().incrementAndGet());
             return connection.send(networkMessage, token);
@@ -391,7 +391,7 @@ public class Node implements Connection.Handler {
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
                     result.getCapability(),
-                    result.getLoad(),
+                    result.getNetworkLoad(),
                     result.getMetrics(),
                     this,
                     this::handleException);
@@ -614,8 +614,8 @@ public class Node implements Connection.Handler {
         }
     }
 
-    private Load getMyLoad() {
-        return new Load(getNumConnections());
+    private NetworkLoad getMyLoad() {
+        return new NetworkLoad(getNumConnections());
     }
 
     private void setState(State newState) {

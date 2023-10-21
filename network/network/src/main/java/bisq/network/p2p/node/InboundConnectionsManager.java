@@ -192,7 +192,7 @@ public class InboundConnectionsManager {
             return Optional.of(
                     new InboundConnectionChannel(
                             handshakeRequest.getCapability(),
-                            handshakeRequest.getLoad(),
+                            handshakeRequest.getNetworkLoad(),
                             networkEnvelopeSocketChannel,
                             new Metrics()
                     )

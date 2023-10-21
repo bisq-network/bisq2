@@ -22,7 +22,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.ProtoBufMessageLengthParser;
 import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
@@ -82,9 +82,9 @@ public class ProtoBufMessageLengthTests {
 
     private bisq.network.protobuf.NetworkEnvelope createValidRequest() {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).getFullAddress(),
                 0);
         return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request).toProto();

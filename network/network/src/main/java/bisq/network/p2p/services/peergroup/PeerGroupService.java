@@ -171,7 +171,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public Stream<Peer> getAllConnectedPeers() {
         return getAllConnections().map(con ->
-                new Peer(con.getPeersCapability(), con.getPeersLoad(), con.isOutboundConnection()));
+                new Peer(con.getPeersCapability(), con.getPeersNetworkLoad(), con.isOutboundConnection()));
     }
 
     public boolean isNotBanned(Peer peer) {

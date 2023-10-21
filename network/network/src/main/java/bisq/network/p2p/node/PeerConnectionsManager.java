@@ -18,7 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.data.Load;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -140,7 +140,7 @@ public class PeerConnectionsManager {
             OutboundConnectionManager outboundConnectionManager = new OutboundConnectionManager(
                     authorizationService,
                     banList,
-                    Load.INITIAL_LOAD,
+                    NetworkLoad.INITIAL_NETWORK_LOAD,
                     serverCapability,
                     node,
                     SelectorProvider.provider().openSelector()
