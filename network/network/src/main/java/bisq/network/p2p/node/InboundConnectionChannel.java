@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import lombok.Setter;
@@ -31,8 +31,8 @@ public class InboundConnectionChannel extends ConnectionChannel {
     public InboundConnectionChannel(Capability peersCapability,
                                     NetworkLoad peersNetworkLoad,
                                     NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
-                                    Metrics metrics) {
-        super(peersCapability, peersNetworkLoad, networkEnvelopeSocketChannel, metrics);
+                                    ConnectionMetrics connectionMetrics) {
+        super(peersCapability, peersNetworkLoad, networkEnvelopeSocketChannel, connectionMetrics);
         log.debug("Create inboundConnection");
     }
 

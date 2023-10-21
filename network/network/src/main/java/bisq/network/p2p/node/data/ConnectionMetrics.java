@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
 @ToString
-public class Metrics {
+public class ConnectionMetrics {
     private final long created;
     private final AtomicLong lastUpdate = new AtomicLong();
     private final AtomicLong sentBytes = new AtomicLong();
@@ -37,7 +37,7 @@ public class Metrics {
     private final AtomicLong numMessagesReceived = new AtomicLong();
     private final List<Long> rrtList = new CopyOnWriteArrayList<>();
 
-    public Metrics() {
+    public ConnectionMetrics() {
         created = new Date().getTime();
     }
 

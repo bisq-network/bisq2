@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.vo.Address;
 import lombok.Getter;
@@ -36,10 +36,10 @@ public class OutboundConnection extends Connection {
                        Address address,
                        Capability peersCapability,
                        NetworkLoad peersNetworkLoad,
-                       Metrics metrics,
+                       ConnectionMetrics connectionMetrics,
                        Handler handler,
                        BiConsumer<Connection, Exception> errorHandler) {
-        super(socket, peersCapability, peersNetworkLoad, metrics, handler, errorHandler);
+        super(socket, peersCapability, peersNetworkLoad, connectionMetrics, handler, errorHandler);
 
         this.address = address;
         log.debug("Create outboundConnection to {}", address);

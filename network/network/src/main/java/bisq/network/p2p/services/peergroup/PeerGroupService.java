@@ -161,7 +161,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public Comparator<Connection> getConnectionAgeComparator() {
-        return Comparator.comparing(connection -> connection.getMetrics().getCreationDate());
+        return Comparator.comparing(connection -> connection.getConnectionMetrics().getCreationDate());
     }
 
 

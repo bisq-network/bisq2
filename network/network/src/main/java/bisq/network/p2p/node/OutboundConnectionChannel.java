@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.vo.Address;
@@ -33,8 +33,8 @@ public class OutboundConnectionChannel extends ConnectionChannel {
     public OutboundConnectionChannel(Capability peersCapability,
                                      NetworkLoad peersNetworkLoad,
                                      NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
-                                     Metrics metrics) {
-        super(peersCapability, peersNetworkLoad, networkEnvelopeSocketChannel, metrics);
+                                     ConnectionMetrics connectionMetrics) {
+        super(peersCapability, peersNetworkLoad, networkEnvelopeSocketChannel, connectionMetrics);
 
         this.address = peersCapability.getAddress();
         log.debug("Create outboundConnection to {}", this.address);

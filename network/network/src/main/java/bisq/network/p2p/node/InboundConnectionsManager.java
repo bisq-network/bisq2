@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.data.Pair;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
@@ -194,7 +194,7 @@ public class InboundConnectionsManager {
                             handshakeRequest.getCapability(),
                             handshakeRequest.getNetworkLoad(),
                             networkEnvelopeSocketChannel,
-                            new Metrics()
+                            new ConnectionMetrics()
                     )
             );
         } catch (ConnectionException e) {

@@ -245,7 +245,7 @@ public class Node implements Connection.Handler {
                     serverSocketResult,
                     result.getCapability(),
                     result.getNetworkLoad(),
-                    result.getMetrics(),
+                    result.getConnectionMetrics(),
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
@@ -392,7 +392,7 @@ public class Node implements Connection.Handler {
                     address,
                     result.getCapability(),
                     result.getNetworkLoad(),
-                    result.getMetrics(),
+                    result.getConnectionMetrics(),
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);

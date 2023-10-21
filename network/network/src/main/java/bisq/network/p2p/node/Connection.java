@@ -22,7 +22,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.vo.Address;
@@ -69,7 +69,7 @@ public abstract class Connection {
     @Getter
     private final NetworkLoad peersNetworkLoad;
     @Getter
-    private final Metrics metrics;
+    private final ConnectionMetrics connectionMetrics;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
 
@@ -88,13 +88,13 @@ public abstract class Connection {
     protected Connection(Socket socket,
                          Capability peersCapability,
                          NetworkLoad peersNetworkLoad,
-                         Metrics metrics,
+                         ConnectionMetrics connectionMetrics,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.peersCapability = peersCapability;
         this.peersNetworkLoad = peersNetworkLoad;
         this.handler = handler;
-        this.metrics = metrics;
+        this.connectionMetrics = connectionMetrics;
 
         try {
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(socket);
@@ -121,7 +121,7 @@ public abstract class Connection {
                         NetworkMessage networkMessage = networkEnvelope.getNetworkMessage();
                         log.debug("Received message: {} at: {}",
                                 StringUtils.truncate(networkMessage.toString(), 200), this);
-                        metrics.onReceived(networkEnvelope);
+                        connectionMetrics.onReceived(networkEnvelope);
                         NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkMessage,
                                 networkEnvelope.getAuthorizationToken(),
                                 this));
@@ -161,7 +161,7 @@ public abstract class Connection {
                 }
             }
             if (sent) {
-                metrics.onSent(networkEnvelope);
+                connectionMetrics.onSent(networkEnvelope);
                 if (networkMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
                             StringUtils.truncate(networkMessage.toString(), 300), this);

@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
@@ -165,7 +165,7 @@ public class OutboundConnectionManager {
                     peerCapability,
                     handshakeResponse.getNetworkLoad(),
                     networkEnvelopeSocketChannel,
-                    new Metrics()
+                    new ConnectionMetrics()
             );
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);

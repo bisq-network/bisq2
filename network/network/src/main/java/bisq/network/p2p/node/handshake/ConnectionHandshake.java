@@ -24,7 +24,7 @@ import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -112,12 +112,12 @@ public final class ConnectionHandshake {
     public static final class Result {
         private final Capability capability;
         private final NetworkLoad networkLoad;
-        private final Metrics metrics;
+        private final ConnectionMetrics connectionMetrics;
 
-        Result(Capability capability, NetworkLoad networkLoad, Metrics metrics) {
+        Result(Capability capability, NetworkLoad networkLoad, ConnectionMetrics connectionMetrics) {
             this.capability = capability;
             this.networkLoad = networkLoad;
-            this.metrics = metrics;
+            this.connectionMetrics = connectionMetrics;
         }
     }
 
@@ -144,7 +144,7 @@ public final class ConnectionHandshake {
     // Client side protocol
     public Result start(NetworkLoad myNetworkLoad, Address peerAddress) {
         try {
-            Metrics metrics = new Metrics();
+            ConnectionMetrics connectionMetrics = new ConnectionMetrics();
             Request request = new Request(capability, myNetworkLoad);
             // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
             AuthorizationToken token = authorizationService.createToken(request,
@@ -155,7 +155,7 @@ public final class ConnectionHandshake {
             long ts = System.currentTimeMillis();
 
             networkEnvelopeSocket.send(requestNetworkEnvelope);
-            metrics.onSent(requestNetworkEnvelope);
+            connectionMetrics.onSent(requestNetworkEnvelope);
 
             bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (responseProto == null) {
@@ -187,10 +187,10 @@ public final class ConnectionHandshake {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
 
-            metrics.onReceived(responseNetworkEnvelope);
-            metrics.addRtt(System.currentTimeMillis() - ts);
+            connectionMetrics.onReceived(responseNetworkEnvelope);
+            connectionMetrics.addRtt(System.currentTimeMillis() - ts);
             log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
-            return new Result(response.getCapability(), response.getNetworkLoad(), metrics);
+            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -207,7 +207,7 @@ public final class ConnectionHandshake {
     // Server side protocol
     public Result onSocket(NetworkLoad myNetworkLoad) {
         try {
-            Metrics metrics = new Metrics();
+            ConnectionMetrics connectionMetrics = new ConnectionMetrics();
             bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (requestProto == null) {
                 throw new ConnectionException("Request NetworkEnvelope protobuf is null");
@@ -242,16 +242,16 @@ public final class ConnectionHandshake {
             }
 
             log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
-            metrics.onReceived(requestNetworkEnvelope);
+            connectionMetrics.onReceived(requestNetworkEnvelope);
 
             Response response = new Response(capability, myNetworkLoad);
             AuthorizationToken token = authorizationService.createToken(response, request.getNetworkLoad(), peerAddress.getFullAddress(), 0);
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
             networkEnvelopeSocket.send(responseNetworkEnvelope);
 
-            metrics.onSent(responseNetworkEnvelope);
-            metrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(request.getCapability(), request.getNetworkLoad(), metrics);
+            connectionMetrics.onSent(responseNetworkEnvelope);
+            connectionMetrics.addRtt(System.currentTimeMillis() - ts);
+            return new Result(request.getCapability(), request.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();

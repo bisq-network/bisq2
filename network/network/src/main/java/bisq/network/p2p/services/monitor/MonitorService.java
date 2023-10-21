@@ -67,7 +67,7 @@ public class MonitorService {
     }
 
     private void appendConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
-        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getMetrics().getCreationDate());
+        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getConnectionMetrics().getCreationDate());
         String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
         String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
         String dir = isOutbound ? " --> " : " <-- ";

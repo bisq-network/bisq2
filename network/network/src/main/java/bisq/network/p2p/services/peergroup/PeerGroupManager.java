@@ -307,7 +307,7 @@ public class PeerGroupManager {
         log.debug("Node {} called maybeCloseAgedConnections", node);
         peerGroupService.getAllConnections()
                 .filter(this::mayDisconnect)
-                .filter(connection -> connection.getMetrics().getAge() > config.getMaxAge())
+                .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
                         node, connection.getPeersCapability().getAddress()))
@@ -412,7 +412,7 @@ public class PeerGroupManager {
 
     // TODO find better solution than to use a hard coded estimated value
     private boolean notBootstrapping(Connection connection) {
-        return connection.getMetrics().getAge() > config.getBootstrapTime();
+        return connection.getConnectionMetrics().getAge() > config.getBootstrapTime();
     }
 
     private int getMissingOutboundConnections() {
