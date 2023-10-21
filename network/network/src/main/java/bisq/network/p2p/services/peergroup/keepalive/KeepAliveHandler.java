@@ -69,7 +69,7 @@ class KeepAliveHandler implements Connection.Listener {
                 log.info("Node {} received Pong from {} with nonce {}. Connection={}",
                         node, connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
                 removeListeners();
-                connection.getConnectionMetrics().addRtt(ts = System.currentTimeMillis() - ts);
+                connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {
                 log.warn("Node {} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
