@@ -64,6 +64,7 @@ public class ConnectionHandshakeResponder {
         verifyPoW(requestNetworkEnvelope);
 
         Address peerAddress = request.getCapability().getAddress();
+        // TODO myLoad should be used here
         NetworkEnvelope responseEnvelope = createResponseEnvelope(Load.INITIAL_LOAD, request.getLoad(), peerAddress);
 
         return new Pair<>(request, responseEnvelope);
@@ -82,6 +83,8 @@ public class ConnectionHandshakeResponder {
     private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
         String myAddress = capability.getAddress().getFullAddress();
+        // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+        // AuthorizationToken.
         boolean isAuthorized = authorizationService.isAuthorized(
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),

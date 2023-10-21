@@ -136,6 +136,7 @@ public class PeerConnectionsManager {
 
     private void createAndStartOutboundConnectionMultiplexer(Capability serverCapability, Node node) {
         try {
+            // TODO myLoad should be used here
             OutboundConnectionManager outboundConnectionManager = new OutboundConnectionManager(
                     authorizationService,
                     banList,

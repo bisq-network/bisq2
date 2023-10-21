@@ -146,6 +146,7 @@ public final class ConnectionHandshake {
         try {
             Metrics metrics = new Metrics();
             Request request = new Request(capability, myLoad);
+            // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
             AuthorizationToken token = authorizationService.createToken(request,
                     Load.INITIAL_LOAD,
                     peerAddress.getFullAddress(),
@@ -229,6 +230,8 @@ public final class ConnectionHandshake {
             }
 
             String myAddress = capability.getAddress().getFullAddress();
+            // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+            // AuthorizationToken.
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
                     Load.INITIAL_LOAD,
