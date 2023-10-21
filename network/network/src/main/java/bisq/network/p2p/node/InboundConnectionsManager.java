@@ -21,6 +21,7 @@ import bisq.common.data.Pair;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
@@ -42,6 +43,7 @@ public class InboundConnectionsManager {
 
     private final BanList banList;
     private final Capability myCapability;
+    private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
 
     private final ServerSocketChannel serverSocketChannel;
@@ -55,12 +57,14 @@ public class InboundConnectionsManager {
 
     public InboundConnectionsManager(BanList banList,
                                      Capability myCapability,
+                                     NetworkLoad myNetworkLoad,
                                      AuthorizationService authorizationService,
                                      ServerSocketChannel serverSocketChannel,
                                      Selector selector,
                                      Node node) {
         this.banList = banList;
         this.myCapability = myCapability;
+        this.myNetworkLoad = myNetworkLoad;
         this.authorizationService = authorizationService;
         this.serverSocketChannel = serverSocketChannel;
         this.selector = selector;
@@ -171,6 +175,7 @@ public class InboundConnectionsManager {
             var handshakeResponder = new ConnectionHandshakeResponder(
                     banList,
                     myCapability,
+                    myNetworkLoad,
                     authorizationService,
                     networkEnvelopeSocketChannel
             );

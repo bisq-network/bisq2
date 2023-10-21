@@ -45,6 +45,7 @@ public class PeerConnectionsManager {
     private final Node.Config config;
     private final String nodeId;
     private final BanList banList;
+    private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
     private final TransportService transportService;
 
@@ -54,11 +55,13 @@ public class PeerConnectionsManager {
     public PeerConnectionsManager(Node.Config config,
                                   String nodeId,
                                   BanList banList,
+                                  NetworkLoad myNetworkLoad,
                                   AuthorizationService authorizationService,
                                   TransportService transportService) {
         this.config = config;
         this.nodeId = nodeId;
         this.banList = banList;
+        this.myNetworkLoad = myNetworkLoad;
         this.authorizationService = authorizationService;
         this.transportService = transportService;
     }
@@ -123,6 +126,7 @@ public class PeerConnectionsManager {
         Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
+                myNetworkLoad,
                 banList,
                 authorizationService,
                 node,
@@ -136,11 +140,10 @@ public class PeerConnectionsManager {
 
     private void createAndStartOutboundConnectionMultiplexer(Capability serverCapability, Node node) {
         try {
-            // TODO myLoad should be used here
             OutboundConnectionManager outboundConnectionManager = new OutboundConnectionManager(
                     authorizationService,
                     banList,
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
+                    myNetworkLoad,
                     serverCapability,
                     node,
                     SelectorProvider.provider().openSelector()

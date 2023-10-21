@@ -63,6 +63,7 @@ public class ConnectionHandshakeResponderTest {
         this.handshakeResponder = new ConnectionHandshakeResponder(
                 banList,
                 responderCapability,
+                new NetworkLoad(),
                 authorizationService,
                 networkEnvelopeSocketChannel);
     }

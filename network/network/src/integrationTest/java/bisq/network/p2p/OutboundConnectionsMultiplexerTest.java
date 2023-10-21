@@ -62,6 +62,7 @@ public class OutboundConnectionsMultiplexerTest {
         Capability serverCapability = new Capability(serverAddress, supportedTransportTypes);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
+                new NetworkLoad(),
                 mock(BanList.class),
                 createAuthorizationService(),
                 mock(Node.class),

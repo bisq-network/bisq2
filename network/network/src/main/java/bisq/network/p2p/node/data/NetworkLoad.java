@@ -26,8 +26,12 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class NetworkLoad implements Proto {
-    public static final NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad(1);
+    public static final NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad();
     private final int numConnections;
+
+    public NetworkLoad() {
+        this.numConnections = 1;
+    }
 
     public NetworkLoad(int numConnections) {
         this.numConnections = numConnections;

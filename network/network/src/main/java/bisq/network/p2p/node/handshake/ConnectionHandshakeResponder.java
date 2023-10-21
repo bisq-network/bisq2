@@ -38,15 +38,18 @@ public class ConnectionHandshakeResponder {
 
     private final BanList banList;
     private final Capability capability;
+    private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
 
     public ConnectionHandshakeResponder(BanList banList,
                                         Capability capability,
+                                        NetworkLoad myNetworkLoad,
                                         AuthorizationService authorizationService,
                                         NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         this.banList = banList;
         this.capability = capability;
+        this.myNetworkLoad = myNetworkLoad;
         this.authorizationService = authorizationService;
         this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
     }
@@ -64,8 +67,7 @@ public class ConnectionHandshakeResponder {
         verifyPoW(requestNetworkEnvelope);
 
         Address peerAddress = request.getCapability().getAddress();
-        // TODO myLoad should be used here
-        NetworkEnvelope responseEnvelope = createResponseEnvelope(NetworkLoad.INITIAL_NETWORK_LOAD, request.getNetworkLoad(), peerAddress);
+        NetworkEnvelope responseEnvelope = createResponseEnvelope(myNetworkLoad, request.getNetworkLoad(), peerAddress);
 
         return new Pair<>(request, responseEnvelope);
     }

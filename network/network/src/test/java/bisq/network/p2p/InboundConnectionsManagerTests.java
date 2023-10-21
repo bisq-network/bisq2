@@ -82,7 +82,11 @@ public class InboundConnectionsManagerTests {
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                mock(BanList.class), myCapability, authorizationService, serverSocketChannel,
+                mock(BanList.class),
+                myCapability,
+                new NetworkLoad(),
+                authorizationService,
+                serverSocketChannel,
                 selector,
                 mock(Node.class)
         );
@@ -167,7 +171,11 @@ public class InboundConnectionsManagerTests {
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                mock(BanList.class), myCapability, authorizationService, serverSocketChannel,
+                mock(BanList.class),
+                myCapability,
+                new NetworkLoad(),
+                authorizationService,
+                serverSocketChannel,
                 selector,
                 mock(Node.class)
         );
