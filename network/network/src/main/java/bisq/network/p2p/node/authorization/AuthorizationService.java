@@ -43,9 +43,15 @@ public class AuthorizationService {
         this.proofOfWorkService = proofOfWorkService;
     }
 
-    public AuthorizationToken createToken(NetworkMessage message, Load peersLoad, String peerAddress, int messageCounter) {
+    public AuthorizationToken createToken(NetworkMessage message,
+                                          Load peersLoad,
+                                          String peerAddress,
+                                          int messageCounter) {
         long ts = System.currentTimeMillis();
-        AuthorizationToken token = proofOfWorkService.mint(getPayload(message), getChallenge(peerAddress, messageCounter), calculateDifficulty(message, peersLoad))
+        double difficulty = calculateDifficulty(message, peersLoad);
+        byte[] challenge = getChallenge(peerAddress, messageCounter);
+        byte[] payload = getPayload(message);
+        AuthorizationToken token = proofOfWorkService.mint(payload, challenge, difficulty)
                 .thenApply(proofOfWork -> new AuthorizationToken(proofOfWork, messageCounter))
                 .join();
         log.debug("Create token for {} took {} ms\n token={}, peersLoad={}, peerAddress={}",
@@ -53,7 +59,11 @@ public class AuthorizationService {
         return token;
     }
 
-    public boolean isAuthorized(NetworkMessage message, AuthorizationToken authorizationToken, Load myLoad, String connectionId, String myAddress) {
+    public boolean isAuthorized(NetworkMessage message,
+                                AuthorizationToken authorizationToken,
+                                Load myLoad,
+                                String connectionId,
+                                String myAddress) {
         ProofOfWork proofOfWork = authorizationToken.getProofOfWork();
         int messageCounter = authorizationToken.getMessageCounter();
 
@@ -71,12 +81,6 @@ public class AuthorizationService {
         }
         receivedMessageCounters.add(messageCounter);
 
-        // Verify difficulty
-        if (calculateDifficulty(message, myLoad) != proofOfWork.getDifficulty()) {
-            log.warn("Invalid difficulty");
-            return false;
-        }
-
         // Verify payload
         if (!Arrays.equals(getPayload(message), proofOfWork.getPayload())) {
             log.warn("Invalid payload");
@@ -86,6 +90,12 @@ public class AuthorizationService {
         // Verify challenge
         if (!Arrays.equals(getChallenge(myAddress, messageCounter), proofOfWork.getChallenge())) {
             log.warn("Invalid challenge");
+            return false;
+        }
+
+        // Verify difficulty
+        if (calculateDifficulty(message, myLoad) != proofOfWork.getDifficulty()) {
+            log.warn("Invalid difficulty");
             return false;
         }
 
