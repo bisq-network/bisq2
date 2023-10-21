@@ -241,7 +241,13 @@ public class Node implements Connection.Handler {
                 return;
             }
 
-            InboundConnection connection = new InboundConnection(socket, serverSocketResult, result.getCapability(), result.getLoad(), result.getMetrics(), this, this::handleException);
+            InboundConnection connection = new InboundConnection(socket,
+                    serverSocketResult,
+                    result.getCapability(),
+                    result.getLoad(),
+                    result.getMetrics(),
+                    this,
+                    this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
             DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(connection)));
         } catch (Throwable throwable) {
@@ -382,7 +388,13 @@ public class Node implements Connection.Handler {
                 return outboundConnectionsByAddress.get(address);
             }
 
-            OutboundConnection connection = new OutboundConnection(socket, address, result.getCapability(), result.getLoad(), result.getMetrics(), this, this::handleException);
+            OutboundConnection connection = new OutboundConnection(socket,
+                    address,
+                    result.getCapability(),
+                    result.getLoad(),
+                    result.getMetrics(),
+                    this,
+                    this::handleException);
             outboundConnectionsByAddress.put(address, connection);
             DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(connection)));
             return connection;

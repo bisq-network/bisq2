@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Connection {
-    interface Handler {
+    protected interface Handler {
         void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
 
         void handleConnectionClosed(Connection connection, CloseReason closeReason);
