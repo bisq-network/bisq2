@@ -24,7 +24,7 @@ import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.beans.property.SimpleStringProperty;

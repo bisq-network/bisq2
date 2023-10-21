@@ -30,6 +30,8 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeRequest;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeResponse;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
+import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeRequest;
+import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeResponse;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationRequest;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationResponse;
 
@@ -91,6 +93,12 @@ public interface NetworkMessage extends Proto {
             }
             case DATAREQUEST: {
                 return DataRequest.fromProto(proto.getDataRequest());
+            }
+            case NETWORKLOADEXCHANGEREQUEST: {
+                return NetworkLoadExchangeRequest.fromProto(proto.getNetworkLoadExchangeRequest());
+            }
+            case NETWORKLOADEXCHANGERESPONSE: {
+                return NetworkLoadExchangeResponse.fromProto(proto.getNetworkLoadExchangeResponse());
             }
             case EXTERNALNETWORKMESSAGE: {
                 // Externally defined messages

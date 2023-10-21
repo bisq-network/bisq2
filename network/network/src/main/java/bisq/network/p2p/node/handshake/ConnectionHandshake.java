@@ -24,9 +24,9 @@ import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.ConnectionMetrics;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.EqualsAndHashCode;
@@ -111,12 +111,12 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Result {
         private final Capability capability;
-        private final NetworkLoad networkLoad;
+        private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
 
-        Result(Capability capability, NetworkLoad networkLoad, ConnectionMetrics connectionMetrics) {
+        Result(Capability capability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
             this.capability = capability;
-            this.networkLoad = networkLoad;
+            this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
         }
     }

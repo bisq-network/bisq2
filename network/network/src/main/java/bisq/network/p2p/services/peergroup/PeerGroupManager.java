@@ -25,6 +25,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
+import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
 import bisq.network.p2p.vo.Address;
 import bisq.persistence.PersistenceService;
@@ -121,6 +122,7 @@ public class PeerGroupManager {
     private final PeerGroupService peerGroupService;
     private final PeerExchangeService peerExchangeService;
     private final KeepAliveService keepAliveService;
+    private final NetworkLoadExchangeService networkLoadExchangeService;
     private final AddressValidationService addressValidationService;
     private Optional<Scheduler> scheduler = Optional.empty();
 
@@ -144,6 +146,7 @@ public class PeerGroupManager {
                 config.getPeerExchangeConfig());
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
         keepAliveService = new KeepAliveService(node, peerGroupService, config.getKeepAliveServiceConfig());
+        networkLoadExchangeService = new NetworkLoadExchangeService(node, peerGroupService);
         addressValidationService = new AddressValidationService(node, banList);
 
         retryPolicy = RetryPolicy.<Boolean>builder()
@@ -178,6 +181,7 @@ public class PeerGroupManager {
                         .periodically(config.getInterval())
                         .name("PeerGroupService.scheduler-" + nodeInfo));
                 keepAliveService.initialize();
+                networkLoadExchangeService.initialize();
                 setState(State.RUNNING);
                 break;
             case STARTING:
@@ -194,6 +198,7 @@ public class PeerGroupManager {
         peerExchangeService.shutdown();
         addressValidationService.shutdown();
         keepAliveService.shutdown();
+        networkLoadExchangeService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
         setState(State.TERMINATED);
         return CompletableFuture.completedFuture(true);
@@ -240,7 +245,6 @@ public class PeerGroupManager {
             e.printStackTrace();
         }
     }
-
 
     private void closeBanned() {
         log.debug("Node {} called closeBanned", node);

@@ -97,6 +97,16 @@ message Pong {
   sint32 requestNonce = 1;
 }
 
+message NetworkLoadExchangeRequest {
+  sint32 nonce = 1;
+  NetworkLoad networkLoad = 2;
+}
+
+message NetworkLoadExchangeResponse {
+  sint32 requestNonce = 1;
+  NetworkLoad networkLoad = 2;
+}
+
 message ConfidentialMessage {
   security.ConfidentialData confidentialData = 1;
   string receiverKeyId = 2;
@@ -149,8 +159,11 @@ message NetworkMessage {
 
     DataRequest dataRequest = 14;
 
+    NetworkLoadExchangeRequest networkLoadExchangeRequest = 15;
+    NetworkLoadExchangeResponse networkLoadExchangeResponse = 16;
+
     // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
-    ExternalNetworkMessage externalNetworkMessage = 15;
+    ExternalNetworkMessage externalNetworkMessage = 17;
   }
 }
 

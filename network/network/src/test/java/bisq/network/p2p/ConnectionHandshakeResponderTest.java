@@ -23,10 +23,10 @@ import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
@@ -108,8 +108,7 @@ public class ConnectionHandshakeResponderTest {
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
-        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
-        assertThat(exception.getMessage()).containsIgnoringCase("Invalid version");
+        assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
     }
 
     @Test

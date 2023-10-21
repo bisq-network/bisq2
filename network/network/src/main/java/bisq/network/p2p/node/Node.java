@@ -27,8 +27,8 @@ import bisq.network.common.TransportConfig;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.node.transport.TransportType;
@@ -144,6 +144,8 @@ public class Node implements Connection.Handler {
     public final AtomicReference<State> state = new AtomicReference<>(State.NEW);
     @Getter
     public final Observable<State> observableState = new Observable<>(State.NEW);
+    @Getter
+    public final NetworkLoadService networkLoadService = new NetworkLoadService();
 
     public Node(BanList banList, Config config, String nodeId, TransportService transportService) {
         this.banList = banList;
@@ -225,7 +227,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
-            ConnectionHandshake.Result result = connectionHandshake.onSocket(getMyLoad()); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadService.getCurrentNetworkLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
 
             Address address = result.getCapability().getAddress();
@@ -244,7 +246,7 @@ public class Node implements Connection.Handler {
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
                     result.getCapability(),
-                    result.getNetworkLoad(),
+                    new NetworkLoadService(result.getPeersNetworkLoad()),
                     result.getConnectionMetrics(),
                     this,
                     this::handleException);
@@ -292,7 +294,7 @@ public class Node implements Connection.Handler {
         }
         try {
             AuthorizationToken token = authorizationService.createToken(networkMessage,
-                    connection.getPeersNetworkLoad(),
+                    connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
                     connection.getSentMessageCounter().incrementAndGet());
             return connection.send(networkMessage, token);
@@ -367,7 +369,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
-            ConnectionHandshake.Result result = connectionHandshake.start(getMyLoad(), address); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadService.getCurrentNetworkLoad(), address); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
             log.debug("Create new outbound connection to {}", address);
@@ -391,7 +393,7 @@ public class Node implements Connection.Handler {
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
                     result.getCapability(),
-                    result.getNetworkLoad(),
+                    new NetworkLoadService(result.getPeersNetworkLoad()),
                     result.getConnectionMetrics(),
                     this,
                     this::handleException);
@@ -428,7 +430,8 @@ public class Node implements Connection.Handler {
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
                 authorizationToken,
-                getMyLoad(),
+                networkLoadService.getCurrentNetworkLoad(),
+                networkLoadService.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
@@ -454,7 +457,8 @@ public class Node implements Connection.Handler {
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
                 authorizationToken,
-                getMyLoad(),
+                networkLoadService.getCurrentNetworkLoad(),
+                networkLoadService.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
@@ -612,10 +616,6 @@ public class Node implements Connection.Handler {
         } else {
             log.error(exception.toString(), exception);
         }
-    }
-
-    private NetworkLoad getMyLoad() {
-        return new NetworkLoad(getNumConnections());
     }
 
     private void setState(State newState) {

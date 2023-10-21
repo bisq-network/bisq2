@@ -19,13 +19,14 @@ package bisq.network.p2p.node.authorization;
 
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,24 +45,33 @@ public class AuthorizationService {
     }
 
     public AuthorizationToken createToken(NetworkMessage message,
-                                          NetworkLoad peersNetworkLoad,
+                                          NetworkLoad networkLoad,
                                           String peerAddress,
                                           int messageCounter) {
         long ts = System.currentTimeMillis();
-        double difficulty = calculateDifficulty(message, peersNetworkLoad);
+        double difficulty = calculateDifficulty(message, networkLoad);
         byte[] challenge = getChallenge(peerAddress, messageCounter);
         byte[] payload = getPayload(message);
         AuthorizationToken token = proofOfWorkService.mint(payload, challenge, difficulty)
                 .thenApply(proofOfWork -> new AuthorizationToken(proofOfWork, messageCounter))
                 .join();
         log.debug("Create token for {} took {} ms\n token={}, peersLoad={}, peerAddress={}",
-                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, peersNetworkLoad, peerAddress);
+                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, networkLoad, peerAddress);
         return token;
     }
 
     public boolean isAuthorized(NetworkMessage message,
                                 AuthorizationToken authorizationToken,
-                                NetworkLoad myNetworkLoad,
+                                NetworkLoad currentNetworkLoad,
+                                String connectionId,
+                                String myAddress) {
+        return isAuthorized(message, authorizationToken, currentNetworkLoad, null, connectionId, myAddress);
+    }
+
+    public boolean isAuthorized(NetworkMessage message,
+                                AuthorizationToken authorizationToken,
+                                NetworkLoad currentNetworkLoad,
+                                @Nullable NetworkLoad previousNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
         ProofOfWork proofOfWork = authorizationToken.getProofOfWork();
@@ -94,13 +104,19 @@ public class AuthorizationService {
         }
 
         // Verify difficulty
-        if (calculateDifficulty(message, myNetworkLoad) != proofOfWork.getDifficulty()) {
-            log.warn("Invalid difficulty");
-            return false;
+        if (calculateDifficulty(message, currentNetworkLoad) != proofOfWork.getDifficulty()) {
+            if (previousNetworkLoad == null) {
+                log.warn("Invalid difficulty using currentNetworkLoad. No previousNetworkLoad is provided.");
+                return false;
+            } else {
+                log.info("Invalid difficulty using currentNetworkLoad. " +
+                        "This can happen if the peer did not had the most recent networkLoad. We try again with the previous state.");
+                if (calculateDifficulty(message, previousNetworkLoad) != proofOfWork.getDifficulty()) {
+                    log.warn("Invalid difficulty using previousNetworkLoad");
+                    return false;
+                }
+            }
         }
-
-        log.debug("Verify token for {}. token={}, myLoad={}, myAddress={}",
-                message.getClass().getSimpleName(), authorizationToken, myNetworkLoad, myAddress);
         return proofOfWorkService.verify(proofOfWork);
     }
 

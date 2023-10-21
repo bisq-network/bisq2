@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.keepalive;
+package bisq.network.p2p.services.peergroup.network_load;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
@@ -23,9 +23,8 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -33,64 +32,48 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
+/**
+ * Sends a request for NetworkLoad to our peers. We add our own NetworkLoad in the request.
+ * We do not user a config here as we want to have the same behaviour in the network to avoid stale networkLoad states.
+ */
 @Slf4j
-public class KeepAliveService implements Node.Listener {
+public class NetworkLoadExchangeService implements Node.Listener {
     private static final long TIMEOUT_SEC = 120;
-
-    @Getter
-    @ToString
-    public static final class Config {
-        private final long maxIdleTime;
-        private final long interval;
-
-        public Config(long maxIdleTime, long interval) {
-            this.maxIdleTime = maxIdleTime;
-            this.interval = interval;
-        }
-
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
-            return new Config(
-                    SECONDS.toMillis(typesafeConfig.getLong("maxIdleTimeInSeconds")),
-                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds"))
-            );
-        }
-    }
+    private static final long INITIAL_DELAY = TimeUnit.MINUTES.toSeconds(1);
+    private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
+    private static final long MAX_IDLE = TimeUnit.MINUTES.toMillis(5);
 
     private final Node node;
     private final PeerGroupService peerGroupService;
-    private final Config config;
-    private final Map<String, KeepAliveHandler> requestHandlerMap = new ConcurrentHashMap<>();
+    private final Map<String, NetworkLoadExchangeHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> scheduler = Optional.empty();
 
-    public KeepAliveService(Node node, PeerGroupService peerGroupService, Config config) {
+    public NetworkLoadExchangeService(Node node, PeerGroupService peerGroupService) {
         this.node = node;
         this.peerGroupService = peerGroupService;
-        this.config = config;
         this.node.addListener(this);
     }
 
     public void initialize() {
-        scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
-                .periodically(config.getInterval())
-                .name("KeepAliveService.scheduler-" + node.getNodeInfo()));
+        scheduler = Optional.of(Scheduler.run(this::requestFromAll)
+                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
+                .name("NetworkLoadExchangeService.scheduler-" + node.getNodeInfo()));
     }
 
-    private void sendPingIfRequired() {
+    private void requestFromAll() {
         peerGroupService.getAllConnections()
-                .filter(this::isRequired)
-                .forEach(this::sendPing);
+                .filter(this::needsUpdate)
+                .forEach(this::request);
     }
 
-    public void sendPing(Connection connection) {
+    public void request(Connection connection) {
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
             log.warn("requestHandlerMap contains already {}. " +
                     "We dispose the existing handler and start a new one. Connection={}", connection.getPeerAddress(), connection);
             requestHandlerMap.get(key).dispose();
         }
-        KeepAliveHandler handler = new KeepAliveHandler(node, connection);
+        NetworkLoadExchangeHandler handler = new NetworkLoadExchangeHandler(node, connection);
         requestHandlerMap.put(key, handler);
         handler.request()
                 .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -99,17 +82,24 @@ public class KeepAliveService implements Node.Listener {
 
     public void shutdown() {
         scheduler.ifPresent(Scheduler::stop);
-        requestHandlerMap.values().forEach(KeepAliveHandler::dispose);
+        requestHandlerMap.values().forEach(NetworkLoadExchangeHandler::dispose);
         requestHandlerMap.clear();
     }
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof Ping) {
-            Ping ping = (Ping) networkMessage;
-            log.debug("Node {} received Ping with nonce {} from {}", node, ping.getNonce(), connection.getPeerAddress());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.getNonce()), connection));
-            log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());
+        if (networkMessage instanceof NetworkLoadExchangeRequest) {
+            NetworkLoadExchangeRequest networkLoadExchangeRequest = (NetworkLoadExchangeRequest) networkMessage;
+            NetworkLoad peersNetworkLoad = networkLoadExchangeRequest.getNetworkLoad();
+            log.info("Node {} received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
+                    node, networkLoadExchangeRequest.getNonce(), peersNetworkLoad, connection.getPeerAddress());
+            connection.getPeersNetworkLoadService().update(peersNetworkLoad);
+            NetworkLoadExchangeResponse networkLoadExchangeResponse = new NetworkLoadExchangeResponse(networkLoadExchangeRequest.getNonce(),
+                    node.getNetworkLoadService().getCurrentNetworkLoad());
+            NetworkService.NETWORK_IO_POOL.submit(() ->
+                    node.send(networkLoadExchangeResponse, connection));
+            log.info("Node {} sent NetworkLoadResponse with nonce {} to {}. Connection={}",
+                    node, networkLoadExchangeRequest.getNonce(), connection.getPeerAddress(), connection.getId());
         }
     }
 
@@ -126,7 +116,7 @@ public class KeepAliveService implements Node.Listener {
         }
     }
 
-    private boolean isRequired(Connection connection) {
-        return System.currentTimeMillis() - connection.getConnectionMetrics().getLastUpdate().get() > config.getMaxIdleTime();
+    private boolean needsUpdate(Connection connection) {
+        return System.currentTimeMillis() - connection.getPeersNetworkLoadService().getLastUpdated() > MAX_IDLE;
     }
 }

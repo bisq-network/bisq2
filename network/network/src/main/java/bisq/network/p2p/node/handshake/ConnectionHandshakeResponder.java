@@ -24,8 +24,8 @@ import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +63,6 @@ public class ConnectionHandshakeResponder {
 
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
         verifyPeerIsNotBanned(request);
-
         verifyPoW(requestNetworkEnvelope);
 
         Address peerAddress = request.getCapability().getAddress();

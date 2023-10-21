@@ -45,8 +45,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 @Getter
 public class PeerExchangeService implements Node.Listener {
-    private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
-
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
@@ -204,7 +202,7 @@ public class PeerExchangeService implements Node.Listener {
                     requestHandlerMap.remove(connectionId);
                 }
             }
-            log.info("Node {} failed to do a peer exchange with {}.",
+            log.debug("Node {} failed to do a peer exchange with {}.",
                     node, peerAddress, throwable);
             return false;
         }
