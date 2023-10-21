@@ -17,12 +17,17 @@
 
 package bisq.network.p2p.node.network_load;
 
+import bisq.common.util.ByteUnit;
+import bisq.network.p2p.services.data.inventory.Inventory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -33,18 +38,92 @@ public final class NetworkLoadService {
     private long lastUpdated = 0;
 
     public NetworkLoadService() {
-        currentNetworkLoad = NetworkLoad.INITIAL_NETWORK_LOAD;
+        currentNetworkLoad = new NetworkLoad();
     }
 
     public NetworkLoadService(NetworkLoad networkLoad) {
         currentNetworkLoad = networkLoad;
     }
 
-    public void update(NetworkLoad networkLoad) {
+    public void updatePeersNetworkLoad(NetworkLoad networkLoad) {
         synchronized (this) {
             lastUpdated = System.currentTimeMillis();
             previousNetworkLoad = currentNetworkLoad;
             currentNetworkLoad = networkLoad;
         }
+    }
+
+    public void updateMyLoad(List<ConnectionMetrics> allConnectionMetrics, Inventory inventory) {
+        double load = calculateLoad(allConnectionMetrics, inventory);
+        NetworkLoad networkLoad = new NetworkLoad(load);
+        synchronized (this) {
+            lastUpdated = System.currentTimeMillis();
+            previousNetworkLoad = currentNetworkLoad;
+            currentNetworkLoad = networkLoad;
+        }
+    }
+
+    private double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, Inventory inventory) {
+        long numConnections = allConnectionMetrics.size();
+        long sentBytesOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getSentBytesOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long numMessagesSentOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumMessagesSentOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long receivedBytesOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getReceivedBytesOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long numMessagesReceivedOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long networkDatabaseSize = inventory.getEntries().stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
+
+        double MAX_NUM_CON = 30;
+        double NUM_CON_WEIGHT = 0.1;
+        double numConnectionsImpact = numConnections / MAX_NUM_CON * NUM_CON_WEIGHT;
+
+        double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20);
+        double SENT_BYTES_WEIGHT = 0.2;
+        double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
+
+        double MAX_NUM_MSG_SENT = 2000;
+        double NUM_MSG_SENT_WEIGHT = 0.1;
+        double numMessagesSentImpact = numMessagesSentOfLastHour / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
+
+        double MAX_REC_BYTES = ByteUnit.MB.toBytes(20);
+        double REC_BYTES_WEIGHT = 0.2;
+        double receivedBytesImpact = receivedBytesOfLastHour / MAX_REC_BYTES * REC_BYTES_WEIGHT;
+
+        double MAX_NUM_MSG_REC = 1000;
+        double NUM_MSG_REC_WEIGHT = 0.1;
+        double numMessagesReceivedImpact = numMessagesReceivedOfLastHour / MAX_NUM_MSG_REC * NUM_MSG_REC_WEIGHT;
+
+        double MAX_DB_SIZE = ByteUnit.MB.toBytes(100);
+        double DB_WEIGHT = 0.3;
+        double networkDatabaseSizeImpact = networkDatabaseSize / MAX_DB_SIZE * DB_WEIGHT;
+
+        double sum = numConnectionsImpact +
+                sentBytesImpact +
+                numMessagesSentImpact +
+                receivedBytesImpact +
+                numMessagesReceivedImpact +
+                networkDatabaseSizeImpact;
+        StringBuilder sb = new StringBuilder("\n##############################################\n");
+        sb.append("numConnectionsImpact=" + numConnectionsImpact);
+        sb.append("; sentBytesImpact=" + sentBytesImpact);
+        sb.append("; numMessagesSentImpact=" + numMessagesSentImpact);
+        sb.append("; receivedBytesImpact=" + receivedBytesImpact);
+        sb.append("; numMessagesReceivedImpact=" + numMessagesReceivedImpact);
+        sb.append("; networkDatabaseSizeImpact=" + networkDatabaseSizeImpact);
+        sb.append("; sum=" + sum);
+        sb.append("\n##############################################\n");
+        log.debug(sb.toString());
+
+        return sum;
     }
 }

@@ -19,6 +19,7 @@ package bisq.network.p2p.services.peergroup.exchange;
 
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
@@ -64,7 +65,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             Node seed = new Node(banList,
                     nodeConfig,
                     "seed_" + i,
-                    transportService);
+                    transportService, new NetworkLoadService());
             seeds.add(seed);
             seed.initialize(port);
             initSeedsLatch.countDown();
@@ -89,7 +90,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             Node node = new Node(banList,
                     nodeConfig,
                     "node_" + i,
-                    transportService);
+                    transportService, new NetworkLoadService());
             nodes.add(node);
             node.initialize(port);
             initNodesLatch.countDown();

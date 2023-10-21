@@ -82,9 +82,9 @@ public class ProtoBufMessageLengthTests {
 
     private bisq.network.protobuf.NetworkEnvelope createValidRequest() {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 Address.localHost(1234).getFullAddress(),
                 0);
         return new NetworkEnvelope(token, request).toProto();

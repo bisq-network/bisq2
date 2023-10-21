@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
@@ -53,18 +54,28 @@ public class NodesById implements Node.Listener {
     private final BanList banList;
     private final Node.Config nodeConfig;
     private final TransportService transportService;
+    private final NetworkLoadService networkLoadService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<Node.Listener> nodeListeners = new CopyOnWriteArraySet<>();
 
-    public NodesById(BanList banList, Node.Config nodeConfig, TransportService transportService) {
+    public NodesById(BanList banList, Node.Config nodeConfig, TransportService transportService, NetworkLoadService networkLoadService) {
         this.banList = banList;
         this.nodeConfig = nodeConfig;
         this.transportService = transportService;
+        this.networkLoadService = networkLoadService;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Node createAndConfigNode(String nodeId) {
+        Node node = new Node(banList, nodeConfig, nodeId, transportService, networkLoadService);
+        map.put(nodeId, node);
+        node.addListener(this);
+        listeners.forEach(listener -> listener.onNodeAdded(node));
+        return node;
+    }
 
     public Node getInitializedNode(String nodeId, int serverPort) {
         Node node = getOrCreateNode(nodeId);
@@ -94,10 +105,6 @@ public class NodesById implements Node.Listener {
                     nodeListeners.clear();
                     return throwable == null && list.stream().allMatch(e -> e);
                 });
-    }
-
-    public Node getOrCreateDefaultNode() {
-        return getOrCreateNode(Node.DEFAULT);
     }
 
     public boolean isNodeInitialized(String nodeId) {
@@ -181,12 +188,6 @@ public class NodesById implements Node.Listener {
 
     private Node getOrCreateNode(String nodeId) {
         return findNode(nodeId)
-                .orElseGet(() -> {
-                    Node node = new Node(banList, nodeConfig, nodeId, transportService);
-                    map.put(nodeId, node);
-                    node.addListener(this);
-                    listeners.forEach(listener -> listener.onNodeAdded(node));
-                    return node;
-                });
+                .orElseGet(() -> createAndConfigNode(nodeId));
     }
 }

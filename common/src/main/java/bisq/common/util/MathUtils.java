@@ -87,4 +87,16 @@ public class MathUtils {
     public static long doubleToLong(double value) {
         return Double.valueOf(value).longValue();
     }
+
+    public static double bounded(double lowerBound, double upperBound, double value) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
+    }
+
+    public static int bounded(int lowerBound, int upperBound, int value) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
+    }
+
+    public static long bounded(long lowerBound, long upperBound, long value) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
+    }
 }

@@ -26,27 +26,25 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class NetworkLoad implements Proto {
-    public static final NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad();
-    private final int numConnections;
+    public final static NetworkLoad INITIAL_LOAD = new NetworkLoad();
+
+    private final double value;
 
     public NetworkLoad() {
-        this.numConnections = 1;
+        this(0.01);
     }
 
-    public NetworkLoad(int numConnections) {
-        this.numConnections = numConnections;
+    public NetworkLoad(double value) {
+        this.value = Math.min(1, value);
     }
 
     public bisq.network.protobuf.NetworkLoad toProto() {
-        return bisq.network.protobuf.NetworkLoad.newBuilder().setNumConnections(numConnections).build();
+        return bisq.network.protobuf.NetworkLoad.newBuilder()
+                .setValue(value)
+                .build();
     }
 
     public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
-        return new NetworkLoad(proto.getNumConnections());
-    }
-
-    public int getFactor() {
-        //todo
-        return 10;
+        return new NetworkLoad(proto.getValue());
     }
 }

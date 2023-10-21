@@ -27,6 +27,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
@@ -64,7 +65,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
- *
  */
 // TODO: if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
@@ -87,7 +87,8 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
-                                   ProofOfWorkService proofOfWorkService) {
+                                   ProofOfWorkService proofOfWorkService,
+                                   NetworkLoadService networkLoadService) {
         this.supportedTransportTypes = supportedTransportTypes;
         this.keyPairService = keyPairService;
 
@@ -115,7 +116,8 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                     keyPairService,
                     persistenceService,
                     seedAddresses,
-                    transportType);
+                    transportType,
+                    networkLoadService);
             map.put(transportType, serviceNode);
         });
 

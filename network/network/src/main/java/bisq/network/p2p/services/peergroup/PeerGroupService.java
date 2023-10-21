@@ -141,7 +141,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public Stream<Connection> getAllConnections() {
-        return Stream.concat(getOutboundConnections(), getInboundConnections());
+        return node.getAllConnections().filter(Connection::isRunning);
     }
 
     public int getNumConnections() {

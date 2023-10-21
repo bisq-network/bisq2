@@ -84,12 +84,12 @@ public class ConnectionHandshakeResponder {
     private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
         String myAddress = capability.getAddress().getFullAddress();
-        // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+        // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
         // AuthorizationToken.
         boolean isAuthorized = authorizationService.isAuthorized(
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                NetworkLoad.INITIAL_LOAD,
                 StringUtils.createUid(),
                 myAddress
         );

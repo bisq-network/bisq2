@@ -185,13 +185,13 @@ public class NetworkEnvelopeSocketChannelTests {
         supportedTransportTypes.add(TransportType.CLEAR);
 
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, new NetworkLoad());
         AuthorizationService authorizationService = createAuthorizationService();
 
         Capability responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes);
 
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
                 0);
         return new NetworkEnvelope(token, request);

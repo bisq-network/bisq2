@@ -53,9 +53,9 @@ public class ConnectionHandshakeInitiator {
 
     public NetworkEnvelope initiate() {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, myNetworkLoad);
-        // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
+        // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                NetworkLoad.INITIAL_LOAD,
                 peerAddress.getFullAddress(),
                 0);
         return new NetworkEnvelope(token, request);

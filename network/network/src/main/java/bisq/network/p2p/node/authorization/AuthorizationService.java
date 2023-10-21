@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.util.ByteArrayUtils;
+import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.DigestUtil;
@@ -36,6 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class AuthorizationService {
+    public final static int MAX_DIFFICULTY = 262_144;  // Math.pow(2, 18) = 262144;
+    public final static int DIFFICULTY_TOLERANCE = 50_000;
+
     private final ProofOfWorkService proofOfWorkService;
     // Keep track of message counter per connection to avoid reuse of pow
     private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
@@ -104,20 +108,32 @@ public class AuthorizationService {
         }
 
         // Verify difficulty
-        if (calculateDifficulty(message, currentNetworkLoad) != proofOfWork.getDifficulty()) {
+        double difficulty = calculateDifficulty(message, currentNetworkLoad);
+        if (isInvalidDifficulty(difficulty, proofOfWork)) {
             if (previousNetworkLoad == null) {
                 log.warn("Invalid difficulty using currentNetworkLoad. No previousNetworkLoad is provided.");
                 return false;
             } else {
                 log.info("Invalid difficulty using currentNetworkLoad. " +
                         "This can happen if the peer did not had the most recent networkLoad. We try again with the previous state.");
-                if (calculateDifficulty(message, previousNetworkLoad) != proofOfWork.getDifficulty()) {
+                difficulty = calculateDifficulty(message, previousNetworkLoad);
+                if (isInvalidDifficulty(difficulty, proofOfWork)) {
                     log.warn("Invalid difficulty using previousNetworkLoad");
                     return false;
                 }
             }
         }
         return proofOfWorkService.verify(proofOfWork);
+    }
+
+    private static boolean isInvalidDifficulty(double difficulty, ProofOfWork proofOfWork) {
+        double difference = Math.abs(difficulty - proofOfWork.getDifficulty());
+        if (difference > 0) {
+            log.warn("Calculated difficulty does not match difficulty from the proofOfWork object. " +
+                            "difference={}, proofOfWork.getDifficulty()={}",
+                    difference, proofOfWork.getDifficulty());
+        }
+        return difference > DIFFICULTY_TOLERANCE;
     }
 
     private byte[] getPayload(NetworkMessage message) {
@@ -130,10 +146,10 @@ public class AuthorizationService {
     }
 
     private double calculateDifficulty(NetworkMessage message, NetworkLoad networkLoad) {
-        //todo impl formula and add costs to messages
-        int cost = message.getCost();
-        int loadFactor = networkLoad.getFactor();
-        return cost * loadFactor;
-        // return 1048576; // = Math.pow(2, 20) = 1048576; -> high value which takes several seconds
+        double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
+        double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
+        return MAX_DIFFICULTY * messageCostFactor * loadValue;
+        // MAX_DIFFICULTY = Math.pow(2, 18) = 262144; takes on an old laptop about 70 - 2000ms, average about 1 sec
+        // Math.pow(2, 19) = 524288 -> 1-5 sec
     }
 }

@@ -145,15 +145,16 @@ public class Node implements Connection.Handler {
     @Getter
     public final Observable<State> observableState = new Observable<>(State.NEW);
     @Getter
-    public final NetworkLoadService networkLoadService = new NetworkLoadService();
+    public final NetworkLoadService networkLoadService;
 
-    public Node(BanList banList, Config config, String nodeId, TransportService transportService) {
+    public Node(BanList banList, Config config, String nodeId, TransportService transportService, NetworkLoadService networkLoadService) {
         this.banList = banList;
         this.transportService = transportService;
         transportType = config.getTransportType();
         authorizationService = config.getAuthorizationService();
         this.config = config;
         this.nodeId = nodeId;
+        this.networkLoadService = networkLoadService;
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)

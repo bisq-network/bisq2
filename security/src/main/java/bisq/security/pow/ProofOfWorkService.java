@@ -28,7 +28,6 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ProofOfWorkService {
     public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
 
-
     public ProofOfWorkService() {
     }
 

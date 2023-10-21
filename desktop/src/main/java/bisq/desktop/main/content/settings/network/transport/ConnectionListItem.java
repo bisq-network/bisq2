@@ -101,14 +101,14 @@ public class ConnectionListItem implements TableItem {
 
     private void updateSent() {
         sent.set(Res.get("settings.network.connections.value.ioData",
-                StringUtils.fromBytes(connectionMetrics.getSentBytes().get()),
-                connectionMetrics.getNumMessagesSent().get()));
+                StringUtils.fromBytes(connectionMetrics.getSentBytes()),
+                connectionMetrics.getNumMessagesSent()));
     }
 
     private void updateReceived() {
         received.set(Res.get("settings.network.connections.value.ioData",
-                StringUtils.fromBytes(connectionMetrics.getReceivedBytes().get()),
-                connectionMetrics.getNumMessagesReceived().get()));
+                StringUtils.fromBytes(connectionMetrics.getReceivedBytes()),
+                connectionMetrics.getNumMessagesReceived()));
     }
 
     public int compareDate(ConnectionListItem other) {

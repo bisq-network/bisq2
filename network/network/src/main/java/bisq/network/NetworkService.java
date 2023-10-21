@@ -30,6 +30,7 @@ import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
@@ -44,6 +45,7 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.p2p.vo.Address;
 import bisq.network.p2p.vo.AddressByTransportTypeMap;
 import bisq.network.p2p.vo.NetworkId;
@@ -109,6 +111,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     @Getter
     private final Optional<DataService> dataService;
+    private final Optional<MonitorService> monitorService;
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
@@ -118,15 +121,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
         Set<ServiceNode.Service> services = config.getServiceNodeConfig().getServices();
 
-        // DataService is a global service that's why we create it here and pass it to lower level services
         dataService = services.contains(ServiceNode.Service.DATA) ?
                 Optional.of(new DataService(new StorageService(persistenceService))) :
                 Optional.empty();
 
-        // MessageDeliveryStatusService is a global service that's why we create it here and pass it to lower level services
         messageDeliveryStatusService = services.contains(ServiceNode.Service.ACK) && services.contains(ServiceNode.Service.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
+
+        NetworkLoadService networkLoadService = new NetworkLoadService();
 
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
@@ -139,7 +142,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 messageDeliveryStatusService,
                 keyPairService,
                 persistenceService,
-                proofOfWorkService);
+                proofOfWorkService,
+                networkLoadService);
+
+        monitorService = services.contains(ServiceNode.Service.DATA) &&
+                services.contains(ServiceNode.Service.PEER_GROUP) &&
+                services.contains(ServiceNode.Service.MONITOR) ?
+                Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadService)) :
+                Optional.empty();
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 NetworkService.NETWORK_DB_PATH,
@@ -166,6 +176,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                        monitorService.ifPresent(MonitorService::initialize);
                     } else {
                         log.error("Initialize serviceNodesByTransport failed", throwable);
                     }
@@ -175,6 +186,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
+        monitorService.ifPresent(MonitorService::shutdown);
         return CompletableFutureUtils.allOf(
                         dataService.map(DataService::shutdown).orElse(completedFuture(true)),
                         serviceNodesByTransport.shutdown())

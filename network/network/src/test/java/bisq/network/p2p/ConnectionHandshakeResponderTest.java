@@ -99,9 +99,9 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void wrongEnvelopeVersion() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 Address.localHost(1234).toString(),
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION + 1000, token, request);
@@ -113,10 +113,10 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void wrongNetworkMessage() throws IOException {
-        ConnectionHandshake.Response response = new ConnectionHandshake.Response(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Response response = new ConnectionHandshake.Response(responderCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(
                 response,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 Address.localHost(1234).toString(),
                 0);
         NetworkEnvelope responseEnvelope = new NetworkEnvelope(token, response);
@@ -132,9 +132,9 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void bannedPeer() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 Address.localHost(1234).toString(),
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
@@ -152,9 +152,9 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void invalidPoW() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 Address.localHost(1234).toString(),
                 5);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
@@ -171,9 +171,9 @@ public class ConnectionHandshakeResponderTest {
     @Test
     void correctPoW() throws IOException {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
@@ -184,14 +184,14 @@ public class ConnectionHandshakeResponderTest {
 
         ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getNetworkMessage();
         assertThat(response.getCapability()).isEqualTo(responderCapability);
-        assertThat(response.getNetworkLoad()).isEqualTo(NetworkLoad.INITIAL_NETWORK_LOAD);
+        assertThat(response.getNetworkLoad()).isEqualTo(new NetworkLoad());
     }
 
     private NetworkEnvelope createValidRequest() {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
                 0);
         return new NetworkEnvelope(token, request);

@@ -89,7 +89,7 @@ public class OutboundConnectionsMultiplexerTest {
                 var outboundConnectionManager = new OutboundConnectionManager(
                         authorizationService,
                         mock(BanList.class),
-                        NetworkLoad.INITIAL_NETWORK_LOAD,
+                        new NetworkLoad(),
                         outboundCapability,
                         mock(Node.class),
                         selector

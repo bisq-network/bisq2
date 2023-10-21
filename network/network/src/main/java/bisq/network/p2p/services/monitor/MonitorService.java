@@ -17,31 +17,73 @@
 
 package bisq.network.p2p.services.monitor;
 
+import bisq.common.timer.Scheduler;
+import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.Peer;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.network.p2p.vo.Address;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.inventory.Inventory;
 
-import java.text.SimpleDateFormat;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MonitorService {
-    private final Node node;
-    private final PeerGroupService peerGroupService;
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(1);
+    private static final long INTERVAL = TimeUnit.SECONDS.toSeconds(3);
 
-    public MonitorService(Node node, PeerGroupService peerGroupService) {
-        this.node = node;
-        this.peerGroupService = peerGroupService;
+    private final ServiceNodesByTransport serviceNodesByTransport;
+    private final DataService dataService;
+    private final NetworkLoadService networkLoadService;
+    private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
+
+    public MonitorService(ServiceNodesByTransport serviceNodesByTransport,
+                          DataService dataService,
+                          NetworkLoadService networkLoadService) {
+        this.serviceNodesByTransport = serviceNodesByTransport;
+        this.dataService = dataService;
+        this.networkLoadService = networkLoadService;
+    }
+
+    public void initialize() {
+        updateNetworkLoadScheduler = Optional.of(Scheduler.run(this::updateNetworkLoad)
+                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
+                .name("NetworkLoadExchangeService.updateNetworkLoadScheduler"));
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        updateNetworkLoadScheduler.ifPresent(Scheduler::stop);
         return CompletableFuture.completedFuture(true);
     }
 
-    public String getPeerGroupInfo() {
+    private void updateNetworkLoad() {
+        List<ConnectionMetrics> allConnectionMetrics = getAllConnections()
+                .map(Connection::getConnectionMetrics)
+                .collect(Collectors.toList());
+
+        // Provide an empty filter so that we get all persisted network data
+        DataFilter emptyFilter = new DataFilter(new ArrayList<>());
+        Inventory inventory = dataService.getStorageService().getInventoryOfAllStores(emptyFilter);
+
+        networkLoadService.updateMyLoad(allConnectionMetrics, inventory);
+    }
+
+    // All connections of all nodes on all transports
+    public Stream<Connection> getAllConnections() {
+        return serviceNodesByTransport.getMap().values().stream()
+                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
+                .flatMap(Node::getAllConnections);
+    }
+
+
+ /*   public String getPeerGroupInfo() {
         int numSeedConnections = (int) peerGroupService.getAllConnections()
                 .filter(connection -> peerGroupService.isSeed(connection.getPeerAddress())).count();
         StringBuilder sb = new StringBuilder();
@@ -64,13 +106,13 @@ public class MonitorService {
         sb.append("\n").append("Persisted peers: ").append(peerGroupService.getPersistedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         return sb.append("\n").toString();
-    }
+    }*/
 
-    private void appendConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
+  /*  private void appendConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
         String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getConnectionMetrics().getCreationDate());
         String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
         String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
         String dir = isOutbound ? " --> " : " <-- ";
         sb.append(node).append(dir).append(peerAddress).append(date).append("\n");
-    }
+    }*/
 }
