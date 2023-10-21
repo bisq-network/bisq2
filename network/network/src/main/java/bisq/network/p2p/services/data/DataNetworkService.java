@@ -27,7 +27,7 @@ import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.inventory.InventoryService;
-import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,15 +41,15 @@ import java.util.function.Function;
  * Responsible for broadcast and inventory service. One instance per transport type.
  */
 @Slf4j
-public class DataNetworkService implements PeerGroupService.Listener, Node.Listener {
+public class DataNetworkService implements PeerGroupManager.Listener, Node.Listener {
 
-    private final PeerGroup peerGroup;
     private final PeerGroupService peerGroupService;
+    private final PeerGroupManager peerGroupManager;
 
     public interface Listener {
         void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId);
 
-        void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService);
+        void onStateChanged(PeerGroupManager.State state, DataNetworkService dataNetworkService);
 
         void onSufficientlyConnected(int numConnections, DataNetworkService dataNetworkService);
     }
@@ -60,20 +60,20 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
     private final Set<DataNetworkService.Listener> listeners = new CopyOnWriteArraySet<>();
 
     public DataNetworkService(Node node,
-                              PeerGroupService peerGroupService,
+                              PeerGroupManager peerGroupManager,
                               Function<DataFilter, Inventory> inventoryProvider) {
         this.node = node;
-        peerGroup = peerGroupService.getPeerGroup();
-        this.peerGroupService = peerGroupService;
-        peerGroupService.addListener(this);
-        broadcaster = new Broadcaster(node, peerGroup);
-        inventoryService = new InventoryService(node, peerGroup, inventoryProvider);
+        peerGroupService = peerGroupManager.getPeerGroupService();
+        this.peerGroupManager = peerGroupManager;
+        peerGroupManager.addListener(this);
+        broadcaster = new Broadcaster(node, peerGroupService);
+        inventoryService = new InventoryService(node, peerGroupService, inventoryProvider);
         node.addListener(this);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         node.removeListener(this);
-        peerGroupService.removeListener(this);
+        peerGroupManager.removeListener(this);
         broadcaster.shutdown();
         return CompletableFuture.completedFuture(true);
     }
@@ -84,7 +84,7 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onStateChanged(PeerGroupService.State state) {
+    public void onStateChanged(PeerGroupManager.State state) {
         listeners.forEach(listener -> listener.onStateChanged(state, this));
     }
 
@@ -100,8 +100,8 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
 
     @Override
     public void onConnection(Connection connection) {
-        if (peerGroup.getNumConnections() > peerGroup.getTargetNumConnectedPeers() / 2) {
-            listeners.forEach(listener -> listener.onSufficientlyConnected(peerGroup.getNumConnections(), this));
+        if (peerGroupService.getNumConnections() > peerGroupService.getTargetNumConnectedPeers() / 2) {
+            listeners.forEach(listener -> listener.onSufficientlyConnected(peerGroupService.getNumConnections(), this));
         }
     }
 

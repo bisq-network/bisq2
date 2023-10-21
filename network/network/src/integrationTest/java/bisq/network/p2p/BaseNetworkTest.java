@@ -50,6 +50,11 @@ public abstract class BaseNetworkTest {
             }
 
             @Override
+            public int getDefaultNodePort() {
+                return -1;
+            }
+
+            @Override
             public int getSocketTimeout() {
                 return 600;
             }

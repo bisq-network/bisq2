@@ -56,7 +56,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int finalI = i;
-            int serverPort = 1000 + i;
+            int serverPort = 3000 + i;
             nodesById.getInitializedNode(nodeId, serverPort);
             initializeServerLatch.countDown();
             nodesById.addNodeListener(new Node.Listener() {
@@ -133,7 +133,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     private void initializeServers(int numNodes, NodesById nodesById) {
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
-            int serverPort = 1000 + i;
+            int serverPort = 3000 + i;
             nodesById.getInitializedNode(nodeId, serverPort);
         }
         nodesById.shutdown().join();

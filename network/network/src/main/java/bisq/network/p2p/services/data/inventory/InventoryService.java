@@ -23,7 +23,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -39,13 +39,13 @@ public class InventoryService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     private final Node node;
-    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final Function<DataFilter, Inventory> inventoryProvider;
 
-    public InventoryService(Node node, PeerGroup peerGroup, Function<DataFilter, Inventory> inventoryProvider) {
+    public InventoryService(Node node, PeerGroupService peerGroupService, Function<DataFilter, Inventory> inventoryProvider) {
         this.node = node;
-        this.peerGroup = peerGroup;
+        this.peerGroupService = peerGroupService;
         this.inventoryProvider = inventoryProvider;
         this.node.addListener(this);
     }
@@ -55,7 +55,7 @@ public class InventoryService implements Node.Listener {
 
     public List<CompletableFuture<Inventory>> request(DataFilter dataFilter) {
         int maxRequests = 400;
-        return peerGroup.getAllConnections()
+        return peerGroupService.getAllConnections()
                 .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
                 .limit(maxRequests)
                 .map(connection -> {

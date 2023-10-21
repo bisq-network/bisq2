@@ -80,8 +80,9 @@ public final class Peer implements Proto, Comparable<Peer> {
         return new Date().getTime() - created;
     }
 
+    // Descending order
     @Override
     public int compareTo(@Nonnull Peer o) {
-        return Long.compare(created, o.getCreated());
+        return Long.compare(o.getCreated(), created);
     }
 }
