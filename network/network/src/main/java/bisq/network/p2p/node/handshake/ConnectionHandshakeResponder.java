@@ -106,7 +106,8 @@ public class ConnectionHandshakeResponder {
     }
 
     private NetworkEnvelope parseAndValidateRequest(NetworkEnvelope requestNetworkEnvelope) {
-        validateEnvelopeVersion(requestNetworkEnvelope);
+        requestNetworkEnvelope.verifyVersion();
+
         validateNetworkMessage(requestNetworkEnvelope);
         return requestNetworkEnvelope;
     }
@@ -122,13 +123,6 @@ public class ConnectionHandshakeResponder {
         ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myNetworkLoad);
         AuthorizationToken token = authorizationService.createToken(response, peerNetworkLoad, peerAddress.getFullAddress(), 0);
         return new NetworkEnvelope(token, response);
-    }
-
-    private void validateEnvelopeVersion(NetworkEnvelope requestNetworkEnvelope) {
-        if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-            throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                    requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-        }
     }
 
     private void validateNetworkMessage(NetworkEnvelope requestNetworkEnvelope) {

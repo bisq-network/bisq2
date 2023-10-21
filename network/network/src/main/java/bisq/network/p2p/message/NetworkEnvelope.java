@@ -18,6 +18,7 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.Proto;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -61,4 +62,14 @@ public final class NetworkEnvelope implements Proto {
                 AuthorizationToken.fromProto(proto.getAuthorizationToken()),
                 NetworkMessage.fromProto(proto.getNetworkMessage()));
     }
+
+    public void verifyVersion() throws ConnectionException {
+        if (version != VERSION) {
+            throw new ConnectionException("Invalid networkEnvelopeVersion. " +
+                    "version=" + version +
+                    "; NetworkEnvelope.VERSION=" + VERSION +
+                    "; networkMessage=" + networkMessage.getClass().getSimpleName());
+        }
+    }
+
 }

@@ -110,10 +110,7 @@ public abstract class Connection {
                     if (isInputStreamActive()) {
                         checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
-                        if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                            throw new ConnectionException("Invalid network version. " +
-                                    networkEnvelope.getClass().getSimpleName());
-                        }
+                        networkEnvelope.verifyVersion();
                         NetworkMessage networkMessage = networkEnvelope.getNetworkMessage();
                         log.debug("Received message: {} at: {}",
                                 StringUtils.truncate(networkMessage.toString(), 200), this);

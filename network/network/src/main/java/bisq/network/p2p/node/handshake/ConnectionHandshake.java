@@ -163,10 +163,7 @@ public final class ConnectionHandshake {
             }
 
             NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
-            if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                        responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-            }
+            responseNetworkEnvelope.verifyVersion();
             if (!(responseNetworkEnvelope.getNetworkMessage() instanceof Response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseNetworkEnvelope);
@@ -213,12 +210,9 @@ public final class ConnectionHandshake {
                 throw new ConnectionException("Request NetworkEnvelope protobuf is null");
             }
             NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
+            requestNetworkEnvelope.verifyVersion();
 
             long ts = System.currentTimeMillis();
-            if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                        requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-            }
             if (!(requestNetworkEnvelope.getNetworkMessage() instanceof Request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestNetworkEnvelope);

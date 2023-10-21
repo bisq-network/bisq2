@@ -71,10 +71,8 @@ public class ConnectionHandshakeInitiator {
         }
 
         NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
-        if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-            throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                    responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-        }
+        responseNetworkEnvelope.verifyVersion();
+
         if (!(responseNetworkEnvelope.getNetworkMessage() instanceof ConnectionHandshake.Response)) {
             throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                     responseNetworkEnvelope);
