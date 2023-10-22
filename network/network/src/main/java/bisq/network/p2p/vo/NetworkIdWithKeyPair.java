@@ -18,15 +18,15 @@
 package bisq.network.p2p.vo;
 
 import bisq.security.PubKey;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Getter
 @ToString
-@EqualsAndHashCode
 public final class NetworkIdWithKeyPair {
     private final NetworkId networkId;
     private final KeyPair keyPair;
@@ -42,5 +42,25 @@ public final class NetworkIdWithKeyPair {
 
     public PubKey getPubKey() {
         return networkId.getPubKey();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NetworkIdWithKeyPair that = (NetworkIdWithKeyPair) o;
+
+        if (!Objects.equals(networkId, that.networkId)) return false;
+        return Arrays.equals(keyPair.getPublic().getEncoded(), that.keyPair.getPublic().getEncoded()) &&
+                Arrays.equals(keyPair.getPrivate().getEncoded(), that.keyPair.getPrivate().getEncoded());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = networkId != null ? networkId.hashCode() : 0;
+        result = 31 * result + Arrays.hashCode(keyPair.getPublic().getEncoded());
+        result = 31 * result + Arrays.hashCode(keyPair.getPrivate().getEncoded());
+        return result;
     }
 }

@@ -22,15 +22,15 @@ import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j
-@EqualsAndHashCode
 public final class PubKey implements Proto {
     @Getter
     private final PublicKey publicKey;
@@ -75,6 +75,28 @@ public final class PubKey implements Proto {
             id = Hex.encode(getHash());
         }
         return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PubKey pubKey = (PubKey) o;
+
+        if (!Arrays.equals(publicKey.getEncoded(), pubKey.publicKey.getEncoded())) return false;
+        if (!keyId.equals(pubKey.keyId)) return false;
+        if (!Arrays.equals(hash, pubKey.hash)) return false;
+        return Objects.equals(id, pubKey.id);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = publicKey != null ? Arrays.hashCode(publicKey.getEncoded()) : 0;
+        result = 31 * result + keyId.hashCode();
+        result = 31 * result + Arrays.hashCode(hash);
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        return result;
     }
 
     @Override
