@@ -26,7 +26,7 @@ public class AwtNotifications implements NotificationsDelegate {
 
     public void sendNotification(String title, String message) {
         SystemTray systemTray = SystemTray.getSystemTray();
-        Image awtImage = Toolkit.getDefaultToolkit().createImage(getClass().getClassLoader().getResource("images/task_bar_icon_windows.png"));
+        Image awtImage = Toolkit.getDefaultToolkit().createImage(getClass().getClassLoader().getResource("images/app_window/icon_128.png"));
         TrayIcon trayIcon = new TrayIcon(awtImage, "Bisq");
         trayIcon.setImageAutoSize(true);
         try {
