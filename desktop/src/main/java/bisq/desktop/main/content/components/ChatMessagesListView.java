@@ -739,67 +739,7 @@ public class ChatMessagesListView {
                             messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
                             VBox userProfileIconVbox = new VBox(userProfileIcon);
                             if (isMyMessage) {
-                                HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
-                                userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
-                                message.setAlignment(Pos.CENTER_RIGHT);
-
-                                quotedMessageVBox.setId("chat-message-quote-box-my-msg");
-
-                                messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-                                VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
-
-                                VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
-                                if (isBisqEasyPublicChatMessageWithOffer) {
-                                    message.maxWidthProperty().bind(root.widthProperty().subtract(160));
-                                    userProfileIcon.setSize(60);
-                                    userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-                                    HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                                    HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
-                                    HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
-
-                                    removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
-                                    reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon);
-                                    reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
-
-                                    HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
-                                    HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
-                                    HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
-                                    VBox vBox = new VBox(hBox, removeOfferButtonHBox);
-                                    messageBgHBox.getChildren().setAll(vBox);
-                                } else {
-                                    message.maxWidthProperty().bind(root.widthProperty().subtract(140));
-                                    userProfileIcon.setSize(30);
-                                    userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-                                    HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-                                    reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, deleteIcon);
-                                    HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
-                                    HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                                    HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
-                                    messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
-                                }
-
-                                HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
-                                HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
-
-                                subscriptions.add(EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
-                                    if (v) {
-                                        deliveryStateHBox.getChildren().remove(deliveryState);
-                                        if (!reactionsHBox.getChildren().contains(deliveryState)) {
-                                            reactionsHBox.getChildren().add(deliveryState);
-                                        }
-                                    } else {
-                                        reactionsHBox.getChildren().remove(deliveryState);
-                                        if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
-                                            deliveryStateHBox.getChildren().add(deliveryState);
-                                        }
-                                    }
-                                }));
-
-                                VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
-                                mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
-
-                                messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
-
+                                buildMyMessage(isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
                             } else {
                                 // Peer
                                 HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
@@ -896,6 +836,69 @@ public class ChatMessagesListView {
 
                             editInputField.maxWidthProperty().bind(message.widthProperty());
                             setGraphic(cellHBox);
+                        }
+
+                        private void buildMyMessage(boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {
+                            HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
+                            userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
+                            message.setAlignment(Pos.CENTER_RIGHT);
+
+                            quotedMessageVBox.setId("chat-message-quote-box-my-msg");
+
+                            messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
+                            VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
+
+                            VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
+                            if (isBisqEasyPublicChatMessageWithOffer) {
+                                message.maxWidthProperty().bind(root.widthProperty().subtract(160));
+                                userProfileIcon.setSize(60);
+                                userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+                                HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+                                HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
+                                HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
+
+                                removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
+                                reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon);
+                                reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
+
+                                HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
+                                HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
+                                HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
+                                VBox vBox = new VBox(hBox, removeOfferButtonHBox);
+                                messageBgHBox.getChildren().setAll(vBox);
+                            } else {
+                                message.maxWidthProperty().bind(root.widthProperty().subtract(140));
+                                userProfileIcon.setSize(30);
+                                userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
+                                HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
+                                reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, deleteIcon);
+                                HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
+                                HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
+                                HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
+                                messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
+                            }
+
+                            HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
+                            HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
+
+                            subscriptions.add(EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
+                                if (v) {
+                                    deliveryStateHBox.getChildren().remove(deliveryState);
+                                    if (!reactionsHBox.getChildren().contains(deliveryState)) {
+                                        reactionsHBox.getChildren().add(deliveryState);
+                                    }
+                                } else {
+                                    reactionsHBox.getChildren().remove(deliveryState);
+                                    if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
+                                        deliveryStateHBox.getChildren().add(deliveryState);
+                                    }
+                                }
+                            }));
+
+                            VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
+                            mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
+
+                            messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
                         }
 
 
