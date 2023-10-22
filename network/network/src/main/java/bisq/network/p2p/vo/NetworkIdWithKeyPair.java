@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
-import java.util.Arrays;
 import java.util.Objects;
 
 @Getter
@@ -44,6 +43,7 @@ public final class NetworkIdWithKeyPair {
         return networkId.getPubKey();
     }
 
+    // KeyPair does not implement equals and hashCode, though the public and private key implementations do.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -52,15 +52,15 @@ public final class NetworkIdWithKeyPair {
         NetworkIdWithKeyPair that = (NetworkIdWithKeyPair) o;
 
         if (!Objects.equals(networkId, that.networkId)) return false;
-        return Arrays.equals(keyPair.getPublic().getEncoded(), that.keyPair.getPublic().getEncoded()) &&
-                Arrays.equals(keyPair.getPrivate().getEncoded(), that.keyPair.getPrivate().getEncoded());
+        return keyPair.getPublic().equals(that.keyPair.getPublic()) &&
+                keyPair.getPrivate().equals(that.keyPair.getPrivate());
     }
 
     @Override
     public int hashCode() {
         int result = networkId != null ? networkId.hashCode() : 0;
-        result = 31 * result + Arrays.hashCode(keyPair.getPublic().getEncoded());
-        result = 31 * result + Arrays.hashCode(keyPair.getPrivate().getEncoded());
+        result = 31 * result + keyPair.getPublic().hashCode();
+        result = 31 * result + keyPair.getPrivate().hashCode();
         return result;
     }
 }

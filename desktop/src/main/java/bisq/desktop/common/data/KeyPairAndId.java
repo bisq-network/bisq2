@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
-import java.util.Arrays;
 import java.util.Objects;
 
 @Getter
@@ -18,6 +17,7 @@ public final class KeyPairAndId {
         this.keyPair = keyPair;
     }
 
+    // KeyPair does not implement equals and hashCode, though the public and private key implementations do.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -26,15 +26,15 @@ public final class KeyPairAndId {
         KeyPairAndId that = (KeyPairAndId) o;
 
         if (!Objects.equals(keyId, that.keyId)) return false;
-        return Arrays.equals(keyPair.getPublic().getEncoded(), that.keyPair.getPublic().getEncoded()) &&
-                Arrays.equals(keyPair.getPrivate().getEncoded(), that.keyPair.getPrivate().getEncoded());
+        return keyPair.getPublic().equals(that.keyPair.getPublic()) &&
+                keyPair.getPrivate().equals(that.keyPair.getPrivate());
     }
 
     @Override
     public int hashCode() {
         int result = keyId != null ? keyId.hashCode() : 0;
-        result = 31 * result + Arrays.hashCode(keyPair.getPublic().getEncoded());
-        result = 31 * result + Arrays.hashCode(keyPair.getPrivate().getEncoded());
+        result = 31 * result + keyPair.getPublic().hashCode();
+        result = 31 * result + keyPair.getPrivate().hashCode();
         return result;
     }
 }
